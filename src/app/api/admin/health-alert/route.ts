@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdminClient } from "../../_lib/supabaseAdmin";
+import { getSupabaseAdminClient } from "../../../../../app/api/_lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     // Let's implement origin validation to prevent trivial CSRF / external abuse.
 
     const origin = req.headers.get("origin") || req.headers.get("referer") || "";
-    if (origin && !origin.includes("dawayir.com") && !origin.includes("localhost") && !origin.includes("alrehla")) {
+    if (!origin || (!origin.includes("dawayir.com") && !origin.includes("localhost") && !origin.includes("alrehla"))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

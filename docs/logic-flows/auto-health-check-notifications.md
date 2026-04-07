@@ -1,12 +1,12 @@
 # Auto Health Check Notifications Logic Flow
 
 ## Goal
-To notify administrators in real-time about critical system health issues detected by the auto-health checker using Telegram.
+To notify administrators in real-time about critical system health issues detected by the auto-health checker using an email integration.
 
 ## Mental Model
 - The auto-health check runs periodically (e.g. hourly) and evaluates system status.
 - When critical issues are detected, the system needs to alert the administrators so they can intervene immediately.
-- This flow ensures critical problems aren't silently stored in `localStorage` but are broadcast to external channels like Telegram.
+- This flow ensures critical problems aren't silently stored in `localStorage` but are broadcast to external channels via email.
 
 ## Inputs / Outputs
 - Inputs: `HealthCheckResult` (with `critical` status)
