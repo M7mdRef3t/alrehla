@@ -344,7 +344,7 @@ export const B2BPortal: FC = () => {
                                     name="b2bClientCode"
                                     value={clientCode}
                                     onChange={(e) => setClientCode(e.target.value)}
-                                    placeholder="د اع (B2B-XXXXXX)"
+                                    placeholder="د اع (B2B-123456)"
                                     className="w-full rounded-xl p-2.5 text-sm text-white outline-none font-mono"
                                     style={{
                                         background: "rgba(255,255,255,0.05)",
@@ -497,7 +497,7 @@ export const B2BPortal: FC = () => {
                                 <input
                                     value={inviteCode}
                                     onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                                    placeholder="DWYR-COACH-XXXX"
+                                    placeholder="DWYR-COACH-1234"
                                     className="w-full rounded-xl p-4 text-center text-xl font-mono text-white outline-none tracking-widest placeholder:text-slate-600 focus:bg-white/5"
                                     style={{
                                         background: "rgba(255,255,255,0.02)",
