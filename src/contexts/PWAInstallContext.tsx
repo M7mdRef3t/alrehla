@@ -4,50 +4,9 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
 import { getWindowOrNull } from "../services/clientRuntime";
+import { BeforeInstallPromptEvent, isStandaloneDisplay, isLikelyInAppBrowser, showInstallInstructions } from "../utils/pwa";
 
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
-};
-
-function isStandaloneDisplay(): boolean {
-  const windowRef = getWindowOrNull();
-  if (!windowRef) return false;
-  const nav = windowRef.navigator as Navigator & { standalone?: boolean };
-  return windowRef.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
-}
-
-function isLikelyInAppBrowser(ua: string): boolean {
-  return /(FBAN|FBAV|Instagram|Line|TikTok|Snapchat|wv)/i.test(ua);
-}
-
-function showInstallInstructions(options: {
-  isAndroid: boolean;
-  isIOS: boolean;
-  isInAppBrowser: boolean;
-}) {
-  const windowRef = getWindowOrNull();
-  if (!windowRef) return;
-
-  if (options.isInAppBrowser) {
-    windowRef.alert('متصفح التطبيق الحالي لا يدعم التثبيت مباشرة. افتح الصفحة في Chrome أو Safari ثم اختر "إضافة إلى الشاشة الرئيسية".');
-    return;
-  }
-
-  if (options.isAndroid) {
-    windowRef.alert('على Android: افتح قائمة المتصفح ثم اختر "إضافة إلى الشاشة الرئيسية" (Add to Home screen).');
-    return;
-  }
-
-  if (options.isIOS) {
-    windowRef.alert('على iPhone/iPad: اضغط زر المشاركة ثم اختر "إضافة إلى الشاشة الرئيسية".');
-    return;
-  }
-
-  windowRef.alert('على Chrome أو Edge من الكمبيوتر: افتح قائمة المتصفح ثم اختر "Install app" أو "تثبيت التطبيق".');
-}
-
-interface PWAInstallContextValue {
+export interface PWAInstallContextValue {
   canShowInstallButton: boolean;
   triggerInstall: () => Promise<void>;
   hasInstallPrompt: boolean;
@@ -68,11 +27,7 @@ export function usePWAInstall(): PWAInstallContextValue | null {
   return useContext(PWAInstallContext);
 }
 
-interface PWAInstallProviderProps {
-  children: ReactNode;
-}
-
-export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
+export function usePWAInstallLogic(): PWAInstallContextValue {
   const [hasMounted, setHasMounted] = useState(false);
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -207,7 +162,7 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
   const showAndroidBanner = canRenderBanner && (forceShowHint || isVisible) && isAndroid;
   const showIOSBanner = canRenderBanner && (forceShowHint || isVisible) && isIOS;
 
-  const value: PWAInstallContextValue = {
+  return {
     canShowInstallButton,
     triggerInstall,
     hasInstallPrompt,
@@ -221,6 +176,13 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
     isInAppBrowser,
     installEvent
   };
+}
 
+export interface PWAInstallProviderProps {
+  children: ReactNode;
+}
+
+export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
+  const value = usePWAInstallLogic();
   return <PWAInstallContext.Provider value={value}>{children}</PWAInstallContext.Provider>;
 }
