@@ -253,10 +253,43 @@ export class DecisionEngine {
    * طلب موافقة من المستخدم/الأدمن
    */
   async requestApproval(decision: AIDecision): Promise<boolean> {
-    // TODO: Integration with Notification System
-    // نبعت notification للمستخدم: "الـ AI بيقترح كذا، موافق؟"
-
     this.logDecision({ ...decision, outcome: "pending_approval" });
+
+    try {
+      const { telegramBot } = await import("../services/telegramBot");
+
+      const messageText = `
+⏸️ **طلب موافقة على قرار AI**
+
+🎯 **النوع:** ${decision.type}
+🧠 **السبب:** ${decision.reasoning}
+📦 **التفاصيل:**
+\`\`\`json
+${JSON.stringify(decision.payload, null, 2)}
+\`\`\`
+
+**القرار معلق حالياً وفي انتظار الموافقة.**
+`.trim();
+
+      // Ensure we have a unique ID for the callback
+      const decisionId = decision.timestamp || Date.now();
+
+      await telegramBot.sendMessage({
+        type: "decision_approval_request",
+        text: messageText,
+        parseMode: "Markdown",
+        replyMarkup: {
+          inline_keyboard: [
+            [
+              { text: "✅ موافق", callback_data: `approve_${decision.type}_${decisionId}` },
+              { text: "❌ رفض", callback_data: `reject_${decision.type}_${decisionId}` },
+            ],
+          ],
+        },
+      });
+    } catch (error) {
+      console.error("❌ Failed to send Telegram approval request:", error);
+    }
 
     // مؤقتاً: نرفض تلقائياً (عشان ما نعملش حاجة خطيرة)
     return false;
