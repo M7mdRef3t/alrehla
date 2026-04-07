@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { Compass, Zap, Workflow, Loader2, GitGraph, AlertTriangle } from "lucide-react";
 import { fetchOverviewStats, type OverviewStats } from "../../../../services/adminApi";
 import { useFleetState } from "../../../../state/fleetState";
-import { FlowMindMap } from "../../FlowMindMap";
+import { FlowMindMap } from "../../flow-mind-map";
 import { VISITOR_FLOW_LINKS, buildFlowNodes } from "../../../../data/visitorFlowWorkflow";
 
 export const FlowMapPanel: FC = () => {
