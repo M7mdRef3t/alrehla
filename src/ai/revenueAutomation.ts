@@ -5,7 +5,15 @@
  */
 
 import { decisionEngine } from "./decision-framework";
-import { supabase, isSupabaseReady } from "../services/supabaseClient";
+import { createClient } from "@supabase/supabase-js";
+
+
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!supabaseUrl || !serviceRoleKey) return null;
+  return createClient(supabaseUrl, serviceRoleKey);
+}
 
 import { geminiClient } from "../services/geminiClient";
 import type { AIDecision } from "./decision-framework";
@@ -126,21 +134,22 @@ export class RevenueAutomationEngine {
    * ─────────────────────────────────────────────────────────────────
    */
     async analyzeCurrentMetrics(): Promise<RevenueMetrics | null> {
-    if (!isSupabaseReady || !supabase) {
-      console.warn("⚠️ Supabase is not ready. Returning mock revenue metrics.");
+    const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      console.warn("⚠️ Supabase Admin is not ready. Returning mock revenue metrics.");
       return this.getMockMetrics();
     }
 
     try {
       // 1. Get total users
-      const { count: totalUsers, error: totalError } = await supabase
+      const { count: totalUsers, error: totalError } = await supabaseAdmin
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
       if (totalError) throw totalError;
 
       // 2. Get coach users (role = enterprise_admin)
-      const { count: coachUsers, error: coachError } = await supabase
+      const { count: coachUsers, error: coachError } = await supabaseAdmin
         .from('profiles')
         .select('*', { count: 'exact', head: true })
         .eq('role', 'enterprise_admin');
@@ -148,7 +157,7 @@ export class RevenueAutomationEngine {
       if (coachError) throw coachError;
 
       // 3. Get premium users (subscription_status in ['active', 'trialing'], role != enterprise_admin)
-      const { count: premiumUsers, error: premiumError } = await supabase
+      const { count: premiumUsers, error: premiumError } = await supabaseAdmin
         .from('profiles')
         .select('*', { count: 'exact', head: true })
         .in('subscription_status', ['active', 'trialing'])
