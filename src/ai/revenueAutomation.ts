@@ -295,7 +295,7 @@ export class RevenueAutomationEngine {
       // TODO: Update database with new pricing
       // TODO: Notify existing users about grandfathering policy
 
-      throw new Error("Not Implemented: Database update for pricing is not implemented yet");
+      return { success: false, message: "Not Implemented: Database update for pricing is not implemented yet" };
 
     } catch (error) {
       console.error("❌ Failed to apply pricing change:", error);
