@@ -6,6 +6,8 @@
 
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
+import { supabase } from "../services/supabaseClient";
+import { notifyPricingGrandfathering } from "../services/emailService";
 import type { AIDecision } from "./decision-framework";
 import {
   type PricingTier,
@@ -257,6 +259,56 @@ export class RevenueAutomationEngine {
    * تطبيق تغيير التسعير (يحتاج موافقة)
    * ─────────────────────────────────────────────────────────────────
    */
+
+  /**
+   * Notify existing active users that they are grandfathered into their old price.
+   */
+  private async notifyUsersAboutGrandfathering(oldPrices: { premium: number, coach: number }, newPrices: { premium: number, coach: number }): Promise<void> {
+    console.warn("📧 Notifying users about pricing grandfathering...");
+    try {
+      if (!supabase) return;
+
+      // Fetch active subscriptions (premium and coach) with their user details
+      const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("id, email, full_name, role, subscription_status")
+        .in("subscription_status", ["active", "trialing"])
+        .in("role", ["enterprise_admin", "user"]); // enterprise_admin is coach, user is generally premium if status is active
+
+      if (error) {
+        console.error("❌ Failed to fetch profiles for grandfathering notifications:", error);
+        return;
+      }
+
+      if (!profiles || profiles.length === 0) {
+        console.warn("ℹ️ No active users found to notify about grandfathering.");
+        return;
+      }
+
+      console.warn(`📩 Found ${profiles.length} active users to notify.`);
+
+      for (const profile of profiles) {
+        if (!profile.email) continue;
+
+        // Determine user's tier based on role
+        const isCoach = profile.role === "enterprise_admin";
+        const oldPrice = isCoach ? oldPrices.coach : oldPrices.premium;
+        const newPrice = isCoach ? newPrices.coach : newPrices.premium;
+
+        await notifyPricingGrandfathering(profile.email, {
+          userName: profile.full_name || undefined,
+          oldPrice,
+          newPrice,
+          currency: "USD" // Defaulting to USD, or could be dynamic based on region
+        });
+      }
+
+      console.warn("✅ Grandfathering notifications sent successfully.");
+    } catch (err) {
+      console.error("❌ Error sending grandfathering notifications:", err);
+    }
+  }
+
   async applyPricingChange(
     recommendation: PricingRecommendation
   ): Promise<{ success: boolean; message: string }> {
@@ -293,7 +345,12 @@ export class RevenueAutomationEngine {
     try {
       // TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
       // TODO: Update database with new pricing
-      // TODO: Notify existing users about grandfathering policy
+
+      // Notify existing users about grandfathering policy
+      await this.notifyUsersAboutGrandfathering(
+        { premium: TIER_PRICES_USD.premium.monthly, coach: TIER_PRICES_USD.coach.monthly },
+        recommendation.suggestedPrices
+      );
 
       console.warn("✅ Pricing changed successfully:", recommendation.suggestedPrices);
 

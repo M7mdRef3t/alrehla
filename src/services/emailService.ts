@@ -1,6 +1,8 @@
 
 import { supabase } from "./supabaseClient";
 import { getRecoveryPlanHtml, type RecoveryPlanData } from "../templates/RecoveryPlanEmail";
+import { getPricingGrandfatheringHtml, type PricingGrandfatheringData } from "../templates/PricingGrandfatheringEmail";
+
 
 /**
  * Service to handle sending emails to users.
@@ -42,6 +44,48 @@ export async function sendRecoveryPlanEmail(email: string, data: RecoveryPlanDat
     return true;
   } catch (err: any) {
     console.error(`${logPrefix} Unexpected failure in email flow:`, err);
+    return false;
+  }
+}
+
+/**
+ * Notify existing users about the pricing grandfathering policy.
+ */
+export async function notifyPricingGrandfathering(email: string, data: PricingGrandfatheringData): Promise<boolean> {
+  const logPrefix = "[EmailService]";
+
+  if (!supabase) {
+    console.error(`${logPrefix} Supabase not initialized. Cannot invoke send-email.`);
+    return false;
+  }
+
+  if (!email || !email.includes("@")) {
+    console.warn(`${logPrefix} Invalid email provided: ${email}`);
+    return false;
+  }
+
+  try {
+    const html = getPricingGrandfatheringHtml(data);
+    const subject = "تحديث أسعار الباقات - باقتك القديمة محفوظة 🛡️";
+
+    const { data: responseData, error } = await supabase.functions.invoke("send-email", {
+      body: {
+        to: email.trim(),
+        subject,
+        html,
+        text: `أهلاً بيك! تحديث أسعار جديد: السعر الجديد ${data.newPrice} ${data.currency} لكن باقتك القديمة محفوظة بسعر ${data.oldPrice} ${data.currency}.`
+      }
+    });
+
+    if (error) {
+      console.error(`${logPrefix} Edge function error:`, error);
+      return false;
+    }
+
+    console.log(`${logPrefix} Pricing grandfathering email sent successfully to ${email}. ID:`, responseData?.id);
+    return true;
+  } catch (err: any) {
+    console.error(`${logPrefix} Unexpected failure in pricing grandfathering email flow:`, err);
     return false;
   }
 }
