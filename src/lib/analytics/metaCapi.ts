@@ -1,8 +1,10 @@
 export const sendToCapi = async (
   eventName: string,
   eventId: string,
-  userData: any,
-  customData: any = {}
+  userData: /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+any,
+  customData: /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+any = {}
 ) => {
   try {
     const res = await fetch('/api/meta/capi', {
