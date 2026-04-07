@@ -12,6 +12,8 @@ import type { MapNode } from "../modules/map/mapTypes";
 import type { DailyQuestion } from "../data/dailyQuestions";
 import { useEmergencyState } from "../state/emergencyState";
 import { useToastState } from "../state/toastState";
+import { isAlignedWithPrinciples } from "./CORE_PRINCIPLES";
+
 
 
 
@@ -310,11 +312,38 @@ export class DecisionEngine {
    * تحقق من جودة المحتوى المُولّد
    */
   private async validateContentQuality(
-    _decision: Omit<AIDecision, "timestamp">
+    decision: Omit<AIDecision, "timestamp">
   ): Promise<{ passed: boolean; reason?: string }> {
-    // TODO: استخدم isAlignedWithPrinciples() من CORE_PRINCIPLES.ts
+    let contentToValidate = "";
 
-    // مؤقتاً: نقبل كل حاجة
+    if (decision.payload && typeof decision.payload === "object") {
+      const payload = decision.payload as any;
+
+      if (payload.generatedQuestion?.text) {
+        contentToValidate = payload.generatedQuestion.text;
+      } else if (payload.greeting) {
+        contentToValidate = payload.greeting;
+      } else if (payload.missionDescription) {
+        contentToValidate = payload.missionDescription;
+      } else if (payload.doSay || payload.dontSay) {
+        contentToValidate = `${payload.doSay || ""} ${payload.dontSay || ""}`.trim();
+      } else if (typeof payload.text === "string") {
+        contentToValidate = payload.text;
+      } else if (typeof payload.message === "string") {
+        contentToValidate = payload.message;
+      }
+    }
+
+    if (contentToValidate) {
+      const result = isAlignedWithPrinciples(contentToValidate);
+      if (!result.aligned) {
+        return {
+          passed: false,
+          reason: `Violates core principles: ${result.violations.join(", ")}`,
+        };
+      }
+    }
+
     return { passed: true };
   }
 }
