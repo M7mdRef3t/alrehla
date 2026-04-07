@@ -5,3 +5,4 @@
 
 export { useAppNavigation } from "./useAppNavigation";
 export { usePulseManagement } from "./usePulseManagement";
+export { usePWALogic } from './usePWALogic';
