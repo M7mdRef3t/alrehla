@@ -224,6 +224,19 @@ export async function GET(request: Request) {
   const results: Array<Record<string, unknown>> = [];
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.alrehla.app").replace(/\/$/, "");
 
+  // Batch fetch all required marketing leads data
+  const uniqueEmails = Array.from(new Set(rows.map(r => r.lead_email)));
+  const { data: leadsData } = uniqueEmails.length > 0
+    ? await supabase
+        .from("marketing_leads")
+        .select("email, first_name, name, full_name, unsubscribed, phone")
+        .in("email", uniqueEmails)
+    : { data: [] };
+
+  const leadsMap = new Map(
+    (leadsData || []).map((lead) => [(lead as Record<string, unknown>).email as string, lead])
+  );
+
   for (const row of rows) {
     try {
       let outcome;
@@ -231,11 +244,7 @@ export async function GET(request: Request) {
 
       if (row.channel === "email") {
         // 0. Check unsubscribed
-        const { data: leadCheck } = await supabase
-          .from("marketing_leads")
-          .select("first_name, name, full_name, unsubscribed")
-          .eq("email", row.lead_email)
-          .maybeSingle();
+        const leadCheck = leadsMap.get(row.lead_email);
 
         if ((leadCheck as Record<string, unknown> | null)?.unsubscribed === true) {
           await supabase
@@ -304,11 +313,7 @@ export async function GET(request: Request) {
         }
       } else {
         // WhatsApp
-        const { data: lead } = await supabase
-          .from("marketing_leads")
-          .select("phone")
-          .eq("email", row.lead_email)
-          .maybeSingle();
+        const lead = leadsMap.get(row.lead_email);
 
         const payloadWithPhone = {
           ...row.payload,
