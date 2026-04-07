@@ -532,24 +532,10 @@ export class AutoHealthChecker {
   private async notifyAdmin(result: HealthCheckResult): Promise<void> {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
+    // TODO: إرسال notification فعلي (email, SMS, push, etc.)
     // مؤقتاً: نحفظ في localStorage
 
     try {
-      const { telegramBot } = await import("../services/telegramBot");
-
-      const severity = result.status === "critical" ? "critical" : "high";
-      const affectedFeatures = Array.from(
-        new Set(result.issues.map((issue) => issue.category))
-      );
-
-      const message = `Health Score: ${result.score}/100\nIssues: ${result.issues.length}\nAuto-fixed: ${result.autoFixedIssues.length}\n\nTop issues:\n` +
-        result.issues.slice(0, 3).map(i => `- [${i.category}] ${i.description}`).join("\n");
-
-      await telegramBot.alertCriticalError({
-        message,
-        severity,
-        affectedFeatures,
-      });
       const alerts = JSON.parse(
         localStorage.getItem("dawayir-health-alerts") || "[]"
       ) as HealthCheckResult[];
@@ -617,4 +603,3 @@ export function startAutoHealthCheck(): void {
 export function stopAutoHealthCheck(): void {
   autoHealthChecker.stop();
 }
-
