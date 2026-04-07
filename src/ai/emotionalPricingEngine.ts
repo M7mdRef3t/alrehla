@@ -14,6 +14,7 @@
  */
 
 import { telegramBot } from "../services/telegramBot";
+import { getAuthUserId } from "../state/authState";
 import { decisionEngine } from "./decision-framework";
 import type { MapNode } from "../modules/map/mapTypes";
 import type { DailyJournalEntry } from "../state/dailyJournalState";
@@ -434,7 +435,7 @@ export class EmotionalPricingEngine {
    * فحص دوري لكل المستخدمين (يوميا)
    * ─────────────────────────────────────────────────────────────────
    */
-  async runDailyEmotionalCheck(): Promise<void> {
+  async runDailyEmotionalCheck(userId?: string): Promise<void> {
     console.warn("🧠 Running daily emotional pricing check...");
 
     try {
@@ -453,7 +454,7 @@ export class EmotionalPricingEngine {
       ) as number[];
 
       const state = this.analyzeUserState({
-        userId: "current-user", // TODO: استخدام User ID الفعلي
+        userId: userId || getAuthUserId() || "anonymous",
         nodes,
         journalEntries,
         teiHistory,
