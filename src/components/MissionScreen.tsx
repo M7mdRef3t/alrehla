@@ -27,8 +27,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
   const [showRealityPopup, setShowRealityPopup] = useState(false);
   const [showDopaminePopup, setShowDopaminePopup] = useState(false);
   const [showFallbackAfterTimeout, setShowFallbackAfterTimeout] = useState(false);
-  const [fallbackAttempt, setFallbackAttempt] = useState(0);
-  const lastCelebratedAtRef = useRef<number | null>(null);
+    const lastCelebratedAtRef = useRef<number | null>(null);
   const detachmentReasons = node?.recoveryProgress?.detachmentReasons;
 
   const result = useMemo(() => {
@@ -180,7 +179,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
     setShowFallbackAfterTimeout(false);
     const timeoutId = setTimeout(() => setShowFallbackAfterTimeout(true), 2500);
     return () => clearTimeout(timeoutId);
-  }, [node, result, fallbackAttempt]);
+  }, [node, result]);
 
   if (!node || !node.analysis || !result) {
     if (!showFallbackAfterTimeout) {
