@@ -372,8 +372,6 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
                 onBack={() => setStep("select")}
                 onContinue={handleQuickQuestionsDone}
                 disableSubmit={false}
-                getTier1={(value) => quick1Tier[value] ?? "green"}
-                getTier2={(value) => quick2Tier[value] ?? "green"}
                 nextLabel={addPersonCopy.nextAfterQuestions}
               />
             ) : step === "feeling" ? (
