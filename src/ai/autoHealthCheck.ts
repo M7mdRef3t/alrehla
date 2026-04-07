@@ -533,24 +533,37 @@ export class AutoHealthChecker {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
     try {
-      const { telegramBot } = await import("../services/telegramBot");
+      const { supabase } = await import("../services/supabaseClient");
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || "admin@example.com";
 
       const criticalIssues = result.issues.filter((i) => i.severity === "critical" || i.severity === "high");
 
-      const message = `Health Score: ${result.score}/100\n` +
-        criticalIssues.map((i) => `[${i.category}] ${i.description}`).join("\n");
+      const htmlBody = `
+        <h2>🚨 CRITICAL HEALTH ISSUE DETECTED</h2>
+        <p><strong>Health Score:</strong> ${result.score}/100</p>
+        <h3>Issues:</h3>
+        <ul>
+          ${criticalIssues.map((i) => `<li>[${i.category}] ${i.description}</li>`).join("")}
+        </ul>
+      `;
 
-      const affectedFeatures = criticalIssues.map((i) => i.category);
-      // Remove duplicates
-      const uniqueAffectedFeatures = [...new Set(affectedFeatures)];
+      if (!supabase) {
+        console.error("❌ Supabase client not initialized, cannot send admin alert.");
+        return;
+      }
 
-      await telegramBot.alertCriticalError({
-        message,
-        severity: result.status === "critical" ? "critical" : "high",
-        affectedFeatures: uniqueAffectedFeatures.length > 0 ? uniqueAffectedFeatures : ["System Health"]
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: adminEmail,
+          subject: "Dawayir: Critical System Health Alert",
+          html: htmlBody
+        }
       });
+      if (error) {
+         console.error("❌ Failed to notify admin via email edge function:", error);
+      }
     } catch (error) {
-      console.error("❌ Failed to notify admin via Telegram:", error);
+      console.error("❌ Failed to notify admin via email:", error);
     }
   }
 
