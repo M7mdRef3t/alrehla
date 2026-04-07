@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Send, ShieldCheck, Zap, RefreshCcw, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Sparkles, Send, Zap, RefreshCcw, CheckCircle2, AlertCircle } from 'lucide-react';
 import { viralArchitect, ViralPost } from '../../../../ai/ViralContentManager';
 
 export const CreativeDashboard: React.FC = () => {
