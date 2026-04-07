@@ -152,14 +152,42 @@ export async function applyReferralCodeAsync(code: string, myEmail: string): Pro
             const rUsers = rMeta.referred_users || [];
             if (!rUsers.includes(myEmail)) {
                 rUsers.push(myEmail);
+                const newEarnedWeeks = (rMeta.earned_weeks || 0) + 1;
+                const newReferralCount = (rMeta.referral_count || 0) + 1;
                 await supabase.from("marketing_leads").update({
                     metadata: { 
                         ...rMeta, 
                         referred_users: rUsers,
-                        referral_count: (rMeta.referral_count || 0) + 1,
-                        earned_weeks: (rMeta.earned_weeks || 0) + 1
+                        referral_count: newReferralCount,
+                        earned_weeks: newEarnedWeeks
                     }
                 }).eq("email", referrer.email);
+
+                // Notify referrer via Supabase edge function
+                try {
+                    const html = `
+                        <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #333;">
+                            <h2>🎉 مبروك! صديق جديد انضم لدايرتك</h2>
+                            <p>صديق لك استخدم كود الإحالة الخاص بك (<strong>${code}</strong>) وانضم للرحلة.</p>
+                            <p>بفضل إحالتك، لقد ربحت أسبوع بريميوم إضافي!</p>
+                            <p>مجموع أسابيع البريميوم المكتسبة الآن: <strong>${newEarnedWeeks}</strong> أسبوع.</p>
+                            <p>مجموع أصدقائك المنضمين: <strong>${newReferralCount}</strong> أصدقاء.</p>
+                            <p>استمر في دعوة أصدقائك واكتسب المزيد!</p>
+                            <br/>
+                            <p>مع تحيات،<br/>فريق الرحلة (دواير)</p>
+                        </div>
+                    `;
+                    await supabase.functions.invoke('send-email', {
+                        body: {
+                            to: referrer.email,
+                            subject: "🎉 مبروك! صديق جديد انضم باستخدام كودك!",
+                            html,
+                            text: `صديق لك استخدم كود الإحالة الخاص بك (${code})! لقد ربحت أسبوع بريميوم إضافي.`
+                        }
+                    });
+                } catch (edgeErr) {
+                    console.error("Failed to invoke send-email edge function for referral:", edgeErr);
+                }
             }
         }
     } catch (e) {
