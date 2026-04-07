@@ -23,7 +23,7 @@ export class ResonanceMonitor {
         if (!supabase) return;
 
         // 1. Fetch pioneers inactive for > 24h
-        const { data: pioneers, error } = await supabase!
+        const { data: pioneers, error } = await supabase
             .from('profiles')
             .select('id, full_name, last_active_at')
             .lt('last_active_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
@@ -42,7 +42,7 @@ export class ResonanceMonitor {
         if (!supabase) return;
 
         // 1. Fetch last chat context for sentiment analysis
-        const { data: lastChat } = await supabase!
+        const { data: lastChat } = await supabase
             .from('chat_history')
             .select('content, role')
             .eq('user_id', userId)
@@ -78,7 +78,7 @@ Output strictly as JSON:
         const nudgeText = nudgeResult.response.text();
 
         // 4. Log & Dispatch (Log to DB, real-world dispatch simulated)
-        await supabase!.from('resonance_nudge_logs').insert({
+        await supabase.from('resonance_nudge_logs').insert({
             user_id: userId,
             nudge_type: tone.toLowerCase(),
             context_sentiment: analysis.state,
@@ -94,7 +94,7 @@ Output strictly as JSON:
     static async dispatchPreIonizationRiddle() {
         if (!supabase) return;
 
-        const { data: pioneers } = await supabase!.from('profiles').select('id');
+        const { data: pioneers } = await supabase.from('profiles').select('id');
         if (!pioneers) return;
 
         const riddle = `
@@ -103,7 +103,7 @@ Output strictly as JSON:
         `;
 
         for (const p of pioneers) {
-            await supabase!.from('resonance_nudge_logs').insert({
+            await supabase.from('resonance_nudge_logs').insert({
                 user_id: p.id,
                 nudge_type: 'pre_ionization',
                 context_sentiment: 'STABILITY',
@@ -124,7 +124,7 @@ Output strictly as JSON:
         console.log("🔗 [ResonanceMonitor] Initiating Synchronicity Pairing...");
 
         // 1. Expire any stale entanglements first
-        const { data: expired } = await supabase!
+        const { data: expired } = await supabase
             .from('resonance_pairs')
             .update({ status: 'expired' })
             .eq('status', 'active')
@@ -136,7 +136,7 @@ Output strictly as JSON:
         }
 
         // 2. Fetch unpaired pioneers
-        const { data: pioneers } = await supabase!
+        const { data: pioneers } = await supabase
             .from('profiles')
             .select('id')
             .not('id', 'in', `(SELECT user_a_id FROM resonance_pairs WHERE status = 'active' UNION SELECT user_b_id FROM resonance_pairs WHERE status = 'active')`);
@@ -149,7 +149,8 @@ Output strictly as JSON:
         // 3. Find complements using concurrent RPC calls
         // Promise.all optimizes the N+1 sequential I/O problem.
         const pairingPromises = pioneers.map(async (pioneer) => {
-            const { data: partner } = await supabase!
+            if (!supabase) return { pioneerId: pioneer.id, partner: null };
+            const { data: partner } = await supabase
                 .rpc('find_resonance_partner', { p_user_id: pioneer.id });
             return { pioneerId: pioneer.id, partner: partner && partner.length > 0 ? partner[0] : null };
         });
@@ -191,7 +192,7 @@ Output strictly as JSON:
 
         // Execute a single bulk insert
         if (inserts.length > 0) {
-            const { error } = await supabase!.from('resonance_pairs').insert(inserts);
+            const { error } = await supabase.from('resonance_pairs').insert(inserts);
             if (error) {
                 console.error("❌ [ResonanceMonitor] Failed to bulk insert Synchronicity Pairings:", error);
             }
