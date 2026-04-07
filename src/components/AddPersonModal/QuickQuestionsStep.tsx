@@ -1,5 +1,4 @@
 import type { FC } from "react";
-import { getOptionButtonClass } from "../../utils/optionColors";
 import type { OptionTier } from "../../utils/optionColors";
 import { EditableText } from "../EditableText";
 
@@ -23,8 +22,8 @@ interface QuickQuestionsStepProps {
   onBack: () => void;
   onContinue: (e: React.FormEvent) => void;
   disableSubmit: boolean;
-  getTier1: (value: string) => OptionTier;
-  getTier2: (value: string) => OptionTier;
+  _getTier1: (value: string) => OptionTier;
+  _getTier2: (value: string) => OptionTier;
   nextLabel: string;
 }
 
@@ -43,8 +42,8 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
   onBack,
   onContinue,
   disableSubmit,
-  getTier1,
-  getTier2,
+  _getTier1,
+  _getTier2,
   nextLabel
 }) => {
   return (
@@ -71,8 +70,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {options1.map((opt) => {
-              const tier = getTier1(opt.value);
-              const isSelected = quickAnswer1 === opt.value;
+                            const isSelected = quickAnswer1 === opt.value;
               return (
                 <button
                   key={opt.value}
@@ -100,8 +98,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {options2.map((opt) => {
-              const tier = getTier2(opt.value);
-              const isSelected = quickAnswer2 === opt.value;
+                            const isSelected = quickAnswer2 === opt.value;
               return (
                 <button
                   key={opt.value}
