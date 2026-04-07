@@ -265,7 +265,6 @@ export async function GET(request: Request) {
               .from("marketing_lead_outreach_queue")
               .update({ status: "cancelled", last_error: "unsubscribed" })
               .eq("id", row.id)
-              .then((res) => res)
           );
           results.push({ id: row.id, status: "cancelled", reason: "unsubscribed" });
           continue;
@@ -350,10 +349,6 @@ export async function GET(request: Request) {
             last_error: null,
           })
           .eq("id", row.id)
-          .then(({ error }) => {
-            if (error) console.error("Failed to update queue row", row.id, error);
-            return null;
-          })
       );
       results.push({ id: row.id, channel: row.channel, status, step: row.step ?? 1 });
     } catch (err) {
@@ -363,7 +358,6 @@ export async function GET(request: Request) {
           .from("marketing_lead_outreach_queue")
           .update({ status: "failed", attempts: (row.attempts ?? 0) + 1, last_error: message })
           .eq("id", row.id)
-          .then((res) => res)
       );
       results.push({ id: row.id, channel: row.channel, status: "failed", error: message });
     }
@@ -380,7 +374,14 @@ export async function GET(request: Request) {
   }
 
   // Await all updates
-  await Promise.allSettled(queueUpdates);
+  const updateResults = await Promise.allSettled(queueUpdates);
+  for (const res of updateResults) {
+    if (res.status === 'fulfilled' && res.value && res.value.error) {
+      console.error("Failed to update queue row", res.value.error);
+    } else if (res.status === 'rejected') {
+      console.error("Queue update promise rejected", res.reason);
+    }
+  }
 
   return NextResponse.json({ ok: true, processed: rows.length, results });
 }
