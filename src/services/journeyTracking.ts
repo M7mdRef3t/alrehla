@@ -208,7 +208,7 @@ async function flushSupabaseSync(): Promise<void> {
   });
 
   // Session → User stitching: ربط الجلسة بالمستخدم عند تسجيل الدخول
-  const userProfileUpserts = [];
+  const userProfileUpsertsMap = new Map<string, Record<string, unknown>>();
   for (const { event } of batch) {
     if (event.type !== "flow_event" || !event.sessionId) continue;
     const payload = event.payload as JourneyEventPayload["flow_event"];
@@ -217,7 +217,7 @@ async function flushSupabaseSync(): Promise<void> {
     const userId = typeof extra?.userId === "string" ? extra.userId : null;
     const email = typeof extra?.email === "string" ? extra.email : null;
     if (!userId) continue;
-    userProfileUpserts.push({
+    userProfileUpsertsMap.set(event.sessionId, {
       id: event.sessionId,
       full_name: event.sessionId,
       role: "session",
@@ -227,6 +227,7 @@ async function flushSupabaseSync(): Promise<void> {
     });
   }
 
+  const userProfileUpserts = Array.from(userProfileUpsertsMap.values());
   if (userProfileUpserts.length > 0) {
     await supabase.from(SUPABASE_PROFILES_TABLE).upsert(userProfileUpserts, { onConflict: "id" });
   }
