@@ -16,7 +16,7 @@ interface ViralLoopNudgeProps {
 
 export function ViralLoopNudge({ onClose, forceShow = false }: ViralLoopNudgeProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [isExpanding, setIsExpanding] = useState(false);
+
   const [copied, setCopied] = useState(false);
   
   const status = getReferralRewardStatus();
