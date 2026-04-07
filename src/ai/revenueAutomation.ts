@@ -6,7 +6,6 @@
 
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
-import { supabase } from "../services/supabaseClient";
 import type { AIDecision } from "./decision-framework";
 import {
   type PricingTier,
@@ -293,6 +292,7 @@ export class RevenueAutomationEngine {
     // تطبيق التغيير
     try {
       // TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
+      const { supabase } = await import("../services/supabaseClient");
       if (supabase) {
         const { error: dbError } = await supabase.from("system_settings").upsert({
           key: "ai_dynamic_pricing",
