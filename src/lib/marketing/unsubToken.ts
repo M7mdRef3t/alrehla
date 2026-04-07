@@ -1,9 +1,21 @@
-import { createHmac, randomBytes } from "crypto";
+import { createHmac } from "crypto";
 
-// Use a secure random fallback that persists for the lifetime of the process
-// if neither UNSUB_SECRET nor CRON_SECRET is provided. This prevents the app from
-// failing in non-production environments while still avoiding hardcoded defaults.
-const SECURE_RANDOM_FALLBACK = randomBytes(32).toString("hex");
+// Fallback logic for random secrets in an edge-compatible way
+let SECURE_RANDOM_FALLBACK = "";
+
+function getFallbackSecret(): string {
+  if (!SECURE_RANDOM_FALLBACK) {
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+       const array = new Uint8Array(32);
+       crypto.getRandomValues(array);
+       SECURE_RANDOM_FALLBACK = Array.from(array, byte => byte.toString(16).padStart(2, "0")).join("");
+    } else {
+       // Node.js fallback or less secure fallback if web crypto is completely unavailable
+       SECURE_RANDOM_FALLBACK = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+    }
+  }
+  return SECURE_RANDOM_FALLBACK;
+}
 
 function getUnsubSecret(): string {
   const secret = process.env.UNSUB_SECRET || process.env.CRON_SECRET || "";
@@ -12,7 +24,7 @@ function getUnsubSecret(): string {
     if (process.env.NODE_ENV === "production") {
       throw new Error("UNSUB_SECRET or CRON_SECRET must be configured in production");
     }
-    return SECURE_RANDOM_FALLBACK;
+    return getFallbackSecret();
   }
 
   return secret.trim();
