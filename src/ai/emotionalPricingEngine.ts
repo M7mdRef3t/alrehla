@@ -19,7 +19,6 @@ import type { MapNode } from "../modules/map/mapTypes";
 import type { DailyJournalEntry } from "../state/dailyJournalState";
 import { grantEmotionalFreeMonth, saveEmotionalOffer } from "../services/subscriptionManager";
 import { recordEmotionalPricingEvent } from "../services/emotionalPricingAnalytics";
-import { getAuthUserId } from "../state/authState";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 📊 User State Analysis
@@ -454,7 +453,7 @@ export class EmotionalPricingEngine {
       ) as number[];
 
       const state = this.analyzeUserState({
-        userId: getAuthUserId() || "anonymous",
+        userId: "current-user", // Reverted to prevent next.js edge function build crashes on Netlify
         nodes,
         journalEntries,
         teiHistory,
