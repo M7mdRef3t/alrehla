@@ -18,7 +18,6 @@ import { decisionEngine } from "./decision-framework";
 import type { MapNode } from "../modules/map/mapTypes";
 import type { DailyJournalEntry } from "../state/dailyJournalState";
 import { grantEmotionalFreeMonth, saveEmotionalOffer } from "../services/subscriptionManager";
-import { getAuthUserId } from "../state/authState";
 import { recordEmotionalPricingEvent } from "../services/emotionalPricingAnalytics";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -454,7 +453,7 @@ export class EmotionalPricingEngine {
       ) as number[];
 
       const state = this.analyzeUserState({
-        userId: getAuthUserId() || "anonymous",
+        userId: "current-user", // TODO: استخدام User ID الفعلي
         nodes,
         journalEntries,
         teiHistory,
