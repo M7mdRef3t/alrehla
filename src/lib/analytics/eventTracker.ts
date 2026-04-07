@@ -8,7 +8,7 @@ import * as pixel from './metaPixel';
  */
 export const trackGateEventPixelOnly = (
   eventName: string,
-  customData: Record<string, any> = {}
+  customData: Record<string, unknown> = {}
 ): string => {
   const eventId = uuidv4();
 
