@@ -293,29 +293,39 @@ export function AppRuntimeControllers({
       const alerts = await fetchOwnerAlerts({ since, phaseTarget: 10 });
       if (!alerts || cancelled) return;
 
+      const notificationPromises: Promise<void>[] = [];
+
       for (const sessionId of alerts.newVisitors.sessionIds) {
-        await sendOwnerNotification(
-          "زائر جديد دخل المنصة",
-          `Session: ${sessionId.slice(0, 14)}…`,
-          `owner-visitor-${sessionId}`
+        notificationPromises.push(
+          sendOwnerNotification(
+            "زائر جديد دخل المنصة",
+            `Session: ${sessionId.slice(0, 14)}…`,
+            `owner-visitor-${sessionId}`
+          )
         );
       }
 
       for (const sessionId of alerts.logins.sessionIds) {
-        await sendOwnerNotification(
-          "زائر أكمل تسجيل الدخول",
-          `Session: ${sessionId.slice(0, 14)}…`,
-          `owner-login-${sessionId}`
+        notificationPromises.push(
+          sendOwnerNotification(
+            "زائر أكمل تسجيل الدخول",
+            `Session: ${sessionId.slice(0, 14)}…`,
+            `owner-login-${sessionId}`
+          )
         );
       }
 
       for (const sessionId of alerts.installs.sessionIds) {
-        await sendOwnerNotification(
-          "زائر ثبّت التطبيق",
-          `Session: ${sessionId.slice(0, 14)}…`,
-          `owner-install-${sessionId}`
+        notificationPromises.push(
+          sendOwnerNotification(
+            "زائر ثبّت التطبيق",
+            `Session: ${sessionId.slice(0, 14)}…`,
+            `owner-install-${sessionId}`
+          )
         );
       }
+
+      await Promise.all(notificationPromises);
 
       const prevMilestones = loadOwnerMilestonesState();
       const nextMilestones: OwnerMilestonesState = {
