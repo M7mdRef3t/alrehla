@@ -293,7 +293,7 @@ export class RevenueAutomationEngine {
     try {
       // Run actual Stripe creation only in a secure server environment with the SDK
       // Using native fetch bypasses Node-specific edge bundling issues for client components
-      if (typeof process !== "undefined" && process.env.STRIPE_SECRET_KEY) {
+      if (typeof process !== "undefined" && (process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY_TEST)) {
         const secretKey = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY_TEST;
         const premiumPriceId = process.env.STRIPE_PRICE_PREMIUM || process.env.VITE_STRIPE_PRICE_PREMIUM || process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM;
         const coachPriceId = process.env.STRIPE_PRICE_COACH || process.env.VITE_STRIPE_PRICE_COACH || process.env.NEXT_PUBLIC_STRIPE_PRICE_COACH;
