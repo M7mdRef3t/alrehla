@@ -292,7 +292,7 @@ export class RevenueAutomationEngine {
     // تطبيق التغيير
     try {
       // TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
-      const { supabase } = await import("../services/supabaseClient");
+      const { supabase } = await import(/* webpackIgnore: true */ "../services/supabaseClient");
       if (supabase) {
         const { error: dbError } = await supabase.from("system_settings").upsert({
           key: "ai_dynamic_pricing",
