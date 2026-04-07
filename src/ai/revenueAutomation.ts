@@ -295,18 +295,8 @@ export class RevenueAutomationEngine {
       // TODO: Update database with new pricing
       // TODO: Notify existing users about grandfathering policy
 
-      console.warn("✅ Pricing changed successfully:", recommendation.suggestedPrices);
+      throw new Error("Not Implemented: Database update for pricing is not implemented yet");
 
-      await decisionEngine.execute({
-        ...decision,
-        timestamp: Date.now(),
-        outcome: "executed",
-      });
-
-      return {
-        success: true,
-        message: `Pricing updated: Premium=$${recommendation.suggestedPrices.premium}, Coach=$${recommendation.suggestedPrices.coach}`,
-      };
     } catch (error) {
       console.error("❌ Failed to apply pricing change:", error);
       return { success: false, message: String(error) };
