@@ -9,18 +9,36 @@ const MAX_LOCAL_ERRORS = 50;
  * and localStorage for local debugging and health checks.
  */
 export const logger = {
-  error: (message: string, error?: any, ...args: any[]) => {
+  error: (messageOrError: string | unknown, error?: any, ...args: any[]) => {
+    let message = "";
+    let actualError = error;
+
+    if (typeof messageOrError === "string") {
+      message = messageOrError;
+    } else {
+      // If the first argument is an error object
+      if (messageOrError instanceof Error) {
+        message = messageOrError.message;
+        actualError = actualError || messageOrError;
+      } else {
+        message = String(messageOrError);
+        actualError = actualError || messageOrError;
+      }
+    }
+
     // 1. Log to console for developer visibility
-    console.error(message, error, ...args);
+    console.error(messageOrError, error, ...args);
 
     // 2. In production, send to Sentry
     if (runtimeEnv.isProd) {
-      if (error instanceof Error) {
-        Sentry.captureException(error, { extra: { message, ...args } });
+      if (actualError instanceof Error) {
+        Sentry.captureException(actualError, { extra: { message, ...args } });
+      } else if (messageOrError instanceof Error) {
+        Sentry.captureException(messageOrError, { extra: { ...args } });
       } else {
-        Sentry.captureMessage(message, {
+        Sentry.captureMessage(message || "Unknown error", {
           level: "error",
-          extra: { error, ...args },
+          extra: { error: actualError, ...args },
         });
       }
       // Do not store in localStorage in production to save space and avoid leaking info
@@ -38,7 +56,7 @@ export const logger = {
 
         errorLog.push({
           message,
-          error: error instanceof Error ? error.message : String(error),
+          error: actualError instanceof Error ? actualError.message : String(actualError),
           timestamp: Date.now(),
         });
 
@@ -53,11 +71,11 @@ export const logger = {
     }
   },
 
-  warn: (message: string, ...args: any[]) => {
+  warn: (message: string | unknown, ...args: any[]) => {
     console.warn(message, ...args);
   },
 
-  log: (message: string, ...args: any[]) => {
+  log: (message: string | unknown, ...args: any[]) => {
     console.log(message, ...args);
   },
 };
