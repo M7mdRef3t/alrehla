@@ -8,7 +8,7 @@ interface EmailTemplateOptions {
   name?: string;
   personalLink: string;
   previewText?: string;
-  _senderName?: string;
+  senderName?: string;
   unsubLink?: string;
 }
 
@@ -16,7 +16,7 @@ export function buildMarketingEmail({
   name,
   personalLink,
   previewText = "خريطة علاقاتك جاهزة — ابدأ الرحلة الآن",
-  _senderName = "فريق عمل",
+  senderName: _senderName = "فريق عمل",
   unsubLink,
 }: EmailTemplateOptions): string {
   const greeting = name ? `أهلاً ${name} 🌙،` : "أهلاً بك 🌙،";
