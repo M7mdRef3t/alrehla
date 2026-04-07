@@ -247,7 +247,7 @@ export async function GET(request: Request) {
   }
 
   // Arrays to hold bulk database operations
-  const queueUpdates: PromiseLike<any>[] = [];
+  const queueUpdates: Promise<any>[] = [];
   const queueInserts: any[] = [];
 
   for (const row of rows) {
@@ -261,10 +261,13 @@ export async function GET(request: Request) {
 
         if ((leadCheck as Record<string, unknown> | null)?.unsubscribed === true) {
           queueUpdates.push(
-            supabase
-              .from("marketing_lead_outreach_queue")
-              .update({ status: "cancelled", last_error: "unsubscribed" })
-              .eq("id", row.id)
+            Promise.resolve(
+              supabase
+                .from("marketing_lead_outreach_queue")
+                .update({ status: "cancelled", last_error: "unsubscribed" })
+                .eq("id", row.id)
+            )
+              .then((res) => res)
           );
           results.push({ id: row.id, status: "cancelled", reason: "unsubscribed" });
           continue;
@@ -338,26 +341,35 @@ export async function GET(request: Request) {
       const status = outcome.status === "sent" ? "sent" : "simulated";
       const resendId = (outcome.providerResponse?.id as string | undefined) ?? null;
       queueUpdates.push(
-        supabase
-          .from("marketing_lead_outreach_queue")
-          .update({
-            status,
-            attempts: (row.attempts ?? 0) + 1,
-            sent_at: new Date().toISOString(),
-            provider_response: outcome.providerResponse,
-            resend_message_id: resendId,
-            last_error: null,
+        Promise.resolve(
+          supabase
+            .from("marketing_lead_outreach_queue")
+            .update({
+              status,
+              attempts: (row.attempts ?? 0) + 1,
+              sent_at: new Date().toISOString(),
+              provider_response: outcome.providerResponse,
+              resend_message_id: resendId,
+              last_error: null,
+            })
+            .eq("id", row.id)
+        )
+          .then(({ error }) => {
+            if (error) console.error("Failed to update queue row", row.id, error);
+            return null;
           })
-          .eq("id", row.id)
       );
       results.push({ id: row.id, channel: row.channel, status, step: row.step ?? 1 });
     } catch (err) {
       const message = toErrorMessage(err).slice(0, 500);
       queueUpdates.push(
-        supabase
-          .from("marketing_lead_outreach_queue")
-          .update({ status: "failed", attempts: (row.attempts ?? 0) + 1, last_error: message })
-          .eq("id", row.id)
+        Promise.resolve(
+          supabase
+            .from("marketing_lead_outreach_queue")
+            .update({ status: "failed", attempts: (row.attempts ?? 0) + 1, last_error: message })
+            .eq("id", row.id)
+        )
+          .then((res) => res)
       );
       results.push({ id: row.id, channel: row.channel, status: "failed", error: message });
     }
@@ -374,14 +386,7 @@ export async function GET(request: Request) {
   }
 
   // Await all updates
-  const updateResults = await Promise.allSettled(queueUpdates);
-  for (const res of updateResults) {
-    if (res.status === 'fulfilled' && res.value && res.value.error) {
-      console.error("Failed to update queue row", res.value.error);
-    } else if (res.status === 'rejected') {
-      console.error("Queue update promise rejected", res.reason);
-    }
-  }
+  await Promise.allSettled(queueUpdates);
 
   return NextResponse.json({ ok: true, processed: rows.length, results });
 }
