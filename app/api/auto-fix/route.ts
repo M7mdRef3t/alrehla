@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
   try {
     // Dynamically import typescript so it isn't bundled in production
-    const tsCompiler = await import("typescript");
+    const tsCompiler = await import(/* webpackIgnore: true */ "typescript");
 
     const body = await req.json();
     const { filePath, originalCode, code, action } = body;
