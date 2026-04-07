@@ -5,7 +5,6 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { geminiClient } from "../services/geminiClient";
 import { aiCurator, buildUserContext } from "../ai/aiCurator";
 import { useMapState } from "../state/mapState";
 import { useDailyJournalState } from "../state/dailyJournalState";
@@ -43,7 +42,14 @@ export function useAIQuestionGenerator(): UseAIQuestionGeneratorResult {
 
   // تحقق من توفر الـ AI عند التحميل
   useEffect(() => {
-    setIsAIAvailable(geminiClient.isAvailable());
+    (async () => {
+      try {
+        const { geminiClient } = await import("../services/geminiClient");
+        setIsAIAvailable(geminiClient.isAvailable());
+      } catch (e) {
+        setIsAIAvailable(false);
+      }
+    })();
   }, []);
 
   /**
