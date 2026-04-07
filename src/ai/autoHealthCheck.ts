@@ -14,6 +14,8 @@
 
 import { decisionEngine } from "./decision-framework";
 import type { AIDecision } from "./decision-framework";
+import * as Sentry from "@sentry/react";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🏥 Health Check Result
@@ -139,10 +141,12 @@ export class AutoHealthChecker {
    * ─────────────────────────────────────────────────────────────────
    */
   private checkConsoleErrors(): HealthIssue[] {
-    // TODO: في production، نستخدم error tracking service (مثل Sentry)
-    // مؤقتاً: نفحص localStorage للـ errors المحفوظة
-
     const issues: HealthIssue[] = [];
+
+    // في production، نعتمد على Sentry لتتبع الأخطاء بدلاً من فحص localStorage
+    if (runtimeEnv.isProd) {
+      return issues;
+    }
 
     try {
       const errorLog = localStorage.getItem("dawayir-error-log");
@@ -531,6 +535,12 @@ export class AutoHealthChecker {
    */
   private async notifyAdmin(result: HealthCheckResult): Promise<void> {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
+
+    if (runtimeEnv.isProd) {
+      Sentry.captureException(new Error("Critical Health Issue Detected"), {
+        extra: { healthCheckResult: result }
+      });
+    }
 
     // TODO: إرسال notification فعلي (email, SMS, push, etc.)
     // مؤقتاً: نحفظ في localStorage
