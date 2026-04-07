@@ -543,9 +543,21 @@ export class AutoHealthChecker {
 
       const affectedFeatures = Array.from(new Set(result.issues.map(i => i.category)));
 
+      // Import token dynamically from authState to not break tests that don't have access to context
+      const { getAuthToken } = await import("../state/authState");
+      const token = getAuthToken();
+
+      if (!token) {
+        console.warn("Skipping health alert notification: User not authenticated.");
+        return;
+      }
+
       await fetch("/api/admin/health-alert", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           message: message || "Unknown critical health issue detected.",
           severity: result.status === "critical" ? "critical" : "high",
