@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-
+import ts from "typescript";
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,32 +43,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Since `jscodeshift` needs a parser that handles TypeScript/TSX,
-    // we specify it using the api.
-    // Dynamically import jscodeshift to prevent Next.js from bundling it in production
-    const jscodeshift = (await import(/* webpackIgnore: true */ "jscodeshift")).default;
-    const j = jscodeshift.withParser(fullPath.endsWith('.tsx') ? 'tsx' : 'ts');
-
-    // AST parsing
-    const root = j(source);
-    let matched = false;
-
-    // A simple AST replacement strategy:
+    // A simple replacement strategy verified by AST parsing:
     // We try to find the target code string within the file.
-    // If we can't do an exact AST node match, we fallback to string replacement since
-    // LLM outputs might not perfectly align with single AST node boundaries.
-
-    // However, to satisfy the requirement of "AST manipulation", we will use AST to find matching
-    // nodes, or use jscodeshift to replace code text directly if we want to ensure formatting.
-    // For a generic LLM fix, the replaceTarget could span multiple statements.
+    // We replace the text, then parse the resulting code with TypeScript AST parser
+    // to ensure the LLM output did not introduce syntax errors.
 
     // Attempt standard string replacement first to ensure the text exists
     if (source.includes(replaceTarget)) {
-      // Let's use string replace but confirm we can parse the resulting AST
       const newSource = source.replace(replaceTarget, code);
       try {
         // Verify the new source is valid AST
-        j(newSource);
+        const sourceFile = ts.createSourceFile(
+          fullPath,
+          newSource,
+          ts.ScriptTarget.Latest,
+          true,
+          fullPath.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+        );
+
+        // Check for syntactic diagnostics (parsing errors)
+        // Note: ts.createSourceFile doesn't throw, it creates nodes and stores errors in parseDiagnostics if we were using a full Program.
+        // For a simple syntax check without a Program, we can just assume if it parses without throwing it's structurally okay,
+        // but typically syntax errors are attached to the sourceFile.
+        const diagnostics = (sourceFile as any).parseDiagnostics || [];
+        if (diagnostics.length > 0) {
+           return NextResponse.json(
+            { error: `The suggested code results in invalid syntax.` },
+            { status: 400 }
+          );
+        }
 
         // Save the file
         await fs.writeFile(fullPath, newSource, "utf-8");
@@ -80,8 +83,7 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
-      // Fallback: try to find AST nodes matching roughly
-      // This is quite hard without exact structure, so we return an error if replaceTarget is not found.
+      // Fallback: target code not found
       return NextResponse.json(
         { error: "Could not find the target code to replace." },
         { status: 400 }
