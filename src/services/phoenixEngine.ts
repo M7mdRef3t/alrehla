@@ -269,7 +269,6 @@ export class PhoenixEngine {
             return null;
         }
 
-        console.log(`✨ [PhoenixEngine] Resonance Pair created: ${userId} ↔ ${match.partner_id} (Axis: ${match.weakness_axis}, Score: ${match.complementary_score.toFixed(3)})`);
         return pair as ResonancePair;
     }
 
