@@ -30,7 +30,7 @@ export function derivePressureSentence(
   const netEnergy = node?.energyBalance?.netEnergy ?? 0;
 
   // 1. EMERGENCY / SOS (The most extreme protection)
-  if (node?.isEmergency || ring === "red" || scenarioKey === "emergency") {
+  if (node?.isEmergency || scenarioKey === "emergency") {
     const sentence = "أنا حالياً فاتح مساحة لنفسي للهدوء ومش هقدر أدخل في أي تواصل تفصيلي الفترة دي. لو فيه حاجة ضرورية جداً أرجو إرسالها في رسالة قصيرة وهرد لما أكون مستعد.";
     return {
       tone: "danger",
@@ -39,6 +39,20 @@ export function derivePressureSentence(
       sentence,
       reasoning: "بدل الرد على فعل هو بيعمله، أنت بتعلن وضعك الحالي 'أنا في مساحة هدوء'. ده بيمنع الطرف التاني من البدء في استدراجك لأي حوار أو محاكمة ذهنية.",
       sourceLabel: "بروتوكول SOS",
+      copyText: sentence
+    };
+  }
+
+  // 2. ARCHIVED / STEADY DISTANCE (Distance already established)
+  if (node?.isNodeArchived) {
+    const sentence = "أنا حابب أحافظ على المسافة الهادية اللي بيننا دلوقتي لأنها أنسب وضع ليا. أي تواصل ضروري ياريت يكون محدد وقصير جداً.";
+    return {
+      tone: "steady",
+      title: "درع الحفاظ على المكتسبات",
+      summary: `لو ظهر ضغط للرجوع إلى النمط القديم مع ${displayName}، هذه الجملة هي 'المرساة' التي تحمي المسافة التي بنيتها بصعوبة.`,
+      sentence,
+      reasoning: "الجملة دي بتعلن بوضوح إن المسافة الحالية هي 'اختيار' وليست صدفة، وده بيقفل الباب قدام أي محاولات لاستعادة السيطرة القديمة.",
+      sourceLabel: "مرساة السيادة",
       copyText: sentence
     };
   }
@@ -57,8 +71,8 @@ export function derivePressureSentence(
     };
   }
 
-  // 3. ACTIVE BATTLEFIELD (Limiting operational exposure)
-  if (scenarioKey === "active_battlefield" || netEnergy <= -5) {
+  // 4. ACTIVE BATTLEFIELD (Limiting operational exposure)
+  if (scenarioKey === "active_battlefield" || netEnergy <= -5 || ring === "red") {
     const sentence = "أنا وقتي النهاردة ضيق جداً فخلينا نقتصر في تواصلنا على أهم حاجة محتاجين نخلصها عشان مش هقدر أطول في الكلام النهاردة.";
     return {
       tone: "danger",
@@ -85,19 +99,6 @@ export function derivePressureSentence(
     };
   }
 
-  // 5. ARCHIVED / STEADY DISTANCE
-  if (node?.isNodeArchived) {
-    const sentence = "أنا حابب أحافظ على المسافة الهادية اللي بيننا دلوقتي لأنها أنسب وضع ليا. أي تواصل ضروري ياريت يكون محدد وقصير جداً.";
-    return {
-      tone: "steady",
-      title: "درع الحفاظ على المكتسبات",
-      summary: `لو ظهر ضغط للرجوع إلى النمط القديم مع ${displayName}، هذه الجملة هي 'المرساة' التي تحمي المسافة التي بنيتها بصعوبة.`,
-      sentence,
-      reasoning: "الجملة دي بتعلن بوضوح إن المسافة الحالية هي 'اختيار' وليست صدفة، وده بيقفل الباب قدام أي محاولات لاستعادة السيطرة القديمة.",
-      sourceLabel: "مرساة السيادة",
-      copyText: sentence
-    };
-  }
 
   return null;
 }

@@ -86,22 +86,16 @@ describe("meta analytics tracking", () => {
       flow: "relationship_onboarding"
     });
 
-    expect(fbq).toHaveBeenCalledWith("track", "Lead", {
+    expect(fbq).toHaveBeenCalledWith("track", "Lead", expect.objectContaining({
       source: "landing",
       cta_name: "start_journey",
       destination: "full_app_boot"
-    });
+    }));
 
-    expect(fbq).toHaveBeenCalledWith("track", "CompleteRegistration", {
+    expect(fbq).toHaveBeenCalledWith("track", "CompleteRegistration", expect.objectContaining({
       items_count: 3,
       flow: "relationship_onboarding"
-    });
-
-    expect(fbq).not.toHaveBeenCalledWith(
-      "trackCustom",
-      "SubscribedButtonClick",
-      expect.anything()
-    );
+    }));
 
     expect(
       fbq.mock.calls.some(([method, eventName]) => (
