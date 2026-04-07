@@ -119,19 +119,26 @@ export async function processInterventions(userId: string) {
     }
 
     // Save New Interventions
-    for (const f of findings) {
-        const { count } = await supabaseAdmin
+    if (findings.length > 0) {
+        const findingTypes = findings.map(f => f.type);
+        const { data: existingInterventions } = await supabaseAdmin
             .from('interventions')
-            .select('*', { count: 'exact', head: true })
+            .select('type')
             .eq('user_id', userId)
-            .eq('type', f.type)
+            .in('type', findingTypes)
             .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
-        if (count === 0) {
-            await supabaseAdmin.from('interventions').insert({
+        const existingTypes = new Set(existingInterventions?.map(i => i.type) || []);
+
+        const newInterventions = findings
+            .filter(f => !existingTypes.has(f.type))
+            .map(f => ({
                 user_id: userId,
                 ...f
-            });
+            }));
+
+        if (newInterventions.length > 0) {
+            await supabaseAdmin.from('interventions').insert(newInterventions);
         }
     }
 
