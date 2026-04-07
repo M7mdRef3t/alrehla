@@ -12,7 +12,8 @@ describe("determineAutoPersona", () => {
     selectedNodeId: null,
     goalId: "default",
     category: "general",
-    availableFeatures: { featureX: true } as unknown as AgentContext,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    availableFeatures: { featureX: true } as any,
     ...overrides,
   });
 
@@ -64,7 +65,8 @@ describe("determineAutoPersona", () => {
 
   it("should return STOIC when energy is 6 or more", () => {
     // Normal mood, high energy
-    const context = createBaseContext({ pulse: { mood: "neutral", energy: 8, focus: "event", timestamp: Date.now() } as unknown as AgentContext });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const context = createBaseContext({ pulse: { mood: "neutral", energy: 8, focus: "event", timestamp: Date.now() } as any });
     expect(determineAutoPersona(context)).toBe("STOIC");
   });
 
@@ -74,7 +76,8 @@ describe("determineAutoPersona", () => {
     expect(determineAutoPersona(context1)).toBe("STOIC");
 
     // Pulse exists but doesn't trigger other conditions (energy 4-5, mood not angry/overwhelmed/bright/calm)
-    const context2 = createBaseContext({ pulse: { mood: "neutral", energy: 4, focus: "event", timestamp: Date.now() } as unknown as AgentContext });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const context2 = createBaseContext({ pulse: { mood: "neutral", energy: 4, focus: "event", timestamp: Date.now() } as any });
     expect(determineAutoPersona(context2)).toBe("STOIC");
   });
 });
