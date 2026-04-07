@@ -1,7 +1,7 @@
+import type ts from 'typescript';
 import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
-import ts from "typescript";
 
 export async function POST(req: Request) {
   // STRICT SECURITY CHECK: Ensure this only runs in local development
@@ -10,6 +10,9 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Dynamically import typescript so it isn't bundled in production
+    const tsCompiler = await import("typescript");
+
     const body = await req.json();
     const { filePath, originalCode, code, action } = body;
 
@@ -31,10 +34,10 @@ export async function POST(req: Request) {
     const sourceText = await fs.readFile(fullPath, "utf-8");
 
     // AST Manipulation using TypeScript Compiler API
-    const sourceFile = ts.createSourceFile(
+    const sourceFile = tsCompiler.createSourceFile(
       fullPath,
       sourceText,
-      ts.ScriptTarget.Latest,
+      tsCompiler.ScriptTarget.Latest,
       true
     );
 
@@ -48,7 +51,7 @@ export async function POST(req: Request) {
         if (nodeText.includes(originalCode) && (!foundNode || nodeText.length < foundNode.getText(sourceFile).length)) {
           foundNode = node;
         }
-        ts.forEachChild(node, visit);
+        tsCompiler.forEachChild(node, visit);
       };
       visit(sourceFile);
 
@@ -66,6 +69,9 @@ export async function POST(req: Request) {
     } else if (action === "append") {
        newSourceText = sourceText + "\n" + code;
     } else {
+       if (!originalCode && action === "replace") {
+         return NextResponse.json({ error: "Missing originalCode for replace action" }, { status: 400 });
+       }
        newSourceText = sourceText.replace(originalCode || "", code);
     }
 
