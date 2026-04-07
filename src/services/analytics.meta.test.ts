@@ -50,28 +50,32 @@ describe("meta analytics tracking", () => {
     vi.resetModules();
     window.localStorage.clear();
     window.sessionStorage.clear();
-    delete window.fbq;
-    delete window.gtag;
+    delete (window as any).fbq;
+    delete (window as any).gtag;
+    delete (window as any).__dawayirMetaPixelInitialized;
+    delete (window as any).__dawayirMetaPixelScriptLoaded;
   });
 
   it("fires ViewContent for landing without requiring consent", { timeout: 20000 }, async () => {
     const fbq = vi.fn();
-    window.fbq = fbq;
+    window.fbq = fbq as any;
 
     const { trackLandingView } = await import("./analytics");
 
     trackLandingView({ entry_variant: "default" });
 
-    expect(fbq).toHaveBeenCalledWith("track", "ViewContent", {
+    // Should call init then track
+    expect(fbq).toHaveBeenCalledWith("init", "964579425998794");
+    expect(fbq).toHaveBeenCalledWith("track", "ViewContent", expect.objectContaining({
       content_name: "alrehla_landing",
       content_category: "landing",
       entry_variant: "default"
-    });
+    }));
   });
 
   it("fires standard Lead and CompleteRegistration events through fbq without requiring consent", { timeout: 20000 }, async () => {
     const fbq = vi.fn();
-    window.fbq = fbq;
+    window.fbq = fbq as any;
 
     const { trackLead, trackCompleteRegistration } = await import("./analytics");
 
@@ -86,6 +90,8 @@ describe("meta analytics tracking", () => {
       flow: "relationship_onboarding"
     });
 
+    expect(fbq).toHaveBeenCalledWith("init", "964579425998794");
+    
     expect(fbq).toHaveBeenCalledWith("track", "Lead", expect.objectContaining({
       source: "landing",
       cta_name: "start_journey",
