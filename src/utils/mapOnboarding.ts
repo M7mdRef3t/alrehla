@@ -1,4 +1,4 @@
-import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
+import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 
 const ONBOARDING_STORAGE_KEY = "dawayir-onboarding-map-seen";
 

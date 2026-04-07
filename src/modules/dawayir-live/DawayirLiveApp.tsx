@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, History } from "lucide-react";
-import { assignUrl } from "../../services/navigation";
-import { runtimeEnv } from "../../config/runtimeEnv";
+import { assignUrl } from "@/services/navigation";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import LiveCanvas from "./components/LiveCanvas";
 import BreathingGuideOverlay from "./components/BreathingGuideOverlay";
 import LiveHUD from "./components/LiveHUD";

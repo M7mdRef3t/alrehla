@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getLiveAdminAnalytics } from "../api";
-import type { LiveAdminAnalytics } from "../types";
-import { AdminTooltip } from "../../../components/admin/dashboard/Overview/components/AdminTooltip";
+import type { LiveAdminAnalytics } from '../types';
+import { AdminTooltip } from "@/components/admin/dashboard/Overview/components/AdminTooltip";
 
 export default function LiveAdminPanel() {
   const [analytics, setAnalytics] = useState<LiveAdminAnalytics | null>(null);

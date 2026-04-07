@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Sparkles, Send, Zap, Wind, AlertCircle, Users, Activity, ShieldAlert, History, Radio, TrendingUp, Target, Brain, Box, Eye } from "lucide-react";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
-import { supabase, isSupabaseReady } from "../../../../services/supabaseClient";
-import { fetchOverviewStats, fetchAlertIncidents, fetchBroadcasts, type OverviewStats, type AlertIncident } from "../../../../services/adminApi";
-import { useAdminState, type AdminBroadcast } from "../../../../state/adminState";
+import { supabase, isSupabaseReady } from "@/services/supabaseClient";
+import { fetchOverviewStats, fetchAlertIncidents, fetchBroadcasts, type OverviewStats, type AlertIncident } from "@/services/adminApi";
+import { useAdminState, type AdminBroadcast } from "@/state/adminState";
 import { CollapsibleSection } from "../../ui/CollapsibleSection";
 import { IllusionRadar } from "./IllusionRadar";
 import { SovereignSpreadCommand } from "./SovereignSpreadCommand";
@@ -144,10 +144,14 @@ export const SovereignControl: FC = () => {
       });
 
     return () => {
+      const wasSubscribed = subscribed;
       subscribed = false;
       clearInterval(interval);
       if (subscription) {
-        supabase?.removeChannel(subscription);
+        // Only remove if we actually joined, otherwise it triggers "closed before established" noise
+        if (wasSubscribed) {
+          void supabase?.removeChannel(subscription);
+        }
         subscription = null;
       }
     };

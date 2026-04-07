@@ -1,7 +1,7 @@
 
 import { geminiClient } from '../geminiClient';
-import { useDigitalTwinState } from '../../state/digitalTwinState';
-import { usePredictiveState } from '../../state/predictiveState';
+import { useDigitalTwinState } from '@/state/digitalTwinState';
+import { usePredictiveState } from '@/state/predictiveState';
 
 export interface RefractionTask {
     id: string;

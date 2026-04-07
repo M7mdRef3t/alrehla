@@ -1,23 +1,25 @@
 import { revenueEngine } from "./revenueEngine";
 import type { RevenueMetricSnapshot, TransactionSummary } from "./revenueEngine";
 import { supabase, isSupabaseReady } from "./supabaseClient";
-import { getAuthToken } from "../state/authState";
-import { useAdminState } from "../state/adminState";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { getAuthToken } from "@/state/authState";
+import { useAdminState } from "@/state/adminState";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { fetchJsonWithResilience, sendJsonWithResilience } from "../architecture/resilientHttp";
-import type { FeatureFlagKey, FeatureFlagMode } from "../config/features";
+import type { FeatureFlagKey, FeatureFlagMode } from "@/config/features";
 import type {
   ScoringWeights,
   ScoringThresholds,
   AiLogEntry,
   AdminMission,
-  AdminBroadcast
-} from "../state/adminState";
-import { getBroadcastAudienceFromId, withBroadcastAudienceId } from "../utils/broadcastAudience";
-import type { MapNode } from "../modules/map/mapTypes";
-import type { PulseCheckMode } from "../state/pulseState";
-import type { PulseCopyOverrides } from "../state/adminState";
+  AdminBroadcast,
+  SovereignInsight,
+  SovereignStats
+} from "@/state/adminState";
+import { getBroadcastAudienceFromId, withBroadcastAudienceId } from "@/utils/broadcastAudience";
+import type { MapNode } from "@/modules/map/mapTypes";
+import type { PulseCheckMode } from "@/state/pulseState";
+import type { PulseCopyOverrides } from "@/state/adminState";
 import type {
   OpsInsights as SharedOpsInsights,
   ExecutiveReport as SharedExecutiveReport,
@@ -25,7 +27,7 @@ import type {
   SecuritySignalsReport as SharedSecuritySignalsReport,
   WeeklyReport as SharedWeeklyReport,
   CronReportResponse as SharedCronReportResponse
-} from "../types/admin.types";
+} from "@/types/admin.types";
 
 type SystemSettingKey =
   | "feature_flags"
@@ -119,6 +121,28 @@ export interface AlertIncident {
 export async function fetchAlertIncidents(): Promise<AlertIncident[] | null> {
   const apiData = await callAdminApi<{ incidents: AlertIncident[] }>("alerts");
   return apiData?.incidents ?? null;
+}
+
+export async function fetchSovereignInsights(): Promise<{
+  insights: SovereignInsight[];
+  stats: SovereignStats | null;
+  error?: string;
+  retryAfterSec?: number;
+} | null> {
+  const apiData = await callAdminApi<{ 
+    insights: SovereignInsight[]; 
+    stats: SovereignStats;
+    error?: string;
+    retryAfterSec?: number;
+  }>("oracle-pulse");
+  
+  if (!apiData) return null;
+  return {
+    insights: apiData.insights || [],
+    stats: apiData.stats || null,
+    error: apiData.error,
+    retryAfterSec: apiData.retryAfterSec
+  };
 }
 
 export async function updateAlertIncidentStatus(
@@ -904,7 +928,7 @@ export async function fetchVisitorSessions(limit = 300): Promise<VisitorSessionS
     .select("session_id,event_type,payload,occurred_at")
     .not("session_id", "is", null)
     .order("occurred_at", { ascending: false })
-    .limit(10000);
+    .limit(safeLimit);
   if (error || !data) return null;
 
   const bySession = new Map<string, VisitorSessionSummary>();

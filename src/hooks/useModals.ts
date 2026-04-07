@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { isAdminPath, subscribePopstate } from "../services/navigation";
+import { isAdminPath, subscribePopstate } from "@/services/navigation";
 
 /**
  * Hook to manage modal states for various overlays

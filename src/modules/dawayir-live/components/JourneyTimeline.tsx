@@ -1,7 +1,7 @@
 "use client";
 
 import { BrainCircuit, Compass, Gem } from "lucide-react";
-import type { LiveLanguage } from "../types";
+import type { LiveLanguage } from '../types';
 
 const NODE_CONFIG = {
   1: { labelAr: "الوعي", labelEn: "Awareness", color: "#38B2D8", Icon: Compass },

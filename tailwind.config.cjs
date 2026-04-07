@@ -62,8 +62,8 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['Almarai', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Almarai', 'system-ui', 'sans-serif']
+        sans: ['Tajawal', 'Almarai', 'system-ui', 'sans-serif'],
+        display: ['Tajawal', 'Almarai', 'system-ui', 'sans-serif']
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1.5', letterSpacing: '0.02em' }],

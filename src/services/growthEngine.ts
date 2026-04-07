@@ -194,10 +194,10 @@ class SovereignGrowthEngine {
 
   private generateOracleVerdict(gateway: string, resonance: number): string {
     const gatewayName = gateway.toUpperCase();
-    if (resonance > 0.45) return `البوابة ${gatewayName} في حالة رنين مثالي. استمر في ضخ الطاقة، الأرواح هنا جاهزة للتحول العميق.`;
-    if (resonance > 0.25) return `تدفق مستقر من ${gatewayName}. نوصي بتحسين "تردد الرسالة الأولى" لرفع معدل الاستجابة بنسبة 10%.`;
-    if (resonance > 0.1) return `تحذير: بوابة ${gatewayName} تسرب الأرواح. هناك فجوة بين النداء والوعي. راجع مسار الهبوط (Landing Page).`;
-    return `بوابة ${gatewayName} خامدة تقريباً. الرنين تحت الحد الأدنى. Oracle يقترح إعادة توجيه ميزانية هذه البوابة لمسار Meta أو Direct.`;
+    if (resonance > 0.45) return `الرحلة ${gatewayName} في حالة رنين مثالي. استمر في ضخ الطاقة، الأرواح هنا جاهزة للتحول العميق.`;
+    if (resonance > 0.25) return `الرحلة ${gatewayName} مستقرة، لكن تحتاج إلى شرارة صغيرة (Push) لزيادة العائد من الرنين.`;
+    if (resonance > 0.1) return `تحذير: رحلة ${gatewayName} تسرب الأرواح. هناك فجوة بين النداء والوعي. راجع مسار الهبوط (Landing Page).`;
+    return `رحلة ${gatewayName} خامدة تقريباً. الرنين تحت الحد الأدنى. Oracle يقترح إعادة توجيه ميزانية هذه الرحلة لمسار Meta أو Direct.`;
   }
 
   private getMockDiffusionMetrics(): DiffusionMetrics {

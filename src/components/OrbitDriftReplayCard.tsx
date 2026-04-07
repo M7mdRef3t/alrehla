@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import type { OrbitDriftReplaySnapshot } from "../utils/orbitDriftReplay";
+import type { OrbitDriftReplaySnapshot } from "@/utils/orbitDriftReplay";
 
 interface OrbitDriftReplayCardProps {
   snapshot: OrbitDriftReplaySnapshot;

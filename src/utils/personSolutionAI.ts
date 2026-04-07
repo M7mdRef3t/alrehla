@@ -1,7 +1,7 @@
 /**
  * حل مخصص للشخص بناءً على التشخيص والحالة والهدف — من الذكاء الاصطناعي.
  */
-import { geminiClient } from "../services/geminiClient";
+import { geminiClient } from "@/services/geminiClient";
 
 export interface PersonSolutionInput {
   personLabel: string;

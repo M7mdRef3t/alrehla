@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { AIOrchestrator } from '../../../src/services/aiOrchestrator';
-import { getClient as getGeminiClient } from '../../../server/gemini/_shared';
+import { getGeminiClient } from '@/lib/gemini/shared';
 
 const SYSTEM_PROMPT = `
 أنت "محرك الوعي" (Consciousness Engine) لأداة "دواير". دورك هو تحليل الحالة الذهنية والطاقية للمستخدم بناءً على مدخلاته السريعة، وتحويل هذه الفوضى النفسية إلى **هيكل بيانات بصري (Nodes and Edges)**، مع تقديم بصيرة نفسية قاطعة واكتشاف **الأعراض (Symptoms)** الناتجة عن هذا الاستنزاف.

@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { supabase, isSupabaseReady } from "../services/supabaseClient";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { supabase, isSupabaseReady } from "@/services/supabaseClient";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 type AppContentSource = "remote" | "fallback";
 

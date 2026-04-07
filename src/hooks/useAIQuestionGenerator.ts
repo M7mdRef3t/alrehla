@@ -5,14 +5,14 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { aiCurator, buildUserContext } from "../ai/aiCurator";
-import { useMapState } from "../state/mapState";
-import { useDailyJournalState } from "../state/dailyJournalState";
-import { useShadowPulseState } from "../state/shadowPulseState";
-import { computeTEI } from "../utils/traumaEntropyIndex";
-import type { DailyQuestion } from "../data/dailyQuestions";
-import type { UserContext } from "../ai/aiCurator";
-import type { PersonViewInsights } from "../modules/map/mapTypes";
+import { aiCurator, buildUserContext } from "@/ai/aiCurator";
+import { useMapState } from "@/state/mapState";
+import { useDailyJournalState } from "@/state/dailyJournalState";
+import { useShadowPulseState } from "@/state/shadowPulseState";
+import { computeTEI } from "@/utils/traumaEntropyIndex";
+import type { DailyQuestion } from "@/data/dailyQuestions";
+import type { UserContext } from "@/ai/aiCurator";
+import type { PersonViewInsights } from "@/modules/map/mapTypes";
 
 interface UseAIQuestionGeneratorResult {
   /** السؤال المُولّد */

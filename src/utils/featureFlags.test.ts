@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_FEATURE_FLAGS } from "../config/features";
+import { DEFAULT_FEATURE_FLAGS } from "@/config/features";
 import { getEffectiveFeatureAccess } from "./featureFlags";
 
 describe("getEffectiveFeatureAccess", () => {

@@ -1,5 +1,5 @@
-import { PulseEntry } from "../state/pulseState";
-import { type MapNode } from "../modules/map/mapTypes";
+import { PulseEntry } from "@/state/pulseState";
+import { type MapNode } from "@/modules/map/mapTypes";
 
 // Interfaces for data we need (mocking or importing)
 interface ChronicleChapter {

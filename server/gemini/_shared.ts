@@ -1,13 +1,9 @@
 import { GoogleGenerativeAI, type GenerativeModel } from "@google/generative-ai";
 
 export const DEFAULT_MODEL_ORDER: string[] = [
-  "gemini-2.0-flash-lite",
-  "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
-  "gemini-2.5-flash",
-  "gemini-2.5-pro",
-  "gemini-3-flash-preview",
-  "gemini-3-pro-preview"
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
+  "gemini-2.0-flash-exp"
 ];
 
 export const DEFAULT_GENERATION_CONFIG = {
@@ -47,7 +43,8 @@ export function isRetryableModelError(error: unknown): boolean {
 }
 
 export function getClient() {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_PRO_API_KEY;
+  console.log("[Gemini API] API Key found (censored):", apiKey ? apiKey.slice(0, 5) + "..." : "NONE");
   if (!apiKey) return null;
   return new GoogleGenerativeAI(apiKey);
 }

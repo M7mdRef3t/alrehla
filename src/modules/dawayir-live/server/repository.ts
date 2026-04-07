@@ -8,7 +8,7 @@ import type {
   LiveSessionEventRecord,
   LiveSessionRecord,
   LiveSessionSummary,
-} from "../types";
+} from '../types';
 
 const LIVE_SESSIONS = "live_sessions";
 const LIVE_EVENTS = "live_session_events";

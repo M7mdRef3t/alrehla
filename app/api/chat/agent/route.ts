@@ -4,7 +4,7 @@ import { supabase } from '../../../../src/services/supabaseClient';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
 import { TrajectoryEngine, type AwarenessVector } from '../../../../src/services/trajectoryEngine';
 import { HiveEngine } from '../../../../src/services/hiveEngine';
-import { getClient as getGeminiClient } from '../../../../server/gemini/_shared';
+import { getGeminiClient } from '@/lib/gemini/shared';
 const MAX_AGENT_REQUEST_BYTES = 120_000;
 const MAX_AGENT_MESSAGES = 20;
 const MAX_AGENT_MESSAGE_CHARS = 2_000;

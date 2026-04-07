@@ -1,4 +1,4 @@
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 import { downloadBlobFile } from "./clientDom";
 import { getDocumentOrNull } from "./clientRuntime";
 

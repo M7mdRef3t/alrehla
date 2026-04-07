@@ -92,7 +92,7 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   },
   {
     key: "pulse_check",
-    label: "بوابة النبض اللحظي",
+    label: "رحلة النبض اللحظي",
     description: "شاشة ضبط البوصلة قبل الدخول",
     group: "AI"
   },

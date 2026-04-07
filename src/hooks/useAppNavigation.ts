@@ -4,7 +4,7 @@
  */
 
 import { useCallback } from "react";
-import { resolveNavigation, type AppScreen } from "../navigation/navigationMachine";
+import { resolveNavigation, type AppScreen } from "@/navigation/navigationMachine";
 
 interface UseAppNavigationProps {
   canUseMap: boolean;

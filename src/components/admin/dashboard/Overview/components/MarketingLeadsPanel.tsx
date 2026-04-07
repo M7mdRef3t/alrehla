@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { BarChart3, Target, Users } from "lucide-react";
-import type { OverviewStats } from "../../../../../services/adminApi";
+import type { OverviewStats } from "@/services/adminApi";
 import { AdminTooltip } from "./AdminTooltip";
 
 type MarketingLeadsStats = NonNullable<OverviewStats["marketingLeads"]>;
@@ -59,7 +59,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
     return <div className="mb-6 h-64 animate-pulse rounded-3xl bg-slate-900/30 border border-white/5" />;
   }
 
-  if (!data) {
+  if (!data || Object.keys(data).length === 0) {
     return (
       <div className="admin-glass-card mb-6 rounded-3xl border-slate-800 bg-slate-950/40 p-10 flex flex-col items-center justify-center text-center">
         <Users className="w-8 h-8 text-slate-600 mb-2 opacity-50" />
@@ -68,11 +68,11 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
     );
   }
 
-  const topSources = data.bySource.slice(0, 5);
-  const topSourceTypes = data.bySourceType.slice(0, 4);
-  const topStatuses = data.byStatus.slice(0, 4);
-  const topCampaigns = data.byCampaign.slice(0, 5);
-  const peakDaily = data.dailyTrend.reduce((max, day) => Math.max(max, day.count), 0);
+  const topSources = data.bySource?.slice(0, 5) || [];
+  const topSourceTypes = data.bySourceType?.slice(0, 4) || [];
+  const topStatuses = data.byStatus?.slice(0, 4) || [];
+  const topCampaigns = data.byCampaign?.slice(0, 5) || [];
+  const peakDaily = (data.dailyTrend || []).reduce((max, day) => Math.max(max, day.count), 0);
 
   return (
     <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2" dir="ltr">
@@ -102,14 +102,14 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
                 <p className="text-[10px] uppercase tracking-widest text-slate-500 font-black">إجمالي الزيارات</p>
                 <AdminTooltip content="كل الزوار اللي قدرنا نرصدهم كـ (Leads) محتملين لحد دلوقتي." position="bottom" />
             </div>
-            <p className="text-3xl font-black text-white tabular-nums drop-shadow-md">{data.total.toLocaleString("ar-EG")}</p>
+            <p className="text-3xl font-black text-white tabular-nums drop-shadow-md">{(data.total || 0).toLocaleString("ar-EG")}</p>
           </div>
           <div className="rounded-2xl border border-teal-500/20 bg-teal-500/5 p-4 relative overflow-hidden shadow-inner">
             <div className="flex items-center justify-between mb-2">
                 <p className="text-[10px] uppercase tracking-widest text-teal-500 font-black">النبض (آخر 24 ساعة)</p>
                 <AdminTooltip content="زخم الـ 24 ساعة اللي فاتت، لو الرقم قل فجأة يبقى فيه هبوط في الترافيك." position="bottom" />
             </div>
-            <p className="text-3xl font-black text-teal-400 drop-shadow-[0_0_12px_rgba(45,212,191,0.5)] tabular-nums">{data.last24h.toLocaleString("ar-EG")}</p>
+            <p className="text-3xl font-black text-teal-400 drop-shadow-[0_0_12px_rgba(45,212,191,0.5)] tabular-nums">{(data.last24h || 0).toLocaleString("ar-EG")}</p>
           </div>
         </div>
 
@@ -158,7 +158,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
                 معدل البدء
                 <AdminTooltip content="نسبة الزوار اللي ضغطوا (انطلق) من إجمالي الزيارات." position="bottom" />
             </p>
-            <p className="text-xl sm:text-2xl font-black text-white tabular-nums">{fmtPct(data.conversion.startClickRatePct)}</p>
+            <p className="text-xl sm:text-2xl font-black text-white tabular-nums">{fmtPct(data.conversion?.startClickRatePct)}</p>
           </div>
           <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-3 flex flex-col items-center justify-center relative overflow-hidden group/box">
             <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50" />
@@ -166,7 +166,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
                 معدل النبض
                 <AdminTooltip content="نسبة الزوار اللي خلصوا (فحص النبض) بنجاح والمزاج بتاعهم اتحدد." position="bottom" />
             </p>
-            <p className="text-xl sm:text-2xl font-black text-cyan-400 tabular-nums drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">{fmtPct(data.conversion.pulseCompletedRatePct)}</p>
+            <p className="text-xl sm:text-2xl font-black text-cyan-400 tabular-nums drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">{fmtPct(data.conversion?.pulseCompletedRatePct)}</p>
           </div>
           <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-3 flex flex-col items-center justify-center relative overflow-hidden group/box">
             <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-50" />
@@ -174,7 +174,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
                 معدل خريطة الرحلة
                 <AdminTooltip content="نسبة اللي قدروا يوصلوا لمراحل متقدمة ويكوّنوا عيلتهم او يضيفوا شخص." position="bottom" />
             </p>
-            <p className="text-xl sm:text-2xl font-black text-emerald-400 tabular-nums drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{fmtPct(data.conversion.mapCreatedRatePct)}</p>
+            <p className="text-xl sm:text-2xl font-black text-emerald-400 tabular-nums drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{fmtPct(data.conversion?.mapCreatedRatePct)}</p>
           </div>
         </div>
 
@@ -187,7 +187,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
               <AdminTooltip content="مؤشر لتذبذب دخول الـ Leads اليومي لآخر أسبوعين. العمود الأعلى يعني يوم حققنا فيه Viral Peak." position="left" />
           </div>
           <div className="flex h-16 items-end gap-1.5 w-full">
-            {data.dailyTrend.map((point) => {
+            {(data.dailyTrend || []).map((point) => {
               const height = peakDaily > 0 ? Math.max(8, (point.count / peakDaily) * 100) : 8;
               const isPeak = point.count === peakDaily && peakDaily > 0;
               return (

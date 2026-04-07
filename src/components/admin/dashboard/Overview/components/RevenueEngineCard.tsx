@@ -2,9 +2,9 @@ import type { FC } from "react";
 import { useState } from "react";
 import { AlertTriangle, RefreshCw, TrendingUp, Zap, Target, ActivitySquare } from "lucide-react";
 import { motion } from "framer-motion";
-import { runCronReport } from "../../../../../services/adminApi";
-import { computeConsciousRevenueMetrics } from "../../../../../services/consciousRevenueLink";
-import type { WeeklyReport } from "../../../../../types/admin.types";
+import { runCronReport } from "@/services/adminApi";
+import { computeConsciousRevenueMetrics } from "@/services/consciousRevenueLink";
+import type { WeeklyReport } from "@/types/admin.types";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface RevenueEngineCardProps {
@@ -187,7 +187,7 @@ export const RevenueEngineCard: FC<RevenueEngineCardProps> = ({
         />
         <Metric
           delay={0.4}
-          label="بوابة 7 (عمر التدفق)"
+          label="رحلة 7 (عمر التدفق)"
           value={gate7Critical ? "وضع حرج" : "مستقر"}
           tone={gate7Critical ? "warn" : "good"}
           hint="مقياس يقيم استمرارية ضخ الزوار. الوضع الحرج ينذر بجفاف المصدر."

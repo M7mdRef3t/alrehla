@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { useDigitalTwinState } from '../../../../state/digitalTwinState';
+import { useDigitalTwinState } from '@/state/digitalTwinState';
 import { Activity, Zap, Brain, Target, ShieldAlert, Wifi, ZapOff, Activity as PulseIcon } from 'lucide-react';
-import { InterventionEngine } from '../../../../services/telemetry/InterventionEngine';
-import { PredictiveEngine } from '../../../../services/predictiveEngine';
+import { InterventionEngine } from '@/services/telemetry/InterventionEngine';
+import { PredictiveEngine } from '@/services/predictiveEngine';
 import { PredictiveRadar } from './PredictiveRadar';
 
 export const ConsciousnessGraph: React.FC = () => {
@@ -13,15 +13,23 @@ export const ConsciousnessGraph: React.FC = () => {
     useEffect(() => {
         if (graph.nodes.length === 0) seedGraph();
 
-        // Run deep analysis every 30 seconds if active
+        // Only run AI analysis when mirroring is explicitly active
+        if (!isMirroring) return;
+
+        // Delay initial call to allow server compilation on first load
+        const initialDelay = setTimeout(() => {
+            PredictiveEngine.analyzeTrajectory();
+        }, 2000);
+
+        // Run deep analysis every 30 seconds if still active
         const interval = setInterval(() => {
-            if (isMirroring) {
-                PredictiveEngine.analyzeTrajectory();
-            }
+            PredictiveEngine.analyzeTrajectory();
         }, 30000);
 
-        PredictiveEngine.analyzeTrajectory();
-        return () => clearInterval(interval);
+        return () => {
+            clearTimeout(initialDelay);
+            clearInterval(interval);
+        };
     }, [isMirroring]);
 
     useEffect(() => {

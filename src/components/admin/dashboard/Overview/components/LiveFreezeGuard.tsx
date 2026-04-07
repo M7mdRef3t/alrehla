@@ -6,7 +6,7 @@ import {
   startPerformanceWatchdog,
   subscribePerformanceWatchdog,
   type WatchdogSnapshot
-} from "../../../../../services/performanceWatchdog";
+} from "@/services/performanceWatchdog";
 import { AdminTooltip } from "./AdminTooltip";
 
 const fmtTime = (ts: number | null): string => {

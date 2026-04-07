@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { getWindowOrNull } from "../services/clientRuntime";
+import { getWindowOrNull } from "@/services/clientRuntime";
 
 declare global {
   interface Window {

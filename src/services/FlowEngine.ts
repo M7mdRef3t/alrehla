@@ -1,5 +1,5 @@
-import { useFlowState } from '../state/flowState';
-import { useGrowthState } from '../state/growthState';
+import { useFlowState } from '@/state/flowState';
+import { useGrowthState } from '@/state/growthState';
 
 /**
  * 🌊 FLOW ENGINE

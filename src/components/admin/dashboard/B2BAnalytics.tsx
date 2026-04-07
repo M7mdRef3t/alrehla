@@ -6,7 +6,7 @@
 
 import React, { useMemo } from "react";
 import { Users, Activity, AlertCircle, TrendingDown, Lightbulb, Download } from "lucide-react";
-import { loadEnterpriseData, generateMockMetrics, ENTERPRISE_TYPE_LABELS } from "../../../services/enterpriseAnalytics";
+import { loadEnterpriseData, generateMockMetrics, ENTERPRISE_TYPE_LABELS } from "@/services/enterpriseAnalytics";
 import { AdminTooltip } from "./Overview/components/AdminTooltip";
 
 export const B2BAnalytics: React.FC = () => {

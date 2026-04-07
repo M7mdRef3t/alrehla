@@ -4,7 +4,7 @@
  * محرك تحليل التداخلات بين العُقد واكتشاف التوترات المعقدة.
  */
 
-import { type MapNode, type Ring } from "../modules/map/mapTypes";
+import { type MapNode, type Ring } from "@/modules/map/mapTypes";
 
 export interface SyncInsight {
     id: string;

@@ -14,11 +14,11 @@ import type {
   OrbitHistoryEntry,
   MapType,
   FeelingCheckResult
-} from "../modules/map/mapTypes";
-import { loadStoredState, saveStoredState } from "../services/localStore";
-import { resolvePathId } from "../modules/pathEngine/pathResolver";
-import type { ContactLevel } from "../modules/pathEngine/pathTypes";
-import { emitDawayirSignal } from "../modules/recommendation/recommendationBus";
+} from "@/modules/map/mapTypes";
+import { loadStoredState, saveStoredState } from "@/services/localStore";
+import { resolvePathId } from "@/modules/pathEngine/pathResolver";
+import type { ContactLevel } from "@/modules/pathEngine/pathTypes";
+import { emitDawayirSignal } from "@/modules/recommendation/recommendationBus";
 import { useGamificationState } from "./gamificationState";
 
 export interface RecoveryPlanOpenWith {

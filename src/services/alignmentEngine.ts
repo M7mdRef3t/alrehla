@@ -1,6 +1,6 @@
-import { Dream, Knot } from '../types/dreams';
+import { Dream, Knot } from '@/types/dreams';
 import { OverviewStats } from './adminApi';
-import { useMapState } from '../state/mapState';
+import { useMapState } from '@/state/mapState';
 
 /**
  * AlignmentEngine: The Logical Heart of Alrehla

@@ -1,4 +1,4 @@
-﻿import type { PulseFocus } from "../state/pulseState";
+﻿import type { PulseFocus } from "@/state/pulseState";
 
 export type EnergyTrend = { direction: "up" | "down" | "flat"; label: string; delta: number };
 export type EnergySuggestion = { cta: string; note: string; focus: PulseFocus };

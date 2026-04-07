@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useDigitalTwinState } from '../../../../state/digitalTwinState';
+import { useDigitalTwinState } from '@/state/digitalTwinState';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 

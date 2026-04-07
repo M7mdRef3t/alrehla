@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { usePulseState } from "../state/pulseState";
+import { usePulseState } from "@/state/pulseState";
 
 /**
  * usePersonalizedBiometrics

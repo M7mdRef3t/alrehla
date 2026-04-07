@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { getDocumentOrNull, getWindowOrNull } from "../services/clientRuntime";
+import { getDocumentOrNull, getWindowOrNull } from "@/services/clientRuntime";
 
 type Theme = "light" | "dark" | "system";
 

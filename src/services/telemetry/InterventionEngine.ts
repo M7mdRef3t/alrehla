@@ -1,5 +1,5 @@
 
-import { useDigitalTwinState } from '../../state/digitalTwinState';
+import { useDigitalTwinState } from '@/state/digitalTwinState';
 
 export class InterventionEngine {
     private static lastUpdate: number = 0;

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getJSON, setJSON } from "../services/secureStore";
+import { getJSON, setJSON } from "@/services/secureStore";
 
 const ME_STORAGE_KEY = "dawayir-me";
 

@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { Briefcase, CheckCircle2, Target } from "lucide-react";
-import { salesEnablementAssets } from "../../../../data/marketingContent";
+import { salesEnablementAssets } from "@/data/marketingContent";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 
 export const SalesEnablementPanel: FC = () => {

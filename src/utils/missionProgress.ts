@@ -1,7 +1,7 @@
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 import { buildResultTemplateFromAnswers } from "./resultScreenTemplates";
-import type { FeelingAnswers } from "../components/FeelingCheck";
-import type { RealityAnswers } from "../components/RealityCheck";
+import type { FeelingAnswers } from '@/modules/exploration/FeelingCheck';
+import type { RealityAnswers } from '@/modules/exploration/RealityCheck';
 
 export interface MissionProgressSummary {
   completed: number;

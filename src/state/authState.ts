@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
-import { isPrivilegedRole } from "../utils/featureFlags";
-import { safeGetSession, supabase } from "../services/supabaseClient";
-import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
-import { replaceUrl, createCurrentUrl } from "../services/navigation";
-import { runtimeEnv } from "../config/runtimeEnv";
-import { trackEvent, AnalyticsEvents, trackIdentityLinked } from "../services/analytics";
+import { isPrivilegedRole } from "@/utils/featureFlags";
+import { safeGetSession, supabase } from "@/services/supabaseClient";
+import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
+import { replaceUrl, createCurrentUrl } from "@/services/navigation";
+import { runtimeEnv } from "@/config/runtimeEnv";
+import { trackEvent, AnalyticsEvents, trackIdentityLinked } from "@/services/analytics";
 
 export type UserToneGender = "male" | "female" | "neutral";
 export type SubscriptionTier = "free" | "pro";

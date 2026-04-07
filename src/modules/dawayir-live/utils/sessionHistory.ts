@@ -15,8 +15,8 @@ function canUseStorage() {
   return typeof window !== "undefined" && Boolean(window.localStorage);
 }
 
-import { supabase } from "../../../services/supabaseClient";
-import { trackEvent } from "../../../services/analytics";
+import { supabase } from "@/services/supabaseClient";
+import { trackEvent } from "@/services/analytics";
 
 let _liveSessionCache: SessionHistoryEntry[] | null = null;
 let _liveSessionLoaded = false;
@@ -28,7 +28,7 @@ export async function syncLiveSessionsFromSupabase(): Promise<void> {
         if (!sessionData?.session?.user) return;
         
         const { data } = await supabase
-            .from("telemetry_events")
+            .from("routing_events")
             .select("payload")
             .eq("user_id", sessionData.session.user.id)
             .eq("event_type", "live_session_backup")

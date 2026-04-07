@@ -1,5 +1,5 @@
-import type { ShadowScore } from "../state/shadowPulseState";
-import type { MapNode } from "../modules/map/mapTypes";
+import type { ShadowScore } from "@/state/shadowPulseState";
+import type { MapNode } from "@/modules/map/mapTypes";
 
 /** مستويات الـ Shadow Score */
 export type ShadowLevel = "none" | "low" | "medium" | "high";

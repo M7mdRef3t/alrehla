@@ -1,10 +1,10 @@
-import { geminiClient } from "../services/geminiClient";
-import type { Ring } from "../modules/map/mapTypes";
-import type { AdviceCategory } from "../data/adviceScripts";
-import type { FeelingAnswers } from "../components/FeelingCheck";
-import type { RealityAnswers } from "../components/RealityCheck";
-import { feelingCopy } from "../copy/feeling";
-import { realityCopy } from "../copy/reality";
+import { geminiClient } from "@/services/geminiClient";
+import type { Ring } from "@/modules/map/mapTypes";
+import type { AdviceCategory } from "@/data/adviceScripts";
+import type { FeelingAnswers } from '@/modules/exploration/FeelingCheck';
+import type { RealityAnswers } from '@/modules/exploration/RealityCheck';
+import { feelingCopy } from "@/copy/feeling";
+import { realityCopy } from "@/copy/reality";
 
 export interface ResultScreenAIContent {
   title: string;

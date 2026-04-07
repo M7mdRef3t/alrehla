@@ -1,5 +1,5 @@
-import { recordFlowEvent } from "../../services/journeyTracking";
-import { runtimeEnv } from "../../config/runtimeEnv";
+import { recordFlowEvent } from "@/services/journeyTracking";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 const DEFAULT_AFFILIATE_DOMAINS = [
   "youtube.com",

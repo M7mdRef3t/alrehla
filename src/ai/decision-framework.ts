@@ -8,10 +8,10 @@
  * "الـ AI = Extension of Consciousness، مش Replacement"
  */
 
-import type { MapNode } from "../modules/map/mapTypes";
-import type { DailyQuestion } from "../data/dailyQuestions";
-import { useEmergencyState } from "../state/emergencyState";
-import { useToastState } from "../state/toastState";
+import type { MapNode } from "@/modules/map/mapTypes";
+import type { DailyQuestion } from "@/data/dailyQuestions";
+import { useEmergencyState } from "@/state/emergencyState";
+import { useToastState } from "@/state/toastState";
 
 
 
@@ -267,7 +267,7 @@ export class DecisionEngine {
     }
 
     try {
-      import("../services/notifications").then((mod) => {
+      import("@/services/notifications").then((mod) => {
         mod.sendNotification({
           title,
           body,

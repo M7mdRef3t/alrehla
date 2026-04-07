@@ -2,9 +2,9 @@ import type { FC } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, ShieldAlert, Zap, UserX, Activity, Heart, Battery } from "lucide-react";
-import { useFirewallState } from "../../../../../state/firewallState";
-import { useMapState } from "../../../../../state/mapState";
-import { EnergyROIEngine } from "../../../../../services/EnergyROIEngine";
+import { useFirewallState } from "@/state/firewallState";
+import { useMapState } from "@/state/mapState";
+import { EnergyROIEngine } from "@/services/EnergyROIEngine";
 import { AdminTooltip } from "./AdminTooltip";
 
 export const SocialFirewall: FC<{ loading: boolean }> = ({ loading }) => {

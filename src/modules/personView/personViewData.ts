@@ -3,8 +3,8 @@
  * مصدر البيانات: node + قاعدة ثابتة. عند إضافة AI نملأ insights في analysis والدمج يحدث هنا من غير تغيير المعمار.
  */
 import type { MapNode, Ring } from "../map/mapTypes";
-import type { AdviceCategory } from "../../data/adviceScripts";
-import { getGoalAction } from "../../copy/goalPicker";
+import type { AdviceCategory } from "@/data/adviceScripts";
+import { getGoalAction } from "@/copy/goalPicker";
 
 export type ResultTabId = "diagnosis" | "symptoms" | "solution" | "plan";
 

@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { ar } from "date-fns/locale";
-import { useAdminState } from "../../../../state/adminState";
-import { getAuthToken } from "../../../../state/authState";
+import { useAdminState } from "@/state/adminState";
+import { getAuthToken } from "@/state/authState";
 import { buildMarketingEmail } from "../../../../lib/marketing/emailTemplate";
 
 function getBearerToken(): string {

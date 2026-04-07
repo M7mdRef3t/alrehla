@@ -1,5 +1,5 @@
 import type { AgentContext } from "./types";
-import { buildToneSystemBlock } from "../copy/toneGuide";
+import { buildToneSystemBlock } from "@/copy/toneGuide";
 import { SWARM_PERSONAE } from "./personae";
 
 /** بناء الـ system prompt لرفيق الرحلة مع السياق الحالي */

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CocoonModeModal } from "../../src/components/CocoonModeModal";
-import { BreathingOverlay } from "../../src/components/BreathingOverlay";
+import { CocoonModeModal } from "@/modules/action/CocoonModeModal";
+import { BreathingOverlay } from "@/modules/exploration/BreathingOverlay";
 
 type View = "landing" | "cocoon" | "breathing";
 

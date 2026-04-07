@@ -1,4 +1,4 @@
-import type { FeatureFlagKey } from "../config/features";
+import type { FeatureFlagKey } from "@/config/features";
 import type { OwnerActionKey } from "./actionRoutingMachine";
 
 interface OwnerActionFlags {

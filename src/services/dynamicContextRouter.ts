@@ -8,6 +8,8 @@
 import { AwarenessVector, TrajectoryEngine } from "./trajectoryEngine";
 import { BehavioralIntegrityEngine, BIResult } from "./behavioralIntegrity";
 import { DDAConstraintEngine, MissionGenerator, GeneratedMission } from "./missionGenerator";
+import { VaultService } from "./truthVault";
+
 
 const behavioralIntegrity = new BehavioralIntegrityEngine();
 
@@ -62,8 +64,10 @@ export class DynamicContextRouter {
             updatedDDA = DDAConstraintEngine.calculateInitialDDA(currentVector.cb);
         }
 
-        // 4. Mission Generation
-        const prompt = MissionGenerator.constructPrompt(currentVector, updatedDDA);
+        // 4. Mission Generation (Grounded in Truth)
+        const truths = VaultService.getRecords();
+        const prompt = MissionGenerator.constructPrompt(currentVector, updatedDDA, truths);
+
 
         // This is where we'd call the actual LLM API with the prompt.
         // For now, we return the prompt for verification (Mocking the AI call).

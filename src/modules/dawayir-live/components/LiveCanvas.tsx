@@ -11,7 +11,7 @@ import type {
   SpawnedTopic,
   ThoughtNode,
   TopicConnection,
-} from "../types";
+} from '../types';
 
 interface LiveCanvasProps {
   circles: CircleNode[];

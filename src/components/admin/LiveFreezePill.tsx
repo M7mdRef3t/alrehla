@@ -6,8 +6,8 @@ import {
   startPerformanceWatchdog,
   subscribePerformanceWatchdog,
   type WatchdogSnapshot
-} from "../../services/performanceWatchdog";
-import { sendNotification } from "../../services/notifications";
+} from "@/services/performanceWatchdog";
+import { sendNotification } from "@/services/notifications";
 
 const CRITICAL_ALERT_AFTER_MS = 10_000;
 const CRITICAL_ALERT_COOLDOWN_MS = 5 * 60_000;

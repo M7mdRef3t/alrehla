@@ -13,13 +13,13 @@
  * - نرسل فقط "Signal" (crisis/stable) بدون تفاصيل
  */
 
-import { supabase } from "../services/supabaseClient";
-import { telegramBot } from "../services/telegramBot";
+import { supabase } from "@/services/supabaseClient";
+import { telegramBot } from "@/services/telegramBot";
 import { decisionEngine } from "./decision-framework";
-import type { MapNode } from "../modules/map/mapTypes";
-import type { DailyJournalEntry } from "../state/dailyJournalState";
-import { grantEmotionalFreeMonth, saveEmotionalOffer } from "../services/subscriptionManager";
-import { recordEmotionalPricingEvent } from "../services/emotionalPricingAnalytics";
+import type { MapNode } from "@/modules/map/mapTypes";
+import type { DailyJournalEntry } from "@/state/dailyJournalState";
+import { grantEmotionalFreeMonth, saveEmotionalOffer } from "@/services/subscriptionManager";
+import { recordEmotionalPricingEvent } from "@/services/emotionalPricingAnalytics";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 📊 User State Analysis

@@ -1,6 +1,6 @@
 
 import { supabase } from "./supabaseClient";
-import { getRecoveryPlanHtml, type RecoveryPlanData } from "../templates/RecoveryPlanEmail";
+import { getRecoveryPlanHtml, type RecoveryPlanData } from "@/templates/RecoveryPlanEmail";
 
 /**
  * Service to handle sending emails to users.

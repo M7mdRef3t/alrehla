@@ -6,7 +6,7 @@ import {
   type MarketingLeadStatus,
   type MarketingLeadUtm,
   type NormalizedMarketingLeadInput
-} from "../types/marketingLead";
+} from "@/types/marketingLead";
 
 function sanitizeText(value: unknown, max = 300): string | null {
   if (typeof value !== "string") return null;

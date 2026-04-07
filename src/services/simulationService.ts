@@ -1,7 +1,7 @@
 import { AIOrchestrator } from './aiOrchestrator';
 import { supabase } from './supabaseClient';
 import { geminiClient } from './geminiClient';
-import { Dream } from '../types/dreams';
+import { Dream } from '@/types/dreams';
 
 export interface SimulationResult {
     scenarioName: string;
@@ -35,7 +35,7 @@ export class SimulationService {
 
             // Fetch recent telemetry for energetic states
             const { data: latestEvents } = await supabase
-                .from('telemetry_events')
+                .from('routing_events')
                 .select('payload')
                 .eq('user_id', userId)
                 .in('event_type', ['first_pulse_submitted', 'shadow_pulse_snapshot', 'baseline_completed'])

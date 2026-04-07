@@ -7,7 +7,7 @@
 
 import { supabase } from "./supabaseClient";
 import { consciousnessService } from "./consciousnessService";
-import { videos, successStories, faqs } from "../data/educationalContent";
+import { videos, successStories, faqs } from "@/data/educationalContent";
 
 export interface RecommendationResult {
     type: "video" | "story" | "faq" | "nudge";

@@ -4,9 +4,9 @@ import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 
-import RadarBackground from '@/components/gate/RadarBackground';
-import LayerOneForm from '@/components/gate/LayerOneForm';
-import LayerTwoQualifier from '@/components/gate/LayerTwoQualifier';
+import RadarBackground from '@/modules/meta/gate/RadarBackground';
+import LayerOneForm from '@/modules/meta/gate/LayerOneForm';
+import LayerTwoQualifier from '@/modules/meta/gate/LayerTwoQualifier';
 import { trackGateEventPixelOnly } from '@/lib/analytics/eventTracker';
 import type { GateState } from '@/lib/gate/types';
 

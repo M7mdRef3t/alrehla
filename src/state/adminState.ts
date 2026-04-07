@@ -4,12 +4,12 @@ import {
   DEFAULT_FEATURE_FLAGS,
   type FeatureFlagKey,
   type FeatureFlagMode
-} from "../config/features";
-import type { BroadcastAudience } from "../utils/broadcastAudience";
+} from "@/config/features";
+import type { BroadcastAudience } from "@/utils/broadcastAudience";
 import { getAuthRole } from "./authState";
-import { getEffectiveFeatureAccess } from "../utils/featureFlags";
-import { isUserMode } from "../config/appEnv";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { getEffectiveFeatureAccess } from "@/utils/featureFlags";
+import { isUserMode } from "@/config/appEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 export interface ScoringWeights {
   often: number;
@@ -48,6 +48,24 @@ export interface AdminBroadcast {
   createdAt: number;
 }
 
+export interface SovereignInsight {
+    id: string;
+    type: 'truth' | 'warning' | 'opportunity';
+    message: string;
+    timestamp: string;
+}
+
+export interface SovereignStats {
+    activeNow: number;
+    breakthroughs24h: number;
+    events24h: number;
+    behavioralFriction: Array<{
+        scenario: string;
+        avgTimeSec: number;
+        sampleSize: number;
+    }>;
+}
+
 export type PulseCopyOverrideValue = "auto" | "a" | "b";
 export interface PulseCopyOverrides {
   energy: PulseCopyOverrideValue;
@@ -71,6 +89,8 @@ interface AdminState {
   broadcasts: AdminBroadcast[];
   pulseCopyOverrides: PulseCopyOverrides;
   hasSovereignAlert: boolean;
+  sovereignInsights: SovereignInsight[];
+  sovereignStats: SovereignStats | null;
   
   // Smart Caching Layer
   opsStatsCache: CacheEntry<any> | null;
@@ -100,6 +120,8 @@ interface AdminState {
   removeBroadcast: (id: string) => void;
   setPulseCopyOverrides: (overrides: PulseCopyOverrides) => void;
   setHasSovereignAlert: (value: boolean) => void;
+  setSovereignInsights: (insights: SovereignInsight[]) => void;
+  setSovereignStats: (stats: SovereignStats) => void;
   
   setOpsStatsCache: (data: any) => void;
   setLiveStatsCache: (data: any) => void;
@@ -137,6 +159,8 @@ export const useAdminState = create<AdminState>()(
       broadcasts: [],
       pulseCopyOverrides: { energy: "auto", mood: "auto", focus: "auto" },
       hasSovereignAlert: false,
+      sovereignInsights: [],
+      sovereignStats: null,
       opsStatsCache: null,
       liveStatsCache: null,
       isCopilotOpen: false,
@@ -181,6 +205,8 @@ export const useAdminState = create<AdminState>()(
         set((state) => ({ broadcasts: state.broadcasts.filter((b) => b.id !== id) })),
       setPulseCopyOverrides: (overrides) => set({ pulseCopyOverrides: overrides }),
       setHasSovereignAlert: (value) => set({ hasSovereignAlert: value }),
+      setSovereignInsights: (insights) => set({ sovereignInsights: insights }),
+      setSovereignStats: (stats) => set({ sovereignStats: stats }),
       setOpsStatsCache: (data) => 
         set({ opsStatsCache: data ? { data, timestamp: Date.now() } : null }),
       setLiveStatsCache: (data) => 

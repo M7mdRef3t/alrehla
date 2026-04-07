@@ -10,7 +10,7 @@
  * القاعدة الذهبية: "لو محمد كتب ده، هيكتبه إزاي؟"
  */
 
-import { geminiClient } from "../services/geminiClient";
+import { geminiClient } from "@/services/geminiClient";
 import {
   DAWAYIR_DNA,
   isAlignedWithPrinciples,
@@ -18,9 +18,9 @@ import {
   QUALITY_THRESHOLDS,
 } from "./CORE_PRINCIPLES";
 import { decisionEngine } from "./decision-framework";
-import type { DailyQuestion } from "../data/dailyQuestions";
-import type { ContentPacket } from "../services/contentEngine";
-import type { MapNode } from "../modules/map/mapTypes";
+import type { DailyQuestion } from "@/data/dailyQuestions";
+import type { ContentPacket } from "@/services/contentEngine";
+import type { MapNode } from "@/modules/map/mapTypes";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🧬 User Context — سياق المستخدم
@@ -113,7 +113,7 @@ export class AICurator {
 
 # 🧬 المبادئ الأساسية
 - ${therapeutic.priority}: الوعي قبل الحل
-- ${therapeutic.painPhilosophy}: الألم بوابة للنمو
+- ${therapeutic.painPhilosophy}: الألم رحلة للنمو
 - ${therapeutic.answerModel}: لا توجد إجابات صح
 
 # 🗣️ الأسلوب

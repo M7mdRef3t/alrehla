@@ -1,5 +1,5 @@
-import { isUserMode } from "../config/appEnv";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { isUserMode } from "@/config/appEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { getHref } from "./navigation";
 import { getDocumentOrNull, getWindowOrNull, isClientRuntime } from "./clientRuntime";
@@ -421,9 +421,14 @@ export async function trackIdentityLinked(userId: string): Promise<void> {
       // to prevent 400 errors when auth.uid() is null due to timing
       const { data: sessionData } = await supabase.auth.getSession();
       if (sessionData?.session?.user?.id) {
-        await supabase.rpc("link_anonymous_to_user", {
+        const { data: rpcRes, error } = await supabase.rpc("link_anonymous_to_user", {
           p_anonymous_id: anonymous_id
         });
+        
+        if (runtimeEnv.isDev) {
+          if (error) console.error("[Analytics] RPC Link Error:", error);
+          else console.log("[Analytics] Identity Link Result:", rpcRes);
+        }
       }
     } catch (error) {
       if (runtimeEnv.isDev) {
@@ -491,6 +496,12 @@ export const AnalyticsEvents = {
 
   SURVEY_QUESTION_ANSWERED: "survey_question_answered",
   PREMIUM_UPGRADE_VIEWED: "premium_upgrade_viewed",
+
+  // --- AI Content Studio ---
+  AI_STUDIO_OPENED: "ai_studio_opened",
+  AI_STUDIO_GENERATED: "ai_studio_generated",
+  AI_STUDIO_COPIED: "ai_studio_copied",
+  AI_STUDIO_HISTORY_NAVIGATED: "ai_studio_history_navigated",
 
   // --- Weather Forecast Funnel (Viral Loop V2) ---
   WEATHER_LANDING_VIEW: "weather_landing_view",

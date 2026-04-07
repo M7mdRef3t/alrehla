@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { pushGamificationStats, pushGamificationBadge } from "../services/gamificationSync";
+import { pushGamificationStats, pushGamificationBadge } from "@/services/gamificationSync";
 
 export type Rank =
     | "مستطلع جَدِيد"

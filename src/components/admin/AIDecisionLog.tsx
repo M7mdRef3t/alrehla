@@ -20,8 +20,8 @@ import {
   ShieldAlert,
   Zap,
 } from "lucide-react";
-import { decisionEngine } from "../../ai/decision-framework";
-import type { AIDecision, DecisionType } from "../../ai/decision-framework";
+import { decisionEngine } from "@/ai/decision-framework";
+import type { AIDecision, DecisionType } from "@/ai/decision-framework";
 
 interface AIDecisionLogProps {
   maxDecisions?: number;

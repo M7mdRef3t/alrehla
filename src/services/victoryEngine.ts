@@ -4,7 +4,7 @@
  * يحلل سجل الأحداث لاستخراج مؤشرات النمو والسيطرة.
  */
 
-import { useEventHistoryStore } from "../state/eventHistoryStore";
+import { useEventHistoryStore } from "@/state/eventHistoryStore";
 
 export interface VictoryMetrics {
     growthVelocity: number;      // Higher means more positive shifts (inward/reconciliation)

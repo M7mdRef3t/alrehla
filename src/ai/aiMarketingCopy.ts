@@ -4,7 +4,7 @@
  * نظام ذكي لتوليد نصوص تسويقية، إعلانات، ومحتوى Social Media
  */
 
-import { geminiClient } from "../services/geminiClient";
+import { geminiClient } from "@/services/geminiClient";
 import { decisionEngine } from "./decision-framework";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -392,7 +392,7 @@ export class AIMarketingCopywriter {
 # صوت العلامة التجارية (محمد — مؤسس دواير)
 - **اللغة**: العامية المصرية (warm, authentic, relatable)
 - **النبرة**: ${toneMap[params.tone]}
-- **الفلسفة العلاجية**: الألم بوابة للوعي، الأسئلة أهم من الإجابات، الحدود حماية مش رفض
+- **الفلسفة العلاجية**: الألم رحلة للوعي، الأسئلة أهم من الإجابات، الحدود حماية مش رفض
 - **الأسلوب**: بسيط، واضح، بدون مصطلحات معقدة، مباشر للقلب
 
 # المنتج: دواير (Dawayir)

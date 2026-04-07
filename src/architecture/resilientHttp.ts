@@ -8,7 +8,13 @@ export interface ResilientHttpOptions {
 }
 
 function shouldRetryStatus(status: number): boolean {
-  return status === 408 || status === 425 || status === 429 || (status >= 500 && status <= 504);
+  // 429 (Too Many Requests) is handled by the caller (cooldown logic)
+  // so we don't retry it here to avoid wasting quota or noise.
+  return (
+    status === 408 ||
+    status === 425 ||
+    (status >= 500 && status <= 504)
+  );
 }
 
 /**

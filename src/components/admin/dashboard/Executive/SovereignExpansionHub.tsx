@@ -21,10 +21,10 @@ import {
   Landmark
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchSovereignExecutiveReport, type SovereignExecutiveReport } from "../../../../services/adminApi";
-import { growthEngine, type GrowthMetrics, type DiffusionMetrics } from "../../../../services/growthEngine";
-import { getClients, type ClientLink } from "../../../../services/b2bService";
-import { revenueEngine } from "../../../../services/revenueEngine";
+import { fetchSovereignExecutiveReport, type SovereignExecutiveReport } from "@/services/adminApi";
+import { growthEngine, type GrowthMetrics, type DiffusionMetrics } from "@/services/growthEngine";
+import { getClients, type ClientLink } from "@/services/b2bService";
+import { revenueEngine } from "@/services/revenueEngine";
 
 export const SovereignExpansionHub: React.FC = () => {
   const [activeMarket, setActiveMarket] = useState<string | null>("Riyadh");

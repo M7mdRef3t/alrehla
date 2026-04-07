@@ -4,7 +4,7 @@
  * يستخدم Gemini لتحليل الـ errors واقتراح حلول
  */
 
-import { geminiClient } from "../services/geminiClient";
+import { geminiClient } from "@/services/geminiClient";
 import { decisionEngine } from "./decision-framework";
 
 // ═══════════════════════════════════════════════════════════════════════════

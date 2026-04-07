@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Command, ArrowRight } from "lucide-react";
 import { NAV_ITEMS, CLEAN_NAV_LABELS, type AdminTab } from "../adminNavigation";
-import { createCurrentUrl, pushUrl } from "../../../services/navigation";
+import { createCurrentUrl, pushUrl } from "@/services/navigation";
 
 export const AdminOmniSearch: FC = () => {
   const [isOpen, setIsOpen] = useState(false);

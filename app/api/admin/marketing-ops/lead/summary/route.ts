@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../../../_lib/supabaseAdmin";
 import { requireLiveAuth } from "../../../../../../src/modules/dawayir-live/server/auth";
-import { getClient as getGeminiClient } from "../../../../../../server/gemini/_shared";
+import { getGeminiClient } from "@/lib/gemini/shared";
 
 export const dynamic = "force-dynamic";
 

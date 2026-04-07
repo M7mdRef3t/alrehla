@@ -5,14 +5,14 @@
  */
 
 import { decisionEngine } from "./decision-framework";
-import { geminiClient } from "../services/geminiClient";
-import { supabase } from "../services/supabaseClient";
+import { geminiClient } from "@/services/geminiClient";
+import { supabase } from "@/services/supabaseClient";
 import type { AIDecision } from "./decision-framework";
 import {
   type PricingTier,
   TIER_PRICES_USD,
   TIER_LIMITS,
-} from "../config/pricing";
+} from "@/config/pricing";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 💰 Revenue Models

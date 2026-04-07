@@ -1,4 +1,4 @@
-import type { MarketingLeadPayload } from "../types/marketingLead";
+import type { MarketingLeadPayload } from "@/types/marketingLead";
 import { trackLead, getOrCreateAnonymousId } from "./analytics";
 import { recordFlowEvent } from "./journeyTracking";
 import { getStoredUtmParams } from "./marketingAttribution";

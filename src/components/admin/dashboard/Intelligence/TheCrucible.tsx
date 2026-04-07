@@ -16,13 +16,13 @@ import {
     Gamepad2,
     Eye
 } from "lucide-react";
-import { useSynthesisState } from "../../../../state/synthesisState";
-import { useFlowState } from "../../../../state/flowState";
-import { useGrowthState } from "../../../../state/growthState";
-import { usePredictiveState } from "../../../../state/predictiveState";
-import { CreativeSeedEngine } from "../../../../services/CreativeSeedEngine";
-import { MajazEngine } from "../../../../services/audio/MajazEngine";
-import { RefractionEngine, RefractionTask } from "../../../../services/telemetry/RefractionEngine";
+import { useSynthesisState } from "@/state/synthesisState";
+import { useFlowState } from "@/state/flowState";
+import { useGrowthState } from "@/state/growthState";
+import { usePredictiveState } from "@/state/predictiveState";
+import { CreativeSeedEngine } from "@/services/CreativeSeedEngine";
+import { MajazEngine } from "@/services/audio/MajazEngine";
+import { RefractionEngine, RefractionTask } from "@/services/telemetry/RefractionEngine";
 import { EntropyGame } from "./EntropyGame";
 
 export const TheCrucible: FC = () => {

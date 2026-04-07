@@ -1,4 +1,5 @@
-import type { MapNode, Ring } from "../modules/map/mapTypes";
+import type { MapNode, Ring } from "@/modules/map/mapTypes";
+import type { ResultScenarioKey } from "./resultScreenTemplates";
 
 type PressureSentenceTone = "danger" | "caution" | "steady";
 
@@ -7,6 +8,7 @@ export interface PressureSentenceSnapshot {
   title: string;
   summary: string;
   sentence: string;
+  reasoning: string; // The "Sovereign Logic" behind this specific sentence
   sourceLabel: string;
   copyText: string;
 }
@@ -14,6 +16,7 @@ export interface PressureSentenceSnapshot {
 interface PressureSentenceInput {
   displayName: string;
   ring: Ring;
+  scenarioKey?: ResultScenarioKey;
   node?: Pick<
     MapNode,
     "ring" | "isNodeArchived" | "detachmentMode" | "energyBalance" | "isEmergency"
@@ -23,47 +26,75 @@ interface PressureSentenceInput {
 export function derivePressureSentence(
   input: PressureSentenceInput
 ): PressureSentenceSnapshot | null {
-  const { displayName, ring, node } = input;
+  const { displayName, ring, node, scenarioKey } = input;
   const netEnergy = node?.energyBalance?.netEnergy ?? 0;
 
-  if (node?.isNodeArchived) {
-    const sentence =
-      "أحتاج أن تبقى المسافة كما هي الآن، لذلك لن أعود لنفس نمط التواصل القديم. إذا ظهر أمر ضروري فليكن التواصل مختصرًا وواضحًا.";
-
-    return {
-      tone: "steady",
-      title: "جملة تحفظ المسافة",
-      summary: `لو ظهر ضغط للرجوع إلى ${displayName} قبل أن تكون جاهزًا، استخدم هذه الصياغة بدل شرح طويل.`,
-      sentence,
-      sourceLabel: "قالب سريع",
-      copyText: sentence
-    };
-  }
-
-  if (node?.isEmergency || ring === "red" || netEnergy <= -5) {
-    const sentence =
-      "أحتاج مساحة الآن، ولن أدخل في هذا الحوار اليوم. إذا كان هناك أمر ضروري فأرسله في رسالة قصيرة وسأرد عندما أكون مستعدًا.";
-
+  // 1. EMERGENCY / SOS (The most extreme protection)
+  if (node?.isEmergency || ring === "red" || scenarioKey === "emergency") {
+    const sentence = "أنا حالياً فاتح مساحة لنفسي للهدوء ومش هقدر أدخل في أي تواصل تفصيلي الفترة دي. لو فيه حاجة ضرورية جداً أرجو إرسالها في رسالة قصيرة وهرد لما أكون مستعد.";
     return {
       tone: "danger",
-      title: "جملة تحميك الآن",
-      summary: `لو حاول ${displayName} فتح نفس الحلقة، هذه صياغة قصيرة تحميك قبل أن تدخل في تبرير طويل.`,
+      title: "درع الحماية المطلقة",
+      summary: `لأن ${displayName} يمثل خطراً استنزافياً حقيقياً، هذه الجملة تضع حداً فاصلاً ينهي التوقعات منه قبل أن يطالبك بشيء.`,
       sentence,
-      sourceLabel: "قالب سريع",
+      reasoning: "بدل الرد على فعل هو بيعمله، أنت بتعلن وضعك الحالي 'أنا في مساحة هدوء'. ده بيمنع الطرف التاني من البدء في استدراجك لأي حوار أو محاكمة ذهنية.",
+      sourceLabel: "بروتوكول SOS",
       copyText: sentence
     };
   }
 
-  if (ring === "yellow" || node?.detachmentMode || netEnergy < 0) {
-    const sentence =
-      "الوقت الحالي لا يناسبني، وأحتاج أن يكون التواصل أخف وأوضح. إذا كان هناك شيء مهم فأرسله باختصار.";
+  // 2. EMOTIONAL PRISONER (Breaking the mental loop)
+  if (scenarioKey === "emotional_prisoner") {
+    const sentence = "الوقت ده أنا بحترم فيه طاقتي ومحتاج أكون في حالة هدوء بعيداً عن أي نقاشات. أي تواصل ياريت يكون محدود وفي الضروريات بس.";
+    return {
+      tone: "danger",
+      title: "درع فك الارتباط الاستباقي",
+      summary: "عقلك متعلق بمحاكمات وهمية، هذه الجملة تحسم حدودك 'قبل' أن يحدث احتكاك حقيقي وتساعدك على تثبيت 'الصمت الداخلي'.",
+      sentence,
+      reasoning: "الجملة دي مش رد على 'حوار' قايم، دي 'إعلان موقف'. أنت بتقول إنك مش متاح للنقاشات، وده بيوقف استنزاف تفكيرك في 'يا ترى لو كلمني هقول إيه؟'.",
+      sourceLabel: "تحليل سجين المدار",
+      copyText: sentence
+    };
+  }
 
+  // 3. ACTIVE BATTLEFIELD (Limiting operational exposure)
+  if (scenarioKey === "active_battlefield" || netEnergy <= -5) {
+    const sentence = "أنا وقتي النهاردة ضيق جداً فخلينا نقتصر في تواصلنا على أهم حاجة محتاجين نخلصها عشان مش هقدر أطول في الكلام النهاردة.";
+    return {
+      tone: "danger",
+      title: "درع الوقت المحدود",
+      summary: `في احتكاكك مع ${displayName}، هذه الجملة ترسم 'خندقاً' زمنياً يحميك من البداية، سواء في مكالمة أو مقابلة.`,
+      sentence,
+      reasoning: "تحديد الوقت من الأول هو 'بتر استباقي'. أنت بتفرض قوانينك قبل ما هو يفرض سيطرته على وقتك وطاقتك باللوم أو العتاب.",
+      sourceLabel: "بروتوكول الدرع",
+      copyText: sentence
+    };
+  }
+
+  // 4. EGGSHELLS (De-escalation / Diplomacy)
+  if (scenarioKey === "eggshells" || ring === "yellow" || node?.detachmentMode) {
+    const sentence = "الفترة دي وقتي مش ملكي بالكامل، فياريت نكتفي بالمراسلة لو فيه حاجة مهمة عشان أرد بوضوح لما أكون متاح.";
     return {
       tone: "caution",
-      title: "جملة تضبط القرب",
-      summary: `لو بدأ الضغط يزيد مع ${displayName}، استخدم هذه الجملة لتخفيف الاحتكاك من غير تصعيد.`,
+      title: "درع التحول للدبلوماسية",
+      summary: `لتحويل العلاقة مع ${displayName} لمسار رسمي ومتحكم فيه، هذه الجملة هي 'الفلتر' الذي يفصل بين احتياجه وبين راحتك.`,
       sentence,
-      sourceLabel: "قالب سريع",
+      reasoning: "المراسلة بدل الكلام بتديك 'ثواني تفكير' إضافية قبل الرد. أنت هنا بتفرض 'بروتوكول تواصل' جديد بيحميك من الاستدراج العاطفي اللحظي.",
+      sourceLabel: "تكتيك الدرع الرسمي",
+      copyText: sentence
+    };
+  }
+
+  // 5. ARCHIVED / STEADY DISTANCE
+  if (node?.isNodeArchived) {
+    const sentence = "أنا حابب أحافظ على المسافة الهادية اللي بيننا دلوقتي لأنها أنسب وضع ليا. أي تواصل ضروري ياريت يكون محدد وقصير جداً.";
+    return {
+      tone: "steady",
+      title: "درع الحفاظ على المكتسبات",
+      summary: `لو ظهر ضغط للرجوع إلى النمط القديم مع ${displayName}، هذه الجملة هي 'المرساة' التي تحمي المسافة التي بنيتها بصعوبة.`,
+      sentence,
+      reasoning: "الجملة دي بتعلن بوضوح إن المسافة الحالية هي 'اختيار' وليست صدفة، وده بيقفل الباب قدام أي محاولات لاستعادة السيطرة القديمة.",
+      sourceLabel: "مرساة السيادة",
       copyText: sentence
     };
   }

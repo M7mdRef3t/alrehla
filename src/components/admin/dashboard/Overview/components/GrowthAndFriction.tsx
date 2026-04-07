@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { AlertOctagon, TrendingUp, Lock, Radar } from "lucide-react";
-import type { OverviewStats } from "../../../../../services/adminApi";
+import type { OverviewStats } from "@/services/adminApi";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface GrowthAndFrictionProps {
@@ -88,8 +88,8 @@ export const GrowthAndFriction: FC<GrowthAndFrictionProps> = ({ growthData, fric
                     </div>
                 </div>
 
-                <div className="h-72 w-full relative z-10" dir="ltr">
-                    <ResponsiveContainer width="100%" height="100%">
+                <div className="w-full relative z-10" dir="ltr" style={{ width: '100%', height: 288 }}>
+                    <ResponsiveContainer width="99%" height={288}>
                         <AreaChart data={filteredGrowth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorPaths" x1="0" y1="0" x2="0" y2="1">

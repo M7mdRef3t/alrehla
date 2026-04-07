@@ -1,5 +1,5 @@
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 const supabaseUrl = runtimeEnv.supabaseUrl;
 const supabaseAnonKey = runtimeEnv.supabaseAnonKey;
@@ -81,7 +81,7 @@ export async function safeGetSession(): Promise<Session | null> {
 
 // Tactical Helpers
 
-import { CommanderStats, Rank } from "../types/tactical";
+import { CommanderStats, Rank } from "@/types/tactical";
 
 export const fetchCommanderStats = async (userId: string): Promise<CommanderStats | null> => {
   if (!supabase) return null;

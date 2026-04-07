@@ -1,6 +1,6 @@
 import { geminiClient } from "./geminiClient";
-import { Dream } from "../types/dreams";
-import { useMapState } from "../state/mapState";
+import { Dream } from "@/types/dreams";
+import { useMapState } from "@/state/mapState";
 
 export type OracleGrade = 'S' | 'A' | 'B' | 'C' | 'F' | 'Test';
 
@@ -10,6 +10,13 @@ export interface LeadAnalysisVerdict {
     reasoning: string;
     recommendedAction: string;
     isSpam: boolean;
+}
+
+export interface SovereignInsight {
+    id: string;
+    type: 'truth' | 'warning' | 'opportunity';
+    message: string;
+    timestamp: string;
 }
 
 /**
@@ -120,6 +127,53 @@ export class OracleService {
         } catch (error) {
             console.error("Oracle Lead Analysis Error:", error);
             return {};
+        }
+    }
+    /**
+     * 🔮 SOVEREIGN INSIGHTS (War Room Oracle)
+     * Generates a pulse of strategic insights based on truth_vault and routing_events.
+     */
+    static async generateSovereignInsights(context: { 
+        recentTruths: any[], 
+        eventCounts: Record<string, number>,
+        activeNow: number,
+        behavioralFriction?: Array<{ scenario: string; avgTimeSec: number; sampleSize: number }>
+    }): Promise<SovereignInsight[]> {
+        const frictionSummary = context.behavioralFriction?.length 
+            ? context.behavioralFriction.map(f => `${f.scenario}: ${f.avgTimeSec}s (N=${f.sampleSize})`).join(", ")
+            : "No friction data available.";
+
+        const prompt = `
+      بصفتك "The Oracle" وكبير مستشاري "Dawayir Sovereign Control". 
+      قم بتحليل "نبض المنصة" الحالي وتوليد 3 رؤى استراتيجية عميقة.
+
+      النبض الحالي:
+      - عدد المستخدمين الآن: ${context.activeNow}
+      - إحصائيات الأحداث (24 ساعة): ${JSON.stringify(context.eventCounts)}
+      - احتكاك السلوك (متوسط وقت البقاء في الأوهام/السيناريوهات): ${frictionSummary}
+      - آخر اختراقات (Truth Vault): ${JSON.stringify(context.recentTruths.map(t => t.content))}
+
+      المطلوب:
+      توليد 3 رؤى دقيقة جداً وموجهة لمالك المنصة بالعامية المصرية وبأسلوب "الأوراكل" (Skeptical, Progressive, First Principles). 
+      ركز بشكل خاص على "الاحتكاك السلوكي" (Behavioral Friction) - إذا كان الناس يقضون وقتاً طويلاً في 'سجين ذهني' أو 'استنزاف نشط'، فهذا يعني فخ أو عقدة في التصميم يجب كسرها.
+
+      كل رؤية يجب أن تكون واحدة من هذه الأنواع:
+      1. truth: حقيقة عميقة تم رصدها من الـ Truth Vault أو السلوك الجماعي.
+      2. warning: تحذير من "وقوع المستخدمين في فخ" (User Trap) أو اضطراب في المسار.
+      3. opportunity: فرصة للتحسين الجذري في نظام الـ Routing لفك عقد المستخدمين.
+
+      رجع JSON فقط:
+      [
+        { "id": "1", "type": "truth" | "warning" | "opportunity", "message": "...", "timestamp": "الآن" }
+      ]
+    `;
+
+        try {
+            const result = await geminiClient.generateJSON<SovereignInsight[]>(prompt);
+            return result || [];
+        } catch (error) {
+            console.error("Oracle Sovereign Insights Error:", error);
+            return [];
         }
     }
 }

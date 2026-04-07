@@ -6,7 +6,7 @@ import {
   TIER_LIMITS as UNIFIED_TIER_LIMITS,
   TIER_LABELS as UNIFIED_TIER_LABELS,
   TIER_PRICES_USD,
-} from "../config/pricing";
+} from "@/config/pricing";
 
 /**
  * Subscription Manager — مدير الاشتراكات
@@ -48,7 +48,7 @@ export interface LegacyEmotionalOfferInput {
     urgencyLevel?: "low" | "medium" | "high";
 }
 
-export type { TierLimits } from "../config/pricing";
+export type { TierLimits } from "@/config/pricing";
 
 export const TIER_LIMITS = UNIFIED_TIER_LIMITS;
 

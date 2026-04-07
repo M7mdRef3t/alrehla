@@ -14,8 +14,8 @@
 
 import { decisionEngine } from "./decision-framework";
 import type { AIDecision } from "./decision-framework";
-import { sendOwnerSecurityWebhook } from "../services/adminApi";
-import { sendNotification } from "../services/notifications";
+import { sendOwnerSecurityWebhook } from "@/services/adminApi";
+import { sendNotification } from "@/services/notifications";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🏥 Health Check Result
@@ -535,7 +535,7 @@ export class AutoHealthChecker {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
     try {
-      import("../services/adminApi").then((mod) => {
+      import("@/services/adminApi").then((mod) => {
         mod.sendOwnerSecurityWebhook({
             type: "health_critical",
             status: result.status,
@@ -549,7 +549,7 @@ export class AutoHealthChecker {
     }
 
     try {
-      import("../services/notifications").then((mod) => {
+      import("@/services/notifications").then((mod) => {
         mod.sendNotification({
           title: `حالة طوارئ صحية: ${result.status}`,
           body: `تم رصد عطل استراتيجي. تقييم المنصة: ${result.score}`,

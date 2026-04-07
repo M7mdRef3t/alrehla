@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { trackPageView } from "../services/analytics";
+import { trackPageView } from "@/services/analytics";
 
 /**
  * Hook لتتبع الصفحات تلقائياً

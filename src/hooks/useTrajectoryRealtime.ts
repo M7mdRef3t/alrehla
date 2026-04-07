@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../services/supabaseClient';
-import { GeneratedMission } from '../services/missionGenerator';
+import { supabase } from '@/services/supabaseClient';
+import { GeneratedMission } from '@/services/missionGenerator';
 
 export interface TrajectoryRecord {
     id: string;

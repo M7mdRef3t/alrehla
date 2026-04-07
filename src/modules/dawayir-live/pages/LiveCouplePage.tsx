@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { HeartHandshake, Link2, Search, Share2, ShieldCheck, Sparkles, Users2 } from "lucide-react";
-import { assignUrl } from "../../../services/navigation";
+import { assignUrl } from "@/services/navigation";
 import { createLiveShare, getLiveSession, grantLiveAccess, listLiveSessions } from "../api";
-import type { LiveSessionArtifactRecord, LiveSessionDetail, LiveSessionRecord } from "../types";
+import type { LiveSessionArtifactRecord, LiveSessionDetail, LiveSessionRecord } from '../types';
 
 function sortSessionsByRecent(list: LiveSessionRecord[]) {
   return [...list].sort((left, right) => new Date(right.updated_at).getTime() - new Date(left.updated_at).getTime());

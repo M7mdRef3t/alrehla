@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Download, Pause, Play, RotateCcw } from "lucide-react";
-import { assignUrl } from "../../../services/navigation";
+import { assignUrl } from "@/services/navigation";
 import { getLiveSession } from "../api";
-import type { CircleNode, LiveLanguage, LiveReplayFrameRecord, LiveSessionDetail } from "../types";
+import type { CircleNode, LiveLanguage, LiveReplayFrameRecord, LiveSessionDetail } from '../types';
 
 const NODE_POSITIONS = {
   1: { x: 24, y: 66 },

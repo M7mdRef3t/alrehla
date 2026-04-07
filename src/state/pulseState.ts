@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { pushPulseLog } from "../services/pulseSync";
+import { pushPulseLog } from "@/services/pulseSync";
 import { useGamificationState } from "./gamificationState";
 
 export type PulseMood = "bright" | "calm" | "anxious" | "angry" | "sad" | "tense" | "hopeful" | "overwhelmed";

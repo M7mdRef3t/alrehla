@@ -2,10 +2,10 @@ import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, Sparkles, ArrowRight, CheckCircle2, Loader2, Zap, Repeat, HeartPulse } from "lucide-react";
-import { detectContradictions, MirrorInsight, dismissMirrorInsight } from "../../../../../services/mirrorLogic";
-import { RecoveryEngine } from "../../../../../services/RecoveryEngine";
-import { useRecoveryState } from "../../../../../state/recoveryState";
-import { CatalystEngine } from "../../../../../services/CatalystEngine";
+import { detectContradictions, MirrorInsight, dismissMirrorInsight } from "@/services/mirrorLogic";
+import { RecoveryEngine } from "@/services/RecoveryEngine";
+import { useRecoveryState } from "@/state/recoveryState";
+import { CatalystEngine } from "@/services/CatalystEngine";
 import { AdminTooltip } from "./AdminTooltip";
 
 export const RecoveryWidget: FC = () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { Cloud, CloudLightning, CloudRain, Sun, SunDim } from "lucide-react";
-import type { LiveLanguage } from "../types";
+import type { LiveLanguage } from '../types';
 
 const WEATHER_STATES = [
   {

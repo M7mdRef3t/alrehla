@@ -1,6 +1,6 @@
-import { useMapState } from '../state/mapState';
-import { usePulseState, PulseEntry } from '../state/pulseState';
-import { useFirewallState } from '../state/firewallState';
+import { useMapState } from '@/state/mapState';
+import { usePulseState, PulseEntry } from '@/state/pulseState';
+import { useFirewallState } from '@/state/firewallState';
 
 export class EnergyROIEngine {
     /**

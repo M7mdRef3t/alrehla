@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
-import { useMapState } from "../state/mapState";
-import { useJourneyState } from "../state/journeyState";
-import { useDailyJournalState } from "../state/dailyJournalState";
-import { useAchievementState } from "../state/achievementState";
-import { orchestrator } from "../ai/orchestrator/Core";
-import { SystemSnapshot } from "../ai/orchestrator/types";
+import { useMapState } from "@/state/mapState";
+import { useJourneyState } from "@/state/journeyState";
+import { useDailyJournalState } from "@/state/dailyJournalState";
+import { useAchievementState } from "@/state/achievementState";
+import { orchestrator } from "@/ai/orchestrator/Core";
+import { SystemSnapshot } from "@/ai/orchestrator/types";
 
 /**
  * useAIOrchestration — الجسر بين الحالة الحقيقية وعقل الأوركسترا

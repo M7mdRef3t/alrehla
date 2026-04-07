@@ -1,8 +1,8 @@
 import { useEffect, useReducer } from "react";
 import { CircuitBreaker } from "./circuitBreaker";
 import { appEventBus } from "./appEventBus";
-import { runtimeEnv } from "../config/runtimeEnv";
-import { designToggles } from "../config/designToggles";
+import { runtimeEnv } from "@/config/runtimeEnv";
+import { designToggles } from "@/config/designToggles";
 
 export interface LiveMetrics {
   activeUnits30d: number;

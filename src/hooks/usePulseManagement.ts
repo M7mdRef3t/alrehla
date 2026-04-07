@@ -4,11 +4,11 @@
  */
 
 import { useState, useCallback, useRef, useEffect, type Dispatch, type SetStateAction } from "react";
-import type { PulseMood, PulseFocus, PulseEnergyConfidence } from "../state/pulseState";
-import { usePulseState } from "../state/pulseState";
-import { recordFlowEvent } from "../services/journeyTracking";
-import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
-import { getWindowOrNull } from "../services/clientRuntime";
+import type { PulseMood, PulseFocus, PulseEnergyConfidence } from "@/state/pulseState";
+import { usePulseState } from "@/state/pulseState";
+import { recordFlowEvent } from "@/services/journeyTracking";
+import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
+import { getWindowOrNull } from "@/services/clientRuntime";
 
 const PULSE_DRAFT_STORAGE_KEY = "dawayir-pulse-check-draft-v1";
 

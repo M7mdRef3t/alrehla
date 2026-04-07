@@ -1,6 +1,6 @@
-import { useMapState } from "../state/mapState";
+import { useMapState } from "@/state/mapState";
 import { geminiClient } from "./geminiClient";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { consciousnessService } from "./consciousnessService";
 
 /**

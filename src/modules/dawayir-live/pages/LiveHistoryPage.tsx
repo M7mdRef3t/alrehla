@@ -15,7 +15,7 @@ import {
   Sparkles,
   Wand2,
 } from "lucide-react";
-import { assignUrl } from "../../../services/navigation";
+import { assignUrl } from "@/services/navigation";
 import { createLiveShare, getLiveSession, listLiveSessions } from "../api";
 import type {
   CircleNode,
@@ -23,7 +23,7 @@ import type {
   LiveSessionArtifactRecord,
   LiveSessionDetail,
   LiveSessionRecord,
-} from "../types";
+} from '../types';
 
 type TruthContractPayload = {
   promises?: unknown;

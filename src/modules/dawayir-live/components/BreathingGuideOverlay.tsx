@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { LiveLanguage } from "../types";
+import type { LiveLanguage } from '../types';
 
 const PHASES = [
   { key: "inhale", dur: 4, ar: "خد نفس", en: "Inhale" },

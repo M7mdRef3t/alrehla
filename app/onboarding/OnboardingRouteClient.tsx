@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { OnboardingFlow } from "../../src/components/OnboardingFlow";
+import { OnboardingFlow } from "@/modules/meta/OnboardingFlow";
 import { useJourneyState } from "../../src/state/journeyState";
 import {
   captureLeadAttributionFromCurrentUrl,

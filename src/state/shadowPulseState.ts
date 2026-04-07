@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
+import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 
 const STORAGE_KEY = "dawayir-shadow-pulse";
 

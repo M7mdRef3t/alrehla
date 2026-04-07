@@ -3,11 +3,11 @@
  */
 
 import { isSupabaseReady, supabase } from "./supabaseClient";
-import { awardPointsForFlowStep, awardPointsForJourneyType } from "../state/achievementState";
-import { isUserMode } from "../config/appEnv";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { awardPointsForFlowStep, awardPointsForJourneyType } from "@/state/achievementState";
+import { isUserMode } from "@/config/appEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "./browserStorage";
-import { getAuthUserId } from "../state/authState";
+import { getAuthUserId } from "@/state/authState";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { sendJsonWithResilience } from "../architecture/resilientHttp";
 import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribution";

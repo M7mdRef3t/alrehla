@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { getQuestionOfDay, type DailyQuestion } from "../data/dailyQuestions";
-import { useDailyJournalState } from "../state/dailyJournalState";
+import { getQuestionOfDay, type DailyQuestion } from "@/data/dailyQuestions";
+import { useDailyJournalState } from "@/state/dailyJournalState";
 
 export interface UseDailyQuestionReturn {
   question: DailyQuestion;

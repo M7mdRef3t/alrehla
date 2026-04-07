@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { Activity, AlertOctagon, CheckCircle2, User, Server } from "lucide-react";
-import type { SystemHealthReport } from "../../../../../services/adminApi";
-import { useDigitalTwinState } from "../../../../../state/digitalTwinState";
+import type { SystemHealthReport } from "@/services/adminApi";
+import { useDigitalTwinState } from "@/state/digitalTwinState";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface SystemHealthProps {

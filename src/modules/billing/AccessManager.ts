@@ -1,5 +1,5 @@
-import { supabase } from '../../services/supabaseClient';
-import { TIER_LIMITS, type PricingTier } from '../../config/pricing';
+import { supabase } from '@/services/supabaseClient';
+import { TIER_LIMITS, type PricingTier } from '@/config/pricing';
 
 interface FeatureFlags {
     maxMapNodes: number;

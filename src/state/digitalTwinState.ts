@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DigitalTwinGraph, ConsciousnessNode, ConnectivityEdge, TelemetrySnapshot } from '../types/digitalTwin';
+import { DigitalTwinGraph, ConsciousnessNode, ConnectivityEdge, TelemetrySnapshot } from '@/types/digitalTwin';
 
 interface DigitalTwinState {
     graph: DigitalTwinGraph;

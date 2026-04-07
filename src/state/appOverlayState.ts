@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { create } from "zustand";
-import type { FeatureFlagKey } from "../config/features";
-import type { PostAuthIntent } from "../utils/postAuthIntent";
-import type { PulseCheckContext } from "../hooks/usePulseCheckLogic";
+import type { FeatureFlagKey } from "@/config/features";
+import type { PostAuthIntent } from "@/utils/postAuthIntent";
+import type { PulseCheckContext } from "@/hooks/usePulseCheckLogic";
 import type { PulseSubmitPayload } from "./pulseState";
 
 export type AppOverlayFlag =

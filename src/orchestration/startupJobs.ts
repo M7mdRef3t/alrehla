@@ -1,4 +1,4 @@
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 type LogTarget = Pick<Console, "warn">;
 
@@ -31,7 +31,7 @@ export function startAutonomousStartupJobs({ enabled, logger = console }: Startu
 
   // 1. Health Check (Immediate)
   void runStartupJob(
-    () => import("../ai/autoHealthCheck"),
+    () => import("@/ai/autoHealthCheck"),
     (mod) => mod.startAutoHealthCheck(),
     "Auto Health Check started",
     "Health Check init failed:",
@@ -40,7 +40,7 @@ export function startAutonomousStartupJobs({ enabled, logger = console }: Startu
 
   // 1.5 Sovereign Override (Immediate - Critical)
   void runStartupJob(
-    () => import("../ai/sovereignOverride"),
+    () => import("@/ai/sovereignOverride"),
     (mod) => mod.checkSovereignOverride(),
     "Sovereign Override Check completed",
     "Sovereign Override check failed:",
@@ -50,7 +50,7 @@ export function startAutonomousStartupJobs({ enabled, logger = console }: Startu
   // 2. Revenue Automation (Delay 1.5s)
   void sleep(1500).then(() => 
     runStartupJob(
-      () => import("../ai/revenueAutomation"),
+      () => import("@/ai/revenueAutomation"),
       (mod) => mod.startWeeklyRevenueAnalysis(),
       "Weekly Revenue Analysis started",
       "Revenue automation init failed:",
@@ -61,7 +61,7 @@ export function startAutonomousStartupJobs({ enabled, logger = console }: Startu
   // 3. Emotional Pricing (Delay 3s)
   void sleep(3000).then(() => 
     runStartupJob(
-      () => import("../ai/emotionalPricingEngine"),
+      () => import("@/ai/emotionalPricingEngine"),
       (mod) => mod.startDailyEmotionalCheck(),
       "Emotional Pricing Engine started",
       "Emotional Pricing init failed:",
@@ -72,7 +72,7 @@ export function startAutonomousStartupJobs({ enabled, logger = console }: Startu
   // 4. Telegram & Notifications (Delay 4.5s)
   void sleep(4500).then(() => 
     runStartupJob(
-      () => import("../services/telegramBot"),
+      () => import("@/services/telegramBot"),
       (mod) => {
         mod.scheduleTelegramReports();
         void mod.telegramBot.notifySystemStartup();
@@ -87,7 +87,7 @@ export function startAutonomousStartupJobs({ enabled, logger = console }: Startu
   // This one is visual, let's keep it later to avoid initial layout shifts
   void sleep(6000).then(() => 
     runStartupJob(
-      () => import("../ai/consciousnessThemeEngine"),
+      () => import("@/ai/consciousnessThemeEngine"),
       (mod) => mod.startConsciousnessTheme(),
       "Consciousness Theme Engine started",
       "Consciousness Theme init failed:",

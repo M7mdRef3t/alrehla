@@ -1,10 +1,10 @@
 import { useMemo, useEffect } from "react";
-import { useAdminState } from "../state/adminState";
-import { useAuthState, getEffectiveRoleFromState } from "../state/authState";
-import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFlags";
-import { isUserMode } from "../config/appEnv";
-import { runtimeEnv } from "../config/runtimeEnv";
-import { fetchAdminConfig } from "../services/adminApi";
+import { useAdminState } from "@/state/adminState";
+import { useAuthState, getEffectiveRoleFromState } from "@/state/authState";
+import { getEffectiveFeatureAccess, isPrivilegedRole } from "@/utils/featureFlags";
+import { isUserMode } from "@/config/appEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
+import { fetchAdminConfig } from "@/services/adminApi";
 
 const hasSupabaseEnv = Boolean(runtimeEnv.supabaseUrl && runtimeEnv.supabaseAnonKey);
 

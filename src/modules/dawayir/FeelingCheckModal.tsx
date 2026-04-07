@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, Clock, Zap, Coins, Maximize, Heart, ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { useMapState } from "../../state/mapState";
+import { useMapState } from "@/state/mapState";
 import { FeelingCheckAsset } from "../map/mapTypes";
 
 interface AssetQuestion {

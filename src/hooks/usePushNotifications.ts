@@ -9,8 +9,8 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "../services/supabaseClient";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { supabase } from "@/services/supabaseClient";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 export type PushPermission = "default" | "granted" | "denied" | "unsupported";
 

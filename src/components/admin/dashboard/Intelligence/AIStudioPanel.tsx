@@ -21,13 +21,13 @@ import {
     CheckCircle
 } from "lucide-react";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
-import { julesService, JulesSession, JulesSource } from "../../../../services/julesService";
+import { julesService, JulesSession, JulesSource } from "@/services/julesService";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useAdminState } from "../../../../state/adminState";
-import { isSupabaseReady } from "../../../../services/supabaseClient";
-import { geminiClient } from "../../../../services/geminiClient";
-import { saveSystemPrompt, saveScoring, saveAiLog, rateAiLog as rateAiLogRemote } from "../../../../services/adminApi";
+import { useAdminState } from "@/state/adminState";
+import { isSupabaseReady } from "@/services/supabaseClient";
+import { geminiClient } from "@/services/geminiClient";
+import { saveSystemPrompt, saveScoring, saveAiLog, rateAiLog as rateAiLogRemote } from "@/services/adminApi";
 
 export const AIStudioPanel: FC = () => {
     // Global State

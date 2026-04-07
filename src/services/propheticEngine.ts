@@ -7,8 +7,8 @@
  * 3. محاكي المستقبل (Future Simulator): يتوقع حالتك بعد سنة.
  */
 
-import { useMapState } from "../state/mapState";
-import { type MapNode } from "../modules/map/mapTypes";
+import { useMapState } from "@/state/mapState";
+import { type MapNode } from "@/modules/map/mapTypes";
 import { calculateGravityMass } from "./physicsEngine";
 
 // 1. Energy Drain Radar & Vampire Detection

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { getItem, setItem, getJSON, setJSON, clearLocalData } from "../services/secureStore";
+import { getItem, setItem, getJSON, setJSON, clearLocalData } from "@/services/secureStore";
 
 describe("secureStore", () => {
   beforeEach(() => {

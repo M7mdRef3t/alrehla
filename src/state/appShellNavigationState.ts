@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import type { AdviceCategory } from "../data/adviceScripts";
-import type { AppScreen } from "../navigation/navigationMachine";
+import type { AdviceCategory } from "@/data/adviceScripts";
+import type { AppScreen } from "@/navigation/navigationMachine";
 
 export type AppShellScreen = AppScreen;
 

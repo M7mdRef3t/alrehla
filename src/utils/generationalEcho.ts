@@ -1,4 +1,4 @@
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 
 type GenerationalEchoTone = "danger" | "caution";
 

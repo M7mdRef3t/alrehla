@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Sparkles, MessageCircle, Lock, Users, Activity } from 'lucide-react';
-import { getActiveCircles, getSharedWisdom, SupportCircle, SharedWisdom } from '../../services/communityService';
+import { getActiveCircles, getSharedWisdom, SupportCircle, SharedWisdom } from '@/services/communityService';
 
 /**
  * Support Circles Screen

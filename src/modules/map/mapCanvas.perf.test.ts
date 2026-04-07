@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeMapInterference } from "../../services/socialSync";
+import { analyzeMapInterference } from "@/services/socialSync";
 import type { MapNode, Ring } from "./mapTypes";
 
 const MAX_NODES_FOR_FULL_CONNECTIONS = 140;

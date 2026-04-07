@@ -9,7 +9,7 @@ import {
   markGeminiRequestEnd,
   markGeminiRequestStart,
   withTimeout
-} from "./_shared.js";
+} from "./_shared";
 import {
   CODING_OUTPUT_CONTRACT,
   buildPromptGuardResponse,
@@ -17,7 +17,7 @@ import {
   evaluatePrompt,
   extractLatestUserTextFromContents,
   validateCodingCommentContract
-} from "./_promptGuard.js";
+} from "./_promptGuard";
 
 type ApiRequest = {
   method?: string;

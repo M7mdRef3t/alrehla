@@ -1,4 +1,4 @@
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 
 export type ContextAtlasKey = "family" | "work" | "love" | "general";
 

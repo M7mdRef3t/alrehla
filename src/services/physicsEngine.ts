@@ -4,9 +4,9 @@
  * يحول العلاقات إلى كتل جاذبية (Gravity Mass) وأنماط صدى (Echo Patterns).
  */
 
-import { useMapState } from "../state/mapState";
-import { useEventHistoryStore } from "../state/eventHistoryStore";
-import { type MapNode, type Ring } from "../modules/map/mapTypes";
+import { useMapState } from "@/state/mapState";
+import { useEventHistoryStore } from "@/state/eventHistoryStore";
+import { type MapNode, type Ring } from "@/modules/map/mapTypes";
 
 // 1. Gravity Mass Calculation
 // ------------------------------------------------------------------

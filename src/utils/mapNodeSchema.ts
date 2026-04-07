@@ -1,4 +1,4 @@
-import type { MapNode, TreeRelationType } from "../modules/map/mapTypes";
+import type { MapNode, TreeRelationType } from "@/modules/map/mapTypes";
 
 const TREE_TYPES = new Set<TreeRelationType>(["family", "work", "social"]);
 

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Hammer, Flame, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
-import { HiveEngine, ProvenPath } from '../../services/hiveEngine';
-import { soundManager } from '../../services/soundManager';
+import { HiveEngine, ProvenPath } from '@/services/hiveEngine';
+import { soundManager } from '@/services/soundManager';
 
 interface FirstBloodProps {
     oracleId: string;

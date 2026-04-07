@@ -11,8 +11,9 @@ import type {
   MarketingLeadPayload,
   MarketingLeadSourceType,
   NormalizedMarketingLeadInput
-} from "../types/marketingLead";
+} from "@/types/marketingLead";
 import { sendMetaCapiEvent } from "./metaCapi";
+import { WhatsAppCloudService } from "../services/whatsappCloudService";
 
 type OutreachQueueStatus = "pending" | "sent" | "failed" | "simulated";
 
@@ -189,6 +190,13 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
 
   if (storedLeadId) {
     enqueueOutreachAsync(input.email || null, input.source, input.utm, storedLeadId, input.phoneNormalized);
+
+    // Validate WhatsApp if phone is present and it's a NEW lead
+    if (input.phoneNormalized && isNew) {
+      void WhatsAppCloudService.validateNumber(input.phoneNormalized, storedLeadId).catch((err) => {
+        console.error("[marketing/lead] whatsapp_validation_trigger_failed:", err);
+      });
+    }
   }
 
   return {

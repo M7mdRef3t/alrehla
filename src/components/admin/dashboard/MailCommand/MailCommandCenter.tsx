@@ -7,8 +7,8 @@ import {
   ChevronDown, Search, Plus, ArrowUpRight, Inbox, Zap,
   TrendingUp
 } from "lucide-react";
-import { getAuthToken } from "../../../../state/authState";
-import { useAdminState } from "../../../../state/adminState";
+import { getAuthToken } from "@/state/authState";
+import { useAdminState } from "@/state/adminState";
 
 function getBearerToken(): string {
   return getAuthToken() ?? useAdminState.getState().adminCode ?? "";

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getStorageSize, getStorageStats } from "../services/dataExport";
+import { getStorageSize, getStorageStats } from "@/services/dataExport";
 
 describe("dataExport", () => {
   describe("getStorageSize", () => {

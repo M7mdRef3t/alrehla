@@ -1,4 +1,4 @@
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 
 export interface TEIResult {
   /** 0–100 — كلما ارتفع كلما زادت الفوضى العاطفية */
@@ -30,8 +30,8 @@ export interface TEISnapshot {
   savedAt: number;
 }
 
-import { supabase } from "../services/supabaseClient";
-import { trackEvent } from "../services/analytics";
+import { supabase } from "@/services/supabaseClient";
+import { trackEvent } from "@/services/analytics";
 
 function getClarityMessage(score: number, disturbedCount: number, totalCount: number): string {
   if (totalCount === 0) return "ابدأ برسم دوايرك لترى مؤشر وعيك";
@@ -152,7 +152,7 @@ export async function getTEIHistory(): Promise<TEISnapshot[]> {
      if(!user) return [];
 
      const { data } = await supabase
-       .from("telemetry_events")
+       .from("routing_events")
        .select("payload")
        .eq("user_id", user.id)
        .eq("event_type", "tei_snapshot_saved")

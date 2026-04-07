@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { BaselineAnswers } from "../data/baselineQuestions";
-import type { PostStepAnswers } from "../data/postStepQuestions";
-import { getJSON, setJSON } from "../services/secureStore";
+import type { BaselineAnswers } from "@/data/baselineQuestions";
+import type { PostStepAnswers } from "@/data/postStepQuestions";
+import { getJSON, setJSON } from "@/services/secureStore";
 
 export type JourneyStepId =
   | "baseline"

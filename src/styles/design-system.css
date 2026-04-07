@@ -4,11 +4,17 @@
   --ds-theme-text-muted: var(--ds-color-text-muted);
   --ds-theme-surface: color-mix(in srgb, var(--ds-color-space-mid) 72%, transparent);
   --ds-theme-surface-hover: color-mix(in srgb, var(--ds-color-space-nebula) 78%, transparent);
+  --ds-theme-void: var(--ds-color-space-void);
   --ds-color-primary: var(--ds-color-brand-teal-400);
   --ds-color-primary-strong: var(--ds-color-brand-teal-500);
-  --ds-color-primary-soft: color-mix(in srgb, var(--soft-teal) 92%, transparent);
-  --ds-color-primary-glow: color-mix(in srgb, var(--soft-teal) 28%, transparent);
+  --ds-color-primary-soft: color-mix(in srgb, var(--ds-color-brand-teal-400) 12%, transparent);
+  --ds-color-primary-glow: color-mix(in srgb, var(--ds-color-brand-teal-400) 28%, transparent);
   --ds-color-focus: color-mix(in srgb, var(--ds-color-brand-teal-400) 45%, transparent);
+  
+  /* Additional Brand Accents */
+  --ds-color-accent-indigo: #7C3AED;
+  --ds-color-accent-violet: #8B5CF6;
+  --ds-color-accent-amber: #F59E0B;
 }
 
 /* Kill white focus rectangle on SVG interactive elements (dnd-kit injects tabIndex) */
@@ -34,18 +40,35 @@ svg [role="button"]:focus-visible {
   border-radius: var(--ds-radius-lg);
   border: 1px solid var(--ds-color-border-default);
   background: var(--ds-color-glass-default);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(24px) saturate(120%);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
   box-shadow: var(--ds-shadow-base);
   transition:
     border-color var(--ds-motion-base) var(--ds-motion-ease),
     transform var(--ds-motion-base) var(--ds-motion-ease),
-    background var(--ds-motion-base) var(--ds-motion-ease);
+    background var(--ds-motion-base) var(--ds-motion-ease),
+    box-shadow var(--ds-motion-base) var(--ds-motion-ease);
 }
 
 .ds-card:hover {
   border-color: var(--ds-color-border-hover);
   background: var(--ds-color-glass-hover);
+}
+
+.glass-heavy {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
 }
 
 .ds-badge {
@@ -150,3 +173,57 @@ svg [role="button"]:focus-visible {
   border-color: var(--ds-color-border-default);
   background: color-mix(in srgb, var(--ds-color-space-void) 35%, transparent);
 }
+
+/* 🧭 Premium Sidebar Navigation */
+.ds-sidebar-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: var(--ds-radius-base);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ds-theme-text-secondary);
+  border: 1px solid transparent;
+  background: transparent;
+  transition: all var(--ds-motion-base) var(--ds-motion-ease);
+  cursor: pointer;
+  text-align: right;
+  position: relative;
+  overflow: hidden;
+}
+
+.ds-sidebar-item:hover {
+  color: var(--ds-theme-text-primary);
+  background: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 8%, transparent);
+  border-color: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 25%, transparent);
+  box-shadow: 0 4px 20px -5px color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 20%, transparent);
+}
+
+.ds-sidebar-item[data-active="true"] {
+  color: var(--ds-theme-text-primary);
+  background: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 12%, transparent);
+  border-color: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 40%, transparent);
+  box-shadow: 0 0 15px -2px color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 30%, transparent);
+}
+
+.ds-sidebar-item .ds-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ds-theme-text-muted);
+  transition: all var(--ds-motion-base) var(--ds-motion-ease);
+}
+
+.ds-sidebar-item:hover .ds-icon-box,
+.ds-sidebar-item[data-active="true"] .ds-icon-box {
+  background: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 15%, transparent);
+  color: var(--ds-item-glow-color, var(--ds-color-primary));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 30%, transparent);
+}
+

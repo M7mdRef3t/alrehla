@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { StoriesScreen } from "../../src/components/StoriesScreen";
-import { PlatformFooter } from "../../src/components/PlatformFooter";
+import { StoriesScreen } from "@/modules/growth/StoriesScreen";
+import { PlatformFooter } from "@/modules/meta/PlatformFooter";
 
 export default function StoriesPage() {
   const router = useRouter();

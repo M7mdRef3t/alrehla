@@ -123,7 +123,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: "expansion-hub", label: "إستراتيجية التوسع", icon: <Rocket className="w-4 h-4 text-rose-400" /> },
       { id: "b2b-analytics", label: "تحليلات B2B", icon: <ShieldCheck className="w-4 h-4 text-indigo-400" /> },
       { id: "sales-enablement", label: "تمكين النمو", icon: <Briefcase className="w-4 h-4 text-emerald-400" /> },
-      { id: "marketing-ops", label: "إدارة الانتشار", icon: <Rocket className="w-4 h-4 text-rose-400" /> },
+      { id: "marketing-ops", label: "رحلة الانتشار", icon: <Rocket className="w-4 h-4 text-rose-400" /> },
       { id: "mail-command", label: "قيادة البريد", icon: <Mail className="w-4 h-4 text-indigo-400" /> },
       { id: "ai-marketing", label: "تسويق الوعي", icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
       { id: "ad-analytics", label: "تحليلات الإعلانات", icon: <BarChart3 className="w-4 h-4 text-cyan-400" /> },
@@ -166,7 +166,7 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "repo-intel": "ذكاء المستودع",
   "dawayir-live": "دواير لايف",
   "ad-analytics": "تحليلات الإعلانات",
-  "marketing-ops": "إدارة الانتشار",
+  "marketing-ops": "رحلة الانتشار",
   "mail-command": "قيادة البريد",
   "expansion-hub": "إستراتيجية التوسع",
   sovereign: "مركز السيادة الإدراكية"
@@ -206,7 +206,7 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "repo-intel": "ذكاء المستودع: نظرة مكشوفة لكود المنصة والتغيرات البرمجية من داخل اللوحة مباشرة.",
   "dawayir-live": "دواير لايف: مراقبة النشاط المباشر والتفاعل اللحظي واللقاءات الحية للزوار.",
   "ad-analytics": "تحليلات الإعلانات: حساب العائد من الإنفاق المباشر ونسب التحويل المؤكدة.",
-  "marketing-ops": "إدارة الانتشار: حملات البريد الإلكتروني، إدارة الإشعارات، والرسائل الترويجية.",
+  "marketing-ops": "رحلة الانتشار: حملات البريد الإلكتروني، إدارة الإشعارات، والرسائل الترويجية.",
   "mail-command": "قيادة البريد: نظام بريد إلكتروني متكامل — إرسال، قوالب، تتبع أداء، وسجل كامل.",
   "expansion-hub": "إستراتيجية التوسع: تحليل القوة الشرائية العالمية مقابل نقاط الألم النفسية لتحديد الأسواق المحتملة."
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { BaselineAssessment } from "../../src/components/BaselineAssessment";
+import { BaselineAssessment } from "@/modules/exploration/BaselineAssessment";
 import { useState } from "react";
 import { motion } from "framer-motion";
 

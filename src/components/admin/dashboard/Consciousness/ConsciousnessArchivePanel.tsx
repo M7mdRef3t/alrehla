@@ -14,7 +14,7 @@ import {
     Activity
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { type MemoryMatch } from "../../../../services/consciousnessService";
+import { type MemoryMatch } from "@/services/consciousnessService";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 
 // Mock service if not fully implemented, or use existing

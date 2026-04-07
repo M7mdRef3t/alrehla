@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Activity, TrendingDown, TrendingUp } from "lucide-react";
-import { getWeeklyPattern } from "../utils/sessionHistory";
+import { getWeeklyPattern } from '@/modules/dawayir-live/utils/sessionHistory';
 
 const NODE_META = {
   ar: {

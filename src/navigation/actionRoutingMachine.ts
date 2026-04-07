@@ -1,4 +1,4 @@
-import type { FeatureFlagKey } from "../config/features";
+import type { FeatureFlagKey } from "@/config/features";
 
 export type OwnerActionKey =
   | "admin_dashboard"

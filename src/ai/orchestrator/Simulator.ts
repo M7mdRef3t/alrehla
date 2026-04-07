@@ -1,7 +1,7 @@
 ﻿import { orchestrator } from "./Core";
 import { SystemSnapshot } from "./types";
-import { awarenessQueueService } from "../../services/awarenessQueueService";
-import { MissionGenerator, DDAConstraintEngine } from "../../services/missionGenerator";
+import { awarenessQueueService } from "@/services/awarenessQueueService";
+import { MissionGenerator, DDAConstraintEngine } from "@/services/missionGenerator";
 
 /**
  * TacticalSimulator — أداة اختبار الضغط للنظام الآلي

@@ -1,8 +1,8 @@
-import { geminiClient } from "../services/geminiClient";
-import type { MapNode, PersonViewInsights } from "../modules/map/mapTypes";
-import type { AdviceCategory } from "../data/adviceScripts";
-import { PATH_NAMES } from "../modules/pathEngine/pathResolver";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { geminiClient } from "@/services/geminiClient";
+import type { MapNode, PersonViewInsights } from "@/modules/map/mapTypes";
+import type { AdviceCategory } from "@/data/adviceScripts";
+import { PATH_NAMES } from "@/modules/pathEngine/pathResolver";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 interface AIDiagnosisResponse {
   diagnosisTitle?: string;

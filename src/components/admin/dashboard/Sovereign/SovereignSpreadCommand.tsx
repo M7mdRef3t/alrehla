@@ -16,8 +16,8 @@ import {
   ShieldCheck
 } from "lucide-react";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
-import { growthEngine, type DiffusionMetrics } from "../../../../services/growthEngine";
-import { supabase, isSupabaseReady } from "../../../../services/supabaseClient";
+import { growthEngine, type DiffusionMetrics } from "@/services/growthEngine";
+import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import debounce from "lodash/debounce";
 
 export const SovereignSpreadCommand: FC = () => {

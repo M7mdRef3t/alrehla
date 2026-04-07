@@ -2,17 +2,17 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Check, Shield, Sparkles, ArrowLeft, Zap } from "lucide-react";
-import { signInWithGoogleAtPath } from "../../services/authService";
-import { consumeEmotionalOffer, getEmotionalOffer } from "../../services/subscriptionManager";
-import { supabase } from "../../services/supabaseClient";
-import { trackEvent, AnalyticsEvents } from "../../services/analytics";
-import { marketingLeadService } from "../../services/marketingLeadService";
-import { recordFlowEvent } from "../../services/journeyTracking";
+import { signInWithGoogleAtPath } from "@/services/authService";
+import { consumeEmotionalOffer, getEmotionalOffer } from "@/services/subscriptionManager";
+import { supabase } from "@/services/supabaseClient";
+import { trackEvent, AnalyticsEvents } from "@/services/analytics";
+import { marketingLeadService } from "@/services/marketingLeadService";
+import { recordFlowEvent } from "@/services/journeyTracking";
 import {
   TIER_PRICES_USD,
   TIER_LABELS,
   PREMIUM_FEATURES_LIST,
-} from "../../config/pricing";
+} from "@/config/pricing";
 
 const FEATURES = PREMIUM_FEATURES_LIST;
 

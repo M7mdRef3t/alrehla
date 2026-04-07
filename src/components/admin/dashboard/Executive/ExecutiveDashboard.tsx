@@ -16,9 +16,9 @@ import {
   fetchExecutiveReport,
   fetchSovereignExecutiveReport,
   type SovereignExecutiveReport
-} from "../../../../services/adminApi";
-import { fetchFlowAuditLogs, type FlowAuditLogEntry } from "../../../../services/flowAudit";
-import type { ExecutiveReport as ExecutiveReportType } from "../../../../types/admin.types";
+} from "@/services/adminApi";
+import { fetchFlowAuditLogs, type FlowAuditLogEntry } from "@/services/flowAudit";
+import type { ExecutiveReport as ExecutiveReportType } from "@/types/admin.types";
 
 export const ExecutiveDashboard: FC = () => {
     const [remoteStats, setRemoteStats] = useState<OverviewStats | null>(null);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { LiveLanguage, TranscriptEntry } from "../types";
+import type { LiveLanguage, TranscriptEntry } from '../types';
 
 interface SacredPauseOverlayProps {
   language: LiveLanguage;

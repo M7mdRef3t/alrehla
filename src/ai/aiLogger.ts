@@ -1,4 +1,4 @@
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 type ConsoleMethod = "log" | "warn" | "error";
 

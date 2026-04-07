@@ -4,30 +4,30 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, GripVertical } from "lucide-react";
 import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
 import type { Ring, MapNode as MapNodeType } from "./mapTypes";
-import { useMapState } from "../../state/mapState";
-import { useMeState } from "../../state/meState";
-import { mapCopy } from "../../copy/map";
-import { hasSeenOnboarding } from "../../utils/mapOnboarding";
-import { getMissionProgressSummary } from "../../utils/missionProgress";
-import { JourneyToast } from "../../components/JourneyToast";
-import { FutureSimulator } from "../../components/FutureSimulator";
+import { useMapState } from "@/state/mapState";
+import { useMeState } from "@/state/meState";
+import { mapCopy } from "@/copy/map";
+import { hasSeenOnboarding } from "@/utils/mapOnboarding";
+import { getMissionProgressSummary } from "@/utils/missionProgress";
+import { JourneyToast } from '@/modules/action/JourneyToast';
+import { FutureSimulator } from '@/modules/action/FutureSimulator';
 import { Telescope } from "lucide-react";
-import { analyzeMapInterference } from "../../services/socialSync";
+import { analyzeMapInterference } from "@/services/socialSync";
 import { AINode } from "./AINode";
-import { useCognitiveDebounce } from "../../hooks/useCognitiveDebounce";
-import { useAuthState } from "../../state/authState";
-import { useAdminState } from "../../state/adminState";
-import { useOptimisticPhoenixSync } from "../../hooks/useOptimisticPhoenixSync";
-import { useKineticSensors } from "../../hooks/useKineticSensors";
-import { useDailyPulse } from "../../hooks/useDailyPulse";
-import { useDailyQuestion } from "../../hooks/useDailyQuestion";
-import { soundManager } from "../../services/soundManager";
-import { BatteryStateModal } from "../../components/BatteryStateModal";
-import { useLongPress } from "../../hooks/useLongPress";
-import { usePulseState } from "../../state/pulseState";
-import { useGamificationState } from "../../state/gamificationState";
+import { useCognitiveDebounce } from "@/hooks/useCognitiveDebounce";
+import { useAuthState } from "@/state/authState";
+import { useAdminState } from "@/state/adminState";
+import { useOptimisticPhoenixSync } from "@/hooks/useOptimisticPhoenixSync";
+import { useKineticSensors } from "@/hooks/useKineticSensors";
+import { useDailyPulse } from "@/hooks/useDailyPulse";
+import { useDailyQuestion } from "@/hooks/useDailyQuestion";
+import { soundManager } from "@/services/soundManager";
+import { BatteryStateModal } from '@/modules/action/BatteryStateModal';
+import { useLongPress } from "@/hooks/useLongPress";
+import { usePulseState } from "@/state/pulseState";
+import { useGamificationState } from "@/state/gamificationState";
 import { Zap, Flame } from "lucide-react";
-import { useSynthesisState } from "../../state/synthesisState";
+import { useSynthesisState } from "@/state/synthesisState";
 
 /* 
     COSMIC MAP CANVAS  Digital Sanctuary
@@ -279,10 +279,10 @@ const IllusionEntityView: FC<{ scenario: any; index: number; total: number; onDi
 /*  Node Colors (Cosmic)  */
 
 const RING_COLORS = {
-  safe: { stroke: "#2DD4BF", glow: "rgba(45, 212, 191, 0.25)" },
-  caution: { stroke: "#FBBF24", glow: "rgba(251, 191, 36, 0.35)" },
-  danger: { stroke: "#F43F5E", glow: "rgba(244, 63, 94, 0.45)" },
-  detached: { stroke: "#94A3B8", glow: "rgba(148, 163, 184, 0.15)" }
+  safe: { stroke: "var(--consciousness-primary)", glow: "var(--ds-color-primary-glow)" },
+  caution: { stroke: "var(--consciousness-accent)", glow: "color-mix(in srgb, var(--consciousness-accent) 35%, transparent)" },
+  danger: { stroke: "var(--consciousness-critical)", glow: "color-mix(in srgb, var(--consciousness-critical) 45%, transparent)" },
+  detached: { stroke: "var(--ds-theme-text-muted)", glow: "rgba(148, 163, 184, 0.15)" }
 } as const;
 
 const NODE_GLOW_CLASS: Record<Ring, string> = {
@@ -403,12 +403,12 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         shadow: "rgba(0,0,0,0.05)"
       }
     : isVampire
-      ? { stroke: "rgba(153,27,27,0.6)", bg: "linear-gradient(135deg, rgba(153,27,27,0.1), rgba(0,0,0,0.4))", glow: "rgba(185,28,28,0.1)", accent: "#ef4444", shadow: "rgba(185,28,28,0.2)" }
+      ? { stroke: "rgba(153,27,27,0.6)", bg: "linear-gradient(135deg, rgba(153,27,27,0.1), rgba(0,0,0,0.4))", glow: "rgba(185,28,28,0.1)", accent: "var(--consciousness-critical)", shadow: "rgba(185,28,28,0.2)" }
       : node.ring === "red"
-        ? { stroke: "rgba(244,63,94,0.55)", bg: "var(--glass-bg)", glow: "rgba(244,63,94,0.1)", accent: "#f43f5e", shadow: "rgba(244,63,94,0.12)" }
+        ? { stroke: "rgba(244,63,94,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-critical)", shadow: "color-mix(in srgb, var(--consciousness-critical) 12%, transparent)" }
         : node.ring === "yellow"
-          ? { stroke: "rgba(251,191,36,0.55)", bg: "var(--glass-bg)", glow: "rgba(251,191,36,0.1)", accent: "#f59e0b", shadow: "rgba(251,191,36,0.12)" }
-          : { stroke: "rgba(45,212,191,0.55)", bg: "var(--glass-bg)", glow: "rgba(45,212,191,0.1)", accent: "#14b8a6", shadow: "rgba(45,212,191,0.12)" };
+          ? { stroke: "rgba(251,191,36,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-accent)", shadow: "color-mix(in srgb, var(--consciousness-accent) 12%, transparent)" }
+          : { stroke: "rgba(45,212,191,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-primary)", shadow: "color-mix(in srgb, var(--consciousness-primary) 12%, transparent)" };
 
   const auraColor = isDetached
     ? "rgba(71,85,105,0.08)"

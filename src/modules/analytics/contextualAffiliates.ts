@@ -1,4 +1,4 @@
-import { videos, type ContentCategory } from "../../data/educationalContent";
+import { videos, type ContentCategory } from "@/data/educationalContent";
 
 export interface ContextualAffiliateRecommendation {
   id: string;

@@ -1,12 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import React from 'react';
-import DawayirApp from '../../src/modules/dawayir/DawayirApp';
+import { ClientAppShell } from '../client-app-shell';
 
 export const metadata = {
-    title: 'دَوَايِر - اكتشف النزيف الخفي',
-    description: 'منصة الرحلة - أداة دواير لتحليل واستعادة طاقتك المهدورة',
+    title: 'دَوَايِر - رادار السيادة الحية',
+    description: 'استعد سيادتك على علاقاتك وطاقتك المهدورة عبر رادار الذكاء الاصطناعي',
 };
 
 export default function DawayirPage() {
-    return <DawayirApp />;
+    return <ClientAppShell />;
 }

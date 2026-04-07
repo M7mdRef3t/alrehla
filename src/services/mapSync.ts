@@ -1,13 +1,13 @@
 // mapSync.ts
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 import { isSupabaseReady, supabase } from "./supabaseClient";
 import {
   getTrackingSessionId
 } from "./journeyTracking";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "./browserStorage";
-import { useSyncState } from "../state/syncState";
-import { useJourneyState } from "../state/journeyState";
+import { useSyncState } from "@/state/syncState";
+import { useJourneyState } from "@/state/journeyState";
 import { triggerMapCompletionCheck } from "../lib/gate/handoffCore";
 
 const SUPABASE_MAPS_TABLE = "journey_maps";

@@ -1,7 +1,7 @@
-import { useSynthesisState } from '../../state/synthesisState';
-import { usePulseState } from '../../state/pulseState';
-import { useMapState } from '../../state/mapState';
-import { computeTEI } from '../../utils/traumaEntropyIndex';
+import { useSynthesisState } from '@/state/synthesisState';
+import { usePulseState } from '@/state/pulseState';
+import { useMapState } from '@/state/mapState';
+import { computeTEI } from '@/utils/traumaEntropyIndex';
 
 /*
     MAJAZ NEURAL ENGINE 2.0 — Resonant Soundscape

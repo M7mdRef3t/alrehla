@@ -2,23 +2,23 @@
 
 import { useCallback, useEffect, Suspense, useState } from "react";
 import dynamic from "next/dynamic";
-import { AwarenessSkeleton } from "../src/components/AwarenessSkeleton";
-import { ErrorBoundary } from "../src/components/ErrorBoundary";
-import { initAnalytics, trackPageView, trackLandingView } from "../src/services/analytics";
-import { initMonitoring } from "../src/services/monitoring";
-import { runtimeEnv } from "../src/config/runtimeEnv";
-import { applyDesignSystemTokens } from "../src/services/designSystemTokens";
-import { PWAInstallProvider } from "../src/contexts/PWAInstallContext";
-import { AnalyticsConsentBanner } from "../src/components/AnalyticsConsentBanner";
-import { AnalyticsDiagnosticsOverlay } from "../src/components/AnalyticsDiagnosticsOverlay";
-import { PlatformHeader } from "../src/components/PlatformHeader";
-import type { PostAuthIntent } from "../src/utils/postAuthIntent";
+import { AwarenessSkeleton } from "@/modules/meta/AwarenessSkeleton";
+import { ErrorBoundary } from "@/modules/action/ErrorBoundary";
+import { initAnalytics, trackPageView, trackLandingView } from "@/services/analytics";
+import { initMonitoring } from "@/services/monitoring";
+import { runtimeEnv } from "@/config/runtimeEnv";
+import { applyDesignSystemTokens } from "@/services/designSystemTokens";
+import { PWAInstallProvider } from "@/contexts/PWAInstallContext";
+import { AnalyticsConsentBanner } from "@/modules/meta/AnalyticsConsentBanner";
+import { AnalyticsDiagnosticsOverlay } from "@/modules/meta/AnalyticsDiagnosticsOverlay";
+import { PlatformHeader } from "@/modules/meta/PlatformHeader";
+import type { PostAuthIntent } from "@/utils/postAuthIntent";
 
-const App = dynamic(() => import("../src/App"), { ssr: false });
-const Landing = dynamic(() => import("../src/components/Landing").then((m) => m.Landing), { ssr: false }) as typeof import("../src/components/Landing").Landing;
-const GoogleAuthModal = dynamic(() => import("../src/components/GoogleAuthModal").then((m) => m.GoogleAuthModal), {
+const App = dynamic(() => import("@/App"), { ssr: false });
+const Landing = dynamic(() => import("@/modules/meta/Landing").then((m) => m.Landing), { ssr: false }) as typeof import("@/modules/meta/Landing").Landing;
+const GoogleAuthModal = dynamic(() => import("@/modules/exploration/GoogleAuthModal").then((m) => m.GoogleAuthModal), {
   ssr: false
-}) as typeof import("../src/components/GoogleAuthModal").GoogleAuthModal;
+}) as typeof import("@/modules/exploration/GoogleAuthModal").GoogleAuthModal;
 const Analytics = dynamic(() => import("@vercel/analytics/react").then((m) => m.Analytics), { ssr: false });
 const SpeedInsights = dynamic(() => import("@vercel/speed-insights/react").then((m) => m.SpeedInsights), { ssr: false });
 

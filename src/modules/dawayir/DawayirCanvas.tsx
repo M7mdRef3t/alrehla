@@ -12,11 +12,11 @@ import {
   DragOverlay,
   defaultDropAnimationSideEffects
 } from "@dnd-kit/core";
-import { useMapState } from "../../state/mapState";
+import { useMapState } from "@/state/mapState";
 import { Ring, MapNode as MapNodeType } from "../map/mapTypes";
 import { User, Clock, Zap, Coins, Maximize, GripVertical, Plus, AlertCircle, Info, X } from "lucide-react";
 import { useMasafatyAnalysis, EntropyLevel } from "./hooks/useMasafatyAnalysis";
-import { Button } from "../../components/UI/Button";
+import { Button } from '@/modules/meta/UI/Button';
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -30,9 +30,9 @@ interface DawayirCanvasProps {
 
 const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ radius, label, ring }) => {
   const colors = {
-    green: "rgba(45, 212, 191, 0.15)",
-    yellow: "rgba(251, 191, 36, 0.15)",
-    red: "rgba(244, 63, 94, 0.15)",
+    green: "var(--ring-safe)",
+    yellow: "var(--ring-caution)",
+    red: "var(--ring-danger)",
   };
 
   return (
@@ -40,13 +40,14 @@ const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ r
       <circle 
         cx="50" cy="50" r={radius} 
         fill="none" 
-        stroke="rgba(255,255,255,0.03)" 
+        stroke="var(--app-border)" 
         strokeWidth="0.5" 
       />
       <motion.circle
         cx="50" cy="50" r={radius}
         fill="none"
         stroke={colors[ring]}
+        strokeOpacity="0.15"
         strokeWidth="0.2"
         strokeDasharray="1 2"
         animate={{ rotate: 360 }}
@@ -60,15 +61,16 @@ const EntropyGlow: FC<{ x: number; y: number; level: EntropyLevel }> = memo(({ x
   if (level === 0) return null;
   
   const colors = {
-    1: "rgba(251, 191, 36, 0.4)", // Yellow
-    2: "rgba(244, 63, 94, 0.4)",  // Red
-    3: "rgba(244, 63, 94, 0.6)",  // Strong Red
+    1: "var(--ring-caution)",
+    2: "var(--ring-danger)",
+    3: "var(--ring-danger)",
   };
 
   return (
     <motion.circle
       cx={x} cy={y} r="6"
       fill={colors[level as 1|2|3]}
+      fillOpacity={level === 3 ? 0.6 : 0.4}
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ 
         scale: [1, 1.3, 1],
@@ -106,14 +108,24 @@ const MeNodeCenter: FC = memo(() => {
       />
       
       {/* Core "Me" */}
-      <circle r="6" fill="#0f172a" stroke="rgba(45, 212, 191, 0.3)" strokeWidth="0.5" />
+      <motion.circle 
+        r="6" 
+        fill="var(--space-950)" 
+        stroke="var(--ring-safe)" 
+        strokeOpacity="0.6"
+        strokeWidth="0.8" 
+        animate={{ scale: [1, 1.05, 1] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+      />
+      
+      {/* Drop-shadow Text Effect */}
       <text 
         textAnchor="middle" 
-        dy="1.5" 
-        fontSize="3" 
+        dy="1.2" 
+        fontSize="2.8" 
         fontWeight="black" 
         fill="white"
-        className="pointer-events-none"
+        className="pointer-events-none drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]"
       >
         أنا
       </text>
@@ -192,24 +204,48 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   } : undefined;
 
   const ringColors = {
-    green: "rgba(45, 212, 191, 1)",
-    yellow: "rgba(251, 191, 36, 1)",
-    red: "rgba(244, 63, 94, 1)",
+    green: "var(--ring-safe)",
+    yellow: "var(--ring-caution)",
+    red: "var(--ring-danger)",
   };
 
   return (
     <>
     <motion.g 
       ref={setNodeRef as any} 
-      style={{ ...style, outline: "none", WebkitTapHighlightColor: "transparent" } as any}
+      style={{ ...style, outline: "none", WebkitTapHighlightColor: "transparent", zIndex: isDragging ? 50 : "auto" } as any}
       {...attributes} 
       {...listeners}
       tabIndex={-1}
-      className="cursor-grab active:cursor-grabbing"
+      className={`cursor-grab ${isDragging ? "cursor-grabbing" : ""}`}
+      whileHover={{ scale: 1.15, transition: { type: "spring", stiffness: 400, damping: 10 } }}
+      whileTap={{ scale: 0.95 }}
+      animate={isDragging ? { scale: 1.3, filter: "drop-shadow(0 0 15px rgba(45,212,191,0.6))" } : { scale: 1, filter: "drop-shadow(0 0 0px rgba(45,212,191,0))" }}
       onTap={() => {
         if (!isDragging && !deleteClickedRef.current && !showConfirmDelete) onClick(node);
       }}
     >
+      {node.isMirrorNode && (
+        <motion.circle
+          cx={baseX} cy={baseY} r="7"
+          fill="none" stroke="rgba(251,191,36,0.6)" strokeWidth="0.5"
+          strokeDasharray="2 2"
+          animate={{ rotate: 360, scale: [1, 1.15, 1], opacity: [0.3, 0.8, 0.3] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        />
+      )}
+
+      {node.isPowerBank && (
+        <motion.g 
+          transform={`translate(${baseX - 4}, ${baseY + 4})`}
+          animate={{ y: [0, -1, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <circle r="1.8" fill="#eab308" />
+          <text textAnchor="middle" dy="0.6" fontSize="1.8" fill="#1e293b" fontWeight="black" className="pointer-events-none drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]">⚡</text>
+        </motion.g>
+      )}
+
       <EntropyGlow x={baseX} y={baseY} level={entropyLevel} />
       
       {/* Analyzing Glow */}
@@ -228,8 +264,9 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
 
       <circle 
         cx={baseX} cy={baseY} r="4" 
-        fill="#0f172a" 
-        stroke={node.isAnalyzing ? "rgba(20, 184, 166, 0.4)" : ringColors[node.ring]} 
+        fill="var(--space-950)" 
+        stroke={node.isAnalyzing ? "var(--soft-teal)" : ringColors[node.ring]} 
+        strokeOpacity={node.isAnalyzing ? 0.4 : 1}
         strokeWidth="0.8" 
         className="transition-colors duration-300"
       />

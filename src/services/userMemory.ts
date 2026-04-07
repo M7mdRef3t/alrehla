@@ -60,7 +60,7 @@ export async function syncMemoryFromSupabase(): Promise<void> {
         if (!sessionData?.session?.user) return;
         
         const { data } = await supabase
-            .from("telemetry_events")
+            .from("routing_events")
             .select("payload")
             .eq("user_id", sessionData.session.user.id)
             .eq("event_type", "jarvis_memory_backup")

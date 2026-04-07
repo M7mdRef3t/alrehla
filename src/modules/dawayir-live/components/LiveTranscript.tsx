@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import type { LiveLanguage, TranscriptEntry } from "../types";
+import type { LiveLanguage, TranscriptEntry } from '../types';
 
 interface LiveTranscriptProps {
   entries: TranscriptEntry[];

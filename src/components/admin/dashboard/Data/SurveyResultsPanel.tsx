@@ -1,8 +1,8 @@
 import type { FC } from "react";
 import { useEffect, useState, useCallback } from "react";
 import { ClipboardList, TrendingUp, Users, AlertTriangle, CheckCircle2, BarChart3 } from "lucide-react";
-import { supabase, isSupabaseReady } from "../../../../services/supabaseClient";
-import { surveyCopy } from "../../../../copy/survey";
+import { supabase, isSupabaseReady } from "@/services/supabaseClient";
+import { surveyCopy } from "@/copy/survey";
 
 /* ═══════════════════════════════
    Survey Results Panel — Hypothesis Dashboard

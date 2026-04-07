@@ -59,17 +59,17 @@ export async function getEmotionalPricingStats(): Promise<EmotionalPricingStats>
   try {
     const [gifts, discounts, conversions] = await Promise.all([
       supabase
-        .from("telemetry_events")
+        .from("routing_events")
         .select("*", { count: "exact", head: true })
         .eq("event_type", "emotional_pricing_triggered")
         .eq("payload->>action", "gift_granted"),
       supabase
-        .from("telemetry_events")
+        .from("routing_events")
         .select("*", { count: "exact", head: true })
         .eq("event_type", "emotional_pricing_triggered")
         .eq("payload->>action", "discount_offer_created"),
       supabase
-        .from("telemetry_events")
+        .from("routing_events")
         .select("*", { count: "exact", head: true })
         .eq("event_type", "emotional_pricing_triggered")
         .eq("payload->>action", "offer_converted_to_premium"),

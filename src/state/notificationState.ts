@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import {
   isNotificationSupported,
   getNotificationPermission,
@@ -11,7 +11,7 @@ import {
   checkAndSendWeeklyGratitude,
   checkAndSendMapRevisit,
   type NotificationSettings
-} from "../services/notifications";
+} from "@/services/notifications";
 
 interface NotificationState {
   // حالة الدعم والإذن

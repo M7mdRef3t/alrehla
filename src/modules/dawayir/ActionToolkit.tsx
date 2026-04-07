@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, MessageCircle, Heart, Zap, RefreshCw, X, ChevronRight } from "lucide-react";
-import { Button } from "../../components/UI/Button";
+import { Button } from '@/modules/meta/UI/Button';
 import { useMasafatyAnalysis } from "./hooks/useMasafatyAnalysis";
-import { trackEvent, AnalyticsEvents } from "../../services/analytics";
+import { trackEvent, AnalyticsEvents } from "@/services/analytics";
 
 export function ActionToolkit() {
   const [showAIPopover, setShowAIPopover] = useState(false);

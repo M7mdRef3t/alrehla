@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { LiveLanguage } from "../types";
+import type { LiveLanguage } from '../types';
 
 interface ParityOnboardingModalProps {
   language: LiveLanguage;

@@ -3,9 +3,9 @@
  * للاستخدام في لوحة تحكم الأطلس فقط.
  */
 
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 import { getAggregateStats, getEventsByDay } from "./journeyTracking";
-import { PATH_NAMES } from "../modules/pathEngine/pathResolver";
+import { PATH_NAMES } from "@/modules/pathEngine/pathResolver";
 
 export type RoleId = "family" | "work" | "love" | "money" | "unknown";
 export type ZoneId = "red" | "yellow" | "green" | "grey";

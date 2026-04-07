@@ -42,8 +42,8 @@ import { SovereignGatewayCommand, AVAILABLE_GATEWAYS } from "../Sovereign/Sovere
 import { StatCard } from "../Executive/components/StatCard";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 
-import { adminApi } from "../../../../services/adminApi";
-import { growthEngine, GrowthMetrics } from "../../../../services/growthEngine";
+import { adminApi } from "@/services/adminApi";
+import { growthEngine, GrowthMetrics } from "@/services/growthEngine";
 
 // --- Types ---
 
@@ -116,8 +116,8 @@ const OWNER_EMAIL = "hello@alrehla.app";
 
 // --- Helpers ---
 
-import { getAuthToken } from "../../../../state/authState";
-import { useAdminState } from "../../../../state/adminState";
+import { getAuthToken } from "@/state/authState";
+import { useAdminState } from "@/state/adminState";
 import { CampaignLeadsModal } from "./CampaignLeadsModal";
 
 function getBearerToken(): string {
@@ -393,7 +393,7 @@ function MarketingSpendConsole({
       <div className="flex items-center gap-2 px-2">
         <AlertCircle className="w-3 h-3 text-indigo-400/50" />
         <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 leading-none">
-          يتم ربط هذا الرقم مع بوابة العوائد لحساب الـ ROI الفعلي بدقة السنت.
+          يتم ربط هذا الرقم مع مركز العوائد لحساب العائد على الاستثمار الفعلي بدقة السنت.
         </p>
       </div>
     </div>
@@ -662,7 +662,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
 
       {/* Financial ROI Dashboard (New) */}
       <CollapsibleSection
-        title={"التحليل المالي والعائد (ROI)"}
+        title={"التحليل المالي والعائد"}
         icon={<DollarSign className="w-5 h-5 text-indigo-400" />}
         subtitle={"الذكاء المالي الفوقي لمراقبة كفاءة الإنفاق والتحويل النقدي."}
         defaultExpanded={true}
@@ -671,21 +671,21 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <StatCard 
-              title={"العائد على الإنفاق (ROI)"} 
+              title={"العائد على الإنفاق"} 
               value={(growthMetrics?.roi ?? 0).toFixed(1) + "%"} 
               icon={growthMetrics && growthMetrics.roi > 0 ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownRight className="w-5 h-5" />} 
               glowColor={growthMetrics && growthMetrics.roi > 0 ? "emerald" : "rose"} 
               tooltip={"نسبة الربح الصافي إلى تكلفة الإنفاق الإعلاني."} 
             />
             <StatCard 
-              title={"تكلفة الاستحواذ (CPA)"} 
+              title={"تكلفة الاستحواذ"} 
               value={"$" + (growthMetrics?.cpa ?? 0).toFixed(2)} 
               icon={<Target className="w-5 h-5" />} 
               glowColor="indigo" 
               tooltip={"متوسط تكلفة تحويل ليد عادي إلى مشترك أو عميل مفعل."} 
             />
             <StatCard 
-              title={"تكلفة الليد (CPL)"} 
+              title={"تكلفة الروح الجديدة"} 
               value={"$" + (growthMetrics?.cpl ?? 0).toFixed(2)} 
               icon={<Users className="w-5 h-5" />} 
               glowColor="sky" 
@@ -714,7 +714,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
                <div className="flex items-center gap-2 mt-4">
                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400/70">
-                    اتصال حي مع بوابة Sovereign Revenue
+                    اتصال حي مع تدفق الإيرادات
                  </p>
                </div>
             </div>
@@ -724,7 +724,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
 
       {/* Sovereign Gateway Command (Gateways Monitoring) */}
       <CollapsibleSection
-        title={"بوابات العبور ونبض الانتشار (Gateways Control)"}
+        title={"رحلات العبور ونبض الانتشار"}
         icon={<Orbit className="w-5 h-5 text-fuchsia-400" />}
         subtitle={"مراقبة ترددات القنوات الإعلانية (Meta, TikTok, etc) والتحكم في تدفق الأرواح."}
         defaultExpanded={true}

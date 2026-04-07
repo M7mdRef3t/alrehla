@@ -4,7 +4,7 @@ import { Gift, PercentCircle, TrendingUp, Sparkles } from "lucide-react";
 import {
   getEmotionalPricingStats,
   type EmotionalPricingStats,
-} from "../../../../../services/emotionalPricingAnalytics";
+} from "@/services/emotionalPricingAnalytics";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface EmotionalPricingCardProps {
