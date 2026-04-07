@@ -6,6 +6,7 @@
 
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
+import { supabase } from "../services/supabaseClient";
 import type { AIDecision } from "./decision-framework";
 import {
   type PricingTier,
@@ -123,33 +124,90 @@ export class RevenueAutomationEngine {
    * تحليل الميتريكس الحالية
    * ─────────────────────────────────────────────────────────────────
    */
-  async analyzeCurrentMetrics(): Promise<RevenueMetrics | null> {
-    // في المستقبل: نجيب البيانات من Supabase
-    // مؤقتاً: نحاكي البيانات
+    async analyzeCurrentMetrics(): Promise<RevenueMetrics | null> {
+    console.warn("📊 Fetching real revenue metrics from Supabase...");
 
     try {
-      // TODO: Replace with actual Supabase query
-      const mockData: RevenueMetrics = {
+      // 1. Fetch user profiles to determine tiers
+      if (!supabase) return null;
+
+      const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("role, subscription_status");
+
+      if (error) {
+        console.error("❌ Error fetching profiles from Supabase:", error);
+        return null;
+      }
+
+      if (!profiles || profiles.length === 0) {
+        console.warn("⚠️ No profiles found in Supabase.");
+        return null;
+      }
+
+      // 2. Aggregate user counts by tier
+      let freeCount = 0;
+      let premiumCount = 0;
+      let coachCount = 0;
+
+      for (const profile of profiles) {
+        if (profile.role === "enterprise_admin") {
+          coachCount++;
+        } else if (
+          profile.subscription_status === "active" ||
+          profile.subscription_status === "trialing"
+        ) {
+          premiumCount++;
+        } else {
+          freeCount++;
+        }
+      }
+
+      const totalUsers = profiles.length;
+      const premiumPrice = TIER_PRICES_USD.premium.monthly;
+      const coachPrice = TIER_PRICES_USD.coach.monthly;
+
+      // 3. Calculate Revenue Metrics
+      const mrr = premiumCount * premiumPrice + coachCount * coachPrice;
+      const arr = mrr * 12;
+
+      // Temporary estimates for churn and conversion until event tracking is fully integrated
+      const estimatedChurnRate = 0.05; // 5% monthly churn estimate
+      const estimatedFreeToPremium =
+        freeCount + premiumCount > 0
+          ? premiumCount / (freeCount + premiumCount)
+          : 0;
+      const estimatedPremiumToCoach =
+        premiumCount + coachCount > 0
+          ? coachCount / (premiumCount + coachCount)
+          : 0;
+
+      const avgRevenuePerUser = totalUsers > 0 ? mrr / totalUsers : 0;
+
+      // LTV = ARPU / Churn Rate
+      const lifetimeValue = estimatedChurnRate > 0 ? avgRevenuePerUser / estimatedChurnRate : 0;
+
+      const actualData: RevenueMetrics = {
         timestamp: Date.now(),
-        totalUsers: 150,
+        totalUsers,
         breakdown: {
-          free: 100,
-          premium: 40,
-          coach: 10,
+          free: freeCount,
+          premium: premiumCount,
+          coach: coachCount,
         },
-        mrr: 40 * 4.99 + 10 * 49, // $689.6
-        arr: (40 * 4.99 + 10 * 49) * 12, // $8,275.2
-        churnRate: 0.05, // 5%
+        mrr,
+        arr,
+        churnRate: estimatedChurnRate,
         conversionRate: {
-          freeToPremium: 0.15, // 15% من Free بيحولوا لـ Premium
-          premiumToCoach: 0.08, // 8% من B2C بيحولوا لـ B2B
+          freeToPremium: estimatedFreeToPremium,
+          premiumToCoach: estimatedPremiumToCoach,
         },
-        avgRevenuePerUser: (40 * 4.99 + 10 * 49) / 150,
-        lifetimeValue: ((40 * 4.99 + 10 * 49) / 50) * (1 / 0.05), // LTV = ARPU × (1/churn)
+        avgRevenuePerUser,
+        lifetimeValue,
       };
 
-      console.warn("📊 Revenue metrics analyzed:", mockData);
-      return mockData;
+      console.warn("✅ Real revenue metrics calculated:", actualData);
+      return actualData;
     } catch (error) {
       console.error("❌ Failed to analyze metrics:", error);
       return null;
