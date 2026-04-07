@@ -3,6 +3,7 @@ import { useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, TrendingUp, Ghost, ShieldAlert } from "lucide-react";
 import { useMapState } from "../state/mapState";
+import { useAppOverlayState } from "../state/appOverlayState";
 import { soundManager } from "../services/soundManager";
 
 interface GhostingSimulatorModalProps {
@@ -122,7 +123,7 @@ export const GhostingSimulatorModal: FC<GhostingSimulatorModalProps> = ({ isOpen
                                 <button
                                     onClick={() => {
                                         onClose();
-                                        // TODO: trigger AI Oracle with plan request
+                                        useAppOverlayState.getState().openOverlay('journeyGuideChat');
                                     }}
                                     className="w-full flex items-center justify-center py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/20 active:scale-[0.98]"
                                 >
