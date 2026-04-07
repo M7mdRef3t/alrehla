@@ -101,7 +101,7 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
             });
             setFlows(prevFlows => {
                 return prevFlows.map(flow => {
-                    const nextProgress = flow.progress + flow.speed;
+                    let nextProgress = flow.progress + flow.speed;
                     if (nextProgress > 1) {
                         return {
                             ...flow,
