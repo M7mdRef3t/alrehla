@@ -71,7 +71,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {options1.map((opt) => {
-              const tier = getTier1(opt.value);
+              const _tier = getTier1(opt.value);
               const isSelected = quickAnswer1 === opt.value;
               return (
                 <button
@@ -100,7 +100,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {options2.map((opt) => {
-              const tier = getTier2(opt.value);
+              const _tier = getTier2(opt.value);
               const isSelected = quickAnswer2 === opt.value;
               return (
                 <button
