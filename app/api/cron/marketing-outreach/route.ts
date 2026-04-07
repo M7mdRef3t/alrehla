@@ -224,24 +224,49 @@ export async function GET(request: Request) {
   const results: Array<Record<string, unknown>> = [];
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.alrehla.app").replace(/\/$/, "");
 
+    // --- BATCH FETCHING DATA (Optimization) ---
+  const leadEmails = [...new Set(rows.map(r => r.lead_email))];
+  const leadIds = [...new Set(rows.map(r => r.lead_id).filter(Boolean))] as string[];
+
+  // 1. Fetch leads by email (for both email and whatsapp channels)
+  const { data: leadsData } = await supabase
+    .from("marketing_leads")
+    .select("email, first_name, name, full_name, unsubscribed, phone")
+    .in("email", leadEmails);
+
+  const leadsByEmail = new Map((leadsData || []).map((l: any) => [l.email, l]));
+
+  // 2. Fetch routing events by lead_id (to check if they started onboarding)
+  let routingSet = new Set<string>();
+  if (leadIds.length > 0) {
+    const { data: routingData } = await supabase
+      .from("routing_events")
+      .select("lead_id")
+      .in("lead_id", leadIds);
+    routingSet = new Set((routingData || []).map((r: any) => r.lead_id));
+  }
+
+  // Arrays to hold bulk database operations
+  const queueUpdates: PromiseLike<any>[] = [];
+  const queueInserts: any[] = [];
+
   for (const row of rows) {
     try {
       let outcome;
       const currentStep = row.step ?? 1;
 
       if (row.channel === "email") {
-        // 0. Check unsubscribed
-        const { data: leadCheck } = await supabase
-          .from("marketing_leads")
-          .select("first_name, name, full_name, unsubscribed")
-          .eq("email", row.lead_email)
-          .maybeSingle();
+        // 0. Check unsubscribed (batched)
+        const leadCheck = leadsByEmail.get(row.lead_email);
 
         if ((leadCheck as Record<string, unknown> | null)?.unsubscribed === true) {
-          await supabase
-            .from("marketing_lead_outreach_queue")
-            .update({ status: "cancelled", last_error: "unsubscribed" })
-            .eq("id", row.id);
+          queueUpdates.push(
+            supabase
+              .from("marketing_lead_outreach_queue")
+              .update({ status: "cancelled", last_error: "unsubscribed" })
+              .eq("id", row.id)
+              .then((res) => res)
+          );
           results.push({ id: row.id, status: "cancelled", reason: "unsubscribed" });
           continue;
         }
@@ -279,17 +304,14 @@ export async function GET(request: Request) {
         // 5. Schedule next drip step (if not last step and lead hasn't started onboarding)
         const nextStep = currentStep + 1;
         if (nextStep <= 3 && row.lead_id) {
-          // Check if lead already converted
-          const { count: started } = await supabase
-            .from("routing_events")
-            .select("*", { count: "exact", head: true })
-            .eq("lead_id", row.lead_id);
+          // Check if lead already converted (batched)
+          const started = routingSet.has(row.lead_id);
 
-          if (!started || started === 0) {
+          if (!started) {
             const nextConfig = DRIP_STEPS[nextStep];
             if (nextConfig) {
               const scheduledAt = addDays(new Date(), nextConfig.delayDays);
-              await supabase.from("marketing_lead_outreach_queue").insert({
+              queueInserts.push({
                 lead_email: row.lead_email,
                 lead_id: row.lead_id,
                 channel: "email",
@@ -303,12 +325,8 @@ export async function GET(request: Request) {
           }
         }
       } else {
-        // WhatsApp
-        const { data: lead } = await supabase
-          .from("marketing_leads")
-          .select("phone")
-          .eq("email", row.lead_email)
-          .maybeSingle();
+        // WhatsApp (batched)
+        const lead = leadsByEmail.get(row.lead_email);
 
         const payloadWithPhone = {
           ...row.payload,
@@ -320,28 +338,49 @@ export async function GET(request: Request) {
 
       const status = outcome.status === "sent" ? "sent" : "simulated";
       const resendId = (outcome.providerResponse?.id as string | undefined) ?? null;
-      const { error: updateError } = await supabase
-        .from("marketing_lead_outreach_queue")
-        .update({
-          status,
-          attempts: (row.attempts ?? 0) + 1,
-          sent_at: new Date().toISOString(),
-          provider_response: outcome.providerResponse,
-          resend_message_id: resendId,
-          last_error: null,
-        })
-        .eq("id", row.id);
-      if (updateError) throw updateError;
+      queueUpdates.push(
+        supabase
+          .from("marketing_lead_outreach_queue")
+          .update({
+            status,
+            attempts: (row.attempts ?? 0) + 1,
+            sent_at: new Date().toISOString(),
+            provider_response: outcome.providerResponse,
+            resend_message_id: resendId,
+            last_error: null,
+          })
+          .eq("id", row.id)
+          .then(({ error }) => {
+            if (error) console.error("Failed to update queue row", row.id, error);
+            return null;
+          })
+      );
       results.push({ id: row.id, channel: row.channel, status, step: row.step ?? 1 });
     } catch (err) {
       const message = toErrorMessage(err).slice(0, 500);
-      await supabase
-        .from("marketing_lead_outreach_queue")
-        .update({ status: "failed", attempts: (row.attempts ?? 0) + 1, last_error: message })
-        .eq("id", row.id);
+      queueUpdates.push(
+        supabase
+          .from("marketing_lead_outreach_queue")
+          .update({ status: "failed", attempts: (row.attempts ?? 0) + 1, last_error: message })
+          .eq("id", row.id)
+          .then((res) => res)
+      );
       results.push({ id: row.id, channel: row.channel, status: "failed", error: message });
     }
   }
+
+  // --- BATCH PROCESS DB UPDATES ---
+  if (queueInserts.length > 0) {
+    const { error: insertError } = await supabase
+      .from("marketing_lead_outreach_queue")
+      .insert(queueInserts);
+    if (insertError) {
+      console.error("Bulk insert failed for next steps", insertError);
+    }
+  }
+
+  // Await all updates
+  await Promise.allSettled(queueUpdates);
 
   return NextResponse.json({ ok: true, processed: rows.length, results });
 }
