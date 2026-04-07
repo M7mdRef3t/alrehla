@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Info } from "lucide-react";
@@ -28,7 +27,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
   const [showRealityPopup, setShowRealityPopup] = useState(false);
   const [showDopaminePopup, setShowDopaminePopup] = useState(false);
   const [showFallbackAfterTimeout, setShowFallbackAfterTimeout] = useState(false);
-  const [fallbackAttempt, setFallbackAttempt] = useState(0);
+  const [fallbackAttempt] = useState(0);
   const lastCelebratedAtRef = useRef<number | null>(null);
   const detachmentReasons = node?.recoveryProgress?.detachmentReasons;
 
