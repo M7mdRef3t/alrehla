@@ -1,4 +1,4 @@
-import type { FlowNode } from "../components/admin/flow-mind-map";
+import type { FlowNode } from "../components/admin/flow-mind-map/types";
 
 export interface FlowNodeMetric {
   count: number;
