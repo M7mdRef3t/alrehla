@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import ts from "typescript";
+import type ts from "typescript";
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,12 +53,13 @@ export async function POST(req: NextRequest) {
       const newSource = source.replace(replaceTarget, code);
       try {
         // Verify the new source is valid AST
-        const sourceFile = ts.createSourceFile(
+        const tsModule = await import(/* webpackIgnore: true */ "typescript");
+        const sourceFile = tsModule.createSourceFile(
           fullPath,
           newSource,
-          ts.ScriptTarget.Latest,
+          tsModule.ScriptTarget.Latest,
           true,
-          fullPath.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+          fullPath.endsWith('.tsx') ? tsModule.ScriptKind.TSX : tsModule.ScriptKind.TS
         );
 
         // Check for syntactic diagnostics (parsing errors)
