@@ -5,6 +5,7 @@
  */
 
 import { decisionEngine } from "./decision-framework";
+import { supabase } from "../services/supabaseClient";
 import { geminiClient } from "../services/geminiClient";
 import type { AIDecision } from "./decision-framework";
 import {
@@ -156,6 +157,71 @@ export class RevenueAutomationEngine {
     }
   }
 
+
+  /**
+   * إرسال إشعار للمستخدمين الحاليين باحتفاظهم بأسعارهم القديمة
+   */
+  private async notifyGrandfatheredUsers(): Promise<void> {
+    if (!supabase) {
+      console.warn("Supabase not initialized, cannot notify users.");
+      return;
+    }
+
+    try {
+      console.warn("📧 Notifying active users about grandfathering policy...");
+
+      // Fetch users who are on premium/coach tiers (active or enterprise admins)
+      const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("email, subscription_status, role")
+        .or("subscription_status.eq.active,subscription_status.eq.trialing,role.eq.enterprise_admin");
+
+      if (error) {
+        console.error("❌ Failed to fetch profiles for grandfathering:", error);
+        return;
+      }
+
+      if (!profiles || profiles.length === 0) {
+        console.warn("ℹ️ No active users to notify about grandfathering.");
+        return;
+      }
+
+      console.warn(`⏳ Sending emails to ${profiles.length} users...`);
+
+      const subject = "تحديث في أسعار دواير (أنت في أمان!)";
+      const html = `
+        <div dir="rtl" lang="ar" style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2>تحديث أسعار اشتراكات منصة دواير</h2>
+          <p>أهلاً بك،</p>
+          <p>نود إعلامك بأنه تم تحديث أسعار الاشتراكات في منصة دواير لتعكس القيمة الإضافية التي نقدمها.</p>
+          <p>بما أنك من مستخدمينا الحاليين، <strong>نضمن لك استمرار اشتراكك بالسعر القديم الذي اشتركت به</strong>. لن تتأثر بهذا التغيير طالما بقي اشتراكك فعالاً ولم تقم بإلغائه.</p>
+          <p>شكراً لثقتك بنا وبقائك معنا في هذه الرحلة.</p>
+          <p>مع تحيات،<br>فريق دواير</p>
+        </div>
+      `;
+      const text = "تم تحديث أسعار دواير، ولكنك ستستمر بالسعر القديم طالما اشتراكك فعال. شكراً لثقتك بنا.";
+
+      // To avoid overwhelming the edge function, we could batch, but for now we do them in sequence or a simple loop
+      // Supabase edge function 'send-email'
+      for (const profile of profiles) {
+        if (!profile.email) continue;
+
+        await supabase.functions.invoke("send-email", {
+          body: {
+            to: profile.email.trim(),
+            subject,
+            html,
+            text
+          }
+        });
+      }
+
+      console.warn("✅ Grandfathering notification complete.");
+    } catch (err) {
+      console.error("❌ Error during grandfathering notification:", err);
+    }
+  }
+
   /**
    * ─────────────────────────────────────────────────────────────────
    * اقتراح تسعير جديد بناءً على البيانات
@@ -293,7 +359,8 @@ export class RevenueAutomationEngine {
     try {
       // TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
       // TODO: Update database with new pricing
-      // TODO: Notify existing users about grandfathering policy
+      // Notify existing users about grandfathering policy
+      void this.notifyGrandfatheredUsers();
 
       console.warn("✅ Pricing changed successfully:", recommendation.suggestedPrices);
 
