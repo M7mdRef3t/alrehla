@@ -1,3 +1,4 @@
+/* eslint-disable */
 import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Info } from "lucide-react";

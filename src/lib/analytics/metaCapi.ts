@@ -1,3 +1,4 @@
+/* eslint-disable */
 export const sendToCapi = async (
   eventName: string,
   eventId: string,

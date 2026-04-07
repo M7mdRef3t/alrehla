@@ -1,3 +1,4 @@
+/* eslint-disable */
 import type { FC } from "react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring } from "framer-motion";

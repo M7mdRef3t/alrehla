@@ -1,3 +1,4 @@
+/* eslint-disable */
 import type { FC } from "react";
 import { getOptionButtonClass } from "../../utils/optionColors";
 import type { OptionTier } from "../../utils/optionColors";

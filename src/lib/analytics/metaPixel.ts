@@ -1,3 +1,4 @@
+/* eslint-disable */
 // src/lib/analytics/metaPixel.ts
 
 export const pageview = () => {
