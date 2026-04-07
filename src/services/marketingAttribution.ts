@@ -87,6 +87,34 @@ export function captureLeadAttributionFromCurrentUrl(): CapturedLeadAttribution 
     return alreadyStored;
   }
 
+  // Verify signature if lead_id is present
+  const leadId = captured.lead_id;
+  const sig = sanitizeValue(params.get("sig"));
+
+  if (leadId) {
+    if (!sig) {
+      console.warn("Lead attribution missing signature, ignoring");
+      return null;
+    }
+
+    // We do async verification but don't block the UI return.
+    // However, if we want to prevent IDOR we should only store it after validation.
+    // For simplicity, we can fetch immediately.
+    fetch(`/api/marketing/lead/verify?lead_id=${encodeURIComponent(leadId)}&sig=${encodeURIComponent(sig)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok) {
+          setInLocalStorage(KEY_LEAD_ATTRIBUTION, JSON.stringify(captured));
+        } else {
+          console.warn("Lead attribution signature invalid, ignoring");
+        }
+      })
+      .catch(err => console.error("Lead verification failed", err));
+
+    // We return captured immediately but storage is delayed until verification.
+    return captured;
+  }
+
   setInLocalStorage(KEY_LEAD_ATTRIBUTION, JSON.stringify(captured));
   return captured;
 }

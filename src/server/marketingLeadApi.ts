@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { NextResponse } from "next/server";
 import {
   dedupeMarketingLeadInputs,
@@ -39,9 +40,16 @@ function isDebugAuthorized(request: Request): boolean {
  * P0-2: Builds a personalized URL with lead_id and lead_source for full attribution tracking.
  * Every outreach message MUST use this — never a bare /onboarding or external handoff link.
  */
+
+export function generateLeadSignature(leadId: string): string {
+  const secret = process.env.MARKETING_LINK_SECRET || process.env.MARKETING_DEBUG_KEY || "default-unsafe-secret-replace-in-prod";
+  return crypto.createHmac("sha256", secret).update(leadId).digest("hex");
+}
+
 function buildPersonalizedUrl(leadId: string, source: string, path = "/onboarding"): string {
   const base = "https://www.alrehla.app";
-  return `${base}${path}?lead_id=${encodeURIComponent(leadId)}&lead_source=${encodeURIComponent(source)}`;
+  const sig = generateLeadSignature(leadId);
+  return `${base}${path}?lead_id=${encodeURIComponent(leadId)}&lead_source=${encodeURIComponent(source)}&sig=${encodeURIComponent(sig)}`;
 }
 
 function toLeadRow(input: NormalizedMarketingLeadInput) {
