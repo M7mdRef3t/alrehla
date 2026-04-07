@@ -13,7 +13,6 @@ import { computeTEI } from "../utils/traumaEntropyIndex";
 import type { DailyQuestion } from "../data/dailyQuestions";
 import type { UserContext } from "../ai/aiCurator";
 import type { PersonViewInsights } from "../modules/map/mapTypes";
-import { geminiClient } from "../services/geminiClient";
 
 interface UseAIQuestionGeneratorResult {
   /** السؤال المُولّد */
@@ -43,7 +42,14 @@ export function useAIQuestionGenerator(): UseAIQuestionGeneratorResult {
 
   // تحقق من توفر الـ AI عند التحميل
   useEffect(() => {
-    setIsAIAvailable(geminiClient.isAvailable());
+    (async () => {
+      try {
+        const { geminiClient } = await import("../services/geminiClient");
+        setIsAIAvailable(geminiClient.isAvailable());
+      } catch (err) {
+        setIsAIAvailable(false);
+      }
+    })();
   }, []);
 
   /**
