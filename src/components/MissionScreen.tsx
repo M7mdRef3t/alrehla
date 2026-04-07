@@ -27,7 +27,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
   const [showRealityPopup, setShowRealityPopup] = useState(false);
   const [showDopaminePopup, setShowDopaminePopup] = useState(false);
   const [showFallbackAfterTimeout, setShowFallbackAfterTimeout] = useState(false);
-  // Removed unused fallbackAttempt
+  const [fallbackAttempt] = useState(0);
   const lastCelebratedAtRef = useRef<number | null>(null);
   const detachmentReasons = node?.recoveryProgress?.detachmentReasons;
 
