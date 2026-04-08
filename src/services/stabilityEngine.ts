@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { createClient } from "@supabase/supabase-js";
 
 function getSupabaseAdmin() {
@@ -92,7 +93,7 @@ export async function processStabilitySnapshot(userId: string, windowDays: numbe
         });
 
     } catch (err) {
-        console.error("Stability Engine Error:", err);
+        logger.error("Stability Engine Error:", err);
     }
 }
 

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { BrainCircuit, Compass, Gem } from "lucide-react";
 import type { LiveLanguage } from '../types';

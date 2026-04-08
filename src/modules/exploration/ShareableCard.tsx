@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, CheckCircle2, Sparkles, X } from 'lucide-react';
@@ -51,7 +52,7 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ title, description
                 trackShareSuccess();
             }
         } catch (err) {
-            console.error('Error sharing:', err);
+            logger.error('Error sharing:', err);
         }
     };
 

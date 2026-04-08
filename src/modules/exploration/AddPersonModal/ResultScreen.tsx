@@ -91,8 +91,9 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     realityAnswers,
     isEmergency,
     safetyAnswer,
-    personGender
-  }), [score, feelingAnswers, realityAnswers, isEmergency, safetyAnswer, personGender]);
+    personGender,
+    category
+  }), [score, feelingAnswers, realityAnswers, isEmergency, safetyAnswer, personGender, category]);
   const isEmotionalPrisoner = result.scenarioKey === "emotional_prisoner";
 
   const derivedRing = useMemo(
@@ -250,93 +251,168 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   // RENDER: DIAGNOSIS TAB
   // ==========================================
   const renderDiagnosisTab = () => (
-    <div className="flex flex-col gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div ref={shareCardRef} className="text-right relative">
-        
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 relative z-10">
-          <div>
-            <span className="inline-block px-3 py-1 mb-3 rounded-full bg-[var(--ds-color-primary-soft)] border border-[var(--ds-color-primary-glow)] text-[10px] font-black text-[var(--consciousness-primary)] tracking-[0.2em] uppercase">
-              الخلاصة التشخيصية
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">
-              {isEmotionalPrisoner ? `تشخيص المدار: ${result.state_label}` : result.title}
-            </h2>
+    <div className="flex flex-col gap-10 w-full animate-in fade-in slide-in-from-bottom-10 duration-1000">
+      
+      {/* Cinematic Verdict Section */}
+      <div ref={shareCardRef} className="text-center relative">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-12 flex flex-col items-center"
+        >
+          {/* Sovereignty Gauge - High Fidelity */}
+          <div className="relative w-64 h-32 mb-8 overflow-hidden">
+             <svg className="w-full h-full transform" viewBox="0 0 100 50">
+               {/* Background Arc */}
+               <path 
+                 d="M 10 50 A 40 40 0 0 1 90 50" 
+                 fill="none" 
+                 stroke="rgba(255,255,255,0.05)" 
+                 strokeWidth="8" 
+                 strokeLinecap="round"
+               />
+               {/* Filled Arc */}
+               <motion.path 
+                 initial={{ pathLength: 0 }}
+                 animate={{ pathLength: result.sovereigntyScore / 100 }}
+                 transition={{ duration: 2, ease: "easeOut" }}
+                 d="M 10 50 A 40 40 0 0 1 90 50" 
+                 fill="none" 
+                 stroke={activeRing === "red" ? "var(--consciousness-critical)" : activeRing === "yellow" ? "var(--ds-color-accent-amber)" : "var(--consciousness-primary)"}
+                 strokeWidth="8" 
+                 strokeDasharray="100 100"
+                 strokeLinecap="round"
+                 style={{ filter: `drop-shadow(0 0 10px ${activeRing === "red" ? "rgba(244,63,94,0.4)" : "rgba(45,212,191,0.4)"})` }}
+               />
+             </svg>
+             <div className="absolute bottom-0 inset-x-0 flex flex-col items-center">
+                <motion.span 
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 1 }}
+                  className="text-4xl font-black text-white"
+                >
+                  {result.sovereigntyScore}<span className="text-lg text-slate-500">%</span>
+                </motion.span>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">مؤشر السيادة</span>
+             </div>
           </div>
-          <div className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center gap-2 shrink-0 self-start">
-            <div className={`w-2 h-2 rounded-full ${isEmergency ? "bg-[var(--consciousness-critical)] shadow-[0_0_10px_var(--consciousness-critical)]" : "bg-[var(--consciousness-primary)] shadow-[0_0_10px_var(--consciousness-primary)]"}`} />
-            <span className="text-xs font-black text-[var(--ds-theme-text-secondary)]">
-               {isEmotionalPrisoner ? "التركيز:" : "الحالة:"} {isEmotionalPrisoner ? result.goal_label : result.state_label}
-            </span>
-          </div>
-        </div>
 
-        {/* Promise Body (Quote) */}
-        <div className="relative z-10 mb-8 w-full sm:max-w-xl">
-          <p className="text-lg/relaxed text-slate-300 font-medium whitespace-pre-wrap">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8 }}
+            className="space-y-4"
+          >
+            <span className="inline-block px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-[10px] font-black text-teal-400 tracking-[0.3em] uppercase">
+              الخلاصة الاستراتيجية
+            </span>
+            <h2 className="text-4xl sm:text-5xl font-black text-white leading-tight tracking-tight px-4 blur-none">
+              {isEmotionalPrisoner ? result.state_label : result.title}
+            </h2>
+            <p className="text-xl text-slate-400 font-medium max-w-lg mx-auto leading-relaxed">
+              {result.goal_label}
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* Tactical Narrative Card */}
+        <motion.div 
+          initial={{ opacity: 0, filter: "blur(10px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          transition={{ delay: 1.2 }}
+          className="relative group p-8 rounded-[3rem] bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 backdrop-blur-2xl shadow-2xl mb-10 text-right"
+        >
+          <div 
+            className="absolute -top-20 -right-20 w-64 h-64 blur-[100px] rounded-full pointer-events-none opacity-20"
+            style={{ 
+              background: `radial-gradient(circle, ${activeRing === "red" ? "var(--consciousness-critical)" : "var(--consciousness-primary)"}, transparent)` 
+            }}
+          />
+          <p className="text-xl/relaxed text-slate-300 font-medium whitespace-pre-wrap relative z-10">
             {shortPromiseBody}
           </p>
-        </div>
-
-        {isEmotionalPrisoner && (
-          <div className="mb-8 p-4 rounded-2xl bg-[var(--consciousness-critical)]/5 border-r-2 border-[var(--consciousness-critical)]/30 relative z-10">
-            <p className="text-sm text-slate-300 leading-relaxed font-bold">
-              جسمك حر.. بس عقلك لسه متعلق. أنت دلوقتي مش في نفس المكان، لكن التفكير لسه ماسكك. بتصحى وتنام وأنت {singularReferenceText} في خيالك وبتدافع عن نفسك في محاكمات جوه دماغك.
-            </p>
-          </div>
-        )}
-
-        {/* Mission Box */}
-        <div className="px-6 py-5 rounded-2xl bg-[var(--ds-color-primary-soft)] border border-[var(--ds-color-primary-glow)] relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-1 bg-[var(--consciousness-primary)] h-full" />
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-            <div>
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2 mb-1.5">
-                <span className="opacity-50">{result.mission_label}</span>
-                <span>•</span>
-                <span className="text-[var(--consciousness-primary)]">الهدف الحالي</span>
-              </span>
-              <p className="text-lg font-black text-[var(--ds-theme-text-primary)]">{result.mission_goal}</p>
+          
+          {isEmotionalPrisoner && (
+            <div className="mt-6 p-5 rounded-2xl bg-rose-500/5 border-r-4 border-rose-500/30">
+              <p className="text-sm text-slate-300 leading-relaxed font-bold italic opacity-90">
+                "جسمك حُر.. لكن عقلك لسه متعلق بمحاكمات وهمية."
+              </p>
             </div>
-          </div>
-        </div>
+          )}
+        </motion.div>
+
+        {/* Global Mission Card */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.5 }}
+          className="px-8 py-6 rounded-[2.5rem] bg-slate-900/40 border border-teal-500/20 relative overflow-hidden group mb-12 text-right shadow-[0_20px_40px_rgba(0,0,0,0.3)]"
+        >
+          <div className="absolute top-0 right-0 w-1 bg-teal-500 h-full shadow-[0_0_15px_rgba(45,212,191,0.5)]" />
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center justify-end gap-2 mb-3">
+             <span className="opacity-50">{result.mission_label}</span>
+             <span>•</span>
+             <span className="text-teal-400">الهدف الحالي</span>
+          </span>
+          <p className="text-2xl font-black text-white">{result.mission_goal}</p>
+        </motion.div>
       </div>
 
       {/* High-Fidelity Tactical Instruments */}
-      {pressureSentence && <PressureSentenceCard snapshot={pressureSentence} />}
-      
-      {/* Sovereign Analytical Reports */}
       <div className="space-y-4">
+        {pressureSentence && <PressureSentenceCard snapshot={pressureSentence} />}
         {sovereigntySnapshot && <SovereigntySnapshotCard snapshot={sovereigntySnapshot} />}
         {boundaryEvidence && <BoundaryEvidenceCard evidence={boundaryEvidence} />}
       </div>
 
       {!summaryOnly && (
-        <>
-          <div className="px-6 py-6 rounded-[2rem] bg-slate-950/40 border border-blue-500/10 text-right shadow-xl">
-            <h3 className="text-sm font-black text-blue-400 mb-3 flex items-center gap-2">
-              <span className="opacity-80">🔍</span> {result.understanding_title}
+        <div className="grid grid-cols-1 gap-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2 }}
+            className="px-8 py-8 rounded-[3rem] bg-slate-950/40 border border-blue-500/10 text-right shadow-2xl backdrop-blur-md"
+          >
+            <h3 className="text-sm font-black text-blue-400 mb-4 flex items-center gap-2">
+              <span className="text-xl">🔍</span> {result.understanding_title}
             </h3>
-            <p className="text-sm text-slate-300 leading-relaxed font-medium">{result.understanding_body}</p>
-          </div>
-          <div className="px-6 py-6 rounded-[2rem] bg-slate-950/40 border border-violet-500/10 text-right shadow-xl">
-            <h3 className="text-sm font-black text-violet-400 mb-3 flex items-center gap-2">
-              <span className="opacity-80">✨</span> {result.explanation_title}
+            <p className="text-base text-slate-300 leading-relaxed font-medium">{result.understanding_body}</p>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2.2 }}
+            className="px-8 py-8 rounded-[3rem] bg-slate-950/40 border border-violet-500/10 text-right shadow-2xl backdrop-blur-md"
+          >
+            <h3 className="text-sm font-black text-violet-400 mb-4 flex items-center gap-2">
+              <span className="text-xl">✨</span> {result.explanation_title}
             </h3>
-            <p className="text-sm text-slate-300 leading-relaxed font-medium">{result.explanation_body}</p>
-          </div>
-          <div className="px-6 py-6 rounded-[2rem] bg-[#020617]/80 border border-white/5 text-right shadow-xl">
+            <p className="text-base text-slate-300 leading-relaxed font-medium">{result.explanation_body}</p>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2.4 }}
+            className="px-8 py-8 rounded-[3rem] bg-[#020617]/90 border border-indigo-500/20 text-right shadow-2xl relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-[50px]" />
             <h3 className="text-sm font-black text-indigo-400 mb-2 flex items-center gap-2">
-              <span className="opacity-80">🎯</span> {result.suggested_zone_title}
+              <span className="text-xl">🎯</span> {result.suggested_zone_title}
             </h3>
-            <p className="text-lg font-black text-white mb-2">{result.suggested_zone_label}</p>
-            <p className="text-sm text-slate-400 font-medium leading-relaxed mb-6">{result.suggested_zone_body}</p>
-            <button onClick={() => setShowScripts(true)} className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-[var(--ds-theme-text-primary)] rounded-xl text-sm font-black flex items-center justify-center gap-2 transition-all">
+            <p className="text-2xl font-black text-white mb-3">{result.suggested_zone_label}</p>
+            <p className="text-base text-slate-400 font-medium leading-relaxed mb-8">{result.suggested_zone_body}</p>
+            <button 
+               onClick={() => setShowScripts(true)} 
+               className="w-full py-5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-2xl text-sm font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg"
+            >
               <BookOpen className="w-5 h-5 text-indigo-400" />
               الموسوعة: جمل جاهزة للرد على {displayName}
             </button>
-          </div>
-        </>
+          </motion.div>
+        </div>
       )}
     </div>
   );

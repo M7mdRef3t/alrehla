@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import React, { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share2, TrendingDown, TrendingUp, Zap, Sparkles, Battery } from "lucide-react";
@@ -71,7 +72,7 @@ export const WeeklyWrapModal: React.FC<WeeklyWrapModalProps> = ({ isOpen, onClos
                     url: window.location.origin
                 });
             } catch (err) {
-                console.error("Error sharing", err);
+                logger.error("Error sharing", err);
             }
         } else {
             // Fallback fallback copy to clipboard or just alert

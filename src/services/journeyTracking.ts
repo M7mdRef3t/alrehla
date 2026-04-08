@@ -227,6 +227,7 @@ async function flushSupabaseSync(): Promise<void> {
   });
 
   // Session → User stitching: ربط الجلسة بالمستخدم عند تسجيل الدخول
+  const userStitchingMap = new Map<string, Record<string, unknown>>();
   for (const { event } of batch) {
     if (event.type !== "flow_event" || !event.sessionId) continue;
     const payload = event.payload as JourneyEventPayload["flow_event"];
@@ -237,13 +238,18 @@ async function flushSupabaseSync(): Promise<void> {
     
     if (!userId) continue;
     
-    await supabase.from(SUPABASE_PROFILES_TABLE).upsert({
+    userStitchingMap.set(event.sessionId, {
       id: event.sessionId,
       user_id: userId,
       email: email ?? undefined,
       role: "session",
       last_seen: now
-    }, { onConflict: "id" });
+    });
+  }
+
+  if (userStitchingMap.size > 0) {
+    const stitchingRows = Array.from(userStitchingMap.values());
+    await supabase.from(SUPABASE_PROFILES_TABLE).upsert(stitchingRows, { onConflict: "id" });
   }
 }
 

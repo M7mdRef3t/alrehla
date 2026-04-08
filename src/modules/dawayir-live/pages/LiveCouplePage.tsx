@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useMemo, useState } from "react";
 import { HeartHandshake, Link2, Search, Share2, ShieldCheck, Sparkles, Users2 } from "lucide-react";

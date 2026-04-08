@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 
 export interface WisdomCapsule {
@@ -57,7 +58,7 @@ export class LegacyEngine {
                 isLocked: this.checkIfLocked(capsule, currentRank),
             }));
         } catch (e) {
-            console.error("Failed to parse capsules", e);
+            logger.error("Failed to parse capsules", e);
             return [];
         }
     }

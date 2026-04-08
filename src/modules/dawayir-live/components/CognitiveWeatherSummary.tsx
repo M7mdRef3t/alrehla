@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Cloud, CloudLightning, CloudRain, Sun, SunDim } from "lucide-react";
 import type { LiveLanguage } from '../types';

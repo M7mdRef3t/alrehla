@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BrainCircuit, X, Send, Loader2, AlertTriangle } from "lucide-react";
@@ -83,7 +84,7 @@ export const TherapistChatModal: React.FC<TherapistChatModalProps> = ({ isOpen, 
                 throw new Error("Empty response");
             }
         } catch (error) {
-            console.error("Therapist Chat Error:", error);
+            logger.error("Therapist Chat Error:", error);
             setMessages((prev) => [...prev, { id: Date.now().toString(), role: "assistant", content: "معلش، الشبكة فصلت شوية. خد نفس عميق وجرب تبعت تاني." }]);
         } finally {
             setIsTyping(false);

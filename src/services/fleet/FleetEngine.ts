@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { useFleetState, FleetVessel } from '@/state/fleetState';
 import { useDigitalTwinState } from '@/state/digitalTwinState';
 import { usePredictiveState } from '@/state/predictiveState';
@@ -26,7 +27,7 @@ export class FleetEngine {
 
             setVessels(vessels);
         } catch (error) {
-            console.error("[Fleet Engine] Failed to initialize fleet:", error);
+            logger.error("[Fleet Engine] Failed to initialize fleet:", error);
         }
     }
 

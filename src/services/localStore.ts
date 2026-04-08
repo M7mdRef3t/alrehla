@@ -1,7 +1,9 @@
+import { logger } from "@/services/logger";
 import type { MapNode, MapType, FeelingCheckResult } from "@/modules/map/mapTypes";
 import { getJSON, setJSON } from "./secureStore";
 import { queueMapSync } from "./mapSync";
 import { sanitizeMapNodes } from "@/utils/mapNodeSchema";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 const STORAGE_KEY = "dawayir-map-nodes";
 
@@ -52,7 +54,7 @@ export const loadStoredState = async (): Promise<StoredState | null> => {
       feelingResults: parsed.feelingResults
     };
   } catch (error) {
-    if (runtimeEnv.isDev) console.error("Error loading from localStorage:", error);
+    if (runtimeEnv.isDev) logger.error("Error loading from localStorage:", error);
     return null;
   }
 };
@@ -75,4 +77,3 @@ export const saveStoredState = (state: StoredState) => {
     queueMapSync(safeState.nodes);
   }, 100); // 100ms debounce
 };
-import { runtimeEnv } from "@/config/runtimeEnv";

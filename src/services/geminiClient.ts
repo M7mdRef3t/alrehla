@@ -1,5 +1,6 @@
 import type { Content, FunctionCall, Part, Tool } from "@google/generative-ai";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import { useToastState } from "@/state/toastState";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { fetchJsonWithResilience } from "../architecture/resilientHttp";
 import {
@@ -58,6 +59,8 @@ interface GenerateResponse {
 
 class GeminiClient {
   private serverAvailable = true;
+  private unavailableUntil = 0;
+  private lastUnavailableToastAt = 0;
   private readonly generateBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
   private readonly toolBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
   private readonly embedBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
@@ -74,16 +77,30 @@ class GeminiClient {
     return runtimeEnv.geminiEnabled !== "false";
   }
 
+  private canAttemptServerRequest(): boolean {
+    return Date.now() >= this.unavailableUntil;
+  }
+
+  private notifyTemporarilyUnavailable(): void {
+    const now = Date.now();
+    if (now - this.lastUnavailableToastAt < 30_000) return;
+    this.lastUnavailableToastAt = now;
+    useToastState.getState().showToast("الذكاء الاصطناعي غير متاح مؤقتًا. بنحاول نرجّعه تلقائيًا خلال ثواني.", "warning");
+  }
+
   isAvailable(): boolean {
-    return this.isEnabled() && this.serverAvailable;
+    return this.isEnabled() && this.serverAvailable && this.canAttemptServerRequest();
   }
 
   private markServerUnavailable() {
     this.serverAvailable = false;
+    this.unavailableUntil = Date.now() + 30_000;
+    this.notifyTemporarilyUnavailable();
   }
 
   private markServerAvailable() {
     this.serverAvailable = true;
+    this.unavailableUntil = 0;
   }
 
   private applyUsageCost(usage: GenerateResponse["usage"]): void {
@@ -99,6 +116,10 @@ class GeminiClient {
    */
   async generate(prompt: string): Promise<string | null> {
     if (!this.isEnabled()) return null;
+    if (!this.canAttemptServerRequest()) {
+      this.notifyTemporarilyUnavailable();
+      return null;
+    }
     this.ensureGuardHydrated();
 
     let data: GenerateResponse | null = null;
@@ -166,10 +187,16 @@ class GeminiClient {
       yield "AI غير متاح حاليا";
       return;
     }
+    if (!this.canAttemptServerRequest()) {
+      this.notifyTemporarilyUnavailable();
+      yield "AI غير متاح حاليا";
+      return;
+    }
     this.ensureGuardHydrated();
 
     try {
       if (!this.streamBreaker.canRequest()) {
+        this.notifyTemporarilyUnavailable();
         recordAIFallback();
         yield "AI غير متاح حاليا";
         return;
@@ -232,6 +259,10 @@ class GeminiClient {
     executeTool: ToolExecutor
   ): Promise<string | null> {
     if (!this.isEnabled()) return null;
+    if (!this.canAttemptServerRequest()) {
+      this.notifyTemporarilyUnavailable();
+      return null;
+    }
     this.ensureGuardHydrated();
 
     const { contents, tools, systemInstruction } = request;
@@ -309,6 +340,10 @@ class GeminiClient {
    */
   async embedText(text: string): Promise<number[] | null> {
     if (!this.isEnabled()) return null;
+    if (!this.canAttemptServerRequest()) {
+      this.notifyTemporarilyUnavailable();
+      return null;
+    }
     this.ensureGuardHydrated();
 
     let data: { embedding: number[] } | null = null;

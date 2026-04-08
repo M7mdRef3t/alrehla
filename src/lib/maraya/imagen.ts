@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 /**
  * Imagen Image Generation Service for Maraya
  * Adapted from the legacy Maraya image runtime.
@@ -109,10 +110,10 @@ export async function generateImage(prompt: string): Promise<GeneratedImage | nu
     }
 
     globalBackoffUntil = Date.now() + 60000;
-    console.error('[maraya-imagen] All image generation strategies failed');
+    logger.error('[maraya-imagen] All image generation strategies failed');
     return null;
   } catch (error) {
-    console.error('[maraya-imagen] Image generation failed:', (error as Error).message);
+    logger.error('[maraya-imagen] Image generation failed:', (error as Error).message);
     return null;
   }
 }

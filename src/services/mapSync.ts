@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 // mapSync.ts
 import type { MapNode } from "@/modules/map/mapTypes";
 import { isSupabaseReady, supabase } from "./supabaseClient";
@@ -138,7 +139,7 @@ async function flushMapSync(): Promise<void> {
     } else {
       const errorMsg = error.message || "sync_failed";
       useSyncState.getState().setError(errorMsg);
-      if (runtimeEnv.isDev) console.error("[MapSync] Sync error:", error);
+      if (runtimeEnv.isDev) logger.error("[MapSync] Sync error:", error);
     }
   } catch (err: any) {
     // Check if it's a network/fetch error

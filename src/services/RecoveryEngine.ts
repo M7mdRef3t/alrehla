@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { MirrorInsight } from './mirrorLogic';
 import { geminiClient } from './geminiClient';
 
@@ -60,7 +61,7 @@ export class RecoveryEngine {
                 generatedAt: Date.now()
             };
         } catch (error) {
-            console.error('[RecoveryEngine] Error generating path:', error);
+            logger.error('[RecoveryEngine] Error generating path:', error);
             return null;
         }
     }

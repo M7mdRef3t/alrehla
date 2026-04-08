@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { createClient } from "@supabase/supabase-js";
 
 function getSupabaseAdmin() {
@@ -77,7 +78,7 @@ export async function processMilestones(userId: string) {
         }
 
     } catch (err) {
-        console.error("Milestone Engine error:", err);
+        logger.error("Milestone Engine error:", err);
     }
 }
 

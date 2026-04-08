@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { NextResponse } from "next/server";
 import {
   dedupeMarketingLeadInputs,
@@ -146,7 +147,7 @@ function enqueueOutreachAsync(
   phone?: string | null
 ): void {
   void enqueueOutreach(email, source, utm, leadId, phone).catch((error) => {
-    console.error("[marketing/lead] enqueue_outreach_failed:", error);
+    logger.error("[marketing/lead] enqueue_outreach_failed:", error);
   });
 }
 
@@ -244,7 +245,7 @@ export async function handleMarketingLeadGet(req: Request) {
   const { data, error } = await query.maybeSingle();
 
   if (error) {
-    console.error("[marketing/lead] lookup error:", error);
+    logger.error("[marketing/lead] lookup error:", error);
     return NextResponse.json({ ok: false, error: "lead_lookup_failed" }, { status: 500 });
   }
   return NextResponse.json({ ok: true, exists: Boolean(data), lead: data ?? null });
@@ -331,7 +332,7 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
 
     return NextResponse.json({ ok: true, lead: { email: input.email, phone: input.phoneNormalized, source: input.source } });
   } catch (error) {
-    console.error("[marketing/lead] unexpected error:", error);
+    logger.error("[marketing/lead] unexpected error:", error);
     return NextResponse.json({ ok: false, error: "lead_store_failed" }, { status: 500 });
   }
 }
@@ -394,14 +395,14 @@ export async function handleMarketingLeadImportPost(req: Request) {
           results.updated++;
         }
       } catch (err) {
-        console.error("[marketing/lead/import] row processing failed:", err);
+        logger.error("[marketing/lead/import] row processing failed:", err);
         errors.push(`Processing failed for ${input.email || input.phoneNormalized}`);
       }
     }
 
     return NextResponse.json({ ok: true, result: results, leads: leadsWithIds });
   } catch (error) {
-    console.error("[marketing/lead/import] unexpected error:", error);
+    logger.error("[marketing/lead/import] unexpected error:", error);
     return NextResponse.json({ ok: false, error: "lead_import_failed" }, { status: 500 });
   }
 }

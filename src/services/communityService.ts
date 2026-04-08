@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { supabase } from "./supabaseClient";
 
 /**
@@ -56,7 +57,7 @@ export async function getActiveCircles(): Promise<SupportCircle[]> {
         `);
 
     if (error || !data) {
-        console.error("Error fetching circles:", error);
+        logger.error("Error fetching circles:", error);
         return [];
     }
 

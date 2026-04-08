@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { supabase } from './supabaseClient';
 
 export class AccessControl {
@@ -27,7 +28,7 @@ export class AccessControl {
             .eq('metadata->>role', 'pioneer');
 
         if ((count || 0) > 10) {
-            console.error("❌ [AccessControl] Alpha-Zero cohort is FULL (10/10).");
+            logger.error("❌ [AccessControl] Alpha-Zero cohort is FULL (10/10).");
             return false;
         }
 

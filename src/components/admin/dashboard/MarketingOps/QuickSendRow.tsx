@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Ghost, Mail, MessageCircle, Phone, Send } from "lucide-react";
 

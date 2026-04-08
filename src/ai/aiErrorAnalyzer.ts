@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 /**
  * AI_ERROR_ANALYZER.ts — محلل الأخطاء الذكي
  * =============================================
@@ -331,14 +332,14 @@ export function setupGlobalErrorHandler(): void {
   if (typeof window === "undefined") return;
 
   window.addEventListener("error", (event) => {
-    console.error("🚨 Global error caught:", event.error);
+    logger.error("🚨 Global error caught:", event.error);
 
     // تحليل تلقائي
     void aiErrorAnalyzer.analyzeError(event.error);
   });
 
   window.addEventListener("unhandledrejection", (event) => {
-    console.error("🚨 Unhandled promise rejection:", event.reason);
+    logger.error("🚨 Unhandled promise rejection:", event.reason);
 
     // تحليل تلقائي
     void aiErrorAnalyzer.analyzeError(

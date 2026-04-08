@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 /**
  * 🛰️ Graph Recommendation Engine — محرك التوصيات الشبكي
  * ===================================================
@@ -82,7 +83,7 @@ export class GraphRecommendationEngine {
             return recommendations.sort((a, b) => b.relevance - a.relevance);
 
         } catch (error) {
-            console.error("❌ [Recommendation Engine] Failed to get recommendations:", error);
+            logger.error("❌ [Recommendation Engine] Failed to get recommendations:", error);
             return [];
         }
     }

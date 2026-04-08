@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { createClient } from "@supabase/supabase-js";
 
 function getSupabaseAdmin() {
@@ -73,6 +74,6 @@ export async function processShadowSignals(userId: string) {
         }
 
     } catch (err) {
-        console.error("Shadow Engine Error:", err);
+        logger.error("Shadow Engine Error:", err);
     }
 }

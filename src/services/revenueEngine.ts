@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 /**
  * SOVEREIGN_REVENUE_ENGINE.ts — محرك السيادة المالية
  * =====================================================
@@ -89,7 +90,7 @@ class SovereignRevenueEngine {
         regionalResonance: resonanceMap
       };
     } catch (e) {
-      console.error("Error in Revenue Engine:", e);
+      logger.error("Error in Revenue Engine:", e);
       return this.getMockSnapshot();
     }
   }
@@ -121,7 +122,7 @@ class SovereignRevenueEngine {
         market: lead.metadata?.market || "Unknown"
       }));
     } catch (e) {
-      console.error("Failed to fetch recent transactions:", e);
+      logger.error("Failed to fetch recent transactions:", e);
       return [];
     }
   }

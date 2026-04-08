@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 /**
  * useAIQuestionGenerator — React Hook للتكامل مع AI Curator
  * =============================================================
@@ -115,7 +116,7 @@ export function useAIQuestionGenerator(): UseAIQuestionGeneratorResult {
         setError("فشل توليد السؤال. حاول مرة تانية.");
       }
     } catch (err) {
-      console.error("Error generating question:", err);
+      logger.error("Error generating question:", err);
       setError("حدث خطأ أثناء التوليد");
     } finally {
       setIsGenerating(false);
@@ -197,7 +198,7 @@ export function useAIContentGenerator() {
         setError("فشل توليد المحتوى");
       }
     } catch (err) {
-      console.error("Error generating content:", err);
+      logger.error("Error generating content:", err);
       setError("حدث خطأ أثناء التوليد");
     } finally {
       setIsGenerating(false);
@@ -251,7 +252,7 @@ export function useAIPersonInsights(nodeId: string | null) {
         setError("فشل توليد التحليل");
       }
     } catch (err) {
-      console.error("Error generating insights:", err);
+      logger.error("Error generating insights:", err);
       setError("حدث خطأ أثناء التوليد");
     } finally {
       setIsGenerating(false);

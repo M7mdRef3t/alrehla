@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 /**
  * usePushNotifications — Web Push subscription hook
  * 
@@ -131,7 +132,7 @@ export function usePushNotifications() {
       setState((prev) => ({ ...prev, isSubscribed: true, isLoading: false }));
       return true;
     } catch (err) {
-      console.error("[push] subscribe error:", err);
+      logger.error("[push] subscribe error:", err);
       setState((prev) => ({ ...prev, isLoading: false }));
       return false;
     }
@@ -151,7 +152,7 @@ export function usePushNotifications() {
       }
       setState((prev) => ({ ...prev, isSubscribed: false, isLoading: false }));
     } catch (err) {
-      console.error("[push] unsubscribe error:", err);
+      logger.error("[push] unsubscribe error:", err);
       setState((prev) => ({ ...prev, isLoading: false }));
     }
   }, []);

@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { supabase } from './supabaseClient';
 import { AwarenessVector } from './trajectoryEngine';
 
@@ -82,7 +83,7 @@ export class PhoenixEngine {
 
         const { data: cards, error } = await query;
         if (error || !cards || cards.length === 0) {
-            console.error("❌ [PhoenixEngine] No report card data found:", error);
+            logger.error("❌ [PhoenixEngine] No report card data found:", error);
             return null;
         }
 
@@ -189,7 +190,7 @@ export class PhoenixEngine {
             p_entries: recalibrationPayload
         });
         if (batchError) {
-            console.error("❌ [PhoenixEngine] Batch recalibration failed:", batchError);
+            logger.error("❌ [PhoenixEngine] Batch recalibration failed:", batchError);
         }
 
         return {
@@ -265,7 +266,7 @@ export class PhoenixEngine {
             .single();
 
         if (insertError) {
-            console.error("❌ [PhoenixEngine] Failed to create Resonance Pair:", insertError);
+            logger.error("❌ [PhoenixEngine] Failed to create Resonance Pair:", insertError);
             return null;
         }
 
@@ -288,7 +289,7 @@ export class PhoenixEngine {
             .select('id');
 
         if (error) {
-            console.error("❌ [PhoenixEngine] Failed to expire entanglements:", error);
+            logger.error("❌ [PhoenixEngine] Failed to expire entanglements:", error);
             return 0;
         }
 

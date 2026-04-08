@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { consciousnessService, type MemoryMatch } from "@/services/consciousnessService";
 import { getWindowOrNull } from "@/services/clientRuntime";
@@ -147,7 +148,7 @@ export function useAppSessionToasts() {
           setLastPulseInsights(matches.slice(0, 3));
         }
       } catch (err) {
-        console.error("Pulse consciousness wiring error:", err);
+        logger.error("Pulse consciousness wiring error:", err);
       }
     })();
   }, [pulseLogs]);

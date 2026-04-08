@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { FC, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Share2, Check, Clock, ShieldCheck, X, LockKeyhole } from "lucide-react";
@@ -30,7 +31,7 @@ export const ShareDialog: FC = () => {
                 setShareUrl(data.url);
             }
         } catch (err) {
-            console.error(err);
+            logger.error(err);
         } finally {
             setIsLoading(false);
         }

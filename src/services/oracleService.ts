@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { geminiClient } from "./geminiClient";
 import { Dream } from "@/types/dreams";
 import { useMapState } from "@/state/mapState";
@@ -66,8 +67,12 @@ export class OracleService {
                 metadata: { oracleInsight: result?.analysisSummary, analyzedAt: new Date().toISOString() }
             };
         } catch (error) {
-            console.error("Oracle Dream Analysis Error:", error);
-            return { alignmentScore: 0.5, metadata: { error: "Failed to connect to Oracle" } };
+            logger.error("Oracle Dream Analysis Error:", error);
+            return { 
+                alignmentScore: 0.5, 
+                knots: [],
+                metadata: { error: "Failed to connect to Oracle" } 
+            };
         }
     }
 
@@ -125,10 +130,11 @@ export class OracleService {
             const result = await geminiClient.generateJSON<Record<string, LeadAnalysisVerdict>>(prompt);
             return result || {};
         } catch (error) {
-            console.error("Oracle Lead Analysis Error:", error);
+            logger.error("Oracle Lead Analysis Error:", error);
             return {};
         }
     }
+
     /**
      * 🔮 SOVEREIGN INSIGHTS (War Room Oracle)
      * Generates a pulse of strategic insights based on truth_vault and routing_events.
@@ -172,7 +178,7 @@ export class OracleService {
             const result = await geminiClient.generateJSON<SovereignInsight[]>(prompt);
             return result || [];
         } catch (error) {
-            console.error("Oracle Sovereign Insights Error:", error);
+            logger.error("Oracle Sovereign Insights Error:", error);
             return [];
         }
     }

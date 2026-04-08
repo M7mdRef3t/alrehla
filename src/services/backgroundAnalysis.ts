@@ -1,3 +1,6 @@
+import { logger } from "@/services/logger";
+import { inngestMock } from "./inngestMock";
+import { pineconeMock } from "./pineconeMock";
 import { useMapState } from "@/state/mapState";
 import { geminiClient } from "./geminiClient";
 import { runtimeEnv } from "@/config/runtimeEnv";
@@ -8,7 +11,20 @@ import { consciousnessService } from "./consciousnessService";
  * Orchestrates async jobs for relationship analysis using Supabase pgvector.
  */
 
-const analyzeRelationshipAsync = async (nodeId: string, context: string) => {
+// Define the "background function" (mock)
+inngestMock.on("analyze-relationship", async (rawData) => {
+  if (
+    !rawData ||
+    typeof rawData !== "object" ||
+    typeof (rawData as { nodeId?: unknown }).nodeId !== "string" ||
+    typeof (rawData as { context?: unknown }).context !== "string"
+  ) {
+    logger.error("[Background Job] Invalid payload for analyze-relationship", rawData);
+    return;
+  }
+
+  const data = rawData as { nodeId: string; context: string };
+  const { nodeId, context } = data;
   console.log(`[Background Job] Starting analysis for node: ${nodeId}`);
   
   try {
@@ -34,16 +50,16 @@ const analyzeRelationshipAsync = async (nodeId: string, context: string) => {
 
     console.log(`[Background Job] Analysis complete for node: ${nodeId}`);
   } catch (error) {
-    console.error("[Background Job] Error during analysis:", error);
+    logger.error("[Background Job] Error during analysis:", error);
     useMapState.getState().updateNode(nodeId, { isAnalyzing: false });
   }
-};
+});
 
 export const triggerBackgroundAnalysis = (nodeId: string, context: string) => {
   if (runtimeEnv.isDev) return;
   
-  // Return the promise so specific environments can track it if needed
-  return analyzeRelationshipAsync(nodeId, context).catch(err => {
+  // Trigger mock background job
+  return inngestMock.send("analyze-relationship", { nodeId, context }).catch(err => {
     console.error("[Background Job Orchestrator] Unhandled rejection:", err);
   });
 };

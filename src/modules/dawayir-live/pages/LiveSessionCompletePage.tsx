@@ -1,4 +1,6 @@
-"use client";
+'use client';
+
+import { logger } from "@/services/logger";
 
 import { useEffect, useMemo, useRef, useState, lazy } from "react";
 import { BadgeCheck, Clock3, Download, Gem, Link2, RotateCcw, Share2, Wind } from "lucide-react";
@@ -378,7 +380,7 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
       pdf.addImage(image, "PNG", 0, 0, pdfWidth, pdfHeight);
       pdf.save(`dawayir-insight-${sessionId}.pdf`);
     } catch (exportError) {
-      console.error("Failed to export PDF", exportError);
+      logger.error("Failed to export PDF", exportError);
     } finally {
       printRef.current.classList.remove("complete-card--exporting");
       setIsExporting(false);
@@ -437,7 +439,7 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
       window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1500);
       setShareNotice(copy.shareDownloaded);
     } catch (shareError) {
-      console.error("Failed to share insight", shareError);
+      logger.error("Failed to share insight", shareError);
       setShareNotice(copy.shareUnavailable);
     } finally {
       setIsSharingInsight(false);

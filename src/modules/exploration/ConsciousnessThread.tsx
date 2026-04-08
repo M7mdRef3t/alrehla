@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -43,7 +44,7 @@ export const ConsciousnessThread: FC = () => {
                 setEvents(data);
             }
         } catch (err) {
-            console.error(err);
+            logger.error(err);
         } finally {
             setLoading(false);
         }

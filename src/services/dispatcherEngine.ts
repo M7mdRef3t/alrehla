@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { supabase } from './supabaseClient';
 import { PredictiveInsight } from './predictiveEngine';
 
@@ -50,7 +51,7 @@ export class DispatcherEngine {
             console.warn("🛰️ Automated alert dispatched to coach for user:", userId);
 
         } catch (e) {
-            console.error("Dispatcher failed:", e);
+            logger.error("Dispatcher failed:", e);
         }
     }
 

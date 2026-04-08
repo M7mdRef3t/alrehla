@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -55,7 +56,7 @@ export const DailyPulseWidget: FC = () => {
       setIsSaved(true);
       // Removed the 2000ms timeout for clearing pulseType so we can use it for sharing
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       setPulseType(null);
     }
   };

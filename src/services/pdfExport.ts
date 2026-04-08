@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import type { MapNode } from "@/modules/map/mapTypes";
 import { downloadBlobFile } from "./clientDom";
 import { getDocumentOrNull } from "./clientRuntime";
@@ -47,7 +48,7 @@ export async function exportMapAsImage(elementId = "map-canvas"): Promise<Blob |
       }, "image/png");
     });
   } catch (error) {
-    console.error("فشل في تصدير الخريطة كصورة:", error);
+    logger.error("فشل في تصدير الخريطة كصورة:", error);
     return null;
   }
 }
@@ -202,7 +203,7 @@ export async function exportMapToPDF(nodes: MapNode[]): Promise<void> {
     // حفظ الملف
     pdf.save(`journey-map-${Date.now()}.pdf`);
   } catch (error) {
-    console.error("فشل في تصدير PDF:", error);
+    logger.error("فشل في تصدير PDF:", error);
     throw new Error("حدث خطأ أثناء إنشاء ملف PDF");
   }
 }
@@ -213,7 +214,7 @@ export async function exportMapToPDF(nodes: MapNode[]): Promise<void> {
 function blobToDataURL(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
+    reader.onload = () => resolve( reader.result as string);
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });

@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { supabase } from './supabaseClient';
 import { calculateEntropy } from './predictiveEngine';
 import { DispatcherEngine } from './dispatcherEngine';
@@ -38,7 +39,7 @@ export class ShadowMemory {
             // Trigger Automated Dispatcher
             await DispatcherEngine.checkAndDispatch(userId, insight);
         } catch (e) {
-            console.error("Failed to record Shadow Memory:", e);
+            logger.error("Failed to record Shadow Memory:", e);
         }
     }
 

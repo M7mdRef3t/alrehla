@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 /**
  * Offline Service
  * خدمة العمل بدون إنترنت
@@ -135,7 +136,7 @@ export class OfflineService {
       this.showNotification("تمت المزامنة", "تم مزامنة جميع البيانات بنجاح");
       return true;
     } catch (error) {
-      console.error("Sync failed:", error);
+      logger.error("Sync failed:", error);
       return false;
     } finally {
       this.syncInProgress = false;

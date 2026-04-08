@@ -1,5 +1,7 @@
 'use client';
 
+import { logger } from "@/services/logger";
+
 import React, { useEffect, useState } from 'react';
 import {
     fetchAlertIncidents,
@@ -69,7 +71,7 @@ export default function AlertsPanel() {
         setLoading(true);
         const data = await fetchAlertIncidents();
         if (data) setIncidents(data as Incident[]);
-        else console.error("Error fetching incidents");
+        else logger.error("Error fetching incidents");
         setLoading(false);
     }
 

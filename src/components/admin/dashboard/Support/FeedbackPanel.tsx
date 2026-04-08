@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useEffect, useMemo } from "react";
 import { MessageSquare, ThumbsUp, ThumbsDown, Search, Filter, Loader2, Calendar, User, Zap, AlertCircle } from "lucide-react";
@@ -33,7 +34,7 @@ export const FeedbackPanel: FC = () => {
             if (error) throw error;
             setItems(data as FeedbackItem[]);
         } catch (err) {
-            console.error("Failed to fetch feedback", err);
+            logger.error("Failed to fetch feedback", err);
         } finally {
             setLoading(false);
         }

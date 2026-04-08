@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { supabase } from "./supabaseClient";
 
 /* ══════════════════════════════════════════
@@ -61,7 +62,7 @@ export async function createPost(
     .single();
 
   if (error) {
-    console.error("[Community] Create post error:", error);
+    logger.error("[Community] Create post error:", error);
     return null;
   }
   return data as CommunityPost;

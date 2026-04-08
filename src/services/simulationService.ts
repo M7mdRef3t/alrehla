@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { AIOrchestrator } from './aiOrchestrator';
 import { supabase } from './supabaseClient';
 import { geminiClient } from './geminiClient';
@@ -113,7 +114,7 @@ export class SimulationService {
             return result;
 
         } catch (e) {
-            console.error('[Simulation Service] Error:', e);
+            logger.error('[Simulation Service] Error:', e);
             return null;
         }
     }

@@ -1,4 +1,6 @@
-"use client";
+'use client';
+
+import { logger } from "@/services/logger";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -402,7 +404,7 @@ export function ResourcesCenter({
         const stats = await fetchGlobalUserProgressStats();
         setGlobalStats(stats);
       } catch (err) {
-        console.error("Failed to load global stats:", err);
+        logger.error("Failed to load global stats:", err);
       } finally {
         setIsStatsLoading(false);
       }

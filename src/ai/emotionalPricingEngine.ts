@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 /**
  * EMOTIONAL_PRICING_ENGINE.ts — محرك التسعير العاطفي
  * =====================================================
@@ -481,7 +482,7 @@ export class EmotionalPricingEngine {
         console.warn("✅ Action result:", result);
       }
     } catch (error) {
-      console.error("❌ Daily emotional check failed:", error);
+      logger.error("❌ Daily emotional check failed:", error);
     }
   }
 }

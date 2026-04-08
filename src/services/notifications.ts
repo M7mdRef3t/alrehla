@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 /**
  * خدمة الإشعارات
  * تدير إرسال الإشعارات المحلية للمستخدم
@@ -88,7 +89,7 @@ export async function sendNotification(options: NotificationOptions): Promise<No
 
     return notification;
   } catch (error) {
-    console.error("فشل في إرسال الإشعارات:", error);
+    logger.error("فشل في إرسال الإشعارات:", error);
     return null;
   }
 }
@@ -175,7 +176,7 @@ export async function loadNotificationSettings(): Promise<NotificationSettings> 
       return { ...DEFAULT_SETTINGS, ...stored };
     }
   } catch (error) {
-    console.error("فشل في تحميل إعدادات الإشعارات:", error);
+    logger.error("فشل في تحميل إعدادات الإشعارات:", error);
   }
   return DEFAULT_SETTINGS;
 }

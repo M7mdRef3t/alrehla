@@ -181,5 +181,3 @@ export const FloatingActionMenu: FC<FloatingActionMenuProps> = ({
     </div>
   );
 };
-
-

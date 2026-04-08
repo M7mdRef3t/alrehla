@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { supabase } from "./supabaseClient";
 
 export type AscensionStatus = 'none' | 'candidate' | 'invited' | 'ascended' | 'fallen_oracle';
@@ -32,7 +33,7 @@ export class AscensionManager {
             .single();
 
         if (error) {
-            console.error("Error fetching ascension status:", error);
+            logger.error("Error fetching ascension status:", error);
             return null;
         }
 
@@ -61,7 +62,7 @@ export class AscensionManager {
             .eq('ascension_status', 'invited');
 
         if (error) {
-            console.error("Oath Acceptance Failed:", error);
+            logger.error("Oath Acceptance Failed:", error);
             return false;
         }
 
@@ -77,7 +78,7 @@ export class AscensionManager {
 
         const { data, error } = await supabase.rpc('check_oracle_integrity');
         if (error) {
-            console.error("Descent Protocol Failure:", error);
+            logger.error("Descent Protocol Failure:", error);
             return 0;
         }
         return data as number;

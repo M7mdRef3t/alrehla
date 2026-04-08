@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -132,7 +133,7 @@ export const DreamsMatrixPanel: FC = () => {
             setStats(statsData);
             setDreams(dreamsData);
         } catch (error) {
-            console.error("Failed to load matrix stats", error);
+            logger.error("Failed to load matrix stats", error);
         } finally {
             setLoading(false);
         }
@@ -164,7 +165,7 @@ export const DreamsMatrixPanel: FC = () => {
             setNewDream("");
             await loadData();
         } catch (err) {
-            console.error("Oracle proposal failed", err);
+            logger.error("Oracle proposal failed", err);
         } finally {
             setProposing(false);
         }

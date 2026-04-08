@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 /**
  * 🕸️ Graph Projection Engine — مُحرك إسقاط الوعي
  * ==========================================
@@ -92,7 +93,7 @@ export class GraphProjectionEngine {
 
             console.log(`✅ [Graph Engine] Projection complete for ${nodes.length} nodes.`);
         } catch (error) {
-            console.error("❌ [Graph Engine] Projection failed:", error);
+            logger.error("❌ [Graph Engine] Projection failed:", error);
         }
     }
 
@@ -139,7 +140,7 @@ export class GraphProjectionEngine {
             .single();
 
         if (error) {
-            console.error("Error upserting vector node:", error);
+            logger.error("Error upserting vector node:", error);
             return null;
         }
 
@@ -170,7 +171,7 @@ export class GraphProjectionEngine {
             }, { onConflict: "user_id, source_id, target_id, relation_type" }); // سنحتاج لإضافة هذا القيد في الميجريشن
 
         if (error) {
-            console.error(`Error upserting edge ${relationType}:`, error);
+            logger.error(`Error upserting edge ${relationType}:`, error);
         }
     }
 }

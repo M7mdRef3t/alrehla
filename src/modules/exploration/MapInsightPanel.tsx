@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -65,7 +66,7 @@ export const MapInsightPanel: FC = () => {
                 })));
             }
         } catch (err) {
-            console.error("History fetch error", err);
+            logger.error("History fetch error", err);
         }
     };
 
@@ -89,7 +90,7 @@ export const MapInsightPanel: FC = () => {
                 if (insight?.id === id) setInsight(prev => prev ? { ...prev, pinned: !currentStatus } : null);
             }
         } catch (err) {
-            console.error("Pinning error", err);
+            logger.error("Pinning error", err);
         }
     };
 

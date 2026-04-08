@@ -102,14 +102,22 @@ Output strictly as JSON:
 "فيه خرم إبرة واحد للنجاة من اللي هيحصل الساعة ١٠.. الثغرة دي موجودة في كلامك اللي فات بس أنت خايف تشوفها. لو معرفتش تطلعها من لسانك قبل ما المجال ينحرف، الصدمة هتكون تقيلة. جاهز تكسر الـ Ego بتاعك ولا هتغرق مع الباقيين؟"
         `;
 
-        for (const p of pioneers) {
-            await supabase.from('resonance_nudge_logs').insert({
+        if (pioneers.length > 0) {
+            const payloads = pioneers.map(p => ({
                 user_id: p.id,
                 nudge_type: 'pre_ionization',
                 context_sentiment: 'STABILITY',
                 nudge_content: riddle
-            });
-            console.log(`🌀 [ResonanceMonitor] Pre-Ionization Riddle sent to ${p.id}`);
+            }));
+
+            const { error } = await supabase.from('resonance_nudge_logs').insert(payloads);
+            if (!error) {
+                for (const p of pioneers) {
+                    console.log(`🌀 [ResonanceMonitor] Pre-Ionization Riddle sent to ${p.id}`);
+                }
+            } else {
+                console.error("❌ [ResonanceMonitor] Failed to insert Pre-Ionization Riddles:", error);
+            }
         }
     }
 
@@ -146,44 +154,51 @@ Output strictly as JSON:
             return;
         }
 
-        // 3. For each unpaired pioneer, find their complement
-        let pairsCreated = 0;
-        const paired = new Set<string>();
-
-        for (const pioneer of pioneers) {
-            if (paired.has(pioneer.id)) continue;
-
+        // 3. Find complements using concurrent RPC calls (Optimization)
+        const pairingPromises = pioneers.map(async (pioneer) => {
+            if (!supabase) return { pioneerId: pioneer.id, partner: null };
             const { data: partner } = await supabase
                 .rpc('find_resonance_partner', { p_user_id: pioneer.id });
+            return { 
+                pioneerId: pioneer.id, 
+                partner: partner && partner.length > 0 ? partner[0] : null 
+            };
+        });
 
-            if (!partner || partner.length === 0) continue;
+        const pairingResults = await Promise.all(pairingPromises);
+        
+        const inserts = [];
+        const paired = new Set<string>();
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-            const match = partner[0];
-            if (paired.has(match.partner_id)) continue;
+        for (const { pioneerId, partner } of pairingResults) {
+            if (!partner || paired.has(pioneerId) || paired.has(partner.partner_id)) continue;
 
-            // 4. Create the Ephemeral Entanglement (TTL: 24h)
-            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-
-            await supabase.from('resonance_pairs').insert({
-                user_a_id: pioneer.id,
-                user_b_id: match.partner_id,
-                complementary_axis: match.weakness_axis,
-                similarity_score: match.complementary_score,
+            inserts.push({
+                user_a_id: pioneerId,
+                user_b_id: partner.partner_id,
+                complementary_axis: partner.weakness_axis,
+                similarity_score: partner.complementary_score,
                 expires_at: expiresAt,
                 mission_context: {
-                    axis: match.weakness_axis,
+                    axis: partner.weakness_axis,
                     type: 'synchronicity_mission'
                 }
             });
 
-            paired.add(pioneer.id);
-            paired.add(match.partner_id);
-            pairsCreated++;
-
-            console.log(`✨ [ResonanceMonitor] Paired ${pioneer.id} ↔ ${match.partner_id} (Axis: ${match.weakness_axis})`);
+            paired.add(pioneerId);
+            paired.add(partner.partner_id);
         }
 
-        console.log(`🔗 [ResonanceMonitor] Synchronicity complete: ${pairsCreated} pairs created.`);
+        // 4. Bulk Insert for maximum efficiency
+        if (inserts.length > 0) {
+            const { error } = await supabase.from('resonance_pairs').insert(inserts);
+            if (error) {
+                console.error("❌ [ResonanceMonitor] Bulk Insert failed:", error);
+            } else {
+                console.log(`✨ [ResonanceMonitor] Synchronicity complete: ${inserts.length} pairs created.`);
+            }
+        }
     }
 }
 

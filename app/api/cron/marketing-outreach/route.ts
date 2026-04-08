@@ -97,7 +97,7 @@ function buildStep1Html(opts: { firstName: string; personalLink: string; unsubLi
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "خريطة علاقاتك جاهزة — ابدأ الرحلة الآن",
-    senderName: "فريق عمل",
+    _senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
@@ -107,7 +107,7 @@ function buildStep2Html(opts: { firstName: string; personalLink: string; unsubLi
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "الخريطة لسه مستنياك — مكانك محجوز",
-    senderName: "فريق عمل",
+    _senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
@@ -117,7 +117,7 @@ function buildStep3Html(opts: { firstName: string; personalLink: string; unsubLi
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "رسالة أخيرة — اللينك ده هيوصلك لخريطتك في أي وقت",
-    senderName: "فريق عمل",
+    _senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
@@ -257,20 +257,40 @@ export async function GET(request: Request) {
   const results: Array<Record<string, unknown>> = [];
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.alrehla.app").replace(/\/$/, "");
 
+  // --- BATCH FETCHING DATA (Optimization by M7mdRef3t) ---
+  const leadEmails = [...new Set(rows.map(r => r.lead_email))];
+  const leadIds = [...new Set(rows.map(r => r.lead_id).filter(Boolean))] as string[];
+
+  // 1. Fetch leads by email (Batch)
+  const { data: leadsData } = await supabase
+    .from("marketing_leads")
+    .select("email, first_name, name, full_name, unsubscribed, phone")
+    .in("email", leadEmails);
+  const leadsByEmail = new Map((leadsData || []).map((l: any) => [l.email, l]));
+
+  // 2. Fetch routing events by lead_id (Batch)
+  let routingMap = new Map<string, number>();
+  if (leadIds.length > 0) {
+    const { data: routingData } = await supabase
+      .from("routing_events")
+      .select("lead_id") // We just need to know if they started
+      .in("lead_id", leadIds);
+    
+    (routingData || []).forEach((r: any) => {
+      routingMap.set(r.lead_id, (routingMap.get(r.lead_id) || 0) + 1);
+    });
+  }
+
   for (const row of rows) {
     try {
       let outcome;
       const currentStep = row.step ?? 1;
 
       if (row.channel === "email") {
-        // 0. Check unsubscribed
-        const { data: leadCheck } = await supabase
-          .from("marketing_leads")
-          .select("first_name, name, full_name, unsubscribed")
-          .eq("email", row.lead_email)
-          .maybeSingle();
+        // 0. Check unsubscribed (From Batch)
+        const leadCheck = leadsByEmail.get(row.lead_email);
 
-        if ((leadCheck as Record<string, unknown> | null)?.unsubscribed === true) {
+        if (leadCheck?.unsubscribed === true) {
           await supabase
             .from("marketing_lead_outreach_queue")
             .update({ status: "cancelled", last_error: "unsubscribed" })
@@ -279,9 +299,9 @@ export async function GET(request: Request) {
           continue;
         }
 
-        const rawName = ((leadCheck as Record<string, unknown> | null)?.first_name
-          ?? (leadCheck as Record<string, unknown> | null)?.name
-          ?? (leadCheck as Record<string, unknown> | null)?.full_name
+        const rawName = (leadCheck?.first_name
+          ?? leadCheck?.name
+          ?? leadCheck?.full_name
           ?? "") as string;
         const firstName = rawName.trim().split(/\s+/)[0] ?? "";
 
@@ -312,13 +332,10 @@ export async function GET(request: Request) {
         // 5. Schedule next drip step (if not last step and lead hasn't started onboarding)
         const nextStep = currentStep + 1;
         if (nextStep <= 3 && row.lead_id) {
-          // Check if lead already converted
-          const { count: started } = await supabase
-            .from("routing_events")
-            .select("*", { count: "exact", head: true })
-            .eq("lead_id", row.lead_id);
+          // Check if lead already converted (From Batch)
+          const startedCount = routingMap.get(row.lead_id) || 0;
 
-          if (!started || started === 0) {
+          if (startedCount === 0) {
             const nextConfig = DRIP_STEPS[nextStep];
             if (nextConfig) {
               const scheduledAt = addDays(new Date(), nextConfig.delayDays);
@@ -337,15 +354,11 @@ export async function GET(request: Request) {
         }
       } else {
         // WhatsApp
-        const { data: lead } = await supabase
-          .from("marketing_leads")
-          .select("phone")
-          .eq("email", row.lead_email)
-          .maybeSingle();
+        const lead = leadsByEmail.get(row.lead_email);
 
         const payloadWithPhone = {
           ...row.payload,
-          phone: (lead as Record<string, unknown> | null)?.phone ?? null,
+          phone: lead?.phone ?? null,
           lead_id: row.lead_id,
         };
         outcome = await sendWhatsapp(row.lead_email, payloadWithPhone);

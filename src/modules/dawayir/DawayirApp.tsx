@@ -1,4 +1,6 @@
-"use client";
+'use client';
+
+import { logger } from "@/services/logger";
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -86,7 +88,7 @@ export default function DawayirApp() {
                             analyzeAnswers(aiAnswers, subInfo?.features.maxMapNodes || 7);
                     }
                 } catch (e) {
-                    console.error("Failed to parse weather context", e);
+                    logger.error("Failed to parse weather context", e);
                 }
             }
         }
@@ -182,7 +184,7 @@ export default function DawayirApp() {
             setOraclePrediction(data);
             setShowOracleModal(true);
         } catch (error) {
-            console.error("Failed to query the Oracle:", error);
+            logger.error("Failed to query the Oracle:", error);
             alert("حدث خطأ أثناء تحليل المسار الزمني الخاص بك.");
         } finally {
             setIsOracleLoading(false);

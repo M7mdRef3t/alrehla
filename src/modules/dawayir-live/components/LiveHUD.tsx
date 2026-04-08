@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import type { FormEvent } from "react";
 import { ArrowRight, Eye, History, Link2, MessageSquareText, Mic, MicOff, Send, Sparkles, X } from "lucide-react";

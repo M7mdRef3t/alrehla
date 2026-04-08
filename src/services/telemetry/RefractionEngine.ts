@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 
 import { geminiClient } from '../geminiClient';
 import { useDigitalTwinState } from '@/state/digitalTwinState';
@@ -57,7 +58,7 @@ export class RefractionEngine {
             }
             return null;
         } catch (error) {
-            console.error('[RefractionEngine] Error generating task:', error);
+            logger.error('[RefractionEngine] Error generating task:', error);
             return null;
         }
     }

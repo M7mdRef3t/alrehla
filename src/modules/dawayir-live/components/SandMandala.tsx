@@ -1,4 +1,6 @@
-"use client";
+'use client';
+
+import { logger } from "@/services/logger";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import html2canvas from "html2canvas";
@@ -133,7 +135,7 @@ export default function SandMandala({ targetRef, isActive, onComplete }: SandMan
 
         animate();
       } catch (error) {
-        console.error("SandMandala failed", error);
+        logger.error("SandMandala failed", error);
         restoreTarget();
         onComplete?.();
       }

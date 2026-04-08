@@ -1,5 +1,8 @@
+import { initMonitoring } from "@/services/monitoring";
 import { PWAInstallProvider } from "@/contexts/PWAInstallContext";
 import { AppExperienceShell } from "@/modules/meta/app-shell/AppExperienceShell";
+
+initMonitoring();
 
 export default function App({ onExitToLanding }: { onExitToLanding?: () => void }) {
   return (

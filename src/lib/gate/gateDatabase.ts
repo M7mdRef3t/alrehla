@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { supabase } from '@/services/supabaseClient';
 import type { GateState } from './types'; // We will define this next
 
@@ -22,9 +23,9 @@ export const upsertGateSession = async (state: GateState) => {
       .upsert(payload, { onConflict: 'id' });
 
     if (error) {
-      console.error('[Gate DB] Upsert Error', error);
+      logger.error('[Gate DB] Upsert Error', error);
     }
   } catch (err) {
-    console.error('[Gate DB] Exception', err);
+    logger.error('[Gate DB] Exception', err);
   }
 };

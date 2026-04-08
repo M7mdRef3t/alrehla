@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase, isSupabaseAbortError } from '@/services/supabaseClient';
 import { getLocalDayString } from '@/utils/dateUtils';
@@ -102,7 +103,7 @@ export function useDailyPulse() {
             }
         } catch (err) {
             if (!isSupabaseAbortError(err)) {
-                console.error("Failed to fetch pulse data", err);
+                logger.error("Failed to fetch pulse data", err);
             }
         } finally {
             setLoading(false);
@@ -169,7 +170,7 @@ export function useDailyPulse() {
             }
         } catch (err) {
             if (isSupabaseAbortError(err)) return;
-            console.error("Save pulse failed", err);
+            logger.error("Save pulse failed", err);
             throw err;
         } finally {
             setLoading(false);

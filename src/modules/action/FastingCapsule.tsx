@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -85,7 +86,7 @@ export const FastingCapsule: FC<FastingCapsuleProps> = ({ isOpen, onClose }) => 
             gainNodeRef.current.connect(ctx.destination);
             noiseNodeRef.current.start();
         } catch (e) {
-            console.error("Audio Error:", e);
+            logger.error("Audio Error:", e);
         }
     };
 

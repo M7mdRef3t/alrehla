@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -50,7 +51,7 @@ export const WeeklyReportWidget: FC = () => {
                 setError({ code: data.error, message: data.message });
             }
         } catch (err) {
-            console.error(err);
+            logger.error(err);
             setError({ code: 'FETCH_ERROR', message: 'فش ف استا اترر' });
         } finally {
             setLoading(false);

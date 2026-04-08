@@ -1,4 +1,6 @@
-"use client";
+'use client';
+
+import { logger } from "@/services/logger";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Send, Sparkles, Loader2, Check, Terminal } from 'lucide-react';
@@ -9,6 +11,7 @@ import { isPublicPaymentsEnabled } from '@/config/payments';
 import { VoiceInput } from '@/modules/meta/VoiceInput';
 import { useAppOverlayState } from '@/state/appOverlayState';
 import { ShadowMemory } from '@/services/shadowMemory';
+import ReactMarkdown from 'react-markdown';
 
 interface FacilitatorChatProps {
     focusedNode: NodeData;
@@ -166,7 +169,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                     llmLatencyMs: typeof data.llm_latency_ms === "number" ? data.llm_latency_ms : null
                 }, ...(optionalWarning ? [{ role: 'ai' as const, content: optionalWarning }] : [])]);
             } catch (err) {
-                console.error("Initial greeting failed", err);
+                logger.error("Initial greeting failed", err);
                 setMessages([{ role: 'ai', content: `حدث خطأ في محاكاة "${focusedNode.label}" في عقلي.` }]);
             } finally {
                 setIsLoading(false);
@@ -442,7 +445,11 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                                 : undefined
                             }
                         >
-                            {msg.content}
+                            <div className="markdown-content">
+                                <ReactMarkdown>
+                                    {msg.content}
+                                </ReactMarkdown>
+                            </div>
                         </div>
                         {msg.role === 'ai' && showAlgorithmicVulnerability && typeof msg.llmLatencyMs === 'number' && (
                             <div className="max-w-[85%] text-[11px] text-slate-400 leading-relaxed px-1">

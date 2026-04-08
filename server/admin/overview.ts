@@ -1003,6 +1003,93 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
   });
 }
 
+async function handleVisitorSessions(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
+  const limit = safeLimit(req.query?.limit, 300, 1000);
+  const { data, error } = await client
+    .from("routing_events")
+    .select("session_id,event_type,payload,occurred_at")
+    .not("session_id", "is", null)
+    .order("occurred_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) {
+    res.status(500).json({ error: "Failed to fetch routing events" });
+    return;
+  }
+
+  const bySession = new Map<string, any>();
+  for (const row of data as Array<Record<string, unknown>>) {
+    const sid = String(row.session_id ?? "").trim();
+    if (!sid) continue;
+    const occurredAt = row.occurred_at ? new Date(String(row.occurred_at)).getTime() : null;
+    const type = String(row.event_type ?? "");
+    const payload = (row.payload as Record<string, unknown> | null) ?? null;
+    const flowStep = type === "flow_event" && typeof payload?.step === "string" ? payload.step : null;
+
+    const existing = bySession.get(sid);
+    if (!existing) {
+      bySession.set(sid, {
+        sessionId: sid,
+        firstSeen: occurredAt,
+        lastSeen: occurredAt,
+        eventsCount: 1,
+        pathStarts: type === "path_started" ? 1 : 0,
+        taskCompletions: type === "task_completed" ? 1 : 0,
+        nodesAdded: type === "node_added" ? 1 : 0,
+        lastFlowStep: flowStep
+      });
+      continue;
+    }
+
+    existing.eventsCount += 1;
+    if (type === "path_started") existing.pathStarts += 1;
+    if (type === "task_completed") existing.taskCompletions += 1;
+    if (type === "node_added") existing.nodesAdded += 1;
+    if (occurredAt != null) {
+      if (existing.firstSeen == null || occurredAt < existing.firstSeen) existing.firstSeen = occurredAt;
+      if (existing.lastSeen == null || occurredAt > existing.lastSeen) {
+        existing.lastSeen = occurredAt;
+        if (flowStep) existing.lastFlowStep = flowStep;
+      } else if (existing.lastFlowStep == null && flowStep) {
+        existing.lastFlowStep = flowStep;
+      }
+    } else if (existing.lastFlowStep == null && flowStep) {
+      existing.lastFlowStep = flowStep;
+    }
+  }
+
+  const results = Array.from(bySession.values())
+    .sort((a, b) => (b.lastSeen ?? 0) - (a.lastSeen ?? 0))
+    .slice(0, limit);
+
+  // Session → User stitching
+  const sessionIds = results.map((r) => r.sessionId).slice(0, 300);
+  if (sessionIds.length > 0) {
+    const { data: profiles } = await client
+      .from("profiles")
+      .select("id, user_id, email")
+      .in("id", sessionIds);
+    if (profiles) {
+      const profileMap = new Map<string, { userId: string | null; email: string | null }>();
+      for (const p of profiles as Array<Record<string, unknown>>) {
+        profileMap.set(String(p.id), {
+          userId: p.user_id ? String(p.user_id) : null,
+          email: p.email ? String(p.email) : null
+        });
+      }
+      for (const session of results) {
+        const profile = profileMap.get(session.sessionId);
+        if (profile) {
+          session.linkedUserId = profile.userId;
+          session.linkedEmail = profile.email;
+        }
+      }
+    }
+  }
+
+  res.status(200).json(results);
+}
+
 async function handleFeedback(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const limit = safeLimit(req.query?.limit, 100, 500);
   const search = String(req.query?.search ?? "").trim().toLowerCase();
@@ -2487,6 +2574,7 @@ export async function overviewRouter(req: RequestLike, res: JsonResponder) {
       if (kind === "system-health") return handleSystemHealth(client, res);
       if (kind === "security-signals") return handleSecuritySignals(client, res);
       if (kind === "owner-ops") return handleOwnerOps(client, req, res);
+      if (kind === "visitor-sessions") return handleVisitorSessions(client, req, res);
       if (kind === "feedback") return handleFeedback(client, req, res);
       if (kind === "support-tickets") return handleSupportTicketsGet(client, req, res);
       if (kind === "owner-alerts") return handleOwnerAlerts(client, req, res);

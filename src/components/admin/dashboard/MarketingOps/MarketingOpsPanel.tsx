@@ -1,4 +1,6 @@
-"use client";
+'use client';
+
+import { logger } from "@/services/logger";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -319,7 +321,7 @@ function MarketingSpendConsole({
         const val = await adminApi.fetchMarketingSpend();
         setSpend(val ?? 0);
       } catch (e) {
-        console.error("Failed to fetch spend:", e);
+        logger.error("Failed to fetch spend:", e);
       }
     }
     void load();

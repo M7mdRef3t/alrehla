@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { v4 as uuidv4 } from 'uuid';
 import * as pixel from './metaPixel';
 
@@ -14,7 +15,6 @@ export const trackGateEventPixelOnly = (
   const eventId = explicitEventId || uuidv4();
 
   try {
-    const standardEvents = ['PageView', 'ViewContent', 'GateStarted', 'Lead', 'QualifierStarted', 'CompleteRegistration', 'MapStarted', 'MapCompleted'];
     // In strict business environments, GateStarted might be sent as a custom event.
     // For Meta logic, we use Custom if it's not a standard recognized e-commerce funnel one.
     const isStandard = ['PageView', 'ViewContent', 'Lead', 'CompleteRegistration', 'Purchase'].includes(eventName);
@@ -25,7 +25,7 @@ export const trackGateEventPixelOnly = (
       pixel.customEvent(eventName, customData, eventId);
     }
   } catch (error) {
-    console.error('[Event Tracker] Failed to track browser event', error);
+    logger.error('[Event Tracker] Failed to track browser event', error);
   }
   
   return eventId; // IMPORTANT: Must be passed to API route for CAPI tracking!

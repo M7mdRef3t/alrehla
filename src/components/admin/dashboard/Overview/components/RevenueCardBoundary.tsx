@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import React from "react";
 
 interface RevenueCardBoundaryProps {
@@ -23,7 +24,7 @@ export class RevenueCardBoundary extends React.Component<
 
   public componentDidCatch(error: unknown): void {
     // Keep card failure isolated from the rest of Overview.
-    console.error("RevenueCardBoundary error", error);
+    logger.error("RevenueCardBoundary error", error);
   }
 
   public render(): React.ReactNode {

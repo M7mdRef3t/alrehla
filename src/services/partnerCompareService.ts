@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { supabase } from "./supabaseClient";
 
 /* ══════════════════════════════════════════
@@ -31,7 +32,7 @@ export async function saveAnalysisResult(
   total: number,
 ): Promise<AnalysisResult | null> {
   if (!supabase) {
-    console.error("[PartnerCompare] Supabase not ready");
+    logger.error("[PartnerCompare] Supabase not ready");
     return null;
   }
 
@@ -42,7 +43,7 @@ export async function saveAnalysisResult(
     .single();
 
   if (error) {
-    console.error("[PartnerCompare] Save error:", error);
+    logger.error("[PartnerCompare] Save error:", error);
     return null;
   }
   return data as AnalysisResult;
@@ -61,7 +62,7 @@ export async function getComparisonResults(
     .order("created_at", { ascending: true });
 
   if (error || !data) {
-    console.error("[PartnerCompare] Fetch error:", error);
+    logger.error("[PartnerCompare] Fetch error:", error);
     return { initiator: null, partner: null };
   }
 
