@@ -22,18 +22,11 @@ export class AIOrchestrator {
         sensorTriggered: "mood" | "tei" | "mixed";
     }[] = [];
 
-    // State Mutex, Cooldown & Sanctuary
     private isLocked = false;
     private cooldownUntil = 0;
-    private isSanctuaryActive = false; // وضع السكون / Kill Switch
-
-    // المخزن المؤقت للنبضات التسويقية (المجردة تماماً)
+    private isSanctuaryActive = false;
     private pulseEvents: { event: string; protocol: string; timestamp: number }[] = [];
-
-    private sensorWeights = {
-        mood: 0.7,
-        tei: 0.3
-    };
+    private sensorWeights = { mood: 0.7, tei: 0.3 };
 
     public static getInstance(): AIOrchestrator {
         if (!AIOrchestrator.instance) {
@@ -43,10 +36,9 @@ export class AIOrchestrator {
     }
 
     public async orchestrate(snapshot: SystemSnapshot): Promise<OrchestrationResult> {
-        // Implementation provided by hardener
         return {
             snapshot,
-            trajectory: { moodScore: 50, performanceScore: 50, consistency: 0.8 },
+            trajectory: { moodScore: 50, performanceScore: 50, consistency: 0.8 } as any,
             protocol: null,
             confidence: 0.9,
             weights: this.sensorWeights,
@@ -54,6 +46,10 @@ export class AIOrchestrator {
             status: "passive"
         };
     }
+
+    public getPulseArchive() { return this.pulseEvents; }
+    public async activateSanctuary() { this.isSanctuaryActive = true; }
+    public async exitSanctuary() { this.isSanctuaryActive = false; }
 }
 
 export const orchestrator = AIOrchestrator.getInstance();
