@@ -1,4 +1,4 @@
-import { logger } from '@/services/logger';
+import { logger } from "@/services/logger";
 import { supabase, supabaseAdmin } from './supabaseClient';
 
 export interface MetaLeadData {

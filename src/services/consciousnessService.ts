@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import { geminiClient } from "./geminiClient";
 import { AICache } from "./geminiEnhancements";
 import { useConsciousnessHistory } from "@/state/consciousnessHistoryState";

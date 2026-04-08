@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import { AlrehlaLogo } from "./logo/AlrehlaLogo";
 import { SocialLinks } from '@/modules/growth/SocialLinks';
 

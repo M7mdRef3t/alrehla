@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import React, { useState, useRef, useEffect, type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Share2, X, Sparkles } from "lucide-react";

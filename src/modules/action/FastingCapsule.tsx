@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";

@@ -3,7 +3,7 @@
  * بيانات التدفق — تعديل هنا يحدّث الخريطة تلقائياً
  */
 
-import type { FlowNode } from "@/components/admin/FlowMindMap";
+import type { FlowNode } from "@/components/admin/flow-mind-map";
 
 export interface FlowStepConfig {
   id: string;

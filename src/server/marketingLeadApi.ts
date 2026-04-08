@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import { NextResponse } from "next/server";
 import {
   dedupeMarketingLeadInputs,

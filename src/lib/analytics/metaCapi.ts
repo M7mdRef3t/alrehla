@@ -1,4 +1,4 @@
-import { logger } from "../../services/logger";
+import { logger } from "@/services/logger";
 export const sendToCapi = async (
   eventName: string,
   eventId: string,

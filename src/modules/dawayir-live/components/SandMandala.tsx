@@ -1,5 +1,6 @@
-import { logger } from "../../../services/logger";
-"use client";
+'use client';
+
+import { logger } from "@/services/logger";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import html2canvas from "html2canvas";

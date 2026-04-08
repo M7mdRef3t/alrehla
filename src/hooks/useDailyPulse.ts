@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase, isSupabaseAbortError } from '@/services/supabaseClient';
 import { getLocalDayString } from '@/utils/dateUtils';

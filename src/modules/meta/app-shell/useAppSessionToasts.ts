@@ -1,4 +1,4 @@
-import { logger } from "../../services/logger";
+import { logger } from "@/services/logger";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { consciousnessService, type MemoryMatch } from "@/services/consciousnessService";
 import { getWindowOrNull } from "@/services/clientRuntime";

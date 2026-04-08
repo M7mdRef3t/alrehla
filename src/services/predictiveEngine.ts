@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import { geminiClient } from "./geminiClient";
 import { useConsciousnessHistory } from "@/state/consciousnessHistoryState";
 import { usePredictiveState } from "@/state/predictiveState";

@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import { FC, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Network, Info, Activity, Zap } from "lucide-react";

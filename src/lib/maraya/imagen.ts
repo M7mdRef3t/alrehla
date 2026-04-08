@@ -1,4 +1,4 @@
-import { logger } from "../../services/logger";
+import { logger } from "@/services/logger";
 /**
  * Imagen Image Generation Service for Maraya
  * Adapted from the legacy Maraya image runtime.

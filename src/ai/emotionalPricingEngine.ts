@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 /**
  * EMOTIONAL_PRICING_ENGINE.ts — محرك التسعير العاطفي
  * =====================================================

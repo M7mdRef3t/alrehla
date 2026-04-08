@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 // mapSync.ts
 import type { MapNode } from "@/modules/map/mapTypes";
 import { isSupabaseReady, supabase } from "./supabaseClient";

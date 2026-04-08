@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { GraduationCap, History, Settings2, Users } from "lucide-react";
 import type { LiveLanguage, LiveMode } from '../types';

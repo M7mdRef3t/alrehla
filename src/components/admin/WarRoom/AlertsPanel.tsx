@@ -1,5 +1,6 @@
-import { logger } from "../../../services/logger";
 'use client';
+
+import { logger } from "@/services/logger";
 
 import React, { useEffect, useState } from 'react';
 import {

@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import { FC, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Share2, Check, Clock, ShieldCheck, X, LockKeyhole } from "lucide-react";

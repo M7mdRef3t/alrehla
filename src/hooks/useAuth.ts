@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import { useState, useEffect } from "react";
 import axios from "axios";
 

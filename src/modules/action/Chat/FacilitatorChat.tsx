@@ -1,5 +1,6 @@
-import { logger } from "../../services/logger";
-"use client";
+'use client';
+
+import { logger } from "@/services/logger";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Send, Sparkles, Loader2, Check, Terminal } from 'lucide-react';

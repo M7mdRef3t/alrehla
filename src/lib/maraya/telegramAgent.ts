@@ -1,4 +1,4 @@
-import { logger } from "../../services/logger";
+import { logger } from "@/services/logger";
 /**
  * Telegram Agent: Rafeeq El Rehla (رفيق الرحلة)
  * An AI agent running on Gemini that responds to Telegram users in Egyptian Slang,

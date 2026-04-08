@@ -1,4 +1,4 @@
-import { logger } from "../../services/logger";
+import { logger } from "@/services/logger";
 ﻿import { orchestrator } from "./Core";
 import { SystemSnapshot } from "./types";
 import { awarenessQueueService } from "@/services/awarenessQueueService";

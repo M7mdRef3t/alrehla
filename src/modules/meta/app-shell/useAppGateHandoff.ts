@@ -1,4 +1,4 @@
-import { logger } from "../../services/logger";
+import { logger } from "@/services/logger";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/services/supabaseClient";
 import { useJourneyState } from "@/state/journeyState";

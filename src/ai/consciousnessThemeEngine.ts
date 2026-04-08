@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 /**
  * CONSCIOUSNESS_THEME_ENGINE.ts — محرك الواجهة الواعية
  * =====================================================

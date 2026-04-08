@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import React, { type FC, useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Sparkles, Loader2, Mic, MicOff, History } from "lucide-react";
 import { geminiClient } from "@/services/geminiClient";

@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState } from "react";
 import { Video, Wand2, Sparkles, Copy, RefreshCw, Layers, Zap, ShieldAlert, Brain, History, ChevronRight, ChevronLeft, ThumbsUp, ThumbsDown } from "lucide-react";

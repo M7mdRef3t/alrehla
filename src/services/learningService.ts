@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 /**
  * learningService.ts
  * Typed data access layer for all learning content stored in Supabase.

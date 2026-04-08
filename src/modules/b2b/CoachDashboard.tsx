@@ -1,5 +1,6 @@
-import { logger } from "../../services/logger";
-"use client";
+'use client';
+
+import { logger } from "@/services/logger";
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/services/supabaseClient';

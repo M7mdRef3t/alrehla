@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 /**
  * REVENUE_AUTOMATION.ts — محرك الدخل المالي الذاتي
  * =====================================================

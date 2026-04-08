@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import { MirrorInsight } from './mirrorLogic';
 import { geminiClient } from './geminiClient';
 

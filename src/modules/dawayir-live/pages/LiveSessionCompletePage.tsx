@@ -1,5 +1,6 @@
-import { logger } from "../../../services/logger";
-"use client";
+'use client';
+
+import { logger } from "@/services/logger";
 
 import { useEffect, useMemo, useRef, useState, lazy } from "react";
 import { BadgeCheck, Clock3, Download, Gem, Link2, RotateCcw, Share2, Wind } from "lucide-react";

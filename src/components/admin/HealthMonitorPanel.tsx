@@ -1,4 +1,4 @@
-import { logger } from "../../services/logger";
+import { logger } from "@/services/logger";
 import { type FC, useEffect, useState } from "react";
 import { Activity, AlertTriangle, CheckCircle, Clock, TrendingUp } from "lucide-react";
 import type { HealthCheckResult, HealthIssue } from "@/ai/autoHealthCheck";

@@ -1,4 +1,4 @@
-import { logger } from "../../services/logger";
+import { logger } from "@/services/logger";
 import { v4 as uuidv4 } from 'uuid';
 import * as pixel from './metaPixel';
 

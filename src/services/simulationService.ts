@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import { AIOrchestrator } from './aiOrchestrator';
 import { supabase } from './supabaseClient';
 import { geminiClient } from './geminiClient';

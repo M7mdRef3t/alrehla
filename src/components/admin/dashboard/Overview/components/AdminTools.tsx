@@ -1,4 +1,4 @@
-import { logger } from "../../../../../services/logger";
+import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { FileText, Save, RefreshCw, Sun, Moon, Sunset, Palette, Loader2 } from "lucide-react";

@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 /**
  * خدمة الإشعارات
  * تدير إرسال الإشعارات المحلية للمستخدم

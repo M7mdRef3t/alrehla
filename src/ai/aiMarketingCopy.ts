@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 /**
  * AI_MARKETING_COPY.ts — كاتب النصوص التسويقية بالذكاء الاصطناعي
  * =====================================================

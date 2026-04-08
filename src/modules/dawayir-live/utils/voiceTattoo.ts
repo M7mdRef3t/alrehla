@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { arrayBufferToBase64, base64ToArrayBuffer } from "./audioHelpers";
 

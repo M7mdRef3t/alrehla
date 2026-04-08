@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
 import { runtimeEnv } from "@/config/runtimeEnv";
 

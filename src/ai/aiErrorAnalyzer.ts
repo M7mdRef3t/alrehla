@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 /**
  * AI_ERROR_ANALYZER.ts — محلل الأخطاء الذكي
  * =============================================

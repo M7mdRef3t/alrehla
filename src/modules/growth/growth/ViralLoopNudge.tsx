@@ -1,5 +1,6 @@
-import { logger } from "../../services/logger";
-"use client";
+'use client';
+
+import { logger } from "@/services/logger";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";

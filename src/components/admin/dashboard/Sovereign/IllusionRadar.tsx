@@ -1,4 +1,4 @@
-import { logger } from "../../../../services/logger";
+import { logger } from "@/services/logger";
 import React, { type FC, useState } from "react";
 import { AlertTriangle, TrendingUp, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";

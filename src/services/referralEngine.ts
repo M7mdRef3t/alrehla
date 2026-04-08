@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 /**
  * Referral Engine — محرك الإحالة
  * ==================================
@@ -168,6 +168,24 @@ export async function applyReferralCodeAsync(code: string, myEmail: string): Pro
     }
 
     return true;
+}
+
+/** 
+ * إشعار الشخص اللي عمل الـ Invite لما حد يسجل بسببه
+ * Recovered from M7mdRef3t's manual fix in PR #111
+ */
+export async function notifyReferrer(referrerId: string, newUserEmail: string) {
+    if (!isSupabaseReady || !supabase) return null;
+    
+    const { data, error } = await supabase.functions.invoke('notify-referrer', {
+        body: { referrerId, newUserEmail },
+    });
+    
+    if (error) {
+        logger.error("Notify Referrer Error:", error);
+        throw error;
+    }
+    return data;
 }
 
 /** يُستدعى عندما يكمل المُحال إليه أول خريطة */

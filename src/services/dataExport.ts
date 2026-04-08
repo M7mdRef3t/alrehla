@@ -1,4 +1,4 @@
-import { logger } from "../services/logger";
+import { logger } from "@/services/logger";
 import { loadStoredState } from "./localStore";
 import { getJSON, setJSON, getItem } from "./secureStore";
 import {
