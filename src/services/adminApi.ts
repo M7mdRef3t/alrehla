@@ -921,87 +921,9 @@ export async function fetchSessionEvents(
 }
 
 export async function fetchVisitorSessions(limit = 300): Promise<VisitorSessionSummary[] | null> {
-  if (!isSupabaseReady || !supabase) return null;
   const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 1000) : 300;
-  const { data, error } = await supabase
-    .from("routing_events")
-    .select("session_id,event_type,payload,occurred_at")
-    .not("session_id", "is", null)
-    .order("occurred_at", { ascending: false })
-    .limit(safeLimit);
-  if (error || !data) return null;
-
-  const bySession = new Map<string, VisitorSessionSummary>();
-  for (const row of data as Array<Record<string, unknown>>) {
-    const sid = String(row.session_id ?? "").trim();
-    if (!sid) continue;
-    const createdAt = row.created_at ? new Date(String(row.created_at)).getTime() : null;
-    const type = String(row.type ?? "");
-    const payload = (row.payload as Record<string, unknown> | null) ?? null;
-    const flowStep = type === "flow_event" && typeof payload?.step === "string" ? payload.step : null;
-
-    const existing = bySession.get(sid);
-    if (!existing) {
-      bySession.set(sid, {
-        sessionId: sid,
-        firstSeen: createdAt,
-        lastSeen: createdAt,
-        eventsCount: 1,
-        pathStarts: type === "path_started" ? 1 : 0,
-        taskCompletions: type === "task_completed" ? 1 : 0,
-        nodesAdded: type === "node_added" ? 1 : 0,
-        lastFlowStep: flowStep
-      });
-      continue;
-    }
-
-    existing.eventsCount += 1;
-    if (type === "path_started") existing.pathStarts += 1;
-    if (type === "task_completed") existing.taskCompletions += 1;
-    if (type === "node_added") existing.nodesAdded += 1;
-    if (createdAt != null) {
-      if (existing.firstSeen == null || createdAt < existing.firstSeen) existing.firstSeen = createdAt;
-      if (existing.lastSeen == null || createdAt > existing.lastSeen) {
-        existing.lastSeen = createdAt;
-        if (flowStep) existing.lastFlowStep = flowStep;
-      } else if (existing.lastFlowStep == null && flowStep) {
-        existing.lastFlowStep = flowStep;
-      }
-    } else if (existing.lastFlowStep == null && flowStep) {
-      existing.lastFlowStep = flowStep;
-    }
-  }
-
-  const results = Array.from(bySession.values())
-    .sort((a, b) => (b.lastSeen ?? 0) - (a.lastSeen ?? 0))
-    .slice(0, safeLimit);
-
-  // Session → User stitching
-  const sessionIds = results.map((r) => r.sessionId).slice(0, 300);
-  if (sessionIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, user_id, email")
-      .in("id", sessionIds);
-    if (profiles) {
-      const profileMap = new Map<string, { userId: string | null; email: string | null }>();
-      for (const p of profiles as Array<Record<string, unknown>>) {
-        profileMap.set(String(p.id), {
-          userId: p.user_id ? String(p.user_id) : null,
-          email: p.email ? String(p.email) : null
-        });
-      }
-      for (const session of results) {
-        const profile = profileMap.get(session.sessionId);
-        if (profile) {
-          session.linkedUserId = profile.userId;
-          session.linkedEmail = profile.email;
-        }
-      }
-    }
-  }
-
-  return results;
+  const apiData = await callAdminApi<VisitorSessionSummary[]>(`overview?kind=visitor-sessions&limit=${safeLimit}`);
+  return apiData ?? null;
 }
 
 export async function fetchFeedbackEntries(query?: {

@@ -539,17 +539,6 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode, 
           )}
         </AnimatePresence>
 
-        {/* Floating Actions */}
-        <div className="absolute top-6 left-6 flex flex-col gap-3">
-            {/* Add Person CTA - Primary Amber */}
-            <Button 
-              variant="primary"
-              size="lg"
-              className="w-14 h-14 !p-0 shadow-[0_0_20px_rgba(245,166,35,0.25)]"
-              onClick={onAddNode}
-              icon={<Plus className="w-7 h-7 hover:rotate-90 transition-transform duration-300" />}
-            />
-        </div>
       </DndContext>
     </div>
   );
