@@ -38,11 +38,7 @@ export class AIOrchestrator {
     public async orchestrate(snapshot: SystemSnapshot): Promise<OrchestrationResult> {
         return {
             snapshot,
-            trajectory: { 
-                moodScore: 50, 
-                performanceScore: 50, 
-                consistency: 0.8 
-            } as any,
+            trajectory: { moodScore: 50, performanceScore: 50, consistency: 0.8 } as any,
             protocol: null,
             confidence: 0.9,
             weights: this.sensorWeights,
@@ -51,17 +47,9 @@ export class AIOrchestrator {
         };
     }
 
-    public getPulseArchive() {
-        return this.pulseEvents;
-    }
-
-    public async activateSanctuary() {
-        this.isSanctuaryActive = true;
-    }
-
-    public async exitSanctuary() {
-        this.isSanctuaryActive = false;
-    }
+    public getPulseArchive() { return this.pulseEvents; }
+    public async activateSanctuary() { this.isSanctuaryActive = true; }
+    public async exitSanctuary() { this.isSanctuaryActive = false; }
 }
 
 export const orchestrator = AIOrchestrator.getInstance();
