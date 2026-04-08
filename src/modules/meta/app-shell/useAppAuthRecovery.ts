@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import type { AdviceCategory } from "@/data/adviceScripts";
@@ -212,7 +213,7 @@ export function useAppAuthRecovery({
         .limit(1);
 
       if (error) {
-        console.error("[OfflineIntervention] fetch failed:", error.message);
+        logger.error("[OfflineIntervention] fetch failed:", error.message);
         return;
       }
 
@@ -228,7 +229,7 @@ export function useAppAuthRecovery({
         p_user_id: authUser.id
       });
       if (markError) {
-        console.error("[OfflineIntervention] mark-read failed:", markError.message);
+        logger.error("[OfflineIntervention] mark-read failed:", markError.message);
       }
     })();
 

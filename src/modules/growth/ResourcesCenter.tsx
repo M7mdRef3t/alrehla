@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
@@ -402,7 +403,7 @@ export function ResourcesCenter({
         const stats = await fetchGlobalUserProgressStats();
         setGlobalStats(stats);
       } catch (err) {
-        console.error("Failed to load global stats:", err);
+        logger.error("Failed to load global stats:", err);
       } finally {
         setIsStatsLoading(false);
       }

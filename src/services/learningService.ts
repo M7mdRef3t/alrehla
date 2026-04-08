@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 /**
  * learningService.ts
  * Typed data access layer for all learning content stored in Supabase.
@@ -79,7 +80,7 @@ export async function fetchCourses(): Promise<DBCourse[]> {
     .select("*")
     .eq("status", "published")
     .order("sort_order");
-  if (error) { console.error("[learningService] fetchCourses:", error.message); return []; }
+  if (error) { logger.error("[learningService] fetchCourses:", error.message); return []; }
   return (data ?? []) as DBCourse[];
 }
 
@@ -91,7 +92,7 @@ export async function fetchCourse(id: string): Promise<DBCourse | null> {
     .select("*")
     .eq("id", id)
     .single();
-  if (error) { console.error("[learningService] fetchCourse:", error.message); return null; }
+  if (error) { logger.error("[learningService] fetchCourse:", error.message); return null; }
   return data as DBCourse;
 }
 
@@ -103,7 +104,7 @@ export async function fetchModules(courseId: string): Promise<DBModule[]> {
     .select("*")
     .eq("course_id", courseId)
     .order("sort_order");
-  if (error) { console.error("[learningService] fetchModules:", error.message); return []; }
+  if (error) { logger.error("[learningService] fetchModules:", error.message); return []; }
   return (data ?? []) as DBModule[];
 }
 
@@ -115,7 +116,7 @@ export async function fetchUnits(courseId: string): Promise<DBUnit[]> {
     .select("*")
     .eq("course_id", courseId)
     .order("sort_order");
-  if (error) { console.error("[learningService] fetchUnits:", error.message); return []; }
+  if (error) { logger.error("[learningService] fetchUnits:", error.message); return []; }
   return (data ?? []) as DBUnit[];
 }
 
@@ -127,7 +128,7 @@ export async function fetchQuizQuestions(courseId: string): Promise<DBQuizQuesti
     .select("*")
     .eq("course_id", courseId)
     .order("sort_order");
-  if (error) { console.error("[learningService] fetchQuizQuestions:", error.message); return []; }
+  if (error) { logger.error("[learningService] fetchQuizQuestions:", error.message); return []; }
   return (data ?? []) as DBQuizQuestion[];
 }
 
@@ -140,7 +141,7 @@ export async function fetchUserProgressDetail(courseId: string): Promise<Record<
     .select("unit_id, completed_at, last_position")
     .eq("course_id", courseId)
     .eq("user_id", session.user.id);
-  if (error) { console.error("[learningService] fetchUserProgressDetail:", error.message); return []; }
+  if (error) { logger.error("[learningService] fetchUserProgressDetail:", error.message); return []; }
   return data ?? [];
 }
 
@@ -160,7 +161,7 @@ export async function markUnitComplete(courseId: string, unitId: string): Promis
     unit_id: unitId,
     completed_at: new Date().toISOString(),
   }, { onConflict: "user_id,unit_id" });
-  if (error) console.error("[learningService] markUnitComplete:", error.message);
+  if (error) logger.error("[learningService] markUnitComplete:", error.message);
 }
 
 /** Save the last watched position of a video unit */
@@ -175,7 +176,7 @@ export async function saveVideoProgress(courseId: string, unitId: string, positi
     unit_id: unitId,
     last_position: position,
   }, { onConflict: "user_id,unit_id" });
-  if (error) console.error("[learningService] saveVideoProgress:", error.message);
+  if (error) logger.error("[learningService] saveVideoProgress:", error.message);
 }
 
 /** Save a quiz session result */
@@ -199,7 +200,7 @@ export async function saveQuizSession(params: {
     passed: params.passed,
     completed_at: new Date().toISOString(),
   });
-  if (error) console.error("[learningService] saveQuizSession:", error.message);
+  if (error) logger.error("[learningService] saveQuizSession:", error.message);
 }
 
 /** Fetch all content_items (for ResourcesCenter articles/exercises) */
@@ -212,7 +213,7 @@ export async function fetchContentItems(contentType?: string): Promise<DBContent
     .order("created_at", { ascending: false });
   if (contentType) query = query.eq("content_type", contentType);
   const { data, error } = await query;
-  if (error) { console.error("[learningService] fetchContentItems:", error.message); return []; }
+  if (error) { logger.error("[learningService] fetchContentItems:", error.message); return []; }
   return (data ?? []) as DBContentItem[];
 }
 
@@ -255,8 +256,8 @@ export async function fetchUserProgressStats(courseId: string): Promise<UserProg
       .order("completed_at", { ascending: false }),
   ]);
 
-  if (progressRes.error) console.error("[learningService] fetchStats progress:", progressRes.error.message);
-  if (quizRes.error) console.error("[learningService] fetchStats quiz:", quizRes.error.message);
+  if (progressRes.error) logger.error("[learningService] fetchStats progress:", progressRes.error.message);
+  if (quizRes.error) logger.error("[learningService] fetchStats quiz:", quizRes.error.message);
 
   const progress = (progressRes.data ?? []) as { unit_id: string; completed_at: string }[];
   const quizzes = (quizRes.data ?? []) as { score: number; passed: boolean; completed_at: string }[];
@@ -298,8 +299,8 @@ export async function fetchGlobalUserProgressStats(): Promise<UserProgressStats 
       .order("completed_at", { ascending: false }),
   ]);
 
-  if (progressRes.error) console.error("[learningService] fetchGlobalStats progress:", progressRes.error.message);
-  if (quizRes.error) console.error("[learningService] fetchGlobalStats quiz:", quizRes.error.message);
+  if (progressRes.error) logger.error("[learningService] fetchGlobalStats progress:", progressRes.error.message);
+  if (quizRes.error) logger.error("[learningService] fetchGlobalStats quiz:", quizRes.error.message);
 
   const progress = (progressRes.data ?? []) as { unit_id: string; completed_at: string }[];
   const quizzes = (quizRes.data ?? []) as { score: number; passed: boolean; completed_at: string }[];

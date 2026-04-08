@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { isUserMode } from "@/config/appEnv";
 import { safeGetSession, supabase } from "./supabaseClient";
 import { useGamificationState, type Badge } from "@/state/gamificationState";
@@ -82,7 +83,7 @@ export async function syncGamificationOnLoad(): Promise<void> {
                 if (isSchemaMismatchError(profileError)) {
                     disableProfileGamificationSync(profileError);
                 } else {
-                    console.error("Failed to fetch gamification profile:", profileError);
+                    logger.error("Failed to fetch gamification profile:", profileError);
                 }
             } else if (profile) {
                 useGamificationState.setState((state) => ({
@@ -103,7 +104,7 @@ export async function syncGamificationOnLoad(): Promise<void> {
                 if (isSchemaMismatchError(badgesError)) {
                     disableBadgeGamificationSync(badgesError);
                 } else {
-                    console.error("Failed to fetch gamification badges:", badgesError);
+                    logger.error("Failed to fetch gamification badges:", badgesError);
                 }
             } else if (badges && badges.length > 0) {
                 useGamificationState.setState((state) => {
@@ -130,7 +131,7 @@ export async function syncGamificationOnLoad(): Promise<void> {
             await pushGamificationStats();
         }
     } catch (err) {
-        console.error("Failed to sync gamification on load:", err);
+        logger.error("Failed to sync gamification on load:", err);
     }
 }
 
@@ -155,10 +156,10 @@ export async function pushGamificationStats(): Promise<void> {
                 disableProfileGamificationSync(error);
                 return;
             }
-            console.error("Failed to push gamification stats:", error);
+            logger.error("Failed to push gamification stats:", error);
         }
     } catch (err) {
-        console.error("Failed to push gamification stats:", err);
+        logger.error("Failed to push gamification stats:", err);
     }
 }
 
@@ -185,9 +186,9 @@ export async function pushGamificationBadge(badge: Badge): Promise<void> {
                 disableBadgeGamificationSync(error);
                 return;
             }
-            console.error("Failed to push gamification badge:", error);
+            logger.error("Failed to push gamification badge:", error);
         }
     } catch (err) {
-        console.error("Failed to push gamification badge:", err);
+        logger.error("Failed to push gamification badge:", err);
     }
 }

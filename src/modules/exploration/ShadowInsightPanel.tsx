@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { FC, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, X, Brain } from "lucide-react";
@@ -33,7 +34,7 @@ export const ShadowInsightPanel: FC<{ onSurface?: (context: Record<string, unkno
                 }
             }
         } catch (err) {
-            console.error("Shadow UI Fetch Error:", err);
+            logger.error("Shadow UI Fetch Error:", err);
         }
     }, [lastTriggeredId, onSurface]);
 
@@ -63,7 +64,7 @@ export const ShadowInsightPanel: FC<{ onSurface?: (context: Record<string, unkno
                 console.warn("Exploring Shadow:", signal.target_id);
             }
         } catch (err) {
-            console.error("Shadow Ack Error:", err);
+            logger.error("Shadow Ack Error:", err);
         }
     };
 

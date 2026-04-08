@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { logger } from "@/services/logger";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, User, Mail, Phone, RefreshCw, 
@@ -302,7 +303,7 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
       await navigator.clipboard.write([item]);
       showMsg(lead.id, "✨ تم نسخ التصميم اللامع! اذهب للـ Gmail واضغط Ctrl+V");
     } catch (err) {
-      console.error("Clipboard error:", err);
+      logger.error("Clipboard error:", err);
       showMsg(lead.id, "عفواً، المتصفح منع نسخ التصميم. جرب الطريقة اليدوية.", true);
     }
   };

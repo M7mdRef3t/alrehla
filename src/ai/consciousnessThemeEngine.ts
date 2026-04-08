@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 /**
  * CONSCIOUSNESS_THEME_ENGINE.ts — محرك الواجهة الواعية
  * =====================================================
@@ -468,7 +469,7 @@ export function startConsciousnessTheme(): void {
       // إرسال تقرير لـ Telegram (اختياري)
       await sendVisualReportToTelegram(theme, emotionalState);
     } catch (error) {
-      console.error("❌ Failed to update consciousness theme:", error);
+      logger.error("❌ Failed to update consciousness theme:", error);
     }
   };
 

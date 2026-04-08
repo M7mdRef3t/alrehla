@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 ﻿import { orchestrator } from "./Core";
 import { SystemSnapshot } from "./types";
 import { awarenessQueueService } from "@/services/awarenessQueueService";
@@ -105,7 +106,7 @@ export class TacticalSimulator {
         if (!validation.approved) {
             console.log("✅ [Guardrail] Oracle rejected comfort-seeking bypass:", validation.reasoning);
         } else {
-            console.error("❌ [Guardrail] Oracle failed to catch comfort-seeking bypass!");
+            logger.error("❌ [Guardrail] Oracle failed to catch comfort-seeking bypass!");
         }
 
         // 2. Verify DDA Auto-Downshift (Recovery sensor)
@@ -117,7 +118,7 @@ export class TacticalSimulator {
         if (nextDDA === 2) {
             console.log(`✅ [DDA] Auto-downshift verified: ${currentDDA} -> ${nextDDA}`);
         } else {
-            console.error(`❌ [DDA] Auto-downshift failed! Expected 2, got ${nextDDA}`);
+            logger.error(`❌ [DDA] Auto-downshift failed! Expected 2, got ${nextDDA}`);
         }
 
         console.warn("✅ [STRESS TEST] Zero-Point Integrity Audit finished.");

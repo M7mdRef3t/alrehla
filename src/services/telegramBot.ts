@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 /**
  * TELEGRAM_BOT.ts — الجهاز العصبي للنظام
  * =====================================================
@@ -91,7 +92,7 @@ export class TelegramBotService {
       console.warn("✅ Telegram message sent:", message.type);
       return true;
     } catch (error) {
-      console.error("❌ Failed to send Telegram message:", error);
+      logger.error("❌ Failed to send Telegram message:", error);
       return false;
     }
   }
@@ -419,7 +420,7 @@ async function sendDailyHealthReportNow(): Promise<void> {
       await telegramBot.sendDailyHealthReport(latestHealth);
     }
   } catch (error) {
-    console.error("❌ Failed to send daily health report:", error);
+    logger.error("❌ Failed to send daily health report:", error);
   }
 }
 
@@ -433,7 +434,7 @@ async function sendWeeklyRevenueReportNow(): Promise<void> {
       await telegramBot.sendWeeklyRevenueReport(metrics);
     }
   } catch (error) {
-    console.error("❌ Failed to send weekly revenue report:", error);
+    logger.error("❌ Failed to send weekly revenue report:", error);
   }
 }
 

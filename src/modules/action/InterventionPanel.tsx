@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import type { FC } from "react";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,7 +37,7 @@ export const InterventionPanel: FC = () => {
                 setItems(data);
             }
         } catch (err) {
-            if (!isSupabaseAbortError(err)) console.error(err);
+            if (!isSupabaseAbortError(err)) logger.error(err);
         }
     }, [isApiAvailable]);
 
@@ -65,7 +66,7 @@ export const InterventionPanel: FC = () => {
             // 3. Remove from UI
             setItems(prev => prev.filter(item => item.id !== interventionId));
         } catch (err) {
-            if (!isSupabaseAbortError(err)) console.error(err);
+            if (!isSupabaseAbortError(err)) logger.error(err);
         }
     };
 
@@ -99,7 +100,7 @@ export const InterventionPanel: FC = () => {
             }
             setItems(prev => prev.filter(item => item.id !== id));
         } catch (err) {
-            if (!isSupabaseAbortError(err)) console.error(err);
+            if (!isSupabaseAbortError(err)) logger.error(err);
         }
     };
 

@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { supabase } from "./supabaseClient";
 import { dynamicContextRouter } from "./dynamicContextRouter";
 
@@ -20,7 +21,7 @@ class AwarenessQueueService {
         console.log("📥 [QueueService] Event acknowledged and pushed to DB:", payload.actionType);
 
         if (!supabase) {
-            console.error("❌ [QueueService] Supabase client not initialized.");
+            logger.error("❌ [QueueService] Supabase client not initialized.");
             return false;
         }
 
@@ -40,7 +41,7 @@ class AwarenessQueueService {
             console.log("🚀 [QueueService] Push triggered via DB Webhook.");
             return true;
         } catch (error) {
-            console.error("❌ [QueueService] Failed to push to queue:", error);
+            logger.error("❌ [QueueService] Failed to push to queue:", error);
             // Fallback for UI continuity
             return false;
         }

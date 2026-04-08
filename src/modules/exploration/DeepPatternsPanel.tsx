@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { FC, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Network, ChevronRight, Activity, AlertCircle } from "lucide-react";
@@ -27,7 +28,7 @@ export const DeepPatternsPanel: FC = () => {
                 setInsights(data);
             }
         } catch (err) {
-            console.error(err);
+            logger.error(err);
         }
     };
 

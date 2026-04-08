@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -166,7 +167,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                     llmLatencyMs: typeof data.llm_latency_ms === "number" ? data.llm_latency_ms : null
                 }, ...(optionalWarning ? [{ role: 'ai' as const, content: optionalWarning }] : [])]);
             } catch (err) {
-                console.error("Initial greeting failed", err);
+                logger.error("Initial greeting failed", err);
                 setMessages([{ role: 'ai', content: `حدث خطأ في محاكاة "${focusedNode.label}" في عقلي.` }]);
             } finally {
                 setIsLoading(false);

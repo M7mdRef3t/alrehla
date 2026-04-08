@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { createClient } from "@supabase/supabase-js";
 
 function getSupabaseAdmin() {
@@ -93,7 +94,7 @@ export async function getRankedActions(userId: string, currentMood: number = 3):
 
         return ranked;
     } catch (err) {
-        console.error("Ranking Engine Error:", err);
+        logger.error("Ranking Engine Error:", err);
         return {};
     }
 }

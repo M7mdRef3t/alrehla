@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { supabase, isSupabaseReady } from "./supabaseClient";
 import { geminiClient } from "./geminiClient";
 
@@ -29,7 +30,7 @@ export class MemoryStore {
         });
 
         if (error) {
-            console.error("Error storing memory:", error);
+            logger.error("Error storing memory:", error);
             return false;
         }
         return true;
@@ -54,7 +55,7 @@ export class MemoryStore {
         });
 
         if (error) {
-            console.error("Error recalling memories:", error);
+            logger.error("Error recalling memories:", error);
             return [];
         }
 

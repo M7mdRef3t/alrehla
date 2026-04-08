@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -28,7 +29,7 @@ export const ConsciousnessArchiveModal: FC<ConsciousnessArchiveModalProps> = ({ 
         setLastUpdatedAt(Date.now());
       })
       .catch((err: unknown) => {
-        console.error("ConsciousnessArchive error:", err);
+        logger.error("ConsciousnessArchive error:", err);
         setError("تعذر تحميل أرشيف الوعي حالياً.");
       })
       .finally(() => setLoading(false));

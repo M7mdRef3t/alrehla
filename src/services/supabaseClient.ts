@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
 import { runtimeEnv } from "@/config/runtimeEnv";
 
@@ -92,7 +93,7 @@ export const fetchCommanderStats = async (userId: string): Promise<CommanderStat
     .single();
 
   if (error) {
-    console.error('Error fetching commander stats:', error);
+    logger.error('Error fetching commander stats:', error);
     return null;
   }
   return data;
@@ -115,7 +116,7 @@ export const updateCommanderRank = async (userId: string, missionCount: number) 
       last_promotion_date: new Date().toISOString()
     });
 
-  if (error) console.error('Error updating rank:', error);
+  if (error) logger.error('Error updating rank:', error);
   return newRank;
 };
 
@@ -135,7 +136,7 @@ export const updateAssetLocation = async (assetId: string, newZone: string) => {
     })
     .eq('id', assetId);
 
-  if (error) console.error('Error updating asset location:', error);
+  if (error) logger.error('Error updating asset location:', error);
 };
 
 export const saveDailyIntel = async (userId: string, missionId: string, content: string, breachDetected: boolean = false) => {
@@ -151,6 +152,6 @@ export const saveDailyIntel = async (userId: string, missionId: string, content:
       created_at: new Date().toISOString()
     });
 
-  if (error) console.error('Error saving daily intel:', error);
+  if (error) logger.error('Error saving daily intel:', error);
   return !error;
 };

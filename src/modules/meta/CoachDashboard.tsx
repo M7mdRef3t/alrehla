@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Activity, Users, Link2, KeyRound, BrainCircuit, X, Flame, Loader2 } from "lucide-react";
@@ -85,7 +86,7 @@ export const CoachDashboard: React.FC<{ isOpen: boolean; onClose: () => void }> 
                 })));
             }
         } catch (err) {
-            console.error("Error loading coach data:", err);
+            logger.error("Error loading coach data:", err);
         } finally {
             setIsLoading(false);
         }
@@ -114,11 +115,11 @@ export const CoachDashboard: React.FC<{ isOpen: boolean; onClose: () => void }> 
             if (!error) {
                 setInvites(prev => [{ code, used: false, createdAt: new Date().toISOString().split("T")[0] }, ...prev]);
             } else {
-                console.error("Invite generation failed:", error);
+                logger.error("Invite generation failed:", error);
                 alert("تعذر توليد الكود. حاول مرة أخرى.");
             }
         } catch (e) {
-            console.error(e);
+            logger.error(e);
         } finally {
             setIsLoading(false);
         }

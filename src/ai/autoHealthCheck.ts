@@ -1,3 +1,5 @@
+import { logger } from "../services/logger";
+import { runtimeEnv } from "../config/runtimeEnv";
 /**
  * AUTO_HEALTH_CHECK.ts — نظام الفحص الصحي التلقائي
  * ======================================================
@@ -65,7 +67,7 @@ export class AutoHealthChecker {
       void this.runHealthCheck();
     }, this.CHECK_INTERVAL_MS);
 
-    console.warn("✅ Auto Health Check started (runs every hour)");
+    logger.warn("✅ Auto Health Check started (runs every hour)");
   }
 
   /**
@@ -75,7 +77,7 @@ export class AutoHealthChecker {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
-      console.warn("⏸️ Auto Health Check stopped");
+      logger.warn("⏸️ Auto Health Check stopped");
     }
   }
 
@@ -85,7 +87,7 @@ export class AutoHealthChecker {
    * ─────────────────────────────────────────────────────────────────
    */
   async runHealthCheck(): Promise<HealthCheckResult> {
-    console.warn("🏥 Running health check...");
+    logger.warn("🏥 Running health check...");
     this.lastCheckTime = Date.now();
 
     const issues: HealthIssue[] = [];
@@ -131,7 +133,7 @@ export class AutoHealthChecker {
       await this.notifyAdmin(result);
     }
 
-    console.warn(`🏥 Health check complete: ${status.toUpperCase()} (${score}/100)`);
+    logger.warn(`🏥 Health check complete: ${status.toUpperCase()} (${score}/100)`);
     return result;
   }
 
@@ -141,10 +143,12 @@ export class AutoHealthChecker {
    * ─────────────────────────────────────────────────────────────────
    */
   private checkConsoleErrors(): HealthIssue[] {
-    // TODO: في production، نستخدم error tracking service (مثل Sentry)
-    // مؤقتاً: نفحص localStorage للـ errors المحفوظة
-
     const issues: HealthIssue[] = [];
+
+    // في production نعتمد على Sentry (تم إعداده عبر logger)، فما بنفحص localStorage.
+    if (runtimeEnv.isProd) {
+      return issues;
+    }
 
     try {
       const errorLog = localStorage.getItem("dawayir-error-log");
@@ -390,7 +394,7 @@ export class AutoHealthChecker {
           issue.autoFixed = true;
           issue.fixAttempted = true;
           fixed.push(issue);
-          console.warn(`✅ Auto-fixed: ${issue.description}`);
+          logger.warn(`✅ Auto-fixed: ${issue.description}`);
 
           // سجّل القرار
           await decisionEngine.execute({
@@ -400,7 +404,7 @@ export class AutoHealthChecker {
           });
         }
       } catch (err) {
-        console.error(`❌ Failed to auto-fix: ${issue.description}`, err);
+        logger.error(`❌ Failed to auto-fix: ${issue.description}`, err);
         issue.fixAttempted = true;
         issue.autoFixed = false;
       }
@@ -532,7 +536,7 @@ export class AutoHealthChecker {
    * ─────────────────────────────────────────────────────────────────
    */
   private async notifyAdmin(result: HealthCheckResult): Promise<void> {
-    console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
+    logger.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
     try {
       import("@/services/adminApi").then((mod) => {

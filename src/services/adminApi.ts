@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { revenueEngine } from "./revenueEngine";
 import type { RevenueMetricSnapshot, TransactionSummary } from "./revenueEngine";
 import { supabase, isSupabaseReady } from "./supabaseClient";
@@ -1718,7 +1719,7 @@ export async function fetchSovereignExecutiveReport(): Promise<any | null> {
     const [revenue, recentTransactions] = await Promise.all([revenueEngine.getExecutiveRevenueSnapshot(), revenueEngine.getRecentTransactions(10)]);
     return { revenue, recentTransactions };
   } catch (e) {
-    console.error("fetchSovereignExecutiveReport error:", e);
+    logger.error("fetchSovereignExecutiveReport error:", e);
     return null;
   }
 }

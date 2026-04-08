@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -100,7 +101,7 @@ export default function CoachDashboard() {
             const trajectory = await TrajectoryEngine.getClientTrajectory(client.id);
             setSelectedTrajectory(trajectory);
         } catch (e) {
-            console.error("Failed to load trajectory", e);
+            logger.error("Failed to load trajectory", e);
             setSelectedTrajectory(null);
         } finally {
             setIsTrajectoryLoading(false);

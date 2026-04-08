@@ -1,3 +1,4 @@
+import { logger } from "../../../services/logger";
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useMapState } from '@/state/mapState';
 import { geminiClient } from '@/services/geminiClient';
@@ -82,7 +83,7 @@ export const useMasafatyAnalysis = () => {
         setManeuvers(result.maneuvers);
       }
     } catch (error) {
-      console.error("AI Maneuvers Error:", error);
+      logger.error("AI Maneuvers Error:", error);
     } finally {
       setIsLoading(false);
     }

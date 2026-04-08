@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 import { type FC, useEffect, useState } from "react";
 import { Activity, AlertTriangle, CheckCircle, Clock, TrendingUp } from "lucide-react";
 import type { HealthCheckResult, HealthIssue } from "@/ai/autoHealthCheck";
@@ -42,7 +43,7 @@ export const HealthMonitorPanel: FC = () => {
 
         setErrorHistory(normalizedErrors.slice(-20));
       } catch (error) {
-        console.error("Failed to load health data:", error);
+        logger.error("Failed to load health data:", error);
       }
     };
 

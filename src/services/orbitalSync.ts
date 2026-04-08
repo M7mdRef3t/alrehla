@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { supabase } from "./supabaseClient";
 
 export interface OrbitalFeedParams {
@@ -29,13 +30,13 @@ export async function getOrbitalFeed(limit: number = 20): Promise<OrbitalFeedRes
             .limit(limit);
 
         if (error) {
-            console.error("Failed to fetch orbital feed:", error);
+            logger.error("Failed to fetch orbital feed:", error);
             return [];
         }
 
         return data as OrbitalFeedResponse[];
     } catch (err) {
-        console.error("Exception fetching orbital feed:", err);
+        logger.error("Exception fetching orbital feed:", err);
         return [];
     }
 }
@@ -62,13 +63,13 @@ export async function pushToOrbitalFeed(params: OrbitalFeedParams): Promise<bool
             });
 
         if (error) {
-            console.error("Failed to push to orbital feed:", error);
+            logger.error("Failed to push to orbital feed:", error);
             return false;
         }
 
         return true;
     } catch (err) {
-        console.error("Exception pushing to orbital feed:", err);
+        logger.error("Exception pushing to orbital feed:", err);
         return false;
     }
 }

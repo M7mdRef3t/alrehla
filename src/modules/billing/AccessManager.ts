@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { supabase } from '@/services/supabaseClient';
 import { TIER_LIMITS, type PricingTier } from '@/config/pricing';
 
@@ -86,7 +87,7 @@ export class AccessManager {
             };
 
         } catch (e) {
-            console.error("Access validation failed:", e);
+            logger.error("Access validation failed:", e);
             return {
                 planId: 'free',
                 status: 'none',

@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 ﻿import { decisionEngine } from "../decision-framework";
 import { SystemSnapshot, TacticalProtocol, UserTrajectory } from "./types";
 
@@ -134,7 +135,7 @@ export class AIOrchestrator {
 
             return this.generateResult(snapshot, "executed", protocol, confidence);
         } catch (error) {
-            console.error("[Orchestrator] Execution Failed", error);
+            logger.error("[Orchestrator] Execution Failed", error);
             return this.generateResult(snapshot, "failed", protocol, confidence);
         } finally {
             this.isLocked = false;

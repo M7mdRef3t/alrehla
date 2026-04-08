@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { FC, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldAlert, Flame, Activity, Info } from "lucide-react";
@@ -28,7 +29,7 @@ export const StabilityHeatmap: FC = () => {
                 setNodes(data.node_stability || []);
             }
         } catch (err) {
-            console.error(err);
+            logger.error(err);
         }
     };
 

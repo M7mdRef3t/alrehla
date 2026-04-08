@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 "use client";
 
 import { useState, useEffect } from "react";
@@ -47,7 +48,7 @@ export function ViralLoopNudge({ onClose, forceShow = false }: ViralLoopNudgePro
         setTimeout(() => setCopied(false), 3000);
       }
     } catch (e) {
-      console.error("Share failed", e);
+      logger.error("Share failed", e);
     }
   };
 

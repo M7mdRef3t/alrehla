@@ -1,3 +1,4 @@
+import { logger } from "@/services/logger";
 import { geminiClient } from "@/services/geminiClient";
 import type { Ring } from "@/modules/map/mapTypes";
 import type { DetectedPattern, PatternType } from "./patternAnalyzer";
@@ -169,7 +170,7 @@ ${traumaInheritanceBlock}
     };
 
   } catch (error) {
-    console.error('Error in AI plan generation:', error);
+    logger.error('Error in AI plan generation:', error);
     // Fallback to template-based generation
     const { generateDynamicPlan } = await import('./dynamicPlanGenerator');
     return generateDynamicPlan(personLabel, ring, patterns, analysisInsights, [], focusTraumaInheritance);

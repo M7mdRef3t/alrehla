@@ -1,3 +1,4 @@
+import { logger } from "../../../services/logger";
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/services/supabaseClient';
 
@@ -153,7 +154,7 @@ export default function useWebSocket({ query } = {}) {
         },
       });
     } catch (broadcastError) {
-      console.error('[maraya] Failed to broadcast room event:', broadcastError);
+      logger.error('[maraya] Failed to broadcast room event:', broadcastError);
     }
   }, []);
 
@@ -218,7 +219,7 @@ export default function useWebSocket({ query } = {}) {
       runtime.mirrorMemory = payload.snapshot || null;
       emit('memory_snapshot', { snapshot: runtime.mirrorMemory });
     } catch (memoryError) {
-      console.error('[maraya] Failed to refresh mirror memory:', memoryError);
+      logger.error('[maraya] Failed to refresh mirror memory:', memoryError);
     }
   }, [emit]);
 
@@ -421,7 +422,7 @@ export default function useWebSocket({ query } = {}) {
         });
       }
     } catch (imageError) {
-      console.error('[maraya] Image generation failed:', imageError);
+      logger.error('[maraya] Image generation failed:', imageError);
     }
   }, [broadcastRoomEvent, emit, persistRoomState]);
 
@@ -560,7 +561,7 @@ export default function useWebSocket({ query } = {}) {
           });
         }
       } catch (analysisError) {
-        console.error('[maraya] Space analysis failed:', analysisError);
+        logger.error('[maraya] Space analysis failed:', analysisError);
         emit('notice', { level: 'warning', message: copy.recoveryNotice });
       }
     } else {
@@ -743,7 +744,7 @@ export default function useWebSocket({ query } = {}) {
           await ensureRoomChannel(savedRoomId);
         }
       } catch (connectError) {
-        console.error('[maraya] connect failed:', connectError);
+        logger.error('[maraya] connect failed:', connectError);
         setError((connectError && connectError.message) || 'Failed to connect to Maraya runtime');
       }
     })();
@@ -895,7 +896,7 @@ export default function useWebSocket({ query } = {}) {
             break;
         }
       } catch (sendError) {
-        console.error('[maraya] transport error:', sendError);
+        logger.error('[maraya] transport error:', sendError);
         const message = (sendError && sendError.message) || 'Maraya request failed';
         setError(message);
         emit('error', {

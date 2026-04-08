@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 /**
  * ════════════════════════════════════════════════════════════════════════════
  * 🎙️ AUDIO UTILITIES — Gemini Live API Audio Pipeline
@@ -180,7 +181,7 @@ export class AudioStreamProcessor {
       this.processorNode.connect(this.audioContext.destination);
 
     } catch (error) {
-      console.error('فشل في بدء التقاط الصوت:', error);
+      logger.error('فشل في بدء التقاط الصوت:', error);
       throw error;
     }
   }
@@ -252,7 +253,7 @@ export class AudioPlayer {
         void this.playNext();
       }
     } catch (error) {
-      console.error('فشل في معالجة الصوت المستلم:', error);
+      logger.error('فشل في معالجة الصوت المستلم:', error);
     }
   }
 

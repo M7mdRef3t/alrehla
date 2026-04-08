@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import type { FC } from "react";
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -67,7 +68,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
         }
       }, "image/png");
     } catch (error) {
-      console.error("فشل في تصدير الإحصائيات:", error);
+      logger.error("فشل في تصدير الإحصائيات:", error);
       setIsExporting(false);
     }
   };

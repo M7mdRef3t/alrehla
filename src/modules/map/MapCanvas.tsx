@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 import type { FC } from "react";
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1265,7 +1266,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         console.log("Cognitive commit accepted.");
       }
     } catch (err) {
-      console.error("Failed to dispatch cognitive commit:", err);
+      logger.error("Failed to dispatch cognitive commit:", err);
     } finally {
       setTimeout(() => setIsCommitProcessing(false), 2000);
     }

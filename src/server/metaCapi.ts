@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import crypto from "crypto";
 
 export interface MetaCapiEventData {
@@ -98,7 +99,7 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
 
     const body = await res.json();
     if (!res.ok) {
-      console.error("[Meta CAPI Error]", body);
+      logger.error("[Meta CAPI Error]", body);
       return false;
     }
 
@@ -107,7 +108,7 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
     }
     return true;
   } catch (err) {
-    console.error("[Meta CAPI Fetch Error]", err);
+    logger.error("[Meta CAPI Fetch Error]", err);
     return false;
   }
 }
