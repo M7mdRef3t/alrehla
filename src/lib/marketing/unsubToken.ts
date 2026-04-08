@@ -1,8 +1,19 @@
-import { createHmac } from "crypto";
+import { createHmac, randomBytes } from "crypto";
+
+let fallbackSecret: string | null = null;
 
 function getUnsubSecret(): string | null {
-  const secret = process.env.UNSUB_SECRET || "";
-  return secret.trim() || null;
+  const secret = process.env.UNSUB_SECRET || process.env.CRON_SECRET || "";
+  if (secret.trim()) {
+    return secret.trim();
+  }
+
+  if (!fallbackSecret) {
+    console.warn("⚠️ UNSUB_SECRET and CRON_SECRET are not configured. Falling back to a secure random string for this session.");
+    fallbackSecret = randomBytes(32).toString("hex");
+  }
+
+  return fallbackSecret;
 }
 
 export function buildUnsubToken(leadId: string, email: string): string {
