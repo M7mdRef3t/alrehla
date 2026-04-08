@@ -299,7 +299,7 @@ export function LifeAdvisorChat({ isOpen, onClose }: LifeAdvisorChatProps) {
                 style={{ caretColor: "#a78bfa" }}
               />
               <motion.button
-                onClick={sendMessage}
+                onClick={() => { void sendMessage(); }}
                 disabled={!input.trim() || isLoading}
                 className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 disabled:opacity-30 transition-all"
                 style={{
