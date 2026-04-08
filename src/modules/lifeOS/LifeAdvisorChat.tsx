@@ -53,8 +53,8 @@ export function LifeAdvisorChat({ isOpen, onClose }: LifeAdvisorChatProps) {
     }
   }, [isOpen]);
 
-  const sendMessage = useCallback(async () => {
-    const text = input.trim();
+  const sendMessage = useCallback(async (messageOverride?: string) => {
+    const text = (messageOverride ?? input).trim();
     if (!text || isLoading || !userId) return;
 
     const userMsg: Message = { id: uid(), role: "user", content: text };
@@ -198,7 +198,7 @@ export function LifeAdvisorChat({ isOpen, onClose }: LifeAdvisorChatProps) {
                   {starterQuestions.map((q, i) => (
                     <motion.button
                       key={i}
-                      onClick={() => { setInput(q); setTimeout(() => sendMessage, 50); setInput(q); }}
+                      onClick={() => sendMessage(q)}
                       className="w-full text-right px-3.5 py-2.5 rounded-2xl text-xs font-medium text-white/50 hover:text-white/80 transition-all"
                       style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}
                       initial={{ opacity: 0, y: 8 }}
