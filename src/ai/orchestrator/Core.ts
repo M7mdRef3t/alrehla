@@ -5,6 +5,10 @@ import { SystemSnapshot, TacticalProtocol, UserTrajectory } from "./types";
 
 
 
+
+
+
+
 export interface OrchestrationResult {
     snapshot: SystemSnapshot;
     trajectory: UserTrajectory;
@@ -18,6 +22,10 @@ export interface OrchestrationResult {
 
 
 
+
+
+
+
 export class AIOrchestrator {
     private static instance: AIOrchestrator;
     private protocolHistory: {
@@ -25,8 +33,12 @@ export class AIOrchestrator {
         timestamp: number;
         initialScore: number;
         outcomeScore?: number;
-        sensorTriggered: "mood" | "tei" | "mixed"
+        sensorTriggered: "mood" | "tei" | "mixed";
     }[] = [];
+
+
+
+
 
 
 
@@ -39,8 +51,16 @@ export class AIOrchestrator {
 
 
 
+
+
+
+
     // المخزن المؤقت للنبضات التسويقية (المجردة تماماً)
     private pulseEvents: { event: string; protocol: string; timestamp: number }[] = [];
+
+
+
+
 
 
 
@@ -49,3 +69,4 @@ export class AIOrchestrator {
         mood: 0.7,
         tei: 0.3
     };
+}
