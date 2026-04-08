@@ -378,7 +378,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   }, [archiveNode, node.id]);
 
   const blockDeletePointer = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+    // We only stop propagation to prevent the node from being dragged.
+    // We avoid preventDefault() because it can block click events in some browsers/scenarios.
     e.stopPropagation();
   }, []);
 
@@ -706,21 +707,23 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
             type="button"
             onPointerDown={blockDeletePointer}
             onClick={handleDeleteClick}
-            className="absolute -top-3 -right-3 w-7 h-7 rounded-full flex items-center justify-center z-30 pointer-events-auto"
+            className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center z-30 pointer-events-auto shadow-xl group/del"
             style={{
               background: "linear-gradient(135deg, #64748b, #475569)",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.5)",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1)",
               outline: "none",
               WebkitTapHighlightColor: "transparent",
-              border: "1.5px solid rgba(255,255,255,0.12)",
+              border: "1.5px solid rgba(255,255,255,0.15)",
             }}
+            whileHover={{ scale: 1.1, background: "linear-gradient(135deg, #475569, #334155)" }}
+            whileTap={{ scale: 0.9 }}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 0.12 }}
+            transition={{ duration: 0.15, ease: "backOut" }}
             tabIndex={-1}
           >
-            <X className="w-3.5 h-3.5 text-white/90" strokeWidth={2.5} />
+            <X className="w-4 h-4 text-white/90 pointer-events-none transition-transform group-hover/del:rotate-90" strokeWidth={3} />
           </motion.button>
         )}
       </AnimatePresence>
