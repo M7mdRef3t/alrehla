@@ -15,7 +15,6 @@ export const trackGateEventPixelOnly = (
   const eventId = explicitEventId || uuidv4();
 
   try {
-    const standardEvents = ['PageView', 'ViewContent', 'GateStarted', 'Lead', 'QualifierStarted', 'CompleteRegistration', 'MapStarted', 'MapCompleted'];
     // In strict business environments, GateStarted might be sent as a custom event.
     // For Meta logic, we use Custom if it's not a standard recognized e-commerce funnel one.
     const isStandard = ['PageView', 'ViewContent', 'Lead', 'CompleteRegistration', 'Purchase'].includes(eventName);

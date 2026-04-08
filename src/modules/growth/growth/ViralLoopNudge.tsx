@@ -3,7 +3,7 @@ import { logger } from "../../services/logger";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Share2, Gift, X, Sparkles, Heart, Zap } from "lucide-react";
+import { Share2, Gift, X, Zap } from "lucide-react";
 import { 
   getReferralShareText, 
   getReferralRewardStatus, 
@@ -17,8 +17,7 @@ interface ViralLoopNudgeProps {
 
 export function ViralLoopNudge({ onClose, forceShow = false }: ViralLoopNudgeProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [isExpanding, setIsExpanding] = useState(false);
-  const [copied, setCopied] = useState(false);
+    const [copied, setCopied] = useState(false);
   
   const status = getReferralRewardStatus();
 

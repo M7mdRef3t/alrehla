@@ -2,8 +2,8 @@ import { logger } from "../../services/logger";
 export const sendToCapi = async (
   eventName: string,
   eventId: string,
-  userData: any,
-  customData: any = {}
+  userData: unknown,
+  customData: unknown = {}
 ) => {
   try {
     const res = await fetch('/api/meta/capi', {
