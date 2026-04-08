@@ -192,8 +192,6 @@ export function buildResultTemplateFromAnswers(input: ResultTemplateInput): Resu
   // Symptom (Feeling) and Contact (Reality) subtract from sovereignty.
   // max score per category (3 questions * often(10) = 30)
   const maxSubScore = 30;
-  const symptomScore = input.feelingAnswers ? Object.values(input.feelingAnswers).reduce((s, v) => s + (v as number), 0) : 0;
-  const contactScore = input.realityAnswers ? Object.values(input.realityAnswers).reduce((s, v) => s + (v as number), 0) : 0;
   const symptomImpact = (symptomScore / maxSubScore) * 50; // 50% weight
   const contactImpact = (contactScore / maxSubScore) * 50; // 50% weight
   
