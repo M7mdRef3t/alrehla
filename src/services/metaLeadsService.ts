@@ -1,5 +1,6 @@
 import { logger } from "@/services/logger";
 import { supabase, supabaseAdmin } from './supabaseClient';
+import { sanitizePhone } from "@/server/marketingLeadUtils";
 
 export interface MetaLeadData {
   id: string;
@@ -21,6 +22,32 @@ export interface MetaLeadData {
 }
 
 export const metaLeadsService = {
+  extractFieldValue(
+    fields: Array<{ name: string; values: string[] }>,
+    preferredNames: string[]
+  ): string {
+    const normalize = (v: string) => v.trim().toLowerCase();
+    const byName = new Map(fields.map((f) => [normalize(f.name), f.values?.[0] ?? ""]));
+
+    for (const key of preferredNames) {
+      const value = byName.get(normalize(key));
+      if (value && value.trim()) return value.trim();
+    }
+
+    const fuzzy = fields.find((f) => {
+      const name = normalize(f.name);
+      return (
+        name.includes("phone") ||
+        name.includes("mobile") ||
+        name.includes("whatsapp") ||
+        name.includes("هاتف") ||
+        name.includes("موبايل") ||
+        name.includes("واتساب") ||
+        name.includes("رقم")
+      );
+    });
+    return fuzzy?.values?.[0]?.trim() ?? "";
+  },
   /**
    * Fetches full lead details from Meta Graph API using the leadgen_id
    */
@@ -124,19 +151,36 @@ export const metaLeadsService = {
 
     const leadId = metaData.id;
     const email = fields.email || '';
-    const name = fields.full_name || fields.first_name || '';
-    const phone = fields.phone_number || '';
+    const firstName = fields.first_name || "";
+    const lastName = fields.last_name || "";
+    const fullName = fields.full_name || fields.name || `${firstName} ${lastName}`.trim();
+    const name = fullName || '';
+    const rawPhone = this.extractFieldValue(metaData.field_data, [
+      "phone_number",
+      "phone",
+      "mobile_number",
+      "mobile",
+      "whatsapp",
+      "whatsapp_number",
+      "phone_1"
+    ]);
+    const phoneParsed = sanitizePhone(rawPhone);
+    const phone = phoneParsed?.normalized || "";
+    const phoneRaw = phoneParsed?.raw || rawPhone || "";
 
     const leadRecord = {
       email,
       name,
       phone,
+      phone_normalized: phone || null,
+      phone_raw: phoneRaw || null,
       source: metaData.platform || 'facebook',
       source_type: 'meta_instant_form',
       campaign: metaData.campaign_name,
       adset: metaData.adset_name,
       ad: metaData.ad_name,
       status: 'new',
+      note: phone ? null : '[MISSING_PHONE_FROM_META] lead created without phone',
       metadata: {
         meta_lead_id: leadId,
         form_id: metaData.form_id,
@@ -145,9 +189,15 @@ export const metaLeadsService = {
         adset_id: metaData.adset_id,
         ad_id: metaData.ad_id,
         is_organic: metaData.is_organic,
+        missing_phone: !phone,
+        missing_phone_detected_at: !phone ? new Date().toISOString() : null,
         raw_fields: fields
       }
     };
+
+    if (!phone) {
+      logger.warn(`[MetaLeadsService] Lead ${leadId} arrived without phone. Email=${email || "N/A"}`);
+    }
 
     try {
       const isAdminAvailable = !!supabaseAdmin;

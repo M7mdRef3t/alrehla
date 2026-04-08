@@ -403,6 +403,8 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   ];
 
   const [hovered, setHovered] = useState<number | null>(null);
+  const toSafeRadius = (value: unknown, fallback: number) =>
+    typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
 
   return (
     <motion.div
@@ -442,9 +444,12 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
         {/* Rings */}
         {rings.map((ring, i) => (
+          (() => {
+            const safeRingRadius = toSafeRadius(ring.r, 1);
+            return (
           <motion.circle
             key={i}
-            cx="190" cy="190" r={ring.r}
+            cx="190" cy="190" r={safeRingRadius}
             stroke={ring.stroke}
             strokeWidth="1"
             fill="none"
@@ -453,10 +458,15 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
             transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
             style={{ transformOrigin: "190px 190px" }}
           />
+            );
+          })()
         ))}
 
         {/* Nodes */}
         {nodes.map((node, i) => (
+          (() => {
+            const safeNodeRadius = toSafeRadius(node.r, 1);
+            return (
           <motion.g
             key={i}
             onMouseEnter={() => setHovered(i)}
@@ -474,7 +484,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
             {/* Pulse ring */}
             {hovered === i && (
               <circle
-                cx={node.cx} cy={node.cy} r={node.r + 6}
+                cx={node.cx} cy={node.cy} r={safeNodeRadius + 6}
                 fill="none" stroke={node.color} strokeWidth="1.5"
                 opacity={0.4}
                 style={{
@@ -484,15 +494,15 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
               />
             )}
             {/* Halo */}
-            <circle cx={node.cx} cy={node.cy} r={node.r + 8} fill={node.color} opacity={0.07} />
+            <circle cx={node.cx} cy={node.cy} r={safeNodeRadius + 8} fill={node.color} opacity={0.07} />
             {/* Core */}
             <circle
-              cx={node.cx} cy={node.cy} r={node.r}
+              cx={node.cx} cy={node.cy} r={safeNodeRadius}
               fill={node.color}
               style={{ filter: `drop-shadow(0 0 ${hovered === i ? 28 : 10}px ${node.color}bb)` }}
             />
             {/* Inner dot */}
-            <circle cx={node.cx} cy={node.cy} r={node.r * 0.35} fill="rgba(0,0,0,0.55)" />
+            <circle cx={node.cx} cy={node.cy} r={safeNodeRadius * 0.35} fill="rgba(0,0,0,0.55)" />
 
             {/* Tooltip */}
             <AnimatePresence>
@@ -525,6 +535,8 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
               )}
             </AnimatePresence>
           </motion.g>
+            );
+          })()
         ))}
 
         {/* Center core */}

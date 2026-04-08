@@ -35,16 +35,18 @@ const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ r
     red: "var(--ring-danger)",
   };
 
+  const safeRadius = Number.isFinite(radius) && radius > 0 ? radius : 1;
+
   return (
     <g>
       <circle 
-        cx="50" cy="50" r={radius} 
+        cx="50" cy="50" r={safeRadius} 
         fill="none" 
         stroke="var(--app-border)" 
         strokeWidth="0.5" 
       />
       <motion.circle
-        cx="50" cy="50" r={radius}
+        cx="50" cy="50" r={safeRadius}
         fill="none"
         stroke={colors[ring]}
         strokeOpacity="0.15"

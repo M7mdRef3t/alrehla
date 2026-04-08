@@ -64,7 +64,7 @@ export default function DawayirApp() {
         }
     }, []);
 
-    // Hook-to-Convo Bridge (Weather -> Dawayir)
+    // Hook-to-Convo Bridge (Weather -> Dawayir) — Enhanced with Pattern Context
     useEffect(() => {
         if (typeof window === 'undefined') return;
         
@@ -75,17 +75,27 @@ export default function DawayirApp() {
                 try {
                     const weatherCtx = JSON.parse(weatherContextRaw);
                     if (weatherCtx && weatherCtx.weatherLevel) {
-                        // Prevent infinite loop on remount
                         window.sessionStorage.removeItem('weather_context');
                         
-                        const aiAnswers = [
-                            `المجالات التي تشغل تفكيري: ${weatherCtx.dominantSource} (تحديداً العلاقات المستنزفة)`,
-                            `مستوى الاستنزاف: حالة ${weatherCtx.weatherLevel} - ${weatherCtx.overallHeadline}`,
-                            `الحاجة التي أتجنبها: ${weatherCtx.behavioralExplanation}`
-                        ];
+                        // Build rich, pattern-aware context for the AI
+                        const patternLine = weatherCtx.patternName
+                            ? `النمط السلوكي المكتشف: "${weatherCtx.patternName}" — ${weatherCtx.patternDescription || ''}`
+                            : `مستوى الاستنزاف: ${weatherCtx.overallHeadline}`;
                         
-                        // Fire analysis automatically, acting as if the user completed the chat
-                            analyzeAnswers(aiAnswers, subInfo?.features.maxMapNodes || 7);
+                        const costLine = weatherCtx.weeklyHoursCost
+                            ? `الثمن الأسبوعي: ~${weatherCtx.weeklyHoursCost} ساعة طاقة ذهنية تذهب لـ${weatherCtx.drainZoneName || weatherCtx.dominantSource}`
+                            : `مصدر الاستنزاف الرئيسي: ${weatherCtx.dominantSource}`;
+
+                        const insightLine = weatherCtx.coreInsight || weatherCtx.behavioralExplanation || '';
+
+                        const aiAnswers = [
+                            `الدائرة المستنزفة: ${weatherCtx.drainZoneName || weatherCtx.dominantSource}`,
+                            patternLine,
+                            costLine,
+                            insightLine ? `التشخيص الجذري: ${insightLine}` : '',
+                        ].filter(Boolean);
+                        
+                        analyzeAnswers(aiAnswers, subInfo?.features.maxMapNodes || 7);
                     }
                 } catch (e) {
                     logger.error("Failed to parse weather context", e);

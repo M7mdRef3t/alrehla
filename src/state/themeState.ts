@@ -68,3 +68,18 @@ if (windowRef) {
     }
   });
 }
+
+// 🧠 Synapse Receptor (Neural Link)
+import { SynapseBus } from "@/core/synapse/SynapseBus";
+
+SynapseBus.subscribe((event) => {
+  if (event.intensity >= 0.8) {
+    if (event.type === "LOCKDOWN_INITIATED" || event.type === "VAMPIRE_DETECTED" || event.type === "STRESS_SPIKED") {
+      // Emergency -> Dark Theme
+      useThemeState.getState().setTheme("dark");
+    } else if (event.type === "CATHARSIS_REACHED" || event.type === "LOCKDOWN_LIFTED") {
+      // Relief -> Light Theme
+      useThemeState.getState().setTheme("light");
+    }
+  }
+});

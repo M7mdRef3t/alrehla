@@ -67,6 +67,17 @@ export default function LayerOneForm({ sourceArea, email, onChange, onSubmit, is
           ابدا الرحلة
         </button>
       </div>
+
+      {/* Free Tool CTA — Weather Diagnostic */}
+      <div className="text-center pt-2">
+        <p className="text-xs text-slate-600 mb-2">مش جاهز تسجّل دلوقتي؟</p>
+        <a
+          href="/weather"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-emerald-400 transition-colors underline underline-offset-4 decoration-slate-600 hover:decoration-emerald-400"
+        >
+          🌦️ جرّب تشخيص طقس علاقاتك مجاناً (٩٠ ثانية)
+        </a>
+      </div>
     </motion.div>
   );
 }

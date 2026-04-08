@@ -35,6 +35,7 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{ id: string, msg: string, isError?: boolean } | null>(null);
   const [localSearchQuery, setLocalSearchQuery] = useState("");
+  const [onlyMissingPhone, setOnlyMissingPhone] = useState(false);
   const [aiSummaries, setAiSummaries] = useState<Record<string, { summary: string, state: string, loading: boolean }>>({});
   const [validationStates, setValidationStates] = useState<Record<string, { valid: boolean, loading: boolean, reason?: string }>>({});
 
@@ -385,7 +386,16 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     }
   };
 
+  const isLeadMissingPhone = (lead: any) => {
+    const metadataMissing = Boolean(lead?.metadata?.missing_phone);
+    const normalizedPhone = String(lead?.phone_normalized ?? "").trim();
+    return metadataMissing || !normalizedPhone;
+  };
+
+  const missingPhoneCount = leads.filter(isLeadMissingPhone).length;
+
   const filteredLeads = leads.filter(l => {
+    if (onlyMissingPhone && !isLeadMissingPhone(l)) return false;
     if (!localSearchQuery) return true;
     const q = localSearchQuery.toLowerCase();
     return (
@@ -448,6 +458,20 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
                        onChange={(e) => setLocalSearchQuery(e.target.value)}
                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 pr-10 pl-4 text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all"
                      />
+                     <div className="mt-2 flex items-center justify-end gap-2">
+                       <button
+                         type="button"
+                         onClick={() => setOnlyMissingPhone((v) => !v)}
+                         className={`px-3 py-1.5 rounded-xl text-[10px] font-black border transition-all ${
+                           onlyMissingPhone
+                             ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                             : "bg-white/[0.03] border-white/10 text-slate-400 hover:text-white hover:border-white/20"
+                         }`}
+                         title="فلتر الحالات اللي ناقصها رقم"
+                       >
+                         ناقص رقم ({missingPhoneCount})
+                       </button>
+                     </div>
                      {localSearchQuery && (
                        <button 
                          onClick={() => setLocalSearchQuery("")}
@@ -654,7 +678,18 @@ function LeadCommandCard({
                         <Mail className="w-3.5 h-3.5 text-slate-500" />
                       </div>
                       <span className="w-1 h-1 rounded-full bg-slate-700" />
-                      <span className="flex items-center gap-1.5 text-xs text-slate-300 font-medium">{lead.phone_normalized || "لا يوجد رقم"} <Phone className="w-3.5 h-3.5" /></span>
+                      <span className="flex items-center gap-1.5 text-xs text-slate-300 font-medium">
+                        {lead.phone_normalized || "لا يوجد رقم"} <Phone className="w-3.5 h-3.5" />
+                      </span>
+                      {!lead.phone_normalized && (
+                        <button
+                          onClick={onStartEdit}
+                          className="px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] font-black hover:bg-amber-500/20 transition-all"
+                          title="إضافة رقم الهاتف يدويًا"
+                        >
+                          إضافة رقم
+                        </button>
+                      )}
                     </div>
                   </>
                 )}

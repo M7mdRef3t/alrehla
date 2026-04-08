@@ -15,6 +15,7 @@
 import { type MapNode, type Ring } from "@/modules/map/mapTypes";
 import { useGamificationState } from "./gamificationEngine";
 import { useEventHistoryStore } from "@/state/eventHistoryStore";
+import { SynapseBus } from "@/core/synapse/SynapseBus";
 
 // ─── Event Types ──────────────────────────────────────────────────
 export type GraphEventType =
@@ -177,6 +178,17 @@ export const runAutomagicLoop = (
             prescriptions.push(getPrescription(event));
             // Log to history store for AI context
             useEventHistoryStore.getState().addEvent(event);
+
+            // 🧠 Fire Neural Event
+            SynapseBus.dispatch(
+                event.type === "MAJOR_DETACHMENT" ? "NODE_SHIFTED_OUTWARD" :
+                event.type === "ORBIT_SHIFT_OUTWARD" ? "NODE_SHIFTED_OUTWARD" :
+                event.type === "VAMPIRE_DETECTED" ? "VAMPIRE_DETECTED" :
+                "NODE_SHIFTED_INWARD",
+                "DAWAYIR_MAP",
+                event.type === "MAJOR_DETACHMENT" || event.type === "VAMPIRE_DETECTED" ? 0.8 : 0.4,
+                event
+            );
         });
     });
 

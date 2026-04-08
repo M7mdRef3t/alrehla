@@ -50,6 +50,9 @@ export const SoulGeometryOverlay: React.FC<SoulGeometryOverlayProps> = ({ onClos
         return { paths, circles };
     }, [activeNodes]);
 
+    const toSafeRadius = (value: unknown, fallback: number) =>
+        typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -112,7 +115,7 @@ export const SoulGeometryOverlay: React.FC<SoulGeometryOverlayProps> = ({ onClos
                                 key={i}
                                 cx={c.cx}
                                 cy={c.cy}
-                                r={c.r}
+                                r={toSafeRadius(c.r, 1)}
                                 fill={c.fill}
                                 opacity={c.opacity}
                                 initial={{ scale: 0 }}

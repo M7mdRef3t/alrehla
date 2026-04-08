@@ -113,8 +113,10 @@ function buildAnalyzeFallback(answers: string[]) {
 }
 
 export async function POST(req: Request) {
+  let answers: unknown;
   try {
-    const { answers } = await req.json();
+    const body = await req.json();
+    answers = body?.answers;
 
     if (!answers || !Array.isArray(answers) || answers.length === 0) {
       return NextResponse.json({ error: "Missing answers payload" }, { status: 400 });
@@ -142,18 +144,20 @@ User answers:
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 
-    const data = JSON.parse(responseText);
+    // Gemini can occasionally return JSON wrapped in markdown fences.
+    const cleanedText = responseText
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/, "")
+      .trim();
+
+    const data = JSON.parse(cleanedText);
 
     return NextResponse.json({ ...data, source: "gemini", is_live: true });
   } catch (error: unknown) {
     console.error("Analyze API Error:", error);
-    try {
-      const { answers } = await req.clone().json();
-      if (Array.isArray(answers) && answers.length > 0) {
-        return NextResponse.json({ ...buildAnalyzeFallback(answers), source: "fallback_after_error", is_live: false });
-      }
-    } catch {
-      // fall through to hard failure when the request body cannot be recovered
+    if (Array.isArray(answers) && answers.length > 0) {
+      return NextResponse.json({ ...buildAnalyzeFallback(answers), source: "fallback_after_error", is_live: false });
     }
     return NextResponse.json(
       { error: "Analysis generation failed", source: "generation_failed", is_live: false },
