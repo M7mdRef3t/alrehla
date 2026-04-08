@@ -11,6 +11,7 @@ import { isPublicPaymentsEnabled } from '@/config/payments';
 import { VoiceInput } from '@/modules/meta/VoiceInput';
 import { useAppOverlayState } from '@/state/appOverlayState';
 import { ShadowMemory } from '@/services/shadowMemory';
+import ReactMarkdown from 'react-markdown';
 
 interface FacilitatorChatProps {
     focusedNode: NodeData;
@@ -444,7 +445,11 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                                 : undefined
                             }
                         >
-                            {msg.content}
+                            <div className="markdown-content">
+                                <ReactMarkdown>
+                                    {msg.content}
+                                </ReactMarkdown>
+                            </div>
                         </div>
                         {msg.role === 'ai' && showAlgorithmicVulnerability && typeof msg.llmLatencyMs === 'number' && (
                             <div className="max-w-[85%] text-[11px] text-slate-400 leading-relaxed px-1">

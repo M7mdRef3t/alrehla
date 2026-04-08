@@ -11,6 +11,7 @@ import {
 } from "@/data/resultScreenTemplates";
 export type { ResultScenarioKey };
 import { getScoringThresholds, getScoringWeights } from "@/state/adminState";
+import type { AdviceCategory } from "@/data/adviceScripts";
 
 type ScoreLevel = ResultScoreLevel;
 
@@ -33,6 +34,7 @@ export interface ResultTemplate {
   suggested_zone_title: string;
   suggested_zone_label: string;
   suggested_zone_body: string;
+  sovereigntyScore: number; // 0-100%
 }
 
 export interface ResultTemplateInput {
@@ -42,6 +44,7 @@ export interface ResultTemplateInput {
   isEmergency?: boolean;
   safetyAnswer?: QuickAnswer2;
   personGender?: PersonGender;
+  category?: AdviceCategory;
 }
 
 interface ResultRuleContext {
@@ -131,7 +134,8 @@ function buildResultTemplate(scenario: ResultScenarioKey, gender?: PersonGender)
     explanation_body: applyTokens(copy.explanation_body, tokens),
     suggested_zone_title: RESULT_SCREEN_SECTION_TITLES.suggested_zone_title,
     suggested_zone_label: applyTokens(copy.suggested_zone_label, tokens),
-    suggested_zone_body: applyTokens(copy.suggested_zone_body, tokens)
+    suggested_zone_body: applyTokens(copy.suggested_zone_body, tokens),
+    sovereigntyScore: 0 // Placeholder, will be overriden
   };
 }
 
@@ -182,5 +186,22 @@ export function buildResultTemplateFromAnswers(input: ResultTemplateInput): Resu
     RESULT_SCREEN_RULES.find((rule) => matchesRule(rule, context))?.scenario
     ?? fallbackScenario;
 
-  return buildResultTemplate(matchedScenario, input.personGender);
+  const template = buildResultTemplate(matchedScenario, input.personGender);
+  
+  // Calculate Sovereignty Score based on First Principles:
+  // Symptom (Feeling) and Contact (Reality) subtract from sovereignty.
+  // max score per category (3 questions * often(10) = 30)
+  const maxSubScore = 30;
+  const symptomImpact = (symptomScore / maxSubScore) * 50; // 50% weight
+  const contactImpact = (contactScore / maxSubScore) * 50; // 50% weight
+  
+  template.sovereigntyScore = Math.max(0, Math.min(100, Math.round(100 - (symptomImpact + contactImpact))));
+
+  // Handle Category Modifiers (Deeper Connection)
+  if (input.category === "work") {
+    template.mission_goal = template.mission_goal.replace("استرداد المساحة العقلية", "حماية الاحترافية الذهنية");
+    template.suggested_zone_body += " (تكتيكات العمل المحترفة تتطلب تواصل رسمي ومحدود).";
+  }
+
+  return template;
 }

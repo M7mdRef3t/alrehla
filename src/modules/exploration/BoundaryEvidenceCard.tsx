@@ -79,16 +79,16 @@ export const BoundaryEvidenceCard: FC<BoundaryEvidenceCardProps> = ({ evidence }
            <div className="text-right">
              <div className="flex items-center justify-end gap-3 mb-1">
                 <span className="text-[10px] font-black tracking-[0.3em] uppercase" style={{ color: theme.primary }}>رصد الأدلة</span>
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: theme.primary, boxShadow: `0 0 10px ${theme.primary}` }} />
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.primary, boxShadow: `0 0 10px ${theme.primary}` }} />
              </div>
-             <h3 className="text-3xl font-black text-white tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+             <h3 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-tight">
                 {evidence.title}
              </h3>
            </div>
         </div>
 
         {/* Narrative Summary */}
-        <p className="text-lg text-slate-300 font-medium leading-relaxed max-w-2xl">
+        <p className="text-2xl text-slate-300 font-medium leading-relaxed max-w-2xl">
           {evidence.summary}
         </p>
 

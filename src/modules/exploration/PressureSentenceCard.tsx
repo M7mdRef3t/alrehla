@@ -87,33 +87,33 @@ export const PressureSentenceCard: FC<PressureSentenceCardProps> = ({ snapshot }
           {/* Title Right */}
           <div className="text-right">
             <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] block mb-1">ترياق سيادي: {snapshot.sourceLabel}</span>
-            <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+            <h3 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-tight">
               {snapshot.title}
             </h3>
           </div>
         </div>
 
         {/* Sovereign Logic & Reasoning */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-1 h-full bg-emerald-500/20" />
-            <h4 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 relative overflow-hidden shadow-xl">
+            <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500/40" />
+            <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
               المنطق السيادي
             </h4>
-            <p className="text-sm text-slate-300 leading-relaxed font-bold">
+            <p className="text-base text-slate-300 leading-relaxed font-bold">
               {snapshot.reasoning}
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-1 h-full bg-indigo-500/20" />
-            <h4 className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
-              سياق الاستخدام
+          <div className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 relative overflow-hidden shadow-xl">
+            <div className="absolute top-0 right-0 w-1.5 h-full bg-indigo-500/40" />
+            <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
+              تكتيك الاستخدام
             </h4>
-            <p className="text-sm text-slate-400 leading-relaxed font-medium">
-              استخدم الدرع ده في أي رسالة (WhatsApp) أو رد سريع على مكالمة عشان تفرض "قواعدك" قبل ما الطرف التاني يبدأ يسحب طاقك.
+            <p className="text-base text-slate-400 leading-relaxed font-medium">
+              استخدم "الدرع" ده في أي تواصل رقمي أو رد سريع على مكالمة عشان تفرض حمايتك "قبل" ما يتم استدراجك.
             </p>
           </div>
         </div>
@@ -126,17 +126,16 @@ export const PressureSentenceCard: FC<PressureSentenceCardProps> = ({ snapshot }
         {/* The Instrument: Deep Glass Card */}
         <motion.div 
           whileHover={{ scale: 1.01 }}
-          className="relative py-16 px-8 sm:px-16 rounded-[3rem] border border-white/10 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-center text-center"
+          className="relative py-20 px-10 sm:px-20 rounded-[4rem] border border-white/10 overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.6)] flex items-center justify-center text-center group"
           style={{ 
-            background: "rgba(10, 12, 24, 0.6)",
-            backdropFilter: "blur(40px)"
+            background: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(60px)"
           }}
         >
-          {/* Subtle Inner Glows */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 blur-3xl pointer-events-none" />
+          {/* Iridescent Border Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent opacity-30 pointer-events-none" />
           
-          <p className="text-2xl sm:text-3xl md:text-4xl font-black text-white leading-tight sm:leading-snug tracking-tight drop-shadow-2xl">
+          <p className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight sm:leading-[1.15] tracking-tight drop-shadow-2xl">
               "{snapshot.sentence}"
           </p>
         </motion.div>

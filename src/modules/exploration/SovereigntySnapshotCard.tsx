@@ -59,27 +59,27 @@ export const SovereigntySnapshotCard: FC<SovereigntySnapshotCardProps> = ({ snap
           <div className="w-1.5 h-10 rounded-full" style={{ backgroundColor: theme.primary, boxShadow: `0 0 20px ${theme.primary}` }} />
           <div>
              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] block mb-1">الرؤية السيادية</span>
-             <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+             <h3 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-tight">
                 {snapshot.headline}
              </h3>
           </div>
         </div>
 
         {/* Diagnostic Narrative */}
-        <p className="text-xl leading-snug text-slate-300 font-medium max-w-2xl leading-relaxed">
+        <p className="text-2xl leading-snug text-slate-300 font-medium max-w-2xl leading-relaxed">
           {snapshot.body}
         </p>
 
         {/* Quantized Analysis Layers */}
-        <div className="py-8 px-8 rounded-[3rem] border border-white/10 relative overflow-hidden shadow-2xl"
+        <div className="py-10 px-8 rounded-[3.5rem] border border-white/10 relative overflow-hidden shadow-2xl"
           style={{ 
-            background: "rgba(10, 12, 24, 0.4)",
-            backdropFilter: "blur(30px)"
+            background: "rgba(15, 23, 42, 0.4)",
+            backdropFilter: "blur(40px)"
           }}
         >
-          <div className="absolute top-0 right-0 w-2 h-full" style={{ backgroundColor: theme.primary, opacity: 0.3 }} />
+          <div className="absolute top-0 right-0 w-2 h-full opacity-60" style={{ backgroundColor: theme.primary }} />
           
-          <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6 border-b border-white/5 pb-3">إشارات البوصلة المرصودة</h4>
+          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-8 border-b border-white/5 pb-4">إشارات البوصلة المرصودة</h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {snapshot.reasons.map((reason, idx) => (
