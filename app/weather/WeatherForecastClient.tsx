@@ -6,6 +6,17 @@ import { ArrowLeft, Shield, Zap, Clock, Heart, AlertTriangle, CheckCircle, Chevr
 import html2canvas from "html2canvas";
 import { trackEvent, trackPageView } from "../../src/services/analytics";
 import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "../../src/services/marketingAttribution";
+import { useAdminState } from "../../src/state/adminState";
+import { fetchJourneyPaths } from "../../src/services/adminApi";
+import {
+  getRelationshipWeatherInitialStage,
+  getRelationshipWeatherNextStage,
+  getRelationshipWeatherPath,
+  getRelationshipWeatherPrimaryLabel,
+  getRelationshipWeatherTargetDescription,
+  getRelationshipWeatherTargetLabel,
+  launchRelationshipWeatherFlow
+} from "../../src/utils/relationshipWeatherJourney";
 
 /* ═══════════════════════════════════════════════════════════════════════
    Core Types
@@ -255,6 +266,14 @@ export default function WeatherForecastClient() {
   const resultRef = useRef<HTMLDivElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const setJourneyPaths = useAdminState((state) => state.setJourneyPaths);
+  const weatherPath = useAdminState((state) => {
+    const path = getRelationshipWeatherPath(state.journeyPaths);
+    return path?.isActive ? path : null;
+  });
+  const primaryActionLabel = getRelationshipWeatherPrimaryLabel(weatherPath);
+  const targetLabel = getRelationshipWeatherTargetLabel(weatherPath);
+  const targetDescription = getRelationshipWeatherTargetDescription(weatherPath);
 
   useEffect(() => {
     captureUtmFromCurrentUrl();
@@ -262,10 +281,82 @@ export default function WeatherForecastClient() {
     trackPageView("weather_diagnostic_v3");
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      const remotePaths = await fetchJourneyPaths();
+      if (!cancelled && remotePaths?.length) {
+        setJourneyPaths(remotePaths);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [setJourneyPaths]);
+
+  const finalizeDiagnostic = useCallback((finalAnswers: Record<string, string>) => {
+    const diagnostic = runDiagnostic(finalAnswers);
+    const nextStage = getRelationshipWeatherNextStage(weatherPath, "analyzing");
+
+    if (nextStage === "result") {
+      setResult(diagnostic);
+      setStep("result");
+      return;
+    }
+
+    if (nextStage === "questions") {
+      setResult(diagnostic);
+      setQIdx(0);
+      setAnswers({});
+      setSelectedOption(null);
+      setStep("questions");
+      return;
+    }
+
+    if (nextStage === "analyzing") {
+      setResult(diagnostic);
+      setStep("analyzing");
+      return;
+    }
+
+    if (nextStage === "complete") {
+      setResult(diagnostic);
+      launchRelationshipWeatherFlow(weatherPath, diagnostic, "weather_v3");
+      return;
+    }
+
+    setResult(diagnostic);
+    setStep("result");
+  }, [weatherPath]);
+
   const handleStart = useCallback(() => {
-    setStep("questions");
     trackEvent("weather_started");
-  }, []);
+    const initialStage = getRelationshipWeatherInitialStage(weatherPath);
+
+    if (initialStage === "questions") {
+      setStep("questions");
+      return;
+    }
+
+    if (initialStage === "analyzing") {
+      setStep("analyzing");
+      setTimeout(() => {
+        finalizeDiagnostic({});
+      }, 2800);
+      return;
+    }
+
+    if (initialStage === "result") {
+      const diagnostic = runDiagnostic({});
+      setResult(diagnostic);
+      setStep("result");
+      return;
+    }
+
+    finalizeDiagnostic({});
+  }, [finalizeDiagnostic, weatherPath]);
 
   const handleAnswer = useCallback((optionId: string) => {
     setSelectedOption(optionId);
@@ -278,14 +369,27 @@ export default function WeatherForecastClient() {
       if (qIdx < QUESTIONS.length - 1) {
         setQIdx(qIdx + 1);
       } else {
-        setStep("analyzing");
-        setTimeout(() => {
-          setResult(runDiagnostic(updatedAnswers));
+        const nextStage = getRelationshipWeatherNextStage(weatherPath, "questions");
+
+        if (nextStage === "analyzing") {
+          setStep("analyzing");
+          setTimeout(() => {
+            finalizeDiagnostic(updatedAnswers);
+          }, 2800);
+          return;
+        }
+
+        if (nextStage === "result") {
+          const diagnostic = runDiagnostic(updatedAnswers);
+          setResult(diagnostic);
           setStep("result");
-        }, 2800);
+          return;
+        }
+
+        finalizeDiagnostic(updatedAnswers);
       }
     }, 400);
-  }, [answers, qIdx]);
+  }, [answers, finalizeDiagnostic, qIdx, weatherPath]);
 
   const handleShare = useCallback(async () => {
     if (!result || !resultRef.current || isCapturing) return;
@@ -310,10 +414,9 @@ export default function WeatherForecastClient() {
 
   const handleCTA = useCallback(() => {
     if (!result || typeof window === "undefined") return;
-    window.sessionStorage.setItem("weather_context", JSON.stringify(result));
     trackEvent("weather_cta_clicked", { pattern: result.pattern, level: result.weatherLevel });
-    window.location.assign(`/dawayir?surface=weather-funnel&utm_source=weather_v3`);
-  }, [result]);
+    launchRelationshipWeatherFlow(weatherPath, result, "weather_v3");
+  }, [result, weatherPath]);
 
   const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -516,8 +619,8 @@ export default function WeatherForecastClient() {
                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 flex items-center gap-3 mb-5">
                   <div className="text-2xl">🗺️</div>
                   <div>
-                    <p className="text-white font-bold text-sm">الخطوة الجاية: ارسم الخريطة</p>
-                    <p className="text-gray-500 text-xs leading-snug">دواير بتخليك تشوف كل دوائر حياتك على خريطة تفاعلية وتعرف مين بياخد وإيه نمط العلاقة</p>
+                    <p className="text-white font-bold text-sm">الخطوة الجاية: {targetLabel}</p>
+                    <p className="text-gray-500 text-xs leading-snug">{targetDescription}</p>
                   </div>
                 </div>
 
@@ -526,7 +629,7 @@ export default function WeatherForecastClient() {
                   className="w-full py-5 rounded-2xl font-black text-lg text-black"
                   style={{ background: `linear-gradient(135deg, ${LEVEL_CONFIG[result.weatherLevel].color}, #2dd4bf)` }}
                 >
-                  ابدأ دواير وارسم خريطتك 🗺️
+                  {primaryActionLabel} 🗺️
                 </motion.button>
 
                 <button

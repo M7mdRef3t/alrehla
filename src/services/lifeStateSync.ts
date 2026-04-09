@@ -228,14 +228,25 @@ export async function syncLifeStateWithDB(userId: string): Promise<void> {
       await uploadScoreSnapshot(localState.lifeScore, userId);
     }
 
+    // 4. Sync rituals (fire-and-forget, non-blocking)
+    import("@/services/ritualsSync").then(({ syncRitualsWithDB }) => {
+      syncRitualsWithDB(userId).catch(() => {});
+    });
+
   } catch (err) {
     console.error("[LifeSync] Sync failed:", err);
   }
 }
+
 
 /**
  * Reset session sync flag (call on sign out)
  */
 export function resetLifeSyncSession(): void {
   hasSyncedThisSession = false;
+  // Also reset rituals sync
+  import("@/services/ritualsSync").then(({ resetRitualsSyncSession }) => {
+    resetRitualsSyncSession();
+  });
 }
+

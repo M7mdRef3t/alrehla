@@ -6,6 +6,7 @@ import { calculateEntropy } from "@/services/predictiveEngine";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { useMapState } from "@/state/mapState";
 import { usePulseState } from "@/state/pulseState";
+import { useGamificationState } from "@/state/gamificationState";
 
 interface UseAppMindSignalsParams {
   storedGoalId: string | null | undefined;
@@ -14,13 +15,15 @@ interface UseAppMindSignalsParams {
   showCocoon: boolean;
   /** لو true، لا تُطلق أي nudge أو mirrorOverlay — المستخدم في flow نشط */
   activeFlows?: boolean;
-  openOverlay: (overlay: "nudgeToast" | "mirrorOverlay" | "journeyGuideChat") => void;
+  openOverlay: (overlay: "nudgeToast" | "mirrorOverlay" | "journeyGuideChat" | "evolutionHub") => void;
   closeOverlay: (overlay: "nudgeToast" | "mirrorOverlay") => void;
   openCocoonModal: (source?: "auto" | "manual") => void;
   /** يفتح pulse check بالطريقة الصحيحة (setPulseCheck) لا عبر setOverlay */
   openPulseCheck?: () => void;
   /** يفتح ShareStats overlay للمشاركة */
   openShareStats?: () => void;
+  /** يفتح سجل السيادة */
+  openChronicle?: () => void;
 }
 
 export function useAppMindSignals({
@@ -33,13 +36,22 @@ export function useAppMindSignals({
   closeOverlay,
   openCocoonModal,
   openPulseCheck = () => {},
-  openShareStats = () => {}
+  openShareStats = () => {},
+  openChronicle = () => {}
 }: UseAppMindSignalsParams) {
   const nodes = useMapState((s) => s.nodes);
   const lastPulse = usePulseState((s) => s.lastPulse);
+  const lastNewChronicle = useGamificationState((s) => s.lastNewChronicle);
   const [activeNudge, setActiveNudge] = useState<Nudge | null>(null);
   const [activeMirrorInsight, setActiveMirrorInsight] = useState<MirrorInsight | null>(null);
   const sessionStartRef = useRef(Date.now());
+
+  // Sovereign Chronicles Trigger
+  useEffect(() => {
+    if (lastNewChronicle && !activeFlows) {
+      openChronicle();
+    }
+  }, [lastNewChronicle, activeFlows, openChronicle]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -51,9 +63,9 @@ export function useAppMindSignals({
         openOverlay("nudgeToast");
       }
     }, 8000);
-
+  
     return () => clearTimeout(timer);
-  }, [openOverlay, activeFlows]);
+  }, [openOverlay, activeFlows, lastPulse]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -113,6 +125,8 @@ export function useAppMindSignals({
     } else if (action === "share_stats") {
       // يفتح ShareStats overlay — آمن ولا يغيّر الشاشة
       openShareStats();
+    } else if (action === "open_store") {
+      openOverlay("evolutionHub");
     }
     handleNudgeDismiss();
   }, [activeNudge, openOverlay, openPulseCheck, openShareStats, handleNudgeDismiss]);

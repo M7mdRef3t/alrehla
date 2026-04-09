@@ -1,16 +1,18 @@
 import type { FC } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Compass, Star, BookOpen, Wind, ShieldAlert, Sparkles, Activity, Radar, Fingerprint, Database } from "lucide-react";
 import { getJourneyToolsView } from "@/data/journeyTools";
 import { useJourneyState } from "@/state/journeyState";
 import { useMapState } from "@/state/mapState";
 import { useAchievementState } from "@/state/achievementState";
+import { useAdminState } from "@/state/adminState";
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
 import { getGoalMeta, getGoalOrderIndex } from "@/data/goalMeta";
 import type { FeatureFlagKey } from "@/config/features";
 import { NextStepCard } from '@/modules/exploration/NextStepCard';
 import type { NextStepDecisionV1 } from "../recommendation/types";
+import { getMarayaStoryLaunchHref, getMarayaStoryPath } from "@/utils/marayaStoryJourney";
 
 const getToolIcon = (id: string, className = "w-6 h-6") => {
   switch (id) {
@@ -71,6 +73,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
   const [badgePulse, setBadgePulse] = useState(false);
   const lastGoalRef = useRef<string | null>(lastGoalLabel ?? null);
   const unlockedIds = useAchievementState((s) => s.unlockedIds);
+  const journeyPaths = useAdminState((s) => s.journeyPaths);
   const hasMissionCompleted = useMapState((s) =>
     s.nodes.some((n) => n.missionProgress?.isCompleted)
   );
@@ -85,6 +88,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
   
   const dawayirTool = tools.find(t => t.id === 'dawayir');
   const otherTools = tools.filter(t => t.id !== 'dawayir');
+  const marayaPath = useMemo(() => getMarayaStoryPath(journeyPaths), [journeyPaths]);
 
   const savedGoals = lastGoalById
     ? Object.entries(lastGoalById)
@@ -111,6 +115,15 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
   };
   const handleOpenGoal = (goalId: string, category: string) => {
     onOpenGoal?.(goalId, category);
+  };
+
+  const handleOpenMirrorStory = () => {
+    if (typeof window === "undefined") return;
+    window.location.assign(
+      getMarayaStoryLaunchHref(marayaPath, {
+        surface: "journey-tools"
+      })
+    );
   };
 
   useEffect(() => {
@@ -274,8 +287,14 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
                 key={tool.id}
                 type="button"
                 onClick={() => {
-                  if (!tool.locked || !tool.featureKey || !onFeatureLocked) return;
-                  onFeatureLocked(tool.featureKey);
+                  if (tool.locked) {
+                    if (tool.featureKey && onFeatureLocked) onFeatureLocked(tool.featureKey);
+                    return;
+                  }
+
+                  if (tool.id === "mirror") {
+                    handleOpenMirrorStory();
+                  }
                 }}
                 className={`w-full rounded-2xl p-4 text-right transition-all flex flex-col justify-between min-h-[140px] border backdrop-blur-md relative overflow-hidden group ${
                   tool.locked 

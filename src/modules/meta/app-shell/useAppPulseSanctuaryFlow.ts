@@ -11,6 +11,13 @@ import { AnalyticsEvents, trackEvent } from "@/services/analytics";
 import { recordFlowEvent } from "@/services/journeyTracking";
 import type { PulseEnergyConfidence, PulseEntry, PulseFocus, PulseMood } from "@/state/pulseState";
 import { usePulseState } from "@/state/pulseState";
+import { useAdminState } from "@/state/adminState";
+import {
+  getFirstJourneyStepByKind,
+  getJourneyPathBySlug,
+  getJourneyStepAfterKind,
+  hasEnabledJourneyStepKind
+} from "@/utils/journeyPaths";
 
 type ThemePreference = "light" | "dark" | "system";
 type PulseCloseReason = "backdrop" | "close_button" | "programmatic" | "browser_close";
@@ -39,6 +46,7 @@ type ConcretePulseSubmitPayload = {
 
 interface UseAppPulseSanctuaryFlowParams {
   goalId: string;
+  currentScreen: AppShellScreen;
   isLandingScreen: boolean;
   showPulseCheck: boolean;
   setShowPulseCheck: (show: boolean) => void;
@@ -92,6 +100,7 @@ function buildAutoPulsePayload(): PulseSubmitPayload {
 
 export function useAppPulseSanctuaryFlow({
   goalId,
+  currentScreen,
   isLandingScreen,
   showPulseCheck,
   setShowPulseCheck,
@@ -133,13 +142,61 @@ export function useAppPulseSanctuaryFlow({
   const cocoonSuppressedUntilRef = useRef(0);
   const lastAutoCocoonOpenAtRef = useRef(0);
   const pulseOpenedAtRef = useRef<number | null>(null);
+  const postBreathingScreenRef = useRef<AppShellScreen | null>(null);
   const lastPulse = usePulseState((state) => state.lastPulse);
+  const sanctuaryPath = useAdminState((state) => {
+    const path = getJourneyPathBySlug(state.journeyPaths, "sanctuary");
+    return path?.isActive ? path : null;
+  });
+  const sanctuaryEntryScreen = (sanctuaryPath?.entryScreen as AppShellScreen | undefined) ?? "landing";
+  const sanctuaryTargetScreen = (sanctuaryPath?.targetScreen as AppShellScreen | undefined) ?? "sanctuary";
+  const isSanctuaryEntryScreen = sanctuaryPath ? currentScreen === sanctuaryEntryScreen : isLandingScreen;
+  const sanctuaryDecisionEnabled = hasEnabledJourneyStepKind(sanctuaryPath, "decision");
+  const sanctuaryInterventionEnabled = hasEnabledJourneyStepKind(sanctuaryPath, "intervention");
+
+  const getConfiguredNextScreen = useCallback((): AppShellScreen => {
+    const firstScreenStep = getFirstJourneyStepByKind(sanctuaryPath, "screen")?.screen as AppShellScreen | undefined;
+    const outcomeStep = getFirstJourneyStepByKind(sanctuaryPath, "outcome")?.screen as AppShellScreen | undefined;
+    return sanctuaryTargetScreen ?? firstScreenStep ?? outcomeStep ?? "map";
+  }, [sanctuaryPath, sanctuaryTargetScreen]);
+
+  const startConfiguredRecoveryFlow = useCallback(() => {
+    postBreathingScreenRef.current = getConfiguredNextScreen();
+    setReturnToGoalOnBreathingClose(true);
+    skipNextPulseCheck();
+
+    if (sanctuaryInterventionEnabled) {
+      trackEvent(AnalyticsEvents.BREATHING_OPENED, { source: "sanctuary_path" });
+      setShowBreathing(true);
+      return;
+    }
+
+    const configuredNextScreen = postBreathingScreenRef.current ?? "map";
+    postBreathingScreenRef.current = null;
+    setSuppressLowPulseCocoonUntil(Date.now() + 20 * 60 * 1000);
+    setReturnToGoalOnBreathingClose(false);
+
+    if (configuredNextScreen === "map" && goalId === "unknown") {
+      openDefaultGoalMap();
+      return;
+    }
+
+    void navigateToScreen(configuredNextScreen);
+  }, [
+    getConfiguredNextScreen,
+    goalId,
+    navigateToScreen,
+    openDefaultGoalMap,
+    sanctuaryInterventionEnabled,
+    setShowBreathing,
+    skipNextPulseCheck
+  ]);
 
   const openCocoonModal = useCallback((source: "auto" | "manual" = "manual") => {
     const now = Date.now();
     const decision = evaluateCocoonOpen({
       source,
-      isLandingScreen,
+      isLandingScreen: isSanctuaryEntryScreen,
       now,
       suppressedUntil: cocoonSuppressedUntilRef.current,
       suppressReopen: suppressCocoonReopen,
@@ -157,7 +214,7 @@ export function useAppPulseSanctuaryFlow({
     }
 
     setShowCocoon(true);
-  }, [isLandingScreen, setShowCocoon, showBreathing, suppressCocoonReopen]);
+  }, [isSanctuaryEntryScreen, setShowCocoon, showBreathing, suppressCocoonReopen]);
 
   const suppressCocoonFor = useCallback((ms = 2000) => {
     cocoonSuppressedUntilRef.current = Date.now() + ms;
@@ -253,7 +310,8 @@ export function useAppPulseSanctuaryFlow({
       logPulse(payload);
     }
 
-    const isLow = payload.energy != null && payload.energy <= 3;
+    const autoTriggerMaxEnergy = sanctuaryPath?.autoTriggerMaxEnergy ?? 3;
+    const isLow = payload.energy != null && payload.energy <= autoTriggerMaxEnergy;
     const isAngry = payload.mood === "angry";
 
     if (isLow) {
@@ -272,7 +330,12 @@ export function useAppPulseSanctuaryFlow({
     }
 
     if (isLow) {
-      openCocoonModal("auto");
+      if (sanctuaryPath) {
+        if (sanctuaryDecisionEnabled) openCocoonModal("auto");
+        else startConfiguredRecoveryFlow();
+      } else {
+        openCocoonModal("auto");
+      }
     }
   }, [
     closePulseCheck,
@@ -280,6 +343,9 @@ export function useAppPulseSanctuaryFlow({
     openCocoonModal,
     openDawayirSetup,
     openOverlay,
+    sanctuaryDecisionEnabled,
+    sanctuaryPath,
+    startConfiguredRecoveryFlow,
     setLoginIntent,
     setShowAuthModal,
     setStartRecoveryIntent,
@@ -305,7 +371,8 @@ export function useAppPulseSanctuaryFlow({
     // Note: CRM phone sync now happens instantly in handleTacticalAnalysis (PulseCheckModal)
     // at the moment the user confirms their phone number — no need to sync again here.
 
-    const isLow = payload.energy != null && payload.energy <= 3;
+    const autoTriggerMaxEnergy = sanctuaryPath?.autoTriggerMaxEnergy ?? 3;
+    const isLow = payload.energy != null && payload.energy <= autoTriggerMaxEnergy;
     const isAngry = payload.mood === "angry";
 
     if (isLow) {
@@ -325,7 +392,12 @@ export function useAppPulseSanctuaryFlow({
     }
 
     if (isLow) {
-      openCocoonModal("auto");
+      if (sanctuaryPath) {
+        if (sanctuaryDecisionEnabled) openCocoonModal("auto");
+        else startConfiguredRecoveryFlow();
+      } else {
+        openCocoonModal("auto");
+      }
     }
   }, [
     authUserId,
@@ -334,6 +406,9 @@ export function useAppPulseSanctuaryFlow({
     logPulse,
     openCocoonModal,
     openOverlay,
+    sanctuaryDecisionEnabled,
+    sanctuaryPath,
+    startConfiguredRecoveryFlow,
     setTheme,
     snoozeNotifications,
     theme,
@@ -377,27 +452,14 @@ export function useAppPulseSanctuaryFlow({
   }, [clearPulseCheckPreview, closePulseCheck, logPulse, openDawayirSetup, pulseCheckContext]);
 
   const handleCocoonStart = useCallback(() => {
-    breathingFromCocoonRef.current = true;
+    breathingFromCocoonRef.current = sanctuaryInterventionEnabled;
     setShowCocoon(false);
     suppressCocoonFor(90000);
-    setReturnToGoalOnBreathingClose(true);
-    skipNextPulseCheck();
-
-    if (goalId === "unknown") {
-      openDefaultGoalMap();
-    } else {
-      void navigateToScreen("map");
-    }
-
-    trackEvent(AnalyticsEvents.BREATHING_OPENED, { source: "cocoon" });
-    setShowBreathing(true);
+    startConfiguredRecoveryFlow();
   }, [
-    goalId,
-    navigateToScreen,
-    openDefaultGoalMap,
-    setShowBreathing,
+    sanctuaryInterventionEnabled,
     setShowCocoon,
-    skipNextPulseCheck,
+    startConfiguredRecoveryFlow,
     suppressCocoonFor
   ]);
 
@@ -432,18 +494,24 @@ export function useAppPulseSanctuaryFlow({
     suppressCocoonFor(shouldForceMapAfterBreathing ? 90_000 : 8_000);
 
     if (shouldForceMapAfterBreathing) {
+      const configuredNextScreen =
+        postBreathingScreenRef.current ??
+        (getJourneyStepAfterKind(sanctuaryPath, "intervention")?.screen as AppShellScreen | undefined) ??
+        "map";
+      postBreathingScreenRef.current = null;
       setSuppressLowPulseCocoonUntil(Date.now() + 20 * 60 * 1000);
       setReturnToGoalOnBreathingClose(false);
       skipNextPulseCheck();
-      if (goalId === "unknown") {
+      if (configuredNextScreen === "map" && goalId === "unknown") {
         openDefaultGoalMap();
       } else {
-        void navigateToScreen("map");
+        void navigateToScreen(configuredNextScreen);
       }
       showBreathingSessionToast();
     }
   }, [
     goalId,
+    sanctuaryPath,
     lastPulse,
     navigateToScreen,
     openDefaultGoalMap,

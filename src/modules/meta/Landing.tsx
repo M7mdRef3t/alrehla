@@ -16,6 +16,11 @@ import { trackEvent, AnalyticsEvents, trackLandingView } from "@/services/analyt
 import { isUserMode } from "@/config/appEnv";
 import { landingCopy } from "@/copy/landing";
 import { HeroSection } from "./HeroSection";
+import { useAdminState } from "@/state/adminState";
+import {
+  getRelationshipWeatherEntryHref,
+  getRelationshipWeatherPath
+} from "@/utils/relationshipWeatherJourney";
 
 /* ─── Props ─────────────────────────────────────────────────────────── */
 
@@ -67,10 +72,15 @@ export const Landing: FC<LandingPropsExtended> = ({
   const lastGoalId = useJourneyState((s) => s.goalId);
   const lastGoalCategory = useJourneyState((s) => s.category);
   const lastGoalById = useJourneyState((s) => s.lastGoalById);
+  const weatherPath = useAdminState((state) => {
+    const path = getRelationshipWeatherPath(state.journeyPaths);
+    return path?.isActive ? path : null;
+  });
   const lastGoalRecord = getLastGoalMeta(lastGoalById, lastGoalId, lastGoalCategory);
   const lastGoalLabel = getGoalLabel(lastGoalRecord?.goalId);
   const lastGoalMeta = getGoalMeta(lastGoalRecord?.goalId);
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
+  const weatherEntryHref = getRelationshipWeatherEntryHref(weatherPath);
 
 
   const pwaInstall = usePWAInstall();
@@ -199,60 +209,7 @@ export const Landing: FC<LandingPropsExtended> = ({
         secondaryCta={landingCopy.secondaryCta}
       />
 
-      <div style={{ contentVisibility: "auto", containIntrinsicSize: "1px 2600px" }}>
-
-      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(20,184,166,0.2), transparent)" }} />
-      </div>
-
-      <section className="relative py-20 px-5 max-w-5xl mx-auto">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-        >
-          <motion.div variants={fadeUp} className="text-center mb-12">
-            <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "var(--ds-color-primary)" }}>
-              ٣ خطوات للسيادة
-            </p>
-              <h2 className="text-3xl sm:text-4xl font-black mb-3" style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)" }}>
-              {landingCopy.howItWorks.title}
-            </h2>
-            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{landingCopy.howItWorks.subtitle}</p>
-          </motion.div>
-
-          <motion.div variants={stagger} className="grid md:grid-cols-3 gap-5">
-            {landingCopy.howItWorks.steps.map((step, i) => (
-              <motion.div
-                key={i}
-                variants={fadeUp}
-                className="relative flex flex-col gap-4 rounded-2xl p-7"
-                style={{
-                  border: "1px solid var(--glass-border)",
-                  background: "var(--glass-bg)"
-                }}
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black"
-                  style={{
-                    background: ["rgba(20,184,166,0.15)", "rgba(124,58,237,0.15)", "rgba(251,191,36,0.15)"][i],
-                    color: ["var(--ds-color-primary)", "var(--ds-color-accent-indigo)", "var(--ds-color-accent-amber)"][i]
-                  }}
-                >
-                  {["١", "٢", "٣"][i]}
-                </div>
-                  <h3 className="text-base font-black" style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)" }}>{step.title}</h3>
-                <p className="text-sm leading-loose" style={{ color: "var(--text-secondary)" }}>{step.body}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.div>
-      </section>
-
-      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.25), transparent)" }} />
-      </div>
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "1px 2600px" }} />
 
       <section className="relative py-20 px-4 max-w-3xl mx-auto">
         <motion.div
@@ -275,7 +232,7 @@ export const Landing: FC<LandingPropsExtended> = ({
           <LandingSimulation />
           <motion.div variants={fadeUp} className="mt-10 flex justify-center">
             <a
-              href="/weather"
+              href={weatherEntryHref}
               className="group inline-flex items-center gap-3 px-6 py-3 rounded-full text-sm font-bold transition-all duration-300"
               style={{
                 border: "1px solid rgba(20,184,166,0.25)",
@@ -299,56 +256,6 @@ export const Landing: FC<LandingPropsExtended> = ({
           </motion.div>
         </motion.div>
       </section>
-
-      </div>
-
-      {showTestimonials && (
-        <>
-          <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
-            <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.2), transparent)" }} />
-          </div>
-
-          <section className="relative py-20 px-5 max-w-4xl mx-auto">
-            <motion.div
-              variants={stagger}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-80px" }}
-            >
-              <motion.div variants={fadeUp} className="text-center mb-10">
-                <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "#7C3AED" }}>
-                  فوج التأسيس
-                </p>
-                <h2 className="text-2xl sm:text-3xl font-black " style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)" }}>
-                  ناس زيّك بدأوا رحلتهم
-                </h2>
-              </motion.div>
-
-              <div className="grid sm:grid-cols-2 gap-5">
-                {landingCopy.testimonials?.map((t, i) => (
-                  <motion.div
-                    key={i}
-                    variants={fadeUp}
-                    className="relative rounded-2xl p-7"
-                    style={{
-                      border: "1px solid rgba(124,58,237,0.15)",
-                      background: "radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.05) 0%, transparent 70%)"
-                    }}
-                  >
-                    <Heart className="w-4 h-4 mb-4" style={{ color: "#7C3AED" }} />
-                    <p className="text-sm leading-loose mb-5" style={{ color: "var(--text-secondary)" }}>&#x201C;{t.quote}&#x201D;</p>
-                    <p className="text-xs font-bold" style={{ color: "var(--text-secondary)" }}>— {t.author}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </section>
-        </>
-      )}
-
-      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(20,184,166,0.25), transparent)" }} />
-      </div>
 
       <section className="relative py-20 px-5 max-w-3xl mx-auto text-center">
         <motion.div
@@ -398,12 +305,12 @@ export const Landing: FC<LandingPropsExtended> = ({
             id="landing-final-cta"
             onClick={handleStart}
             className="group inline-flex items-center gap-3 rounded-2xl px-8 py-4 text-base font-black text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
-            style={{ background: "linear-gradient(135deg, #14B8A6, #0d9488)", boxShadow: "0 14px 42px rgba(20,184,166,0.28)" }}
-            whileHover={{ scale: 1.04, boxShadow: "0 18px 50px rgba(20,184,166,0.38)" }}
-            whileTap={{ scale: 0.97 }}
+            style={{ background: "rgba(255,255,255,0.03)", backdropFilter: "blur(12px)", border: "1px solid rgba(20,184,166,0.2)", boxShadow: "0 10px 40px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.1)" }}
+            whileHover={{ scale: 1.02, background: "rgba(255,255,255,0.06)", borderColor: "rgba(20,184,166,0.4)" }}
+            whileTap={{ scale: 0.98 }}
           >
-            استعد مساحتك — مجاناً
-            <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+            اسمح للرحلة بالبدء
+            <ArrowLeft style={{ width: 18, height: 18, color: "#14B8A6" }} className="transition-transform group-hover:-translate-x-1" />
           </motion.button>
         </motion.div>
       </section>

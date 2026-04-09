@@ -8,16 +8,15 @@ import {
   LogOut,
   Settings,
   Wrench,
-  BookOpen,
-  Info,
-  Sun,
-  Moon,
   BarChart2,
   Sparkles,
   Brain,
   Home,
   ShieldCheck,
   Eye,
+  Sun,
+  Moon,
+  Trophy,
 } from "lucide-react";
 import { AlrehlaIcon } from "./logo/AlrehlaIcon";
 import { useAuthState, getEffectiveRoleFromState } from "@/state/authState";
@@ -27,8 +26,13 @@ import { signOut } from "@/services/authService";
 import { NotificationsPanel } from "./NotificationsPanel";
 import { isPrivilegedRole } from "@/utils/featureFlags";
 import { assignUrl } from "@/services/navigation";
+import { useGamificationState } from "@/state/gamificationState";
+import { useAppOverlayState } from "@/state/appOverlayState";
 
-const NAV_LINKS = [
+// Re-importing missing icons correctly
+import { BookOpen, Info } from "lucide-react";
+
+const NAV_LINKS_RESOLVED = [
   { id: "home", label: "الرئيسية", icon: Home },
   { id: "tools", label: "الأدوات", icon: Wrench },
   { id: "insights", label: "تحليلات", icon: BarChart2 },
@@ -36,7 +40,7 @@ const NAV_LINKS = [
   { id: "about", label: "لماذا الرحلة؟", icon: Info },
 ] as const;
 
-type NavLinkId = (typeof NAV_LINKS)[number]["id"];
+type NavLinkId = (typeof NAV_LINKS_RESOLVED)[number]["id"];
 
 const SCREEN_MAP: Record<string, string> = {
   home: "landing",
@@ -92,7 +96,6 @@ export const PlatformHeader = memo(function PlatformHeader({
   const userMenuRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLButtonElement>(null);
 
-
   const user = useAuthState((s) => s.user);
   const firstName = useAuthState((s) => s.firstName);
   const displayName = useAuthState((s) => s.displayName);
@@ -102,8 +105,6 @@ export const PlatformHeader = memo(function PlatformHeader({
   const roleOverride = useAuthState((s) => s.roleOverride);
   const setRoleOverride = useAuthState((s) => s.setRoleOverride);
   
-  // They can see the switch if their base role is privileged (so they can switch back)
-  // or if they currently have a privileged effective role.
   const isPrivilegedUser = isPrivilegedRole(rawRole) || isPrivilegedRole(role);
   const isViewingAsUser = roleOverride === "user";
   const isLoggedIn = Boolean(user);
@@ -119,15 +120,13 @@ export const PlatformHeader = memo(function PlatformHeader({
   const isDark = resolvedTheme === "dark";
 
   const activeNavId = getActiveNavId(activeScreen);
-  const visibleNavLinks = NAV_LINKS;
+  const visibleNavLinks = NAV_LINKS_RESOLVED;
 
-  // Screen label shown in header while scrolled (when not on home)
   const screenLabel = activeNavId !== "home" ? (SCREEN_LABELS[activeNavId] ?? null) : null;
 
   const handleThemeToggle = useCallback(() => {
     setTheme(isDark ? "light" : "dark");
   }, [isDark, setTheme]);
-
 
   useEffect(() => {
     const onScroll = () => {
@@ -140,11 +139,8 @@ export const PlatformHeader = memo(function PlatformHeader({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // ── Reset on screen change: show header, scroll to top ──
   useEffect(() => {
-    // Always show header when navigating to a new screen
     setHidden(false);
-    // Scroll page to top on screen transition (SPA doesn't do this automatically)
     window.scrollTo({ top: 0, behavior: "instant" });
     lastScrollY.current = 0;
     setScrolled(false);
@@ -171,7 +167,7 @@ export const PlatformHeader = memo(function PlatformHeader({
 
   const handleLogout = useCallback(async () => {
     setUserMenuOpen(false);
-    await signOut(); // centralised — errors swallowed inside signOut()
+    await signOut();
     onLogout?.();
     onNavigate?.("landing");
   }, [onLogout, onNavigate]);
@@ -180,13 +176,8 @@ export const PlatformHeader = memo(function PlatformHeader({
     setNotifOpen((previous) => !previous);
   }, []);
 
-  // ── Landing CTA — FIX: if logged in → enter app, not show login ──
   const openOwnerDashboard = useCallback(() => {
-    try {
-      assignUrl("/admin");
-    } catch {
-      assignUrl("/admin");
-    }
+    assignUrl("/admin");
   }, []);
 
   const enterOwnerDashboard = useCallback(() => {
@@ -227,7 +218,6 @@ export const PlatformHeader = memo(function PlatformHeader({
       `}
       style={{ borderColor: scrolled ? "var(--glass-border)" : "transparent" }}
     >
-      {/* Logo */}
       <button
         type="button"
         id="header-logo"
@@ -252,7 +242,6 @@ export const PlatformHeader = memo(function PlatformHeader({
         </span>
       </button>
 
-      {/* Screen label — shows when scrolled & not on home */}
       <AnimatePresence>
         {scrolled && activeNavId !== "home" && screenLabel && (
           <motion.span
@@ -269,7 +258,6 @@ export const PlatformHeader = memo(function PlatformHeader({
         )}
       </AnimatePresence>
 
-      {/* Nav Links */}
       <nav
         aria-label="التنقل الرئيسي"
         className="flex items-center relative gap-2"
@@ -288,8 +276,8 @@ export const PlatformHeader = memo(function PlatformHeader({
               className={`
                 relative px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200 flex items-center gap-2 cursor-pointer
                 ${isActive 
-                  ? "text-app-primary" 
-                  : "text-app-muted hover:text-app-primary"
+                  ? "text-slate-900 dark:text-white" 
+                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                 }
               `}
               aria-current={isActive ? "page" : undefined}
@@ -316,15 +304,25 @@ export const PlatformHeader = memo(function PlatformHeader({
         })}
       </nav>
 
-      {/* Right Controls */}
       <div className="flex items-center gap-3">
-        {/* Theme Toggle */}
+        {isLoggedIn && (
+          <button
+            onClick={() => useAppOverlayState.getState().setOverlay("evolutionHub", true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/20 transition-all group"
+          >
+            <Trophy className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-black text-amber-500 font-mono">
+              Lvl {useGamificationState.getState().level}
+            </span>
+          </button>
+        )}
+
         <button
           type="button"
           id="header-theme-toggle"
           aria-label={isDark ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
           onClick={handleThemeToggle}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-app-muted hover:text-app-primary hover:bg-slate-400/10 dark:hover:bg-white/10 transition-all"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-400/10 dark:hover:bg-white/10 transition-all"
         >
           <AnimatePresence mode="wait" initial={false}>
             {isDark ? (
@@ -351,7 +349,6 @@ export const PlatformHeader = memo(function PlatformHeader({
           </AnimatePresence>
         </button>
 
-        {/* Bell — show everywhere if logged in */}
         <div className="relative">
             <AnimatePresence>
               {isLoggedIn && (
@@ -366,8 +363,8 @@ export const PlatformHeader = memo(function PlatformHeader({
                   aria-label={hasUnread ? "لديك إشعارات جديدة" : "الإشعارات"}
                   aria-expanded={notifOpen}
                   onClick={handleBellClick}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center text-app-muted hover:text-app-primary hover:bg-slate-400/10 dark:hover:bg-white/10 transition-all relative ${
-                    notifOpen ? "bg-slate-400/10 dark:bg-white/10 text-app-primary" : ""
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-400/10 dark:hover:bg-white/10 transition-all relative ${
+                    notifOpen ? "bg-slate-400/10 dark:bg-white/10 text-slate-900 dark:text-white" : ""
                   }`}
                 >
                   <Bell className={`w-5 h-5 transition-colors ${hasUnread ? "text-teal-400" : ""}`} />
@@ -395,16 +392,14 @@ export const PlatformHeader = memo(function PlatformHeader({
             )}
           </div>
 
-        {/* User Area */}
         {status === "loading" ? (
           <div className="w-9 h-9 rounded-full bg-white/10 animate-pulse" />
         ) : isLoggedIn ? (
-          /* ── User Dropdown Menu ── */
           <div ref={userMenuRef} className="relative" id="header-user-menu">
             <button
               type="button"
               onClick={() => setUserMenuOpen((previous) => !previous)}
-              className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-app-primary group"
+              className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group"
               aria-haspopup="true"
               aria-expanded={userMenuOpen}
             >
@@ -418,7 +413,7 @@ export const PlatformHeader = memo(function PlatformHeader({
                 <span className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-xs font-bold text-slate-900">
                   {avatarInitial}
                 </span>
-              )}
+                )}
               <span className="hidden lg:inline max-w-[8rem] truncate">{firstName ?? "حسابي"}</span>
               <ChevronDown
                 className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
@@ -438,11 +433,11 @@ export const PlatformHeader = memo(function PlatformHeader({
                   style={{ background: "var(--glass-bg)", borderColor: "var(--glass-border)" }}
                   role="menu"
                 >
-                  <div className="px-4 py-3 border-b border-app-border">
-                    <p className="text-sm font-semibold text-app-primary truncate">
+                  <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                       {displayName ?? firstName ?? "المستخدم"}
                     </p>
-                    <p className="text-xs text-app-muted truncate">{user?.email ?? ""}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email ?? ""}</p>
                   </div>
                   <div className="p-2 flex flex-col gap-2">
                     <div className="px-2 pt-1">
@@ -460,10 +455,10 @@ export const PlatformHeader = memo(function PlatformHeader({
                     <button
                       type="button"
                       onClick={() => handleNav("settings")}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-app-primary hover:bg-slate-400/10 dark:hover:bg-white/[0.08]"
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-slate-900 dark:text-white hover:bg-slate-400/10 dark:hover:bg-white/[0.08]"
                       role="menuitem"
                     >
-                      <Settings className="w-4 h-4 text-app-muted" />
+                      <Settings className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                       الإعدادات
                     </button>
 
@@ -480,17 +475,16 @@ export const PlatformHeader = memo(function PlatformHeader({
                             key={id}
                             type="button"
                             onClick={() => handleNav(id)}
-                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-app-primary hover:bg-slate-400/10 dark:hover:bg-white/[0.08] transition-colors text-right w-full"
+                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-900 dark:text-white hover:bg-slate-400/10 dark:hover:bg-white/[0.08] transition-colors text-right w-full"
                             role="menuitem"
                           >
-                            <Icon className="w-4 h-4 text-app-muted" />
+                            <Icon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                             {label}
                           </button>
                         ))}
                       </div>
                     </div>
 
-                    {/* Owner Switch — only for privileged roles */}
                     {isPrivilegedUser && (
                       <div className="border-t border-white/[0.08] mt-1 pt-1">
                         <button
@@ -567,12 +561,6 @@ export const PlatformHeader = memo(function PlatformHeader({
             
             <LogIn className="w-5 h-5 text-slate-900 relative z-10" />
             <span className="text-slate-900 relative z-10">تسجيل الدخول</span>
-            
-            <motion.div 
-              className="absolute -right-4 top-0 w-12 h-full bg-white/20 skew-x-[30deg] -translate-x-[200%]"
-              animate={{ translateX: ["-200%", "200%"] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
-            />
           </motion.button>
         )}
       </div>
@@ -581,15 +569,6 @@ export const PlatformHeader = memo(function PlatformHeader({
 });
 
 // ─── Mobile Bottom Navigation Bar ────────────────────────────────────────────
-const MOBILE_NAV = [
-  { id: "home", label: "الرئيسية", icon: Home },
-  { id: "tools", label: "الأدوات", icon: Wrench },
-  { id: "insights", label: "تحليلات", icon: BarChart2 },
-  { id: "stories", label: "قصص", icon: BookOpen },
-  { id: "profile", label: "الملف", icon: User },
-  { id: "settings", label: "الإعدادات", icon: Settings },
-] as const;
-
 export const MobileNavBar = memo(function MobileNavBar({
   activeScreen,
   onNavigate,
@@ -604,15 +583,23 @@ export const MobileNavBar = memo(function MobileNavBar({
     [onNavigate]
   );
 
+  const MOBILE_NAV = [
+    { id: "home", label: "الرئيسية", icon: Home },
+    { id: "tools", label: "الأدوات", icon: Wrench },
+    { id: "insights", label: "تحليلات", icon: BarChart2 },
+    { id: "stories", label: "قصص", icon: BookOpen },
+    { id: "profile", label: "الملف", icon: User },
+  ] as const;
+
   return (
     <nav
       dir="rtl"
       aria-label="التنقل السفلي"
       className="fixed bottom-0 right-0 left-0 z-50 md:hidden
-        flex items-stretch justify-around
+        flex items-center justify-around
         backdrop-blur-2xl
         border-t
-        pb-safe pt-2 px-2
+        pb-safe pt-2 px-4 h-20
         shadow-lg"
       style={{ background: "var(--glass-bg)", borderColor: "var(--glass-border)" }}
     >
@@ -622,33 +609,35 @@ export const MobileNavBar = memo(function MobileNavBar({
           <button
             key={id}
             type="button"
-            id={`mobile-nav-${id}`}
             onClick={() => handleNav(id)}
-            aria-current={isActive ? "page" : undefined}
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-3 relative"
+            className="flex-1 flex flex-col items-center justify-center gap-1 py-3 group relative"
           >
-            {isActive && (
-              <motion.span
-                layoutId="mobile-nav-indicator"
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 rounded-full bg-teal-400"
-                transition={{ type: "spring", stiffness: 500, damping: 35 }}
-              />
-            )}
             <Icon
-              className={`w-5 h-5 transition-colors ${
-                isActive ? "text-teal-500" : "text-app-muted"
-              }`}
+              className={`w-6 h-6 transition-transform group-active:scale-90 ${isActive ? "text-teal-500" : "text-slate-500 dark:text-slate-400"}`}
             />
             <span
-              className={`text-[10px] font-medium transition-colors ${
-                isActive ? "text-teal-500" : "text-app-muted"
-              }`}
+              className={`text-[10px] font-bold ${isActive ? "text-teal-500" : "text-slate-500 dark:text-slate-400"}`}
             >
               {label}
             </span>
           </button>
         );
       })}
+
+      {/* Evolution Hub Access for Mobile */}
+      <div className="flex-1 flex flex-col items-center justify-center py-3">
+         <button
+            onClick={() => useAppOverlayState.getState().setOverlay("evolutionHub", true)}
+            className="flex flex-col items-center justify-center gap-1 group"
+          >
+            <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center group-active:scale-90 transition-transform">
+               <Trophy className="w-5 h-5 text-amber-500" />
+            </div>
+            <span className="text-[10px] font-black text-amber-500 font-mono">
+              Lvl {useGamificationState.getState().level}
+            </span>
+          </button>
+      </div>
     </nav>
   );
 });

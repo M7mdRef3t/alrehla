@@ -102,10 +102,10 @@ export function FeelingCheckModal({ onClose }: Props) {
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-lg bg-app-surface border border-app-border rounded-[2.5rem] shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden"
       >
         {/* Header/Progress */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-app-muted/10">
+        <div className="absolute top-0 left-0 w-full h-1 bg-slate-200 dark:bg-slate-800">
           <motion.div 
             className="h-full bg-teal-500 shadow-[0_0_10px_rgba(45,212,191,0.3)]"
             animate={{ width: `${progress}%` }}
@@ -120,7 +120,7 @@ export function FeelingCheckModal({ onClose }: Props) {
               </div>
               <span className="text-sm font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest">{currentQ.label}</span>
             </div>
-            <span className="text-xs font-mono text-app-muted">{step + 1} / {QUESTIONS.length}</span>
+            <span className="text-xs font-mono text-slate-500 dark:text-slate-400">{step + 1} / {QUESTIONS.length}</span>
           </div>
 
           <AnimatePresence mode="wait">
@@ -132,7 +132,7 @@ export function FeelingCheckModal({ onClose }: Props) {
               transition={{ duration: 0.2 }}
               className="space-y-10"
             >
-              <h2 className="text-2xl font-black text-app-primary leading-tight">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
                 {currentQ.question}
               </h2>
 
@@ -145,7 +145,7 @@ export function FeelingCheckModal({ onClose }: Props) {
                   max="100"
                   value={results[currentQ.id]}
                   onChange={(e) => setResults(prev => ({ ...prev, [currentQ.id]: parseInt(e.target.value) }))}
-                  className="w-full h-2 bg-app-bg rounded-full appearance-none cursor-pointer accent-teal-500 slider-thumb-premium border border-app-border"
+                  className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full appearance-none cursor-pointer accent-teal-500 slider-thumb-premium border border-slate-200 dark:border-white/10"
                 />
                 
                 <div className="flex justify-between text-xs font-bold tracking-wide">
@@ -160,7 +160,7 @@ export function FeelingCheckModal({ onClose }: Props) {
             {step > 0 && (
               <button
                 onClick={handleBack}
-                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border border-app-border text-app-muted hover:bg-app-bg transition-all text-sm font-bold"
+                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-sm font-bold"
               >
                 <ArrowRight className="w-4 h-4" /> رجوع
               </button>
@@ -179,9 +179,9 @@ export function FeelingCheckModal({ onClose }: Props) {
         </div>
 
         {/* Footer info */}
-        <div className="bg-app-bg/50 p-6 flex items-center gap-3 border-t border-app-border">
+        <div className="bg-slate-50 dark:bg-slate-900/50 p-6 flex items-center gap-3 border-t border-slate-200 dark:border-white/10">
           <Heart className="w-4 h-4 text-rose-500" />
-          <p className="text-[10px] font-bold text-app-muted leading-relaxed uppercase tracking-widest">
+          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-relaxed uppercase tracking-widest">
             حُسّك هو أهم داتا. جاوب بصدق عشان تشوف صورتك الحقيقية.
           </p>
         </div>

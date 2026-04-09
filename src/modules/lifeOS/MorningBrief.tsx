@@ -1,11 +1,15 @@
 "use client";
 
-import { memo, useEffect, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, AlertTriangle, Target, TrendingUp, Flame, Moon } from "lucide-react";
+import { Sparkles, AlertTriangle, Target, TrendingUp, Flame, Moon, CalendarDays } from "lucide-react";
 import { type LifeScore, type MorningPriority, getDomainConfig } from "@/types/lifeDomains";
 import { loadStreak } from "@/services/streakSystem";
 import { resolveDisplayName } from "@/services/userMemory";
+import { useRitualState } from "@/state/ritualState";
+import { useLifeState } from "@/state/lifeState";
+import { getTodayRituals, getDailyCompletionStats } from "@/services/ritualsEngine";
+
 
 interface MorningBriefProps {
   lifeScore: LifeScore | null;
@@ -53,6 +57,8 @@ export const MorningBrief = memo(function MorningBrief({
 }: MorningBriefProps) {
   const greeting = useMemo(() => getGreeting(), []);
   const streak = useMemo(() => loadStreak(), []);
+  const brief = useLifeState((s) => s.morningBrief);
+  const dailyMission = brief?.dailyMission ?? null;
   const scoreMsg = useMemo(() => {
     return lifeScore ? getScoreMessage(lifeScore.overall) : "ابدأ يومك بتقييم سريع 🎯";
   }, [lifeScore]);
@@ -61,6 +67,38 @@ export const MorningBrief = memo(function MorningBrief({
     if (!lifeScore) return null;
     return getDomainConfig(lifeScore.weakestDomain);
   }, [lifeScore]);
+
+  // ─── Weekly Insight (كل الأحد + أي وقت) ───
+  const rituals = useRitualState((s) => s.rituals);
+  const logs = useRitualState((s) => s.logs);
+
+  const weeklyInsight = useMemo(() => {
+    if (rituals.length === 0) return null;
+    const today = new Date();
+    const isMonday = today.getDay() === 0; // Sunday in Egypt = start of week
+
+    // حساب إحصائيات آخر 7 أيام
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      return d.toISOString().slice(0, 10);
+    });
+
+    const activeLogs = logs.filter((l) => last7Days.includes(l.logDate));
+    const totalPossible = rituals.filter((r) => r.isActive).length * 7;
+    const totalDone = activeLogs.length;
+    const pct = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
+
+    // أكثر عادة متكررة
+    const ritualCount: Record<string, number> = {};
+    for (const l of activeLogs) {
+      ritualCount[l.ritualId] = (ritualCount[l.ritualId] ?? 0) + 1;
+    }
+    const topId = Object.entries(ritualCount).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const topRitual = topId ? rituals.find((r) => r.id === topId) : null;
+
+    return { pct, totalDone, totalPossible, topRitual, isMonday };
+  }, [rituals, logs]);
 
   return (
     <motion.div
@@ -106,6 +144,43 @@ export const MorningBrief = memo(function MorningBrief({
             </motion.div>
           )}
         </div>
+
+        {/* Daily Mission */}
+        {dailyMission && (
+          <motion.div
+            className="rounded-2xl p-4 overflow-hidden relative border"
+            style={{
+              background: `${getDomainConfig(dailyMission.domainId).color}08`,
+              borderColor: `${getDomainConfig(dailyMission.domainId).color}25`
+            }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="absolute top-0 right-0 p-3 opacity-[0.03]">
+              <Target className="w-16 h-16" />
+            </div>
+            
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest">مهمة اليوم المقترحة</span>
+              </div>
+              <div className="px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <span className="text-[9px] font-black text-emerald-400">+{dailyMission.rewardXp} XP</span>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-sm font-black text-white">
+                {getDomainConfig(dailyMission.domainId).icon} {dailyMission.label}
+              </h3>
+              <p className="text-xs text-white/50 leading-relaxed max-w-[90%]">
+                {dailyMission.description}
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Quick stats row */}
         {lifeScore && (
@@ -198,6 +273,59 @@ export const MorningBrief = memo(function MorningBrief({
           </div>
         )}
 
+        {/* Weekly Insight — ملخص أسبوعي */}
+        {weeklyInsight && weeklyInsight.totalPossible > 0 && (
+          <motion.div
+            className="rounded-2xl p-4 space-y-2"
+            style={{
+              background: "rgba(6,182,212,0.05)",
+              border: "1px solid rgba(6,182,212,0.15)"
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <CalendarDays className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-[9px] font-black text-cyan-400 uppercase tracking-wider">
+                  {weeklyInsight.isMonday ? "ملخص الأسبوع الماضي" : "آخر 7 أيام"}
+                </span>
+              </div>
+              <span
+                className="text-sm font-black font-mono"
+                style={{
+                  color: weeklyInsight.pct >= 70 ? "#10b981"
+                       : weeklyInsight.pct >= 40 ? "#f59e0b"
+                       : "#f87171"
+                }}
+              >
+                {weeklyInsight.pct}%
+              </span>
+            </div>
+            <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.06)" }}>
+              <motion.div
+                className="h-full rounded-full"
+                style={{
+                  background: weeklyInsight.pct >= 70 ? "#10b981"
+                             : weeklyInsight.pct >= 40 ? "#f59e0b"
+                             : "#f87171"
+                }}
+                initial={{ width: 0 }}
+                animate={{ width: `${weeklyInsight.pct}%` }}
+                transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
+              />
+            </div>
+            {weeklyInsight.topRitual && (
+              <p className="text-[10px] text-white/30">
+                أكثر عادة: <span className="text-white/60 font-bold">
+                  {weeklyInsight.topRitual.icon} {weeklyInsight.topRitual.name}
+                </span>
+              </p>
+            )}
+          </motion.div>
+        )}
+
         {/* Pattern insight */}
         {patternInsight && (
           <motion.div
@@ -217,6 +345,7 @@ export const MorningBrief = memo(function MorningBrief({
             </div>
           </motion.div>
         )}
+
       </div>
     </motion.div>
   );

@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Eye, PlayCircle, ScanSearch, Search, Share2, ShieldCheck, Sparkles, Users2 } from "lucide-react";
 import { assignUrl } from "@/services/navigation";
+import { fetchJourneyPaths } from "@/services/adminApi";
+import { useAdminState } from "@/state/adminState";
+import { getDawayirLiveHistoryHref } from "@/utils/dawayirLiveJourney";
 import { createLiveShare, getLiveSession, listCoachLiveSessions } from "../api";
 import type { LiveSessionArtifactRecord, LiveSessionDetail, LiveSessionRecord } from '../types';
 
@@ -46,6 +49,18 @@ export default function LiveCoachPanel() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchJourneyPaths().then((paths) => {
+      if (!cancelled && paths) {
+        useAdminState.getState().setJourneyPaths(paths);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     void listCoachLiveSessions()
@@ -123,7 +138,7 @@ export default function LiveCoachPanel() {
               وjudge share من نفس session.
             </p>
           </div>
-          <button type="button" className="primary-btn" onClick={() => assignUrl("/dawayir-live/history")}>
+          <button type="button" className="primary-btn" onClick={() => assignUrl(getDawayirLiveHistoryHref())}>
             افتح بنك الذاكرة
           </button>
         </div>

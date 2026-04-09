@@ -46,3 +46,32 @@ export async function sendRecoveryPlanEmail(email: string, data: RecoveryPlanDat
     return false;
   }
 }
+
+import { getSessionFollowupHtml, type SessionFollowupData } from "@/templates/SessionFollowupEmail";
+
+export async function sendSessionFollowupEmail(email: string, data: SessionFollowupData): Promise<boolean> {
+  const logPrefix = "[EmailService]";
+  if (!supabase) return false;
+  if (!email || !email.includes("@")) return false;
+
+  try {
+    const html = getSessionFollowupHtml(data);
+    const subject = `متابعة رحلتنا: ${data.clientName} 🧭`;
+
+    const { error } = await supabase.functions.invoke("send-email", {
+      body: {
+        to: email.trim(),
+        subject,
+        html,
+        text: `أهلاً يا ${data.clientName}. دي خلاصة جلستنا والخطوات الجاية: ${data.assignment}`
+      }
+    });
+
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    logger.error(`${logPrefix} Followup email failed:`, err);
+    return false;
+  }
+}
+

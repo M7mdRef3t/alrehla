@@ -409,6 +409,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     isLowPulseCocoonSuppressed
   } = useAppPulseSanctuaryFlow({
     goalId,
+    currentScreen: screen,
     isLandingScreen,
     showPulseCheck,
     setShowPulseCheck,

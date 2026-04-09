@@ -214,7 +214,55 @@ export function generateMorningBrief(ctx: LifeContext): MorningBriefData {
     },
     patternInsight,
     streakDays: ctx.streakDays,
+    dailyMission: generateDailyMission(ctx.lifeScore?.weakestDomain || "self"),
     generatedAt: Date.now()
+  };
+}
+
+/**
+ * Generate a proactive mission based on the weakest domain
+ */
+export function generateDailyMission(domainId: LifeDomainId): MorningBriefData["dailyMission"] {
+  const missions: Record<LifeDomainId, { label: string; description: string }> = {
+    self: {
+      label: "خمس دقائق تدوين",
+      description: "اكتب أهم 3 حاجات شاغلة بالك دلوقتي عشان تفضي مساحة في عقلك."
+    },
+    body: {
+      label: "قسط راحة حقيقي",
+      description: "ابعد عن الشاشات لمدة 20 دقيقة وغمض عينك. جسمك محتاج يفصل."
+    },
+    relations: {
+      label: "رسالة تقدير",
+      description: "ابعت رسالة سريعة لشخص عزيز عليك قوله شكراً على وجوده."
+    },
+    work: {
+      label: "إنجاز المهمة المؤجلة",
+      description: "اختار أصغر مهمة كنت مأجلها وخلصها في أول ساعة شغل."
+    },
+    finance: {
+      label: "مراجعة المصاريف",
+      description: "سجل مصروفات آخر يومين وشوف إيه اللي كان ممكن يتوفر."
+    },
+    dreams: {
+      label: "خطوة نحو الحلم",
+      description: "اعمل بحث صغير أو خطوة فعلية واحدة بتقربك من هدفك الكبير."
+    },
+    spirit: {
+      label: "لحظة تأمل",
+      description: "اقعد في هدوء تام لمدة 10 دقائق بدون أي مشتتات."
+    },
+    knowledge: {
+      label: "تعلم مفهوم جديد",
+      description: "اقرأ مقال أو اتفرج على فيديو بيشرح حاجة جديدة في مجالك."
+    }
+  };
+
+  const mission = missions[domainId];
+  return {
+    ...mission,
+    domainId,
+    rewardXp: 60
   };
 }
 
@@ -375,4 +423,110 @@ export function detectLifePatterns(ctx: LifeContext): DetectedPattern[] {
   }
 
   return patterns;
+}
+
+// ─── Contextual Daily Intelligence ───────────────────────────────
+
+/**
+ * Smarter daily brief that considers time of day, day of week, and rituals
+ */
+export function generateDailyBrief(ctx: LifeContext): {
+  greeting: string;
+  dayMessage: string;
+  focusArea: string | null;
+  energyAdvice: string | null;
+} {
+  const hour = new Date().getHours();
+  const dayOfWeek = new Date().getDay();
+  const name = ctx.userName ?? "";
+
+  // Time-aware greeting
+  let greeting: string;
+  let dayMessage: string;
+
+  if (hour < 10) {
+    greeting = `صباح الخير ${name}! ☀️`;
+    dayMessage = "يومك لسه بادئ — اعمل أهم حاجة أول ما طاقتك عالية";
+  } else if (hour < 14) {
+    greeting = `إيه أخبارك ${name}! 🌤️`;
+    dayMessage = "نص اليوم — ركّز على أهم فكرة واحدة بس";
+  } else if (hour < 18) {
+    greeting = `مساء الخير ${name}! 🌅`;
+    dayMessage = "آخر ساعات الشغل — لو مش قادر تخلص، أجّل بذكاء";
+  } else {
+    greeting = `مساء النور ${name}! 🌙`;
+    dayMessage = "وقت المراجعة والاسترخاء — إيه أنجزت النهاردة؟";
+  }
+
+  // Day of week awareness
+  const weekendDays = [5, 6]; // Friday, Saturday (Egypt)
+  if (weekendDays.includes(dayOfWeek)) {
+    dayMessage = "يوم إجازة — خلّيه لراحتك وعلاقاتك 🏖️";
+  } else if (dayOfWeek === 0) {
+    dayMessage = "أول يوم في الأسبوع — ابدأ بخطوة واحدة واضحة 🎯";
+  }
+
+  // Focus area from weakest domain
+  let focusArea: string | null = null;
+  if (ctx.lifeScore) {
+    const weakest = ctx.lifeScore.weakestDomain;
+    const weakScore = ctx.lifeScore.domains[weakest];
+    const weakConfig = getDomainConfig(weakest);
+    if (weakScore < 50) {
+      focusArea = `${weakConfig.icon} ${weakConfig.label} محتاج اهتمامك (${weakScore}%)`;
+    }
+  }
+
+  // Energy-based advice
+  let energyAdvice: string | null = null;
+  if (ctx.currentEnergy !== null) {
+    if (ctx.currentEnergy <= 3) {
+      energyAdvice = "طاقتك منخفضة — قلل مهامك لأقل حاجة. الراحة إنتاجية";
+    } else if (ctx.currentEnergy <= 5) {
+      energyAdvice = "طاقتك معتدلة — اشتغل على حاجة واحدة بس وخلصها";
+    } else if (ctx.currentEnergy >= 8) {
+      energyAdvice = "طاقتك عالية 🔥 — استغل ده في أصعب مهمة عندك";
+    }
+  }
+
+  return { greeting, dayMessage, focusArea, energyAdvice };
+}
+
+/**
+ * Generate an evening insight based on the day's data
+ */
+export function generateEveningInsight(ctx: LifeContext): string {
+  const insights: string[] = [];
+
+  // Check active problems trend
+  if (ctx.activeProblems.length === 0 && ctx.pendingDecisions.length === 0) {
+    insights.push("يومك كان نظيف — مفيش مشاكل أو قرارات معلقة ✨");
+  }
+
+  // Check for resolved items today
+  const today = new Date().toISOString().slice(0, 10);
+  const resolvedToday = ctx.recentEntries.filter(
+    e => e.status === "resolved" && e.resolvedAt &&
+    new Date(e.resolvedAt).toISOString().slice(0, 10) === today
+  );
+  if (resolvedToday.length > 0) {
+    insights.push(`حليت ${resolvedToday.length} حاجة النهاردة — شغل ممتاز! 💪`);
+  }
+
+  // Relationship health
+  if (ctx.relationshipHealth.red > 2) {
+    insights.push(`${ctx.relationshipHealth.red} علاقات في المنطقة الحمراء — حاول تخصصلهم وقت بكره`);
+  }
+
+  // Decision pile-up
+  if (ctx.pendingDecisions.length >= 3) {
+    insights.push(`عندك ${ctx.pendingDecisions.length} قرارات معلقة — تأجيل القرار هو أسوأ قرار`);
+  }
+
+  // Default
+  if (insights.length === 0) {
+    insights.push("يوم عادي — والأيام العادية هي اللي بتبني العادات القوية 🌱");
+  }
+
+  return insights[0];
 }

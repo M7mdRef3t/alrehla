@@ -10,6 +10,7 @@ import { logger } from "@/services/logger";
  */
 
 import type { UserEmotionalState } from "./emotionalPricingEngine";
+import { useThemeState } from "@/state/themeState";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🎨 Consciousness Theme Types
@@ -46,6 +47,9 @@ export interface ConsciousnessTheme {
 
   // CSS Variables (للتطبيق المباشر)
   cssVariables: Record<string, string>;
+
+  // الوضع الفاتح/الداكن للمزامنة مع next-themes
+  isDark: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -82,7 +86,7 @@ export class ConsciousnessThemeEngine {
     const layout = this.determineLayoutMode(state, emotionalState.engagement);
 
     // 4. توليد الألوان الديناميكية
-    const colors = this.generateColors({
+    const { colors, isDark } = this.generateColors({
       state,
       colorIntensity,
       saturation,
@@ -114,6 +118,7 @@ export class ConsciousnessThemeEngine {
       layout,
       colors,
       cssVariables,
+      isDark,
     };
   }
 
@@ -144,12 +149,24 @@ export class ConsciousnessThemeEngine {
         root.style.setProperty(key, value);
       });
 
+      // إلحاق الألوان الأساسية بالمتغيرات العالمية (للتوافق مع Tailwind)
+      root.style.setProperty("--teal-400", theme.colors.primary);
+      root.style.setProperty("--amber-500", theme.colors.accent);
+      root.style.setProperty("--space-void", theme.colors.background);
+
       // تطبيق Data Attributes للـ Layout Mode
       root.setAttribute("data-consciousness-state", theme.state);
       root.setAttribute("data-animation-level", theme.animations);
       root.setAttribute("data-layout-mode", theme.layout);
 
       console.warn("🎨 Consciousness Theme applied:", theme.state);
+
+      // تنبيه التطبيق لتحديث next-themes
+      window.dispatchEvent(
+        new CustomEvent("consciousness-theme-changed", {
+          detail: { isDark: theme.isDark },
+        })
+      );
     });
 
     // إزالة transition بعد انتهاء التحول
@@ -195,6 +212,10 @@ export class ConsciousnessThemeEngine {
   }
 
   private calculateBorderRadius(state: ConsciousnessState, shadowPulse: number): number {
+    // Check for Custom Overrides from Design Lab
+    const customState = useThemeState.getState().customTokens.states?.[state];
+    if (customState?.borderRadius) return parseInt(customState.borderRadius);
+
     // كلما زاد الضغط النفسي، زادت نعومة الزوايا
     const baseRadius = {
       crisis: 24, // زوايا ناعمة جداً (مريحة)
@@ -243,6 +264,10 @@ export class ConsciousnessThemeEngine {
   }
 
   private calculateBlur(state: ConsciousnessState, shadowPulse: number): number {
+    // Check for Custom Overrides from Design Lab
+    const customState = useThemeState.getState().customTokens.states?.[state];
+    if (customState?.blur) return parseInt(customState.blur);
+
     // كلما زاد الضغط، زادت الضبابية (تقليل التشتت البصري)
     const baseBlur = {
       crisis: 12, // ضبابية عالية
@@ -310,7 +335,7 @@ export class ConsciousnessThemeEngine {
     saturation: number;
     timeOfDay: "morning" | "afternoon" | "evening" | "night";
     preferredMode: "light" | "dark" | "auto";
-  }): ConsciousnessTheme["colors"] {
+  }): { colors: ConsciousnessTheme["colors"]; isDark: boolean } {
     const { state, colorIntensity, saturation, timeOfDay, preferredMode } = params;
 
     // تحديد الوضع (Light/Dark)
@@ -332,11 +357,17 @@ export class ConsciousnessThemeEngine {
     const lightness = isDark ? 20 : 95;
     const textLightness = isDark ? 95 : 20;
 
+    // Check for Custom Overrides from Design Lab
+    const customState = useThemeState.getState().customTokens.states?.[state];
+    
     return {
-      primary: `hsl(${hue}, ${sat}%, ${50 + colorIntensity * 20}%)`,
-      background: `hsl(${hue}, ${sat * 0.2}%, ${lightness}%)`,
-      text: `hsl(${hue}, ${sat * 0.3}%, ${textLightness}%)`,
-      accent: `hsl(${(hue + 30) % 360}, ${sat}%, ${60}%)`,
+      colors: {
+        primary: customState?.primaryColor || `hsl(${hue}, ${sat}%, ${50 + colorIntensity * 20}%)`,
+        background: customState?.spaceVoid || `hsl(${hue}, ${sat * 0.2}%, ${lightness}%)`,
+        text: customState?.primaryColor ? (isDark ? "#ffffff" : "#000000") : `hsl(${hue}, ${sat * 0.3}%, ${textLightness}%)`, // Basic contrast fallback
+        accent: customState?.accentColor || `hsl(${(hue + 30) % 360}, ${sat}%, ${60}%)`,
+      },
+      isDark,
     };
   }
 

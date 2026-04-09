@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushGamificationStats, pushGamificationBadge } from "@/services/gamificationSync";
+import { generateChronicle, ChronicleEntry } from "@/services/chroniclesEngine";
 
 export type Rank =
     | "مستطلع جَدِيد"
@@ -22,12 +23,28 @@ const getRankByLevel = (level: number): Rank => {
     return RANKS[rankIndex];
 };
 
+const getRequiredXPForLevel = (level: number) => 200 + (Math.max(0, level - 1) * 50);
+
+const getTotalXPToReachLevel = (level: number) => {
+    let totals = 0;
+    for (let i = 1; i < level; i++) {
+        totals += getRequiredXPForLevel(i);
+    }
+    return totals;
+};
+
 export interface Badge {
     id: string;
     name: string;
     description: string;
     icon: string;
     earnedAt: number;
+}
+
+export interface PurchaseFeedback {
+    title: string;
+    message: string;
+    itemId: string;
 }
 
 interface GamificationState {
@@ -42,6 +59,16 @@ interface GamificationState {
     // Daily Quests State
     dailyCompletedKeys: string[];
     lastQuestDate: string | null;
+    
+    // Store State
+    purchasedItemIds: string[];
+    activeThemeId: string | null;
+    activeVoiceId: string | null;
+    lastPurchaseFeedback: PurchaseFeedback | null;
+
+    // Sovereign Chronicles
+    chronicles: ChronicleEntry[];
+    lastNewChronicle: ChronicleEntry | null;
 
     // Soft currency
     coins: number;
@@ -52,18 +79,23 @@ interface GamificationState {
     awardBadge: (badgeId: string, name: string, description: string, icon: string) => void;
     recordActivity: () => { streakMaintained: boolean; xpLost: number };
     clearLevelUpState: () => void;
+    clearChronicleState: () => void;
     
+    // Store Methods
+    purchaseItem: (itemId: string, price: number, feedback?: PurchaseFeedback) => boolean;
+    clearPurchaseFeedback: () => void;
+    setActiveTheme: (themeId: string | null) => void;
+    setActiveVoice: (voiceId: string | null) => void;
+
     // Daily Quests Methods
     checkAndResetQuests: () => void;
     completeDailyQuest: (questId: string, actionKey: string, xpReward: number) => void;
 
     // Computed Progress
-    getLevelProgress: () => { progress: number; nextLevelXP: number; xpInCurrent: number };
+    getLevelProgress: () => { progress: number; nextLevelXP: number; xpInCurrent: number; requiredForLevel: number };
 
     resetAll: () => void;
 }
-
-const XP_PER_LEVEL = 200; // Adjusted from 1000 to match engine logic
 
 export const useGamificationState = create<GamificationState>()(
     persist(
@@ -77,7 +109,13 @@ export const useGamificationState = create<GamificationState>()(
             lastActiveDate: null,
             dailyCompletedKeys: [],
             lastQuestDate: null,
-            coins: 500, // Initial coins
+            coins: 500,
+            purchasedItemIds: [],
+            activeThemeId: null,
+            activeVoiceId: null,
+            lastPurchaseFeedback: null,
+            chronicles: [],
+            lastNewChronicle: null,
 
             addCoins: (amount, _reason) => {
                 set((state) => ({ coins: state.coins + amount }));
@@ -98,19 +136,33 @@ export const useGamificationState = create<GamificationState>()(
             addXP: (amount, _reason) => {
                 set((state) => {
                     const newXP = Math.max(0, state.xp + amount);
-                    const newLevel = Math.max(1, Math.floor(newXP / XP_PER_LEVEL) + 1);
-                    const didLevelUp = newLevel > state.level;
-                    const newRank = getRankByLevel(newLevel);
+                    
+                    let currentLevel = 1;
+                    while (newXP >= getTotalXPToReachLevel(currentLevel + 1)) {
+                        currentLevel++;
+                    }
+
+                    const didLevelUp = currentLevel > state.level;
+                    const newRank = getRankByLevel(currentLevel);
+
+                    let newChronicle: ChronicleEntry | null = null;
+                    let updatedChronicles = state.chronicles;
+
+                    if (didLevelUp) {
+                        newChronicle = generateChronicle(currentLevel, newRank);
+                        updatedChronicles = [newChronicle, ...state.chronicles];
+                    }
 
                     return {
                         xp: newXP,
-                        level: newLevel,
+                        level: currentLevel,
                         rank: newRank,
                         recentLevelUp: state.recentLevelUp || didLevelUp,
+                        chronicles: updatedChronicles,
+                        lastNewChronicle: newChronicle || state.lastNewChronicle
                     };
                 });
 
-                // Fire and forget sync to Supabase
                 pushGamificationStats().catch(console.error);
             },
 
@@ -142,38 +194,42 @@ export const useGamificationState = create<GamificationState>()(
                 let xpLost = 0;
 
                 set((state) => {
-                    if (!state.lastActiveDate) { // First time
+                    if (!state.lastActiveDate) {
                         return { lastActiveDate: todayStr, streak: 1 };
                     }
-                    if (state.lastActiveDate === todayStr) { // Already active today
+                    if (state.lastActiveDate === todayStr) {
                         return state;
                     }
 
                     const lastActive = new Date(state.lastActiveDate);
                     const diffDays = Math.floor((today.getTime() - lastActive.getTime()) / (1000 * 3600 * 24));
 
-                    if (diffDays === 1) { // Yesterday -> Streak continues
+                    if (diffDays === 1) {
                         streakMaintained = true;
                         return { lastActiveDate: todayStr, streak: state.streak + 1 };
-                    } else if (diffDays > 1) { // Broken streak -> Decay applied
+                    } else if (diffDays > 1) {
                         xpLost = (diffDays - 1) * 10;
                         const newXp = Math.max(0, state.xp - xpLost);
-                        const newLevel = Math.max(1, Math.floor(newXp / XP_PER_LEVEL) + 1);
+                        
+                        let currentLevel = 1;
+                        while (newXp >= getTotalXPToReachLevel(currentLevel + 1)) {
+                            currentLevel++;
+                        }
+
                         streakMaintained = false;
 
                         return {
                             lastActiveDate: todayStr,
                             streak: 1,
                             xp: newXp,
-                            level: newLevel,
-                            rank: getRankByLevel(newLevel)
+                            level: currentLevel,
+                            rank: getRankByLevel(currentLevel)
                         };
                     }
 
                     return state;
                 });
 
-                // Also check quests on activity record
                 get().checkAndResetQuests();
 
                 if (xpLost > 0 || streakMaintained) {
@@ -219,20 +275,59 @@ export const useGamificationState = create<GamificationState>()(
 
             getLevelProgress: () => {
                 const { xp, level } = get();
-                const currentLevelStartXP = (level - 1) * XP_PER_LEVEL;
+                const currentLevelStartXP = getTotalXPToReachLevel(level);
+                const requiredForLevel = getRequiredXPForLevel(level);
                 const xpInCurrent = xp - currentLevelStartXP;
-                const progress = (xpInCurrent / XP_PER_LEVEL) * 100;
+                const progress = (xpInCurrent / requiredForLevel) * 100;
 
                 return {
                     progress: Math.min(99, Math.max(0, progress)),
-                    nextLevelXP: XP_PER_LEVEL - xpInCurrent,
-                    xpInCurrent
+                    nextLevelXP: requiredForLevel - xpInCurrent,
+                    xpInCurrent,
+                    requiredForLevel
                 };
             },
 
             clearLevelUpState: () => set({ recentLevelUp: false }),
+            clearChronicleState: () => set({ lastNewChronicle: null }),
 
-            resetAll: () => set({ xp: 0, level: 1, rank: "مستطلع جَدِيد", badges: [], recentLevelUp: false, streak: 0, lastActiveDate: null, dailyCompletedKeys: [], lastQuestDate: null, coins: 500 }),
+            purchaseItem: (itemId, price, feedback) => {
+                const { coins, purchasedItemIds } = get();
+                if (coins >= price && !purchasedItemIds.includes(itemId)) {
+                    set((state) => ({
+                        coins: state.coins - price,
+                        purchasedItemIds: [...state.purchasedItemIds, itemId],
+                        lastPurchaseFeedback: feedback || null
+                    }));
+                    return true;
+                }
+                return false;
+            },
+
+            clearPurchaseFeedback: () => set({ lastPurchaseFeedback: null }),
+
+            setActiveTheme: (themeId) => set({ activeThemeId: themeId }),
+            setActiveVoice: (voiceId) => set({ activeVoiceId: voiceId }),
+
+            resetAll: () => set({ 
+                xp: 0, 
+                level: 1, 
+                rank: "مستطلع جَدِيد", 
+                badges: [], 
+                recentLevelUp: false, 
+                streak: 0, 
+                lastActiveDate: null, 
+                dailyCompletedKeys: [], 
+                lastQuestDate: null, 
+                coins: 500,
+                purchasedItemIds: [],
+                activeThemeId: null,
+                activeVoiceId: null,
+                lastPurchaseFeedback: null,
+                chronicles: [],
+                lastNewChronicle: null
+            }),
+
         }),
         {
             name: "dawayir-gamification-storage",

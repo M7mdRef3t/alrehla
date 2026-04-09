@@ -256,6 +256,13 @@ export interface MorningBriefData {
   patternInsight?: string;
   /** Active streak */
   streakDays: number;
+  /** Proactive mission for today build on weakest domain */
+  dailyMission?: {
+    label: string;
+    domainId: LifeDomainId;
+    rewardXp: number;
+    description: string;
+  };
   /** Generated at */
   generatedAt: number;
 }

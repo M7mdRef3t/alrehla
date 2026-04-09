@@ -72,6 +72,7 @@ import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { assignUrl, getHref, pushUrl } from "@/services/navigation";
 import { openInNewTab } from "@/services/clientDom";
 import { HealthBar as SidebarHealthBar } from '@/modules/meta/HealthBar';
+import { getJourneyPathBySlug } from "@/utils/journeyPaths";
 
 
 const NotificationSettings = lazy(() =>
@@ -218,7 +219,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const SidebarSector: FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; color: string }> = ({ title, children, icon: _icon, color: _color }) => (
     <div className="space-y-1.5 mb-6">
       <div className="flex items-center gap-2 px-2.5 mb-2 opacity-50">
-        <span className="text-[9px] font-black uppercase tracking-[0.25em] text-app-muted">
+        <span className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">
           {title}
         </span>
       </div>
@@ -239,16 +240,16 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     <button
       type="button"
       onClick={onClick}
-      className="ds-sidebar-item"
+      className="flex items-center gap-3 w-full px-3 py-2 rounded-xl transition-all hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white relative"
       data-active={active}
       style={{ "--ds-item-glow-color": color } as React.CSSProperties}
     >
-      <div className="ds-icon-box">
+      <div className="w-5 h-5 flex items-center justify-center">
         {icon}
       </div>
       <span className="truncate flex-1 text-right">{label}</span>
       {badge && (
-        <span className="text-[10px] font-bold bg-app-surface border border-app-border rounded-full px-1.5 h-4 flex items-center justify-center opacity-60">
+        <span className="text-[10px] font-bold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full px-1.5 h-4 flex items-center justify-center opacity-60">
           {badge}
         </span>
       )}
@@ -375,10 +376,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
+  const journeyPaths = useAdminState((s) => s.journeyPaths);
   const role = useAuthState(getEffectiveRoleFromState);
   const rawRole = useAuthState((s) => s.role);
   const isOwner = isPrivilegedRole(rawRole) || isPrivilegedRole(role);
   const canShowJourneyToolsEntry = Boolean(onOpenJourneyTools) && isOwner;
+  const sanctuaryPath = getJourneyPathBySlug(journeyPaths, "sanctuary");
+  const sanctuaryPathTarget = sanctuaryPath?.isActive ? sanctuaryPath.targetScreen : "sanctuary";
+  const sanctuaryPathUrl = sanctuaryPathTarget === "sanctuary" ? "/#sanctuary" : "/";
 
   const availableFeatures = useMemo(
     () =>
@@ -472,12 +477,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         className="fixed top-0 right-0 z-40 h-full hidden md:flex flex-row-reverse group/sidebar"
         aria-label="القائمة الرئيسية"
       >
-        <div className="h-full w-56 shrink-0 overflow-hidden border-l border-app-border bg-app">
+        <div className="h-full w-56 shrink-0 overflow-hidden border-l border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40">
           <aside className="h-full w-full flex flex-col gap-3 py-6 px-4">
             {viewingNode?.analysis && (
               <div className="shrink-0 space-y-1 mb-1">
                 <RecoveryProgressBar node={viewingNode} />
-                <p className="text-xs font-semibold text-app-primary text-center truncate px-1" title={viewingNode.label}>
+                <p className="text-xs font-semibold text-slate-900 dark:text-white text-center truncate px-1" title={viewingNode.label}>
                   {viewingNode.label}
                 </p>
               </div>
@@ -498,123 +503,16 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <SidebarItem
                   label="الملاذ الآمن"
                   icon={<ShieldCheck className="w-4 h-4" />}
-                  onClick={() => pushUrl("/#sanctuary")}
-                  active={window.location.hash === "#sanctuary"}
+                  onClick={() => pushUrl(sanctuaryPathUrl, { screen: sanctuaryPathTarget })}
                   color={goalColor}
                 />
-                {availableFeatures.dawayir_map && (
-                  <SidebarItem
-                    label="فهم المسافات"
-                    icon={<Radar className="w-4 h-4" />}
-                    onClick={() => setShowRadarShield(true)}
-                    color={goalColor}
-                  />
-                )}
-                {isOwner && (
-                  <SidebarItem
-                    label="تحليل العلاقات"
-                    icon={<Activity className="w-4 h-4" />}
-                    onClick={() => setShowRelationshipAnalysis(true)}
-                    color="#f43f5e"
-                  />
-                )}
-              </SidebarSector>
-
-              {/* 2. SECTOR: GROWTH (النمو) */}
-              <SidebarSector title="النمو والتعلّم" icon={<Library className="w-3.5 h-3.5" />} color="amber">
                 <SidebarItem
-                  label="مكتبة الحكمة"
-                  icon={<Library className="w-4 h-4" />}
-                  onClick={() => setOverlay("wisdomMatrix", true)}
-                  color="#f59e0b"
-                />
-                <SidebarItem
-                  label="مسار التنقية"
-                  icon={<Layers className="w-4 h-4" />}
-                  onClick={() => setOverlay("immersionPath", true)}
-                  color="#f59e0b"
-                />
-                <SidebarItem
-                  label="مجتمع الثنائي"
-                  icon={<Network className="w-4 h-4" />}
-                  onClick={() => setOverlay("vanguardCollective", true)}
-                  color="#a78bfa"
-                />
-                <SidebarItem
-                  label="الدروس والقصص"
-                  icon={<BookOpen className="w-4 h-4" />}
-                  onClick={() => setShowLibrary(true)}
-                  color="#2dd4bf"
+                  label="طوارئ"
+                  icon={<AlertCircle className="w-4 h-4" />}
+                  onClick={openEmergency}
+                  color="#f43f5e"
                 />
               </SidebarSector>
-
-              {/* 3. SECTOR: ACTION (العمل) */}
-              <SidebarSector title="العمل والتطبيق" icon={<Target className="w-3.5 h-3.5" />} color="indigo">
-                {canShowJourneyToolsEntry && (
-                  <SidebarItem
-                    label="أدوات الرحلة"
-                    icon={<Compass className="w-4 h-4" />}
-                    onClick={() => onOpenJourneyTools?.()}
-                    color="#6366f1"
-                  />
-                )}
-                <SidebarItem
-                  label="رصد الحالة"
-                  icon={<ClipboardList className="w-4 h-4" />}
-                  onClick={onOpenBaseline}
-                  color="#f59e0b"
-                />
-                {!isRevenueMode && (
-                  <SidebarItem
-                    label="متابعة الرحلة"
-                    icon={<BarChart3 className="w-4 h-4" />}
-                    onClick={() => setShowTrackingDashboard(true)}
-                    color="#14b8a6"
-                  />
-                )}
-              </SidebarSector>
-
-              {/* 4. SECTOR: META (السيادة) */}
-              <SidebarSector title="السيادة والإدارة" icon={<ShieldCheck className="w-3.5 h-3.5" />} color="slate">
-                <SidebarItem
-                  label="المظهر"
-                  icon={<Palette className="w-4 h-4" />}
-                  onClick={() => setShowThemeSettings(true)}
-                  color="#94a3b8"
-                />
-                {isOwner && (
-                  <>
-                    <SidebarItem
-                      label="لوحة السيادة"
-                      icon={<ShieldCheck className="w-4 h-4" />}
-                      onClick={openAdminDashboard}
-                      color="#f43f5e"
-                    />
-                    <SidebarItem
-                      label="رحلة المعالجين"
-                      icon={<BrainCircuit className="w-4 h-4" />}
-                      onClick={openCoachDashboard}
-                      color="#6366f1"
-                    />
-                  </>
-                )}
-              </SidebarSector>
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="space-y-1 mt-auto pt-4 border-t border-app-border/40">
-              <SidebarItem
-                label="انطلاق للمهمة"
-                icon={<ArrowLeft className="w-4 h-4" />}
-                onClick={onStartJourney}
-                color="#10b981"
-              />
-              <SidebarItem
-                label="طوارئ"
-                icon={<AlertCircle className="w-4 h-4" />}
-                onClick={openEmergency}
-                color="#f43f5e"
-              />
             </div>
           </aside>
         </div>
@@ -690,7 +588,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <SidebarItem
                     label="الملاذ الآمن"
                     icon={<ShieldCheck className="w-5 h-5" />}
-                    onClick={() => { pushUrl("/#sanctuary"); handleClose(); }}
+                    onClick={() => { pushUrl(sanctuaryPathUrl, { screen: sanctuaryPathTarget }); handleClose(); }}
                     color={goalColor}
                   />
                   {availableFeatures.dawayir_map && (

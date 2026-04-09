@@ -80,21 +80,21 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="relative p-12 overflow-hidden bg-gradient-to-br from-[var(--soft-teal)]/20 to-app-surface rounded-[3rem] border border-app-border text-center shadow-3xl backdrop-blur-3xl"
+                    className="relative p-12 overflow-hidden bg-gradient-to-br from-teal-500/20 dark:from-teal-400/20 to-white dark:to-slate-900 rounded-[3rem] border border-slate-200 dark:border-white/10 text-center shadow-3xl backdrop-blur-3xl"
                 >
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
 
                     <Award className="w-20 h-20 mx-auto mb-6 text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]" />
 
-                    <h2 className="text-4xl font-black text-app-primary mb-2 leading-tight">
+                    <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-2 leading-tight">
                         {report?.report_title || " "}
                     </h2>
                     <p className="text-cyan-500 font-bold tracking-widest uppercase mb-8 text-xs">
                         {completedTrajectory.title} | Completed
                     </p>
 
-                    <div className="p-8 bg-app-muted/5 rounded-3xl border border-app-border mb-8">
-                        <p className="text-2xl font-serif italic text-app-primary leading-relaxed opacity-90">
+                    <div className="p-8 bg-slate-50/50 dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-white/10 mb-8">
+                        <p className="text-2xl font-serif italic text-slate-900 dark:text-white leading-relaxed opacity-90">
                             "{report?.narrative || "      ."}"
                         </p>
                     </div>
@@ -105,14 +105,14 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                             current={completedTrajectory.final_vector || { rs: 0.5, av: 0.7, bi: 0.9, se: 0.2 }}
                             title="Transformation Analysis"
                         />
-                        <div className="p-6 bg-app-surface/60 rounded-3xl border border-app-border flex flex-col justify-center shadow-sm">
+                        <div className="p-6 bg-white/60 dark:bg-slate-800/60 rounded-3xl border border-slate-200 dark:border-white/10 flex flex-col justify-center shadow-sm">
                             <div className="flex justify-between items-start mb-4">
                                 <h5 className="flex items-center text-amber-500 text-xs font-black uppercase tracking-widest">
                                     <Award className="w-4 h-4 mr-2" />
                                     Sovereignty Score
                                 </h5>
                                 <div className="flex flex-col items-end">
-                                    <span className="text-2xl font-black text-app-primary">{completedTrajectory.sovereignty_score || 0}</span>
+                                    <span className="text-2xl font-black text-slate-900 dark:text-white">{completedTrajectory.sovereignty_score || 0}</span>
                                     <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md border ${getRank(completedTrajectory.sovereignty_score || 0) === 'Oracle' ? 'bg-amber-400/10 border-amber-400 text-amber-500' :
                                         getRank(completedTrajectory.sovereignty_score || 0) === 'Sovereign' ? 'bg-[var(--soft-teal)]/10 border-[var(--soft-teal)] text-teal-600' :
                                             getRank(completedTrajectory.sovereignty_score || 0) === 'Initiate' ? 'bg-cyan-400/10 border-cyan-400 text-cyan-600' :
@@ -124,10 +124,10 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                             </div>
 
                             <div className="mb-6">
-                                <p className="text-lg font-bold text-app-primary mb-2">
+                                <p className="text-lg font-bold text-slate-900 dark:text-white mb-2">
                                     Focus: {report?.next_journey_seed?.focus?.toUpperCase() || "Evolution"}
                                 </p>
-                                <p className="text-sm text-app-muted leading-relaxed italic">
+                                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed italic">
                                     {report?.next_journey_seed?.reasoning || "The system is calculating your next bottleneck..."}
                                 </p>
                             </div>
@@ -142,14 +142,14 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                     <h6 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">
                                         Unlocked: Sovereignty Lab
                                     </h6>
-                                    <p className="text-xs text-app-muted">You can now customize your next Reality Hack.</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">You can now customize your next Reality Hack.</p>
                                 </motion.div>
                             ) : (
-                                <div className="p-4 bg-app-muted/5 rounded-2xl border border-app-border mb-4 grayscale opacity-50">
-                                    <h6 className="text-[10px] font-black text-app-muted uppercase tracking-widest mb-1 flex items-center">
+                                <div className="p-4 bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-white/10 mb-4 grayscale opacity-50">
+                                    <h6 className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1 flex items-center">
                                         <Clock className="w-3 h-3 mr-1" /> Locked: Sovereignty Lab
                                     </h6>
-                                    <p className="text-xs text-app-muted">Reach 'Initiate' rank to unlock.</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">Reach 'Initiate' rank to unlock.</p>
                                 </div>
                             )}
 
@@ -184,8 +184,8 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className={`relative p-6 rounded-3xl border shadow-2xl backdrop-blur-2xl transition-all duration-700 ${activeTrajectory?.data?.is_insulated
-                        ? 'bg-gradient-to-br from-amber-500/10 via-[var(--soft-teal)]/20 to-app-surface border-amber-500/50 shadow-[0_0_50px_rgba(245,158,11,0.1)]'
-                        : 'bg-gradient-to-br from-[var(--soft-teal)]/10 to-app-surface border-app-border'
+                        ? 'bg-gradient-to-br from-amber-500/10 via-teal-500/20 dark:via-teal-400/20 to-white dark:to-slate-900 border-amber-500/50 shadow-[0_0_50px_rgba(245,158,11,0.1)]'
+                        : 'bg-gradient-to-br from-teal-500/10 dark:from-teal-400/10 to-white dark:to-slate-900 border-slate-200 dark:border-white/10'
                         }`}
                 >
                     {/* Aegis Aura Glow */}
@@ -219,7 +219,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                         </div>
                     </div>
 
-                    <h3 className="mb-6 text-2xl font-bold text-app-primary leading-tight">
+                    <h3 className="mb-6 text-2xl font-bold text-slate-900 dark:text-white leading-tight">
                         {mission.trajectory_title}
                     </h3>
 
@@ -227,9 +227,9 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     <AwarenessHeatmap initial={activeTrajectory!.initial_vector} current={{ rs: 0.1, av: 0.1, bi: 0.1, se: 0.1 }} />
 
                     {/* Cognitive Bandwidth Meter */}
-                    <div className="mt-6 p-4 bg-app-muted/5 rounded-2xl border border-app-border">
+                    <div className="mt-6 p-4 bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-white/10">
                         <div className="flex justify-between items-center mb-3">
-                            <div className="flex items-center space-x-2 text-app-muted">
+                            <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400">
                                 <Battery className="w-4 h-4" />
                                 <span className="text-xs font-bold uppercase tracking-tighter">Cognitive Bandwidth</span>
                             </div>
@@ -243,27 +243,27 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                 transition={{ duration: 1.5, ease: "easeOut" }}
                             />
                         </div>
-                        <p className="mt-3 text-[10px] text-app-muted leading-relaxed uppercase tracking-widest text-center">
+                        <p className="mt-3 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed uppercase tracking-widest text-center">
                             DDA Level Applied Persistence Active
                         </p>
                     </div>
                 </motion.div>
 
                 {/* Integration Status */}
-                <div className="p-6 bg-app-surface/40 rounded-3xl border border-app-border backdrop-blur-md shadow-sm">
-                    <h4 className="flex items-center mb-4 text-xs font-bold text-app-muted uppercase tracking-widest">
+                <div className="p-6 bg-white/40 dark:bg-slate-800/40 rounded-3xl border border-slate-200 dark:border-white/10 backdrop-blur-md shadow-sm">
+                    <h4 className="flex items-center mb-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                         <Zap className="mr-2 w-3 h-3 text-amber-500" />
                         Verification Logic
                     </h4>
                     <div className="flex items-center space-x-4">
-                        <div className="flex items-center justify-center w-12 h-12 bg-app-muted/10 rounded-2xl border border-app-border text-cyan-600 dark:text-cyan-400 font-extrabold text-[10px]">
+                        <div className="flex items-center justify-center w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-white/10 text-cyan-600 dark:text-cyan-400 font-extrabold text-[10px]">
                             STEALTH
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-app-primary">
+                            <p className="text-sm font-bold text-slate-900 dark:text-white">
                                 Dual-Sensing Active
                             </p>
-                            <p className="text-[10px] text-app-muted font-medium">
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                                 Monitoring behavioral integrity shifts
                             </p>
                         </div>
@@ -294,7 +294,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
                                 whileHover={{ scale: 1.01, x: 5 }}
-                                className={`group relative overflow-hidden p-6 bg-app-surface/60 rounded-3xl border ${isCurrentDay ? 'border-[var(--soft-teal)] ring-1 ring-teal-500/20' : 'border-app-border'
+                                className={`group relative overflow-hidden p-6 bg-white/60 dark:bg-slate-800/60 rounded-3xl border ${isCurrentDay ? 'border-teal-500/50 dark:border-teal-400/50 ring-1 ring-teal-500/20' : 'border-slate-200 dark:border-white/10'
                                     } backdrop-blur-xl transition-all duration-300 shadow-xl ${isCompleted ? 'opacity-60 grayscale-[0.5]' : ''}`}
                             >
                                 {/* Decorative Background Glow for Active Mission */}
@@ -304,23 +304,23 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
 
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                     <div className="flex items-center space-x-6">
-                                        <div className={`flex items-center justify-center w-14 h-14 bg-app-muted/5 rounded-2xl border border-app-border text-2xl font-black transition-colors ${isCompleted ? 'text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'text-app-muted'}`}>
+                                        <div className={`flex items-center justify-center w-14 h-14 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-white/10 text-2xl font-black transition-colors ${isCompleted ? 'text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'text-slate-500 dark:text-slate-400'}`}>
                                             {isCompleted ? <CheckCircle2 className="w-8 h-8" /> : m.day}
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center space-x-2 mb-1">
-                                                <span className="text-[10px] font-black text-teal-600 dark:text-[var(--soft-teal)] uppercase tracking-widest">Day Task</span>
+                                                <span className="text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest">Day Task</span>
                                                 {isCurrentDay && <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 animate-pulse uppercase tracking-widest"> Active Now</span>}
                                                 {isCompleted && <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Verified</span>}
                                             </div>
-                                            <p className="text-lg font-bold text-app-primary leading-tight">
+                                            <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
                                                 {m.actionable_task}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between md:justify-end md:space-x-8 px-4 py-3 md:p-0 bg-app-muted/5 md:bg-transparent rounded-2xl">
-                                        <div className="flex items-center text-app-muted font-bold">
+                                    <div className="flex items-center justify-between md:justify-end md:space-x-8 px-4 py-3 md:p-0 bg-slate-50/50 dark:bg-slate-900/50 md:bg-transparent rounded-2xl">
+                                        <div className="flex items-center text-slate-500 dark:text-slate-400 font-bold">
                                             <Clock className="mr-2 w-4 h-4 text-cyan-600/60 dark:text-cyan-400/60" />
                                             <span className="text-xs">{m.estimated_minutes}M</span>
                                         </div>
@@ -334,7 +334,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                                 <CheckCircle2 className="w-6 h-6 " />
                                             </div>
                                         ) : (
-                                            <div className="flex items-center text-app-muted opacity-40">
+                                            <div className="flex items-center text-slate-500 dark:text-slate-400 opacity-40">
                                                 <CircleDashed className="w-5 h-5" />
                                             </div>
                                         )}
@@ -346,8 +346,8 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                 </AnimatePresence>
 
                 {/* Behavioral Integrity Footer */}
-                <div className="mt-8 pt-8 border-t border-app-border flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center space-x-4 text-app-muted">
+                <div className="mt-8 pt-8 border-t border-slate-200 dark:border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center space-x-4 text-slate-500 dark:text-slate-400">
                         <Activity className="w-5 h-5 text-teal-600" />
                         <span className="text-xs font-bold leading-none tracking-tight">Mission status depends on organic behavioral detection.</span>
                     </div>

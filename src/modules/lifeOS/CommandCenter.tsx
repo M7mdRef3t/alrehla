@@ -20,6 +20,8 @@ import { SelfPortrait } from "./SelfPortrait";
 import { LifeTimeline } from "./LifeTimeline";
 import { DomainAssessmentModal } from "./DomainAssessmentModal";
 import { LifeAdvisorChat } from "./LifeAdvisorChat";
+import { TodayView } from "./TodayView";
+import { EveningReview } from "./EveningReview";
 import { buildLifeContext, generateMorningBrief, detectLifePatterns } from "@/services/lifeAdvisor";
 import { syncLifeStateWithDB } from "@/services/lifeStateSync";
 
@@ -50,12 +52,13 @@ function timeAgo(timestamp: number): string {
 }
 
 export default function CommandCenter({ onBack, onOpenLibrary }: CommandCenterProps) {
-  const [activeView, setActiveView] = useState<"overview" | "domain-detail" | "decisions" | "problems" | "portrait">("overview");
+  const [activeView, setActiveView] = useState<"today" | "overview" | "domain-detail" | "decisions" | "problems" | "portrait">("today");
   const [activeDomainId, setActiveDomainId] = useState<LifeDomainId | null>(null);
   const [isQuickCaptureOpen, setIsQuickCaptureOpen] = useState(false);
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
   const [assessmentDomainId, setAssessmentDomainId] = useState<LifeDomainId | null>(null);
   const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
+  const [isEveningReviewOpen, setIsEveningReviewOpen] = useState(false);
   const [entryFilter, setEntryFilter] = useState<LifeEntryType | "all">("all");
 
   const lifeScore = useLifeState((s) => s.lifeScore);
@@ -147,12 +150,14 @@ export default function CommandCenter({ onBack, onOpenLibrary }: CommandCenterPr
             )}
             <div>
               <h1 className="text-xl font-black text-white tracking-tight">
-                {activeView === "domain-detail" && activeDomainConfig
+                {activeView === "today" ? "يومك" :
+                 activeView === "domain-detail" && activeDomainConfig
                   ? `${activeDomainConfig.icon} ${activeDomainConfig.label}`
                   : "مركز القيادة"}
               </h1>
               <p className="text-[10px] text-white/25 font-bold uppercase tracking-[0.12em]">
-                {activeView === "domain-detail" ? activeDomainConfig?.description : "LIFE COMMAND CENTER"}
+                {activeView === "today" ? "YOUR DAY" :
+                 activeView === "domain-detail" ? activeDomainConfig?.description : "LIFE COMMAND CENTER"}
               </p>
             </div>
           </div>
@@ -223,7 +228,22 @@ export default function CommandCenter({ onBack, onOpenLibrary }: CommandCenterPr
         </div>
 
         <AnimatePresence mode="wait">
-          {activeView === "overview" ? (
+          {activeView === "today" ? (
+            <motion.div
+              key="today"
+              className="space-y-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <TodayView
+                onOpenCapture={() => setIsQuickCaptureOpen(true)}
+                onOpenDecisions={() => setActiveView("decisions")}
+                onOpenAssessment={() => { setAssessmentDomainId(null); setIsAssessmentOpen(true); }}
+                onOpenEveningReview={() => setIsEveningReviewOpen(true)}
+              />
+            </motion.div>
+          ) : activeView === "overview" ? (
             <motion.div
               key="overview"
               className="space-y-6"
@@ -253,6 +273,7 @@ export default function CommandCenter({ onBack, onOpenLibrary }: CommandCenterPr
               {/* Module Tabs */}
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {[
+                  { id: "today" as const, icon: "☀️", label: "يومك" },
                   { id: "overview" as const, icon: "🎯", label: "نظرة عامة" },
                   { id: "problems" as const, icon: "⚠️", label: `مشاكل${activeProblems.length > 0 ? ` (${activeProblems.length})` : ""}` },
                   { id: "decisions" as const, icon: "🧠", label: `قرارات${pendingDecisions.length > 0 ? ` (${pendingDecisions.length})` : ""}` },
@@ -596,6 +617,16 @@ export default function CommandCenter({ onBack, onOpenLibrary }: CommandCenterPr
         isOpen={isAdvisorOpen}
         onClose={() => setIsAdvisorOpen(false)}
       />
+
+      {/* Evening Review */}
+      <AnimatePresence>
+        {isEveningReviewOpen && (
+          <EveningReview
+            isOpen={isEveningReviewOpen}
+            onClose={() => setIsEveningReviewOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

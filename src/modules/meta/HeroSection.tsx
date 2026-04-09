@@ -178,31 +178,23 @@ const HERO_STYLES = `
     gap: 12px;
     padding: 18px 32px;
     border-radius: 20px;
-    background: linear-gradient(135deg, var(--ds-color-brand-teal-400) 0%, var(--ds-color-primary) 40%, var(--ds-color-brand-teal-600) 100%);
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(12px);
     font-family: var(--font-display);
     font-size: 1rem;
     font-weight: 900;
     color: #fff;
     cursor: pointer;
-    border: none;
-    box-shadow: 0 0 0 1px rgba(45,212,191,0.3), 0 20px 60px rgba(20,184,166,0.35), 0 4px 16px rgba(0,0,0,0.4);
-    transition: box-shadow 0.4s ease, transform 0.25s ease;
+    border: 1px solid rgba(20,184,166,0.3);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.1);
+    transition: all 0.4s ease;
     white-space: nowrap;
   }
   .cta-primary:hover {
-    box-shadow: 0 0 0 1px rgba(45,212,191,0.5), 0 28px 80px rgba(20,184,166,0.48), 0 4px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 18px 50px rgba(20,184,166,0.15), inset 0 1px rgba(255,255,255,0.2);
+    border-color: rgba(20,184,166,0.6);
+    background: rgba(255,255,255,0.06);
     transform: translateY(-3px) scale(1.02);
-  }
-  .cta-primary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%);
-    transform: translateX(-100%) skewX(-20deg);
-    transition: transform 0.6s ease;
-  }
-  .cta-primary:hover::before {
-    transform: translateX(200%) skewX(-20deg);
   }
 
   /* ── Secondary CTA ── */
@@ -767,9 +759,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
             {/* Body text */}
             <motion.p variants={fadeUp} className="hero-body" style={{ textAlign: "right" }}>
-              أوقف الاستنزاف الآن. في دقيقتين فقط تترجم هذه الواجهة
-              فوضى أفكارك إلى إحداثيات مرئية، وتمنحك خطوة قاطعة
-              لاستعادة اتزانك.
+              بدون جدار تسجيل مُرهق ولا استبيانات معقدة.
+              مساحتك الخاصة للوضوح الفوري.. نترجم فوضى أفكارك
+              لإحداثيات بصرية تساعدك على رصد استنزافك وتحديد خطوتك القادمة.
             </motion.p>
 
             {/* Name input (optional personalization) */}

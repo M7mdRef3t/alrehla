@@ -7,15 +7,16 @@
 
 import { loadStreak, isStreakAtRisk, isStreakBroken } from "./streakSystem";
 import { loadUserMemory } from "./userMemory";
+import { getStoreRecommendations } from "./storeAdvisor";
 
 export interface Nudge {
     id: string;
-    type: "streak_risk" | "returning" | "milestone" | "boundary_reminder" | "quick_win" | "streak_broken";
+    type: "streak_risk" | "returning" | "milestone" | "boundary_reminder" | "quick_win" | "streak_broken" | "store_recommendation";
     title: string;
     message: string;
     cta?: string;
     /** إجراء الـ CTA — لا يُستخدم لـ navigation، فقط overlays آمنة */
-    ctaAction?: "pulse_check" | "open_assistant" | "dismiss_only" | "share_stats";
+    ctaAction?: "pulse_check" | "open_assistant" | "dismiss_only" | "share_stats" | "open_store";
     priority: 1 | 2 | 3; // 1=عالي, 3=منخفض
     icon: string;
 }
@@ -154,6 +155,24 @@ export function getNextNudge(): Nudge | null {
                 icon: "🌱",
             };
         }
+    }
+
+    // 6. توصية ذكية من المتجر (AI Store Recommendation)
+    // إذا كان هناك شيء ذو أولوية عالية جداً (مثلاً طاقة منخفضة جداً)
+    const storeRecs = getStoreRecommendations([]);
+    const highPriorityRec = storeRecs.find((r) => r.priority >= 4);
+
+    if (highPriorityRec && !shown.has(`rec_${highPriorityRec.itemId}`)) {
+        return {
+            id: `rec_${highPriorityRec.itemId}`,
+            type: "store_recommendation",
+            title: "تطوير مرشح من جارفيس",
+            message: highPriorityRec.reason,
+            cta: "استكشاف التطوير",
+            ctaAction: "open_store",
+            priority: 1, // عالي
+            icon: "Sparkles"
+        };
     }
 
     return null;

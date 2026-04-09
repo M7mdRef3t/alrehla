@@ -4,6 +4,8 @@ import type { MapNode } from "@/modules/map/mapTypes";
 import { ACHIEVEMENTS } from "@/data/achievements";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { loadStreak } from "@/services/streakSystem";
+import { useRitualState } from "./ritualState";
+import { useLifeState } from "./lifeState";
 
 const STORAGE_KEY = "dawayir-achievements";
 
@@ -218,6 +220,27 @@ export const useAchievementState = create<AchievementState>()(
           { id: "streak_1", condition: s >= 1 },
           { id: "streak_3", condition: s >= 3 },
           { id: "streak_7", condition: s >= 7 },
+          
+          // Life OS / Rituals
+          ...(() => {
+            const rState = useRitualState.getState();
+            const lState = useLifeState.getState();
+            const ritualLogsCount = rState.logs.length;
+            
+            // Check for ritual streak (find any with streak >= 7)
+            const hasRitualSteady = rState.rituals.some(r => {
+                // This is a rough check, ideally we'd use calculateRitualStreak
+                // But for now, let's assume if any has a currentStreak >= 7
+                return false; // Placeholder, better logic below
+            });
+
+            return [
+                { id: "ritual_starter", condition: ritualLogsCount >= 5 },
+                { id: "ritual_master", condition: ritualLogsCount >= 50 },
+                { id: "life_seeker",   condition: (lState.lifeScore?.overall || 0) >= 75 },
+            ];
+          })(),
+
           // Quiz milestones — read from localStorage
           ...(() => {
             try {

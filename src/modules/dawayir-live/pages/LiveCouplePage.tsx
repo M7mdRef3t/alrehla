@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { HeartHandshake, Link2, Search, Share2, ShieldCheck, Sparkles, Users2 } from "lucide-react";
 import { assignUrl } from "@/services/navigation";
+import { fetchJourneyPaths } from "@/services/adminApi";
+import { useAdminState } from "@/state/adminState";
+import { getDawayirLiveLaunchHref, getDawayirLivePath } from "@/utils/dawayirLiveJourney";
 import { createLiveShare, getLiveSession, grantLiveAccess, listLiveSessions } from "../api";
 import type { LiveSessionArtifactRecord, LiveSessionDetail, LiveSessionRecord } from '../types';
 
@@ -27,6 +30,7 @@ function formatPercent(value: number | null | undefined) {
 }
 
 export default function LiveCouplePage() {
+  const journeyPaths = useAdminState((state) => state.journeyPaths);
   const [sessions, setSessions] = useState<LiveSessionRecord[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<LiveSessionDetail | null>(null);
@@ -37,6 +41,19 @@ export default function LiveCouplePage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "completed" | "active">("all");
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [isCreatingShare, setIsCreatingShare] = useState(false);
+  const livePath = useMemo(() => getDawayirLivePath(journeyPaths), [journeyPaths]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchJourneyPaths().then((paths) => {
+      if (!cancelled && paths) {
+        useAdminState.getState().setJourneyPaths(paths);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     void listLiveSessions()
@@ -104,7 +121,11 @@ export default function LiveCouplePage() {
             </p>
           </div>
 
-          <button type="button" className="primary-btn memory-bank-primary-btn" onClick={() => assignUrl("/dawayir-live")}>
+          <button
+            type="button"
+            className="primary-btn memory-bank-primary-btn"
+            onClick={() => assignUrl(getDawayirLiveLaunchHref(livePath, { surface: "couple-return" }))}
+          >
             ارجع إلى الجلسة الحية
           </button>
         </div>
