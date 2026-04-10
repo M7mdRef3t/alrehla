@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../../_lib/supabaseAdmin";
 import { requireLiveAuth } from "../../../../../src/modules/dawayir-live/server/auth";
+import { sanitizePhone } from "../../../../../src/server/marketingLeadUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -61,17 +62,39 @@ export async function PATCH(req: Request) {
     if (!supabase) {
       return NextResponse.json({ ok: false, error: "supabase_not_configured" }, { status: 503 });
     }
-    
+
+    const phoneParsed = typeof phone_normalized === "string" && phone_normalized.trim()
+      ? sanitizePhone(phone_normalized)
+      : null;
+
+    const { data: existingLead } = await supabase
+      .from("marketing_leads")
+      .select("metadata, phone_raw")
+      .eq("id", id)
+      .maybeSingle();
+
+    const existingMetadata =
+      existingLead?.metadata && typeof existingLead.metadata === "object"
+        ? (existingLead.metadata as Record<string, unknown>)
+        : {};
+    const nextMetadata = { ...existingMetadata };
+    if (phoneParsed?.normalized) {
+      nextMetadata.missing_phone = false;
+    }
+
     const { error } = await supabase
       .from("marketing_leads")
       .update({
         name,
-        phone_normalized,
+        phone: phoneParsed?.normalized ?? null,
+        phone_normalized: phoneParsed?.normalized ?? null,
+        phone_raw: phoneParsed?.raw ?? existingLead?.phone_raw ?? null,
         email,
         source_type,
         campaign,
         status,
         note,
+        metadata: nextMetadata,
         updated_at: new Date().toISOString()
       })
       .eq("id", id);

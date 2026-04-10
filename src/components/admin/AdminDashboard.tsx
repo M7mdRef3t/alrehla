@@ -38,6 +38,7 @@ import {
   fetchAiLogs,
   fetchMissions,
   fetchBroadcasts,
+  fetchJourneyPaths,
 } from "@/services/adminApi";
 import { LiveFreezePill } from "./LiveFreezePill";
 import { isSupabaseReady, supabase } from "@/services/supabaseClient";
@@ -61,6 +62,9 @@ import { AdminOmniSearch } from "./ui/AdminOmniSearch";
 import { AdminCopilotModal } from "./dashboard/Intelligence/AdminCopilotModal";
 import { DataManagement } from '@/modules/meta/DataManagement';
 import { Bot, Wind } from "lucide-react";
+import { CommandHalo } from "./ui/CommandHalo";
+import { SovereignHUD } from "./ui/SovereignHUD";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 // Extracted Panels (Lazy Loaded for performance and dependency stability)
 const ExecutiveDashboard = lazy(() => import("./dashboard/Executive/ExecutiveDashboard").then(m => ({ default: m.ExecutiveDashboard })));
@@ -99,6 +103,9 @@ const SovereignPanel = lazy(() => import("./dashboard/Sovereign/SovereignControl
 const SovereignExpansionHub = lazy(() => import("./dashboard/Executive/SovereignExpansionHub").then(m => ({ default: m.SovereignExpansionHub })));
 const MapRegistryPanel = lazy(() => import("./dashboard/Content/MapRegistryPanel").then(m => ({ default: m.MapRegistryPanel })));
 const MailCommandCenter = lazy(() => import("./dashboard/MailCommand/MailCommandCenter").then(m => ({ default: m.MailCommandCenter })));
+const JourneyPathsPanel = lazy(() => import("./dashboard/Paths/JourneyPathsPanel").then(m => ({ default: m.JourneyPathsPanel })));
+const DesignLab = lazy(() => import("./dashboard/Sovereign/DesignLab"));
+const GovernanceHub = lazy(() => import("./dashboard/Sovereign/GovernanceHub").then(m => ({ default: m.GovernanceHub })));
 
 const DataManagementModal = lazy(() => Promise.resolve({ default: DataManagement }));
 
@@ -113,6 +120,19 @@ const updateTabInUrl = (tab: AdminTab) => {
   if (!url) return;
   url.searchParams.set("tab", tab);
   pushUrl(url);
+};
+
+const ADMIN_SIDEBAR_VISIBILITY_KEY = "admin-dashboard-sidebar-visible";
+
+const isTypingTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) return false;
+  const tagName = target.tagName.toLowerCase();
+  return (
+    target.isContentEditable ||
+    tagName === "input" ||
+    tagName === "textarea" ||
+    tagName === "select"
+  );
 };
 
 const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
@@ -201,7 +221,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   if (adminAccess) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-200 flex items-center justify-center p-6 relative isolate overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-200 flex items-center justify-center p-6 relative isolate overflow-hidden transition-colors duration-500">
       {/* Cinematic Background effect */}
       <div className="absolute inset-0 z-0 bg-cover bg-center opacity-20 nebula-bg pointer-events-none" />
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#030712] via-[#030712]/90 to-transparent pointer-events-none" />
@@ -275,10 +295,10 @@ const CollapsibleSidebarGroup: FC<{
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between px-4 py-2 hover:bg-slate-800/40 rounded-xl transition-colors focus:outline-none group"
       >
-        <span className="text-[11px] font-black text-slate-500 group-hover:text-slate-300 uppercase tracking-widest transition-colors">
+        <span className="text-[11px] font-black text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 uppercase tracking-widest transition-colors">
           {group.title}
         </span>
-        <span className="text-slate-600 group-hover:text-slate-400 transition-transform">
+        <span className="text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400 transition-transform">
           {expanded ? <X className="w-3 h-3 opacity-50" /> : <Menu className="w-3 h-3 opacity-50 scale-x-125" />}
         </span>
       </button>
@@ -321,6 +341,11 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const [tab, setTab] = useState<AdminTab>(getTabFromLocation);
   const [showAccount, setShowAccount] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDesktopSidebarVisible, setIsDesktopSidebarVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const storedValue = window.localStorage.getItem(ADMIN_SIDEBAR_VISIBILITY_KEY);
+    return storedValue !== "hidden";
+  });
   const authUser = useAuthState((s) => s.user);
   const adminAccess = useAdminState((s) => s.adminAccess);
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
@@ -334,6 +359,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const setAiLogs = useAdminState((s) => s.setAiLogs);
   const setMissions = useAdminState((s) => s.setMissions);
   const setBroadcasts = useAdminState((s) => s.setBroadcasts);
+  const setJourneyPaths = useAdminState((s) => s.setJourneyPaths);
 
   useEffect(() => {
     const handler = () => setTab(getTabFromLocation());
@@ -341,14 +367,49 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(
+      ADMIN_SIDEBAR_VISIBILITY_KEY,
+      isDesktopSidebarVisible ? "visible" : "hidden"
+    );
+  }, [isDesktopSidebarVisible]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (isTypingTarget(event.target)) return;
+
+      const isToggleShortcut =
+        (event.ctrlKey && event.key.toLowerCase() === "b") ||
+        (!event.ctrlKey && !event.metaKey && !event.altKey && event.key === "[");
+
+      if (!isToggleShortcut) return;
+
+      event.preventDefault();
+
+      if (window.innerWidth >= 1024) {
+        setIsDesktopSidebarVisible((current) => !current);
+        return;
+      }
+
+      setIsSidebarOpen((current) => !current);
+    };
+
+    window.addEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydown);
+  }, []);
+
+  useEffect(() => {
     if (!isSupabaseReady) return;
     const loadRemote = async () => {
       try {
-        const [config, aiLogs, missions, broadcasts] = await Promise.all([
+        const [config, aiLogs, missions, broadcasts, journeyPaths] = await Promise.all([
           fetchAdminConfig(),
           fetchAiLogs(),
           fetchMissions(),
-          fetchBroadcasts()
+          fetchBroadcasts(),
+          fetchJourneyPaths()
         ]);
         if (config?.featureFlags) setFeatureFlags(config.featureFlags);
         if (config?.systemPrompt) setSystemPrompt(config.systemPrompt);
@@ -357,12 +418,13 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
         if (aiLogs) setAiLogs(aiLogs);
         if (missions) setMissions(missions);
         if (broadcasts) setBroadcasts(broadcasts);
+        if (journeyPaths) setJourneyPaths(journeyPaths);
       } catch (err) {
         logger.error("Admin data load error", err);
       }
     };
     void loadRemote();
-  }, [setFeatureFlags, setSystemPrompt, setScoringWeights, setScoringThresholds, setAiLogs, setMissions, setBroadcasts]);
+  }, [setFeatureFlags, setSystemPrompt, setScoringWeights, setScoringThresholds, setAiLogs, setMissions, setBroadcasts, setJourneyPaths]);
 
   const authRole = useAuthState(getEffectiveRoleFromState);
   const baseRole = useAuthState((s) => s.role);
@@ -378,17 +440,18 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   };
 
   const activeTabItem = NAV_ITEMS.find((item) => item.id === effectiveTab);
+  const isDesktopSidebarHidden = !isDesktopSidebarVisible;
 
   return (
     <AdminGate>
-      <AdminOmniSearch />
+      <CommandHalo />
       <AdminCopilotModal />
-      <div className="admin-cockpit min-h-screen bg-[#030712] text-slate-200 flex flex-col lg:flex-row relative isolate selection:bg-teal-500/30 font-sans overflow-hidden">
+      <div className="admin-cockpit min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-200 flex flex-col lg:flex-row relative isolate selection:bg-teal-500/30 font-sans overflow-hidden transition-colors duration-500">
         
         {/* Mobile Top Stats Bar */}
-        <div className="lg:hidden w-full flex justify-between items-center bg-slate-900 border-b border-slate-800 p-2 px-4 shadow-sm text-[10px] font-black uppercase text-slate-400 tracking-widest z-10 shrink-0">
+        <div className="lg:hidden w-full flex justify-between items-center bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-2 px-4 shadow-sm text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest z-10 shrink-0 transition-colors">
           <div className="flex items-center gap-2">
-             <Activity className="w-3 h-3 text-teal-400" />
+             <Activity className="w-3 h-3 text-teal-500 dark:text-teal-400" />
              <span>نبض متصل</span> 
           </div>
           <div className="flex items-center gap-2">
@@ -408,25 +471,37 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
         <aside
           className={`
-            admin-sidebar fixed lg:sticky top-0 right-0 h-screen w-72 flex-shrink-0 border-l border-slate-800/80 
-            bg-[#0B0F19] flex flex-col z-50 overflow-hidden select-none
-            transform transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] shadow-2xl
-            ${isSidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
+            admin-sidebar fixed lg:sticky top-0 right-0 h-screen flex-shrink-0 border-l bg-white dark:bg-[#0B0F19]
+            flex flex-col z-50 overflow-hidden select-none shadow-[0_30px_80px_rgba(2,6,23,0.55)]
+            transition-[transform,width,opacity,border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
+            ${
+              isSidebarOpen
+                ? "translate-x-0 w-72 border-slate-800/80 opacity-100 lg:translate-x-0"
+                : "translate-x-full w-72 border-transparent opacity-0 pointer-events-none lg:pointer-events-auto"
+            }
+            ${isDesktopSidebarVisible ? "lg:w-72 lg:translate-x-0 lg:opacity-100 lg:border-slate-800/80" : "lg:w-0 lg:translate-x-full lg:opacity-0 lg:border-transparent"}
           `}
         >
-          <div className="p-6 lg:p-8 border-b border-slate-800/80 relative group flex items-center justify-between bg-[#080B14]">
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-teal-400/20 to-transparent opacity-70" />
+          <div className="p-6 lg:p-8 border-b border-slate-200 dark:border-slate-800/80 relative group flex items-center justify-between bg-slate-50 dark:bg-[#080B14] transition-colors duration-500">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-indigo-600 flex items-center justify-center shadow-[0_0_20px_rgba(20,184,166,0.3)] ring-1 ring-white/10">
                 <Workflow className="w-6 h-6 text-white" />
               </div>
               <div className="flex flex-col">
-                <h1 className="text-xl font-black tracking-tighter text-white leading-none mb-1">القيادة</h1>
-                <p className="text-xs font-bold text-teal-400/80 uppercase tracking-widest leading-none">مركز ألفا</p>
+                <h1 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white leading-none mb-1">القيادة</h1>
+                <p className="text-xs font-bold text-teal-600 dark:text-teal-400/80 uppercase tracking-widest leading-none">مركز ألفا</p>
               </div>
             </div>
             <button
-              className="lg:hidden p-2 bg-slate-800/50 rounded-lg text-slate-300 hover:text-white transition-colors border border-slate-700/50"
-              onClick={() => setIsSidebarOpen(false)}
+              className="p-2 bg-slate-800/50 rounded-lg text-slate-300 hover:text-white transition-colors border border-slate-700/50"
+              onClick={() => {
+                if (window.innerWidth >= 1024) {
+                  setIsDesktopSidebarVisible(false);
+                  return;
+                }
+                setIsSidebarOpen(false);
+              }}
             >
               <X className="w-5 h-5" />
             </button>
@@ -452,14 +527,14 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
             })}
           </nav>
 
-          <footer className="p-5 border-t border-slate-800/80 space-y-3 bg-[#080B14]">
-            <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-[#0B0F19] border border-slate-800 shadow-inner">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/30 text-indigo-400">
+          <footer className="p-5 border-t border-slate-200 dark:border-slate-800/80 space-y-3 bg-slate-50 dark:bg-[#080B14] transition-colors duration-500">
+            <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-slate-800 shadow-inner">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/10 dark:from-indigo-500/20 to-purple-500/10 dark:to-purple-500/20 flex items-center justify-center border border-indigo-500/20 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400">
                 <User className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-black text-white truncate uppercase tracking-tight">{authUser?.email?.split('@')[0] || "مُشغِّل"}</p>
-                <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest">{authRole}</p>
+                <p className="text-xs font-black text-slate-900 dark:text-white truncate uppercase tracking-tight">{authUser?.email?.split('@')[0] || "مُشغِّل"}</p>
+                <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-widest">{authRole}</p>
               </div>
             </div>
             <button
@@ -476,8 +551,33 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           </footer>
         </aside>
 
-        <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
-          <header className="h-20 lg:h-28 border-b border-slate-800/80 bg-[#0B0F19] flex items-center justify-between px-6 lg:px-12 flex-shrink-0 z-10 transition-all shadow-md">
+        {!isDesktopSidebarVisible && (
+          <button
+            type="button"
+            onClick={() => setIsDesktopSidebarVisible(true)}
+            className="hidden lg:flex fixed right-0 top-1/2 z-40 -translate-y-1/2 items-center gap-2 rounded-l-2xl border border-r-0 border-slate-700/70 bg-[#0B0F19]/95 px-3 py-4 text-slate-300 shadow-[0_22px_56px_rgba(2,6,23,0.45)] backdrop-blur-md transition-all duration-300 hover:bg-slate-800 hover:text-white hover:pr-4 hover:shadow-[0_28px_80px_rgba(15,23,42,0.55)]"
+            aria-label="إظهار القائمة الجانبية"
+            title="إظهار القائمة الجانبية"
+          >
+            <Menu className="w-4 h-4" />
+            <span className="text-[11px] font-black uppercase tracking-[0.24em] [writing-mode:vertical-rl] rotate-180">
+              القائمة
+            </span>
+          </button>
+        )}
+
+        <main
+          className={`flex-1 min-w-0 flex flex-col h-screen overflow-hidden transition-[padding,max-width] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+            isDesktopSidebarVisible ? "lg:pr-0" : "lg:pr-6"
+          }`}
+        >
+          <header
+            className={`h-20 lg:h-28 border-b bg-white dark:bg-[#0B0F19] flex items-center justify-between px-6 lg:px-12 flex-shrink-0 z-10 transition-[border-color,background-color,box-shadow] duration-500 shadow-md ${
+              isDesktopSidebarHidden
+                ? "border-slate-200 dark:border-slate-700/70 shadow-[0_10px_40px_rgba(15,23,42,0.18)]"
+                : "border-slate-200 dark:border-slate-800/80"
+            }`}
+          >
             <div className="flex items-center gap-4 lg:gap-8">
               <button
                 type="button"
@@ -486,23 +586,32 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
               >
                 <Menu className="w-6 h-6" />
               </button>
+              <button
+                type="button"
+                className="hidden lg:flex items-center justify-center p-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-all shadow-sm"
+                onClick={() => setIsDesktopSidebarVisible((current) => !current)}
+                aria-label={isDesktopSidebarVisible ? "إخفاء القائمة الجانبية" : "إظهار القائمة الجانبية"}
+                title={`${isDesktopSidebarVisible ? "إخفاء القائمة الجانبية" : "إظهار القائمة الجانبية"} (Ctrl+B أو [)`}
+              >
+                <Menu className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarVisible ? "" : "rotate-180"}`} />
+              </button>
               <div className="flex flex-col">
-                <div className="flex items-center gap-2 lg:gap-2.5 text-[10px] lg:text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1 lg:mb-1.5">
-                  <span>النظام</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.8)] animate-pulse" />
-                  <span className="text-teal-400">{activeTabItem?.id || "أساسي"}</span>
-                </div>
-                <h2 className="text-xl lg:text-3xl font-black text-white tracking-tight uppercase whitespace-nowrap overflow-hidden text-ellipsis max-w-[180px] sm:max-w-[300px] md:max-w-none text-shadow-sm">
-                  {activeTabItem ? (CLEAN_NAV_LABELS[activeTabItem.id] ?? activeTabItem.label) : ""}
+                <h2 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tighter mb-1">
+                  {activeTabItem?.label || "لوحة القيادة"}
                 </h2>
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-teal-500 animate-pulse" />
+                  <span className="text-xs font-bold text-teal-600 dark:text-teal-400/80 uppercase tracking-widest hidden sm:inline-block">تم تأسيس الاتصال السيادي</span>
+                </div>
               </div>
             </div>
-              <div className="flex items-center gap-3 lg:gap-6">
-              <div className="hidden sm:block">
-                <LiveFreezePill />
-              </div>
-              
-              <AdminTooltip content="وضع تعديل المحتوى (Content Editing): بيفتحلك المنصة في Tab جديد، تقدر من هناك تضغط على أي نص وتعدله مباشرة للمستخدمين! ملهاش دور جوة لوحة الإدارة نفسها." position="bottom">
+
+            <div className="flex items-center gap-4 lg:gap-6">
+              <SovereignHUD />
+
+              <div className="h-8 w-px bg-slate-800 hidden lg:block mx-2" />
+
+              <AdminTooltip content={isContentEditingEnabled ? "إيقاف التحرير المباشر" : "تفعيل التحرير المباشر في الموقع"} position="bottom">
                 <button
                   onClick={() => {
                     const newValue = !isContentEditingEnabled;
@@ -512,8 +621,8 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                     }
                   }}
                   className={`p-3 lg:p-4 rounded-xl lg:rounded-2xl border transition-all active:scale-95 group shadow-lg ${isContentEditingEnabled
-                    ? "bg-teal-500/20 border-teal-500/50 text-teal-300 ring-1 ring-teal-500/30"
-                    : "bg-[#111827] border-slate-700/80 text-slate-300 hover:text-white hover:bg-slate-800 hover:border-slate-600"
+                    ? "bg-teal-500/20 border-teal-500/50 text-teal-600 dark:text-teal-300 ring-1 ring-teal-500/30"
+                    : "bg-slate-100 dark:bg-[#111827] border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600"
                     }`}
                 >
                   <Pencil className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
@@ -523,24 +632,33 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
               <AdminTooltip content="المساعد الإداري (Copilot): استعلم سريعاً عن حالة المنصة. الأرقام والشكاوي." position="bottom">
                 <button
                   onClick={() => useAdminState.getState().setCopilotOpen(true)}
-                  className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-[#111827] border border-slate-700/80 text-teal-400 hover:text-teal-300 hover:bg-slate-800 hover:border-teal-500/50 transition-all active:scale-95 group shadow-lg"
+                  className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-teal-300 dark:hover:border-teal-500/50 transition-all active:scale-95 group shadow-lg"
                 >
                   <Bot className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 </button>
               </AdminTooltip>
 
-              <AdminTooltip content="إدارة بيانات النظام (Data Management): لوحة لعمل نسخ احتياطية (JSON/PDF)، ومزامنة البيانات محلياً أو سحابياً، أو تصفير مسار المستخدم للتدخل السريع." position="bottom">
+              <AdminTooltip content="إدارة بيانات النظام (Data Management): لوحة لعمل نسخ احتياطية (JSON/PDF)، ومزامنة البيانات محلياً أو سحابياً." position="bottom">
                 <button
                   onClick={() => setShowAccount(true)}
-                  className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-[#111827] border border-slate-700/80 text-slate-300 hover:text-white hover:bg-slate-800 hover:border-slate-600 transition-all active:scale-95 group shadow-lg"
+                  className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all active:scale-95 group shadow-lg"
                 >
                   <Database className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                 </button>
               </AdminTooltip>
+
+              <div className="h-8 w-px bg-slate-800 hidden lg:block mx-1" />
+              <ThemeToggle />
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-6 lg:p-12 custom-scrollbar relative bg-[#030712] inset-shadow-sm">
+          <div className="flex-1 overflow-y-auto p-6 lg:p-12 custom-scrollbar relative bg-slate-50 dark:bg-[#030712] inset-shadow-sm transition-colors duration-500">
+            <div
+              className={`pointer-events-none absolute inset-0 transition-opacity duration-500 ${
+                isDesktopSidebarHidden ? "opacity-100" : "opacity-0"
+              } bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.08),transparent_28%),radial-gradient(circle_at_right_center,rgba(59,130,246,0.05),transparent_24%)]`}
+              aria-hidden="true"
+            />
             <div className="max-w-7xl mx-auto pb-20">
               <Suspense fallback={<div>Loading...</div>}>
                 {effectiveTab === "sovereign" && <SovereignPanel />}
@@ -552,6 +670,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "flow-dynamics" && <FlowDynamicsDashboard />}
                 {effectiveTab === "war-room" && <AlertsPanel />}
                 {effectiveTab === "flow-map" && <FlowMapPanel />}
+                {effectiveTab === "journey-paths" && <JourneyPathsPanel />}
                 {effectiveTab === "map-registry" && <MapRegistryPanel />}
                 {effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
                 {effectiveTab === "ai-studio" && <AIStudioPanel />}
@@ -587,6 +706,8 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "marketing-ops" && <MarketingOpsPanel />}
                 {effectiveTab === "expansion-hub" && <SovereignExpansionHub />}
                 {effectiveTab === "mail-command" && <MailCommandCenter />}
+                {effectiveTab === "design-lab" && <DesignLab />}
+                {effectiveTab === "governance-ledger" && <GovernanceHub />}
               </Suspense>
             </div>
           </div>

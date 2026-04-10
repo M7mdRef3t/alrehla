@@ -52,6 +52,7 @@ import { getShadowScore } from "@/state/shadowPulseState";
 import { deriveRelationshipWeather } from "@/utils/relationshipWeather";
 import { deriveContextAtlas, type ContextAtlasKey } from "@/utils/contextAtlas";
 import { assignUrl } from "@/services/navigation";
+import { getDawayirLiveLaunchHref, getDawayirLivePath } from "@/utils/dawayirLiveJourney";
 import { SoulGeometryOverlay } from "./SoulGeometryOverlay";
 import { ContextNotePanel } from "./ContextNotePanel";
 import { MapAnalyticalPanel, MapOperationalStrip, MapSupportPanel } from "./Map/CoreMapPanels";
@@ -226,6 +227,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     };
   }, []);
 
+  const journeyPaths = useAdminState((s) => s.journeyPaths);
+  const livePath = useMemo(() => getDawayirLivePath(journeyPaths), [journeyPaths]);
+
   const handleNodeDropOnAI = useCallback((nodeId: string) => {
     if (!user) {
       trackEvent(AnalyticsEvents.AI_ATTEMPT_GUEST);
@@ -242,8 +246,15 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       return;
     }
 
-    assignUrl(`/dawayir-live?surface=map-drop&nodeId=${encodeURIComponent(node.id)}&nodeLabel=${encodeURIComponent(node.label)}&goalId=${encodeURIComponent(goalId)}`);
-  }, [goalId, nodes, user]);
+    assignUrl(
+      getDawayirLiveLaunchHref(livePath, {
+        surface: "map-drop",
+        nodeId: node.id,
+        nodeLabel: node.label,
+        goalId
+      })
+    );
+  }, [goalId, livePath, nodes, user]);
 
   const handleMainDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -258,8 +269,13 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       setIsUpgradeOpen(true);
       return;
     }
-    assignUrl(`/dawayir-live?surface=map-fab&goalId=${encodeURIComponent(goalId)}`);
-  }, [goalId, user]);
+    assignUrl(
+      getDawayirLiveLaunchHref(livePath, {
+        surface: "map-fab",
+        goalId
+      })
+    );
+  }, [goalId, livePath, user]);
 
   const [showMeCard, setShowMeCard] = useState(false);
   const [showFeelingCheck, setShowFeelingCheck] = useState(false);

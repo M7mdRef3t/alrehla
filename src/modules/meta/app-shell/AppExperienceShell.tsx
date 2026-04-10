@@ -244,7 +244,8 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       screen === "quizzes" ||
       screen === "behavioral-analysis" ||
       screen === "resources" ||
-      screen === "settings";
+      screen === "settings" ||
+      screen === "life-os";
 
     if (isRevenueMode && !isWhitelisted && !goalId && !storedGoalId) {
       void setScreen("goal");
@@ -408,6 +409,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     isLowPulseCocoonSuppressed
   } = useAppPulseSanctuaryFlow({
     goalId,
+    currentScreen: screen,
     isLandingScreen,
     showPulseCheck,
     setShowPulseCheck,
@@ -707,7 +709,8 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       map: "Relationship Map",
       guided: "Guided Journey",
       mission: "Mission",
-      tools: "Tools"
+      tools: "Tools",
+      "life-os": "Life Command Center"
     };
     
     const pageTitle = pageNames[screen] || screen;

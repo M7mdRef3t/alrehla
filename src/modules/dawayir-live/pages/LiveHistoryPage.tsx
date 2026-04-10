@@ -16,6 +16,9 @@ import {
   Wand2,
 } from "lucide-react";
 import { assignUrl } from "@/services/navigation";
+import { fetchJourneyPaths } from "@/services/adminApi";
+import { useAdminState } from "@/state/adminState";
+import { getDawayirLiveLaunchHref, getDawayirLivePath } from "@/utils/dawayirLiveJourney";
 import { createLiveShare, getLiveSession, listLiveSessions } from "../api";
 import type {
   CircleNode,
@@ -195,6 +198,7 @@ function TrendSparkline({ values }: { values: number[] }) {
 }
 
 export default function LiveHistoryPage() {
+  const journeyPaths = useAdminState((state) => state.journeyPaths);
   const [sessions, setSessions] = useState<LiveSessionRecord[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<LiveSessionDetail | null>(null);
@@ -202,6 +206,19 @@ export default function LiveHistoryPage() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"recent" | "name">("recent");
   const [error, setError] = useState<string | null>(null);
+  const livePath = useMemo(() => getDawayirLivePath(journeyPaths), [journeyPaths]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchJourneyPaths().then((paths) => {
+      if (!cancelled && paths) {
+        useAdminState.getState().setJourneyPaths(paths);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [judgeMode, setJudgeMode] = useState(false);
   const [presentationFullscreen, setPresentationFullscreen] = useState(false);
   const [demoRouteActive, setDemoRouteActive] = useState(false);
@@ -457,7 +474,11 @@ export default function LiveHistoryPage() {
             </p>
           </div>
 
-          <button type="button" className="primary-btn memory-bank-primary-btn" onClick={() => assignUrl("/dawayir-live")}>
+          <button
+            type="button"
+            className="primary-btn memory-bank-primary-btn"
+            onClick={() => assignUrl(getDawayirLiveLaunchHref(livePath, { surface: "history-return" }))}
+          >
             {isArabic ? "ابدأ جلسة جديدة" : "Start New Session"}
           </button>
         </div>

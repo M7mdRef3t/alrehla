@@ -5,6 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { ArrowRight, History } from "lucide-react";
 import { assignUrl } from "@/services/navigation";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import { fetchJourneyPaths } from "@/services/adminApi";
+import { useAdminState } from "@/state/adminState";
+import {
+  getDawayirLiveCoachHref,
+  getDawayirLiveCoupleHref,
+  getDawayirLiveHistoryHref
+} from "@/utils/dawayirLiveJourney";
 import LiveCanvas from "./components/LiveCanvas";
 import BreathingGuideOverlay from "./components/BreathingGuideOverlay";
 import LiveHUD from "./components/LiveHUD";
@@ -19,6 +26,7 @@ import { PARITY_ONBOARDING_STEPS } from "./parityContent";
 import type { DawayirLiveConfig, LiveLanguage, LiveMode } from "./types";
 
 export default function DawayirLiveApp() {
+  const setJourneyPaths = useAdminState((state) => state.setJourneyPaths);
   const searchParams = useSearchParams();
   const safeSearchParams = useMemo(() => searchParams ?? new URLSearchParams(), [searchParams]);
   const [mode, setMode] = useState<LiveMode>((safeSearchParams.get("mode") as LiveMode) || "standard");
@@ -56,6 +64,18 @@ export default function DawayirLiveApp() {
 
   const session = useDawayirLiveSession(config);
   const onboardingSteps = PARITY_ONBOARDING_STEPS[language];
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchJourneyPaths().then((paths) => {
+      if (!cancelled && paths) {
+        setJourneyPaths(paths);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [setJourneyPaths]);
 
   useEffect(() => {
     if ((session.status === "connected" || session.status === "speaking") && autoMicRef.current && !session.isMicActive) {
@@ -171,8 +191,8 @@ export default function DawayirLiveApp() {
           voiceTattoo={session.voiceTattoo}
           onEnterSetup={() => setAppView("setup")}
           onSetLanguage={setLanguage}
-          onGoToCouple={() => assignUrl("/dawayir-live/couple")}
-          onGoToTeacher={() => assignUrl("/coach?tab=dawayir-live")}
+          onGoToCouple={() => assignUrl(getDawayirLiveCoupleHref())}
+          onGoToTeacher={() => assignUrl(getDawayirLiveCoachHref())}
         />
       )}
 
@@ -185,9 +205,9 @@ export default function DawayirLiveApp() {
           voice={config.voice || "Aoede"}
           nodeLabel={config.initialContext?.nodeLabel}
           onStartSession={handleStart}
-          onOpenHistory={() => assignUrl("/dawayir-live/history")}
-          onOpenCouple={() => assignUrl("/dawayir-live/couple")}
-          onOpenTeacher={() => assignUrl("/coach?tab=dawayir-live")}
+          onOpenHistory={() => assignUrl(getDawayirLiveHistoryHref())}
+          onOpenCouple={() => assignUrl(getDawayirLiveCoupleHref())}
+          onOpenTeacher={() => assignUrl(getDawayirLiveCoachHref())}
           onToggleLanguage={setLanguage}
           onToggleMode={setMode}
         />
@@ -241,7 +261,7 @@ export default function DawayirLiveApp() {
             onToggleMic={session.toggleMic}
             onToggleSilentMirror={session.toggleSilentMirror}
             onEndSession={handleEnd}
-            onOpenHistory={() => assignUrl("/dawayir-live/history")}
+            onOpenHistory={() => assignUrl(getDawayirLiveHistoryHref())}
             onShare={handleShare}
             onBack={handleBack}
             showBreathingGuide={showBreathingGuide}
@@ -304,7 +324,7 @@ export default function DawayirLiveApp() {
               </button>
               <button
                 type="button"
-                onClick={() => assignUrl("/dawayir-live/history")}
+                onClick={() => assignUrl(getDawayirLiveHistoryHref())}
                 className="rounded-2xl border border-app-border bg-app-bg-accent px-5 py-3 text-sm text-app-foreground"
               >
                 افتح السجل
@@ -326,7 +346,7 @@ export default function DawayirLiveApp() {
           </button>
           <button
             type="button"
-            onClick={() => assignUrl("/dawayir-live/history")}
+            onClick={() => assignUrl(getDawayirLiveHistoryHref())}
             className="flex items-center gap-2 rounded-full border border-app-border bg-app-surface/60 px-4 py-2 text-xs font-semibold text-app-foreground backdrop-blur-xl"
           >
             <History className="h-4 w-4" />

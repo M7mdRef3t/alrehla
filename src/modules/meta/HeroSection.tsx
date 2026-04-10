@@ -178,31 +178,23 @@ const HERO_STYLES = `
     gap: 12px;
     padding: 18px 32px;
     border-radius: 20px;
-    background: linear-gradient(135deg, var(--ds-color-brand-teal-400) 0%, var(--ds-color-primary) 40%, var(--ds-color-brand-teal-600) 100%);
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(12px);
     font-family: var(--font-display);
     font-size: 1rem;
     font-weight: 900;
     color: #fff;
     cursor: pointer;
-    border: none;
-    box-shadow: 0 0 0 1px rgba(45,212,191,0.3), 0 20px 60px rgba(20,184,166,0.35), 0 4px 16px rgba(0,0,0,0.4);
-    transition: box-shadow 0.4s ease, transform 0.25s ease;
+    border: 1px solid rgba(20,184,166,0.3);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.1);
+    transition: all 0.4s ease;
     white-space: nowrap;
   }
   .cta-primary:hover {
-    box-shadow: 0 0 0 1px rgba(45,212,191,0.5), 0 28px 80px rgba(20,184,166,0.48), 0 4px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 18px 50px rgba(20,184,166,0.15), inset 0 1px rgba(255,255,255,0.2);
+    border-color: rgba(20,184,166,0.6);
+    background: rgba(255,255,255,0.06);
     transform: translateY(-3px) scale(1.02);
-  }
-  .cta-primary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%);
-    transform: translateX(-100%) skewX(-20deg);
-    transition: transform 0.6s ease;
-  }
-  .cta-primary:hover::before {
-    transform: translateX(200%) skewX(-20deg);
   }
 
   /* ── Secondary CTA ── */
@@ -403,6 +395,8 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   ];
 
   const [hovered, setHovered] = useState<number | null>(null);
+  const toSafeRadius = (value: unknown, fallback: number) =>
+    typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
 
   return (
     <motion.div
@@ -442,9 +436,12 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
         {/* Rings */}
         {rings.map((ring, i) => (
+          (() => {
+            const safeRingRadius = toSafeRadius(ring.r, 1);
+            return (
           <motion.circle
             key={i}
-            cx="190" cy="190" r={ring.r}
+            cx="190" cy="190" r={safeRingRadius}
             stroke={ring.stroke}
             strokeWidth="1"
             fill="none"
@@ -453,10 +450,15 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
             transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
             style={{ transformOrigin: "190px 190px" }}
           />
+            );
+          })()
         ))}
 
         {/* Nodes */}
         {nodes.map((node, i) => (
+          (() => {
+            const safeNodeRadius = toSafeRadius(node.r, 1);
+            return (
           <motion.g
             key={i}
             onMouseEnter={() => setHovered(i)}
@@ -474,7 +476,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
             {/* Pulse ring */}
             {hovered === i && (
               <circle
-                cx={node.cx} cy={node.cy} r={node.r + 6}
+                cx={node.cx} cy={node.cy} r={safeNodeRadius + 6}
                 fill="none" stroke={node.color} strokeWidth="1.5"
                 opacity={0.4}
                 style={{
@@ -484,15 +486,15 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
               />
             )}
             {/* Halo */}
-            <circle cx={node.cx} cy={node.cy} r={node.r + 8} fill={node.color} opacity={0.07} />
+            <circle cx={node.cx} cy={node.cy} r={safeNodeRadius + 8} fill={node.color} opacity={0.07} />
             {/* Core */}
             <circle
-              cx={node.cx} cy={node.cy} r={node.r}
+              cx={node.cx} cy={node.cy} r={safeNodeRadius}
               fill={node.color}
               style={{ filter: `drop-shadow(0 0 ${hovered === i ? 28 : 10}px ${node.color}bb)` }}
             />
             {/* Inner dot */}
-            <circle cx={node.cx} cy={node.cy} r={node.r * 0.35} fill="rgba(0,0,0,0.55)" />
+            <circle cx={node.cx} cy={node.cy} r={safeNodeRadius * 0.35} fill="rgba(0,0,0,0.55)" />
 
             {/* Tooltip */}
             <AnimatePresence>
@@ -525,6 +527,8 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
               )}
             </AnimatePresence>
           </motion.g>
+            );
+          })()
         ))}
 
         {/* Center core */}
@@ -755,9 +759,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
             {/* Body text */}
             <motion.p variants={fadeUp} className="hero-body" style={{ textAlign: "right" }}>
-              أوقف الاستنزاف الآن. في دقيقتين فقط تترجم هذه الواجهة
-              فوضى أفكارك إلى إحداثيات مرئية، وتمنحك خطوة قاطعة
-              لاستعادة اتزانك.
+              بدون جدار تسجيل مُرهق ولا استبيانات معقدة.
+              مساحتك الخاصة للوضوح الفوري.. نترجم فوضى أفكارك
+              لإحداثيات بصرية تساعدك على رصد استنزافك وتحديد خطوتك القادمة.
             </motion.p>
 
             {/* Name input (optional personalization) */}

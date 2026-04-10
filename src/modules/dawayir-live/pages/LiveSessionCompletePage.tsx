@@ -5,6 +5,14 @@ import { logger } from "@/services/logger";
 import { useEffect, useMemo, useRef, useState, lazy } from "react";
 import { BadgeCheck, Clock3, Download, Gem, Link2, RotateCcw, Share2, Wind } from "lucide-react";
 import { assignUrl } from "@/services/navigation";
+import { fetchJourneyPaths } from "@/services/adminApi";
+import { useAdminState } from "@/state/adminState";
+import {
+  getDawayirLiveLaunchHref,
+  getDawayirLivePath,
+  getDawayirLiveReturnHref,
+  prepareDawayirLiveReturnNavigation
+} from "@/utils/dawayirLiveJourney";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { createLiveShare, getLiveSession } from "../api";
 import CognitiveWeatherSummary from '@/modules/dawayir-live/components/CognitiveWeatherSummary';
@@ -155,6 +163,7 @@ function sectionItems(summary: LiveSessionSummary | null, key: "breakthroughs" |
 }
 
 export default function LiveSessionCompletePage({ sessionId }: { sessionId: string }) {
+  const journeyPaths = useAdminState((state) => state.journeyPaths);
   const [detail, setDetail] = useState<LiveSessionDetail | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
@@ -184,6 +193,29 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
   const isArabic = detail?.session.language === "ar";
   const language = isArabic ? "ar" : "en";
   const copy = useMemo(() => createCopy(isArabic), [isArabic]);
+  const livePath = useMemo(() => getDawayirLivePath(journeyPaths), [journeyPaths]);
+  const liveReturnHref = useMemo(() => getDawayirLiveReturnHref(livePath), [livePath]);
+  const liveRestartHref = useMemo(
+    () => getDawayirLiveLaunchHref(livePath, { surface: "complete-restart" }),
+    [livePath]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchJourneyPaths().then((paths) => {
+      if (!cancelled && paths) {
+        useAdminState.getState().setJourneyPaths(paths);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const goToLiveOutcome = () => {
+    prepareDawayirLiveReturnNavigation(livePath);
+    assignUrl(liveReturnHref);
+  };
 
   const journeyPath = useMemo(() => getJourneyPath(detail), [detail]);
   const transitionCount = useMemo(() => {
@@ -495,7 +527,7 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
 
   return (
     <div className="complete-screen complete-overlay min-h-screen px-4 py-10 text-app-foreground">
-      <SandMandala targetRef={printRef} isActive={isReleasing} onComplete={() => assignUrl("/dawayir-live")} />
+      <SandMandala targetRef={printRef} isActive={isReleasing} onComplete={goToLiveOutcome} />
 
       <div ref={printRef} className={`complete-card mx-auto ${isReleasing ? "complete-card--releasing" : ""}`}>
         <div className="success-icon-container">
@@ -653,7 +685,7 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
 
           <div className="complete-actions-row">
             <div className="complete-primary-row">
-              <button className="primary-btn complete-action-btn" onClick={() => assignUrl("/dawayir-live")}>
+              <button className="primary-btn complete-action-btn" onClick={() => assignUrl(liveRestartHref)}>
                 {copy.newSession}
               </button>
               <button className="primary-btn complete-action-btn complete-action-secondary" onClick={() => assignUrl("/dawayir-live/history")}>

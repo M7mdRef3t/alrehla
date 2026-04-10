@@ -3,6 +3,7 @@ import type { FeatureFlagKey } from "@/config/features";
 import { resolveNavigation, type AppScreen } from "@/navigation/navigationMachine";
 import {
   getPathname,
+  getHash,
   isAdminPath,
   isAnalyticsPath,
   pushUrl,
@@ -21,6 +22,14 @@ interface UseAppRouteSyncParams {
   hasOAuthCallbackParams: () => boolean;
   setScreen: (screen: AppScreen) => void;
   setLockedFeature: (feature: FeatureFlagKey | null) => void;
+}
+
+function resolveScreenFromHash(): AppScreen | null {
+  const rawHash = getHash();
+  const hash = rawHash.startsWith("#") ? rawHash.slice(1) : rawHash;
+
+  if (hash === "sanctuary") return "sanctuary";
+  return null;
 }
 
 export function useAppRouteSync({
@@ -56,7 +65,8 @@ export function useAppRouteSync({
     }
 
     const state = { screen };
-    const url = getPathname() || "/";
+    const pathname = getPathname() || "/";
+    const url = screen === "sanctuary" ? `${pathname}#sanctuary` : pathname;
     if (!hasHistorySyncedRef.current) {
       hasHistorySyncedRef.current = true;
       replaceUrl(url, state);
@@ -68,7 +78,10 @@ export function useAppRouteSync({
   useEffect(() => {
     if (isAdminPath()) return;
     const handler = (event: PopStateEvent) => {
-      const next = (event.state as { screen?: AppScreen } | null)?.screen ?? "landing";
+      const next =
+        (event.state as { screen?: AppScreen } | null)?.screen ??
+        resolveScreenFromHash() ??
+        "landing";
       const result = resolveNavigation({
         target: next,
         canUseMap,

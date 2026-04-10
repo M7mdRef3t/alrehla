@@ -31,6 +31,7 @@ import { useGamificationState } from "@/state/gamificationState";
 import { useToastState } from "@/state/toastState";
 import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "@/services/marketingAttribution";
 import type { AppShellScreen } from "@/state/appShellNavigationState";
+import { useTheme } from "next-themes";
 
 type AgentModule = typeof import('@/agent');
 
@@ -109,6 +110,17 @@ export function AppRuntimeControllers({
     captureUtmFromCurrentUrl();
     captureLeadAttributionFromCurrentUrl();
   }, []);
+
+  // Sync ConsciousnessThemeEngine with next-themes
+  const { setTheme } = useTheme();
+  useEffect(() => {
+    const handleThemeChange = ((e: CustomEvent<{ isDark: boolean }>) => {
+      setTheme(e.detail.isDark ? "dark" : "light");
+    }) as EventListener;
+    
+    window.addEventListener("consciousness-theme-changed", handleThemeChange);
+    return () => window.removeEventListener("consciousness-theme-changed", handleThemeChange);
+  }, [setTheme]);
 
   useEffect(() => {
     void initThemePalette();

@@ -1,4 +1,4 @@
-import { memo, useState, type ComponentProps } from "react";
+import { memo, useState, lazy, Suspense, type ComponentProps } from "react";
 import { type AppScreen } from "@/navigation/navigationMachine";
 import { AppStartScreens } from "../AppStartScreens";
 import { AppJourneyScreens } from "../AppJourneyScreens";
@@ -12,6 +12,8 @@ import { ResourcesCenter } from "../../growth/ResourcesCenter";
 import type { ResourceTab } from "../../growth/ResourcesCenter";
 import { UserProfile } from "../UserProfile";
 import { SanctuaryDashboard } from "../SanctuaryDashboard";
+
+const CommandCenter = lazy(() => import("../../lifeOS/CommandCenter"));
 
 
 
@@ -299,6 +301,19 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
           onNavigate={(s) => onNavigate?.(s as any)}
           onOpenBreathing={() => onOpenBreathing?.()}
         />
+      </PageShell>
+    );
+  }
+
+  if (screen === "life-os") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
+          <CommandCenter
+            onBack={() => onNavigate?.("landing" as AppScreen)}
+            onOpenLibrary={onOpenLibrary}
+          />
+        </Suspense>
       </PageShell>
     );
   }

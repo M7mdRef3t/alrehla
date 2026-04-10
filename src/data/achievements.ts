@@ -10,6 +10,8 @@ export interface Achievement {
   icon: string;
   /** ترتيب العرض */
   order: number;
+  /** إذا كان الإنجاز سرياً ولا يظهر إلا بعد فتحه */
+  hidden?: boolean;
 }
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -197,6 +199,34 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: "⚡",
     order: 22
   },
+  /* ══ Hidden Achievements (Phase 2) ══ */
+  {
+    id: "night_owl",
+    title: "حارس الليل",
+    description: "استخدمت تمرين التنفس في وقت متأخر جداً",
+    hint: "السكينة في وسط الليل إنجاز خاص. جارفيس فخور بهدوئك.",
+    icon: "🦉",
+    order: 22.1,
+    hidden: true
+  },
+  {
+    id: "discipline_master",
+    title: "سيد الانضباط",
+    description: "فتحت مركز التطور 10 مرات دون تشتت",
+    hint: "المتابعة المستمرة لمستواك بتعني إنك جاد في التغيير.",
+    icon: "🧘‍♂️",
+    order: 22.2,
+    hidden: true
+  },
+  {
+    id: "impulse_master",
+    title: "حكيم الموارد",
+    description: "تصفحت المتجر وتراجعت 5 مرات قبل الشراء",
+    hint: "التفكير قبل الإنفاق دليل على نضج الشخصية السيادية.",
+    icon: "💎",
+    order: 22.3,
+    hidden: true
+  },
   /* ══ Quiz Achievements ══ */
   {
     id: "quiz_first",
@@ -229,6 +259,39 @@ export const ACHIEVEMENTS: Achievement[] = [
     hint: "من 5٪ من المستخدمين فقط يصلون لهنا. أنت منهم.",
     icon: "🏆",
     order: 26
+  },
+  /* ══ Life OS / Ritual Achievements ══ */
+  {
+    id: "ritual_starter",
+    title: "بداية الانضباط",
+    description: "أكملت أول 5 عادات يومية لك",
+    hint: "العادة هي اللي بتبني الشخصية. استمر.",
+    icon: "🕯️",
+    order: 27
+  },
+  {
+    id: "ritual_steady",
+    title: "ثبات العادة",
+    description: "حافظت على سلسلة عادات كاملة لمدة 7 أيام",
+    hint: "الاستمرارية هي السر الحقيقي للنجاح.",
+    icon: "🧘",
+    order: 28
+  },
+  {
+    id: "ritual_master",
+    title: "سيد الروتين",
+    description: "أكملت 50 عادة في سجلاتك",
+    hint: "دلوقتي الانضباط بقى جزء من هويتك.",
+    icon: "👑",
+    order: 29
+  },
+  {
+    id: "life_seeker",
+    title: "متوازن",
+    description: "وصلت لمعدل حياة (Life Score) أعلى من 75%",
+    hint: "أنت دلوقتي بتعيش حياة واعية ومتزنة فعلاً.",
+    icon: "💎",
+    order: 30
   }
 ].sort((a, b) => a.order - b.order);
 

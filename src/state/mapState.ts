@@ -1016,12 +1016,17 @@ export const useMapState = create<MapState>((set, get) => ({
 }));
 
 async function hydrateMapState() {
-  const initial = await loadStoredState();
-  const initialNodes: MapNode[] = (initial?.nodes ?? []).map(normalizeNodeOrbitHistory);
-  if (initialNodes.length > 0) {
-    deriveNextId(initialNodes);
-    useMapState.setState({ nodes: initialNodes, isHydrated: true });
-  } else {
+  try {
+    const initial =
+      typeof loadStoredState === "function" ? await loadStoredState() : null;
+    const initialNodes: MapNode[] = (initial?.nodes ?? []).map(normalizeNodeOrbitHistory);
+    if (initialNodes.length > 0) {
+      deriveNextId(initialNodes);
+      useMapState.setState({ nodes: initialNodes, isHydrated: true });
+    } else {
+      useMapState.setState({ isHydrated: true });
+    }
+  } catch {
     useMapState.setState({ isHydrated: true });
   }
 }

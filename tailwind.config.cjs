@@ -7,12 +7,12 @@ module.exports = {
       colors: {
         // 🌌 Deep Cosmic Blue — الخلفية العلاجية
         space: {
-          void: "#0a0e1f",      // أعمق من الأسود — void عميق
-          950: "#0f1629",        // slate-950 محسّن
-          deep: "#131a35",       // أزرق كوني عميق
-          mid: "#1a2242",        // أزرق متوسط دافئ
-          nebula: "#212b4f",     // سديم هادئ
-          aurora: "#2a3560"      // شفق شمالي
+          void: "var(--space-void, #0a0e1f)",      // أعمق من الأسود — void عميق
+          950: "var(--space-950, #0f1629)",        // slate-950 محسّن
+          deep: "var(--space-deep, #131a35)",       // أزرق كوني عميق
+          mid: "var(--space-mid, #1a2242)",        // أزرق متوسط دافئ
+          nebula: "var(--space-nebula, #212b4f)",     // سديم هادئ
+          aurora: "var(--space-aurora, #2a3560)"      // شفق شمالي
         },
         // 🔥 Warm Amber — لون الروح الدافئ
         amber: {
@@ -21,7 +21,7 @@ module.exports = {
           200: "#fde68a",
           300: "#fcd34d",
           400: "#fbbf24",
-          500: "#f5a623",        // Warm Amber (aligned with --warm-amber)
+          500: "var(--amber-500, #f5a623)",        // Warm Amber (aligned with --warm-amber)
           600: "#d97706",
           700: "#b45309",
           800: "#92400e",
@@ -34,7 +34,7 @@ module.exports = {
           200: "#a7f3d0",
           300: "#6ee7b7",
           400: "#34d399",
-          500: "#10b981",
+          500: "var(--emerald-500, #10b981)",
           600: "#059669",
           700: "#047857",
           800: "#065f46",
@@ -46,7 +46,7 @@ module.exports = {
           100: "#ccfbf1",
           200: "#99f6e4",
           300: "#5eead4",
-          400: "#2dd4bf",        // اللون الرئيسي
+          400: "var(--teal-400, #2dd4bf)",        // اللون الرئيسي
           500: "#14b8a6",
           600: "#0d9488",
           700: "#0f766e",
@@ -55,8 +55,8 @@ module.exports = {
         },
         // 🔴 Ring / Orbit Zone Colors
         ring: {
-          safe: "#2dd4bf",      // Teal
-          caution: "#f5a623",   // Warm Amber (aligned with --warm-amber)
+          safe: "var(--teal-400, #2dd4bf)",      // Teal
+          caution: "var(--amber-500, #f5a623)",   // Warm Amber (aligned with --warm-amber)
           danger: "#f87171",    // Calm danger (aligned with --ring-danger)
           detached: "#94a3b8"
         }

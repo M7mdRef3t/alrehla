@@ -214,30 +214,56 @@ export async function POST(req: Request) {
         // 🚀 Slash Commands Handling (Instant Response)
         const latestMessageRaw = (messages as any[])?.[messages.length - 1]?.content || '';
         if (typeof latestMessageRaw === 'string' && latestMessageRaw.startsWith('/weather')) {
-            const nodeLabel = (focusedNode as any)?.label || 'الكيان المجهول';
-            const nodeMetadata = (focusedNode as any)?.metadata || {};
-            const urgency = Number(nodeMetadata?.urgency || (focusedNode as any)?.mass || 5);
-            const friction = Number((focusedNode as any)?.color === 'danger' ? 9 : 5);
-            
-            let headline = 'أجواء صافية', icon = '☀️', advice = 'الرؤية واضحة هنا؛ العلاقات في منطقة السيادة الكاملة.';
-            
-            if (friction > 8 && urgency > 8) { 
-                headline = 'إعصار استنزافي استثنائي'; icon = '🌪️⚠️'; advice = 'تحذير تكتيكي: الكيان ده في مرحلة "الانفجار العاطفي". ابعد عنه فوراً لحد ما الجو يهدى.'; 
-            } else if (friction >= 9 || urgency >= 8) { 
-                headline = 'إعصار استنزافي'; icon = '🌪️'; advice = 'أنت في قلب الدوامة. الكيان ده بيستهلك طاقتك بشكل غير واعي. محتاج درع حماية فوراً.'; 
-            } else if (urgency > 6 || friction > 6) { 
-                headline = 'عاصفة مشاعر'; icon = '⛈️'; advice = 'الوضع متوتر. الأفكار متشابكة، والضغط في المنطقة دي عالي. خد نفس وراجع حدودك.'; 
-            } else if (friction > 4 || (focusedNode as any)?.color === 'ignored') { 
-                headline = 'رياح استنزاف خفية'; icon = '🌬️'; advice = 'في تسريب طاقة بطيء في العلاقة دي. مش باين بس بيأثر على المدى البعيد.'; 
-            }
+            const nodeLabel = (focusedNode as any)?.label || 'الكيان غير المحدد';
+            const nodeColor = (focusedNode as any)?.color || 'neutral';
+            const nodeMass = Number((focusedNode as any)?.mass || 5);
+
+            type PatternKey = 'danger' | 'ignored' | 'trusted' | 'neutral';
+            const patternMap: Record<PatternKey, { pattern: string; icon: string; headline: string; insight: string; actions: string[] }> = {
+                danger: {
+                    pattern: 'المنقذ القسري',
+                    icon: '🌪️',
+                    headline: 'إعصار استنزافي',
+                    insight: `"${nodeLabel}" في المنطقة الحمراء. العلاقة دي بتأخد أكتر بكتير مما بتدي. مش ضروري تقطعها — لكن محتاج تعيد رسم الحدود فوراً.`,
+                    actions: ['حدد ٣ أشياء ما تعودش تعملها بدون طلب صريح', 'انتبه لأي لحظة بتحس فيها بذنب لو قلت لأ', 'سجّل اللي بتقدمه وقارنه باللي بيقدمه']
+                },
+                ignored: {
+                    pattern: 'الحارس الصامت',
+                    icon: '🌬️',
+                    headline: 'رياح استنزاف صامتة',
+                    insight: `"${nodeLabel}" في منطقة التجاهل. الكيانات المتجاهلة بتآكل الطاقة أحياناً أكتر من المتعارضة لأن اللبس نفسه مرهق.`,
+                    actions: ['قرر: هل العلاقة دي تستحق صيانة؟', 'لو أيوه — خطوة واحدة هذا الأسبوع', 'لو لأ — خف وزنها في تفكيرك بوعي']
+                },
+                trusted: {
+                    pattern: 'المستقر',
+                    icon: '☀️',
+                    headline: 'أجواء صحوة',
+                    insight: `"${nodeLabel}" في منطقة الاستقرار. العلاقة دي مصدر طاقة مش استنزاف. حافظ عليها بوعي ومتأخدهاش كمسلمة.`,
+                    actions: ['أعبّر عن امتنانك لهذا الشخص بشكل واضح', 'استثمر في العلاقة دي لأنها نادرة', 'لاحظ: إيه اللي بيخليها صحية؟']
+                },
+                neutral: {
+                    pattern: 'قيد الرصد',
+                    icon: '⛅',
+                    headline: 'غيوم متقطعة',
+                    insight: `"${nodeLabel}" في المنطقة الرمادية. مش واضح بعد هل العلاقة بتدي ولا بتاخد. المراقبة أهم من الحكم دلوقتي.`,
+                    actions: ['لمدة أسبوع لاحظ كيف بتحس بعد كل تفاعل', 'اكتب: "بعد ما اتكلمت معاه، حسيت بـ..."', 'البيانات هتقولك أكتر من أي تحليل']
+                }
+            };
+
+            const colorKey = (nodeColor as PatternKey) in patternMap ? (nodeColor as PatternKey) : 'neutral';
+            const matched = patternMap[colorKey];
+            const intensityNote = nodeMass > 7
+                ? `\n\n⚡ **ملاحظة:** هذا الكيان له وزن عالٍ (${nodeMass}/10) — تأثيره على طاقتك أكبر من المتوسط.`
+                : '';
 
             await admin.rpc('consume_awareness_token', { p_user_id: userId, p_amount: 1 });
             return NextResponse.json({
-                reply: `### ${icon} نشرة طقس السيادة: "${nodeLabel}"\n\n**الحالة:** ${headline}\n\n**التشخيص التكتيكي:** ${advice}`,
+                reply: `### ${matched.icon} نشرة الطقس السيادي: "${nodeLabel}"\n\n**الحالة:** ${matched.headline} | **النمط:** ${matched.pattern}\n\n**التشخيص:**\n${matched.insight}${intensityNote}\n\n**الخطوات الفورية:**\n${matched.actions.map((a, i) => `${i + 1}. ${a}`).join('\n')}`,
                 tokens_remaining: currentTokens - 1,
-                llm_latency_ms: 10
+                llm_latency_ms: 12
             });
         }
+
 
         const genAI = getGeminiClient();
         if (!genAI) return NextResponse.json({ error: 'AI Engine offline' }, { status: 503 });

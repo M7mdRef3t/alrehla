@@ -14,6 +14,8 @@ import type {
   AiLogEntry,
   AdminMission,
   AdminBroadcast,
+  JourneyPath,
+  JourneyPathStep,
   SovereignInsight,
   SovereignStats
 } from "@/state/adminState";
@@ -38,6 +40,7 @@ type SystemSettingKey =
   | "pulse_check_mode"
   | "theme_palette"
   | "pulse_copy_overrides"
+  | "journey_paths"
   | "marketing_spend";
 
 const SETTINGS_TABLE = "system_settings";
@@ -267,6 +270,74 @@ export async function fetchPulseCopyOverrides(): Promise<PulseCopyOverrides | nu
 
 export async function updatePulseCopyOverrides(overrides: PulseCopyOverrides): Promise<boolean> {
   return saveSetting("pulse_copy_overrides", overrides);
+}
+
+export async function fetchJourneyPaths(): Promise<JourneyPath[] | null> {
+  const data = await fetchSettings(["journey_paths"]);
+  return (data?.get("journey_paths") as JourneyPath[]) ?? null;
+}
+
+export async function updateJourneyPaths(paths: JourneyPath[]): Promise<boolean> {
+  return saveSetting("journey_paths", paths);
+}
+
+export async function generateJourneyPath(intention: string): Promise<JourneyPathStep[] | null> {
+  const apiData = await callAdminApi<{ ok: boolean; steps: JourneyPathStep[] }>("paths/generate", {
+    method: "POST",
+    body: JSON.stringify({ intention })
+  });
+  if (apiData?.ok && apiData.steps) {
+    return apiData.steps;
+  }
+  return null;
+}
+
+export async function auditJourneyPath(path: JourneyPath): Promise<any | null> {
+  const apiData = await callAdminApi<{ ok: boolean; audit: any }>("paths/audit", {
+    method: "POST",
+    body: JSON.stringify({ path })
+  });
+  if (apiData?.ok && apiData.audit) {
+    return apiData.audit;
+  }
+  return null;
+}
+
+export async function getRevenueMetrics(): Promise<any | null> {
+  if (runtimeEnv.isDev) {
+    const snapshot = await revenueEngine.getExecutiveRevenueSnapshot();
+    return {
+      mrr: snapshot.mrr,
+      arr: snapshot.arr,
+      churnRate: snapshot.churnRate,
+      totalUsers: snapshot.activeSubscriptions,
+      breakdown: {
+        free: 0,
+        premium: snapshot.activeSubscriptions,
+        coach: 0
+      }
+    };
+  }
+
+  const apiData = await callAdminApi<{ ok: boolean; metrics: any }>("revenue/metrics", {
+    method: "GET"
+  });
+  if (apiData?.ok && apiData.metrics) {
+    return apiData.metrics;
+  }
+
+  const snapshot = await revenueEngine.getExecutiveRevenueSnapshot();
+  return {
+    mrr: snapshot.mrr,
+    arr: snapshot.arr,
+    churnRate: snapshot.churnRate,
+    totalUsers: snapshot.activeSubscriptions,
+    breakdown: {
+      free: 0,
+      premium: snapshot.activeSubscriptions,
+      coach: 0
+    }
+  };
 }
 
 export async function fetchAdminConfig(): Promise<{

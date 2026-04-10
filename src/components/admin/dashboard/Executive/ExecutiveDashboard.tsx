@@ -125,22 +125,22 @@ export const ExecutiveDashboard: FC = () => {
     return (
         <div className="space-y-6" dir="rtl">
             {/* Header */}
-            <header className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/5 flex flex-col md:flex-row items-center justify-between relative overflow-hidden mb-8">
+            <header className="bg-white dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-200 dark:border-white/5 flex flex-col md:flex-row items-center justify-between relative overflow-hidden mb-8 transition-colors duration-500">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 blur-[80px] rounded-full pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 blur-[80px] rounded-full pointer-events-none" />
                 <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
-                    <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
-                        <Activity className="w-6 h-6 text-teal-400" />
+                    <div className="p-3 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 transition-colors duration-500">
+                        <Activity className="w-6 h-6 text-teal-600 dark:text-teal-400" />
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h2 className="text-2xl font-black text-white tracking-tight">المركز التنفيذي</h2>
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">المركز التنفيذي</h2>
                             <AdminTooltip content="شاشة القيادة الرئيسية. بتعرض ملخص سريع لكل أرقام المنصة وصحة النظام، وتقارير تخص نجاح مرحلة الإطلاق (Phase One)." position="bottom" />
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-                            <p className="text-sm font-medium text-emerald-400">متصل مباشر</p>
-                            <span className="text-slate-600 mx-1">•</span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+                            <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">متصل مباشر</p>
+                            <span className="text-slate-400 dark:text-slate-600 mx-1">•</span>
                             <p className="text-xs text-slate-500">نظرة عامة سيادية</p>
                         </div>
                     </div>

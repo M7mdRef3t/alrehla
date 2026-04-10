@@ -233,7 +233,7 @@ function EditableBio() {
         <textarea ref={ref} value={draft} onChange={(e) => setDraft(e.target.value)}
           rows={3} maxLength={160}
           placeholder="دوّن ملاحظة عن رحلتك وملاذك الآمن..."
-          className="w-full bg-app-surface border border-teal-500/30 rounded-xl px-4 py-3 text-sm text-app-primary outline-none resize-none placeholder:text-app-muted focus:border-teal-400 focus:ring-1 focus:ring-teal-400/20 transition-all font-sans leading-relaxed text-center"
+          className="w-full bg-white dark:bg-slate-900/40 border border-teal-500/30 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none resize-none placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-teal-400 focus:ring-1 focus:ring-teal-400/20 transition-all font-sans leading-relaxed text-center"
         />
         <div className="flex justify-center gap-3 mt-3">
           <button onClick={cancel} className="px-4 py-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors">
@@ -249,7 +249,7 @@ function EditableBio() {
 
   return (
     <div className="mt-4 px-4 flex justify-center group relative cursor-text" onClick={() => setEditing(true)}>
-      <p className="text-sm text-app-muted leading-relaxed text-center italic opacity-80 group-hover:opacity-100 transition-opacity max-w-[280px]">
+      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed text-center italic opacity-80 group-hover:opacity-100 transition-opacity max-w-[280px]">
         "{bio || "لم يتم تدوين شيء هنا بعد. اضغط للتدوين في رحلتك المدارية."}"
       </p>
       <div className="absolute -right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -277,7 +277,7 @@ function StatsRow({ xp, achievements, quizCount, level }: {
       {items.map((s, i) => (
         <motion.div key={i} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 + i * 0.05, type: "spring", bounce: 0.4 }}
-          className="bg-app-surface border border-app-border rounded-2xl py-3 px-1 text-center flex flex-col items-center shadow-sm"
+          className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/10 rounded-2xl py-3 px-1 text-center flex flex-col items-center shadow-sm"
           style={{ borderTopColor: `${s.color}40` }}>
           <div className="mb-2 p-1.5 rounded-full" style={{ background: `${s.color}15`, color: s.color, filter: `drop-shadow(0 0 5px ${s.color}40)` }}>
             {s.icon}
@@ -524,8 +524,8 @@ function TestHistory({ history }: { history: Array<{ quizTitle: string; score: n
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
       className="mb-6 relative overflow-hidden" style={cosmicGlassBase}
     >
-      <div className="p-5 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-app-border bg-app-surface/40 text-right">
-        <h2 className="text-sm font-bold flex items-center gap-2 text-app-primary">
+      <div className="p-5 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-200 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 text-right">
+        <h2 className="text-sm font-bold flex items-center gap-2 text-slate-900 dark:text-white">
           <BookOpen size={16} className="text-teal-600 dark:text-teal-400" />
           سجل الملاصقات والتقييمات
         </h2>
@@ -583,7 +583,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
   }, [history]);
 
   return (
-    <div dir="rtl" className="min-h-screen relative overflow-hidden bg-app text-app-primary">
+    <div dir="rtl" className="min-h-screen relative overflow-hidden bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-white">
       {/* Background Accents for extra immersion */}
       <div className="absolute inset-0 pointer-events-none opacity-20" style={{ background: "radial-gradient(circle at 50% -10%, var(--soft-teal) 0%, transparent 60%)" }} />
 

@@ -83,7 +83,18 @@ export function startAutonomousStartupJobs({ enabled, logger = console }: Startu
     )
   );
 
-  // 5. Consciousness Theme (Delay 6s)
+  // 5. Cloud Theme Sync (Delay 1s)
+  void sleep(1000).then(() => 
+    runStartupJob(
+      () => import("@/state/themeState"),
+      (mod) => mod.useThemeState.getState().fetchCloudTokens(),
+      "Global Identity synced from cloud",
+      "Cloud theme sync failed:",
+      logger
+    )
+  );
+
+  // 6. Consciousness Theme (Delay 6s)
   // This one is visual, let's keep it later to avoid initial layout shifts
   void sleep(6000).then(() => 
     runStartupJob(

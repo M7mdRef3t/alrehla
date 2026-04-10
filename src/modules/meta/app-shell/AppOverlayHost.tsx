@@ -112,7 +112,9 @@ const JourneyToast = lazy(() => import('@/modules/action/JourneyToast').then((m)
 const BlindCapsuleOpener = lazy(() => import('@/modules/action/BlindCapsuleOpener').then((m) => ({ default: m.BlindCapsuleOpener })));
 const WisdomMatrixHub = lazy(() => import('@/modules/growth/WisdomMatrixHub').then(m => ({ default: m.WisdomMatrixHub })));
 const ImmersionPathDetails = lazy(() => import('@/modules/growth/ImmersionPathDetails').then(m => ({ default: m.ImmersionPathDetails })));
+const EvolutionHub = lazy(() => import('@/modules/gamification/EvolutionHub').then(m => ({ default: m.EvolutionHub })));
 const VanguardCollective = lazy(() => import('@/modules/growth/VanguardCollective').then(m => ({ default: m.VanguardCollective })));
+const ChronicleOverlay = lazy(() => import('@/modules/gamification/ChronicleOverlay').then(m => ({ default: m.ChronicleOverlay })));
 
 interface AppOverlayHostProps {
   canShowAIChatbot: boolean;
@@ -124,7 +126,7 @@ interface AppOverlayHostProps {
 }
 
 type VisibleOverlayId = AppOverlayFlag | "emergency" | "pulseCheck";
-type MindSignalOverlay = "nudgeToast" | "mirrorOverlay" | "journeyGuideChat";
+type MindSignalOverlay = "nudgeToast" | "mirrorOverlay" | "journeyGuideChat" | "evolutionHub";
 
 export const AppOverlayHost = memo(function AppOverlayHost({
   canShowAIChatbot,
@@ -228,9 +230,11 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     duoCommunity: showDuoCommunity,
     pastSessionsLog: showPastSessionsLog,
     rewardStore: showRewardStore,
+    evolutionHub: showEvolutionHub,
     wisdomMatrix: showWisdomMatrix,
     immersionPath: showImmersionPath,
     vanguardCollective: showVanguardCollective,
+    sovereignChronicle: showSovereignChronicle,
   } = flags;
 
   // Implementation of Layer 3 (Execution): Overlay Mutex & Severity Index
@@ -318,6 +322,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     handleAuthModalNotNow
   } = useAppPulseSanctuaryFlow({
     goalId: goalId ?? "unknown",
+    currentScreen: screen,
     isLandingScreen: screen === "landing",
     showPulseCheck: pulseCheckState.isOpen,
     setShowPulseCheck: (val) => setPulseCheck(val, pulseCheckState.context),
@@ -596,7 +601,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
           />
         )}
 
-        {showPrivateCircleInvitation && isVisible("privateCircleInvitation") && (
+        {showPrivateCircleInvitation && isVisible("privateCircleInvitation") && (
           <PrivateCircleInvitationModal 
             isOpen={showPrivateCircleInvitation}
             onClose={() => closeOverlay("privateCircleInvitation")}
@@ -634,6 +639,16 @@ export const AppOverlayHost = memo(function AppOverlayHost({
             isOpen={showRewardStore}
             onClose={() => closeOverlay("rewardStore")}
           />
+        )}
+
+        {showEvolutionHub && isVisible("evolutionHub") && (
+          <EvolutionHub 
+            onClose={() => closeOverlay("evolutionHub")}
+          />
+        )}
+
+        {showSovereignChronicle && isVisible("sovereignChronicle") && (
+          <ChronicleOverlay />
         )}
 
         {showSymptomsOverview && isVisible("symptomsOverview") && (

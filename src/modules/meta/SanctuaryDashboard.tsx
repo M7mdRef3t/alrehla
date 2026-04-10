@@ -16,6 +16,13 @@ import {
 import { usePulseState } from "@/state/pulseState";
 import { useMapState } from "@/state/mapState";
 import { useAuthState } from "@/state/authState";
+import { useAdminState } from "@/state/adminState";
+import {
+    getEnabledJourneySteps,
+    getJourneyPathBySlug,
+    hasEnabledJourneyStepKind,
+    isJourneyScreenEnabled
+} from "@/utils/journeyPaths";
 
 interface SanctuaryDashboardProps {
     onNavigate: (screen: string) => void;
@@ -26,10 +33,17 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
     const lastPulse = usePulseState((s) => s.lastPulse);
     const nodes = useMapState((s) => s.nodes);
     const user = useAuthState((s) => s.user);
+    const journeyPaths = useAdminState((s) => s.journeyPaths);
 
     const activeNodes = nodes.filter(n => !n.isNodeArchived);
     const energyLevel = lastPulse?.energy ?? 5;
     const emailPrefix = user?.email?.split("@")[0] || "Sovereign";
+    const sanctuaryPath = getJourneyPathBySlug(journeyPaths, "sanctuary");
+    const sanctuarySteps = getEnabledJourneySteps(sanctuaryPath);
+    const sanctuaryBreathingEnabled = hasEnabledJourneyStepKind(sanctuaryPath, "intervention");
+    const primaryActionVisible = isJourneyScreenEnabled(sanctuaryPath, sanctuaryPath?.primaryActionScreen || "map");
+    const secondaryActionVisible = isJourneyScreenEnabled(sanctuaryPath, sanctuaryPath?.secondaryActionScreen || "armory");
+    const tertiaryActionVisible = isJourneyScreenEnabled(sanctuaryPath, sanctuaryPath?.tertiaryActionScreen || "insights");
 
     // Dynamic styles based on energy
     const energyColor = energyLevel <= 3 ? "text-[var(--consciousness-critical)]" : energyLevel <= 6 ? "text-[var(--consciousness-accent)]" : "text-[var(--consciousness-primary)]";
@@ -153,7 +167,9 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                         {/* Floating Interaction Labels */}
                         <motion.button
                             whileHover={{ scale: 1.1, x: 10 }}
-                            onClick={onOpenBreathing}
+                            onClick={() => sanctuaryBreathingEnabled && onOpenBreathing()}
+                            hidden={!sanctuaryBreathingEnabled}
+                            aria-hidden={!sanctuaryBreathingEnabled}
                             className="absolute -top-10 -right-10 ds-card px-4 py-2 rounded-full border-teal-500/30 flex items-center gap-2 group transition-all hover:bg-teal-500/10"
                         >
                             <Wind className="w-4 h-4 text-[var(--consciousness-primary)]" />
@@ -171,6 +187,47 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                             <span className="h-px w-8 bg-slate-800" />
                         </div>
                     </div>
+
+                    {sanctuaryPath && (
+                        <div className="mt-8 w-full max-w-2xl rounded-[2rem] border border-cyan-500/10 bg-slate-950/40 p-6 text-right">
+                            <div className="mb-4 flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400/70">Path Runtime</p>
+                                    <h3 className="mt-2 text-xl font-black text-white">{sanctuaryPath.title}</h3>
+                                </div>
+                                <span className={`rounded-full px-3 py-1 text-[10px] font-black ${sanctuaryPath.isActive ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-800 text-slate-400"}`}>
+                                    {sanctuaryPath.isActive ? "فعال" : "متوقف"}
+                                </span>
+                            </div>
+                            <p className="text-sm leading-7 text-slate-400">{sanctuaryPath.description}</p>
+
+                            <div className="mt-5 grid gap-3">
+                                {sanctuarySteps.map((step, index) => (
+                                    <div
+                                        key={step.id}
+                                        className={`rounded-[1.25rem] border p-4 ${step.screen === "sanctuary" ? "border-cyan-500/30 bg-cyan-500/10" : "border-white/5 bg-white/[0.02]"}`}
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-3">
+                                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-black text-white">
+                                                    {index + 1}
+                                                </span>
+                                                <div>
+                                                    <div className="text-sm font-black text-white">{step.title}</div>
+                                                    <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{step.kind} / {step.screen}</div>
+                                                </div>
+                                            </div>
+                                            {step.screen === "sanctuary" && (
+                                                <span className="rounded-full bg-cyan-500/15 px-2 py-1 text-[10px] font-black text-cyan-300">أنت هنا</span>
+                                            )}
+                                        </div>
+                                        <p className="mt-3 text-sm leading-6 text-slate-400">{step.description}</p>
+                                        {step.note && <p className="mt-2 text-xs leading-6 text-slate-500">{step.note}</p>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </motion.div>
 
                 {/* ── Right Column: Tactical Hub ── */}
@@ -182,7 +239,9 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-2 mr-2">Tactical Hub // العمليات</h3>
                     
                     <button 
-                        onClick={() => onNavigate("map")}
+                        onClick={() => onNavigate(sanctuaryPath?.primaryActionScreen || "map")}
+                        hidden={!primaryActionVisible}
+                        aria-hidden={!primaryActionVisible}
                         className="group relative w-full p-5 rounded-[2rem] glass-card border-white/5 hover:border-teal-500/30 transition-all overflow-hidden text-right"
                     >
                         <div className="absolute top-0 left-0 w-1 h-full bg-teal-500 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
@@ -191,7 +250,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                 <MapIcon className="w-6 h-6 text-slate-400 group-hover:text-teal-400 transition-colors" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-black text-white">خريطة العلاقات</h4>
+                                <h4 className="text-sm font-black text-white">{sanctuaryPath?.primaryActionLabel || "خريطة العلاقات"}</h4>
                                 <p className="text-[10px] text-slate-500 font-medium">المرصد الرقمي لوعيك</p>
                             </div>
                             <ChevronRight className="w-4 h-4 text-slate-700 mr-auto group-hover:text-teal-500 group-hover:-translate-x-1 transition-all" />
@@ -199,7 +258,9 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                     </button>
 
                     <button 
-                        onClick={() => onNavigate("armory")}
+                        onClick={() => onNavigate(sanctuaryPath?.secondaryActionScreen || "armory")}
+                        hidden={!secondaryActionVisible}
+                        aria-hidden={!secondaryActionVisible}
                         className="group relative w-full p-5 rounded-[2rem] glass-card border-white/5 hover:border-rose-500/30 transition-all overflow-hidden text-right"
                     >
                         <div className="absolute top-0 left-0 w-1 h-full bg-rose-500 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
@@ -208,7 +269,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                 <Crosshair className="w-6 h-6 text-slate-400 group-hover:text-rose-400 transition-colors" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-black text-white">الترسانة والصد</h4>
+                                <h4 className="text-sm font-black text-white">{sanctuaryPath?.secondaryActionLabel || "الترسانة والصد"}</h4>
                                 <p className="text-[10px] text-slate-500 font-medium">بروتوكولات الحماية الفورية</p>
                             </div>
                             <ChevronRight className="w-4 h-4 text-slate-700 mr-auto group-hover:text-rose-500 group-hover:-translate-x-1 transition-all" />
@@ -216,7 +277,9 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                     </button>
 
                     <button 
-                        onClick={() => onNavigate("insights")}
+                        onClick={() => onNavigate(sanctuaryPath?.tertiaryActionScreen || "insights")}
+                        hidden={!tertiaryActionVisible}
+                        aria-hidden={!tertiaryActionVisible}
                         className="group relative w-full p-5 rounded-[2rem] glass-card border-white/5 hover:border-indigo-500/30 transition-all overflow-hidden text-right"
                     >
                         <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
@@ -225,7 +288,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                 <TrendingUp className="w-6 h-6 text-slate-400 group-hover:text-indigo-400 transition-colors" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-black text-white">رادار التقدم</h4>
+                                <h4 className="text-sm font-black text-white">{sanctuaryPath?.tertiaryActionLabel || "رادار التقدم"}</h4>
                                 <p className="text-[10px] text-slate-500 font-medium">تحليل المسار والاحتمالات</p>
                             </div>
                             <ChevronRight className="w-4 h-4 text-slate-700 mr-auto group-hover:text-indigo-500 group-hover:-translate-x-1 transition-all" />

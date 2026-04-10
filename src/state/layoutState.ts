@@ -262,3 +262,20 @@ export const useLayoutState = create<LayoutState>()(
     }
   )
 );
+
+// 🧠 Synapse Receptor (Neural Link)
+import { SynapseBus } from "@/core/synapse/SynapseBus";
+
+SynapseBus.subscribe((event) => {
+  if (event.intensity >= 0.7) {
+    if (event.type === "VAMPIRE_DETECTED" || event.type === "NODE_SHIFTED_OUTWARD") {
+      // User might need insights when major changes or drain happen
+      useLayoutState.getState().setMode("insights");
+      useLayoutState.getState().setActiveTab("analytical");
+    } else if (event.type === "STRESS_SPIKED" || event.type === "LOCKDOWN_INITIATED") {
+      // User needs to talk to the AI
+      useLayoutState.getState().setMode("conversation");
+      useLayoutState.getState().setActiveTab("narrative");
+    }
+  }
+});

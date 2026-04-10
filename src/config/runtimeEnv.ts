@@ -25,8 +25,6 @@ type RuntimeKey =
   | "VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"
   | "VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"
   | "VITE_OWNER_SECURITY_WEBHOOK_URL"
-  | "VITE_TELEGRAM_BOT_TOKEN"
-  | "VITE_TELEGRAM_CHAT_ID"
   | "VITE_AFFILIATE_WHITELIST"
   | "VITE_JULES_API_KEY"
   | "VITE_DEMO_MODE"
@@ -63,8 +61,6 @@ type NextPublicKey =
   | "NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"
   | "NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"
   | "NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL"
-  | "NEXT_PUBLIC_TELEGRAM_BOT_TOKEN"
-  | "NEXT_PUBLIC_TELEGRAM_CHAT_ID"
   | "NEXT_PUBLIC_AFFILIATE_WHITELIST"
   | "NEXT_PUBLIC_JULES_API_KEY"
   | "NEXT_PUBLIC_DEMO_MODE"
@@ -118,8 +114,6 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
     NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE: process.env.NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE,
     NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE: process.env.NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE,
     NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL: process.env.NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL,
-    NEXT_PUBLIC_TELEGRAM_BOT_TOKEN: process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN,
-    NEXT_PUBLIC_TELEGRAM_CHAT_ID: process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID,
     NEXT_PUBLIC_AFFILIATE_WHITELIST: process.env.NEXT_PUBLIC_AFFILIATE_WHITELIST,
     NEXT_PUBLIC_JULES_API_KEY: process.env.NEXT_PUBLIC_JULES_API_KEY,
     NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE,
@@ -162,6 +156,20 @@ function readEnv(key: RuntimeKey): string | undefined {
   return undefined;
 }
 
+function readServerOnlyEnv(...keys: string[]): string | undefined {
+  if (typeof window !== "undefined") return undefined;
+
+  const penv = safeProcessEnv();
+  for (const key of keys) {
+    const value = penv[key];
+    if (typeof value === "string" && value.length > 0) {
+      return normalizeEnvValue(value);
+    }
+  }
+
+  return undefined;
+}
+
 const penv = safeProcessEnv();
 const processNodeEnv = typeof penv.NODE_ENV === "string" ? penv.NODE_ENV : undefined;
 
@@ -194,8 +202,8 @@ export const runtimeEnv = {
   sentryReplaysSessionSampleRate: readEnv("VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"),
   sentryReplaysOnErrorSampleRate: readEnv("VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"),
   ownerSecurityWebhookUrl: readEnv("VITE_OWNER_SECURITY_WEBHOOK_URL"),
-  telegramBotToken: readEnv("VITE_TELEGRAM_BOT_TOKEN"),
-  telegramChatId: readEnv("VITE_TELEGRAM_CHAT_ID"),
+  telegramBotToken: readServerOnlyEnv("TELEGRAM_BOT_TOKEN", "VITE_TELEGRAM_BOT_TOKEN"),
+  telegramChatId: readServerOnlyEnv("TELEGRAM_CHAT_ID", "VITE_TELEGRAM_CHAT_ID"),
   affiliateWhitelist: readEnv("VITE_AFFILIATE_WHITELIST"),
   julesApiKey: readEnv("VITE_JULES_API_KEY"),
   isDemoMode: readEnv("VITE_DEMO_MODE") === "true",

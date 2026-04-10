@@ -55,11 +55,13 @@ export type AppOverlayFlag =
   | "duoCommunity"
   | "pastSessionsLog"
   | "rewardStore"
+  | "evolutionHub"
   | "ruthlessMirror"
   | "egoDeath"
   | "wisdomMatrix"
   | "immersionPath"
-  | "vanguardCollective";
+  | "vanguardCollective"
+  | "sovereignChronicle";
 
 export type AppOverlayFlags = Record<AppOverlayFlag, boolean>;
 
@@ -113,11 +115,13 @@ const defaultOverlayFlags: AppOverlayFlags = {
   duoCommunity: false,
   pastSessionsLog: false,
   rewardStore: false,
+  evolutionHub: false,
   ruthlessMirror: false,
   egoDeath: false,
   wisdomMatrix: false,
   immersionPath: false,
-  vanguardCollective: false
+  vanguardCollective: false,
+  sovereignChronicle: false
 };
 
 interface AppOverlayState {

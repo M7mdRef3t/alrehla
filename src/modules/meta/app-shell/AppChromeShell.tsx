@@ -86,6 +86,28 @@ export function AppChromeShell({
           }}
           aria-label="التنقل الرئيسي"
         >
+          {/* حياتي — Life OS Command Center */}
+          <button
+            type="button"
+            onClick={() => onNavigate("life-os" as AppShellScreen)}
+            className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
+            style={{ color: screen === "life-os" ? "#a78bfa" : "rgba(148,163,184,0.55)" }}
+            aria-label="حياتي"
+          >
+            <span className="relative inline-flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                style={{ filter: screen === "life-os" ? "drop-shadow(0 0 8px rgba(139,92,246,0.7))" : "none", transition: "filter 0.3s" }}
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2a7 7 0 0 1 0 14 7 7 0 0 1 0-14" />
+                <circle cx="12" cy="9" r="2" fill="currentColor" stroke="none" />
+                <path d="M12 14v4" />
+                <path d="M9 18h6" />
+              </svg>
+            </span>
+            <span className="text-[10px] font-semibold">حياتي</span>
+          </button>
+          {/* الخريطة */}
           <button
             type="button"
             onClick={() => onNavigate("map")}
@@ -100,6 +122,7 @@ export function AppChromeShell({
             </svg>
             <span className="text-[10px] font-semibold">الخريطة</span>
           </button>
+          {/* المسار */}
           <button
             type="button"
             onClick={() => onNavigate("tools")}
@@ -130,6 +153,7 @@ export function AppChromeShell({
             </span>
             <span className="text-[10px] font-semibold">المسار</span>
           </button>
+          {/* النبض */}
           <button
             type="button"
             onClick={onOpenPulse}
@@ -142,29 +166,7 @@ export function AppChromeShell({
             </svg>
             <span className="text-[10px] font-semibold">النبض</span>
           </button>
-          <button
-            type="button"
-            onClick={onOpenLibrary}
-            className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
-            style={{ color: libraryOpen ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
-            aria-label="المكتبة"
-          >
-            <span className="relative inline-flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-              </svg>
-              {archivedNodesCount > 0 && (
-                <span
-                  className="absolute -top-1 -right-2 min-w-[15px] h-[15px] rounded-full text-[8px] font-bold flex items-center justify-center px-0.5"
-                  style={{ background: "rgba(45,212,191,0.9)", color: "#0f172a", lineHeight: "1" }}
-                >
-                  {archivedNodesCount}
-                </span>
-              )}
-            </span>
-            <span className="text-[10px] font-semibold">المكتبة</span>
-          </button>
+          {/* أنا */}
           <button
             type="button"
             onClick={() => onNavigate("settings")}

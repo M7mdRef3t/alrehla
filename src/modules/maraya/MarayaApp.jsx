@@ -19,6 +19,13 @@ import KineticText from './components/ui/KineticText.jsx';
 import useMarayaRuntime from './hooks/useMarayaRuntime.js';
 import { APP_STATES, JUDGE_MODE_QUERY_PARAM } from './utils/constants.js';
 import { buildTransformationSummary, toDisplayEmotionLabel } from './utils/transformation.js';
+import { useAdminState } from '@/state/adminState';
+import {
+  getMarayaStoryPath,
+  getMarayaStoryRestartLabel,
+  getMarayaStoryReturnLabel,
+  launchMarayaStoryReturn
+} from '@/utils/marayaStoryJourney';
 
 const EMOTION_COLORS = {
   hope: '#5effb3',
@@ -165,6 +172,8 @@ export default function App() {
   const hideUiTimerRef = useRef(null);
   const hrvIntervalRef = useRef(null);
   const judgeMode = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(JUDGE_MODE_QUERY_PARAM) === '1' : false;
+  const journeyPaths = useAdminState((state) => state.journeyPaths);
+  const marayaPath = getMarayaStoryPath(journeyPaths);
 
   const handlePointerDown = (e) => {
     if (e.target.closest('button') || e.target.closest('input')) return;
@@ -300,6 +309,8 @@ export default function App() {
     : 'خاتمة تحكيمية خاصة تجعل التحوّل يبدو ككشفٍ بصري لا كتلاشي هادئ.';
 
   const judgeEndingAccent = judgeEndingSceneAccent || currentEmotionColor;
+  const returnToJourneyLabel = getMarayaStoryReturnLabel(marayaPath);
+  const restartJourneyLabel = getMarayaStoryRestartLabel(marayaPath);
 
   const judgeFinaleVoiceLine = uiLanguage === 'en'
     ? `Transformation complete. ${judgeEndingLine}.`
@@ -708,9 +719,16 @@ export default function App() {
                     endingMessage={endingMessage}
                     summary={transformationSummary}
                   />
+                  <button
+                    type="button"
+                    className="ending__restart"
+                    onClick={() => launchMarayaStoryReturn(marayaPath)}
+                  >
+                    {returnToJourneyLabel}
+                  </button>
                   {canRestartStory ? (
                     <button type="button" className="ending__restart" onClick={handleRestart}>
-                      {uiText.restart}
+                      {restartJourneyLabel || uiText.restart}
                     </button>
                   ) : (
                     <p className="ending__duo-note">

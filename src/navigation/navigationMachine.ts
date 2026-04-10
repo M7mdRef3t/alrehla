@@ -21,7 +21,8 @@ export type AppScreen =
   | "behavioral-analysis"
   | "resources"
   | "profile"
-  | "sanctuary";
+  | "sanctuary"
+  | "life-os";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

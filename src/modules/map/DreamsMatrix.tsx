@@ -74,14 +74,14 @@ const MatrixNode: FC<MatrixNodeProps> = memo(({ node, index, total, isLocked }) 
 
                 {/* Hover Simulation Overlay */}
                 <div className="absolute top-12 left-1/2 -translate-x-1/2 w-48 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100]">
-                    <div className={`p-4 rounded-2xl border backdrop-blur-xl space-y-3 shadow-2xl transition-all duration-300 ${isLocked ? 'bg-rose-500/10 border-rose-500/30' : 'bg-app-surface/90 border-app-border'}`}>
+                    <div className={`p-4 rounded-2xl border backdrop-blur-xl space-y-3 shadow-2xl transition-all duration-300 ${isLocked ? 'bg-rose-500/10 border-rose-500/30' : 'bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-white/10'}`}>
                         <div className="flex justify-between items-start">
-                            <p className="text-sm font-black text-app-primary leading-tight">{node.title}</p>
+                            <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">{node.title}</p>
                             {isLocked && <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />}
                         </div>
 
                         <div className="flex justify-between items-center text-[11px] font-bold">
-                            <span className="text-app-muted">التوافق (S):</span>
+                            <span className="text-slate-500 dark:text-slate-400">التوافق (S):</span>
                             <span className={`${isLocked ? 'text-rose-500' : 'text-teal-600 dark:text-teal-400'} font-mono`}>{(node.alignmentScore * 100).toFixed(0)}%</span>
                         </div>
 
@@ -104,7 +104,7 @@ const MatrixNode: FC<MatrixNodeProps> = memo(({ node, index, total, isLocked }) 
                             </div>
                         )}
 
-                        <div className="w-full bg-app-bg rounded-full h-1.5 overflow-hidden border border-app-border shadow-inner">
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden border border-slate-200 dark:border-white/10 shadow-inner">
                             <div
                                 className={`h-full ${isLocked ? 'bg-rose-500' : 'bg-teal-500'}`}
                                 style={{ width: `${node.alignmentScore * 100}%` }}
@@ -165,7 +165,7 @@ export const DreamsMatrix: FC<{ dreams: Dream[]; stats: Partial<OverviewStats> }
     }, [dreams, stats, isSurvivalMode]);
 
     return (
-        <div className={`relative w-full h-[500px] overflow-hidden rounded-[2rem] bg-app-surface border transition-all duration-1000 backdrop-blur-xl group ${isCrisis ? 'border-rose-500/30' : 'border-app-border'}`}>
+        <div className={`relative w-full h-[500px] overflow-hidden rounded-[2rem] bg-white dark:bg-slate-900 border transition-all duration-1000 backdrop-blur-xl group ${isCrisis ? 'border-rose-500/30' : 'border-slate-200 dark:border-white/10'}`}>
             {/* Background Starfield/Grid */}
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5 dark:opacity-10" />
             <div className={`absolute inset-0 bg-radial-at-c transition-colors duration-1000 ${isCrisis ? 'from-rose-500/10' : 'from-teal-500/5'} to-transparent`} />
@@ -209,9 +209,9 @@ export const DreamsMatrix: FC<{ dreams: Dream[]; stats: Partial<OverviewStats> }
                         <span className="text-[11px] text-rose-700 dark:text-rose-100 font-black tracking-widest uppercase">CRISIS VETO ACTIVE</span>
                     </div>
                 )}
-                <div className={`flex items-center gap-3 px-4 py-2 rounded-2xl bg-app-surface/60 border border-app-border backdrop-blur-md ${!isCrisis ? 'opacity-70' : ''}`}>
+                <div className={`flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-white/10 backdrop-blur-md ${!isCrisis ? 'opacity-70' : ''}`}>
                     <Activity className={`w-4 h-4 ${isCrisis ? 'text-rose-500' : 'text-teal-600 dark:text-teal-400'}`} />
-                    <span className="text-[11px] text-app-primary font-black tracking-widest uppercase">SYSTEM LIVE</span>
+                    <span className="text-[11px] text-slate-900 dark:text-white font-black tracking-widest uppercase">SYSTEM LIVE</span>
                 </div>
             </div>
         </div>
