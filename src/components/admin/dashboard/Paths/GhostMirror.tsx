@@ -42,13 +42,14 @@ const mapDbEventToTrace = (row: any): GhostTrace => {
   let path = "system";
 
   switch (evtType) {
-    case "mood_logged":
+    case "mood_logged": {
       const score = payload.moodScore;
       if (score > 3) sentiment = "positive";
       else if (score < 3) sentiment = "negative";
       label = `تسجيل مزاج (${score}/5)`;
       path = "/pulse";
       break;
+    }
 
     case "node_added":
       sentiment = payload.isEmergency ? "anxious" : "positive";
@@ -56,7 +57,7 @@ const mapDbEventToTrace = (row: any): GhostTrace => {
       path = "/map";
       break;
 
-    case "flow_event":
+    case "flow_event": {
       const step = payload.step || "";
       if (step.includes("success") || step.includes("completed")) sentiment = "positive";
       else if (step.includes("failed") || step.includes("abandoned") || step.includes("dropped")) sentiment = "negative";
@@ -75,6 +76,7 @@ const mapDbEventToTrace = (row: any): GhostTrace => {
         duration = Math.round(payload.extra.dwellTime / 1000);
       }
       break;
+    }
 
     case "path_started":
       sentiment = "positive";
