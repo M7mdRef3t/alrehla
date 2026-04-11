@@ -43,16 +43,16 @@ import {
   Library,
   Map
 } from "lucide-react";
-import { useJourneyState } from "@/state/journeyState";
-import { useNotificationState } from "@/state/notificationState";
-import { useAppOverlayState } from "@/state/appOverlayState";
-import { useEmergencyState } from "@/state/emergencyState";
+import { useJourneyProgress } from "@/domains/journey";
+import { useNotificationState } from "@/domains/notifications/store/notification.store";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+import { useEmergencyState } from "@/domains/admin/store/emergency.store";
 import { BreathingOverlay } from '@/modules/exploration/BreathingOverlay';
-import { useAchievementState } from "@/state/achievementState";
-import { useMapState } from "@/state/mapState";
-import type { RecoveryPlanOpenWith } from "@/state/mapState";
-import { trackEvent, AnalyticsEvents } from "@/services/analytics";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import type { RecoveryPlanOpenWith } from "@/domains/dawayir/store/map.store";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
+import { trackingService } from "@/domains/journey";
 import { HealthBar } from "./HealthBar";
 import { TodayTaskStrip } from "@/modules/action/TodayTaskStrip";
 import { RecoveryProgressBar } from '@/modules/action/RecoveryProgressBar';
@@ -61,8 +61,8 @@ import { mapCopy } from "@/copy/map";
 import { getMissionProgressSummary } from "@/utils/missionProgress";
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
 import { getGoalMeta } from "@/data/goalMeta";
-import { useAdminState } from "@/state/adminState";
-import { getEffectiveRoleFromState, useAuthState } from "@/state/authState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "@/utils/featureFlags";
 import type { FeatureFlagKey } from "@/config/features";
 import { usePWAInstall } from "@/contexts/PWAInstallContext";
@@ -362,14 +362,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   }, [nodes]);
 
   const viewingNode = viewingNodeId ? nodes.find((n) => n.id === viewingNodeId) : null;
-  const lastGoalId = useJourneyState((s) => s.goalId);
-  const lastGoalCategory = useJourneyState((s) => s.category);
-  const lastGoalById = useJourneyState((s) => s.lastGoalById);
+  const lastGoalId = useJourneyProgress().goalId;
+  const lastGoalCategory = useJourneyProgress().category;
+  const lastGoalById = useJourneyProgress().lastGoalById;
   const lastGoalRecord = getLastGoalMeta(lastGoalById, lastGoalId, lastGoalCategory);
   const lastGoalLabel = getGoalLabel(lastGoalRecord?.goalId);
   const [badgePulse, setBadgePulse] = useState(false);
   const lastGoalRef = useRef<string | null>(lastGoalLabel ?? null);
-  const isFirstTime = useJourneyState((s) => s.baselineCompletedAt == null);
+  const isFirstTime = useJourneyProgress().baselineCompletedAt == null;
   const unlockedCount = useAchievementState((s) => s.unlockedIds.length);
   const { isSupported: notificationsSupported, settings: notificationSettings } = useNotificationState();
   const openEmergency = useEmergencyState((s) => s.open);
@@ -416,7 +416,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
   const openWhatsAppChat = (placement: "desktop_sidebar" | "mobile_sidebar" | "floating_fab") => {
     if (!whatsAppLink) return;
-    trackEvent("whatsapp_contact_clicked", { placement });
+    analyticsService.track("whatsapp_contact_clicked", { placement });
     openInNewTab(whatsAppLink);
   };
 
@@ -466,7 +466,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
   const triggerPwaInstall = () => {
     if (!pwaInstall || !canShowInstallButton) return;
-    recordFlowEvent("install_clicked");
+    trackingService.recordFlow("install_clicked");
     void pwaInstall.triggerInstall();
   };
 
@@ -818,7 +818,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               isOpen={true}
               onClose={() => setShowFeedback(false)}
               onSubmit={async (payload) => {
-                recordFlowEvent("feedback_submitted", {
+                trackingService.recordFlow("feedback_submitted", {
                   meta: {
                     category: payload.category,
                     rating: payload.rating,

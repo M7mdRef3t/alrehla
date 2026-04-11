@@ -1,7 +1,7 @@
 import { logger } from "@/services/logger";
 import { geminiClient } from "./geminiClient";
 import { Dream } from "@/types/dreams";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 
 export type OracleGrade = 'S' | 'A' | 'B' | 'C' | 'F' | 'Test';
 

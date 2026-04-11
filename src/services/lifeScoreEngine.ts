@@ -19,8 +19,8 @@ import type {
   DomainAssessment,
   LifeEntry
 } from "@/types/lifeDomains";
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { loadStreak } from "@/services/streakSystem";
 
 // ─── Weights ─────────────────────────────────────────────────────

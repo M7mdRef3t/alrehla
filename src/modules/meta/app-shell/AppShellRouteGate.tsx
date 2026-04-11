@@ -61,8 +61,7 @@ export function AppShellRouteGate({
   if ((isAnalyticsRoute || isAnalyticsPathname) && isOwnerWatcher) {
     return (
       <div
-        className="min-h-screen min-h-[100dvh] w-full overflow-auto isolate relative"
-        style={{ background: "var(--space-void)" }}
+        className="min-h-screen min-h-[100dvh] w-full overflow-auto isolate relative bg-[var(--page-bg)]"
         dir="rtl"
       >
         {isFeaturePreviewSession && (
@@ -81,7 +80,7 @@ export function AppShellRouteGate({
           </button>
         )}
         <div className="nebula-bg absolute inset-0 -z-10" aria-hidden="true" />
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: "var(--space-void)" }} />}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[var(--page-bg)]" />}>
           <div className="p-4 sm:p-6 max-w-6xl mx-auto">
             <AdminOverviewPanel />
           </div>
@@ -92,7 +91,7 @@ export function AppShellRouteGate({
 
   if (isCoachPathname) {
     return (
-      <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--space-void)" }} />}>
+      <Suspense fallback={<div className="min-h-screen bg-[var(--page-bg)]" />}>
         <CoachDashboard isOpen={true} onClose={() => pushUrl("/")} />
       </Suspense>
     );
@@ -100,7 +99,7 @@ export function AppShellRouteGate({
 
   if (isAdminRoute || isAdminPathname) {
     return (
-      <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--space-void)" }} />}>
+      <Suspense fallback={<div className="min-h-screen bg-[var(--page-bg)]" />}>
         <AdminDashboard onExit={onExitAdminRoute} />
       </Suspense>
     );

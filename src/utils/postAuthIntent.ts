@@ -1,4 +1,4 @@
-import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "@/state/pulseState";
+import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "@/domains/consciousness/store/pulse.store";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 
 export type PostAuthIntent =

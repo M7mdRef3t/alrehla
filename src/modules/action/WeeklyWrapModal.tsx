@@ -2,7 +2,7 @@ import { logger } from "@/services/logger";
 import React, { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share2, TrendingDown, TrendingUp, Zap, Sparkles, Battery } from "lucide-react";
-import { usePulseState } from "@/state/pulseState";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 
 interface WeeklyWrapModalProps {
     isOpen: boolean;

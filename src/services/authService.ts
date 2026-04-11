@@ -133,6 +133,59 @@ export async function signInWithMagicLink(email: string): Promise<AuthOtpRespons
   });
 }
 
+/**
+ * Normalizes phone numbers to E.164 format.
+ * Defaults to Egypt (+20) if no country code starts the string.
+ */
+export function normalizePhoneNumber(phone: string): string {
+  let cleaned = phone.replace(/\s+/g, "").replace(/[^\d+]/g, "");
+  if (!cleaned.startsWith("+")) {
+    // If it starts with 00, replace with +
+    if (cleaned.startsWith("00")) {
+      cleaned = "+" + cleaned.slice(2);
+    } else if (cleaned.startsWith("0")) {
+      cleaned = "+20" + cleaned.slice(1);
+    } else {
+      cleaned = "+20" + cleaned;
+    }
+  }
+  return cleaned;
+}
+
+export async function signInWithPhone(phone: string): Promise<AuthOtpResponse> {
+  if (!supabase) {
+    return {
+      data: { user: null, session: null },
+      error: buildSupabaseUnavailableError()
+    } as AuthOtpResponse;
+  }
+  
+  const normalized = normalizePhoneNumber(phone);
+  return supabase.auth.signInWithOtp({
+    phone: normalized,
+    options: {
+      shouldCreateUser: true
+    }
+  });
+}
+
+export async function verifyOtp(phone: string, token: string): Promise<AuthResponse> {
+  if (!supabase) {
+    return {
+      data: { user: null, session: null },
+      error: buildSupabaseUnavailableError()
+    } as AuthResponse;
+  }
+
+  const normalized = normalizePhoneNumber(phone);
+  return supabase.auth.verifyOtp({
+    phone: normalized,
+    token,
+    type: "sms"
+  });
+}
+
+
 export async function signOut(): Promise<void> {
   if (!supabase) return;
   await supabase.auth.signOut();

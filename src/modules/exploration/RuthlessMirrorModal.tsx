@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { DissonanceEngine, DissonanceReport } from "@/services/dissonanceEngine";
-import { useJourneyState } from "@/state/journeyState";
+import { useJourneyProgress } from "@/domains/journey";
 
 export default function RuthlessMirrorModal() {
   const { flags, closeOverlay } = useAppOverlayState();
   const isOpen = flags.ruthlessMirror;
   const [report, setReport] = useState<DissonanceReport | null>(null);
+  const { setLastGoal } = useJourneyProgress();
 
   useEffect(() => {
     if (isOpen) {
@@ -23,7 +24,7 @@ export default function RuthlessMirrorModal() {
   const handleAcceptTruth = () => {
     // Freeze the stated goal
     if (report?.triggeringGoalId) {
-      useJourneyState.getState().setLastGoal(report.triggeringGoalId, "مُجمّد للاستشفاء");
+      setLastGoal(report.triggeringGoalId, "مُجمّد للاستشفاء");
     }
     closeOverlay("ruthlessMirror");
   };

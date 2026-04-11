@@ -2,13 +2,13 @@ import type { FC } from "react";
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, ChevronUp } from "lucide-react";
-import { useGamificationState } from "@/state/gamificationState";
-import { useMapState } from "@/state/mapState";
+import { useGamification } from "@/domains/gamification";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 
 const XP_PER_LEVEL = 1000;
 
 export const LevelWidget: FC = () => {
-    const { xp, level, badges, recentLevelUp, clearLevelUpState, awardBadge } = useGamificationState();
+    const { xp, level, badges, recentLevelUp, clearLevelUpState, awardBadge } = useGamification();
     const nodes = useMapState(s => s.nodes);
 
     // Check and award badges automatically

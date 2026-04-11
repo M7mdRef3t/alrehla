@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
-import { useConsciousnessHistory } from '@/state/consciousnessHistoryState';
+import { useConsciousnessHistory } from '@/domains/consciousness/store/history.store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, TrendingUp, Sparkles, MessageCircle } from 'lucide-react';
 

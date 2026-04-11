@@ -25,9 +25,9 @@ import type {
   DomainAssessment
 } from "@/types/lifeDomains";
 import { getDomainConfig, LIFE_DOMAINS } from "@/types/lifeDomains";
-import { useLifeState } from "@/state/lifeState";
-import { usePulseState } from "@/state/pulseState";
-import { useMapState } from "@/state/mapState";
+import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { loadStreak } from "@/services/streakSystem";
 import { resolveDisplayName } from "@/services/userMemory";
 

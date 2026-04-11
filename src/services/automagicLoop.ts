@@ -14,7 +14,7 @@
 
 import { type MapNode, type Ring } from "@/modules/map/mapTypes";
 import { useGamificationState } from "./gamificationEngine";
-import { useEventHistoryStore } from "@/state/eventHistoryStore";
+import { useEventHistoryStore } from "@/domains/analytics/store/eventHistory.store";
 import { SynapseBus } from "@/core/synapse/SynapseBus";
 
 // ─── Event Types ──────────────────────────────────────────────────

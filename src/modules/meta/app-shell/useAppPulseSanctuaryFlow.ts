@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AppShellScreen } from "@/state/appShellNavigationState";
+import type { AppShellScreen } from "@/domains/dawayir/store/navigation.store";
 import type { PulseCheckContext } from "@/hooks/usePulseCheckLogic";
 import {
   AUTO_COCOON_LAST_SHOWN_DATE_KEY,
@@ -7,11 +7,11 @@ import {
 } from '@/orchestration/modalOrchestrator';
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { getWindowOrNull } from "@/services/clientRuntime";
-import { AnalyticsEvents, trackEvent } from "@/services/analytics";
-import { recordFlowEvent } from "@/services/journeyTracking";
-import type { PulseEnergyConfidence, PulseEntry, PulseFocus, PulseMood } from "@/state/pulseState";
-import { usePulseState } from "@/state/pulseState";
-import { useAdminState } from "@/state/adminState";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
+import { trackingService } from "@/domains/journey";
+import type { PulseEnergyConfidence, PulseEntry, PulseFocus, PulseMood } from "@/domains/consciousness/store/pulse.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import {
   getFirstJourneyStepByKind,
   getJourneyPathBySlug,
@@ -166,7 +166,7 @@ export function useAppPulseSanctuaryFlow({
     skipNextPulseCheck();
 
     if (sanctuaryInterventionEnabled) {
-      trackEvent(AnalyticsEvents.BREATHING_OPENED, { source: "sanctuary_path" });
+      analyticsService.track(AnalyticsEvents.BREATHING_OPENED, { source: "sanctuary_path" });
       setShowBreathing(true);
       return;
     }
@@ -245,13 +245,13 @@ export function useAppPulseSanctuaryFlow({
   useEffect(() => {
     if (showPulseCheck) {
       pulseOpenedAtRef.current = Date.now();
-      recordFlowEvent("pulse_opened");
+      trackingService.recordFlow("pulse_opened");
     }
   }, [showPulseCheck]);
 
   const closePulseCheck = useCallback((completed = false, closeReason?: PulseCloseReason) => {
     if (!completed && pulseOpenedAtRef.current != null) {
-      recordFlowEvent("pulse_abandoned", { closeReason });
+      trackingService.recordFlow("pulse_abandoned", { meta: { closeReason } });
     }
 
     pulseOpenedAtRef.current = null;
@@ -276,11 +276,11 @@ export function useAppPulseSanctuaryFlow({
   }, [closePulseCheck, showPulseCheck]);
 
   const handlePulseGateSubmit = useCallback((payload: PulseSubmitPayload) => {
-    recordFlowEvent("pulse_completed");
-    if (isDefaultPulseSubmit(payload)) recordFlowEvent("pulse_completed_without_choices");
-    else recordFlowEvent("pulse_completed_with_choices");
+    trackingService.recordFlow("pulse_completed");
+    if (isDefaultPulseSubmit(payload)) trackingService.recordFlow("pulse_completed_without_choices");
+    else trackingService.recordFlow("pulse_completed_with_choices");
 
-    trackEvent(AnalyticsEvents.MICRO_COMPASS_COMPLETED, {
+    analyticsService.track(AnalyticsEvents.MICRO_COMPASS_COMPLETED, {
       gate: "pulse",
       pulse_energy: payload.energy ?? "none",
       pulse_mood: payload.mood ?? "none",
@@ -291,7 +291,7 @@ export function useAppPulseSanctuaryFlow({
     closePulseCheck(true, "programmatic");
 
     if (shouldPromptAuthAfterPulse) {
-      recordFlowEvent("auth_gate_opened", {
+      trackingService.recordFlow("auth_gate_opened", {
         meta: {
           mode: hasConcretePulseSelection(payload) ? "start_recovery" : "login"
         }
@@ -357,9 +357,9 @@ export function useAppPulseSanctuaryFlow({
   ]);
 
   const handlePulseSubmit = useCallback((payload: PulseSubmitPayload) => {
-    recordFlowEvent("pulse_completed");
-    if (isDefaultPulseSubmit(payload)) recordFlowEvent("pulse_completed_without_choices");
-    else recordFlowEvent("pulse_completed_with_choices");
+    trackingService.recordFlow("pulse_completed");
+    if (isDefaultPulseSubmit(payload)) trackingService.recordFlow("pulse_completed_without_choices");
+    else trackingService.recordFlow("pulse_completed_with_choices");
 
     if (hasConcretePulseSelection(payload)) {
       logPulse(payload);

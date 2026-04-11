@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import { sendBroadcast } from "@/services/adminApi"; // Optional: Use for AI intervention
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 
 interface GhostTrace {
   id: string;

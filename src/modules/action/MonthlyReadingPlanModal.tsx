@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGamificationState } from "@/state/gamificationState";
-import { useAchievementState } from "@/state/achievementState";
+import { useGamification } from "@/domains/gamification";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import {
   X,
   BookOpen,
@@ -27,7 +27,7 @@ export const MonthlyReadingPlanModal: FC<MonthlyReadingPlanModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { level, rank } = useGamificationState();
+  const { level, rank } = useGamification();
   const { unlockedIds } = useAchievementState();
 
   return (

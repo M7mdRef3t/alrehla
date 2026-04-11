@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { AppScreen } from "@/navigation/navigationMachine";
 import { trackPageView } from "@/services/analytics";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import { trackingService } from "@/domains/journey";
 import { getDocumentOrNull } from "@/services/clientRuntime";
 import { getOrigin, getPathname } from "@/services/navigation";
 
@@ -68,19 +68,19 @@ export function useAppPageMetadata(screen: AppScreen) {
       return;
     }
 
-    if (screen === "goal") recordFlowEvent("screen_goal_viewed");
-    if (screen === "map") recordFlowEvent("screen_map_viewed");
-    if (screen === "guided") recordFlowEvent("screen_guided_viewed");
-    if (screen === "mission") recordFlowEvent("screen_mission_viewed");
-    if (screen === "tools") recordFlowEvent("screen_tools_viewed");
-    if (screen === "diplomacy") recordFlowEvent("screen_diplomacy_viewed");
-    if (screen === "guilt-court") recordFlowEvent("screen_guilt_court_viewed");
-    if (screen === "enterprise") recordFlowEvent("screen_enterprise_viewed");
-    if (screen === "settings") recordFlowEvent("screen_settings_viewed");
-    if (screen === "oracle-dashboard") recordFlowEvent("screen_oracle_dashboard_viewed");
-    if (screen === "armory") recordFlowEvent("screen_armory_viewed");
-    if (screen === "exit-scripts") recordFlowEvent("screen_exit_scripts_viewed");
-    if (screen === "grounding") recordFlowEvent("screen_grounding_viewed");
+    if (screen === "goal") trackingService.recordFlow("screen_goal_viewed");
+    if (screen === "map") trackingService.recordFlow("screen_map_viewed");
+    if (screen === "guided") trackingService.recordFlow("screen_guided_viewed");
+    if (screen === "mission") trackingService.recordFlow("screen_mission_viewed");
+    if (screen === "tools") trackingService.recordFlow("screen_tools_viewed");
+    if (screen === "diplomacy") trackingService.recordFlow("screen_diplomacy_viewed");
+    if (screen === "guilt-court") trackingService.recordFlow("screen_guilt_court_viewed");
+    if (screen === "enterprise") trackingService.recordFlow("screen_enterprise_viewed");
+    if (screen === "settings") trackingService.recordFlow("screen_settings_viewed");
+    if (screen === "oracle-dashboard") trackingService.recordFlow("screen_oracle_dashboard_viewed");
+    if (screen === "armory") trackingService.recordFlow("screen_armory_viewed");
+    if (screen === "exit-scripts") trackingService.recordFlow("screen_exit_scripts_viewed");
+    if (screen === "grounding") trackingService.recordFlow("screen_grounding_viewed");
   }, [screen]);
 
   useEffect(() => {

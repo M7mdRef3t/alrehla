@@ -10,7 +10,7 @@ import {
   type ResultScenarioKey
 } from "@/data/resultScreenTemplates";
 export type { ResultScenarioKey };
-import { getScoringThresholds, getScoringWeights } from "@/state/adminState";
+import { getScoringThresholds, getScoringWeights } from "@/domains/admin/store/admin.store";
 import type { AdviceCategory } from "@/data/adviceScripts";
 
 type ScoreLevel = ResultScoreLevel;

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { HeartHandshake, Link2, Search, Share2, ShieldCheck, Sparkles, Users2 } from "lucide-react";
 import { assignUrl } from "@/services/navigation";
 import { fetchJourneyPaths } from "@/services/adminApi";
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getDawayirLiveLaunchHref, getDawayirLivePath } from "@/utils/dawayirLiveJourney";
 import { createLiveShare, getLiveSession, grantLiveAccess, listLiveSessions } from "../api";
 import type { LiveSessionArtifactRecord, LiveSessionDetail, LiveSessionRecord } from '../types';

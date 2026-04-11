@@ -1,3 +1,4 @@
+import { trackingService } from '@/domains/journey';
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AdviceCategory } from "@/data/adviceScripts";
 import type { FeatureFlagKey } from "@/config/features";
@@ -12,7 +13,7 @@ import {
   type RecentTelemetrySignalV1
 } from "@/modules/recommendation";
 import type { AppScreen } from "@/navigation/navigationMachine";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 
 
 export interface ActiveInterventionState {
@@ -81,7 +82,7 @@ export function useNextStepRouting({
       });
       nextStepTelemetry.clearSession(nextStepDecision.decisionId);
     }
-    recordFlowEvent("next_step_dismissed", {
+    trackingService.recordFlow("next_step_dismissed", {
       meta: { reason: "manual_refresh", surface: screen }
     });
     setNextStepRefreshTick((tick) => tick + 1);
@@ -97,7 +98,7 @@ export function useNextStepRouting({
     const timeToActionSec =
       telemetry?.activeElapsedSec ?? Math.max(0, Math.round((Date.now() - decision.createdAt) / 1000));
 
-    recordFlowEvent("next_step_action_taken", {
+    trackingService.recordFlow("next_step_action_taken", {
       timeToAction: timeToActionSec,
       meta: {
         decisionId: decision.decisionId,
@@ -201,7 +202,7 @@ export function useNextStepRouting({
       hesitationSec: snapshot.hesitationSec,
       cognitiveLoadRequired
     });
-    recordFlowEvent("routing_intervention_triggered", {
+    trackingService.recordFlow("routing_intervention_triggered", {
       meta: {
         decisionId: snapshot.decisionId,
         hesitationSec: snapshot.hesitationSec,

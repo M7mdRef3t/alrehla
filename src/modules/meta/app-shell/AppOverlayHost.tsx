@@ -1,16 +1,16 @@
 import { lazy, memo, Suspense, useCallback, useMemo } from "react";
-import { useAdminState } from "@/state/adminState";
-import { getEffectiveRoleFromState, useAuthState } from "@/state/authState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "@/utils/featureFlags";
 import { isUserMode } from "@/config/appEnv";
 import type { AgentActions, AgentContext } from '@/agent/types';
-import { useAppOverlayState } from "@/state/appOverlayState";
-import { useAppShellNavigationState, type AppShellScreen } from "@/state/appShellNavigationState";
-import { useEmergencyState } from "@/state/emergencyState";
-import { useAchievementState } from "@/state/achievementState";
-import { useThemeState } from "@/state/themeState";
-import { usePulseState } from "@/state/pulseState";
-import { useJourneyState } from "@/state/journeyState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+import { useAppShellNavigationState, type AppShellScreen } from "@/domains/dawayir/store/navigation.store";
+import { useEmergencyState } from "@/domains/admin/store/emergency.store";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
+import { useThemeState } from "@/domains/consciousness/store/theme.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useJourneyProgress } from "@/domains/journey";
 import { useAppPulseSanctuaryFlow } from "./useAppPulseSanctuaryFlow";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { JourneyTimeline } from '@/modules/action/JourneyTimeline';
@@ -20,7 +20,7 @@ import { useAppMindSignals } from "./useAppMindSignals";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { SafePulseCheckModal, SafeAIChatbot } from "../WrappedComponents";
 import { OVERLAY_SEVERITY, CRITICAL_SEVERITY_THRESHOLD } from "@/utils/overlayPriorities";
-import type { AppOverlayFlag } from "@/state/appOverlayState";
+import type { AppOverlayFlag } from "@/domains/consciousness/store/overlay.store";
 import type { PostAuthIntent } from "@/utils/postAuthIntent";
 
 const GoogleAuthModal = lazy(() => import('@/modules/exploration/GoogleAuthModal').then((m) => ({ default: m.GoogleAuthModal })));
@@ -181,8 +181,8 @@ export const AppOverlayHost = memo(function AppOverlayHost({
       }).pulse_check,
     [featureFlags, betaAccess, role, adminAccess]
   );
-  const goalId = useJourneyState((s) => s.goalId);
-  const storedMirrorName = useJourneyState((s) => s.mirrorName);
+  const goalId = useJourneyProgress().goalId;
+  const storedMirrorName = useJourneyProgress().mirrorName;
 
   const {
     gym: showGym,
@@ -383,7 +383,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
       externalOnboardingComplete(skipped);
     } else {
       setOverlay("onboarding", false);
-      const journeyState = useJourneyState.getState();
+      const journeyState = useJourneyProgress();
       if (!journeyState.goalId) {
         journeyState.setLastGoal("unknown", "general");
       }

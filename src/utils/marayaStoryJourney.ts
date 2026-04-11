@@ -1,4 +1,4 @@
-import type { JourneyPath, JourneyPathStepKind } from "@/state/adminState";
+import type { JourneyPath, JourneyPathStepKind } from "@/domains/admin/store/admin.store";
 import {
   getEnabledJourneySteps,
   getFirstJourneyStepByKind,

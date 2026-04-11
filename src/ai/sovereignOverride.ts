@@ -1,8 +1,8 @@
 import { calculateEntropy } from "@/services/predictiveEngine";
-import { useAppOverlayState } from "@/state/appOverlayState";
-import { useToastState } from "@/state/toastState";
-import { useBlindCapsuleState } from "@/state/blindCapsuleState";
-import { useLockdownState } from "@/state/lockdownState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+import { useToastState } from "@/domains/dawayir/store/toast.store";
+import { useBlindCapsuleState } from "@/domains/journey/store/blindCapsule.store";
+import { useLockdownState } from "@/domains/admin/store/lockdown.store";
 
 export async function checkSovereignOverride(): Promise<void> {
     try {

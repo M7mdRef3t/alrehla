@@ -8,8 +8,8 @@ import {
   Sparkles, MessageCircle, ClipboardCheck
 } from "lucide-react";
 import { LIFE_DOMAINS, getDomainConfig, type LifeDomainId, type LifeEntryType } from "@/types/lifeDomains";
-import { useLifeState } from "@/state/lifeState";
-import { useAuthState } from "@/state/authState";
+import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useAuthState } from "@/domains/auth/store/auth.store";
 import { LifeScoreRing } from "./LifeScoreRing";
 import { DomainRadar } from "./DomainRadar";
 import { MorningBrief } from "./MorningBrief";

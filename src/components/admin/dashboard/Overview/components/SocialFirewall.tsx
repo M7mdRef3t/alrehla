@@ -2,8 +2,8 @@ import type { FC } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, ShieldAlert, Zap, UserX, Activity, Heart, Battery } from "lucide-react";
-import { useFirewallState } from "@/state/firewallState";
-import { useMapState } from "@/state/mapState";
+import { useFirewallState } from "@/domains/admin/store/firewall.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { EnergyROIEngine } from "@/services/EnergyROIEngine";
 import { AdminTooltip } from "./AdminTooltip";
 

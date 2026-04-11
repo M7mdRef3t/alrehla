@@ -24,7 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { fetchSovereignExecutiveReport, type SovereignExecutiveReport } from "@/services/adminApi";
 import { growthEngine, type GrowthMetrics, type DiffusionMetrics } from "@/services/growthEngine";
 import { getClients, type ClientLink } from "@/services/b2bService";
-import { revenueEngine } from "@/services/revenueEngine";
+import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
 
 export const SovereignExpansionHub: React.FC = () => {
   const [activeMarket, setActiveMarket] = useState<string | null>("Riyadh");
@@ -183,6 +183,20 @@ export const SovereignExpansionHub: React.FC = () => {
                       <span>مؤشر الألم الإدراكي: {market.painScore}%</span>
                     </div>
                   </div>
+                  
+                  {activeMarket === market.id && (
+                     <div className="mt-4 pt-4 border-t border-rose-500/20 text-center">
+                        <button
+                           onClick={(e) => {
+                               e.stopPropagation();
+                               SovereignOrchestrator.executeIntervention(`ignite_market_${market.id}`);
+                           }}
+                           className="w-full py-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-transform"
+                        >
+                           Ignite Market (Deploy AI Campaign)
+                        </button>
+                     </div>
+                  )}
                 </button>
               ))}
             </div>

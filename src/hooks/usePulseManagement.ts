@@ -4,9 +4,9 @@
  */
 
 import { useState, useCallback, useRef, useEffect, type Dispatch, type SetStateAction } from "react";
-import type { PulseMood, PulseFocus, PulseEnergyConfidence } from "@/state/pulseState";
-import { usePulseState } from "@/state/pulseState";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import type { PulseMood, PulseFocus, PulseEnergyConfidence } from "@/domains/consciousness/store/pulse.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { trackingService } from "@/domains/journey";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { getWindowOrNull } from "@/services/clientRuntime";
 

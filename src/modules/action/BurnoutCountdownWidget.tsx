@@ -2,8 +2,8 @@ import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Flame, Hourglass, BatteryWarning, BrainCircuit } from "lucide-react";
-import { useMapState } from "@/state/mapState";
-import { useAuthState } from "@/state/authState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useAuthState } from "@/domains/auth/store/auth.store";
 import { TherapistChatModal } from "./TherapistChatModal";
 import { UpgradeScreen } from '@/modules/exploration/UpgradeScreen';
 

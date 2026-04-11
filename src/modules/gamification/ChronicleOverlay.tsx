@@ -2,12 +2,12 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, X, ChevronRight, BookOpen, ScrollText } from "lucide-react";
-import { useGamificationState } from "@/state/gamificationState";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useGamification } from "@/domains/gamification";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 export function ChronicleOverlay() {
-  const lastNewChronicle = useGamificationState((s) => s.lastNewChronicle);
-  const clearChronicleState = useGamificationState((s) => s.clearChronicleState);
+  const lastNewChronicle = useGamification().lastNewChronicle;
+  const clearChronicleState = useGamification().clearChronicleState;
   const { setOverlay } = useAppOverlayState();
 
   if (!lastNewChronicle) return null;

@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
-import { useMapState } from "@/state/mapState";
-import { useJourneyState } from "@/state/journeyState";
-import { useDailyJournalState } from "@/state/dailyJournalState";
-import { useAchievementState } from "@/state/achievementState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useJourneyProgress } from "@/domains/journey";
+import { useDailyJournalState } from "@/domains/journey/store/journal.store";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { orchestrator } from "@/ai/orchestrator/Core";
 import { SystemSnapshot } from "@/ai/orchestrator/types";
 
@@ -11,7 +11,7 @@ import { SystemSnapshot } from "@/ai/orchestrator/types";
  */
 export function useAIOrchestration() {
     const nodes = useMapState((s) => s.nodes);
-    const baselineScore = useJourneyState((s) => s.baselineScore);
+    const baselineScore = useJourneyProgress().baselineScore;
     const journalEntries = useDailyJournalState((s) => s.entries);
     const unlockedIds = useAchievementState((s) => s.unlockedIds);
 

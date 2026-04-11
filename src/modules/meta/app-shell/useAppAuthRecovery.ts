@@ -2,19 +2,19 @@ import { logger } from "@/services/logger";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import type { AdviceCategory } from "@/data/adviceScripts";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import { trackingService } from "@/domains/journey";
 import { syncLocalMapOnLogin } from "@/services/mapSync";
 import { syncLocalPulsesOnLogin } from "@/services/pulseSync";
 import { consciousnessService, type ConsciousnessInsight } from "@/services/consciousnessService";
 import { geminiClient } from "@/services/geminiClient";
-import { supabase } from "@/services/supabaseClient";
-import type { UserToneGender } from "@/state/authState";
+import { supabase, isSupabaseAbortError } from "@/services/supabaseClient";
+import type { UserToneGender } from "@/domains/auth/store/auth.store";
 import type {
   PulseEnergyConfidence,
   PulseEntry,
   PulseFocus,
   PulseMood
-} from "@/state/pulseState";
+} from "@/domains/consciousness/store/pulse.store";
 import type { AppScreen } from "@/navigation/navigationMachine";
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "@/utils/postAuthIntent";
 import { ensureValidJourneyState } from "@/utils/journeyState";
@@ -119,7 +119,7 @@ export function useAppAuthRecovery({
     if (!intent) return;
 
     clearPostAuthIntent();
-    recordFlowEvent("auth_login_success", { meta: { intent: intent.kind, userId: authUser.id, email: authUser.email ?? null } });
+    trackingService.recordFlow("auth_login_success", { meta: { intent: intent.kind, userId: authUser.id, email: authUser.email ?? null } });
 
     if (intent.kind === "login") {
       setPulseCheckContext("regular");
@@ -149,10 +149,10 @@ export function useAppAuthRecovery({
       setCategory(validJourney.category);
       setSelectedNodeId(null);
       void navigateToScreen("map");
-      recordFlowEvent("post_auth_intent_phase_one_map");
+      trackingService.recordFlow("post_auth_intent_phase_one_map");
     } else {
       void navigateToScreen("goal");
-      recordFlowEvent("post_auth_intent_goal_picker");
+      trackingService.recordFlow("post_auth_intent_goal_picker");
     }
 
     void syncLocalMapOnLogin();
@@ -160,16 +160,22 @@ export function useAppAuthRecovery({
 
     let cancelled = false;
     void (async () => {
-      const insight = await consciousnessService.analyzeConsciousness(`بدأ المستخدم ${authFirstName || ""} رحلة جديدة`);
-      if (!cancelled) setConsciousnessInsight(insight);
+      try {
+        const insight = await consciousnessService.analyzeConsciousness(`بدأ المستخدم ${authFirstName || ""} رحلة جديدة`);
+        if (!cancelled) setConsciousnessInsight(insight);
 
-      if (!geminiClient.isAvailable()) return;
-      const prompt = buildWelcomePrompt(authFirstName, authToneGender);
-      const out = await geminiClient.generate(prompt);
-      if (cancelled) return;
-      const cleaned = cleanWelcomeMessage(out);
-      if (!cleaned) return;
-      setWelcome({ message: cleaned, source: "ai" });
+        if (!geminiClient.isAvailable()) return;
+        const prompt = buildWelcomePrompt(authFirstName, authToneGender);
+        const out = await geminiClient.generate(prompt);
+        if (cancelled) return;
+        const cleaned = cleanWelcomeMessage(out);
+        if (!cleaned) return;
+        setWelcome({ message: cleaned, source: "ai" });
+      } catch (err) {
+        if (!isSupabaseAbortError(err)) {
+          logger.error("[useAppAuthRecovery] start_recovery async failed:", err);
+        }
+      }
     })();
 
     return () => {
@@ -204,32 +210,40 @@ export function useAppAuthRecovery({
 
     let cancelled = false;
     void (async () => {
-      const { data, error } = await supabase
-        .from("pending_interventions")
-        .select("id, ai_message, trigger_reason, created_at")
-        .eq("user_id", authUser.id)
-        .eq("status", "unread")
-        .order("created_at", { ascending: false })
-        .limit(1);
+      try {
+        const { data, error } = await supabase
+          .from("pending_interventions")
+          .select("id, ai_message, trigger_reason, created_at")
+          .eq("user_id", authUser.id)
+          .eq("status", "unread")
+          .order("created_at", { ascending: false })
+          .limit(1);
 
-      if (error) {
-        logger.error("[OfflineIntervention] fetch failed:", error.message);
-        return;
-      }
+        if (error) {
+          if (!isSupabaseAbortError(error)) {
+            logger.error("[OfflineIntervention] fetch failed:", error.message);
+          }
+          return;
+        }
 
-      const intervention = data?.[0];
-      if (!intervention || cancelled) return;
+        const intervention = data?.[0];
+        if (!intervention || cancelled) return;
 
-      const cleaned = cleanWelcomeMessage(intervention.ai_message);
-      if (cleaned) {
-        setWelcome({ message: cleaned, source: "offline_intervention" });
-      }
+        const cleaned = cleanWelcomeMessage(intervention.ai_message);
+        if (cleaned) {
+          setWelcome({ message: cleaned, source: "offline_intervention" });
+        }
 
-      const { error: markError } = await supabase.rpc("mark_pending_interventions_read", {
-        p_user_id: authUser.id
-      });
-      if (markError) {
-        logger.error("[OfflineIntervention] mark-read failed:", markError.message);
+        const { error: markError } = await supabase.rpc("mark_pending_interventions_read", {
+          p_user_id: authUser.id
+        });
+        if (markError && !isSupabaseAbortError(markError)) {
+          logger.error("[OfflineIntervention] mark-read failed:", markError.message);
+        }
+      } catch (err) {
+        if (!isSupabaseAbortError(err)) {
+          logger.error("[OfflineIntervention] unexpected failure:", err);
+        }
       }
     })();
 

@@ -118,8 +118,8 @@ const OWNER_EMAIL = "hello@alrehla.app";
 
 // --- Helpers ---
 
-import { getAuthToken } from "@/state/authState";
-import { useAdminState } from "@/state/adminState";
+import { getAuthToken } from "@/domains/auth/store/auth.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { CampaignLeadsModal } from "./CampaignLeadsModal";
 
 function getBearerToken(): string {

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { Tag } from "lucide-react";
 
-import type { PulseMood, PulseFocus } from "@/state/pulseState";
+import type { PulseMood, PulseFocus } from "@/domains/consciousness/store/pulse.store";
 import { VoiceInput } from '@/modules/meta/VoiceInput';
 import { 
   MOODS, 

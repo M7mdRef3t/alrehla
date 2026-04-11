@@ -1,7 +1,7 @@
 import React, { useEffect, useState, type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldAlert, Wind } from "lucide-react";
-import { useLockdownState } from "@/state/lockdownState";
+import { useLockdownState } from "@/domains/admin/store/lockdown.store";
 import { isDevMode } from "@/config/appEnv";
 
 export const SanctuaryLockdownExperience: FC = () => {

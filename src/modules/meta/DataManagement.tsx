@@ -27,11 +27,11 @@ import {
   backupToKeyValues,
   buildBackupFromLocal
 } from "@/services/dataExport";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { clearLocalData } from "@/services/secureStore";
 import { fetchRemoteState, pushRemoteState } from "@/services/cloudStore";
 import { soundManager } from "@/services/soundManager";
-import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "@/state/authState";
+import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "@/domains/auth/store/auth.store";
 import { signInWithGoogle, signOut, updateAccountProfile } from "@/services/authService";
 import { isPrivilegedRole } from "@/utils/featureFlags";
 import { useAppContentString } from "@/hooks/useAppContentString";

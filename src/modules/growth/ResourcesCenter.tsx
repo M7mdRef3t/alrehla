@@ -23,7 +23,7 @@ import {
   type FAQItem,
 } from "@/data/educationalContent";
 import { trackAffiliateLinkClicked, trackAffiliateLinkExposed } from "../analytics/affiliateTracking";
-import { useAchievementState } from "@/state/achievementState";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { ContentDetailSheet, type ContentDetailType } from "../exploration/ContentDetailSheet";
 
 import { CourseDetailPage } from "./CourseDetailPage";

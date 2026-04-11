@@ -2,8 +2,8 @@ import { logger } from "@/services/logger";
 import { revenueEngine } from "./revenueEngine";
 import type { RevenueMetricSnapshot, TransactionSummary } from "./revenueEngine";
 import { supabase, isSupabaseReady } from "./supabaseClient";
-import { getAuthToken } from "@/state/authState";
-import { useAdminState } from "@/state/adminState";
+import { getAuthToken } from "@/domains/auth/store/auth.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { fetchJsonWithResilience, sendJsonWithResilience } from "../architecture/resilientHttp";
@@ -18,11 +18,11 @@ import type {
   JourneyPathStep,
   SovereignInsight,
   SovereignStats
-} from "@/state/adminState";
+} from "@/domains/admin/store/admin.store";
 import { getBroadcastAudienceFromId, withBroadcastAudienceId } from "@/utils/broadcastAudience";
 import type { MapNode } from "@/modules/map/mapTypes";
-import type { PulseCheckMode } from "@/state/pulseState";
-import type { PulseCopyOverrides } from "@/state/adminState";
+import type { PulseCheckMode } from "@/domains/consciousness/store/pulse.store";
+import type { PulseCopyOverrides } from "@/domains/admin/store/admin.store";
 import type {
   OpsInsights as SharedOpsInsights,
   ExecutiveReport as SharedExecutiveReport,
@@ -288,6 +288,24 @@ export async function generateJourneyPath(intention: string): Promise<JourneyPat
   });
   if (apiData?.ok && apiData.steps) {
     return apiData.steps;
+  }
+  return null;
+}
+
+export interface CognitiveSimulationResult {
+  persona: string;
+  theme: "amber" | "rose" | "slate" | "cyan" | "emerald";
+  feedback: string;
+  willComplete: boolean;
+}
+
+export async function simulateJourneyPath(pathSteps: JourneyPathStep[]): Promise<CognitiveSimulationResult[] | null> {
+  const apiData = await callAdminApi<{ ok: boolean; simulation: CognitiveSimulationResult[] }>("paths/simulate", {
+    method: "POST",
+    body: JSON.stringify({ pathSteps })
+  });
+  if (apiData?.ok && apiData.simulation) {
+    return apiData.simulation;
   }
   return null;
 }
@@ -1796,6 +1814,27 @@ export async function fetchSovereignExecutiveReport(): Promise<any | null> {
 }
 
 export type SovereignExecutiveReport = Awaited<ReturnType<typeof fetchSovereignExecutiveReport>>;
+
+export async function fetchOpenSupportTickets(): Promise<SupportTicketEntry[] | null> {
+  const apiData = await callAdminApi<{ tickets: SupportTicketEntry[] }>("tickets/resolve", { method: "GET" });
+  return apiData?.tickets ?? null;
+}
+
+export async function resolveActivationTicket(ticketId: string, userId: string, email: string | null, phone: string | null): Promise<boolean> {
+  const apiData = await callAdminApi<{ ok: boolean }>("tickets/resolve", {
+    method: "POST",
+    body: JSON.stringify({ action: "resolve", ticketId, userId, email, phone })
+  });
+  return Boolean(apiData?.ok);
+}
+
+export async function rejectActivationTicket(ticketId: string, reason?: string): Promise<boolean> {
+  const apiData = await callAdminApi<{ ok: boolean }>("tickets/resolve", {
+    method: "POST",
+    body: JSON.stringify({ action: "reject", ticketId, reason })
+  });
+  return Boolean(apiData?.ok);
+}
 
 export const adminApi = {
   fetchMarketingSpend,

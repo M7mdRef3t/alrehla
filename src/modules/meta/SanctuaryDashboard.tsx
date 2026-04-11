@@ -13,10 +13,10 @@ import {
     Brain,
     Lock
 } from "lucide-react";
-import { usePulseState } from "@/state/pulseState";
-import { useMapState } from "@/state/mapState";
-import { useAuthState } from "@/state/authState";
-import { useAdminState } from "@/state/adminState";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useAuthState } from "@/domains/auth/store/auth.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import {
     getEnabledJourneySteps,
     getJourneyPathBySlug,

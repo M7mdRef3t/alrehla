@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { downloadBlobFile } from "../../../src/services/clientDom";
 import { safeGetSession } from "../../../src/services/supabaseClient";
-import { useAdminState } from "../../../src/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 
 type RadarPulse = {
   global_phoenix_avg: number;

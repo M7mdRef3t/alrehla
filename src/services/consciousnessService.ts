@@ -1,7 +1,7 @@
 import { logger } from "@/services/logger";
 import { geminiClient } from "./geminiClient";
 import { AICache } from "./geminiEnhancements";
-import { useConsciousnessHistory } from "@/state/consciousnessHistoryState";
+import { useConsciousnessHistory } from "@/domains/consciousness/store/history.store";
 import { supabase } from "./supabaseClient";
 
 export interface ConsciousnessInsight {

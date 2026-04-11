@@ -1,5 +1,5 @@
-import { useFlowState } from '@/state/flowState';
-import { useGrowthState } from '@/state/growthState';
+import { useFlowState } from '@/domains/journey/store/flow.store';
+import { useGrowthState } from '@/domains/gamification/store/growth.store';
 
 /**
  * 🌊 FLOW ENGINE

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Zap, ShieldAlert, Sparkles, UserCheck } from 'lucide-react';
-import { useEventHistoryStore } from '@/state/eventHistoryStore';
+import { useEventHistoryStore } from '@/domains/analytics/store/eventHistory.store';
 import type { GraphEvent } from '@/services/automagicLoop';
 import { getPrescription } from '@/services/automagicLoop';
 

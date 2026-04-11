@@ -1,4 +1,4 @@
-import { useDigitalTwinState } from '@/state/digitalTwinState';
+import { useDigitalTwinState } from '@/domains/maraya/store/digitalTwin.store';
 import { TelemetrySnapshot } from '@/types/digitalTwin';
 import { InterventionEngine } from './InterventionEngine';
 import { runtimeEnv } from '@/config/runtimeEnv';

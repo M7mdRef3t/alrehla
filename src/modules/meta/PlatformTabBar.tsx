@@ -1,9 +1,9 @@
 import { useState, useEffect, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home, Wrench, BookOpen, Info, LogIn, LogOut, Sun, Moon, GraduationCap } from "lucide-react";
-import { useAuthState } from "@/state/authState";
-import { useAchievementState } from "@/state/achievementState";
-import { useThemeState } from "@/state/themeState";
+import { useAuthState } from "@/domains/auth/store/auth.store";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
+import { useThemeState } from "@/domains/consciousness/store/theme.store";
 import { signOut } from "@/services/authService";
 
 /**

@@ -1,7 +1,7 @@
 import { geminiClient } from './geminiClient';
-import { useFirewallState } from '@/state/firewallState';
-import { useGrowthState } from '@/state/growthState';
-import { useMapState } from '@/state/mapState';
+import { useFirewallState } from '@/domains/admin/store/firewall.store';
+import { useGrowthState } from '@/domains/gamification/store/growth.store';
+import { useMapState } from '@/domains/dawayir/store/map.store';
 
 export interface InterceptionResult {
     blocked: boolean;

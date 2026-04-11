@@ -3,10 +3,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tag } from "lucide-react";
 import { VoiceInput } from '@/modules/meta/VoiceInput';
-import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "@/state/pulseState";
-import { usePulseState } from "@/state/pulseState";
-import { useAdminState, isFeatureAllowed, type PulseCopyOverrideValue } from "@/state/adminState";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "@/domains/consciousness/store/pulse.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useAdminState, isFeatureAllowed, type PulseCopyOverrideValue } from "@/domains/admin/store/admin.store";
+import { trackingService } from "@/domains/journey";
 import {
   getEnergySuggestion,
   getWeeklyEnergyRecommendation,
@@ -426,7 +426,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
   useEffect(() => {
     if (!isOpen || copyVariantTrackedRef.current) return;
-    recordFlowEvent("pulse_copy_variant_assigned", {
+    trackingService.recordFlow("pulse_copy_variant_assigned", {
       meta: {
         energyVariant: energyCopyVariant,
         moodVariant: moodCopyVariant,
@@ -604,7 +604,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       return trimmed.length > 0 ? `${trimmed}\n${energySuggestion.note}` : energySuggestion.note;
     });
     if (!hasTrackedNotesUsage) {
-      recordFlowEvent("pulse_notes_used");
+      trackingService.recordFlow("pulse_notes_used");
       setHasTrackedNotesUsage(true);
     }
     if (!focus) setFocus(energySuggestion.focus);
@@ -619,7 +619,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       "\u062a\u0645 \u062a\u0637\u0628\u064a\u0642 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639.",
       "weekly_recommendation"
     );
-    recordFlowEvent("pulse_energy_weekly_recommendation_applied", {
+    trackingService.recordFlow("pulse_energy_weekly_recommendation_applied", {
       meta: { value: weeklyEnergyRecommendation.value, samples: weeklyEnergyRecommendation.samples }
     });
     setEnergyValue(weeklyEnergyRecommendation.value);
@@ -645,13 +645,13 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       const unstableNow = recent.length >= 4;
       isMoodSelectionUnstableRef.current = unstableNow;
       if (unstableNow && !moodUnstableEventTrackedRef.current) {
-        recordFlowEvent("pulse_mood_unstable", {
+        trackingService.recordFlow("pulse_mood_unstable", {
           meta: { changes: recent.length, windowMs, step }
         });
         moodUnstableEventTrackedRef.current = true;
       }
       if (lastTrackedMoodRef.current !== nextMood || now - moodChangeLastTrackedAtRef.current > 150) {
-        recordFlowEvent("pulse_mood_changed", {
+        trackingService.recordFlow("pulse_mood_changed", {
           meta: { mood: nextMood, step }
         });
         lastTrackedMoodRef.current = nextMood;
@@ -666,14 +666,14 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const _applyWeeklyMoodRecommendation = () => {
     if (!weeklyMoodRecommendation) return;
     setMoodValue(weeklyMoodRecommendation.mood);
-    recordFlowEvent("pulse_mood_weekly_recommendation_applied", {
+    trackingService.recordFlow("pulse_mood_weekly_recommendation_applied", {
       meta: { mood: weeklyMoodRecommendation.mood, count: weeklyMoodRecommendation.count }
     });
   };
 
   const setFocusValue = (nextFocus: PulseFocus) => {
     if (focus !== nextFocus) {
-      recordFlowEvent("pulse_focus_changed", {
+      trackingService.recordFlow("pulse_focus_changed", {
         meta: { focus: nextFocus, step }
       });
     }
@@ -687,7 +687,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       if (trimmed.includes(chip)) return prev;
       const next = trimmed.length > 0 ? `${trimmed}\n${chip}` : chip;
       if (!hasTrackedNotesUsage && next.trim().length > 0) {
-        recordFlowEvent("pulse_notes_used");
+        trackingService.recordFlow("pulse_notes_used");
         setHasTrackedNotesUsage(true);
       }
       return next;
@@ -740,13 +740,13 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       const unstableNow = recent.length >= 5;
       isEnergySelectionUnstableRef.current = unstableNow;
       if (unstableNow && !unstableEventTrackedRef.current) {
-        recordFlowEvent("pulse_energy_unstable", {
+        trackingService.recordFlow("pulse_energy_unstable", {
           meta: { changes: recent.length, windowMs, step }
         });
         unstableEventTrackedRef.current = true;
       }
       if (lastTrackedEnergyRef.current !== next || now - energyChangeLastTrackedAtRef.current > 150) {
-        recordFlowEvent("pulse_energy_changed", {
+        trackingService.recordFlow("pulse_energy_changed", {
           meta: { energy: next, step }
         });
         lastTrackedEnergyRef.current = next;

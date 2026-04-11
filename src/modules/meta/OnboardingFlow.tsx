@@ -3,11 +3,11 @@
 import type { FC } from "react";
 import { useState, useCallback, useEffect, useRef, memo, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMapState } from "@/state/mapState";
-import { useJourneyState } from "@/state/journeyState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useJourneyProgress } from "@/domains/journey";
 import { setInLocalStorage } from "@/services/browserStorage";
-import { recordFlowEvent } from "@/services/journeyTracking";
-import { AnalyticsEvents, trackCompleteRegistration, trackEvent, trackLead } from "@/services/analytics";
+import { trackingService } from "@/domains/journey";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
 import { AlertTriangle, Mail, ArrowRight, Sparkles, Zap, Smartphone, User, Lock } from "lucide-react";
 import { signInWithMagicLink } from "@/services/authService";
@@ -700,7 +700,7 @@ void onboardingRingPalette;
 /* ── Main OnboardingFlow Component ── */
 export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initialMirrorName }) => {
   const addNode = useMapState((s) => s.addNode);
-  const setMirrorName = useJourneyState((s) => s.setMirrorName);
+  const setMirrorName = useJourneyProgress().setMirrorName;
   
   const [step, setStep] = useState(0);
   const [, setPrevStep] = useState(-1);
@@ -720,8 +720,8 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   }, [seededMirrorName]);
 
   useEffect(() => {
-    recordFlowEvent("onboarding_opened");
-    trackEvent(AnalyticsEvents.ONBOARDING_STARTED, { 
+    trackingService.recordFlow("onboarding_opened");
+    analyticsService.track(AnalyticsEvents.ONBOARDING_STARTED, { 
       entry_point: seededMirrorName ? "landing_bridge" : "direct" 
     });
   }, [seededMirrorName]);
@@ -758,8 +758,8 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   }, [addNode, goTo]);
 
   const handleContactCapture = useCallback(async (providedName: string, email: string, whatsapp: string) => {
-    recordFlowEvent("lead_form_submitted", { meta: { name: providedName, email, whatsapp } });
-    trackLead({ method: "whatsapp", has_email: !!email, has_whatsapp: !!whatsapp });
+    trackingService.recordFlow("lead_form_submitted", { meta: { name: providedName, email, whatsapp } });
+    analyticsService.trackLead({ method: "whatsapp", has_email: !!email, has_whatsapp: !!whatsapp });
 
     const finalName = providedName.trim() || seededMirrorName;
     if (finalName) {
@@ -803,7 +803,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
 
   const handleComplete = useCallback(() => {
     if (!completionTrackedRef.current) {
-      trackCompleteRegistration({ flow: "onboarding" });
+      analyticsService.trackCompleteRegistration({ flow: "onboarding" });
       completionTrackedRef.current = true;
     }
     markJourneyOnboardingDone();

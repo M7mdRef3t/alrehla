@@ -4,8 +4,8 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Loader2, Sparkles, Brain, RefreshCw } from "lucide-react";
 import { buildLifeContext } from "@/services/lifeAdvisor";
-import { useAuthState } from "@/state/authState";
-import { useLifeState } from "@/state/lifeState";
+import { useAuthState } from "@/domains/auth/store/auth.store";
+import { useLifeState } from "@/domains/dawayir/store/life.store";
 
 interface Message {
   id: string;

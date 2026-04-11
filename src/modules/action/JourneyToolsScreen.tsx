@@ -3,10 +3,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Compass, Star, BookOpen, Wind, ShieldAlert, Sparkles, Activity, Radar, Fingerprint, Database } from "lucide-react";
 import { getJourneyToolsView } from "@/data/journeyTools";
-import { useJourneyState } from "@/state/journeyState";
-import { useMapState } from "@/state/mapState";
-import { useAchievementState } from "@/state/achievementState";
-import { useAdminState } from "@/state/adminState";
+import { useJourneyProgress } from "@/domains/journey";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
 import { getGoalMeta, getGoalOrderIndex } from "@/data/goalMeta";
 import type { FeatureFlagKey } from "@/config/features";
@@ -63,10 +63,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
     show: { opacity: 1, y: 0, scale: 1 }
   };
   const nodesCount = useMapState((s) => s.nodes.length);
-  const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
-  const lastGoalId = useJourneyState((s) => s.goalId);
-  const lastGoalCategory = useJourneyState((s) => s.category);
-  const lastGoalById = useJourneyState((s) => s.lastGoalById);
+  const { baselineCompletedAt, goalId: lastGoalId, category: lastGoalCategory, lastGoalById } = useJourneyProgress();
   const lastGoalRecord = getLastGoalMeta(lastGoalById, lastGoalId, lastGoalCategory);
   const lastGoalLabel = getGoalLabel(lastGoalRecord?.goalId);
   const lastGoalMeta = getGoalMeta(lastGoalRecord?.goalId);

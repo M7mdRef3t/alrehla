@@ -28,18 +28,18 @@ import { TabNavigation } from "./TabNavigation";
 import { LayoutModeSwitcher } from "./LayoutModeSwitcher";
 import { useGraphSync } from "@/hooks/useGraphSync";
 import { useAdaptiveLayout } from "@/hooks/useAdaptiveLayout";
-import { useLayoutState } from "@/state/layoutState";
+import { useLayoutState } from "@/domains/dawayir/store/layout.store";
 import { mapCopy } from "@/copy/map";
 import { EditableText } from "./EditableText";
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
-import { useJourneyState } from "@/state/journeyState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useJourneyProgress } from "@/domains/journey";
 import { PULSE_DAY_NAMES } from "@/utils/pulseInsights";
 import { NextStepCard } from "./NextStepCard";
 import type { AdviceCategory } from "@/data/adviceScripts";
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getEffectiveFeatureAccess } from "@/utils/featureFlags";
-import { getEffectiveRoleFromState, useAuthState } from "@/state/authState";
+import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
 import type { FeatureFlagKey } from "@/config/features";
 import type { NextStepDecisionV1 } from "../recommendation/types";
 import { isUserMode } from "@/config/appEnv";
@@ -48,7 +48,7 @@ import { adaptiveLayoutEngine } from "@/ai/adaptiveLayoutEngine";
 import { loadSubscription, canSendAIMessage } from "@/services/subscriptionManager";
 import { computeTEI } from "@/utils/traumaEntropyIndex";
 import { useDailyQuestion } from "@/hooks/useDailyQuestion";
-import { getShadowScore } from "@/state/shadowPulseState";
+import { getShadowScore } from "@/domains/consciousness/store/shadowPulse.store";
 import { deriveRelationshipWeather } from "@/utils/relationshipWeather";
 import { deriveContextAtlas, type ContextAtlasKey } from "@/utils/contextAtlas";
 import { assignUrl } from "@/services/navigation";
@@ -62,7 +62,7 @@ const FeelingCheckModal = lazy(() => import("@/modules/dawayir/FeelingCheckModal
 const EmergencyButton = lazy(() => import("@/modules/dawayir/EmergencyButton").then(m => ({ default: m.EmergencyButton })));
 const ActionToolkit = lazy(() => import("@/modules/dawayir/ActionToolkit").then(m => ({ default: m.ActionToolkit })));
 
-import { trackEvent, AnalyticsEvents } from "@/services/analytics";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { getGlobalHarmony } from "@/services/globalPulse";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import { ViralLoopNudge } from '@/modules/growth/growth/ViralLoopNudge';
@@ -209,7 +209,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   }, []);
 
   useEffect(() => {
-    trackEvent(AnalyticsEvents.SANCTUARY_LOADED);
+    analyticsService.track(AnalyticsEvents.SANCTUARY_LOADED);
     
     // Neural Soundscape Lifecycle
     const shouldPlay = localStorage.getItem('dawayir_ambient_sound') === 'true';
@@ -232,7 +232,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   const handleNodeDropOnAI = useCallback((nodeId: string) => {
     if (!user) {
-      trackEvent(AnalyticsEvents.AI_ATTEMPT_GUEST);
+      analyticsService.track(AnalyticsEvents.AI_ATTEMPT_GUEST);
       setIsCloudAuthOpen(true);
       return;
     }
@@ -441,7 +441,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   }, [selectedNodeId, showPlacementTooltip, dismissPlacementTooltip]);
 
   useEffect(() => {
-    const mirrorName = useJourneyState.getState().mirrorName;
+    const mirrorName = useJourneyProgress().mirrorName;
     if (mirrorName && activeNodes.length === 0 && !showOnboarding) {
       const nodeId = useMapState.getState().addNode(
         mirrorName, 
@@ -457,14 +457,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         false, 
         true
       );
-      useJourneyState.getState().consumeMirrorName();
+      useJourneyProgress().consumeMirrorName();
       onSelectNode(nodeId);
       
-      import("@/state/achievementState").then(m => {
+      import("@/domains/gamification/store/achievement.store").then(m => {
         m.useAchievementState.getState().unlock("mirror_discovery");
       });
 
-      void trackEvent(AnalyticsEvents.NODE_ADDED, { label: mirrorName, source: "mirror_hook" });
+      void analyticsService.track(AnalyticsEvents.NODE_ADDED, { label: mirrorName, source: "mirror_hook" });
     }
   }, [goalId, activeNodes.length, onSelectNode, showOnboarding]);
 

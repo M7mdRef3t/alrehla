@@ -1,3 +1,4 @@
+import { trackingService } from '@/domains/journey';
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { X, BarChart3, Users, Shield } from "lucide-react";
@@ -59,8 +60,8 @@ export const TrackingDashboard: FC<TrackingDashboardProps> = ({ isOpen, onClose 
     setMode(v);
   };
 
-  const stats = getAggregateStats();
-  const sessions = getSessionsWithProgress();
+  const stats = trackingService.getAggregateStats();
+  const sessions = trackingService.getSessions();
 
   const handleClearEvents = () => {
     if (confirmClear) {

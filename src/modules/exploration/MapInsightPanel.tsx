@@ -3,7 +3,7 @@ import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowRight, AlertCircle, RefreshCw, BrainCircuit, History, Pin, CheckCircle2, Columns } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { supabase } from "@/services/supabaseClient";
 
 interface MapInsight {

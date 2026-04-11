@@ -3,15 +3,15 @@
  */
 
 import { isSupabaseReady, supabase } from "./supabaseClient";
-import { awardPointsForFlowStep, awardPointsForJourneyType } from "@/state/achievementState";
+import { awardPointsForFlowStep, awardPointsForJourneyType } from "@/domains/gamification/store/achievement.store";
 import { isUserMode } from "@/config/appEnv";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "./browserStorage";
-import { getAuthUserId } from "@/state/authState";
+import { getAuthUserId } from "@/domains/auth/store/auth.store";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { sendJsonWithResilience } from "../architecture/resilientHttp";
 import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribution";
-import { ANALYTICS_SESSION_KEY, getOrCreateSessionId as getUnifiedSessionId } from "./analytics";
+import { ANALYTICS_SESSION_KEY, getOrCreateSessionId as getUnifiedSessionId, getOrCreateAnonymousId } from "./analytics";
 
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
@@ -165,10 +165,20 @@ async function flushSupabaseSync(): Promise<void> {
     headers["Authorization"] = `Bearer ${session.access_token}`;
   }
 
+  const anonymousId = getOrCreateAnonymousId();
+  const leadAttr = getStoredLeadAttribution();
+  const utm = getStoredUtmParams();
+
   const rows = batch.map(({ mode, event }) => ({
     event_type: event.type,
     session_id: event.sessionId ?? null,
+    anonymous_id: anonymousId,
     client_event_id: crypto.randomUUID(), // Ensure idempotency at the source
+    lead_id: leadAttr?.lead_id || null,
+    lead_source: leadAttr?.lead_source || null,
+    utm_source: utm?.utm_source || null,
+    utm_medium: utm?.utm_medium || null,
+    utm_campaign: utm?.utm_campaign || null,
     payload: {
       ...(event.payload ?? {}),
       mode

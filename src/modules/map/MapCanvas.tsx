@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, GripVertical } from "lucide-react";
 import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
 import type { Ring, MapNode as MapNodeType } from "./mapTypes";
-import { useMapState } from "@/state/mapState";
-import { useMeState } from "@/state/meState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMeState } from "@/domains/dawayir/store/me.store";
 import { mapCopy } from "@/copy/map";
 import { hasSeenOnboarding } from "@/utils/mapOnboarding";
 import { getMissionProgressSummary } from "@/utils/missionProgress";
@@ -16,8 +16,8 @@ import { Telescope } from "lucide-react";
 import { analyzeMapInterference } from "@/services/socialSync";
 import { AINode } from "./AINode";
 import { useCognitiveDebounce } from "@/hooks/useCognitiveDebounce";
-import { useAuthState } from "@/state/authState";
-import { useAdminState } from "@/state/adminState";
+import { useAuthState } from "@/domains/auth/store/auth.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { useOptimisticPhoenixSync } from "@/hooks/useOptimisticPhoenixSync";
 import { useKineticSensors } from "@/hooks/useKineticSensors";
 import { useDailyPulse } from "@/hooks/useDailyPulse";
@@ -25,10 +25,10 @@ import { useDailyQuestion } from "@/hooks/useDailyQuestion";
 import { soundManager } from "@/services/soundManager";
 import { BatteryStateModal } from '@/modules/action/BatteryStateModal';
 import { useLongPress } from "@/hooks/useLongPress";
-import { usePulseState } from "@/state/pulseState";
-import { useGamificationState } from "@/state/gamificationState";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useGamification } from "@/domains/gamification";
 import { Zap, Flame } from "lucide-react";
-import { useSynthesisState } from "@/state/synthesisState";
+import { useSynthesisState } from "@/domains/consciousness/store/synthesis.store";
 
 /* 
     COSMIC MAP CANVAS  Digital Sanctuary
@@ -201,7 +201,7 @@ const getGreyZonePosition = (nodeIndex: number, totalInGrey: number): { x: numbe
 /* ── Illusion Entity View (Dark Asteroids) ── */
 const IllusionEntityView: FC<{ scenario: any; index: number; total: number; onDismantle: (key: string) => void }> = memo(({ scenario, index, total, onDismantle }) => {
   const [isDismantling, setIsDismantling] = useState(false);
-  const addXP = useGamificationState((s) => s.addXP);
+  const addXP = useGamification().addXP;
 
   // Orbit in the deep edges of the map (r=55)
   const radius = 55;
@@ -842,7 +842,7 @@ interface IllusionEntityProps {
 
 const IllusionEntity: FC<IllusionEntityProps> = memo(({ id, label, type, orbitAngle, onDestroyed }) => {
   const [isDismantling, setIsDismantling] = useState(false);
-  const addXP = useGamificationState(s => s.addXP);
+  const { addXP } = useGamification();
 
   // حساب موضع الكويكب في المدار الخارجي (radius = 48)
   const x = 50 + 49 * Math.cos(orbitAngle);

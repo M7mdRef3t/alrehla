@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { ResultActionToolkit } from "./ResultActionToolkit";
 import { NotesSection } from '@/modules/meta/NotesSection';
 import { PersonalizedTraining } from '@/modules/exploration/PersonalizedTraining';

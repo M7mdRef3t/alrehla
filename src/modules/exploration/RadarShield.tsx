@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Radar, X, Clock, Shield } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 
 interface RadarShieldProps {
     isOpen: boolean;

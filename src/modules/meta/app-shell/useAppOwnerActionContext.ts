@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { FeatureFlagKey } from "@/config/features";
 import type { OwnerActionExecutionContext } from "@/navigation/ownerActionExecutor";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import { trackingService } from "@/domains/journey";
 import { createCurrentUrl, pushUrl } from "@/services/navigation";
 import type { AppScreen } from "@/navigation/navigationMachine";
 
@@ -103,7 +103,7 @@ export function useAppOwnerActionContext({
         openClassicRecovery: () => openOverlay("classicRecovery"),
         openManualPlacement: () => openOverlay("manualPlacement"),
         openFeedbackModal: () => {
-          recordFlowEvent("feedback_opened");
+          trackingService.recordFlow("feedback_opened");
           openOverlay("feedback");
         },
         requestInstallApp: () => {

@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, Users, Target, AlertTriangle, ArrowLeft, BarChart2 } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import type { MapNode, Ring } from "../map/mapTypes";
 
 /* ═══════════════════════════════════════════════
@@ -275,7 +275,7 @@ export function RelationshipInsightsDashboard({ onBack, onGoToQuizzes: _onGoToQu
   const isEmpty = ins.active.length === 0;
 
   return (
-    <div dir="rtl" style={{ minHeight: "100vh", background: "var(--space-void)", padding: "0" }}>
+    <div dir="rtl" className="bg-[var(--page-bg)]" style={{ minHeight: "100vh", padding: "0" }}>
 
       {/* ── Header ── */}
       <div style={{

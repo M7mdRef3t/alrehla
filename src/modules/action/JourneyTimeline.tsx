@@ -3,11 +3,11 @@ import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Target, Battery, Calendar, Shield } from "lucide-react";
 import { getTimelineEvents, type JourneyEventPayload } from "@/services/journeyTracking";
-import { useMapState } from "@/state/mapState";
-import { useJourneyState } from "@/state/journeyState";
-import { usePulseState } from "@/state/pulseState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useJourneyProgress } from "@/domains/journey";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { PATH_NAMES } from "../pathEngine/pathResolver";
-import type { PulseMood } from "@/state/pulseState";
+import type { PulseMood } from "@/domains/consciousness/store/pulse.store";
 
 const MOOD_LABEL: Record<PulseMood, string> = {
   bright: "رايق",
@@ -53,7 +53,7 @@ function formatTimeAgo(ts: number): string {
 
 export const JourneyTimeline: FC<JourneyTimelineProps> = ({ isOpen, onClose, onCardClick }) => {
   const nodes = useMapState((s) => s.nodes);
-  const journeyStartedAt = useJourneyState((s) => s.journeyStartedAt);
+  const journeyStartedAt = useJourneyProgress().journeyStartedAt;
   const pulseLogs = usePulseState((s) => s.logs);
 
   const stats = useMemo(() => {

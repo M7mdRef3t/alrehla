@@ -1,37 +1,38 @@
 import { useEffect, useRef } from "react";
 import { hasCompletedJourneyOnboarding, markJourneyOnboardingDone } from "../OnboardingFlow";
 import { initThemePalette } from "@/services/themePalette";
-import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "@/state/achievementState";
-import { useMapState } from "@/state/mapState";
-import { useJourneyState } from "@/state/journeyState";
+import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "@/domains/gamification/store/achievement.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useJourneyState } from "@/domains/journey/store/journey.store";
 import {
   fetchPublicBroadcasts,
   doesBroadcastMatchAudience,
   isAppInstalledMode,
   type PublicBroadcast
 } from "@/services/broadcasts";
-import { useNotificationState } from "@/state/notificationState";
+import { useNotificationState } from "@/domains/notifications/store/notification.store";
 import { sendNotification } from "@/services/notifications";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
-import { useAuthState } from "@/state/authState";
+import { useAuthState } from "@/domains/auth/store/auth.store";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { requestIdleCallback, cancelIdleCallback } from "@/utils/performanceOptimizations";
 import { startAutonomousStartupJobs } from '@/orchestration/startupJobs';
 import type * as AgentModule from '@/agent';
 import type { AgentActions, AgentContext } from '@/agent/types';
 import { isUserMode } from "@/config/appEnv";
-import { initAppContentRealtime } from "@/state/appContentState";
+import { initAppContentRealtime } from "@/domains/dawayir/store/content.store";
 import { fetchAdminConfig, fetchOwnerAlerts } from "@/services/adminApi";
-import { useAdminState } from "@/state/adminState";
-import { usePulseState } from "@/state/pulseState";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { syncGamificationOnLoad } from "@/services/gamificationSync";
 import { syncSubscription } from "@/services/subscriptionManager";
-import { useGamificationState } from "@/state/gamificationState";
-import { useToastState } from "@/state/toastState";
+import { useGamification } from "@/domains/gamification";
+import { useToastState } from "@/domains/dawayir/store/toast.store";
 import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "@/services/marketingAttribution";
-import type { AppShellScreen } from "@/state/appShellNavigationState";
+import type { AppShellScreen } from "@/domains/dawayir/store/navigation.store";
 import { useTheme } from "next-themes";
+import { consciousnessTheme } from "@/ai/consciousnessThemeEngine";
 
 type AgentModule = typeof import('@/agent');
 
@@ -114,13 +115,63 @@ export function AppRuntimeControllers({
   // Sync ConsciousnessThemeEngine with next-themes
   const { setTheme } = useTheme();
   useEffect(() => {
-    const handleThemeChange = ((e: CustomEvent<{ isDark: boolean }>) => {
+    // Bridge: ConsciousnessThemeEngine → next-themes
+    const handleConsciousnessThemeChange = ((e: CustomEvent<{ isDark: boolean }>) => {
       setTheme(e.detail.isDark ? "dark" : "light");
     }) as EventListener;
-    
-    window.addEventListener("consciousness-theme-changed", handleThemeChange);
-    return () => window.removeEventListener("consciousness-theme-changed", handleThemeChange);
+
+    // Bridge: useThemeState (Zustand) → next-themes
+    const handleZustandThemeChange = ((e: CustomEvent<{ theme: string }>) => {
+      const t = e.detail.theme;
+      if (t === "dark" || t === "light" || t === "system") {
+        setTheme(t);
+      }
+    }) as EventListener;
+
+    window.addEventListener("consciousness-theme-changed", handleConsciousnessThemeChange);
+    window.addEventListener("zustand-theme-change", handleZustandThemeChange);
+    return () => {
+      window.removeEventListener("consciousness-theme-changed", handleConsciousnessThemeChange);
+      window.removeEventListener("zustand-theme-change", handleZustandThemeChange);
+    };
   }, [setTheme]);
+
+  // Wire up Sensory Input for Consciousness Theme Engine
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          consciousnessTheme.handleSensoryInput("scroll", window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    const handleMotion = (event: DeviceMotionEvent) => {
+      if (event.acceleration) {
+        const ax = event.acceleration.x || 0;
+        const ay = event.acceleration.y || 0;
+        const az = event.acceleration.z || 0;
+        // Calculate rough motion magnitude
+        const magnitude = Math.sqrt(ax * ax + ay * ay + az * az);
+        // Normalize to roughly 0-1 range (adjusting typical motion 0-10m/s^2)
+        const normalized = Math.min(1, magnitude / 10);
+        consciousnessTheme.handleSensoryInput("motion", normalized);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("devicemotion", handleMotion, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("devicemotion", handleMotion);
+    };
+  }, []);
 
   useEffect(() => {
     void initThemePalette();
@@ -405,14 +456,14 @@ export function AppRuntimeControllers({
     if (!authUser) return;
 
     // Fast local-only operation — run immediately
-    const { xpLost, streakMaintained } = useGamificationState.getState().recordActivity();
+    const { xpLost, streakMaintained } = useGamification().recordActivity();
     if (xpLost > 0) {
       useToastState.getState().showToast(
         `فقدت ${xpLost} XP بسبب انقطاعك عن تسجيل الدخول. العزم يتجدد كل يوم!`,
         "error"
       );
     } else if (streakMaintained) {
-      const currentStreak = useGamificationState.getState().streak;
+      const currentStreak = useGamification().streak;
       if (currentStreak > 1) {
         useToastState.getState().showToast(
           `أبقيت على شعلة الوعي! سلسلة الحضور: ${currentStreak} يوم 🔥`,

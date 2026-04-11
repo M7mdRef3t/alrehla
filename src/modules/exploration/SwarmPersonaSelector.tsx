@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { motion } from "framer-motion";
 import { Cpu, Zap, Shield, Waves, Check } from "lucide-react";
-import { useSwarmState } from "@/state/swarmState";
+import { useSwarmState } from "@/domains/admin/store/swarm.store";
 import { SWARM_PERSONAE } from '@/agent/personae';
 
 /**

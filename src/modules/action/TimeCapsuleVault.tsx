@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, Unlock, Plus, Calendar, Award, X } from "lucide-react";
 import { LegacyEngine, WisdomCapsule } from "@/services/legacyEngine";
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { ChronicleGenerator } from "@/services/chronicleGenerator";
 
 interface TimeCapsuleVaultProps {

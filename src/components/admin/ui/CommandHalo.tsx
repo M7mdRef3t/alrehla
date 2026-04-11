@@ -19,14 +19,16 @@ import {
 } from "lucide-react";
 import { AdminTab, NAV_ITEMS, CLEAN_NAV_LABELS } from "../adminNavigation";
 import { createCurrentUrl, pushUrl } from "@/services/navigation";
-import { useLockdownState } from "@/state/lockdownState";
-import { useAdminState } from "@/state/adminState";
+import { useLockdownState } from "@/domains/admin/store/lockdown.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
 import { AlertTriangle, Fingerprint } from "lucide-react";
 
 export const CommandHalo: React.FC = () => {
   const { isLockedDown, triggerLockdown, liftLockdown } = useLockdownState();
   const resonanceScore = useAdminState(s => s.resonanceScore);
   const latestFriction = useAdminState(s => s.latestFriction);
+  const aiInterventions = useAdminState(s => s.aiInterventions || []);
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -68,13 +70,30 @@ export const CommandHalo: React.FC = () => {
       label: isLockedDown ? "فك تجميد النبض (Lift Lockdown)" : "تجميد النبض (Sovereign Freeze)", 
       icon: isLockedDown ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />, 
       type: "action" as const, 
+      actionId: "toggle-lockdown",
       subtitle: isLockedDown ? "استعادة العمليات الحيوية" : "إيقاف العمليات مؤقتاً لحماية النظام" 
     },
-    { id: "broadcast-all", label: "بث استغاثة (Emergency Broadcast)", icon: <Activity className="h-4 w-4" />, type: "action" as const, subtitle: "رسالة لكل المستخدمين" },
-    { id: "audit-system", label: "تدقيق السيادة (Sovereign Audit)", icon: <Shield className="h-4 w-4" />, type: "action" as const, subtitle: "فحص أمان النظام" },
-  ].filter(action => action.label.toLowerCase().includes(query.toLowerCase()));
+    { id: "broadcast-all", label: "بث استغاثة (Emergency Broadcast)", icon: <Activity className="h-4 w-4" />, type: "action" as const, actionId: "broadcast-all", subtitle: "رسالة لكل المستخدمين" },
+    { id: "audit-system", label: "تدقيق السيادة (Sovereign Audit)", icon: <Shield className="h-4 w-4" />, type: "action" as const, actionId: "audit-system", subtitle: "فحص أمان النظام" },
+    ...aiInterventions.map(ai => ({
+      ...ai,
+      id: ai.id,
+      label: ai.label,
+      subtitle: ai.subtitle,
+      actionId: ai.actionId,
+      type: "action" as const,
+      isAi: true,
+      icon: ai.iconType === "shield" ? <Shield className="h-4 w-4" /> :
+            ai.iconType === "zap" ? <Zap className="h-4 w-4" /> :
+            ai.iconType === "activity" ? <Activity className="h-4 w-4" /> :
+            ai.iconType === "flame" ? <Flame className="h-4 w-4" /> :
+            ai.iconType === "lock" ? <Lock className="h-4 w-4" /> :
+            ai.iconType === "unlock" ? <Unlock className="h-4 w-4" /> :
+            <Command className="h-4 w-4" />
+    }))
+  ].filter(action => action.label.toLowerCase().includes(query.toLowerCase()) || query === "");
 
-  const filteredItems = [...actionResults, ...navResults].slice(0, 8);
+  const filteredItems = [...actionResults, ...navResults].slice(0, 10);
 
   useEffect(() => {
     if (isOpen) {
@@ -100,12 +119,16 @@ export const CommandHalo: React.FC = () => {
         const item = filteredItems[selectedIndex];
         if (item.type === "navigation") {
           navigateTo(item.id as AdminTab);
-        } else if (item.id === "toggle-lockdown") {
+        } else if (item.id === "toggle-lockdown" || ("actionId" in item && item.actionId === "toggle-lockdown")) {
           if (isLockedDown) liftLockdown();
           else triggerLockdown();
           setIsOpen(false);
         } else {
-          console.log("Executing Sovereign Action:", item.id);
+          if ("actionId" in item && item.actionId) {
+             SovereignOrchestrator.executeIntervention(item.actionId);
+          } else {
+             console.log("Executing Sovereign Action:", item.id);
+          }
           setIsOpen(false);
         }
       }

@@ -6,9 +6,9 @@ import { getDawayirSignalHistory } from "../recommendation/recommendationBus";
 import { calculateEntropy } from "@/services/predictiveEngine";
 import { buildRelationalFieldSnapshot } from "@/services/relationalFieldEngine";
 import { getRecentJourneyEvents } from "@/services/journeyTracking";
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
-import { useShadowPulseState } from "@/state/shadowPulseState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useShadowPulseState } from "@/domains/consciousness/store/shadowPulse.store";
 
 const WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 

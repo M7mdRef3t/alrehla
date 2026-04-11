@@ -6,8 +6,8 @@ import {
 } from "lucide-react";
 import { growthEngine, type DiffusionMetrics } from "@/services/growthEngine";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
-import { getAuthToken } from "@/state/authState";
-import { useAdminState } from "@/state/adminState";
+import { getAuthToken } from "@/domains/auth/store/auth.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 
 function getBearerToken(): string {
   return getAuthToken() ?? useAdminState.getState().adminCode ?? "";

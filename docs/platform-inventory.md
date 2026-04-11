@@ -1,0 +1,636 @@
+# Platform Inventory
+
+Updated: 2026-04-10
+
+## Executive Summary
+
+- App routes and route-level files: 45
+- API route handlers: 97
+- Major module screens/apps/modals/pages: 60
+- Shared component files: 113
+- State/store files: 35
+- Service files: 143
+- Hook files: 38
+- Utility files: 51
+
+## App Routes
+
+- `app/(marketing)/gate/page.tsx`
+- `app/about/layout.tsx`
+- `app/about/page.tsx`
+- `app/activation/page.tsx`
+- `app/admin/page.tsx`
+- `app/admin/radar/error.tsx`
+- `app/admin/radar/loading.tsx`
+- `app/admin/radar/page.tsx`
+- `app/admin/repo-intel/page.tsx`
+- `app/admin/sessions/page.tsx`
+- `app/app/page.tsx`
+- `app/auth/callback/page.tsx`
+- `app/checkout/page.tsx`
+- `app/coach/landing/page.tsx`
+- `app/coach/page.tsx`
+- `app/dawayir-live/complete/[sessionId]/page.tsx`
+- `app/dawayir-live/couple/page.tsx`
+- `app/dawayir-live/history/page.tsx`
+- `app/dawayir-live/layout.tsx`
+- `app/dawayir-live/page.tsx`
+- `app/dawayir-live/replay/[sessionId]/page.tsx`
+- `app/dawayir/page.tsx`
+- `app/debug-baseline/page.tsx`
+- `app/debug-logo-lab/page.tsx`
+- `app/debug-pulse/page.tsx`
+- `app/debug-sanctuary/page.tsx`
+- `app/debug-telegram/page.tsx`
+- `app/error.tsx`
+- `app/layout.tsx`
+- `app/loading.tsx`
+- `app/maraya/layout.tsx`
+- `app/maraya/page.tsx`
+- `app/not-found.tsx`
+- `app/onboarding/loading.tsx`
+- `app/onboarding/page.tsx`
+- `app/page.tsx`
+- `app/pricing/page.tsx`
+- `app/privacy/page.tsx`
+- `app/sessions/intake/page.tsx`
+- `app/sessions/prep/[requestId]/page.tsx`
+- `app/stories/layout.tsx`
+- `app/stories/page.tsx`
+- `app/terms/page.tsx`
+- `app/weather/layout.tsx`
+- `app/weather/page.tsx`
+
+## API Routes
+
+- `app/api/activation/manual-proof/route.ts`
+- `app/api/admin/email/logs/route.ts`
+- `app/api/admin/email/send/route.ts`
+- `app/api/admin/email/stats/route.ts`
+- `app/api/admin/email/templates/route.ts`
+- `app/api/admin/intelligence/oracle-leads/route.ts`
+- `app/api/admin/marketing-ops/lead-gamify/route.ts`
+- `app/api/admin/marketing-ops/lead/route.ts`
+- `app/api/admin/marketing-ops/lead/summary/route.ts`
+- `app/api/admin/marketing-ops/prepare-tracked-email/route.ts`
+- `app/api/admin/marketing-ops/repair/route.ts`
+- `app/api/admin/marketing-ops/route.ts`
+- `app/api/admin/marketing-ops/validate-email/route.ts`
+- `app/api/admin/meta-warmup/route.ts`
+- `app/api/admin/paths/audit/route.ts`
+- `app/api/admin/paths/generate/route.ts`
+- `app/api/admin/revenue/metrics/route.ts`
+- `app/api/admin/route.ts`
+- `app/api/admin/sessions/map-nodes/route.ts`
+- `app/api/admin/sessions/route.ts`
+- `app/api/analytics/route.ts`
+- `app/api/analyze/route.ts`
+- `app/api/auth/link-anonymous-to-user/route.ts`
+- `app/api/awareness-queue/route.ts`
+- `app/api/awareness-queue/worker/route.ts`
+- `app/api/chat/agent/route.ts`
+- `app/api/checkout/cancel/route.ts`
+- `app/api/checkout/manual-proof/route.ts`
+- `app/api/checkout/portal/route.ts`
+- `app/api/checkout/route.ts`
+- `app/api/cron/alert-sweep/route.ts`
+- `app/api/cron/marketing-outreach/route.ts`
+- `app/api/cron/sessions/followup/route.ts`
+- `app/api/dawayir-live/admin/analytics/route.ts`
+- `app/api/dawayir-live/bootstrap/route.ts`
+- `app/api/dawayir-live/coach/sessions/route.ts`
+- `app/api/dawayir-live/sessions/[id]/access/route.ts`
+- `app/api/dawayir-live/sessions/[id]/camera/route.ts`
+- `app/api/dawayir-live/sessions/[id]/complete/route.ts`
+- `app/api/dawayir-live/sessions/[id]/events/route.ts`
+- `app/api/dawayir-live/sessions/[id]/route.ts`
+- `app/api/dawayir-live/sessions/[id]/share/route.ts`
+- `app/api/dawayir-live/sessions/[id]/tool/route.ts`
+- `app/api/dawayir-live/sessions/[id]/tts/route.ts`
+- `app/api/dawayir-live/sessions/route.ts`
+- `app/api/dev/inject-mock/route.ts`
+- `app/api/dev/mock-injection/route.ts`
+- `app/api/email/track/route.ts`
+- `app/api/gate/map-completion/route.ts`
+- `app/api/gate/session/route.ts`
+- `app/api/life-advisor/route.ts`
+- `app/api/maraya/audio/scene/route.ts`
+- `app/api/maraya/duo/host/route.ts`
+- `app/api/maraya/duo/join/route.ts`
+- `app/api/maraya/duo/leave/route.ts`
+- `app/api/maraya/duo/reset/route.ts`
+- `app/api/maraya/duo/restore/route.ts`
+- `app/api/maraya/duo/vote/route.ts`
+- `app/api/maraya/health/route.ts`
+- `app/api/maraya/image/generate/route.ts`
+- `app/api/maraya/memory/route.ts`
+- `app/api/maraya/space/analyze/route.ts`
+- `app/api/maraya/story/next/route.ts`
+- `app/api/maraya/story/start/route.ts`
+- `app/api/maraya/telemetry/client/route.ts`
+- `app/api/marketing/lead/meta/route.ts`
+- `app/api/marketing/lead/route.ts`
+- `app/api/marketing/webhook/resend/route.ts`
+- `app/api/meta/capi/route.ts`
+- `app/api/predict/route.ts`
+- `app/api/public/pulse/route.ts`
+- `app/api/public/scarcity/route.ts`
+- `app/api/pulse/route.ts`
+- `app/api/recommendations/[action]/route.ts`
+- `app/api/repo-graph/query/route.ts`
+- `app/api/repo-graph/route.ts`
+- `app/api/routing/[action]/route.ts`
+- `app/api/routing/intervention-trigger/route.ts`
+- `app/api/routing/next-step-v2/route.ts`
+- `app/api/routing/outcome-v2/route.ts`
+- `app/api/sessions/ai-brief/route.ts`
+- `app/api/sessions/intake/route.ts`
+- `app/api/sessions/prep-form/route.ts`
+- `app/api/shadow/route.ts`
+- `app/api/unsubscribe/route.ts`
+- `app/api/user/broadcasts/route.ts`
+- `app/api/user/leaderboard/route.ts`
+- `app/api/user/live-metrics/route.ts`
+- `app/api/user/state/route.ts`
+- `app/api/user/subscription/route.ts`
+- `app/api/user/testimonials/route.ts`
+- `app/api/webhooks/meta-leads/route.ts`
+- `app/api/webhooks/meta-whatsapp/route.ts`
+- `app/api/webhooks/resend/route.ts`
+- `app/api/webhooks/stripe/route.ts`
+- `app/api/webhooks/telegram/route.ts`
+- `app/go/[id]/route.ts`
+
+## Module Surfaces (Screens, Pages, Modals, Apps)
+
+- `src/modules/action/AdvancedToolsModal.tsx`
+- `src/modules/action/AggressiveBurnoutModal.tsx`
+- `src/modules/action/BatteryStateModal.tsx`
+- `src/modules/action/BoundaryGeneratorModal.tsx`
+- `src/modules/action/ClassicRecoveryModal.tsx`
+- `src/modules/action/CocoonModeModal.tsx`
+- `src/modules/action/ConsciousnessArchiveModal.tsx`
+- `src/modules/action/EmotionalCompassModal.tsx`
+- `src/modules/action/GhostingSimulatorModal.tsx`
+- `src/modules/action/JourneyToolsScreen.tsx`
+- `src/modules/action/ManualPlacementModal.tsx`
+- `src/modules/action/MissionScreen.tsx`
+- `src/modules/action/MonthlyReadingPlanModal.tsx`
+- `src/modules/action/RecoveryPlanModal.tsx`
+- `src/modules/action/SymptomsOverviewModal.tsx`
+- `src/modules/action/TheArmoryScreen.tsx`
+- `src/modules/action/TherapistChatModal.tsx`
+- `src/modules/action/WeeklyActionPlanModal.tsx`
+- `src/modules/action/WeeklyWrapModal.tsx`
+- `src/modules/community/SupportCirclesScreen.tsx`
+- `src/modules/dawayir-live/DawayirLiveApp.tsx`
+- `src/modules/dawayir-live/components/LiveSetupScreen.tsx`
+- `src/modules/dawayir-live/components/ParityOnboardingModal.tsx`
+- `src/modules/dawayir-live/components/ParityWelcomeScreen.tsx`
+- `src/modules/dawayir-live/pages/LiveCouplePage.tsx`
+- `src/modules/dawayir-live/pages/LiveHistoryPage.tsx`
+- `src/modules/dawayir-live/pages/LiveReplayPage.tsx`
+- `src/modules/dawayir-live/pages/LiveSessionCompletePage.tsx`
+- `src/modules/dawayir/DawayirApp.tsx`
+- `src/modules/dawayir/FeelingCheckModal.tsx`
+- `src/modules/exploration/AddPersonModal.tsx`
+- `src/modules/exploration/AddPersonModal/ResultScreen.tsx`
+- `src/modules/exploration/CoreMapScreen.tsx`
+- `src/modules/exploration/GoogleAuthModal.tsx`
+- `src/modules/exploration/HealingEchoModal.tsx`
+- `src/modules/exploration/PulseCheckModal.tsx`
+- `src/modules/exploration/RelationshipAnalysisModal.tsx`
+- `src/modules/exploration/RuthlessMirrorModal.tsx`
+- `src/modules/exploration/UpgradeScreen.tsx`
+- `src/modules/exploration/ViewPersonModal.tsx`
+- `src/modules/exploration/VoicePulseModal.tsx`
+- `src/modules/growth/AboutScreen.tsx`
+- `src/modules/growth/CourseDetailPage.tsx`
+- `src/modules/growth/QuickPathModal.tsx`
+- `src/modules/growth/RecoveryPathwaysModal.tsx`
+- `src/modules/growth/StoriesScreen.tsx`
+- `src/modules/lifeOS/DomainAssessmentModal.tsx`
+- `src/modules/maraya/MarayaApp.jsx`
+- `src/modules/maraya/components/SplashScreen.jsx`
+- `src/modules/meta/BoardingPassModal.tsx`
+- `src/modules/meta/DashboardScreen.tsx`
+- `src/modules/meta/FaqScreen.tsx`
+- `src/modules/meta/FeatureLockedModal.tsx`
+- `src/modules/meta/FeedbackModal.tsx`
+- `src/modules/meta/LegalPage.tsx`
+- `src/modules/meta/PastSessionsLogModal.tsx`
+- `src/modules/meta/PremiumBridgeModal.tsx`
+- `src/modules/meta/PrivateCircleInvitationModal.tsx`
+- `src/modules/meta/SettingsScreen.tsx`
+- `src/modules/pricing/PricingPage.tsx`
+
+## Shared Components
+
+Top-level component domains: `Oracle`, `admin`, `providers`, `ui`
+
+- `src/components/AIContentStudioWidget.tsx`
+- `src/components/AIInsightsPanel.tsx`
+- `src/components/BehavioralModeBanner.tsx`
+- `src/components/DiplomaticCables.tsx`
+- `src/components/Oracle/AscensionRitual.tsx`
+- `src/components/Oracle/BehavioralRadar.tsx`
+- `src/components/Oracle/FirstBloodOverlay.tsx`
+- `src/components/Oracle/LiveTelemetry.tsx`
+- `src/components/Oracle/OracleDashboard.tsx`
+- `src/components/Oracle/PhoenixReport.tsx`
+- `src/components/OrbitDriftReplayCard.tsx`
+- `src/components/PlaybookViewer.tsx`
+- `src/components/TopicTaxWidget.tsx`
+- `src/components/admin/AIDecisionLog.tsx`
+- `src/components/admin/AdminDashboard.tsx`
+- `src/components/admin/HealthMonitorPanel.tsx`
+- `src/components/admin/LiveFreezePill.tsx`
+- `src/components/admin/WarRoom/AlertsPanel.tsx`
+- `src/components/admin/adminNavigation.tsx`
+- `src/components/admin/dashboard/AdAnalytics/AdAnalyticsDashboard.tsx`
+- `src/components/admin/dashboard/AdAnalytics/adAnalyticsData.ts`
+- `src/components/admin/dashboard/B2BAnalytics.tsx`
+- `src/components/admin/dashboard/Consciousness/ConsciousnessArchivePanel.tsx`
+- `src/components/admin/dashboard/Consciousness/ConsciousnessMap.tsx`
+- `src/components/admin/dashboard/Consciousness/ConsciousnessNetwork.tsx`
+- `src/components/admin/dashboard/Content/ContentPanel.tsx`
+- `src/components/admin/dashboard/Content/MapRegistryPanel.tsx`
+- `src/components/admin/dashboard/Data/SurveyResultsPanel.tsx`
+- `src/components/admin/dashboard/Data/UserStatePanel.tsx`
+- `src/components/admin/dashboard/Entity/EntityDashboard.tsx`
+- `src/components/admin/dashboard/Executive/ConsciousnessAtlasDashboard.tsx`
+- `src/components/admin/dashboard/Executive/ExecutiveDashboard.tsx`
+- `src/components/admin/dashboard/Executive/FlowDynamicsDashboard.tsx`
+- `src/components/admin/dashboard/Executive/GrowthRevenueDashboard.tsx`
+- `src/components/admin/dashboard/Executive/SecurityOpsDashboard.tsx`
+- `src/components/admin/dashboard/Executive/SovereignExpansionHub.tsx`
+- `src/components/admin/dashboard/Executive/components/StatCard.tsx`
+- `src/components/admin/dashboard/Executive/components/TimelineOfSouls.tsx`
+- `src/components/admin/dashboard/Features/FeatureFlagsPanel.tsx`
+- `src/components/admin/dashboard/Fleet/FleetCommander.tsx`
+- `src/components/admin/dashboard/Fleet/components/VesselCard.tsx`
+- `src/components/admin/dashboard/Flow/FlowMapPanel.tsx`
+- `src/components/admin/dashboard/Intelligence/AISimulatorPanel.tsx`
+- `src/components/admin/dashboard/Intelligence/AIStudioPanel.tsx`
+- `src/components/admin/dashboard/Intelligence/AdminCopilotModal.tsx`
+- `src/components/admin/dashboard/Intelligence/ConsciousnessGraph.tsx`
+- `src/components/admin/dashboard/Intelligence/CreativeDashboard.tsx`
+- `src/components/admin/dashboard/Intelligence/DreamsMatrixPanel.tsx`
+- `src/components/admin/dashboard/Intelligence/EntropyGame.tsx`
+- `src/components/admin/dashboard/Intelligence/PredictiveRadar.tsx`
+- `src/components/admin/dashboard/Intelligence/RepoIntelPanel.tsx`
+- `src/components/admin/dashboard/Intelligence/SalesEnablementPanel.tsx`
+- `src/components/admin/dashboard/Intelligence/TheCrucible.tsx`
+- `src/components/admin/dashboard/MailCommand/MailCommandCenter.tsx`
+- `src/components/admin/dashboard/MarketingOps/CampaignLeadsModal.tsx`
+- `src/components/admin/dashboard/MarketingOps/ManualLeadEntry.tsx`
+- `src/components/admin/dashboard/MarketingOps/MarketingOpsPanel.tsx`
+- `src/components/admin/dashboard/MarketingOps/QuickSendRow.tsx`
+- `src/components/admin/dashboard/Overview/OverviewPanel.tsx`
+- `src/components/admin/dashboard/Overview/components/AIGuardrailCard.tsx`
+- `src/components/admin/dashboard/Overview/components/AdminTools.tsx`
+- `src/components/admin/dashboard/Overview/components/AdminTooltip.tsx`
+- `src/components/admin/dashboard/Overview/components/AwarenessAndScenarios.tsx`
+- `src/components/admin/dashboard/Overview/components/ConversionDiagnosis.tsx`
+- `src/components/admin/dashboard/Overview/components/DeepAnalytics.tsx`
+- `src/components/admin/dashboard/Overview/components/EmotionalPricingCard.tsx`
+- `src/components/admin/dashboard/Overview/components/ExecutiveReport.tsx`
+- `src/components/admin/dashboard/Overview/components/FunnelAndEmergency.tsx`
+- `src/components/admin/dashboard/Overview/components/GrowthAndFriction.tsx`
+- `src/components/admin/dashboard/Overview/components/LiveFreezeGuard.tsx`
+- `src/components/admin/dashboard/Overview/components/MarketingAndRetention.tsx`
+- `src/components/admin/dashboard/Overview/components/MarketingLeadsPanel.tsx`
+- `src/components/admin/dashboard/Overview/components/OpsInsights.tsx`
+- `src/components/admin/dashboard/Overview/components/PhaseOneGoal.tsx`
+- `src/components/admin/dashboard/Overview/components/PulseStabilityCard.tsx`
+- `src/components/admin/dashboard/Overview/components/RecoveryWidget.tsx`
+- `src/components/admin/dashboard/Overview/components/RevenueCardBoundary.tsx`
+- `src/components/admin/dashboard/Overview/components/RevenueEngineCard.tsx`
+- `src/components/admin/dashboard/Overview/components/SecuritySentinel.tsx`
+- `src/components/admin/dashboard/Overview/components/SocialFirewall.tsx`
+- `src/components/admin/dashboard/Overview/components/SuccessIndexCard.tsx`
+- `src/components/admin/dashboard/Overview/components/SystemHealth.tsx`
+- `src/components/admin/dashboard/Paths/GhostMirror.tsx`
+- `src/components/admin/dashboard/Paths/JourneyPathsPanel.tsx`
+- `src/components/admin/dashboard/Paths/components/FrictionHealer.tsx`
+- `src/components/admin/dashboard/Paths/components/PathArchitect.tsx`
+- `src/components/admin/dashboard/Paths/components/TelemetryPulse.tsx`
+- `src/components/admin/dashboard/SEO/SeoGeoAuditorPanel.tsx`
+- `src/components/admin/dashboard/Sovereign/DesignLab.tsx`
+- `src/components/admin/dashboard/Sovereign/GovernanceHub.tsx`
+- `src/components/admin/dashboard/Sovereign/IllusionRadar.tsx`
+- `src/components/admin/dashboard/Sovereign/SovereignControl.tsx`
+- `src/components/admin/dashboard/Sovereign/SovereignGatewayCommand.tsx`
+- `src/components/admin/dashboard/Sovereign/SovereignOracle.tsx`
+- `src/components/admin/dashboard/Sovereign/SovereignSpreadCommand.tsx`
+- `src/components/admin/dashboard/Sovereign/TikTokTeleprompterModal.tsx`
+- `src/components/admin/dashboard/Support/FeedbackPanel.tsx`
+- `src/components/admin/dashboard/Users/UsersPanel.tsx`
+- `src/components/admin/flow-mind-map/FlowMindMap.tsx`
+- `src/components/admin/flow-mind-map/Subcomponents.tsx`
+- `src/components/admin/flow-mind-map/constants.ts`
+- `src/components/admin/flow-mind-map/index.ts`
+- `src/components/admin/flow-mind-map/storage.ts`
+- `src/components/admin/flow-mind-map/styles.ts`
+- `src/components/admin/flow-mind-map/types.ts`
+- `src/components/admin/flow-mind-map/utils.ts`
+- `src/components/admin/sessions/SessionOSConsole.tsx`
+- `src/components/admin/ui/AdminOmniSearch.tsx`
+- `src/components/admin/ui/CollapsibleSection.tsx`
+- `src/components/admin/ui/CommandHalo.tsx`
+- `src/components/admin/ui/SovereignHUD.tsx`
+- `src/components/providers/ThemeProvider.tsx`
+- `src/components/ui/ThemeToggle.tsx`
+
+## State Stores
+
+- `src/state/achievementState.ts` — exports: `awardPointsForFlowStep`, `awardPointsForJourneyType`, `getBreathingUsedAt`, `getLibraryOpenedAt`, `useAchievementState`
+- `src/state/adminState.ts` — exports: `getScoringThresholds`, `getScoringWeights`, `isFeatureAllowed`, `useAdminState`
+- `src/state/appContentState.ts` — exports: `initAppContentRealtime`, `useAppContentState`
+- `src/state/appOverlayState.ts` — exports: `useAppOverlayState`, `useOverlayFlag`
+- `src/state/appShellNavigationState.ts` — exports: `useAppShellNavigationState`
+- `src/state/authState.ts` — exports: `getAuthDisplayName`, `getAuthEmail`, `getAuthFirstName`, `getAuthRole`, `getAuthToken`, `getAuthToneGender`, `getAuthUserId`, `getEffectiveRoleFromState`, `useAuthState`
+- `src/state/blindCapsuleState.ts` — exports: `useBlindCapsuleState`
+- `src/state/catalystState.ts` — exports: `useCatalystState`
+- `src/state/consciousnessHistoryState.ts` — exports: `useConsciousnessHistory`
+- `src/state/dailyJournalState.ts` — exports: `useDailyJournalState`
+- `src/state/digitalTwinState.ts` — exports: `useDigitalTwinState`
+- `src/state/emergencyState.ts` — exports: `useEmergencyOverlay`, `useEmergencyState`
+- `src/state/eventHistoryStore.ts` — exports: `useEventHistoryStore`
+- `src/state/firewallState.ts` — exports: `useFirewallState`
+- `src/state/fleetState.ts` — exports: `useFleetState`
+- `src/state/flowState.ts` — exports: `useFlowState`
+- `src/state/gamificationState.ts` — exports: `useGamificationState`
+- `src/state/growthState.ts` — exports: `useGrowthState`
+- `src/state/journeyState.ts` — exports: `useJourneyState`
+- `src/state/layoutState.ts` — exports: `useLayoutState`
+- `src/state/lifeState.ts` — exports: `useLifeState`
+- `src/state/lockdownState.ts` — exports: `useLockdownState`
+- `src/state/mapState.ts` — exports: `useMapState`
+- `src/state/meState.ts` — exports: `useMeState`
+- `src/state/notificationState.ts` — exports: `useNotificationState`
+- `src/state/predictiveState.ts` — exports: `usePredictiveState`
+- `src/state/pulseState.ts` — exports: `usePulseState`
+- `src/state/recoveryState.ts` — exports: `useRecoveryState`
+- `src/state/ritualState.ts` — exports: `useRitualState`
+- `src/state/shadowPulseState.ts` — exports: `getShadowScore`, `useShadowPulseState`
+- `src/state/swarmState.ts` — exports: `useSwarmState`
+- `src/state/syncState.ts` — exports: `useSyncState`
+- `src/state/synthesisState.ts` — exports: `useSynthesisState`
+- `src/state/themeState.ts` — exports: `useThemeState`
+- `src/state/toastState.ts` — exports: `useToastState`
+
+## Hooks
+
+- `src/hooks/index.ts` — exports: `useAppNavigation`, `usePulseManagement`
+- `src/hooks/useABTestingVariant.ts` — exports: `useABTestingVariant`
+- `src/hooks/useAIOrchestration.ts` — exports: `useAIOrchestration`
+- `src/hooks/useAIQuestionGenerator.ts` — exports: `useAIContentGenerator`, `useAIPersonInsights`, `useAIQuestionGenerator`
+- `src/hooks/useAdaptiveLayout.ts` — exports: `useAdaptiveLayout`
+- `src/hooks/useAppContentString.ts` — exports: `useAppContentString`
+- `src/hooks/useAppNavigation.ts` — exports: `useAppNavigation`
+- `src/hooks/useAppStateInitialization.ts` — exports: `useAppStateInitialization`
+- `src/hooks/useAuth.ts` — exports: `useAuth`
+- `src/hooks/useCognitiveDebounce.ts` — exports: `useCognitiveDebounce`
+- `src/hooks/useContinuousSpeechRecognition.ts` — exports: `useContinuousSpeechRecognition`
+- `src/hooks/useDailyPulse.ts` — exports: `useDailyPulse`
+- `src/hooks/useDailyQuestion.ts` — exports: `useDailyQuestion`
+- `src/hooks/useDawayirEngine.ts` — exports: `useDawayirEngine`
+- `src/hooks/useEveningNudge.ts` — exports: `useEveningNudge`
+- `src/hooks/useGestureSanctuary.ts` — exports: `useGestureSanctuary`
+- `src/hooks/useGraphSync.ts` — exports: `useGraphSync`
+- `src/hooks/useHiddenFootprint.ts` — exports: `useHiddenFootprint`
+- `src/hooks/useIdleAwareTelemetry.ts` — exports: `useIdleAwareTelemetry`
+- `src/hooks/useKineticSensors.ts` — exports: `useKineticSensors`
+- `src/hooks/useLongPress.ts` — exports: `useLongPress`
+- `src/hooks/useModalState.ts` — exports: `useModalState`, `useModalStateWithValue`
+- `src/hooks/useModals.ts` — exports: `useModals`
+- `src/hooks/useMultiStep.ts` — exports: `useMultiStep`
+- `src/hooks/useOptimisticPhoenixSync.ts` — exports: `useOptimisticPhoenixSync`
+- `src/hooks/usePageTracking.ts` — exports: `usePageTracking`
+- `src/hooks/usePersonalizedBiometrics.ts` — exports: `usePersonalizedBiometrics`
+- `src/hooks/usePulseCheckLogic.ts` — exports: `usePulseCheckLogic`
+- `src/hooks/usePulseManagement.ts` — exports: `usePulseManagement`
+- `src/hooks/usePushNotifications.ts` — exports: `usePushNotifications`
+- `src/hooks/useQuizHistory.ts` — exports: `useQuizHistory`
+- `src/hooks/useQuizStats.ts` — exports: `useQuizStats`
+- `src/hooks/useScreenNavigation.ts` — exports: `useScreenNavigation`
+- `src/hooks/useShakeDetection.ts` — exports: `useShakeDetection`
+- `src/hooks/useSpeechRecognition.ts` — exports: `useSpeechRecognition`
+- `src/hooks/useSwipeGesture.ts` — exports: `useHorizontalSwipe`, `useSwipeGesture`, `useVerticalSwipe`
+- `src/hooks/useTrajectoryRealtime.ts` — exports: `useTrajectoryRealtime`
+- `src/hooks/useWeatherFunnelBridge.ts` — exports: `useWeatherFunnelBridge`
+
+## Services and Engines
+
+- `src/services/BoundaryEnforcer.ts` — exports: `BoundaryEnforcer`
+- `src/services/CatalystEngine.ts` — exports: `CatalystEngine`
+- `src/services/CreativeSeedEngine.ts` — exports: `CreativeSeedEngine`
+- `src/services/EnergyROIEngine.ts` — exports: `EnergyROIEngine`
+- `src/services/FlowEngine.ts` — exports: `FlowEngine`
+- `src/services/RecoveryEngine.ts` — exports: `RecoveryEngine`
+- `src/services/accessControl.ts` — exports: `AccessControl`
+- `src/services/actionAdaptation.ts` — exports: `getRankedActions`
+- `src/services/adminApi.ts` — exports: `adminApi`, `applySeoAutofix`, `auditJourneyPath`, `callAdminApi`, `createBroadcast`, `createMission`, `createSupportTicket`, `deleteAppContentEntry`, `deleteBroadcast`, `deleteMission`, `exportFullData`, `exportUserStates` ...
+- `src/services/aiGuardrails.ts` — exports: `getAIGuardrailSnapshot`, `hydrateAIGuardrailSnapshot`, `recordAICostFromUsage`, `recordAIFallback`, `runWithAIGuardrails`, `subscribeAIGuardrail`
+- `src/services/aiOrchestrator.ts` — exports: `AIOrchestrator`
+- `src/services/aiSessionBrief.ts` — exports: `extractAiSessionBrief`
+- `src/services/alignmentEngine.ts` — exports: `AlignmentEngine`
+- `src/services/analytics.ts` — exports: `ANALYTICS_ANON_KEY`, `ANALYTICS_SESSION_KEY`, `AnalyticsEvents`, `getAnalyticsConsent`, `getAnalyticsDiagnostics`, `getOrCreateAnonymousId`, `getOrCreateSessionId`, `initAnalytics`, `logAnalyticsDiagnostics`, `setAnalyticsConsent`, `trackCheckoutViewed`, `trackCompleteRegistration` ...
+- `src/services/ascensionManager.ts` — exports: `AscensionManager`
+- `src/services/atlasAggregation.ts` — exports: `getAtlasAlerts`, `getCollectiveConsciousnessData`, `getPainHeatmapData`, `getRecoveryLabData`, `getSymptomAnatomyData`
+- `src/services/audio/MajazEngine.ts` — exports: `MajazEngine`
+- `src/services/authService.ts` — exports: `getSession`, `signInWithEmail`, `signInWithGoogle`, `signInWithGoogleAtPath`, `signInWithMagicLink`, `signOut`, `signUpWithEmail`, `updateAccountProfile`, `updateAuthUserMetadata`, `updateDisplayName`, `updateToneGender`
+- `src/services/autoOptimizer.ts` — exports: `AutoOptimizer`
+- `src/services/automagicLoop.ts` — exports: `detectGraphEvents`, `getPrescription`, `runAutomagicLoop`
+- `src/services/awarenessQueueService.ts` — exports: `awarenessQueueService`
+- `src/services/b2bService.ts` — exports: `B2B_FEATURES`, `B2B_ROLE_LABELS`, `addClient`, `getClients`, `getMyShareCode`, `getShareWithCoachText`, `isCoach`, `registerAsCoach`
+- `src/services/backgroundAnalysis.ts` — exports: `triggerBackgroundAnalysis`
+- `src/services/behavioralIntegrity.ts` — exports: `BI_MAPPING`, `BehavioralIntegrityEngine`
+- `src/services/biometricsBridge.ts` — exports: `analyzeStressLevels`, `injectMockStressEvent`, `startBiometricStream`
+- `src/services/broadcasts.ts` — exports: `doesBroadcastMatchAudience`, `fetchPublicBroadcasts`, `isAppInstalledMode`
+- `src/services/browserStorage.ts` — exports: `clearLocalStorage`, `getFromLocalStorage`, `getFromSessionStorage`, `getLocalStorageKey`, `getLocalStorageLength`, `removeFromLocalStorage`, `removeFromSessionStorage`, `setInLocalStorage`, `setInSessionStorage`
+- `src/services/chronicleGenerator.ts` — exports: `ChronicleGenerator`
+- `src/services/chroniclesEngine.ts` — exports: `generateChronicle`
+- `src/services/clientDom.ts` — exports: `downloadBlobFile`, `getAudioContextConstructor`, `getDocumentVisibilityState`, `openInNewTab`, `openMailto`, `setDocumentBodyOverflow`
+- `src/services/clientRuntime.ts` — exports: `getDocumentOrNull`, `getWindowOrNull`, `isClientRuntime`
+- `src/services/cloudStore.ts` — exports: `fetchRemoteState`, `getRemoteValue`, `pushRemoteState`, `queueRemoteSet`
+- `src/services/communityForumService.ts` — exports: `createPost`, `fetchCommunityStats`, `fetchPosts`, `generateAnonName`, `reactToPost`
+- `src/services/communityService.ts` — exports: `getActiveCircles`, `getSharedWisdom`, `joinCircle`, `shareMyWisdom`
+- `src/services/consciousRevenueLink.ts` — exports: `computeConsciousRevenueMetrics`
+- `src/services/consciousnessService.ts` — exports: `consciousnessService`
+- `src/services/contentEngine.ts` — exports: `getDailyContent`
+- `src/services/contextEngine.ts` — exports: `processContextualInsights`
+- `src/services/cryptoKeyStore.ts` — exports: `getOrCreateDeviceKey`
+- `src/services/culturalAdapter.ts` — exports: `PROFILES`, `buildCulturalContext`, `getCulturalContext`, `getCulturalProfile`, `saveCulturalContext`
+- `src/services/dailyIntel.ts` — exports: `getQuestionOfDay`, `tacticalQuestions`
+- `src/services/dataExport.ts` — exports: `backupToKeyValues`, `buildBackupFromKeyValues`, `buildBackupFromLocal`, `downloadBackupFile`, `exportToJSON`, `getStorageSize`, `getStorageStats`, `hasAnyStoredData`, `importFromJSON`, `restoreBackupData`
+- `src/services/decisionOracle.ts` — exports: `buildDecisionPrompt`, `buildProblemPrompt`, `detectBlindSpots`, `identifyImpactedDomains`, `scoreDecisionOptions`
+- `src/services/designSystemTokens.ts` — exports: `applyDesignSystemTokens`
+- `src/services/diplomacyService.ts` — exports: `generateCableContent`, `getCablesByCategory`
+- `src/services/dispatcherEngine.ts` — exports: `DispatcherEngine`
+- `src/services/dissonanceEngine.ts` — exports: `DissonanceEngine`
+- `src/services/driftEngine.ts` — exports: `calculateDrift`
+- `src/services/dynamicContextRouter.ts` — exports: `DynamicContextRouter`, `dynamicContextRouter`
+- `src/services/emailService.ts` — exports: `sendRecoveryPlanEmail`, `sendSessionFollowupEmail`
+- `src/services/emotionalCompass.ts` — exports: `COMPASS_OPTIONS`, `getCompassConfig`, `getCompassReading`, `getCurrentConfig`, `saveCompassReading`, `shouldShowCompass`
+- `src/services/emotionalPricingAnalytics.ts` — exports: `getEmotionalPricingStats`, `hasRecordedOfferConversion`, `recordEmotionalPricingEvent`
+- `src/services/enterpriseAnalytics.ts` — exports: `ENTERPRISE_FEATURES`, `ENTERPRISE_TYPE_LABELS`, `addMemberCode`, `generateMockMetrics`, `isEnterprise`, `loadEnterpriseData`, `registerEnterprise`, `saveEnterpriseData`
+- `src/services/feedbackService.ts` — exports: `feedbackService`
+- `src/services/fleet/FleetEngine.ts` — exports: `FleetEngine`
+- `src/services/flowAudit.ts` — exports: `fetchFlowAuditLogs`, `saveFlowAuditLog`, `subscribeFlowAuditLogs`
+- `src/services/gamificationEngine.ts` — exports: `XP_ACTIONS`, `getDailyQuests`, `useGamificationState`
+- `src/services/gamificationSync.ts` — exports: `pushGamificationBadge`, `pushGamificationStats`, `syncGamificationOnLoad`
+- `src/services/geminiClient.ts` — exports: `geminiClient`
+- `src/services/geminiEnhancements.ts` — exports: `AICache`, `GENERATION_TIMEOUT`, `getErrorMessage`, `withRetry`, `withTimeout`
+- `src/services/globalPulse.ts` — exports: `getGlobalHarmony`
+- `src/services/graphProjectionEngine.ts` — exports: `GraphProjectionEngine`
+- `src/services/graphRecommendationEngine.ts` — exports: `GraphRecommendationEngine`
+- `src/services/growthEngine.ts` — exports: `GrowthEngine`, `SovereignGrowthEngine`, `growthEngine`
+- `src/services/hiveEngine.ts` — exports: `HiveEngine`
+- `src/services/i18n.ts` — exports: `LANGUAGE_OPTIONS`, `getLanguage`, `initLanguage`, `isRTL`, `setLanguage`, `t`
+- `src/services/impactEngine.ts` — exports: `processActionImpacts`
+- `src/services/inngestMock.ts` — exports: `inngestMock`
+- `src/services/interventionEngine.ts` — exports: `processInterventions`
+- `src/services/journeyTracking.ts` — exports: `clearAllJourneyEvents`, `clearSessionId`, `ensureIdentifiedTrackingSession`, `getAggregateStats`, `getEventsByDay`, `getLastTaskForNode`, `getRecentJourneyEvents`, `getSessionTimelineEvents`, `getSessionsWithProgress`, `getTimelineEvents`, `getTrackingApiUrl`, `getTrackingMode` ...
+- `src/services/julesService.ts` — exports: `julesService`
+- `src/services/kineticTelemetry.ts` — exports: `consumeKineticTelemetryOnce`, `peekLatestKineticTelemetry`, `writeLatestKineticTelemetry`
+- `src/services/learningService.ts` — exports: `fetchContentItems`, `fetchCourse`, `fetchCourses`, `fetchDBArticles`, `fetchDBVideoCourses`, `fetchGlobalUserProgressStats`, `fetchModules`, `fetchQuizQuestions`, `fetchResourceCounts`, `fetchUnits`, `fetchUserProgress`, `fetchUserProgressDetail` ...
+- `src/services/legacyEngine.ts` — exports: `LegacyEngine`
+- `src/services/lifeAdvisor.ts` — exports: `buildLifeAdvisorSystemPrompt`, `buildLifeContext`, `detectLifePatterns`, `generateDailyBrief`, `generateDailyMission`, `generateEveningInsight`, `generateMorningBrief`
+- `src/services/lifeScoreEngine.ts` — exports: `calculateDomainScore`, `calculateLifeScore`, `calculateTrend`
+- `src/services/lifeStateSync.ts` — exports: `pullAssessments`, `pullLifeEntries`, `resetLifeSyncSession`, `syncLifeStateWithDB`, `uploadAssessment`, `uploadLifeEntry`, `uploadScoreSnapshot`
+- `src/services/localStore.ts` — exports: `loadStoredState`, `saveStoredState`
+- `src/services/logger.ts` — exports: `logger`
+- `src/services/mapSync.ts` — exports: `queueMapSync`, `syncLocalMapOnLogin`
+- `src/services/marketingAttribution.ts` — exports: `captureLeadAttributionFromCurrentUrl`, `captureUtmFromCurrentUrl`, `getStoredLeadAttribution`, `getStoredUtmParams`
+- `src/services/marketingLeadService.ts` — exports: `captureMarketingLead`, `getStoredLeadId`, `getStoredLeadPhone`, `marketingLeadService`, `syncLead`
+- `src/services/memoryStore.ts` — exports: `MemoryStore`
+- `src/services/metaLeadsService.ts` — exports: `metaLeadsService`
+- `src/services/milestoneEngine.ts` — exports: `processMilestones`
+- `src/services/mirrorLogic.ts` — exports: `detectContradictions`, `dismissMirrorInsight`
+- `src/services/missionGenerator.ts` — exports: `DDAConstraintEngine`, `MissionGenerator`
+- `src/services/monitoring.ts` — exports: `initMonitoring`
+- `src/services/navigation.ts` — exports: `assignUrl`, `createCurrentUrl`, `getHash`, `getHref`, `getOrigin`, `getPathname`, `getSearch`, `isAdminPath`, `isAnalyticsPath`, `pushUrl`, `reloadPage`, `replaceUrl` ...
+- `src/services/nervousSystem.ts` — exports: `NervousSystem`
+- `src/services/notifications.ts` — exports: `NOTIFICATION_TYPES`, `PRESET_NOTIFICATIONS`, `checkAndSendInactiveReminder`, `checkAndSendMapRevisit`, `checkAndSendWeeklyGratitude`, `getDaysSinceLastActivity`, `getLastActivity`, `getNotificationPermission`, `isNotificationSupported`, `loadNotificationSettings`, `recordActivity`, `requestNotificationPermission` ...
+- `src/services/nudgeEngine.ts` — exports: `dismissNudge`, `getNextNudge`
+- `src/services/offlineService.ts` — exports: `OfflineService`, `offlineService`
+- `src/services/oracleService.ts` — exports: `OracleService`
+- `src/services/orbitalSync.ts` — exports: `getOrbitalFeed`, `pushToOrbitalFeed`
+- `src/services/partnerCompareService.ts` — exports: `generateShareCode`, `getComparisonResults`, `hasInitiatorResult`, `saveAnalysisResult`
+- `src/services/pdfExport.ts` — exports: `downloadMapImage`, `exportMapAsImage`, `exportMapToPDF`
+- `src/services/performanceWatchdog.ts` — exports: `getPerformanceWatchdogSnapshot`, `startPerformanceWatchdog`, `stopPerformanceWatchdog`, `subscribePerformanceWatchdog`
+- `src/services/phoenixEngine.ts` — exports: `PhoenixEngine`
+- `src/services/physicsEngine.ts` — exports: `calculateGravityMass`, `detectEchoPatterns`, `getSystemGravity`
+- `src/services/pineconeMock.ts` — exports: `pineconeMock`
+- `src/services/predictiveEngine.ts` — exports: `PredictiveEngine`, `calculateEntropy`, `generatePredictiveInsight`
+- `src/services/pricingEngine.ts` — exports: `REGIONAL_PRICING`, `TIER_LABELS`, `TIER_LIMITS`, `TIER_PERMISSIONS`, `TIER_PRICES_USD`, `getLocalizedPricing`, `hasPermission`
+- `src/services/propheticEngine.ts` — exports: `analyzeEnergyDrain`, `identifyKeystones`, `scanForVampires`, `simulateFutureSelf`, `simulateHypotheticalState`
+- `src/services/pulseEngagement.ts` — exports: `getLivePulseCount`, `shouldTriggerHeartbeat`
+- `src/services/pulseSync.ts` — exports: `pushPulseLog`, `syncLocalPulsesOnLogin`
+- `src/services/pushNotifications.ts` — exports: `enableNotificationsWithPrompt`, `getNotificationPermission`, `notifyInsight`, `notifyJourneyMilestone`, `requestNotificationPermission`, `showNotification`
+- `src/services/quickPath.ts` — exports: `SITUATION_ICONS`, `SITUATION_LABELS`, `generateQuickPath`, `getQuickPathHistory`
+- `src/services/rankingSystem.ts` — exports: `calculateRank`, `getNextRankThreshold`
+- `src/services/referralEngine.ts` — exports: `applyReferralCode`, `applyReferralCodeAsync`, `getMyReferralCode`, `getMyReferralLink`, `getReferralRewardStatus`, `getReferralShareText`, `loadReferralData`, `notifyReferrer`, `recordSuccessfulReferral`, `saveReferralData`, `syncReferralToSupabase`
+- `src/services/relationalFieldEngine.ts` — exports: `buildRelationalFieldSnapshot`, `computeRelationalFieldSnapshot`
+- `src/services/resonanceMonitor.ts` — exports: `ResonanceMonitor`
+- `src/services/revenueEngine.ts` — exports: `revenueEngine`
+- `src/services/ritualsEngine.ts` — exports: `calculateRitualDomainBonus`, `calculateRitualStreak`, `generateDailyPlan`, `generateQuickActions`, `getDailyCompletionStats`, `getTodayRituals`, `suggestDayTheme`, `suggestRituals`
+- `src/services/ritualsSync.ts` — exports: `pullDailyPlans`, `pullRitualLogs`, `pullRituals`, `resetRitualsSyncSession`, `syncRitualsWithDB`, `uploadDailyPlan`, `uploadRitualLogs`, `uploadRituals`
+- `src/services/secureStore.ts` — exports: `clearLocalData`, `getItem`, `getJSON`, `setItem`, `setJSON`
+- `src/services/semanticCompressor.ts` — exports: `semanticCompressor`
+- `src/services/shadowEngine.ts` — exports: `processShadowSignals`
+- `src/services/shadowMemory.ts` — exports: `ShadowMemory`
+- `src/services/simulationService.ts` — exports: `SimulationService`
+- `src/services/smartReminders.ts` — exports: `getProgressSnapshot`, `getSmartDailyReminder`, `getSmartInactiveReminder`
+- `src/services/socialSync.ts` — exports: `analyzeMapInterference`, `getTacticalSyncAdvice`
+- `src/services/soundManager.ts` — exports: `soundManager`
+- `src/services/stabilityEngine.ts` — exports: `processStabilitySnapshot`
+- `src/services/storeAdvisor.ts` — exports: `getStoreRecommendations`
+- `src/services/streakSystem.ts` — exports: `getStreakEmoji`, `getStreakMessage`, `isStreakAtRisk`, `isStreakBroken`, `loadStreak`, `recordDailyVisit`
+- `src/services/subscriptionManager.ts` — exports: `TIER_LABELS`, `TIER_LIMITS`, `TIER_PRICES`, `activateSubscription`, `canAddMapNode`, `canSendAIMessage`, `clearEmotionalOffer`, `consumeEmotionalOffer`, `getCurrentTier`, `getEmotionalOffer`, `getRemainingAIMessages`, `getTierLimits` ...
+- `src/services/supabaseClient.ts` — exports: `fetchCommanderStats`, `isSupabaseAbortError`, `isSupabaseReady`, `safeGetSession`, `saveDailyIntel`, `supabase`, `supabaseAdmin`, `updateAssetLocation`, `updateCommanderRank`
+- `src/services/swarmNotifier.ts` — exports: `SwarmNotifier`
+- `src/services/telegramBot.ts` — exports: `TelegramBotService`, `scheduleTelegramReports`, `telegramBot`
+- `src/services/telemetry/InterventionEngine.ts` — exports: `InterventionEngine`
+- `src/services/telemetry/MicroTelemetryEngine.ts` — exports: `MicroTelemetryEngine`
+- `src/services/telemetry/RefractionEngine.ts` — exports: `RefractionEngine`
+- `src/services/themePalette.ts` — exports: `applyThemePalette`, `initThemePalette`
+- `src/services/trajectoryEngine.ts` — exports: `TrajectoryEngine`
+- `src/services/truthVault.ts` — exports: `VaultService`
+- `src/services/userMemory.ts` — exports: `addBoundaryPattern`, `addConversationSummary`, `addRecurringGoal`, `buildMemoryContext`, `buildPersonalizedWelcome`, `isReturningUser`, `loadUserMemory`, `resolveDisplayName`, `saveUserMemory`, `syncMemoryFromSupabase`, `updateBio`, `updatePreferredName`
+- `src/services/victoryEngine.ts` — exports: `calculateVictoryMetrics`, `scanForAchievements`
+- `src/services/victoryEngineStore.ts` — exports: `useVictoryEngine`
+- `src/services/visualGenes.ts` — exports: `decideVisualGeneLayout`
+- `src/services/voiceEngine.ts` — exports: `generateVoiceScript`
+- `src/services/voiceSynthesis.ts` — exports: `TherapeuticVoiceEngine`, `therapeuticVoice`
+- `src/services/whatsappCloudService.ts` — exports: `WhatsAppCloudService`
+
+## Utilities
+
+- `src/utils/adviceHelpers.ts` — exports: `getAdvice`, `getEncouragingMessage`, `getPersonalizedTitle`, `getUnderstandingMessage`
+- `src/utils/aiPatternAnalyzer.ts` — exports: `analyzeWithAI`, `quickAIFeedback`
+- `src/utils/aiPlanGenerator.ts` — exports: `generateAIPlan`
+- `src/utils/audioUtils.ts` — exports: `AudioPlayer`, `AudioStreamProcessor`, `base64ToFloat32`, `float32ToInt16`, `int16ToBase64`, `resampleAudioBuffer`
+- `src/utils/boundaryEvidence.ts` — exports: `deriveBoundaryEvidence`
+- `src/utils/broadcastAudience.ts` — exports: `getBroadcastAudienceFromId`, `withBroadcastAudienceId`
+- `src/utils/contextAtlas.ts` — exports: `deriveContextAtlas`
+- `src/utils/dateUtils.ts` — exports: `getLocalDayString`, `isValidDayString`
+- `src/utils/dawayirLiveJourney.ts` — exports: `APP_BOOT_ACTION_KEY`, `DAWAYIR_LIVE_PATH_SLUG`, `DAWAYIR_LIVE_SURFACE`, `getDawayirLiveCoachHref`, `getDawayirLiveCoupleHref`, `getDawayirLiveHistoryHref`, `getDawayirLiveInitialStage`, `getDawayirLiveLaunchHref`, `getDawayirLiveNextStage`, `getDawayirLivePath`, `getDawayirLivePrimaryLabel`, `getDawayirLiveReturnHref`, `prepareDawayirLiveReturnNavigation`
+- `src/utils/detachmentCurriculumGenerator.ts` — exports: `generateDetachmentCurriculum`, `generateDetachmentResultInsight`, `reframeGuiltThought`
+- `src/utils/dynamicPlanGenerator.ts` — exports: `generateBasicPlan`, `generateDynamicPlan`
+- `src/utils/emergencyContext.ts` — exports: `buildEmergencyContextFromNode`
+- `src/utils/featureFlags.ts` — exports: `getEffectiveFeatureAccess`, `isFeatureEnabled`, `isGodModeEnabled`, `isPrivilegedRole`, `normalizeFeatureMode`
+- `src/utils/feelingScore.ts` — exports: `feelingScore`, `feelingScoreToRing`
+- `src/utils/flowAnalytics.ts` — exports: `buildFlowNodeMetrics`
+- `src/utils/generationalEcho.ts` — exports: `deriveGenerationalEcho`
+- `src/utils/goalLabel.ts` — exports: `getGoalLabel`, `getLastGoalMeta`
+- `src/utils/journeyPaths.ts` — exports: `getEnabledJourneySteps`, `getFirstJourneyStepByKind`, `getJourneyPathBySlug`, `getJourneyStepAfterKind`, `hasEnabledJourneyStepKind`, `isJourneyScreenEnabled`
+- `src/utils/journeyState.ts` — exports: `ensureValidJourneyState`
+- `src/utils/mapNodeSchema.ts` — exports: `sanitizeMapNodes`
+- `src/utils/mapOnboarding.ts` — exports: `hasSeenOnboarding`, `setOnboardingSeen`
+- `src/utils/marayaStoryJourney.ts` — exports: `APP_BOOT_ACTION_KEY`, `MARAYA_STORY_PATH_SLUG`, `MARAYA_STORY_SURFACE`, `getMarayaStoryInitialStage`, `getMarayaStoryLaunchHref`, `getMarayaStoryNextStage`, `getMarayaStoryPath`, `getMarayaStoryRestartLabel`, `getMarayaStoryReturnHref`, `getMarayaStoryReturnLabel`, `getMarayaStoryTargetLabel`, `launchMarayaStoryReturn`, `prepareMarayaStoryReturnNavigation`
+- `src/utils/missionProgress.ts` — exports: `getIncompleteMissionSteps`, `getMissionProgressSummary`, `getNextMissionStep`
+- `src/utils/noiseSilencingAI.ts` — exports: `realityCheckImaginaryArgument`
+- `src/utils/optionColors.ts` — exports: `getOptionButtonClass`, `impactTier`, `quick1Tier`, `quick2Tier`, `realityTier`, `standardNegativeTier`, `standardPositiveTier`
+- `src/utils/orbitDriftReplay.ts` — exports: `deriveOrbitDriftReplay`
+- `src/utils/overlayPriorities.ts` — exports: `CRITICAL_SEVERITY_THRESHOLD`, `OVERLAY_SEVERITY`, `getOverlaySeverity`
+- `src/utils/pathGenerator.ts` — exports: `generateRecoveryPathFromAI`
+- `src/utils/patternAnalyzer.ts` — exports: `analyzeSituations`, `quickAnalyze`
+- `src/utils/performanceOptimizations.ts` — exports: `batchDOMUpdates`, `cancelIdleCallback`, `debounce`, `detectMemoryLeaks`, `extractStyles`, `getWebVitals`, `mark`, `measure`, `memoize`, `observeIntersection`, `requestIdleCallback`, `throttle`
+- `src/utils/personSolutionAI.ts` — exports: `generatePersonSolution`
+- `src/utils/personViewAI.ts` — exports: `generatePersonViewInsightsFromAI`
+- `src/utils/postAuthIntent.ts` — exports: `clearPostAuthIntent`, `getPostAuthIntent`, `setPostAuthIntent`
+- `src/utils/powerBankNetwork.ts` — exports: `derivePowerBankNetwork`
+- `src/utils/pressureSentence.ts` — exports: `derivePressureSentence`
+- `src/utils/pulseEnergy.ts` — exports: `getEnergySuggestion`, `getEnergySupportLine`, `getEnergySupportLineByVariant`, `getWeeklyEnergyRecommendation`, `getWeeklyEnergyTrend`
+- `src/utils/pulseInsights.ts` — exports: `PULSE_DAY_NAMES`, `getWeeklyPulseInsight`
+- `src/utils/pulseUi.ts` — exports: `energyColorHex`, `energyPct`
+- `src/utils/realityScore.ts` — exports: `realityScoreToRing`
+- `src/utils/redReturnAlarm.ts` — exports: `deriveRedReturnAlarm`
+- `src/utils/relationshipWeather.ts` — exports: `deriveRelationshipWeather`
+- `src/utils/relationshipWeatherJourney.ts` — exports: `APP_BOOT_ACTION_KEY`, `RELATIONSHIP_WEATHER_PATH_SLUG`, `WEATHER_FUNNEL_SURFACE`, `getRelationshipWeatherEntryHref`, `getRelationshipWeatherInitialStage`, `getRelationshipWeatherNextStage`, `getRelationshipWeatherPath`, `getRelationshipWeatherPrimaryLabel`, `getRelationshipWeatherTargetDescription`, `getRelationshipWeatherTargetLabel`, `launchRelationshipWeatherFlow`
+- `src/utils/resultScreenAI.ts` — exports: `generateResultScreenAI`
+- `src/utils/resultScreenTemplates.ts` — exports: `buildResultTemplateFromAnswers`
+- `src/utils/scoreHelpers.ts` — exports: `analyzeScore`, `getRingLabel`, `scoreToRing`, `scoreToZone`
+- `src/utils/seedStressTestData.ts` — exports: `seedJourneyEvents`, `seedMapNodes`, `seedStressTestData`
+- `src/utils/shadowPulseEngine.ts` — exports: `getShadowLevel`, `getShadowMessage`, `sortNodesByShadow`
+- `src/utils/sovereigntySnapshot.ts` — exports: `deriveSovereigntySnapshot`
+- `src/utils/suggestInitialRing.ts` — exports: `suggestInitialRing`
+- `src/utils/suggestedPlacement.ts` — exports: `calculateSuggestedPlacement`, `getRingIcon`, `getSuggestedRingLabel`
+- `src/utils/traumaEntropyIndex.ts` — exports: `computeTEI`, `getTEIComparison`, `getTEIHistory`, `saveTEISnapshot`
+
+## Key Product Journeys Currently Identified
+
+- `sanctuary` — safe mode / recovery path
+- `relationship-weather` — diagnostic-to-map path
+- `dawayir-live` — live-session path
+- `maraya-story` — cinematic mirror-story path
+
+## Notes
+
+- This file is generated from the current codebase structure, so it reflects what exists on disk now.
+- Route inventory is based on the Next.js `app/` tree.
+- Module surface inventory includes files ending in `Page`, `Screen`, `Modal`, or `App`.
+- Service and utility exports are extracted heuristically from source files and meant as an operational map, not an API contract.

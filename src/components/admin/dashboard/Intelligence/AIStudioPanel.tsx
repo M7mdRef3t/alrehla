@@ -24,7 +24,7 @@ import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { julesService, JulesSession, JulesSource } from "@/services/julesService";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { isSupabaseReady } from "@/services/supabaseClient";
 import { geminiClient } from "@/services/geminiClient";
 import { saveSystemPrompt, saveScoring, saveAiLog, rateAiLog as rateAiLogRemote } from "@/services/adminApi";

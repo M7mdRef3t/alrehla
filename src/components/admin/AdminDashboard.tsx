@@ -30,8 +30,8 @@ import {
 } from "lucide-react";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
-import { useAdminState } from "@/state/adminState";
-import { getEffectiveRoleFromState, useAuthState } from "@/state/authState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
 import { isPrivilegedRole } from "@/utils/featureFlags";
 import {
   fetchAdminConfig,
@@ -62,6 +62,7 @@ import { AdminOmniSearch } from "./ui/AdminOmniSearch";
 import { AdminCopilotModal } from "./dashboard/Intelligence/AdminCopilotModal";
 import { DataManagement } from '@/modules/meta/DataManagement';
 import { Bot, Wind } from "lucide-react";
+import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
 import { CommandHalo } from "./ui/CommandHalo";
 import { SovereignHUD } from "./ui/SovereignHUD";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -74,6 +75,7 @@ const ConsciousnessAtlasDashboard = lazy(() => import("./dashboard/Executive/Con
 const FlowDynamicsDashboard = lazy(() => import("./dashboard/Executive/FlowDynamicsDashboard").then(m => ({ default: m.FlowDynamicsDashboard })));
 const FlowMapPanel = lazy(() => import("./dashboard/Flow/FlowMapPanel").then(m => ({ default: m.FlowMapPanel })));
 const FeedbackPanel = lazy(() => import("./dashboard/Support/FeedbackPanel").then(m => ({ default: m.FeedbackPanel })));
+const SupportTicketsPanel = lazy(() => import("./dashboard/Overview/components/SupportTicketsPanel").then(m => ({ default: m.SupportTicketsPanel })));
 const FeatureFlagsPanel = lazy(() => import("./dashboard/Features/FeatureFlagsPanel").then(m => ({ default: m.FeatureFlagsPanel })));
 const ConsciousnessMap = lazy(() => import("./dashboard/Consciousness/ConsciousnessMap").then(m => ({ default: m.ConsciousnessMap })));
 const AIStudioPanel = lazy(() => import("./dashboard/Intelligence/AIStudioPanel").then(m => ({ default: m.AIStudioPanel })));
@@ -104,6 +106,7 @@ const SovereignExpansionHub = lazy(() => import("./dashboard/Executive/Sovereign
 const MapRegistryPanel = lazy(() => import("./dashboard/Content/MapRegistryPanel").then(m => ({ default: m.MapRegistryPanel })));
 const MailCommandCenter = lazy(() => import("./dashboard/MailCommand/MailCommandCenter").then(m => ({ default: m.MailCommandCenter })));
 const JourneyPathsPanel = lazy(() => import("./dashboard/Paths/JourneyPathsPanel").then(m => ({ default: m.JourneyPathsPanel })));
+const OpsDocsPanel = lazy(() => import("./dashboard/OpsDocs/OpsDocsPanel"));
 const DesignLab = lazy(() => import("./dashboard/Sovereign/DesignLab"));
 const GovernanceHub = lazy(() => import("./dashboard/Sovereign/GovernanceHub").then(m => ({ default: m.GovernanceHub })));
 
@@ -360,6 +363,58 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const setMissions = useAdminState((s) => s.setMissions);
   const setBroadcasts = useAdminState((s) => s.setBroadcasts);
   const setJourneyPaths = useAdminState((s) => s.setJourneyPaths);
+  const resonanceScore = useAdminState((s) => s.resonanceScore);
+  const latestFriction = useAdminState((s) => s.latestFriction);
+
+  // 🔱 Resonance Intelligence Observer
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    
+    // Status Logic
+    const isHarmony = resonanceScore >= 80;
+    const isStable = resonanceScore >= 50 && resonanceScore < 80;
+    const isFriction = resonanceScore >= 25 && resonanceScore < 50;
+    const isCrisis = resonanceScore < 25;
+
+    // Mapping Colors
+    let primary = "#2dd4bf"; // Default Teal (Harmony)
+    let glow = "rgba(45, 212, 191, 0.1)";
+    let speed = "3s";
+
+    if (isStable) {
+      primary = "#6366f1"; // Indigo
+      glow = "rgba(99, 102, 241, 0.05)";
+      speed = "4s";
+    } else if (isFriction) {
+      primary = "#f59e0b"; // Amber
+      glow = "rgba(245, 158, 11, 0.1)";
+      speed = "6s";
+    } else if (isCrisis) {
+      primary = "#f43f5e"; // Rose
+      glow = "rgba(244, 63, 94, 0.15)";
+      speed = "8s";
+    }
+
+    // Apply to CSS Engine
+    root.style.setProperty("--admin-resonance-primary", primary);
+    root.style.setProperty("--admin-resonance-glow", glow);
+    root.style.setProperty("--admin-pulse-speed", speed);
+
+  }, [resonanceScore]);
+
+  // 🔱 Sovereign Orchestrator Evaluator
+  useEffect(() => {
+    if (!adminAccess) return;
+    const interval = setInterval(() => {
+      void SovereignOrchestrator.evaluateIntelligence();
+    }, 15000); // evaluate every 15 seconds
+    
+    // Initial evaluation
+    void SovereignOrchestrator.evaluateIntelligence();
+    
+    return () => clearInterval(interval);
+  }, [adminAccess]);
 
   useEffect(() => {
     const handler = () => setTab(getTabFromLocation());
@@ -446,7 +501,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     <AdminGate>
       <CommandHalo />
       <AdminCopilotModal />
-      <div className="admin-cockpit min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-200 flex flex-col lg:flex-row relative isolate selection:bg-teal-500/30 font-sans overflow-hidden transition-colors duration-500">
+      <div className="admin-cockpit sovereign-pulse-fast min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-200 flex flex-col lg:flex-row relative isolate selection:bg-teal-500/30 font-sans overflow-hidden transition-colors duration-500">
         
         {/* Mobile Top Stats Bar */}
         <div className="lg:hidden w-full flex justify-between items-center bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-2 px-4 shadow-sm text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest z-10 shrink-0 transition-colors">
@@ -671,6 +726,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "war-room" && <AlertsPanel />}
                 {effectiveTab === "flow-map" && <FlowMapPanel />}
                 {effectiveTab === "journey-paths" && <JourneyPathsPanel />}
+                {effectiveTab === "ops-docs" && <OpsDocsPanel />}
                 {effectiveTab === "map-registry" && <MapRegistryPanel />}
                 {effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
                 {effectiveTab === "ai-studio" && <AIStudioPanel />}
@@ -703,6 +759,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                     <SurveyResultsPanel />
                   </div>
                 )}
+                {effectiveTab === "support-tickets" && <SupportTicketsPanel />}
                 {effectiveTab === "marketing-ops" && <MarketingOpsPanel />}
                 {effectiveTab === "expansion-hub" && <SovereignExpansionHub />}
                 {effectiveTab === "mail-command" && <MailCommandCenter />}

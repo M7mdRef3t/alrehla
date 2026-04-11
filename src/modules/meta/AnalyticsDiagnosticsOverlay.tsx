@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { getAnalyticsDiagnostics } from "@/services/analytics";
+import { analyticsService } from "@/domains/analytics";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { getWindowOrNull } from "@/services/clientRuntime";
 
@@ -18,7 +18,7 @@ function isDebugEnabled(): boolean {
 }
 
 export function AnalyticsDiagnosticsOverlay() {
-  const [diagnostics, setDiagnostics] = useState(() => getAnalyticsDiagnostics("overlay"));
+  const [diagnostics, setDiagnostics] = useState(() => analyticsService.getDiagnostics("overlay"));
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export function AnalyticsDiagnosticsOverlay() {
   useEffect(() => {
     if (!enabled) return;
 
-    const update = () => setDiagnostics(getAnalyticsDiagnostics("overlay"));
+    const update = () => setDiagnostics(analyticsService.getDiagnostics("overlay"));
     update();
     const timer = window.setInterval(update, 5000);
     return () => window.clearInterval(timer);

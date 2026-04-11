@@ -9,7 +9,7 @@ import {
   Copy, Check, Skull
 } from "lucide-react";
 import { supabase } from "@/services/supabaseClient";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 /* ══════════════════════════════════════════
    Types & Storage

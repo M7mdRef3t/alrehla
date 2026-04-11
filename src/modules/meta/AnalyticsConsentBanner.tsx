@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { setAnalyticsConsent, trackEvent, AnalyticsEvents } from "@/services/analytics";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { isUserMode } from "@/config/appEnv";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 
@@ -47,9 +47,9 @@ export const AnalyticsConsentBanner = ({ suppressed = false }: AnalyticsConsentB
           <button
             className="rounded-full bg-teal-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-teal-500"
             onClick={() => {
-              setAnalyticsConsent(true);
+              analyticsService.setConsent(true);
               try {
-                trackEvent(AnalyticsEvents.CONSENT_GIVEN);
+                analyticsService.track(AnalyticsEvents.CONSENT_GIVEN);
               } catch {
                 // ignore analytics failures in UI flow
               }
@@ -61,9 +61,9 @@ export const AnalyticsConsentBanner = ({ suppressed = false }: AnalyticsConsentB
           <button
             className="rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm text-slate-200 hover:bg-white/10"
             onClick={() => {
-              setAnalyticsConsent(false);
+              analyticsService.setConsent(false);
               try {
-                trackEvent(AnalyticsEvents.CONSENT_DENIED);
+                analyticsService.track(AnalyticsEvents.CONSENT_DENIED);
               } catch {
                 // ignore analytics failures in UI flow
               }

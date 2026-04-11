@@ -1,6 +1,6 @@
 import type { Content, FunctionCall, Part, Tool } from "@google/generative-ai";
 import { runtimeEnv } from "@/config/runtimeEnv";
-import { useToastState } from "@/state/toastState";
+import { useToastState } from "@/domains/dawayir/store/toast.store";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { fetchJsonWithResilience } from "../architecture/resilientHttp";
 import {
@@ -14,8 +14,9 @@ import {
  * ترتيب الموديلات النصية — من الأفضل للاحتياط. مرجع كامل: docs/GEMINI_MODELS.md
  */
 const TEXT_MODEL_FALLBACK_ORDER: string[] = [
-  "gemini-1.5-flash",
-  "gemini-1.5-pro"
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-flash-latest"
 ];
 
 const GENERATION_CONFIG = {

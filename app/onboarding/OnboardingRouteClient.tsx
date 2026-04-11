@@ -3,12 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { OnboardingFlow } from "@/modules/meta/OnboardingFlow";
-import { useJourneyState } from "../../src/state/journeyState";
+import { useJourneyState } from "@/domains/journey/store/journey.store";
 import {
   captureLeadAttributionFromCurrentUrl,
-  captureUtmFromCurrentUrl
+  captureUtmFromCurrentUrl,
 } from "../../src/services/marketingAttribution";
-import { useMapState } from "../../src/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { getStoredLeadEmail, setStoredLeadEmail, hasRevenueAccess } from "../../src/services/revenueAccess";
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 void APP_BOOT_ACTION_KEY;
@@ -77,29 +78,29 @@ export default function OnboardingRouteClient() {
     const baselineCompletedAt = useJourneyState.getState().baselineCompletedAt;
     
     if (typeof window !== "undefined" && (nodesCount > 0 || baselineCompletedAt)) {
-      window.location.replace("/?boot_action=start_recovery");
+      if (hasRevenueAccess()) {
+        window.location.replace("/?boot_action=start_recovery");
+      } else {
+        window.location.replace("/activation?resume=1&source=onboarding");
+      }
     }
   }, []);
 
   const handleComplete = useCallback((skipped = false) => {
     setIsWarping(true);
-    
-    // 1. Prepare storage
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem("dawayir-app-boot-action", "start_recovery");
-    }
-    
+
     const currentState = useJourneyState.getState();
     const name = currentState.mirrorName || "";
-    const email = (typeof window !== "undefined" ? window.sessionStorage.getItem("dawayir-lead-email") : "") || "";
-    
+    const existingEmail = getStoredLeadEmail() || "";
+    if (existingEmail) setStoredLeadEmail(existingEmail);
+
     const params = new URLSearchParams();
     if (name) params.set("name", name);
-    if (email) params.set("email", email);
+    if (existingEmail) params.set("email", existingEmail);
     if (skipped) params.set("skipped", "1");
-    
-    const queryString = params.toString();
-    const nextUrl = queryString ? `/?${queryString}` : "/";
+    params.set("source", "onboarding");
+
+    const nextUrl = `/activation?${params.toString()}`;
 
     // 2. Cinematic delay
     setTimeout(() => {

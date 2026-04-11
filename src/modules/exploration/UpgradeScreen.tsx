@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, Sparkles, BrainCircuit, X, Check, Lock, Star, Loader2, Zap } from "lucide-react";
-import { useAuthState } from "@/state/authState";
+import { useAuthState } from "@/domains/auth/store/auth.store";
 import { TIER_PRICES_USD } from "@/config/pricing";
 import { PaymentCheckout } from '@/modules/meta/PaymentCheckout';
 

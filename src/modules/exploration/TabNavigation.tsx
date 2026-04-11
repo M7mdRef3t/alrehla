@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { motion } from "framer-motion";
 import { Map, Activity, HeartPulse, BookOpen, User } from "lucide-react";
-import { useLayoutState } from "@/state/layoutState";
+import { useLayoutState } from "@/domains/dawayir/store/layout.store";
 
 interface TabNavigationProps {
   hidden?: boolean;

@@ -2,7 +2,7 @@ import { FC, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Zap, Brain, Eye, Terminal, Loader2, RefreshCw } from "lucide-react";
 import { fetchSovereignInsights } from "@/services/adminApi";
-import { useAdminState, type SovereignInsight } from "@/state/adminState";
+import { useAdminState, type SovereignInsight } from "@/domains/admin/store/admin.store";
 
 // Module-level guard: survives React Strict Mode's double-invoke
 // (useRef gets reset on 2nd mount, this doesn't)
@@ -28,10 +28,15 @@ export const SovereignOracle: FC = () => {
         }
         if (result.retryAfterSec) {
           setCooldown(result.retryAfterSec);
+        } else if (!result.insights || result.insights.length === 0) {
+          setCooldown(60); // Fallback: Prevent spam if nothing returned
         }
+      } else {
+        setCooldown(60); // Complete failure: step back.
       }
     } catch (error) {
       console.error("Failed to fetch Oracle insights", error);
+      setCooldown(60);
     } finally {
       setIsRefreshing(false);
       _oracleFetching = false;

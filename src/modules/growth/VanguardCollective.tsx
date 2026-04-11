@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { X, Network, Zap, Shield, Activity, Fingerprint } from "lucide-react";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 export function VanguardCollective() {
   const closeOverlay = useAppOverlayState((s) => s.closeOverlay);

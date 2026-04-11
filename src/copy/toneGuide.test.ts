@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildToneSystemBlock, ORBITAL_DICTIONARY, resolveVoiceMode } from "./toneGuide";
-import type { PulseEntry } from "@/state/pulseState";
+import type { PulseEntry } from "@/domains/consciousness/store/pulse.store";
 
 describe("tone guide", () => {
   it("resolves low energy as warm healer", () => {

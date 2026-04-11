@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mic, MicOff, Flame, VolumeX, Shield, Zap } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { useContinuousSpeechRecognition } from "@/hooks/useContinuousSpeechRecognition";
 
 type ProtocolStep = "analyze_source" | "intercept_signal" | "incinerate" | "mission_report";

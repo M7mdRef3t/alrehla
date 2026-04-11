@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Rocket, Shield, Zap, Search, LayoutGrid, ListFilter, Radar } from 'lucide-react';
-import { useFleetState } from '@/state/fleetState';
+import { useFleetState } from '@/domains/admin/store/fleet.store';
 import { FleetEngine } from '@/services/fleet/FleetEngine';
 import { VesselCard } from './components/VesselCard';
 import { AdminTooltip } from '../Overview/components/AdminTooltip';

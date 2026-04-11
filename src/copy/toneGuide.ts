@@ -1,4 +1,4 @@
-import type { PulseEntry } from "@/state/pulseState";
+import type { PulseEntry } from "@/domains/consciousness/store/pulse.store";
 
 export type VoiceMode = "gentle_companion" | "warm_healer" | "wise_observer";
 

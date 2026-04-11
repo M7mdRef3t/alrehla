@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
-import { getLastTaskForNode } from "@/services/journeyTracking";
+import { trackingService } from "@/domains/journey";
 
 const HEAVY_TASK_PATTERNS = [
   /رد\s*(بارد|رسمي|حد)/i,
@@ -39,7 +39,7 @@ interface JourneyMemoriesProps {
 }
 
 export const JourneyMemories: FC<JourneyMemoriesProps> = ({ nodeId, ring = "yellow" }) => {
-  const memory = useMemo(() => getLastTaskForNode(nodeId), [nodeId]);
+  const memory = useMemo(() => trackingService.getLastTaskForNode(nodeId), [nodeId]);
 
   if (!memory) return null;
 

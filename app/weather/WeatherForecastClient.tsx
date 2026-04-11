@@ -6,7 +6,7 @@ import { ArrowLeft, Shield, Zap, Clock, Heart, AlertTriangle, CheckCircle, Chevr
 import html2canvas from "html2canvas";
 import { trackEvent, trackPageView } from "../../src/services/analytics";
 import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "../../src/services/marketingAttribution";
-import { useAdminState } from "../../src/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { fetchJourneyPaths } from "../../src/services/adminApi";
 import {
   getRelationshipWeatherInitialStage,
@@ -282,6 +282,12 @@ export default function WeatherForecastClient() {
   }, []);
 
   useEffect(() => {
+    if (step === "result" && result) {
+      trackEvent("weather_result_view", { level: result.weatherLevel, pattern: result.pattern, zone: result.drainZone });
+    }
+  }, [step, result]);
+
+  useEffect(() => {
     let cancelled = false;
 
     void (async () => {
@@ -332,7 +338,7 @@ export default function WeatherForecastClient() {
   }, [weatherPath]);
 
   const handleStart = useCallback(() => {
-    trackEvent("weather_started");
+    trackEvent("weather_start_clicked");
     const initialStage = getRelationshipWeatherInitialStage(weatherPath);
 
     if (initialStage === "questions") {
@@ -406,7 +412,7 @@ export default function WeatherForecastClient() {
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url; a.download = "weather-report.png"; a.click();
-          trackEvent("weather_share_downloaded");
+          trackEvent("weather_share_completed");
         }
       });
     } catch { setIsCapturing(false); }
@@ -414,7 +420,7 @@ export default function WeatherForecastClient() {
 
   const handleCTA = useCallback(() => {
     if (!result || typeof window === "undefined") return;
-    trackEvent("weather_cta_clicked", { pattern: result.pattern, level: result.weatherLevel });
+    trackEvent("weather_onboarding_clicked", { pattern: result.pattern, level: result.weatherLevel });
     launchRelationshipWeatherFlow(weatherPath, result, "weather_v3");
   }, [result, weatherPath]);
 

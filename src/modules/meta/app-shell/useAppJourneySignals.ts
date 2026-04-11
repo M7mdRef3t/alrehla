@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import type { MapNode } from "@/modules/map/mapTypes";
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
-import { useJourneyState } from "@/state/journeyState";
-import { useAppShellNavigationState } from "@/state/appShellNavigationState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useJourneyProgress } from "@/domains/journey";
+import { useAppShellNavigationState } from "@/domains/dawayir/store/navigation.store";
 import { getWeeklyPulseInsight } from "@/utils/pulseInsights";
 import { getIncompleteMissionSteps } from "@/utils/missionProgress";
 
@@ -14,7 +14,7 @@ export function useAppJourneySignals() {
   const pulseLogs = usePulseState((s) => s.logs);
   const weekdayLabels = usePulseState((s) => s.weekdayLabels);
   const lastPulse = usePulseState((s) => s.lastPulse);
-  const storedGoalId = useJourneyState((s) => s.goalId);
+  const storedGoalId = useJourneyProgress().goalId;
   const goalId = useAppShellNavigationState((s) => s.goalId);
 
   const pulseInsight = useMemo(

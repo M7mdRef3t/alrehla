@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { motion } from "framer-motion";
-import { useMeState, type BatteryState } from "@/state/meState";
+import { useMeState, type BatteryState } from "@/domains/dawayir/store/me.store";
 const BATTERY_PCT: Record<BatteryState, number> = {
   drained: 25,
   okay: 65,

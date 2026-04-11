@@ -8,9 +8,9 @@ import {
   Link2, BarChart3,
 } from "lucide-react";
 import { useGamificationState } from "@/services/gamificationEngine";
-import { useAchievementState } from "@/state/achievementState";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useQuizHistory } from "@/hooks/useQuizHistory";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { UserProfile } from "./UserProfile";
 
 
@@ -1155,7 +1155,7 @@ export function InteractiveDashboard({ onBack }: InteractiveDashboardProps) {
   };
 
   return (
-    <div dir="rtl" style={{ minHeight: "100vh", background: "var(--ds-color-space-void)", padding: "20px 16px 80px" }}>
+    <div dir="rtl" className="bg-[var(--page-bg)]" style={{ minHeight: "100vh", padding: "20px 16px 80px" }}>
       <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", gap: 16, alignItems: "flex-start" }}>
 
         {/* ════ Sidebar ════ */}

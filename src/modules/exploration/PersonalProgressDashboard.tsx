@@ -15,7 +15,7 @@ import {
   Medal as MedalIcon
 } from "lucide-react";
 
-import { useAchievementState } from "@/state/achievementState";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { ACHIEVEMENTS } from "@/data/achievements";
 
 interface PersonalProgressDashboardProps {

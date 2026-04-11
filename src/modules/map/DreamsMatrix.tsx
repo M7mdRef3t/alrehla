@@ -1,16 +1,16 @@
 import type { FC } from "react";
 import { useState, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { type MapNode } from "@/modules/map/mapTypes";
 import { Sparkles, Activity, ShieldAlert, Target, Lock, AlertTriangle, Zap } from "lucide-react";
 import { DreamNode, AlignmentZone } from "@/types/visualDreams";
 import { AlignmentEngine } from "@/services/alignmentEngine";
 import { fetchOverviewStats, fetchDreams, type OverviewStats } from "@/services/adminApi";
 import { type Dream, type Knot } from "@/types/dreams";
-import { usePredictiveState } from "@/state/predictiveState";
-import { useGrowthState } from "@/state/growthState";
-import { useFlowState } from "@/state/flowState";
+import { usePredictiveState } from "@/domains/consciousness/store/predictive.store";
+import { useGrowthState } from "@/domains/gamification/store/growth.store";
+import { useFlowState } from "@/domains/journey/store/flow.store";
 
 /**
  * 🌌 DREAMS MATRIX (THE MATRIX)

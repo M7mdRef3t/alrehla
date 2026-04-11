@@ -23,12 +23,12 @@ import { AnimatePresence } from "framer-motion";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { useGamificationState } from "@/services/gamificationEngine";
 import { scanForVampires } from "@/services/propheticEngine";
-import { useEventHistoryStore } from "@/state/eventHistoryStore";
+import { useEventHistoryStore } from "@/domains/analytics/store/eventHistory.store";
 import { SwarmPersonaSelector } from "@/modules/exploration/SwarmPersonaSelector";
 import { MemoryStore } from "@/services/memoryStore";
 import { semanticCompressor } from "@/services/semanticCompressor";
 import { dynamicContextRouter } from "@/services/dynamicContextRouter";
-import { getAuthUserId } from "@/state/authState";
+import { getAuthUserId } from "@/domains/auth/store/auth.store";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 
 const GUEST_MEMORY_ACTOR_KEY = "dawayir_guest_memory_actor_id";

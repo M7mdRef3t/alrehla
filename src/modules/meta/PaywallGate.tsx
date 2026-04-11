@@ -8,7 +8,7 @@ import {
 } from "@/services/subscriptionManager";
 
 import { isPublicPaymentsEnabled } from "@/config/payments";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 interface PaywallGateProps {
   reason: "ai_limit" | "map_limit" | "pdf" | "training";

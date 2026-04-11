@@ -9,7 +9,9 @@ import {
 import {
   trackCompleteRegistration,
   trackInitiateCheckout as trackActivationInitiated,
-  trackCheckoutViewed as trackActivationViewed
+  trackCheckoutViewed as trackActivationViewed,
+  trackEvent,
+  AnalyticsEvents,
 } from "../../src/services/analytics";
 import {
   buildPaymentWhatsappHref,
@@ -38,6 +40,7 @@ import {
 import { recordFlowEvent } from "../../src/services/journeyTracking";
 import { safeGetSession } from "../../src/services/supabaseClient";
 import { marketingLeadService } from "../../src/services/marketingLeadService";
+import { getStoredLeadEmail, setStoredLeadEmail } from "../../src/services/revenueAccess";
 
 type ScarcityResponse = {
   total_seats: number;
@@ -134,7 +137,11 @@ export default function ActivationPage() {
         
         let resolvedEmail = emailFromUrl || sessionUser?.email || "";
         if (!resolvedEmail && typeof window !== "undefined") {
-          resolvedEmail = window.localStorage.getItem("dawayir_lead_email") || "";
+          resolvedEmail = getStoredLeadEmail() || "";
+        }
+        
+        if (resolvedEmail) {
+          setStoredLeadEmail(resolvedEmail);
         }
         
         const scarcity = (await scarcityRes.json()) as ScarcityResponse;
@@ -322,29 +329,21 @@ export default function ActivationPage() {
       if (!response.ok) {
         throw new Error(data.error || "تعذر إرسال إثبات الدفع.");
       }
-      const alreadyTrackedThisSession =
-        typeof window !== "undefined" &&
-        window.sessionStorage.getItem(COMPLETE_REGISTRATION_SESSION_KEY) === "true";
+      trackEvent(AnalyticsEvents.PAYMENT_PROOF_SUBMITTED, {
+        flow: "activation_manual_proof",
+        method: methodValue,
+        payment_mode: modeValue,
+        has_reference: Boolean(referenceValue),
+        has_proof_image: hasProofImage
+      });
 
-      if (!alreadyTrackedThisSession) {
-        trackCompleteRegistration({
-          flow: "activation_manual_proof",
+      recordFlowEvent("payment_proof_submitted", {
+        meta: {
+          source: "activation_manual_proof",
           method: methodValue,
-          payment_mode: modeValue,
-          has_reference: Boolean(referenceValue),
-          has_proof_image: hasProofImage
-        });
-        recordFlowEvent("payment_success", {
-          meta: {
-            source: "activation_manual_proof",
-            method: methodValue,
-            payment_mode: modeValue
-          }
-        });
-        if (typeof window !== "undefined") {
-          window.sessionStorage.setItem(COMPLETE_REGISTRATION_SESSION_KEY, "true");
+          payment_mode: modeValue
         }
-      }
+      });
 
       setProofReference("");
       setProofAmount("");

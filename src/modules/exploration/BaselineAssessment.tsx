@@ -8,7 +8,7 @@ import {
   computeBaselineScore,
   type BaselineAnswers
 } from "@/data/baselineQuestions";
-import { useJourneyState } from "@/state/journeyState";
+import { useJourneyProgress } from "@/domains/journey";
 
 interface BaselineAssessmentProps {
   onComplete: () => void;
@@ -25,7 +25,7 @@ export const BaselineAssessment: FC<BaselineAssessmentProps> = ({ onComplete }) 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<BaselineAnswers>({});
   const [isCompleted, setIsCompleted] = useState(false);
-  const completeBaseline = useJourneyState((s) => s.completeBaseline);
+  const completeBaseline = useJourneyProgress().completeBaseline;
 
   const question = BASELINE_QUESTIONS[currentIndex];
   const isLast = currentIndex === BASELINE_QUESTIONS.length - 1;

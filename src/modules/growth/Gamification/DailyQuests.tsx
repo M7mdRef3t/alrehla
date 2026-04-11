@@ -1,9 +1,10 @@
+import { gamificationService } from '@/domains/gamification';
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Zap, Sparkles, Trophy } from 'lucide-react';
 import { getDailyQuests, DailyQuest } from '@/services/gamificationEngine';
-import { useGamificationState } from '@/state/gamificationState';
-import { useMapState } from '@/state/mapState';
+import { useGamification } from '@/domains/gamification';
+import { useMapState } from '@/domains/dawayir/store/map.store';
 import { soundManager } from '@/services/soundManager';
 
 /**
@@ -13,7 +14,7 @@ import { soundManager } from '@/services/soundManager';
  */
 
 export const DailyQuests = () => {
-    const { dailyCompletedKeys, completeDailyQuest, checkAndResetQuests } = useGamificationState();
+    const { dailyCompletedKeys, completeDailyQuest, checkAndResetQuests } = useGamification();
 
     useEffect(() => {
         checkAndResetQuests();

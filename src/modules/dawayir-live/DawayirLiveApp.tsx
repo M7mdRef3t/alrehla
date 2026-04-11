@@ -6,7 +6,7 @@ import { ArrowRight, History } from "lucide-react";
 import { assignUrl } from "@/services/navigation";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { fetchJourneyPaths } from "@/services/adminApi";
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import {
   getDawayirLiveCoachHref,
   getDawayirLiveCoupleHref,

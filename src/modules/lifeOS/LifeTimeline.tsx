@@ -4,7 +4,7 @@ import { memo, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Clock, TrendingUp, TrendingDown, Minus, Sparkles } from "lucide-react";
 import { LIFE_DOMAINS, getDomainConfig, type LifeDomainId } from "@/types/lifeDomains";
-import { useLifeState } from "@/state/lifeState";
+import { useLifeState } from "@/domains/dawayir/store/life.store";
 
 interface LifeTimelineProps {
   maxDays?: number;

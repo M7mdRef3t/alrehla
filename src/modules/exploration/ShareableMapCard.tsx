@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Share2, Lock } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 
 /* ══════════════════════════════════════════
    SHAREABLE MAP CARD — بطاقة خريطة قابلة للمشاركة

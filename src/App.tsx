@@ -12,3 +12,4 @@ export default function App({ onExitToLanding }: { onExitToLanding?: () => void 
     </PWAInstallProvider>
   );
 }
+

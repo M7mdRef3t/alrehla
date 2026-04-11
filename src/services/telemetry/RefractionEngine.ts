@@ -1,8 +1,8 @@
 import { logger } from "@/services/logger";
 
 import { geminiClient } from '../geminiClient';
-import { useDigitalTwinState } from '@/state/digitalTwinState';
-import { usePredictiveState } from '@/state/predictiveState';
+import { useDigitalTwinState } from '@/domains/maraya/store/digitalTwin.store';
+import { usePredictiveState } from '@/domains/consciousness/store/predictive.store';
 
 export interface RefractionTask {
     id: string;

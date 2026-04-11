@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Loader2, Target, AlertCircle, Zap, ShieldAlert, Cpu } from "lucide-react";
-import { useJourneyState } from "@/state/journeyState";
+import { useJourneyProgress } from "@/domains/journey";
 import { recordFlowEvent } from "@/services/journeyTracking";
 import { soundManager } from "@/services/soundManager";
 
@@ -48,7 +48,7 @@ export function LandingSimulation() {
   const [dominantCategory, setDominantCategory] = useState<"future" | "relationships" | "progress" | null>(null);
 
   // Connection to Ghost Backend
-  const setLandingIntent = useJourneyState((s) => s.setLandingIntent);
+  const setLandingIntent = useJourneyProgress().setLandingIntent;
 
   const handleStart = () => {
     setStep("questions");

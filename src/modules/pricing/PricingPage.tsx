@@ -5,7 +5,7 @@ import { Check, Shield, Sparkles, ArrowLeft, Zap } from "lucide-react";
 import { signInWithGoogleAtPath } from "@/services/authService";
 import { consumeEmotionalOffer, getEmotionalOffer } from "@/services/subscriptionManager";
 import { supabase } from "@/services/supabaseClient";
-import { trackEvent, AnalyticsEvents } from "@/services/analytics";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { marketingLeadService } from "@/services/marketingLeadService";
 import { recordFlowEvent } from "@/services/journeyTracking";
 import {
@@ -32,13 +32,13 @@ export default function PricingPage() {
     if (viewTrackedRef.current) return;
     viewTrackedRef.current = true;
     try {
-      trackEvent(AnalyticsEvents.ACTIVATION_VIEWED, { page: "pricing" });
+      analyticsService.track(AnalyticsEvents.ACTIVATION_VIEWED, { page: "pricing" });
     } catch { /* never block render */ }
   }, []);
 
   const handleSubscribe = async () => {
     setIsLoading(true);
-    try { trackEvent(AnalyticsEvents.CTA_CLICK, { source: "pricing", plan: "premium" }); } catch { /* */ }
+    try { analyticsService.track(AnalyticsEvents.CTA_CLICK, { source: "pricing", plan: "premium" }); } catch { /* */ }
 
     if (!supabase) {
       alert("خدمة التسجيل غير متاحة حاليًا.");

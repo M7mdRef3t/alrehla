@@ -1,5 +1,5 @@
 import { getGeminiClient, getGeminiModel, withTimeout, DEFAULT_GENERATION_CONFIG } from "@/lib/gemini/shared";
-import type { DesignTokens } from "@/state/themeState";
+import type { DesignTokens } from "@/domains/consciousness/store/theme.store";
 
 export class AiDesignService {
   /**
@@ -11,45 +11,39 @@ export class AiDesignService {
 
     const model = getGeminiModel(client, "gemini-1.5-flash", {
       ...DEFAULT_GENERATION_CONFIG,
-      temperature: 0.9, // Higher creativity for design
+      temperature: 0.9,
     });
 
     const systemPrompt = `
-      You are a high-end UI/UX Design Strategist. 
-      Your task is to translate a poetic or functional description of a "mood" or "atmosphere" into technical CSS design tokens.
+      You are a premium UI/UX Design Architect. Translate a description of a "mood" into technical design tokens.
       
-      You must return ONLY a JSON object followed by a brief explanation of why you chose these colors.
-      The JSON must match this structure:
+      Return ONLY a JSON object:
       {
         "primaryColor": "#hex",
         "accentColor": "#hex",
-        "spaceVoid": "#hex (background color)",
-        "borderRadius": "string (e.g. 16px)",
-        "blur": "string (e.g. 8px)",
-        "spacing": "string (e.g. 1rem)"
+        "spaceVoid": "#hex",
+        "borderRadius": "string",
+        "blur": "string",
+        "spacing": "string",
+        "vignetteStrength": number (0-1),
+        "grainOpacity": number (0-1),
+        "chromaticAberration": number (0-1),
+        "ambientVolume": number (0-1)
       }
 
-      Guidelines:
-      - For "Crisis" or "Stressed" prompts: Use calming blues/greens, high blur (12px+), and very soft corners (24px+).
-      - For "Productive" or "Flow" prompts: Use high contrast, sharp corners (4px-8px), and energetic colors (Amber/Teal).
-      - For "Luxury" prompts: Use Gold/Black/Deep Void colors.
-      
-      User Description: "${prompt}"
+      Atmospheric Logic:
+      - Crisis: Low saturation, high blur (12px+), high vignette (0.4+), low volume (0.2).
+      - Flow/Energy: High saturation, sharp borders, low vignette, energetic volume (0.8).
+      - Luxury: Cinematic grain (0.2), deep colors, elegant spacing.
+
+      Input: "${prompt}"
     `;
 
     try {
       const result = await withTimeout(model.generateContent(systemPrompt));
       const responseText = result.response.text();
-      
-      // Extract JSON using regex
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error("AI returned malformed design response:", responseText);
-        return null;
-      }
-
-      const tokens = JSON.parse(jsonMatch[0]);
-      return tokens;
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     } catch (error) {
       console.error("Design Generation failed:", error);
       return null;

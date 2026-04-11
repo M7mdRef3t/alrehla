@@ -3,8 +3,8 @@ import type { FC } from "react";
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share2, Download, TrendingUp, Users, Calendar, Check } from "lucide-react";
-import { useMapState } from "@/state/mapState";
-import { useJourneyState } from "@/state/journeyState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useJourneyProgress } from "@/domains/journey";
 import { downloadBlobFile } from "@/services/clientDom";
 
 interface ShareStatsProps {
@@ -14,7 +14,7 @@ interface ShareStatsProps {
 
 export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
   const nodes = useMapState((s) => s.nodes);
-  const { baselineScore, postStepScore, journeyStartedAt } = useJourneyState();
+  const { baselineScore, postStepScore, journeyStartedAt } = useJourneyProgress();
   
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);

@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Sparkles, Copy, X, Loader2, MessageSquareText } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { geminiClient } from "@/services/geminiClient";
 
 interface BoundaryGeneratorModalProps {

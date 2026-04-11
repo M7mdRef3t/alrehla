@@ -1,45 +1,7 @@
-import { useEffect } from "react";
-import { subscribeToDawayirSignals } from "@/modules/recommendation/recommendationBus";
-import { useMapState } from "@/state/mapState";
-import { GraphProjectionEngine } from "@/services/graphProjectionEngine";
-import { supabase } from "@/services/supabaseClient";
-import { runtimeEnv } from "@/config/runtimeEnv";
-
 /**
- * useGraphSync — خطاف المزامنة الشبكية
- * ==========================================
- * يستمع لأي تغييرات في "دواير" ويقوم بتحديث الـ Consciousness Graph تلقائياً.
+ * @deprecated Bridge — استخدم @/domains/dawayir بدلاً منه
+ *
+ * useGraphSync → useDawayirGraphSync
  */
-export function useGraphSync() {
-    const nodes = useMapState((s) => s.nodes);
 
-    useEffect(() => {
-        if (runtimeEnv.isDev) return;
-        // ننتظر أي إشارة تدل على تغيير جوهري في الخريطة
-        const unsubscribe = subscribeToDawayirSignals(async (event) => {
-            if (
-                event.type === "node_added" ||
-                event.type === "ring_changed" ||
-                event.type === "detachment_toggled" ||
-                event.type === "symptoms_updated"
-            ) {
-                // استرجاع المستخدم الحالي
-                if (!supabase?.auth) {
-                    console.warn("📡 [Sync Hook] Supabase Auth not available, skipping sync.");
-                    return;
-                }
-                const { data } = await supabase.auth.getUser();
-                const userId = data.user?.id;
-
-                if (userId) {
-                    // نقوم بإسقاط الجراف بشكل غير متزامن لتجنب تعطيل الـ UI
-                    // نستخدم debounce بسيط (اختياري، هنا نعتمد على استدعاء مباشر)
-                    console.log(`📡 [Sync Hook] Signal ${event.type} received. Syncing Graph...`);
-                    void GraphProjectionEngine.projectMapToGraph(userId, nodes);
-                }
-            }
-        });
-
-        return () => unsubscribe();
-    }, [nodes]);
-}
+export { useDawayirGraphSync as useGraphSync } from "@/domains/dawayir";

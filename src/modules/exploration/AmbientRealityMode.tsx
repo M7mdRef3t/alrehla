@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Maximize2, Minimize2, Volume2, VolumeX } from "lucide-react";
-import { useSwarmState } from "@/state/swarmState";
-import { usePulseState } from "@/state/pulseState";
+import { useSwarmState } from "@/domains/admin/store/swarm.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 
 interface AmbientRealityModeProps {
     onClose: () => void;

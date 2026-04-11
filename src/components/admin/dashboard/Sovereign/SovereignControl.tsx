@@ -5,11 +5,14 @@ import { Shield, Sparkles, Send, Zap, Wind, AlertCircle, Users, Activity, Shield
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import { fetchOverviewStats, fetchAlertIncidents, fetchBroadcasts, type OverviewStats, type AlertIncident } from "@/services/adminApi";
-import { useAdminState, type AdminBroadcast } from "@/state/adminState";
+import { useAdminState, type AdminBroadcast } from "@/domains/admin/store/admin.store";
 import { CollapsibleSection } from "../../ui/CollapsibleSection";
 import { IllusionRadar } from "./IllusionRadar";
 import { SovereignSpreadCommand } from "./SovereignSpreadCommand";
 import { SovereignOracle } from "./SovereignOracle";
+import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
+import { useLockdownState } from "@/domains/admin/store/lockdown.store";
+import { useThemeState } from "@/domains/consciousness/store/theme.store";
 
 const TACTICAL_PRESETS = [
   { id: "peace", label: "بروتوكول السلام", message: "توقف للحظة.. خذ نفساً عميقاً، أنت لست وحدك في هذا الظلام.", icon: Wind, color: "text-emerald-400" },
@@ -36,6 +39,8 @@ export const SovereignControl: FC = () => {
   const [broadcastAudienceType, setBroadcastAudienceType] = useState<"all" | "low_mood" | "scenario">("all");
   const [broadcastScenarioValue, setBroadcastScenarioValue] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
+  const { isLockedDown, triggerLockdown } = useLockdownState();
+  const { customTokens, updateTokens } = useThemeState();
   
   // Sanctuary Pulse State
   const [liveStats, setLiveStats] = useState<OverviewStats | null>(null);
@@ -189,6 +194,17 @@ export const SovereignControl: FC = () => {
     setShowConfirm(true);
     setTimeout(() => setShowConfirm(false), 3000);
   };
+  
+  const handleSovereignTakeover = () => {
+    // 1. Lockdown
+    triggerLockdown();
+    
+    // 2. Dispatch Emergency Broadcast
+    SovereignOrchestrator.executeIntervention("broadcast-all");
+    
+    // 3. UI Alert
+    alert("SOVEREIGN TAKEOVER ENGAGED. System locked and emergency pulse dispatched.");
+  };
 
   return (
     <div className="space-y-12 max-w-[1600px] mx-auto px-4 pb-24">
@@ -238,10 +254,9 @@ export const SovereignControl: FC = () => {
                     <button
                       key={preset.id}
                       onClick={() => {
+                        SovereignOrchestrator.dispatchTacticalPreset(preset.id, preset.message);
                         setBroadcastMessage(preset.message);
                         setBroadcastAudienceType("all");
-                        const el = document.getElementById('broadcast-area');
-                        el?.scrollIntoView({ behavior: 'smooth' });
                       }}
                       className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all group text-right flex flex-col items-start gap-2"
                     >
@@ -308,6 +323,14 @@ export const SovereignControl: FC = () => {
                >
                  <Zap className={`w-3 h-3 ${isLoadingPulse ? 'animate-spin' : ''}`} />
                  Refresh Pulse
+               </button>
+               
+               <button 
+                 onClick={handleSovereignTakeover}
+                 className="px-4 py-2 bg-rose-500/10 border border-rose-500/30 rounded-xl text-[10px] font-black text-rose-500 hover:text-white hover:bg-rose-500 transition-all uppercase tracking-widest flex items-center gap-2"
+               >
+                 <ShieldAlert className="w-3 h-3" />
+                 Sovereign Takeover
                </button>
             </div>
 
@@ -532,6 +555,62 @@ export const SovereignControl: FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Sovereign Atmosphere Lab (Sensory Control) */}
+      <CollapsibleSection
+        title="مختبر الأثير الحسي (Atmosphere Lab)"
+        icon={<Wind className="w-4 h-4" />}
+        subtitle="التحكم بالمؤثرات البصرية للبيئة الواعية"
+        defaultExpanded={true}
+        headerColors="border-indigo-800 bg-indigo-900/40 text-indigo-400"
+      >
+        <div className="p-6 space-y-8 bg-slate-950/30 rounded-3xl border border-indigo-500/20">
+          <div className="space-y-4">
+             <div className="flex justify-between items-center text-sm font-bold text-white">
+                <span className="flex items-center gap-2"><Eye className="w-4 h-4 text-indigo-400" /> تركيز الوعي (Vignette)</span>
+                <span className="text-indigo-400 font-mono text-xs">{Math.round(customTokens.vignetteStrength * 100)}%</span>
+             </div>
+             <input
+               type="range"
+               min="0" max="1" step="0.05"
+               value={customTokens.vignetteStrength}
+               onChange={(e) => updateTokens({ vignetteStrength: parseFloat(e.target.value) })}
+               className="w-full accent-indigo-500"
+             />
+             <p className="text-[10px] text-slate-500 font-black tracking-widest uppercase">Controls the dark edges to simulate deep focus or crisis isolation.</p>
+          </div>
+
+          <div className="space-y-4">
+             <div className="flex justify-between items-center text-sm font-bold text-white">
+                <span className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-emerald-400" /> الذاكرة العشوائية (Film Grain)</span>
+                <span className="text-emerald-400 font-mono text-xs">{Math.round(customTokens.grainOpacity * 100)}%</span>
+             </div>
+             <input
+               type="range"
+               min="0" max="0.5" step="0.01"
+               value={customTokens.grainOpacity}
+               onChange={(e) => updateTokens({ grainOpacity: parseFloat(e.target.value) })}
+               className="w-full accent-emerald-500"
+             />
+             <p className="text-[10px] text-slate-500 font-black tracking-widest uppercase">Injects neural noise to heighten emotional immersion.</p>
+          </div>
+
+          <div className="space-y-4">
+             <div className="flex justify-between items-center text-sm font-bold text-white">
+                <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-rose-400" /> التموج العصبي (Chromatic Aberration)</span>
+                <span className="text-rose-400 font-mono text-xs">{Math.round(customTokens.chromaticAberration * 100)}%</span>
+             </div>
+             <input
+               type="range"
+               min="0" max="1" step="0.05"
+               value={customTokens.chromaticAberration}
+               onChange={(e) => updateTokens({ chromaticAberration: parseFloat(e.target.value) })}
+               className="w-full accent-rose-500"
+             />
+             <p className="text-[10px] text-slate-500 font-black tracking-widest uppercase">Simulates reality distortion during high-stress peaks.</p>
+          </div>
+        </div>
+      </CollapsibleSection>
 
       {/* Sovereign Chronicle - Archive */}
       <CollapsibleSection

@@ -3,6 +3,10 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import Script from "next/script";
 import "./globals.css";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { ConsciousnessSensoryProvider } from "@/components/providers/ConsciousnessSensoryProvider";
+import { WhisperOverlay } from "@/components/ui/WhisperOverlay";
+import { SovereignReceiver } from "@/components/providers/SovereignReceiver";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.alrehla.app"),
@@ -46,7 +50,6 @@ export const viewport: Viewport = {
   colorScheme: "dark light"
 };
 
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -88,8 +91,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <ConsciousnessSensoryProvider>
+            <WhisperOverlay />
+            <SovereignReceiver />
+            {children}
+          </ConsciousnessSensoryProvider>
         </ThemeProvider>
       </body>
     </html>

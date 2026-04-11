@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { computeTEI, saveTEISnapshot, getTEIComparison } from "@/utils/traumaEntropyIndex";
 
 const CLARITY_COLORS = {

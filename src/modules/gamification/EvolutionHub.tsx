@@ -7,14 +7,14 @@ import {
   ChevronRight, ShoppingCart, Award,
   Target, Flame, TrendingUp, Lock
 } from "lucide-react";
-import { useGamificationState } from "@/state/gamificationState";
-import { useAchievementState } from "@/state/achievementState";
+import { useGamification } from "@/domains/gamification";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { ACHIEVEMENTS } from "@/data/achievements";
 import { SovereigntyStore } from "./SovereigntyStore";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 export function EvolutionHub({ onClose }: { onClose: () => void }) {
-  const { xp, level, rank, coins, getLevelProgress } = useGamificationState();
+  const { xp, level, rank, coins, levelProgress } = useGamification();
   const { unlockedIds } = useAchievementState();
   const [showStore, setShowStore] = useState(false);
 
@@ -22,7 +22,7 @@ export function EvolutionHub({ onClose }: { onClose: () => void }) {
   // This is a dev-only simulation logic or real behavior tracking
   // In a real app, this would be handled in an effect, but we can do it locally for now.
 
-  const { progress, nextLevelXP, xpInCurrent, requiredForLevel } = getLevelProgress();
+  const { progress, nextLevelXP, xpInCurrent, requiredForLevel } = levelProgress;
   
   const unlockedCount = unlockedIds.length;
   const totalCount = ACHIEVEMENTS.length;

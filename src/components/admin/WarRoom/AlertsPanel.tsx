@@ -69,10 +69,21 @@ export default function AlertsPanel() {
 
     async function fetchIncidents() {
         setLoading(true);
-        const data = await fetchAlertIncidents();
-        if (data) setIncidents(data as Incident[]);
-        else logger.error("Error fetching incidents");
-        setLoading(false);
+        setFeedback(null);
+        try {
+            const data = await fetchAlertIncidents();
+            if (data) {
+                setIncidents(data as Incident[]);
+            } else {
+                logger.error("Failed to fetch incidents: API returned null");
+                setFeedback({ type: 'error', message: 'تعذر جلب ملفات الطوارئ من السيرفر. قد يكون هناك مشكلة في قواعد البيانات (v_active_alert_incidents) أو الشبكة.' });
+            }
+        } catch (err) {
+            logger.error("Error thrown while fetching incidents", err);
+            setFeedback({ type: 'error', message: 'تعذر جلب ملفات الطوارئ بسبب خطأ داخلي.' });
+        } finally {
+            setLoading(false);
+        }
     }
 
     async function updateStatus(id: string, newStatus: 'ack' | 'resolved') {

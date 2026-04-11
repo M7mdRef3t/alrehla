@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import type { AppScreen } from "@/navigation/navigationMachine";
-import { type AppOverlayFlags, useAppOverlayState } from "@/state/appOverlayState";
+import { type AppOverlayFlags, useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 type AuthStatus = "loading" | "ready";
 

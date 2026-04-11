@@ -1,5 +1,5 @@
 import type { Ring } from "@/modules/map/mapTypes";
-import type { PulseEntry } from "@/state/pulseState";
+import type { PulseEntry } from "@/domains/consciousness/store/pulse.store";
 import type { FeatureFlagKey } from "@/config/features";
 import type { PersonaType } from "./personae";
 import type { AppScreen } from "@/navigation/navigationMachine";

@@ -10,9 +10,9 @@ import { TACTICAL_PLAYBOOKS, type Playbook } from "@/data/tacticalPlaybooks";
 import { BookOpen, AlertTriangle, ChevronRight, X, CheckCircle2 } from "lucide-react";
 import { useGamificationState, XP_ACTIONS } from "@/services/gamificationEngine";
 import { trackEvent } from "@/services/analytics";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import { trackingService } from "@/domains/journey";
 import { calculateEntropy } from "@/services/predictiveEngine";
-import { usePulseState } from "@/state/pulseState";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 
 interface PlaybookExecution {
     count: number;
@@ -219,7 +219,7 @@ export const PlaybookViewer: React.FC = () => {
             category: selectedPlaybook.category,
             intensity: selectedPlaybook.intensity
         });
-        recordFlowEvent("playbook_executed", {
+        trackingService.recordFlow("playbook_executed", {
             meta: {
                 playbookId: selectedPlaybook.id,
                 category: selectedPlaybook.category,
@@ -282,7 +282,7 @@ export const PlaybookViewer: React.FC = () => {
             ...(insights.entropyDelta != null ? { entropyDelta: insights.entropyDelta } : {}),
             ...(insights.energyDelta != null ? { energyDelta: insights.energyDelta } : {})
         });
-        recordFlowEvent("next_step_action_taken", {
+        trackingService.recordFlow("next_step_action_taken", {
             meta: {
                 action: "playbook_effectiveness_rated",
                 playbookId: selectedPlaybook.id,

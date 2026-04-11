@@ -7,9 +7,9 @@ import { logger } from "@/services/logger";
 
 import { useState, useEffect, useCallback } from "react";
 import { aiCurator, buildUserContext } from "@/ai/aiCurator";
-import { useMapState } from "@/state/mapState";
-import { useDailyJournalState } from "@/state/dailyJournalState";
-import { useShadowPulseState } from "@/state/shadowPulseState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useDailyJournalState } from "@/domains/journey/store/journal.store";
+import { useShadowPulseState } from "@/domains/consciousness/store/shadowPulse.store";
 import { computeTEI } from "@/utils/traumaEntropyIndex";
 import type { DailyQuestion } from "@/data/dailyQuestions";
 import type { UserContext } from "@/ai/aiCurator";

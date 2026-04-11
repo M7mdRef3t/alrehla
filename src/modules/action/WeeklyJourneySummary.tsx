@@ -10,7 +10,7 @@
 import { type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Flame, Users, Heart, Trophy } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { loadStreak } from "@/services/streakSystem";
 
 const WEEKLY_SHOWN_KEY = "dawayir-weekly-summary-shown";

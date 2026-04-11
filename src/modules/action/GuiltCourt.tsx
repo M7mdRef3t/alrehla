@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gavel, ShieldCheck, Scale, AlertCircle, ArrowRight, ArrowLeft } from "lucide-react";
 import { soundManager } from "@/services/soundManager";
-import { useJourneyState } from "@/state/journeyState";
+import { useJourneyProgress } from "@/domains/journey";
 
 interface GuiltCourtProps {
   onBack?: () => void;
@@ -19,7 +19,7 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
   const [charge, setCharge] = useState("");
   const [stage, setStage] = useState<TrialStage | "entry">("entry");
 
-  const mirrorName = useJourneyState((s) => s.mirrorName);
+  const mirrorName = useJourneyProgress().mirrorName;
 
   const startTrial = () => {
     if (!charge.trim()) return;
@@ -33,7 +33,7 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen text-slate-200 flex flex-col font-sans relative overflow-hidden" style={{ background: "var(--space-void)" }} dir="rtl">
+    <div className="min-h-screen text-slate-200 flex flex-col font-sans relative overflow-hidden bg-[var(--page-bg)]" dir="rtl">
       {/* Cinematic Background */}
       <div className="absolute inset-0 pointer-events-none opacity-20" style={{ background: "radial-gradient(circle at 10% 10%, rgba(45,212,191,0.1) 0%, transparent 50%), radial-gradient(circle at 90% 90%, rgba(139,92,246,0.1) 0%, transparent 50%)" }} />
       <div className="absolute inset-0 pointer-events-none opacity-10" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
@@ -95,7 +95,7 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
                   onClick={startTrial}
                   disabled={!charge.trim()}
                   className="w-full mt-6 py-4 font-black rounded-2xl transition-all flex items-center justify-center gap-2 group disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ background: "var(--soft-teal)", color: "var(--space-void)" }}
+                  style={{ background: "var(--soft-teal)", color: "var(--page-bg)" }}
                 >
                   ابدأ المحاكمة
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -214,7 +214,7 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
                   <button
                     onClick={onBack}
                     className="px-8 py-3 rounded-full font-bold transition-all hover:opacity-90"
-                    style={{ background: "var(--soft-teal)", color: "var(--space-void)" }}
+                    style={{ background: "var(--soft-teal)", color: "var(--page-bg)" }}
                   >
                     العودة للأدوات
                   </button>

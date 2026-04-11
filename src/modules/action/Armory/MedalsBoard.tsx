@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Award, Lock, CheckCircle2, Star } from 'lucide-react';
 import { ACHIEVEMENTS, Achievement } from '@/data/achievements';
-import { useAchievementState } from '@/state/achievementState';
+import { useAchievementState } from '@/domains/gamification/store/achievement.store';
 
 const GRADIENTS = [
     "from-amber-400 to-yellow-600",

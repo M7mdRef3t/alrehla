@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
-import { useNotificationState } from "@/state/notificationState";
-import { useEmergencyState } from "@/state/emergencyState";
-import { useJourneyState } from "@/state/journeyState";
-import { useAchievementState } from "@/state/achievementState";
-import { useThemeState } from "@/state/themeState";
-import { usePulseState } from "@/state/pulseState";
+import { useNotificationState } from "@/domains/notifications/store/notification.store";
+import { useEmergencyState } from "@/domains/admin/store/emergency.store";
+import { useJourneyProgress } from "@/domains/journey";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
+import { useThemeState } from "@/domains/consciousness/store/theme.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import type { FeatureFlagKey } from "@/config/features";
 import { runtimeEnv } from "@/config/runtimeEnv";
-import { useAppShellNavigationState } from "@/state/appShellNavigationState";
-import { useAppOverlayState, useOverlayFlag } from "@/state/appOverlayState";
+import { useAppShellNavigationState } from "@/domains/dawayir/store/navigation.store";
+import { useAppOverlayState, useOverlayFlag } from "@/domains/consciousness/store/overlay.store";
 
 type AgentModule = typeof import('@/agent');
 const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
@@ -70,10 +70,10 @@ export function useAppShellBootstrapState() {
   const notificationPermission = useNotificationState((s) => s.permission);
   const notificationSupported = useNotificationState((s) => s.isSupported);
   const isEmergencyOpen = useEmergencyState((s) => s.isOpen);
-  const storedGoalId = useJourneyState((s) => s.goalId);
-  const consumeLandingIntent = useJourneyState((s) => s.consumeLandingIntent);
-  const storedCategory = useJourneyState((s) => s.category);
-  const lastGoalById = useJourneyState((s) => s.lastGoalById);
+  const storedGoalId = useJourneyProgress().goalId;
+  const consumeLandingIntent = useJourneyProgress().consumeLandingIntent;
+  const storedCategory = useJourneyProgress().category;
+  const lastGoalById = useJourneyProgress().lastGoalById;
   const lastNewAchievementId = useAchievementState((s) => s.lastNewAchievementId);
   const theme = useThemeState((s) => s.theme);
   const setTheme = useThemeState((s) => s.setTheme);

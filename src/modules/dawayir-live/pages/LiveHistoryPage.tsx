@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { assignUrl } from "@/services/navigation";
 import { fetchJourneyPaths } from "@/services/adminApi";
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getDawayirLiveLaunchHref, getDawayirLivePath } from "@/utils/dawayirLiveJourney";
 import { createLiveShare, getLiveSession, listLiveSessions } from "../api";
 import type {

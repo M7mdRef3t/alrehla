@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { getQuestionOfDay, type DailyQuestion } from "@/data/dailyQuestions";
-import { useDailyJournalState } from "@/state/dailyJournalState";
+import { useDailyJournalState } from "@/domains/journey/store/journal.store";
 
 export interface UseDailyQuestionReturn {
   question: DailyQuestion;

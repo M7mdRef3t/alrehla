@@ -1,8 +1,8 @@
 import React, { useState, type FC } from "react";
 import { X, Send, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useBlindCapsuleState } from "@/state/blindCapsuleState";
-import { useToastState } from "@/state/toastState";
+import { useBlindCapsuleState } from "@/domains/journey/store/blindCapsule.store";
+import { useToastState } from "@/domains/dawayir/store/toast.store";
 
 interface BlindCapsuleCreatorProps {
    isOpen: boolean;

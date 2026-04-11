@@ -2,21 +2,21 @@ import type { FC } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Shield, Zap, Heart } from "lucide-react";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import { trackingService } from "@/domains/journey";
 import { usePWAInstall } from "@/contexts/PWAInstallContext";
 import { getLivePulseCount } from "@/services/pulseEngagement";
 import { soundManager } from "@/services/soundManager";
 import { LandingSimulation } from "./LandingSimulation";
-import { useJourneyState } from "@/state/journeyState";
-import { useMapState } from "@/state/mapState";
+import { useJourneyProgress } from "@/domains/journey";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
 import { getGoalMeta } from "@/data/goalMeta";
 import { LandingFooter } from "./landing/LandingFooter";
-import { trackEvent, AnalyticsEvents, trackLandingView } from "@/services/analytics";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { isUserMode } from "@/config/appEnv";
 import { landingCopy } from "@/copy/landing";
 import { HeroSection } from "./HeroSection";
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import {
   getRelationshipWeatherEntryHref,
   getRelationshipWeatherPath
@@ -66,12 +66,12 @@ export const Landing: FC<LandingPropsExtended> = ({
   ownerInstallRequestNonce = 0,
   onOwnerInstallRequestHandled,
 }) => {
-  const storedMirrorName = useJourneyState((s) => s.mirrorName);
+  const storedMirrorName = useJourneyProgress().mirrorName;
   const nodesCount = useMapState((s) => s.nodes.length);
-  const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
-  const lastGoalId = useJourneyState((s) => s.goalId);
-  const lastGoalCategory = useJourneyState((s) => s.category);
-  const lastGoalById = useJourneyState((s) => s.lastGoalById);
+  const baselineCompletedAt = useJourneyProgress().baselineCompletedAt;
+  const lastGoalId = useJourneyProgress().goalId;
+  const lastGoalCategory = useJourneyProgress().category;
+  const lastGoalById = useJourneyProgress().lastGoalById;
   const weatherPath = useAdminState((state) => {
     const path = getRelationshipWeatherPath(state.journeyPaths);
     return path?.isActive ? path : null;
@@ -110,7 +110,7 @@ export const Landing: FC<LandingPropsExtended> = ({
       window.alert('على Chrome أو Edge من الكمبيوتر: افتح قائمة المتصفح ثم اختر "Install app" أو "تثبيت التطبيق".');
     }
     onOwnerInstallRequestHandled?.();
-    void recordFlowEvent("install_clicked");
+    void trackingService.recordFlow("install_clicked");
   }, [pwaInstall, onOwnerInstallRequestHandled]);
 
   if (ownerInstallRequestNonce !== lastNonceRef.current && ownerInstallRequestNonce > 0) {
@@ -118,22 +118,22 @@ export const Landing: FC<LandingPropsExtended> = ({
     handleInstall();
   }
 
-  const [mirrorName, setMirrorName] = useState((storedMirrorName ?? "").trim());
+  const [mirrorName, setMirrorName] = useState(storedMirrorName ?? "");
   const [pulseCount, setPulseCount] = useState(getLivePulseCount());
   const landingViewTrackedRef = useRef(false);
   const startTrackedRef = useRef(false);
 
-  useEffect(() => {
-    const trimmedName = mirrorName.trim();
-    if (!trimmedName) return;
-    if (useJourneyState.getState().mirrorName !== trimmedName) {
-      useJourneyState.getState().setMirrorName(trimmedName);
-    }
-  }, [mirrorName]);
+  const setStoreMirrorName = useJourneyProgress().setMirrorName;
 
   useEffect(() => {
-    const nextName = (storedMirrorName ?? "").trim();
-    if (nextName && nextName !== mirrorName) {
+    if (storedMirrorName !== mirrorName) {
+      setStoreMirrorName(mirrorName);
+    }
+  }, [mirrorName, storedMirrorName, setStoreMirrorName]);
+
+  useEffect(() => {
+    const nextName = storedMirrorName ?? "";
+    if (nextName && nextName.trim() !== mirrorName.trim()) {
       setMirrorName(nextName);
     }
   }, [storedMirrorName, mirrorName]);
@@ -163,7 +163,7 @@ export const Landing: FC<LandingPropsExtended> = ({
   useEffect(() => {
     if (!isUserMode || landingViewTrackedRef.current) return;
     landingViewTrackedRef.current = true;
-    trackLandingView({
+    analyticsService.trackLanding({
       entry_variant: "default"
     });
   }, []);
@@ -172,8 +172,8 @@ export const Landing: FC<LandingPropsExtended> = ({
     if (startTrackedRef.current) return;
     startTrackedRef.current = true;
 
-    void recordFlowEvent("landing_clicked_start");
-    trackEvent(AnalyticsEvents.CTA_CLICK, {
+    void trackingService.recordFlow("landing_clicked_start");
+    analyticsService.track(AnalyticsEvents.CTA_CLICK, {
       source: "landing",
       cta_name: "start_journey",
       intent: mirrorName ? "mirror_named" : "default"
@@ -194,8 +194,8 @@ export const Landing: FC<LandingPropsExtended> = ({
 
   return (
     <div
-      className="relative min-h-screen w-full overflow-x-hidden"
-      style={{ background: "var(--ds-color-space-void)", fontFamily: "var(--font-sans)" }}
+      className="relative min-h-screen w-full overflow-x-hidden bg-[var(--page-bg)]"
+      style={{ fontFamily: "var(--font-sans)" }}
       dir="rtl"
     >
       {/* ════ NEW HERO SECTION ════ */}
@@ -316,7 +316,7 @@ export const Landing: FC<LandingPropsExtended> = ({
       </section>
 
       <div className="max-w-5xl mx-auto px-8 mt-8" aria-hidden="true">
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, var(--page-border), transparent)" }} />
       </div>
 
       <LandingFooter

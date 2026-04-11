@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import type { Nudge } from "@/services/nudgeEngine";
 import { getNextNudge, dismissNudge } from "@/services/nudgeEngine";
 import { detectContradictions, dismissMirrorInsight, type MirrorInsight } from "@/services/mirrorLogic";
 import { calculateEntropy } from "@/services/predictiveEngine";
 import { runtimeEnv } from "@/config/runtimeEnv";
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
-import { useGamificationState } from "@/state/gamificationState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 
 interface UseAppMindSignalsParams {
   storedGoalId: string | null | undefined;
@@ -26,6 +26,8 @@ interface UseAppMindSignalsParams {
   openChronicle?: () => void;
 }
 
+const noop = () => {};
+
 export function useAppMindSignals({
   storedGoalId,
   goalId,
@@ -35,9 +37,9 @@ export function useAppMindSignals({
   openOverlay,
   closeOverlay,
   openCocoonModal,
-  openPulseCheck = () => {},
-  openShareStats = () => {},
-  openChronicle = () => {}
+  openPulseCheck = noop,
+  openShareStats = noop,
+  openChronicle = noop
 }: UseAppMindSignalsParams) {
   const nodes = useMapState((s) => s.nodes);
   const lastPulse = usePulseState((s) => s.lastPulse);
@@ -149,12 +151,19 @@ export function useAppMindSignals({
     openOverlay("mirrorOverlay");
   }, [openOverlay]);
 
-  return {
+  return useMemo(() => ({
     activeNudge,
     activeMirrorInsight,
     handleNudgeToastClose,
     handleNudgeCtaAction,
     handleMirrorResolve,
     presentMirrorInsight
-  };
+  }), [
+    activeNudge,
+    activeMirrorInsight,
+    handleNudgeToastClose,
+    handleNudgeCtaAction,
+    handleMirrorResolve,
+    presentMirrorInsight
+  ]);
 }

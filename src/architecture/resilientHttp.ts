@@ -44,9 +44,13 @@ export async function fetchJsonWithResilience<T>(
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
       const res = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
-      if (res.ok) {
-        if (breaker) breaker.markSuccess();
-        return (await res.json()) as T;
+      if (res.ok || res.status === 429) {
+        if (breaker && res.ok) breaker.markSuccess();
+        try {
+          return (await res.json()) as T;
+        } catch {
+          return null;
+        }
       }
       // Auth failures are permanent — trip the breaker immediately and stop.
       if (isPermanentAuthFailure(res.status)) {

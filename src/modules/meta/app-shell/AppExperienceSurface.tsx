@@ -42,6 +42,7 @@ const AscensionRitual = lazy(() =>
 );
 const GraphEventToast = lazy(() => import("../../exploration/GraphEventToast").then((m) => ({ default: m.GraphEventToast })));
 const GlobalToast = lazy(() => import("../../growth/GlobalToast").then((m) => ({ default: m.GlobalToast })));
+const AtmosphereSensoryLayer = lazy(() => import("@/components/layout/AtmosphereSensoryLayer").then(m => ({ default: m.AtmosphereSensoryLayer })));
 
 const NotificationEnableButton = lazy(() => import("../NotificationEnableButton").then((m) => ({ default: m.NotificationEnableButton })));
 
@@ -177,7 +178,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
       <div
         className={`min-h-screen flex flex-col transition-colors relative isolate ${screen !== "landing" ? "overflow-visible" : ""}`}
         dir="rtl"
-        style={{ background: "var(--app-bg)" }}
+        style={{ background: "var(--page-bg)" }}
       >
         {isFeaturePreviewSession && (
           <button
@@ -190,6 +191,9 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
           </button>
         )}
         <div className="nebula-bg" aria-hidden="true" />
+        <Suspense fallback={null}>
+            <AtmosphereSensoryLayer />
+        </Suspense>
         <AppTransientChromeHost {...transientChromeProps} />
         <AppChromeShell {...chromeShellProps}>
           <main

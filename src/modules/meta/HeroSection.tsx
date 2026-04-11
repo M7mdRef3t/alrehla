@@ -299,9 +299,40 @@ const HERO_STYLES = `
     pointer-events: none;
   }
 
-  /* ── Mobile: hide map ── */
+  /* ── Layout ── */
+  .hero-content-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 7rem 2rem 6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4rem;
+  }
+
+  .map-area {
+    flex: 0 0 auto;
+    width: min(46vw, 520px);
+    position: relative;
+    padding-bottom: 56px;
+  }
+
+  /* ── Mobile Layout ── */
   @media (max-width: 1023px) {
-    .map-area { display: none; }
+    .hero-content-wrapper {
+      flex-direction: column;
+      gap: 3rem;
+      padding: 6rem 1.5rem 4rem;
+    }
+    
+    .map-area {
+      width: min(90vw, 400px);
+      margin: 0 auto;
+      padding-bottom: 24px;
+    }
   }
 `;
 
@@ -698,16 +729,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
         </div>
 
         {/* ── Content container ── */}
-        <div style={{
-          position: "relative", zIndex: 2,
-          width: "100%", maxWidth: 1380,
-          margin: "0 auto",
-          padding: "7rem 2rem 6rem",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "4rem",
-        }}>
+        <div className="hero-content-wrapper">
 
           {/* ════ LEFT COLUMN: TEXT CONTENT ════ */}
           <motion.div
@@ -865,12 +887,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
             initial={{ opacity: 0, scale: 0.88, filter: "blur(12px)" }}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             transition={{ duration: 1.1, ease, delay: 0.35 }}
-            style={{
-              flex: "0 0 auto",
-              width: "min(46vw, 520px)",
-              position: "relative",
-              paddingBottom: 56,
-            }}
           >
             <SovereignMap reduceMotion={reduceMotion} />
           </motion.div>

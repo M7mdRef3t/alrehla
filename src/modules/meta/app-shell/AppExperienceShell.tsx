@@ -3,13 +3,13 @@ import { syncSubscription } from "@/services/subscriptionManager";
 import { syncLiveSessionsFromSupabase } from "@/modules/dawayir-live/utils/sessionHistory";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { isPhaseOneUserFlow, isUserMode, isRevenueMode } from "@/config/appEnv";
-import { useAuthState } from "@/state/authState";
+import { useAuthState } from "@/domains/auth/store/auth.store";
 import {
   getHash,
   getSearch,
   pushUrl,
 } from "@/services/navigation";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import { trackingService } from "@/domains/journey";
 import { initLanguage } from "@/services/i18n";
 import { AppRuntimeControllers } from "./AppRuntimeControllers";
 import { AppShellRouteGate } from "./AppShellRouteGate";
@@ -28,7 +28,7 @@ import { useAppShellAccessState } from "./useAppShellAccessState";
 import { useAppShellBootstrapState } from "./useAppShellBootstrapState";
 import { useAppExperienceSurfaceState } from "./useAppExperienceSurfaceState";
 import { SanctuaryLockdownExperience } from "@/modules/action/SanctuaryLockdownExperience";
-import type { AppShellScreen } from "@/state/appShellNavigationState";
+import type { AppShellScreen } from "@/domains/dawayir/store/navigation.store";
 import { usePersonalizedBiometrics } from "@/hooks/usePersonalizedBiometrics";
 import { useWeatherFunnelBridge } from "@/hooks/useWeatherFunnelBridge";
 import { BoardingPassModal } from "../BoardingPassModal";
@@ -147,7 +147,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
 
     if (action === APP_LOGIN_BOOT_ACTION) {
       window.sessionStorage.removeItem(APP_BOOT_ACTION_KEY);
-      recordFlowEvent("auth_gate_opened", { meta: { mode: "login_landing_header" } });
+      trackingService.recordFlow("auth_gate_opened", { meta: { mode: "login_landing_header" } });
       setAuthIntent({ kind: "login", createdAt: Date.now() });
       setShowAuthModal(true);
     }
@@ -728,7 +728,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     setPulseCheckContext("regular");
     setShowPulseCheck(false);
     clearWelcome();
-    recordFlowEvent("auth_gate_opened", { meta: { mode: "login_header" } });
+    trackingService.recordFlow("auth_gate_opened", { meta: { mode: "login_header" } });
     queueLoginAuthIntent();
     setShowAuthModal(true);
   }, [

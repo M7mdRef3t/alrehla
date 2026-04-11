@@ -13,6 +13,7 @@ import { AnalyticsConsentBanner } from "@/modules/meta/AnalyticsConsentBanner";
 import { AnalyticsDiagnosticsOverlay } from "@/modules/meta/AnalyticsDiagnosticsOverlay";
 import { PlatformHeader } from "@/modules/meta/PlatformHeader";
 import type { PostAuthIntent } from "@/utils/postAuthIntent";
+import { hasRevenueAccess } from "@/services/revenueAccess";
 
 const App = dynamic(() => import("@/App"), { ssr: false });
 const Landing = dynamic(() => import("@/modules/meta/Landing").then((m) => m.Landing), { ssr: false }) as typeof import("@/modules/meta/Landing").Landing;
@@ -161,6 +162,11 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
   }, [lockFullAppMode]);
 
   const startRecoveryFromLanding = useCallback(() => {
+    if (!hasRevenueAccess()) {
+      window.location.href = "/activation?blocked=map&source=landing";
+      return;
+    }
+
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
     }
@@ -173,6 +179,11 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
   }, []);
 
   const openAppScreenFromLanding = useCallback((screen: string) => {
+    if (!hasRevenueAccess()) {
+      window.location.href = "/activation?blocked=screen&source=landing";
+      return;
+    }
+
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, `${APP_SCREEN_BOOT_ACTION_PREFIX}${screen}`);
     }
@@ -223,6 +234,11 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
       const search = new URLSearchParams(window.location.search);
       const bootActionParam = search.get("boot_action");
       if (bootActionParam === "start_recovery") {
+        if (!hasRevenueAccess()) {
+          window.location.replace("/activation?blocked=boot_action&source=url");
+          return;
+        }
+
         window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
         setLockFullAppMode(true);
         setShouldLoadFullApp(true);

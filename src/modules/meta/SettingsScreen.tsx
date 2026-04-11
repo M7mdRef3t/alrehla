@@ -18,11 +18,11 @@ import { loadUserMemory } from "@/services/userMemory";
 import { getLanguage, LANGUAGE_OPTIONS } from "@/services/i18n";
 import { getCulturalContext, saveCulturalContext, PROFILES, type CulturalContext } from "@/services/culturalAdapter";
 import { syncSubscription } from "@/services/subscriptionManager";
-import { useJourneyState } from "@/state/journeyState";
+import { useJourneyProgress } from "@/domains/journey";
 import { resolveDisplayName } from "@/services/userMemory";
 import { soundManager } from "@/services/soundManager";
 import { Volume2, VolumeX } from "lucide-react";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 
 type SettingsSection = "main" | "language" | "b2b" | "referral" | "subscription" | "culture" | "privacy" | "appearance";
@@ -64,7 +64,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
     const streak = loadStreak();
   const memory = loadUserMemory();
   const displayName = resolveDisplayName();
-    const { isSoundEnabled, setSoundEnabled, isSensoryDepthEnabled, setSensoryDepthEnabled } = useJourneyState();
+    const { isSoundEnabled, setSoundEnabled, isSensoryDepthEnabled, setSensoryDepthEnabled } = useJourneyProgress();
 
     useEffect(() => {
         soundManager.toggle(isSoundEnabled ?? true);

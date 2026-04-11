@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { ar } from "date-fns/locale";
-import { useAdminState } from "@/state/adminState";
-import { getAuthToken } from "@/state/authState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import { getAuthToken } from "@/domains/auth/store/auth.store";
 import { buildMarketingEmail } from "../../../../lib/marketing/emailTemplate";
 
 function getBearerToken(): string {

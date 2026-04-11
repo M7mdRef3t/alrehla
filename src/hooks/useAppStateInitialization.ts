@@ -1,6 +1,6 @@
 import { useMemo, useEffect } from "react";
-import { useAdminState } from "@/state/adminState";
-import { useAuthState, getEffectiveRoleFromState } from "@/state/authState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import { useAuthState, getEffectiveRoleFromState } from "@/domains/auth/store/auth.store";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "@/utils/featureFlags";
 import { isUserMode } from "@/config/appEnv";
 import { runtimeEnv } from "@/config/runtimeEnv";

@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { useMapState } from '@/state/mapState';
+import { useMapState } from '@/domains/dawayir/store/map.store';
 import { trackEvent } from '@/services/analytics';
 import { getWindowOrNull } from '@/services/clientRuntime';
 
