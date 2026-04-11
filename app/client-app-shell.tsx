@@ -22,6 +22,7 @@ const GoogleAuthModal = dynamic(() => import("@/modules/exploration/GoogleAuthMo
 }) as typeof import("@/modules/exploration/GoogleAuthModal").GoogleAuthModal;
 const Analytics = dynamic(() => import("@vercel/analytics/react").then((m) => m.Analytics), { ssr: false });
 const SpeedInsights = dynamic(() => import("@vercel/speed-insights/react").then((m) => m.SpeedInsights), { ssr: false });
+const PuckLandingAdapter = dynamic(() => import("./PuckLandingAdapter").then((m) => m.PuckLandingAdapter), { ssr: false });
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
@@ -117,9 +118,10 @@ function registerServiceWorker() {
 
 interface ClientAppShellProps {
   onBeforeInit?: () => void;
+  puckData?: any;
 }
 
-export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
+export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) {
   const [mounted, setMounted] = useState(false);
   const [shouldLoadFullApp, setShouldLoadFullApp] = useState(true);
   const [lockFullAppMode, setLockFullAppMode] = useState(false);
@@ -286,9 +288,13 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
               onNavigate={handleLandingNavigate}
             />
             <Suspense fallback={<AwarenessSkeleton />}>
-              <Landing
-                onStartJourney={startRecoveryFromLanding}
-              />
+              {puckData ? (
+                <PuckLandingAdapter data={puckData} />
+              ) : (
+                <Landing
+                  onStartJourney={startRecoveryFromLanding}
+                />
+              )}
             </Suspense>
             {landingAuthIntent && (
               <GoogleAuthModal

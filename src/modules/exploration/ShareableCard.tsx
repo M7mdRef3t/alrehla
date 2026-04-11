@@ -36,12 +36,12 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ title, description
     };
 
     const handleShare = async () => {
-        const shareText = `أنا استخدم تطبيق #دوائر لتحسين وعيي الذاتي وعلاقاتي.\n\n${title}\n${description}\n\nجرب التطبيق الآن: https://dawayir.app`;
+        const shareText = `رحلتي في #دوائر — وعي أعمق وعلاقات أوضح.\n\n${title}\n${description}\n\nابدأ رحلتك: https://alrehla.app`;
 
         try {
             if (navigator.share) {
                 await navigator.share({
-                    title: 'انتصار تكتيكي في دوائر',
+                    title: 'محطة في رحلتي — دوائر',
                     text: shareText,
                     url: 'https://dawayir.app',
                 });

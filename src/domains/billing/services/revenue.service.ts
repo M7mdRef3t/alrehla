@@ -31,13 +31,12 @@ class RevenueService {
         .select("status, metadata")
         .in("status", ["activated", "converted", "proof_received"]);
 
-      let mrr = 0;
+      let totalRevenueEgp = 0;
       const activeSubs = customers?.length ?? 0;
 
       (customers as any[])?.forEach((row) => {
-        const market = row.metadata?.market || "Unknown";
-        const base = row.metadata?.amount || 25.5;
-        mrr += this.calculateTargetPrice(market, base);
+        const amt = typeof row.metadata?.amount === 'number' ? row.metadata.amount : 0;
+        totalRevenueEgp += amt;
       });
 
       const { data: allLeads } = await supabase
@@ -55,10 +54,12 @@ class RevenueService {
       });
 
       return {
-        mrr, arr: mrr * 12, totalRevenue: mrr * 5,
+        mrr: totalRevenueEgp, // Treated as accumulated real EGP for backwards compatibility
+        arr: totalRevenueEgp * 12, 
+        totalRevenue: totalRevenueEgp,
         activeSubscriptions: activeSubs,
         churnRate: activeSubs > 20 ? 3.2 : 0,
-        arpu: activeSubs > 0 ? Number((mrr / activeSubs).toFixed(2)) : 0,
+        arpu: activeSubs > 0 ? Number((totalRevenueEgp / activeSubs).toFixed(2)) : 0,
         regionalResonance: resonanceMap,
       };
     } catch (e) {
@@ -82,9 +83,9 @@ class RevenueService {
       return (data || []).map((lead) => ({
         id: lead.id,
         gateway: this.mapGateway(lead.source_type),
-        amount: lead.metadata?.amount || 25,
-        currency: lead.metadata?.currency || "USD",
-        usdEquivalent: lead.metadata?.amount || 25,
+        amount: lead.metadata?.amount || 0,
+        currency: lead.metadata?.currency || "EGP",
+        usdEquivalent: lead.metadata?.amount || 0,
         status: "confirmed" as const,
         timestamp: lead.created_at,
         market: lead.metadata?.market || "Unknown",

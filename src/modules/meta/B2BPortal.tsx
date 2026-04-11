@@ -307,7 +307,7 @@ export const B2BPortal: FC = () => {
                                 whileHover={coachName.trim() ? { scale: 1.02 } : {}}
                                 whileTap={coachName.trim() ? { scale: 0.98 } : {}}
                             >
-                                تسجيل كمعالج في المنصة
+                                تسجيل كمعالج في الرحلة
                             </motion.button>
                         </div>
                     </motion.div>

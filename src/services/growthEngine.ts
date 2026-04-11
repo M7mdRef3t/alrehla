@@ -2,6 +2,7 @@ import { logger } from "@/services/logger";
 import { adminApi } from "./adminApi";
 import { useToastState } from "@/domains/dawayir/store/toast.store";
 import { revenueEngine, type RevenueMetricSnapshot } from "./revenueEngine";
+import { MarketingGatewayService } from "./marketingGatewayService";
 
 export interface GrowthMetrics {
   totalSpend: number;
@@ -26,8 +27,10 @@ export interface DiffusionMetrics {
       pulse: number;
       status: "open" | "locked";
       oracleVerdict: string;
+      auto_ignition_enabled?: boolean;
       spend?: number;
       roi?: number;
+      cpl?: number;
     }
   >;
 }
@@ -131,19 +134,32 @@ class SovereignGrowthEngine {
         { name: "Global Pulse", count: Math.ceil(recentLeadsCount * 0.08), resonance: 0.82 }
       ];
 
+      // Get Dynamic Configs
+      const dbGateways = await MarketingGatewayService.getGateways();
+
       const gatewayHealth = Object.fromEntries(
         Object.entries(gateways).map(([key, gateway]) => {
+          const dbConfig = dbGateways.find(g => g.id === key);
           const resonance = gateway.count > 0 ? gateway.acquisitions / gateway.count : 0;
-          const allocatedSpend = totalSpend / Math.max(Object.keys(gateways).length, 1);
+          
+          // Use actual_spend if available, otherwise fallback to energy-based simulation
+          const energy = dbConfig?.energy_level || 50;
+          const realSpend = dbConfig?.actual_spend || 0;
+          const allocatedSpend = realSpend > 0 ? realSpend : (totalSpend * (energy / 50)) / Math.max(Object.keys(gateways).length, 1);
+          
           return [
             key,
             {
               resonance,
               pulse: Math.min(100, (gateway.count / 10) * 100),
-              status: "open" as const,
-              oracleVerdict: this.generateOracleVerdict(key, resonance),
+              status: dbConfig?.status || "open",
+              energyLevel: energy,
+              actualSpend: realSpend,
+              auto_ignition_enabled: dbConfig?.auto_ignition_enabled || false,
+              oracleVerdict: dbConfig?.oracle_note || this.generateOracleVerdict(key, resonance),
               spend: allocatedSpend,
               roi: allocatedSpend > 0 ? ((gateway.acquisitions * (revenueSnapshot.arpu || 100) - allocatedSpend) / allocatedSpend) * 100 : 0,
+              cpl: gateway.count > 0 ? allocatedSpend / gateway.count : 0,
             },
           ];
         })

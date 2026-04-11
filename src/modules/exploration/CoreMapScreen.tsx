@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { MapCanvas } from "../map/MapCanvas";
 import { FamilyTreeView } from "./FamilyTreeView";
 import { ForestView } from "./ForestView";
@@ -385,6 +385,36 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     return Math.floor((Date.now() - sessionStart) / (60 * 1000));
   }, []);
 
+  // ─── Data-Driven Cinematic Engine (Parallax & Depth) ───
+  const dataWeight = useMemo(() => Math.max(1, nodes.length * 0.12), [nodes.length]);
+  
+  const globalMouseX = useMotionValue(0);
+  const globalMouseY = useMotionValue(0);
+
+  const handleGlobalMouseMove = useCallback((e: React.MouseEvent) => {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    globalMouseX.set((e.clientX - cx) / (20 * dataWeight));
+    globalMouseY.set((e.clientY - cy) / (20 * dataWeight));
+  }, [globalMouseX, globalMouseY, dataWeight]);
+
+  const gridX = useSpring(useTransform(globalMouseX, x => -x * 1.5), { stiffness: 45, damping: 20 });
+  const gridY = useSpring(useTransform(globalMouseY, y => -y * 1.5), { stiffness: 45, damping: 20 });
+  const nebulaX = useSpring(useTransform(globalMouseX, x => -x * 0.3), { stiffness: 10, damping: 40 });
+  const nebulaY = useSpring(useTransform(globalMouseY, y => -y * 0.3), { stiffness: 10, damping: 40 });
+
+  const gridRotateX = useMemo(() => {
+    const angle = 45 + Math.min((tei / 100) * 35, 35);
+    return `${angle}deg`;
+  }, [tei]);
+
+  const nebulaPalette = useMemo(() => {
+    if (pulseMode === "angry") return { c1: "rgba(225,29,72,0.15)", c2: "rgba(159,18,57,0.1)", c3: "rgba(244,63,94,0.05)" };
+    if (pulseMode === "low") return { c1: "rgba(71,85,105,0.15)", c2: "rgba(30,41,59,0.1)", c3: "rgba(148,163,184,0.05)" };
+    return { c1: "rgba(20,184,166,0.08)", c2: "rgba(79,70,229,0.05)", c3: "rgba(245,158,11,0.04)" };
+  }, [pulseMode]);
+  // ────────────────────────────────────────────────────────
+
   const adaptiveLayout = useMemo(
     () =>
       adaptiveLayoutEngine.calculateLayout({
@@ -562,39 +592,32 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       className="flex-1 w-full h-full relative flex flex-col pb-0 atmospheric-void overflow-hidden"
       aria-label="Relationship Radar Map"
       onDrop={handleMainDrop}
+      onMouseMove={handleGlobalMouseMove}
       initial="hidden"
       animate="visible"
     >
-      {/* ── Cinematic ambient background ── */}
+      {/* ── Cinematic Data-Driven Ambient Background ── */}
       <div aria-hidden className="fixed inset-0 pointer-events-none bg-[#030712] overflow-hidden" style={{ zIndex: -1 }}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-900/15 via-[#030712] to-[#030712]" />
         
-        <div style={{
-          position: "absolute", width: "150vw", height: "150vh", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(13, 148, 136, 0.06) 0%, transparent 60%)",
-          top: "-50%", right: "-20%",
-          animation: "av-orb-drift 60s ease-in-out infinite alternate"
-        }} />
-        <div style={{
-          position: "absolute", width: "120vw", height: "120vh", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(234, 179, 8, 0.03) 0%, transparent 60%)",
-          bottom: "-30%", left: "-30%",
-          animation: "av-orb-drift 75s ease-in-out infinite alternate-reverse"
-        }} />
-        <div style={{
-          position: "absolute", width: "100vw", height: "100vh", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(225, 29, 72, 0.03) 0%, transparent 60%)",
-          top: "20%", left: "10%",
-          animation: "av-orb-drift 50s ease-in-out infinite alternate"
-        }} />
-        <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)",
-          backgroundSize: "50px 50px",
-          WebkitMaskImage: "radial-gradient(ellipse 100% 100% at 50% 50%, black 10%, transparent 80%)",
-          maskImage: "radial-gradient(ellipse 100% 100% at 50% 50%, black 10%, transparent 80%)",
-          opacity: 0.25
-        }} />
+        {/* Dynamic Nebula Layer */}
+        <motion.div style={{ x: nebulaX, y: nebulaY, width: "100%", height: "100%", position: "absolute" }}>
+          <div 
+            className="map-nebula" 
+            style={{ 
+              "--nebula-color-1": nebulaPalette.c1,
+              "--nebula-color-2": nebulaPalette.c2,
+              "--nebula-color-3": nebulaPalette.c3,
+            } as React.CSSProperties} 
+          />
+        </motion.div>
+
+        {/* Dynamic 3D Grid Layer */}
+        <motion.div style={{ x: gridX, y: gridY, width: "100%", height: "100%", position: "absolute" }}>
+          <div className="map-grid-wrapper">
+            <div className="map-grid" style={{ transform: `rotateX(${gridRotateX}) scale(1.5)` }} />
+          </div>
+        </motion.div>
       </div>
       <SovereignBroadcastOverlay message={sovereignMessage} />
       

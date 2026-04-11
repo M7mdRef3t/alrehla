@@ -34,6 +34,11 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
     const nodes = useMapState((s) => s.nodes);
     const user = useAuthState((s) => s.user);
     const journeyPaths = useAdminState((s) => s.journeyPaths);
+    const [completedSteps, setCompletedSteps] = React.useState<Record<string, boolean>>({});
+
+    const toggleStep = (stepId: string) => {
+        setCompletedSteps(prev => ({ ...prev, [stepId]: !prev[stepId] }));
+    };
 
     const activeNodes = nodes.filter(n => !n.isNodeArchived);
     const energyLevel = lastPulse?.energy ?? 5;
@@ -166,14 +171,19 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
 
                         {/* Floating Interaction Labels */}
                         <motion.button
+                            initial={energyLevel < 4 ? { scale: 0.8, opacity: 0 } : false}
+                            animate={energyLevel < 4 ? { scale: [1, 1.1, 1], opacity: 1, boxShadow: ["0 0 0px rgba(45,212,191,0)", "0 0 20px rgba(45,212,191,0.5)", "0 0 0px rgba(45,212,191,0)"] } : {}}
+                            transition={energyLevel < 4 ? { duration: 2, repeat: Infinity } : {}}
                             whileHover={{ scale: 1.1, x: 10 }}
                             onClick={() => sanctuaryBreathingEnabled && onOpenBreathing()}
                             hidden={!sanctuaryBreathingEnabled}
                             aria-hidden={!sanctuaryBreathingEnabled}
-                            className="absolute -top-10 -right-10 ds-card px-4 py-2 rounded-full border-teal-500/30 flex items-center gap-2 group transition-all hover:bg-teal-500/10"
+                            className={`absolute ${energyLevel < 4 ? "-top-12 -right-5 ring-2 ring-teal-500/50 bg-teal-500/20" : "-top-10 -right-10 hover:bg-teal-500/10"} ds-card px-4 py-2 rounded-full border-teal-500/30 flex items-center gap-2 group transition-all cursor-pointer`}
                         >
                             <Wind className="w-4 h-4 text-[var(--consciousness-primary)]" />
-                            <span className="text-[10px] font-black uppercase text-[var(--ds-theme-text-primary)]">خذ نفساً</span>
+                            <span className="text-[10px] font-black uppercase text-[var(--ds-theme-text-primary)]">
+                                {energyLevel < 4 ? "التقط أنفاسك الآن" : "خذ نفساً"}
+                            </span>
                         </motion.button>
                     </div>
 
@@ -202,29 +212,33 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                             <p className="text-sm leading-7 text-slate-400">{sanctuaryPath.description}</p>
 
                             <div className="mt-5 grid gap-3">
-                                {sanctuarySteps.map((step, index) => (
-                                    <div
-                                        key={step.id}
-                                        className={`rounded-[1.25rem] border p-4 ${step.screen === "sanctuary" ? "border-cyan-500/30 bg-cyan-500/10" : "border-white/5 bg-white/[0.02]"}`}
-                                    >
-                                        <div className="flex items-center justify-between gap-3">
-                                            <div className="flex items-center gap-3">
-                                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-black text-white">
-                                                    {index + 1}
-                                                </span>
-                                                <div>
-                                                    <div className="text-sm font-black text-white">{step.title}</div>
-                                                    <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{step.kind} / {step.screen}</div>
+                                {sanctuarySteps.map((step, index) => {
+                                    const isDone = completedSteps[step.id];
+                                    return (
+                                        <div
+                                            key={step.id}
+                                            onClick={() => toggleStep(step.id)}
+                                            className={`rounded-[1.25rem] border p-4 cursor-pointer transition-all duration-300 group ${isDone ? "border-emerald-500/30 bg-emerald-500/5 opacity-60 hover:opacity-100" : step.screen === "sanctuary" ? "border-cyan-500/30 bg-cyan-500/10" : "border-white/5 bg-white/[0.02] hover:bg-white/5"}`}
+                                        >
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${isDone ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-white"} text-[11px] font-black`}>
+                                                        {isDone ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg> : (index + 1)}
+                                                    </div>
+                                                    <div>
+                                                        <div className={`text-sm font-black transition-colors ${isDone ? "text-emerald-300 line-through decoration-emerald-500/50" : "text-white group-hover:text-cyan-100"}`}>{step.title}</div>
+                                                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{step.kind} / {step.screen}</div>
+                                                    </div>
                                                 </div>
+                                                {step.screen === "sanctuary" && !isDone && (
+                                                    <span className="rounded-full bg-cyan-500/15 px-2 py-1 text-[10px] font-black text-cyan-300">أنت هنا</span>
+                                                )}
                                             </div>
-                                            {step.screen === "sanctuary" && (
-                                                <span className="rounded-full bg-cyan-500/15 px-2 py-1 text-[10px] font-black text-cyan-300">أنت هنا</span>
-                                            )}
+                                            <p className={`mt-3 text-sm leading-6 transition-colors ${isDone ? "text-slate-500" : "text-slate-400"}`}>{step.description}</p>
+                                            {step.note && <p className="mt-2 text-xs leading-6 text-slate-500">{step.note}</p>}
                                         </div>
-                                        <p className="mt-3 text-sm leading-6 text-slate-400">{step.description}</p>
-                                        {step.note && <p className="mt-2 text-xs leading-6 text-slate-500">{step.note}</p>}
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -242,18 +256,18 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                         onClick={() => onNavigate(sanctuaryPath?.primaryActionScreen || "map")}
                         hidden={!primaryActionVisible}
                         aria-hidden={!primaryActionVisible}
-                        className="group relative w-full p-5 rounded-[2rem] glass-card border-white/5 hover:border-teal-500/30 transition-all overflow-hidden text-right"
+                        className="group relative w-full p-5 rounded-[2rem] glass-card border-teal-500/30 bg-teal-500/5 hover:bg-teal-500/10 hover:border-teal-400/50 hover:shadow-[0_0_30px_rgba(45,212,191,0.15)] hover:scale-[1.02] transition-all overflow-hidden text-right"
                     >
-                        <div className="absolute top-0 left-0 w-1 h-full bg-teal-500 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-teal-500 group-hover:shadow-[0_0_15px_var(--consciousness-primary)] transition-all duration-300" />
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-teal-500/10 transition-colors">
-                                <MapIcon className="w-6 h-6 text-slate-400 group-hover:text-teal-400 transition-colors" />
+                            <div className="w-12 h-12 rounded-2xl bg-teal-500/10 flex items-center justify-center group-hover:bg-teal-500/20 transition-colors shadow-inner">
+                                <MapIcon className="w-6 h-6 text-teal-400 transition-colors" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-black text-white">{sanctuaryPath?.primaryActionLabel || "خريطة العلاقات"}</h4>
-                                <p className="text-[10px] text-slate-500 font-medium">المرصد الرقمي لوعيك</p>
+                                <h4 className="text-sm font-black text-white group-hover:text-teal-50 transition-colors">{sanctuaryPath?.primaryActionLabel || "خريطة العلاقات"}</h4>
+                                <p className="text-[10px] text-teal-100/60 font-medium">المرصد الرقمي لوعيك</p>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-slate-700 mr-auto group-hover:text-teal-500 group-hover:-translate-x-1 transition-all" />
+                            <ChevronRight className="w-4 h-4 text-teal-500/50 mr-auto group-hover:text-teal-400 group-hover:-translate-x-2 group-hover:scale-125 transition-all" />
                         </div>
                     </button>
 
@@ -261,15 +275,15 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                         onClick={() => onNavigate(sanctuaryPath?.secondaryActionScreen || "armory")}
                         hidden={!secondaryActionVisible}
                         aria-hidden={!secondaryActionVisible}
-                        className="group relative w-full p-5 rounded-[2rem] glass-card border-white/5 hover:border-rose-500/30 transition-all overflow-hidden text-right"
+                        className="group relative w-full p-5 rounded-[2rem] bg-white/[0.01] border-white/5 hover:bg-rose-500/5 hover:border-rose-500/30 transition-all overflow-hidden text-right opacity-80 hover:opacity-100"
                     >
                         <div className="absolute top-0 left-0 w-1 h-full bg-rose-500 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-rose-500/10 transition-colors">
-                                <Crosshair className="w-6 h-6 text-slate-400 group-hover:text-rose-400 transition-colors" />
+                                <Crosshair className="w-6 h-6 text-slate-500 group-hover:text-rose-400 transition-colors" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-black text-white">{sanctuaryPath?.secondaryActionLabel || "الترسانة والصد"}</h4>
+                                <h4 className="text-sm font-black text-slate-300 group-hover:text-white">{sanctuaryPath?.secondaryActionLabel || "الترسانة والصد"}</h4>
                                 <p className="text-[10px] text-slate-500 font-medium">بروتوكولات الحماية الفورية</p>
                             </div>
                             <ChevronRight className="w-4 h-4 text-slate-700 mr-auto group-hover:text-rose-500 group-hover:-translate-x-1 transition-all" />
@@ -295,18 +309,23 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                         </div>
                     </button>
 
-                    <div className="mt-4 p-5 rounded-[2rem] bg-white/[0.02] border border-white/5 flex flex-col gap-3 relative overflow-hidden">
-                        <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-amber-500/5 blur-3xl" />
+                    <div className="mt-4 p-5 rounded-[2rem] bg-white/[0.02] border border-white/5 flex flex-col gap-3 relative overflow-hidden group">
+                        <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-amber-500/10 blur-3xl group-hover:bg-amber-500/20 transition-colors" />
                         <div className="flex items-center gap-2 mb-1">
-                            <Brain className="w-3.5 h-3.5 text-amber-500" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-amber-500/70">Oracle Broadcast</span>
+                            <Brain className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                            <span className="text-[9px] font-black uppercase tracking-widest text-amber-500/90">Oracle Broadcast</span>
                         </div>
-                        <p className="text-[11px] font-medium text-slate-400 leading-relaxed italic" dir="rtl">
-                            "النهارده طاقتاك مستقرة.. ده أفضل وقت لتصفية العلاقات اللي في الدائرة الصفراء."
+                        <p className="text-[11px] font-medium text-slate-300 leading-relaxed italic" dir="rtl">
+                            {energyLevel <= 3 
+                                ? "استنزاف ملحوظ! طاقتك الحرجة تتطلب التوقف الفوري.. خدلك نفس عميق واشحن درعك في الترسانة بدل أي احتكاك دلوقتي."
+                                : energyLevel <= 6 
+                                    ? "طاقتك في حالة حذر.. استخدم الوقت ده لترتيب الأفكار المكركبة على خريطة العلاقات بدون صدام مباشر." 
+                                    : "الطاقة في أوجها 🔥.. ده السلاح الأقوى دلوقتي لإنهاء التردد واتخاذ قرارات تقطع حدود صحية مع الدائرة الصفرا."
+                            }
                         </p>
-                        <div className="flex items-center gap-1.5 opacity-40">
-                             <Lock className="w-2.5 h-2.5" />
-                             <span className="text-[8px] font-bold uppercase tracking-tighter">End-to-End Encrypted Sanctuary</span>
+                        <div className="flex items-center gap-1.5 opacity-60">
+                             <Lock className="w-2.5 h-2.5 text-amber-500/50" />
+                             <span className="text-[8px] font-bold uppercase tracking-tighter text-slate-400">Generative Encrypted Insight</span>
                         </div>
                     </div>
                 </motion.div>

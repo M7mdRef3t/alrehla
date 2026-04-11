@@ -14,6 +14,7 @@ import type { DailyQuestion } from "@/data/dailyQuestions";
 import { useEmergencyState } from "@/domains/admin/store/emergency.store";
 import { useToastState } from "@/domains/dawayir/store/toast.store";
 import { supabase } from "@/services/supabaseClient";
+import { isAlignedWithPrinciples } from "./CORE_PRINCIPLES";
 
 
 
@@ -64,6 +65,9 @@ export type DecisionType =
   | "sovereign_intervention_deployed"
   | "tactical_preset_deployed"
   | "market_ignition_campaign"
+  | "ignite_market"
+  | "lock_gateway"
+  | "scale_energy"
 
   // ── تقنية ──
   | "optimize_performance"
@@ -134,6 +138,9 @@ export const DECISION_RULES: Record<DecisionType, AutonomyLevel> = {
   sovereign_intervention_deployed: "REQUIRES_APPROVAL", // الافتراضي للتدخلات عالية التأثير
   tactical_preset_deployed: "AUTONOMOUS_WITH_LOG",     // الأوامر النصية المجهزة مسبقا يتم تسجيلها
   market_ignition_campaign: "REQUIRES_APPROVAL",       // الحملات الإعلانية الجديدة تحتاج موافقة
+  ignite_market: "AUTONOMOUS_WITH_LOG",                // الأوراكل يستطيع إطلاق شرارة للسوق 
+  lock_gateway: "AUTONOMOUS_WITH_LOG",                 // إغلاق بوابة فاشلة 
+  scale_energy: "AUTONOMOUS_WITH_LOG",                 // تقليل الميزانيات آلياً لتقليل الخسائر
 
   // ── تقنية ──
   optimize_performance: "AUTONOMOUS_WITH_LOG",
@@ -181,9 +188,11 @@ export class DecisionEngine {
   private async loadInitialDecisions() {
     try {
       // Load local first for fast UI
-      const local = JSON.parse(localStorage.getItem("dawayir-ai-decisions") || "[]");
-      if (local.length > 0) {
-        this.decisionLog = local;
+      if (typeof window !== 'undefined') {
+        const local = JSON.parse(localStorage.getItem("dawayir-ai-decisions") || "[]");
+        if (local.length > 0) {
+          this.decisionLog = local;
+        }
       }
       this.isLoaded = true;
 
@@ -369,7 +378,9 @@ export class DecisionEngine {
 
   private async saveLogToStorage(syncCloud: boolean = true) {
     try {
-      localStorage.setItem("dawayir-ai-decisions", JSON.stringify(this.decisionLog));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("dawayir-ai-decisions", JSON.stringify(this.decisionLog));
+      }
     } catch {
       // Storage unavailable or quota exceeded
     }
@@ -437,11 +448,24 @@ export class DecisionEngine {
    * تحقق من جودة المحتوى المُولّد
    */
   private async validateContentQuality(
-    _decision: Omit<AIDecision, "timestamp">
+    decision: Omit<AIDecision, "timestamp">
   ): Promise<{ passed: boolean; reason?: string }> {
-    // TODO: استخدم isAlignedWithPrinciples() من CORE_PRINCIPLES.ts
+    // 1. استخراج النص المُولّد من الـ payload
+    const p = decision.payload as { text?: string; greeting?: string; missionDescription?: string } | null;
+    const contentToTest = p?.text || (p?.greeting ? `${p.greeting} ${p.missionDescription}` : "");
 
-    // مؤقتاً: نقبل كل حاجة
+    if (!contentToTest) return { passed: true }; // لا يوجد نص للفحص
+
+    // 2. التحقق من المبادئ
+    const check = isAlignedWithPrinciples(contentToTest);
+    
+    if (!check.aligned) {
+      return { 
+        passed: false, 
+        reason: `مخالفة للمبادئ: ${check.violations.join(", ")}` 
+      };
+    }
+
     return { passed: true };
   }
 }

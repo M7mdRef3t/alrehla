@@ -27,9 +27,9 @@ export default function NotFound() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold text-white">تاهت الرحلة؟</h2>
+          <h2 className="text-3xl font-bold text-white">يبدو إنك خرجت عن المسار</h2>
           <p className="text-slate-400 text-lg">
-            الصفحة اللي بتدور عليها مش موجودة أو اتنقلت لمسار تاني.
+            المحطة دي مش موجودة في رحلتك.. يمكن اتنقلت لمسار تاني أو لسه ما اتفتحتش.
           </p>
         </div>
 
@@ -40,7 +40,7 @@ export default function NotFound() {
           >
             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
             <Home className="w-5 h-5" />
-            <span>الرجوع للرئيسية</span>
+            <span>ارجع لرحلتك</span>
           </a>
           
           <button
@@ -54,7 +54,7 @@ export default function NotFound() {
       </motion.div>
 
       {/* Footer Branding */}
-      <div className="absolute bottom-10 text-slate-600 text-sm font-medium tracking-widest uppercase">
+      <div className="absolute bottom-10 text-slate-600 text-sm font-medium tracking-widest uppercase" dir="ltr">
         Alrehla Platform • 2026
       </div>
     </div>

@@ -11,7 +11,8 @@ import {
   Workflow,
   Activity,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Shield
 } from "lucide-react";
 import {
   useAdminState,
@@ -210,6 +211,7 @@ export function JourneyPathsPanel() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationResults, setSimulationResults] = useState<CognitiveSimulationResult[] | null>(null);
   const [activeTab, setActiveTab] = useState<"linear" | "constellation">("linear");
+  const [activePanelTab, setActivePanelTab] = useState<"design" | "analytics" | "ops">("design");
 
   const handleRunAudit = async () => {
     if (!selectedPath) return;
@@ -373,7 +375,7 @@ export function JourneyPathsPanel() {
       const results = await simulateJourneyPath(selectedPath.steps);
       setSimulationResults(results);
       appendOperationLog({
-        action: "audit-passed" as any, 
+        action: "checklist-toggled" as any, 
         details: "تم تنفيذ المحاكاة الشعورية بنجاح."
       });
     } catch (err) {
@@ -536,16 +538,11 @@ export function JourneyPathsPanel() {
 
   const formatWeatherStageLabel = (stage: "questions" | "analyzing" | "result" | "complete" | null) => {
     switch (stage) {
-      case "questions":
-        return "الأسئلة";
-      case "analyzing":
-        return "التحليل";
-      case "result":
-        return "شاشة النتيجة";
-      case "complete":
-        return "الخروج المباشر";
-      default:
-        return "غير محدد";
+      case "questions": return "الأسئلة";
+      case "analyzing": return "التحليل";
+      case "result": return "شاشة النتيجة";
+      case "complete": return "الخروج المباشر";
+      default: return "غير محدد";
     }
   };
 
@@ -800,11 +797,7 @@ export function JourneyPathsPanel() {
       const completion = getChecklistCompletion(doc.id);
       const checklist = getDocChecklistItems(doc.id);
       const status =
-        completion.completed === 0
-          ? "غير مراجع"
-          : completion.completed === completion.total
-            ? "مكتمل"
-            : "قيد المراجعة";
+        completion.completed === 0 ? "غير مراجع" : completion.completed === completion.total ? "مكتمل" : "قيد المراجعة";
 
       const items = checklist
         .map((item) => `- [${isChecklistItemDone(doc.id, item) ? "x" : " "}] ${item}`)
@@ -851,10 +844,7 @@ export function JourneyPathsPanel() {
   const getChecklistCompletion = (docId: string) => {
     const items = getDocChecklistItems(docId);
     const completed = items.filter((item) => isChecklistItemDone(docId, item)).length;
-    return {
-      completed,
-      total: items.length
-    };
+    return { completed, total: items.length };
   };
 
   const getDocWidgetMeta = (docId: string) => {
@@ -986,72 +976,43 @@ export function JourneyPathsPanel() {
     const docsWithProgress = pathOpsDocs.map((doc) => {
       const completion = getChecklistCompletion(doc.id);
       const status: Exclude<OpsDocReviewFilter, "all"> =
-        completion.completed === 0
-          ? "not-started"
-          : completion.completed === completion.total
-            ? "completed"
-            : "in-progress";
+        completion.completed === 0 ? "not-started" : completion.completed === completion.total ? "completed" : "in-progress";
 
-      return {
-        doc,
-        completion,
-        status
-      };
+      return { doc, completion, status };
     });
 
-    const filtered =
-      opsDocReviewFilter === "all"
-        ? docsWithProgress
-        : docsWithProgress.filter((item) => item.status === opsDocReviewFilter);
+    const filtered = opsDocReviewFilter === "all" ? docsWithProgress : docsWithProgress.filter((item) => item.status === opsDocReviewFilter);
 
     return filtered.sort((a, b) => {
-      const rank = {
-        "not-started": 0,
-        "in-progress": 1,
-        "completed": 2
-      } as const;
-
+      const rank = { "not-started": 0, "in-progress": 1, "completed": 2 } as const;
       return rank[a.status] - rank[b.status];
     });
   }, [pathOpsDocs, opsDocReviewFilter, docChecklistStore]);
 
   const formatLiveStageLabel = (stage: "setup" | "live" | "complete" | "return" | null) => {
     switch (stage) {
-      case "setup":
-        return "التهيئة";
-      case "live":
-        return "الجلسة الحية";
-      case "complete":
-        return "شاشة الإكمال";
-      case "return":
-        return "العودة النهائية";
-      default:
-        return "غير محدد";
+      case "setup": return "التهيئة";
+      case "live": return "الجلسة الحية";
+      case "complete": return "شاشة الإكمال";
+      case "return": return "العودة النهائية";
+      default: return "غير محدد";
     }
   };
 
   const formatMarayaStageLabel = (stage: "landing" | "story" | "ending" | "return" | null) => {
     switch (stage) {
-      case "landing":
-        return "التهيئة / اختيار البداية";
-      case "story":
-        return "القصة الحية";
-      case "ending":
-        return "الخاتمة";
-      case "return":
-        return "العودة النهائية";
-      default:
-        return "غير محدد";
+      case "landing": return "التهيئة / اختيار البداية";
+      case "story": return "القصة الحية";
+      case "ending": return "الخاتمة";
+      case "return": return "العودة النهائية";
+      default: return "غير محدد";
     }
   };
 
-  const filteredOperationLog = operationLog.filter(log => 
-    operationLogFilter === "all" || log.action === operationLogFilter
-  );
+  const filteredOperationLog = operationLog.filter(log => operationLogFilter === "all" || log.action === operationLogFilter);
 
   const reviewTimelineEntries = useMemo(() => {
     if (!selectedPath) return [];
-
     return operationLog
       .filter((entry) => {
         if (!REVIEW_TIMELINE_ACTIONS.includes(entry.action)) return false;
@@ -1145,675 +1106,157 @@ export function JourneyPathsPanel() {
         </div>
       </section>
 
-      {/* Main Grid — Spatial Architecture */}
+      {/* Premium Tab Navigation */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#0B0F19] p-2 rounded-[2rem] border border-slate-800 shadow-xl backdrop-blur-xl sticky top-0 z-30">
+        <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800/50 w-full sm:w-auto">
+          {[
+            { id: "design", label: "التصميم الهندسي", icon: Workflow },
+            { id: "analytics", label: "الرادار والنبض", icon: Activity },
+            { id: "ops", label: "التشغيل والتعافي", icon: Shield }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activePanelTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActivePanelTab(tab.id as any)}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                  isActive 
+                    ? "bg-cyan-500/20 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.1)] border border-cyan-500/20" 
+                    : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? "animate-pulse" : ""}`} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-2 px-4">
+           <div className="h-1 w-1 rounded-full bg-cyan-500 animate-ping" />
+           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+             {activePanelTab === "design" ? "Architect Mode" : activePanelTab === "analytics" ? "Forensics Mode" : "Ops Mode"}
+           </span>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Sidebar: Path Selection */}
-        <aside className="lg:col-span-3 space-y-4">
-           <div className="flex items-center justify-between px-2">
-             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">المسارات المسجلة</h3>
-             <button onClick={handleAddPath} className="text-cyan-400 hover:text-cyan-300 transition-colors">
-               <Plus className="w-4 h-4" />
-             </button>
-           </div>
-           
-           <div className="space-y-3">
-             {journeyPaths.map((path, index) => {
-               const isSelected = path.id === selectedPath.id;
-               return (
-                 <button
-                   key={getSafePathKey(path, index)}
-                   onClick={() => setSelectedPathId(path.id)}
-                   className={`w-full group text-right rounded-[1.75rem] border p-5 transition-all duration-300 ${
-                     isSelected
-                       ? "border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.1)]"
-                       : "border-slate-800 bg-slate-900/40 hover:border-slate-700"
-                   }`}
-                 >
-                   <div className="flex items-center justify-between gap-3 mb-2">
-                     <span className={`text-[10px] font-black uppercase tracking-widest ${path.isActive ? "text-emerald-400" : "text-slate-500"}`}>
-                       {path.isActive ? "ACTIVE" : "INACTIVE"}
+        {/* Sidebar Mini-nav (Always visible or contextual) */}
+        <div className="lg:col-span-3 space-y-6">
+           {/* Path Pick Group */}
+           <div className="space-y-2">
+              <h4 className="px-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4">اختيار المسار</h4>
+              {journeyPaths.map((path, index) => (
+                <button
+                  key={getSafePathKey(path, index)}
+                  onClick={() => setSelectedPathId(path.id)}
+                  className={`w-full text-right p-4 rounded-[1.5rem] transition-all duration-300 group relative overflow-hidden ${
+                    selectedPathId === path.id 
+                      ? "bg-gradient-to-l from-cyan-500/10 to-transparent border border-cyan-500/20" 
+                      : "hover:bg-white/5"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                     <span className={`text-[11px] font-black tracking-wide ${selectedPathId === path.id ? "text-white" : "text-slate-400"}`}>
+                        {path.title}
                      </span>
-                     {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_5px_cyan]" />}
-                   </div>
-                   <div className="text-sm font-black text-white group-hover:text-cyan-200 transition-colors">{path.title}</div>
-                   <div className="mt-1 text-[10px] text-slate-600 font-mono">{path.slug}</div>
-                 </button>
-               );
-             })}
-           </div>
-
-           <div className="rounded-2xl border border-slate-800/50 bg-slate-900/20 p-4">
-              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">الحالة العامة</h4>
-              <div className="space-y-3">
-                 <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400 font-bold">المسارات الفعالة</span>
-                    <span className="text-xs text-white font-black">{activePaths.length}</span>
-                 </div>
-                 <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-teal-500" style={{ width: `${journeyPaths.length > 0 ? (activePaths.length / journeyPaths.length) * 100 : 0}%` }} />
-                 </div>
-              </div>
-           </div>
-        </aside>
-
-        {/* Focus Area: Path Architect & Telemetry */}
-        <div className="lg:col-span-9 space-y-8">
-           
-           {/* Primary Control Zone */}
-           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-              
-              {/* Architect Deck */}
-              <div className="space-y-6">
-                 <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm">
-                    <div className="flex items-center justify-between mb-8">
-                       <h3 className="text-lg font-black text-white">بيانات الوعي (Core Metadata)</h3>
-                       <button
-                         type="button"
-                         onClick={() => patchPath(selectedPath.id, p => ({ ...p, isActive: !p.isActive }))}
-                         className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${selectedPath.isActive ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : 'border-slate-700 bg-slate-800 text-slate-500'}`}
-                       >
-                         {selectedPath.isActive ? 'تشغيل حي' : 'متوقف'}
-                       </button>
-                    </div>
-
-                    <div className="grid gap-6">
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Field label="اسم المسار">
-                            <input
-                              value={selectedPath.title}
-                              onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, title: e.target.value }))}
-                              className="admin-input bg-slate-900/50"
-                            />
-                          </Field>
-                          <Field label="Slug العبور">
-                            <input
-                              value={selectedPath.slug}
-                              onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, slug: e.target.value }))}
-                              className="admin-input bg-slate-900/50"
-                            />
-                          </Field>
-                       </div>
-                       <Field label="وصف غرض المسار">
-                          <textarea
-                            value={selectedPath.description}
-                            onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, description: e.target.value }))}
-                            className="admin-input bg-slate-900/50 min-h-[80px]"
-                          />
-                       </Field>
-                    </div>
-                 </section>
-
-                 <section className="rounded-[2.5rem] border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent p-8 shadow-sm">
-                    <div className="flex items-center justify-between gap-4 mb-6">
-                       <div className="space-y-2">
-                          <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.28em] text-amber-300">
-                             <BookOpen className="h-3.5 w-3.5" />
-                             عناصر مكتبة التشغيل
-                          </div>
-                          <h3 className="text-lg font-black text-white">مراجع قابلة للاستخدام داخل هذا المسار</h3>
-                          <p className="text-sm leading-7 text-slate-300">{pathOpsGuidance}</p>
-                       </div>
-                       <div className="rounded-2xl border border-slate-800 bg-slate-950/50 px-4 py-3 text-center min-w-[92px]">
-                          <div className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">مراجع مرتبطة</div>
-                          <div className="mt-2 text-3xl font-black text-white">{pathOpsDocs.length}</div>
-                       </div>
-                    </div>
-
-                    <div className="mb-6 rounded-[1.75rem] border border-emerald-500/10 bg-emerald-500/[0.04] p-5">
-                       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                          <div className="space-y-2">
-                             <div className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-300">ملخص تقدم المسار</div>
-                             <div className="text-sm font-bold text-white">
-                                تم إنجاز {pathOpsProgressSummary.completed} من {pathOpsProgressSummary.total} عنصر مراجعة عبر {pathOpsProgressSummary.docsCount} مراجع.
-                             </div>
-                             <div className="text-xs leading-6 text-slate-300">
-                                {pathOpsProgressSummary.warningCount > 0
-                                  ? `لا يزال هناك ${pathOpsProgressSummary.warningCount} تحذير يحتاج انتباهًا داخل هذا المسار.`
-                                  : "لا توجد تحذيرات حالية، ويمكنك استكمال المراجعة بهدوء."}
-                             </div>
-                          </div>
-                          <div className="min-w-[220px] space-y-3">
-                             <div className="flex items-center justify-between text-[11px] font-black text-slate-300">
-                                <span>نسبة الإنجاز</span>
-                                <span>{pathOpsProgressSummary.percent}%</span>
-                             </div>
-                             <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
-                                <div
-                                  className={`h-full rounded-full transition-all ${
-                                    pathOpsProgressSummary.percent >= 100
-                                      ? "bg-emerald-400"
-                                      : pathOpsProgressSummary.percent >= 50
-                                        ? "bg-cyan-400"
-                                        : "bg-amber-400"
-                                  }`}
-                                  style={{ width: `${pathOpsProgressSummary.percent}%` }}
-                                />
-                             </div>
-                             <div className="flex items-center justify-between text-[11px] text-slate-400">
-                                <span>مراجع مكتملة بالكامل</span>
-                                <span className="font-black text-white">{pathOpsProgressSummary.fullyReviewedDocs}/{pathOpsProgressSummary.docsCount}</span>
-                              </div>
-                              <div className="flex items-center justify-between text-[11px] text-slate-400">
-                                 <span>آخر مرجع تم لمسه</span>
-                                 <span className="font-black text-white">
-                                   {pathOpsProgressSummary.latestDocTitle ?? "لا يوجد بعد"}
-                                 </span>
-                              </div>
-                              <div className="flex items-center justify-between text-[11px] text-slate-400">
-                                 <span>آخر مراجعة</span>
-                                 <span className="font-black text-white">
-                                   {pathOpsProgressSummary.latestUpdatedAt
-                                     ? new Date(pathOpsProgressSummary.latestUpdatedAt).toLocaleString("ar-EG")
-                                     : "لم تبدأ بعد"}
-                                 </span>
-                              </div>
-                              <div className="flex flex-wrap gap-2 pt-1">
-                                 <button
-                                   type="button"
-                                   onClick={markAllChecklistItems}
-                                   className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-[11px] font-black text-emerald-300 transition hover:bg-emerald-500/20"
-                                 >
-                                   تعليم الكل
-                                 </button>
-                                 <button
-                                   type="button"
-                                   onClick={resetChecklistItems}
-                                   className="rounded-xl border border-slate-700 bg-slate-900/40 px-3 py-2 text-[11px] font-black text-slate-300 transition hover:border-rose-500/30 hover:text-rose-300"
-                                 >
-                                   إعادة ضبط
-                                 </button>
-                                 <button
-                                   type="button"
-                                   onClick={exportChecklistReport}
-                                   className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-3 py-2 text-[11px] font-black text-cyan-300 transition hover:bg-cyan-500/20"
-                                 >
-                                   تصدير التقرير
-                                 </button>
-                              </div>
-                           </div>
-                        </div>
-                    </div>
-
-                    <div className="mb-6 flex flex-wrap gap-2">
-                       {[
-                         { id: "all" as const, label: "كل المراجع" },
-                         { id: "not-started" as const, label: "غير مراجع" },
-                         { id: "in-progress" as const, label: "قيد المراجعة" },
-                         { id: "completed" as const, label: "مكتمل" }
-                       ].map((filter) => (
-                         <button
-                           key={filter.id}
-                           type="button"
-                           onClick={() => setOpsDocReviewFilter(filter.id)}
-                           className={`rounded-xl border px-3 py-2 text-[11px] font-black transition ${
-                             opsDocReviewFilter === filter.id
-                               ? "border-cyan-400/30 bg-cyan-500/10 text-cyan-300"
-                               : "border-slate-800 bg-slate-900/40 text-slate-400 hover:border-slate-700 hover:text-white"
-                           }`}
-                         >
-                           {filter.label}
-                         </button>
-                       ))}
-                    </div>
-
-                    <div className="mb-6 rounded-[1.75rem] border border-slate-800 bg-slate-950/35 p-5">
-                       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                          <div className="space-y-2">
-                             <div className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-300">Timeline المراجعة</div>
-                             <div className="text-sm font-bold text-white">
-                                آخر 5 أفعال مراجعة مرتبطة بهذا المسار.
-                             </div>
-                             <div className="text-xs leading-6 text-slate-400">
-                                يساعدك هذا الشريط على فهم آخر ما تم لمسه بسرعة قبل فتح السجل الكامل أو متابعة التعديل.
-                             </div>
-                          </div>
-                          <div className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-[11px] font-black text-slate-300">
-                             {reviewTimelineEntries.length}/5
-                          </div>
-                       </div>
-
-                       <div className="mt-4 space-y-3">
-                          {reviewTimelineEntries.length > 0 ? (
-                            reviewTimelineEntries.map((entry) => {
-                              const meta = getOperationLogMeta(entry.action);
-                              const dotClass =
-                                meta.badge.includes("emerald")
-                                  ? "bg-emerald-400"
-                                  : meta.badge.includes("rose")
-                                    ? "bg-rose-400"
-                                    : meta.badge.includes("violet")
-                                      ? "bg-violet-400"
-                                      : meta.badge.includes("cyan")
-                                        ? "bg-cyan-400"
-                                        : "bg-amber-400";
-
-                              return (
-                                <div
-                                  key={`${entry.createdAt}-${entry.action}-${entry.docId ?? "doc"}-${entry.itemLabel ?? "item"}`}
-                                  className="flex items-start justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900/45 px-4 py-3"
-                                >
-                                  <div className="flex items-start gap-3">
-                                     <span className={`mt-1.5 h-2.5 w-2.5 rounded-full ${dotClass}`} />
-                                     <div className="space-y-1">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                           <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${meta.badge}`}>
-                                              {meta.label}
-                                           </span>
-                                           {entry.docId ? (
-                                             <span className="rounded-full bg-slate-800 px-2.5 py-1 text-[10px] font-black text-slate-300">
-                                                {pathOpsDocs.find((doc) => doc.id === entry.docId)?.title ?? entry.docId}
-                                             </span>
-                                           ) : null}
-                                        </div>
-                                        <div className="text-xs font-bold leading-6 text-white">{entry.details}</div>
-                                     </div>
-                                  </div>
-                                  <div className="shrink-0 text-[10px] font-mono text-slate-500">
-                                     {new Date(entry.createdAt).toLocaleString("ar-EG")}
-                                  </div>
-                                </div>
-                              );
-                            })
-                          ) : (
-                            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/30 px-4 py-5 text-xs leading-6 text-slate-400">
-                               لا توجد أفعال مراجعة مسجلة لهذا المسار بعد. ابدأ بتعليم عنصر واحد على الأقل لتظهر الحركة هنا.
-                            </div>
-                          )}
-                       </div>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                       {filteredPathOpsDocs.map(({ doc, completion, status }) => {
-                          const Icon = doc.icon;
-                          const widget = getDocWidgetMeta(doc.id);
-                          const checklist = getDocChecklistItems(doc.id);
-                          return (
-                          <div
-                            key={doc.id}
-                           className="rounded-[1.5rem] border border-slate-800 bg-slate-950/40 p-5 space-y-4"
-                         >
-                            <div className="flex items-start justify-between gap-3">
-                               <div className="space-y-2">
-                                  <div className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">
-                                     {doc.badge}
-                                  </div>
-                                  <h4 className="text-base font-black text-white">{doc.title}</h4>
-                               </div>
-                               <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-2 text-amber-300">
-                                  <Icon className="h-4 w-4" />
-                               </div>
-                            </div>
-
-                            <p className="text-xs leading-6 text-slate-400">{doc.purpose}</p>
-
-                            <div className="space-y-2">
-                               <div className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">استخدمه هنا عندما</div>
-                               {doc.whenToUse.slice(0, 2).map((item) => (
-                                 <div key={item} className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-xs text-slate-200">
-                                    {item}
-                                 </div>
-                               ))}
-                            </div>
-
-                              <div className="rounded-xl border border-cyan-500/10 bg-cyan-500/5 px-3 py-2 text-[11px] font-mono text-cyan-300">
-                                 {doc.docPath}
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4 space-y-3">
-                                 <div className="flex items-center justify-between gap-3">
-                                    <div className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">نبضة تشغيلية</div>
-                                    <div className={`rounded-full px-2.5 py-1 text-[10px] font-black ${
-                                      widget.accent === "emerald"
-                                        ? "bg-emerald-500/10 text-emerald-300"
-                                        : widget.accent === "amber"
-                                          ? "bg-amber-400/10 text-amber-300"
-                                          : widget.accent === "rose"
-                                            ? "bg-rose-500/10 text-rose-300"
-                                            : widget.accent === "violet"
-                                              ? "bg-violet-500/10 text-violet-300"
-                                              : widget.accent === "cyan"
-                                                ? "bg-cyan-500/10 text-cyan-300"
-                                                : "bg-slate-800 text-slate-300"
-                                    }`}>
-                                      {widget.status}
-                                    </div>
-                                 </div>
-                                 <div className="space-y-2">
-                                    {widget.items.map((item) => (
-                                      <div key={item} className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-[11px] leading-6 text-slate-300">
-                                         {item}
-                                      </div>
-                                    ))}
-                                 </div>
-                              </div>
-                               <div className="rounded-2xl border border-emerald-500/10 bg-emerald-500/[0.04] p-4 space-y-3">
-                                  <div className="flex items-center justify-between gap-3">
-                                     <div className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-300">Checklist تفاعلي</div>
-                                     <div className="flex items-center gap-2">
-                                       <div className={`rounded-full px-2.5 py-1 text-[10px] font-black ${
-                                         status === "completed"
-                                           ? "bg-emerald-500/10 text-emerald-300"
-                                           : status === "in-progress"
-                                             ? "bg-cyan-500/10 text-cyan-300"
-                                             : "bg-amber-400/10 text-amber-300"
-                                       }`}>
-                                         {status === "completed" ? "مكتمل" : status === "in-progress" ? "قيد المراجعة" : "غير مراجع"}
-                                       </div>
-                                       <div className="rounded-full bg-slate-950/70 px-2.5 py-1 text-[10px] font-black text-white">
-                                         {completion.completed}/{completion.total}
-                                       </div>
-                                     </div>
-                                  </div>
-                                 <div className="space-y-2">
-                                    {checklist.map((item) => {
-                                      const checked = isChecklistItemDone(doc.id, item);
-                                      return (
-                                        <button
-                                          key={item}
-                                          type="button"
-                                          onClick={() => toggleChecklistItem(doc.id, item)}
-                                          className={`w-full rounded-xl border px-3 py-2 text-right text-[11px] leading-6 transition ${
-                                            checked
-                                              ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-200"
-                                              : "border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700"
-                                          }`}
-                                        >
-                                          <span className="inline-flex items-center gap-2">
-                                            <span className={`h-2.5 w-2.5 rounded-full ${checked ? "bg-emerald-400" : "bg-slate-600"}`} />
-                                            {item}
-                                          </span>
-                                        </button>
-                                      );
-                                    })}
-                                 </div>
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                 <button
-                                   type="button"
-                                  onClick={() => handleOpenOpsDoc(doc.id)}
-                                  className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-3 py-2 text-[11px] font-black text-cyan-300 transition hover:bg-cyan-500/20"
-                                >
-                                  افتح المرجع
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRunOpsAction(doc.id)}
-                                  className="rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-[11px] font-black text-amber-300 transition hover:bg-amber-400/20"
-                                >
-                                  {getDocActionLabel(doc.id)}
-                                </button>
-                             </div>
-                          </div>
-                         );
-                       })}
-                    </div>
-                 </section>
-
-                 <div className="flex bg-slate-900/50 p-1 rounded-2xl border border-slate-800 w-fit mb-4">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("linear")}
-                      className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "linear" ? "bg-cyan-500/20 text-cyan-400" : "text-slate-500 hover:text-white"}`}
-                    >
-                      التسلسل الخطي
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("constellation")}
-                      className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "constellation" ? "bg-indigo-500/20 text-indigo-400" : "text-slate-500 hover:text-white"}`}
-                    >
-                      الشبكة البصرية
-                    </button>
-                 </div>
-
-                 {activeTab === "linear" ? (
-                   <PathArchitect 
-                     path={selectedPath} 
-                     onUpdate={(updater) => setJourneyPaths(journeyPaths.map(p => p.id === selectedPath.id ? updater(p) : p))}
-                     onGenerate={handleGeneratePath}
-                     isGenerating={isGenerating}
-                   />
-                 ) : (
-                   <div className="animate-in fade-in zoom-in-95 duration-500">
-                     <PathConstellationPreview steps={selectedPath.steps} />
-                   </div>
-                 )}
-              </div>
-
-              {/* Monitoring & Healing Deck */}
-              <div className="space-y-8">
-                 <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm h-fit">
-                    <TelemetryPulse path={selectedPath} revenueMetrics={revenueMetrics} />
-                 </section>
-
-                 <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm h-fit">
-                    <FrictionHealer 
-                      path={selectedPath} 
-                      warnings={[...selectedPathWarnings, ...globalWarnings]} 
-                      onApplyHealing={handleApplyHealing}
-                      auditData={auditResults[selectedPath.id]}
-                      isAuditing={isAuditing}
-                      onRunAudit={handleRunAudit}
-                    />
-                 </section>
-
-                 {/* Simulated Logic Preview */}
-                 <section className="rounded-[2.5rem] border border-cyan-500/10 bg-gradient-to-br from-cyan-500/5 to-transparent p-8">
-                    <div className="flex items-center gap-3 mb-6">
-                       <Workflow className="w-5 h-5 text-cyan-400" />
-                       <h3 className="text-sm font-black text-white uppercase tracking-widest">محاكاة التشغيل (Simulation)</h3>
-                    </div>
-                    {runtimePreview && (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                           <div className="text-[9px] font-black text-slate-500 uppercase">نقطة الدخول</div>
-                           <div className="text-xs font-bold text-white">{runtimePreview.startsFrom}</div>
-                        </div>
-                        <div className="space-y-1">
-                           <div className="text-[9px] font-black text-slate-500 uppercase">الوجهة المستهدفة</div>
-                           <div className="text-xs font-bold text-white">{runtimePreview.finalScreen}</div>
-                        </div>
-                        <div className="space-y-1">
-                           <div className="text-[9px] font-black text-slate-500 uppercase">Ø¹Ø¯Ø¯ Ø§Ù„Ø®Ø·ÙˆØ§Øª</div>
-                           <div className="text-xs font-bold text-white">{runtimePreview.stepsCount}</div>
-                        </div>
-                        <div className="space-y-1">
-                           <div className="text-[9px] font-black text-slate-500 uppercase">Ø§Ù„Ø®Ø·ÙˆØ§Øª Ø§Ù„Ù…ÙØ¹Ù„Ø©</div>
-                           <div className="text-xs font-bold text-white">{runtimePreview.activeSteps}</div>
-                        </div>
-                        {runtimePreview.isRelationshipWeather && (
-                          <div className="col-span-2 mt-2 rounded-2xl border border-cyan-500/10 bg-slate-950/30 p-4 space-y-4">
-                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-cyan-300">
-                              <Activity className="h-4 w-4" />
-                              Relationship Weather Runtime
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">ÙŠØ¨Ø¯Ø£ Ù…Ù†</div>
-                                <div className="text-xs font-bold text-white">{formatWeatherStageLabel(runtimePreview.weatherInitialStage)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">Ø¨Ø¹Ø¯ Ø§Ù„Ø£Ø³Ø¦Ù„Ø©</div>
-                                <div className="text-xs font-bold text-white">{formatWeatherStageLabel(runtimePreview.weatherAfterQuestions)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">Ø¨Ø¹Ø¯ Ø§Ù„ØªØ­Ù„ÙŠÙ„</div>
-                                <div className="text-xs font-bold text-white">{formatWeatherStageLabel(runtimePreview.weatherAfterAnalyzing)}</div>
-                              </div>
-                            </div>
-                            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/20 p-4 text-xs text-slate-300 leading-7 font-bold">
-                              {runtimePreview.weatherInitialStage === "complete"
-                                ? "Ù‡Ø°Ø§ Ø§Ù„Ù…Ø³Ø§Ø± Ø³ÙŠØªØ¬Ø§ÙˆØ² ÙÙ†Ù„ Ø§Ù„Ø·Ù‚Ø³ ÙƒØ§Ù…Ù„Ø§Ù‹ ÙˆÙŠØ®Ø±Ø¬ Ù…Ø¨Ø§Ø´Ø±Ø© Ø¥Ù„Ù‰ Ø§Ù„ÙˆØ¬Ù‡Ø© Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠØ©."
-                                : runtimePreview.weatherAfterAnalyzing === "complete"
-                                  ? "Ø¨Ø¹Ø¯ Ø§Ù„ØªØ­Ù„ÙŠÙ„ØŒ Ø§Ù„Ù…Ø³Ø§Ø± Ø³ÙŠÙ‚ÙØ² Ù…Ø¨Ø§Ø´Ø±Ø© Ø¥Ù„Ù‰ Ø§Ù„Ø®Ø±ÙˆØ¬ Ø¨Ø¯ÙˆÙ† Ø§Ù„ØªÙˆÙ‚Ù Ø¹Ù†Ø¯ Ø´Ø§Ø´Ø© Ø§Ù„Ù†ØªÙŠØ¬Ø©."
-                                  : "Ø§Ù„Ù…Ø³Ø§Ø± Ø³ÙŠØ³Ù„Ùƒ ÙÙ†Ù„ Ø·Ù‚Ø³ Ø§Ù„Ø¹Ù„Ø§Ù‚Ø§Øª Ø­Ø³Ø¨ Ø§Ù„ØªØ±ØªÙŠØ¨ Ø§Ù„Ø¥Ø¯Ø§Ø±ÙŠ Ø§Ù„Ø­Ø§Ù„ÙŠ Ø¨Ø¯ÙˆÙ† Ø§ÙØªØ±Ø§Ø¶Ø§Øª Ø«Ø§Ø¨ØªØ© ÙÙŠ Ø§Ù„ÙƒÙˆØ¯."}
-                            </div>
-                          </div>
-                        )}
-                        {runtimePreview.isDawayirLive && (
-                          <div className="col-span-2 mt-2 rounded-2xl border border-fuchsia-500/10 bg-slate-950/30 p-4 space-y-4">
-                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-fuchsia-300">
-                              <Activity className="h-4 w-4" />
-                              Dawayir Live Runtime
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">يبدأ من</div>
-                                <div className="text-xs font-bold text-white">{formatLiveStageLabel(runtimePreview.liveInitialStage)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">بعد التهيئة</div>
-                                <div className="text-xs font-bold text-white">{formatLiveStageLabel(runtimePreview.liveAfterSetup)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">بعد الجلسة</div>
-                                <div className="text-xs font-bold text-white">{formatLiveStageLabel(runtimePreview.liveAfterSession)}</div>
-                              </div>
-                            </div>
-                            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/20 p-4 text-xs text-slate-300 leading-7 font-bold space-y-2">
-                              <div>
-                                المسار سيطلق اللايف عبر route الدخول الفعلية، ثم ينتقل إلى شاشة الإكمال، ثم يخرج إلى:
-                                <span className="text-fuchsia-300"> {runtimePreview.liveReturnHref || runtimePreview.finalScreen}</span>
-                              </div>
-                              <div>
-                                {runtimePreview.liveAfterSession === "return"
-                                  ? "هذا يعني أن المسار سيتجاوز شاشة الإكمال ويعود مباشرة بعد نهاية الجلسة."
-                                  : "هذا يعني أن الجلسة ستمر على شاشة الإكمال أولًا قبل العودة النهائية."}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {runtimePreview.isMarayaStory && (
-                          <div className="col-span-2 mt-2 rounded-2xl border border-amber-500/10 bg-slate-950/30 p-4 space-y-4">
-                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-amber-300">
-                              <Activity className="h-4 w-4" />
-                              Maraya Story Runtime
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">يبدأ من</div>
-                                <div className="text-xs font-bold text-white">{formatMarayaStageLabel(runtimePreview.marayaInitialStage)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">بعد التهيئة</div>
-                                <div className="text-xs font-bold text-white">{formatMarayaStageLabel(runtimePreview.marayaAfterLanding)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">بعد القصة</div>
-                                <div className="text-xs font-bold text-white">{formatMarayaStageLabel(runtimePreview.marayaAfterStory)}</div>
-                              </div>
-                            </div>
-                            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/20 p-4 text-xs text-slate-300 leading-7 font-bold space-y-2">
-                              <div>
-                                المسار سيطلق تجربة مرايا عبر route الدخول الفعلية، ثم يمر على الخاتمة، ثم يخرج إلى:
-                                <span className="text-amber-300"> {runtimePreview.marayaReturnHref || runtimePreview.finalScreen}</span>
-                              </div>
-                              <div>
-                                {runtimePreview.marayaAfterStory === "return"
-                                  ? "هذا يعني أن المسار سيتجاوز شاشة الخاتمة ويخرج مباشرة بعد اكتمال القصة."
-                                  : "هذا يعني أن مرايا ستمر على شاشة الخاتمة أولًا قبل حمل أثرها إلى الوجهة التالية."}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        <div className="col-span-2 pt-2">
-                           <button 
-                             onClick={handleRunPathNow}
-                             className="w-full py-3 rounded-xl bg-slate-900 border border-slate-800 text-cyan-400 hover:text-white hover:border-cyan-500/40 transition-all font-black text-[10px] uppercase tracking-widest"
-                           >
-                             بدء تجربة المستخدم
-                           </button>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="mt-8 border-t border-cyan-500/10 pt-6">
-                       <button
-                         onClick={handleSimulatePath}
-                         disabled={isSimulating || selectedPath.steps.length === 0}
-                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500/10 py-3 text-sm font-black text-cyan-400 hover:bg-cyan-500/20 transition-all disabled:opacity-50"
-                       >
-                         {isSimulating ? <Loader2 className="h-4 w-4 animate-spin text-cyan-400" /> : <Sparkles className="h-4 w-4" />}
-                         {isSimulating ? "جاري استدعاء الشخصيات المحاكية..." : "تشغيل المحاكي الشعوري (Personas Playtest)"}
-                       </button>
-
-                       {simulationResults && (
-                         <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                            {simulationResults.map((sim, i) => (
-                              <div key={i} className={`p-4 rounded-2xl border bg-slate-950/50 ${
-                                sim.willComplete ? 'border-emerald-500/30' : 'border-rose-500/30'
-                              }`}>
-                                <div className="flex items-center gap-3 mb-2">
-                                  <div className={`text-[10px] uppercase font-black tracking-widest px-2 py-1 rounded-md ${
-                                    sim.willComplete ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
-                                  }`}>
-                                    {sim.persona}
-                                  </div>
-                                  <div className="text-xs text-slate-400 font-bold">
-                                    {sim.willComplete ? 'سيكمل المسار' : 'قد ينسحب'}
-                                  </div>
-                                </div>
-                                <p className="text-sm text-slate-300 italic leading-relaxed">"{sim.feedback}"</p>
-                              </div>
-                            ))}
-                         </div>
-                       )}
-                    </div>
-                 </section>
-              </div>
-
+                     {selectedPathId === path.id && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />
+                     )}
+                  </div>
+                </button>
+              ))}
            </div>
         </div>
 
+        {/* Focus Area Content */}
+        <div className="lg:col-span-9">
+           
+           {/* Section 1: DESIGN */}
+           {activePanelTab === "design" && (
+             <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm">
+                   <div className="flex items-center justify-between mb-8">
+                      <h3 className="text-lg font-black text-white">بيانات الوعي (Core Metadata)</h3>
+                      <button
+                        type="button"
+                        onClick={() => patchPath(selectedPath.id, p => ({ ...p, isActive: !p.isActive }))}
+                        className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${selectedPath.isActive ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : 'border-slate-700 bg-slate-800 text-slate-500'}`}
+                      >
+                        {selectedPath.isActive ? 'تشغيل حي' : 'متوقف'}
+                      </button>
+                   </div>
+                   <div className="grid gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <Field label="اسم المسار"><input value={selectedPath.title} onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, title: e.target.value }))} className="admin-input bg-slate-900/50" /></Field>
+                         <Field label="Slug العبور"><input value={selectedPath.slug} onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, slug: e.target.value }))} className="admin-input bg-slate-900/50" /></Field>
+                      </div>
+                      <Field label="وصف غرض المسار"><textarea value={selectedPath.description} onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, description: e.target.value }))} className="admin-input bg-slate-900/50 min-h-[80px]" /></Field>
+                   </div>
+                </section>
+
+                <div className="flex bg-slate-900/50 p-1 rounded-2xl border border-slate-800 w-fit mb-4">
+                  <button onClick={() => setActiveTab("linear")} className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "linear" ? "bg-cyan-500/20 text-cyan-400" : "text-slate-500 hover:text-white"}`}>التسلسل الخطي</button>
+                  <button onClick={() => setActiveTab("constellation")} className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "constellation" ? "bg-indigo-500/20 text-indigo-400" : "text-slate-500 hover:text-white"}`}>الشبكة البصرية</button>
+                </div>
+
+                {activeTab === "linear" ? (
+                  <PathArchitect path={selectedPath} onUpdate={(updater) => setJourneyPaths(journeyPaths.map(p => p.id === selectedPath.id ? updater(p) : p))} onGenerate={handleGeneratePath} isGenerating={isGenerating} />
+                ) : (
+                  <div className="animate-in fade-in zoom-in-95 duration-500"><PathConstellationPreview steps={selectedPath.steps} /></div>
+                )}
+             </div>
+           )}
+
+           {/* Section 2: ANALYTICS */}
+           {activePanelTab === "analytics" && (
+             <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                   <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm h-fit"><TelemetryPulse path={selectedPath} revenueMetrics={revenueMetrics} /></section>
+                   <section className="rounded-[2.5rem] border border-cyan-500/10 bg-gradient-to-br from-cyan-500/5 to-transparent p-8">
+                      <div className="flex items-center gap-3 mb-6"><Workflow className="w-5 h-5 text-cyan-400" /><h3 className="text-sm font-black text-white uppercase tracking-widest">محاكاة التشغيل (Simulation)</h3></div>
+                      <button onClick={handleSimulatePath} disabled={isSimulating || selectedPath.steps.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500/10 py-3 text-sm font-black text-cyan-400 hover:bg-cyan-500/20 transition-all disabled:opacity-50">
+                        {isSimulating ? <Loader2 className="h-4 w-4 animate-spin text-cyan-400" /> : <Sparkles className="h-4 w-4" />}
+                        {isSimulating ? "جاري استدعاء الشخصيات المحاكية..." : "تشغيل المحاكي الشعوري (Personas Playtest)"}
+                      </button>
+                   </section>
+                </div>
+                <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 lg:p-12 shadow-sm"><GhostMirror /></section>
+             </div>
+           )}
+
+           {/* Section 3: OPS */}
+           {activePanelTab === "ops" && (
+             <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                   <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm h-fit">
+                      <FrictionHealer path={selectedPath} warnings={[...selectedPathWarnings, ...globalWarnings]} onApplyHealing={handleApplyHealing} auditData={auditResults[selectedPath.id]} isAuditing={isAuditing} onRunAudit={handleRunAudit} />
+                   </section>
+                   <section className="rounded-[2.5rem] border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent p-8 shadow-sm">
+                      <div className="flex items-center justify-between gap-4 mb-6"><div className="space-y-2"><div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.28em] text-amber-300"><BookOpen className="h-3.5 w-3.5" />عناصر مكتبة التشغيل</div><h3 className="text-lg font-black text-white">مراجع قابلة للاستخدام</h3></div></div>
+                      <div className="grid gap-4">
+                         {filteredPathOpsDocs.slice(0, 4).map(({ doc }) => (
+                            <div key={doc.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-900 border border-slate-800"><div className="flex items-center gap-3"><doc.icon className="w-4 h-4 text-amber-500" /><span className="text-xs font-black text-white">{doc.title}</span></div><button onClick={() => handleOpenOpsDoc(doc.id)} className="text-[10px] font-black text-cyan-400">فتح</button></div>
+                         ))}
+                      </div>
+                   </section>
+                </div>
+                {operationLog.length > 0 && (
+                   <div className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-inner overflow-hidden relative">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 blur-[80px] pointer-events-none" />
+                      <div className="flex items-center justify-between mb-8 relative z-10"><h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">سجل العمليات التقنية (Engine Logs)</h4><button onClick={handleClearOperationLog} className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-400 transition-colors">مسح السجل</button></div>
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 no-scrollbar font-mono relative z-10">
+                         {filteredOperationLog.map((entry, index) => (
+                            <div key={index} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 group hover:border-cyan-500/30 transition-all"><div className="flex items-center gap-4"><div className={`w-1.5 h-1.5 rounded-full ${index === 0 ? "bg-cyan-400 animate-pulse" : "bg-slate-700"}`} /><div className="text-xs text-slate-300 leading-relaxed font-bold">{entry.details}</div></div><span className="text-[10px] text-slate-600 font-black">{new Date(entry.createdAt).toLocaleTimeString('ar-EG')}</span></div>
+                         ))}
+                      </div>
+                   </div>
+                )}
+             </div>
+           )}
+        </div>
       </div>
-
-      {/* Operation Logs (Condensed at bottom) */}
-      {operationLog.length > 0 && (
-         <div className="mt-12 rounded-[2.5rem] border border-white/5 bg-slate-950/20 p-8">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h4 className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">سجل العمليات (System Logs)</h4>
-                <div className="mt-2 text-[10px] text-slate-600 uppercase font-black tracking-widest">{filteredOperationLog.length} سجل من أصل {operationLog.length}</div>
-              </div>
-              <div className="flex gap-4">
-                <select
-                  value={operationLogFilter}
-                  onChange={(e) => setOperationLogFilter(e.target.value as OperationLogFilter)}
-                  className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-slate-400 focus:ring-0 cursor-pointer"
-                >
-                  <option value="all">الكل</option>
-                  <option value="import-ready">الجاهزة</option>
-                  <option value="import-confirmed">المعتمدة</option>
-                  <option value="import-cancelled">الملغاة</option>
-                  <option value="backup-restored">المسترجعة</option>
-                </select>
-                <button
-                  onClick={handleClearOperationLog}
-                  className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-400 transition-colors"
-                >
-                  مسح السجل
-                </button>
-              </div>
-            </div>
-            
-            <div className="mt-6 space-y-2 max-h-[200px] overflow-y-auto no-scrollbar">
-               {filteredOperationLog.map((entry, index) => (
-                 <div key={index} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors group">
-                    <div className="flex items-center gap-4">
-                       <span className={`w-2 h-2 rounded-full ${getOperationLogMeta(entry.action)?.badge.includes('emerald') ? 'bg-emerald-500' : 'bg-slate-500'}`} />
-                       <div className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">{entry.details}</div>
-                    </div>
-                    <div className="text-[10px] font-mono text-slate-600 tracking-tighter">{new Date(entry.createdAt).toLocaleTimeString('ar-EG')}</div>
-                 </div>
-               ))}
-            </div>
-         </div>
-      )}
-
-      {/* Psychological Layer: Ghost Mirror */}
-      <section className="mt-12 rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 lg:p-12 shadow-sm">
-         <GhostMirror />
-      </section>
 
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none z-[-1] opacity-30 select-none overflow-hidden">

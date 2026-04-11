@@ -45,10 +45,10 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
-            className="relative w-full max-w-4xl bg-[#0f172a] border border-[#334155] shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[90vh]"
+            className="relative w-full max-w-4xl admin-glass-card flex flex-col max-h-[90vh]"
           >
             {/* ── Studio Header ── */}
-            <div className="flex items-center justify-between p-4 px-6 border-b border-white/10 bg-slate-900/80 backdrop-blur-sm z-10 shrink-0">
+            <div className="flex items-center justify-between p-4 px-6 border-b border-white/10 bg-slate-900/40 relative z-10 backdrop-blur-md shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/30">
                   <Video className="w-5 h-5 text-cyan-400" />
@@ -83,7 +83,8 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
             </div>
 
             {/* ── Studio Canvas ── */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar relative bg-[#0b1121]" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10" ref={scrollRef}>
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none" />
               {isGenerating ? (
                 <div className="flex flex-col items-center justify-center min-h-[400px] py-12">
                   <div className="relative">

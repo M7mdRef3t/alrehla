@@ -344,7 +344,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                     {section === "language" && (
                         <motion.div key="language" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="mt-4">
                             <h2 className="text-base font-bold text-white mb-1">اختر اللغة</h2>
-                            <p className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>ستتغير واجهة التطبيق فوراً</p>
+                            <p className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>ستتغير واجهة الرحلة فوراً</p>
                             <LanguageSwitcher onLanguageChange={() => { }} />
                         </motion.div>
                     )}

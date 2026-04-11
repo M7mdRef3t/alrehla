@@ -11,6 +11,7 @@ export function SovereignReceiver() {
   useEffect(() => {
     // 1. Subscribe to the global 'sovereign_control' channel
     // In a prod environment, this should be scoped: e.g., `sovereign_control_${clientId}`
+    if (!supabase) return;
     const channel = supabase.channel('sovereign_control');
     let isSubscribed = false;
 
@@ -48,7 +49,7 @@ export function SovereignReceiver() {
     return () => {
       // Cleanup on unmount, but only if we actually joined to prevent WS warnings
       if (isSubscribed) {
-        supabase.removeChannel(channel);
+        supabase?.removeChannel(channel);
       }
     };
   }, []);

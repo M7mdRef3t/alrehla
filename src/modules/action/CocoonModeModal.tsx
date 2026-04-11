@@ -15,7 +15,7 @@ function getTimeAwareTheme(): { headline: string; sub: string; color: string; rg
   const h = new Date().getHours();
   if (h >= 5 && h < 12) return {
     headline: "الصبح مش مسابقة",
-    sub: "كل ما بتحاول تسبق نفسك، بتحرق طاقة. المنصة هتستنى لما ترجع لمركزك.",
+    sub: "كل ما بتحاول تسبق نفسك، بتحرق طاقة. رحلتك هتستنى لما ترجع لمركزك.",
     color: "#2dd4bf",
     rgb: "45,212,191"
   };

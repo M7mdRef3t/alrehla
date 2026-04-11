@@ -48,6 +48,7 @@ export const metaLeadsService = {
     });
     return fuzzy?.values?.[0]?.trim() ?? "";
   },
+
   /**
    * Fetches full lead details from Meta Graph API using the leadgen_id
    */
@@ -158,11 +159,21 @@ export const metaLeadsService = {
     const rawPhone = this.extractFieldValue(metaData.field_data, [
       "phone_number",
       "phone",
+      "phoneNumber",
       "mobile_number",
+      "mobileNumber",
       "mobile",
       "whatsapp",
       "whatsapp_number",
-      "phone_1"
+      "whatsappNumber",
+      "phone_1",
+      "contact_number",
+      "هاتف",
+      "موبايل",
+      "رقم",
+      "رقم الهاتف",
+      "رقم الموبايل",
+      "رقم الواتساب"
     ]);
     const phoneParsed = sanitizePhone(rawPhone);
     const phone = phoneParsed?.normalized || "";
@@ -196,14 +207,11 @@ export const metaLeadsService = {
     };
 
     if (!phone) {
-      logger.warn(`[MetaLeadsService] Lead ${leadId} arrived without phone. Email=${email || "N/A"}`);
+      logger.warn(`[MetaLeadsService] Lead ${leadId} arrived without phone. Email=${email || "N/A"} | Fields: ${JSON.stringify(fields)}`);
     }
 
     try {
-      const isAdminAvailable = !!supabaseAdmin;
       const client = supabaseAdmin || supabase;
-      
-      console.log(`[MetaLeadsService] Attempting to store lead. Admin Client: ${isAdminAvailable}, Email: ${email}`);
       
       if (!client) {
         logger.error('[MetaLeadsService] Supabase client not initialized');
@@ -225,6 +233,50 @@ export const metaLeadsService = {
     } catch (error: any) {
       logger.error('[MetaLeadsService] Exception storing lead:', error);
       return { success: false, error: error.message || 'Unknown exception' };
+    }
+  },
+
+  /**
+   * Fetches latest leads for the configured Ad Account and processes them
+   */
+  async syncRecentLeads() {
+    const accessToken = process.env.META_ADS_ACCESS_TOKEN || process.env.META_PAGE_ACCESS_TOKEN;
+    const adAccountId = process.env.META_AD_ACCOUNT_ID;
+
+    if (!accessToken || !adAccountId) {
+      logger.error('[MetaLeadsService] Missing Meta credentials for sync');
+      return { success: false, error: 'Missing credentials' };
+    }
+
+    try {
+      // Fetch leads from last 48 hours for the ENTIRE ad account
+      const response = await fetch(
+        `https://graph.facebook.com/v19.0/${adAccountId}/leads?fields=id,created_time,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,is_organic,platform,field_data&limit=50&access_token=${accessToken}`
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        logger.error('[MetaLeadsService] Error syncing leads:', error);
+        return { success: false, error: error.error?.message || 'API error' };
+      }
+
+      const { data: leads } = await response.json();
+      logger.info(`[MetaLeadsService] Fetched ${leads?.length || 0} recent leads from Meta API`);
+
+      if (!leads || leads.length === 0) {
+        return { success: true, count: 0 };
+      }
+
+      let processedCount = 0;
+      for (const lead of leads) {
+        const result = await this.processAndStoreLead(lead);
+        if (result.success) processedCount++;
+      }
+
+      return { success: true, count: processedCount };
+    } catch (error: any) {
+      logger.error('[MetaLeadsService] Exception during sync:', error);
+      return { success: false, error: error.message };
     }
   }
 };

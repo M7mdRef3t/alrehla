@@ -1,3 +1,114 @@
 @import "tailwindcss";
+
+@theme {
+  --color-space-void: var(--space-void, #0a0e1f);
+  --color-space-950: var(--space-950, #0f1629);
+  --color-space-deep: var(--space-deep, #131a35);
+  --color-space-mid: var(--space-mid, #1a2242);
+  --color-space-nebula: var(--space-nebula, #212b4f);
+  --color-space-aurora: var(--space-aurora, #2a3560);
+
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: var(--amber-500, #f5a623);
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: var(--emerald-500, #10b981);
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
+  --color-emerald-800: #065f46;
+  --color-emerald-900: #064e3b;
+
+  --color-teal-50: #f0fdfa;
+  --color-teal-100: #ccfbf1;
+  --color-teal-200: #99f6e4;
+  --color-teal-300: #5eead4;
+  --color-teal-400: var(--teal-400, #2dd4bf);
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0d9488;
+  --color-teal-700: #0f766e;
+  --color-teal-800: #115e59;
+  --color-teal-900: #134e4a;
+
+  --color-ring-safe: var(--teal-400, #2dd4bf);
+  --color-ring-caution: var(--amber-500, #f5a623);
+  --color-ring-danger: #f87171;
+  --color-ring-detached: #94a3b8;
+
+  --font-sans: "Cairo", "Zain", "Tajawal", "Almarai", system-ui, sans-serif;
+  --font-display: "Zain", "Cairo", system-ui, sans-serif;
+
+  --spacing-18: 4.5rem;
+  --spacing-88: 22rem;
+  --spacing-100: 25rem;
+  --spacing-120: 30rem;
+
+  --blur-xs: 2px;
+  --blur-xl: 24px;
+  --blur-2xl: 32px;
+  --blur-3xl: 48px;
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em; /* Gives Alexandria a majestic tight feel */
+  }
+}
+
 @import "../src/styles/consciousness-theme.css";
 @import "../src/styles/design-system.css";
+
+/* ─── Map Cinematic Data Architectures ─── */
+.map-grid-wrapper {
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  perspective: 1200px;
+  pointer-events: none;
+}
+
+.map-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(rgba(20,184,166,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20,184,166,0.025) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: center bottom;
+  mask-image: radial-gradient(ellipse 70% 50% at 50% 50%, black 15%, transparent 75%);
+  will-change: transform;
+  transform-origin: center center;
+  transition: transform 1.5s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.map-nebula {
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  /* Fallback gradients if no variable is passed */
+  background-image: 
+    radial-gradient(circle at 40% 60%, var(--nebula-color-1, rgba(20,184,166,0.08)) 0%, transparent 45%),
+    radial-gradient(circle at 60% 40%, var(--nebula-color-2, rgba(79,70,229,0.05)) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, var(--nebula-color-3, rgba(245,158,11,0.04)) 0%, transparent 60%);
+  filter: blur(50px);
+  will-change: transform;
+  opacity: 0.7;
+  pointer-events: none;
+  transition: background-image 2s ease-in-out;
+}

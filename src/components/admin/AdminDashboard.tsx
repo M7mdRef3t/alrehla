@@ -26,7 +26,9 @@ import {
   BarChart3,
   ClipboardList,
   TrendingUp,
-  MapPin
+  MapPin,
+  PanelRightClose,
+  PanelRightOpen
 } from "lucide-react";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
@@ -235,7 +237,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
             <ShieldCheck className="w-8 h-8 text-teal-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white tracking-widest uppercase">الوصول السيادي</h1>
+            <h1 className="text-2xl font-black text-white tracking-widest uppercase font-sans">الوصول السيادي</h1>
             <p className="text-sm text-teal-400/80 tracking-wider font-bold mt-1">مركز القيادة المتقدم</p>
           </div>
         </div>
@@ -296,9 +298,9 @@ const CollapsibleSidebarGroup: FC<{
     <div className="space-y-1">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-2 hover:bg-slate-800/40 rounded-xl transition-colors focus:outline-none group"
+        className="w-full flex items-center justify-between px-4 py-2 hover:bg-slate-800/40 rounded-xl transition-colors focus:outline-none group cursor-pointer"
       >
-        <span className="text-[11px] font-black text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 uppercase tracking-widest transition-colors">
+        <span className="text-xs font-black text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 uppercase tracking-widest transition-colors">
           {group.title}
         </span>
         <span className="text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400 transition-transform">
@@ -314,7 +316,7 @@ const CollapsibleSidebarGroup: FC<{
               <button
                 key={item.id}
                 onClick={() => handleTabChange(item.id)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group/item ${
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group/item cursor-pointer ${
                   isActive
                     ? "bg-slate-800/80 border-l border-teal-500/50 text-white shadow-md shadow-slate-900/50"
                     : "border-transparent text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
@@ -324,7 +326,7 @@ const CollapsibleSidebarGroup: FC<{
                   <div className={`p-2 rounded-lg transition-colors shadow-sm ${isActive ? "text-teal-400 bg-teal-500/20 ring-1 ring-teal-500/30" : "text-slate-500 group-hover/item:text-slate-300 bg-slate-900/50 shadow-inner border border-white/5"}`}>
                     {item.icon}
                   </div>
-                  <span className={`text-[13px] font-bold tracking-wide transition-all ${isActive ? "text-white" : "group-hover/item:-translate-x-0.5"}`}>
+                  <span className={`text-sm font-black tracking-wide transition-all ${isActive ? "text-white" : "group-hover/item:-translate-x-0.5"}`}>
                     {CLEAN_NAV_LABELS[item.id] ?? item.label}
                   </span>
                 </div>
@@ -610,14 +612,11 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           <button
             type="button"
             onClick={() => setIsDesktopSidebarVisible(true)}
-            className="hidden lg:flex fixed right-0 top-1/2 z-40 -translate-y-1/2 items-center gap-2 rounded-l-2xl border border-r-0 border-slate-700/70 bg-[#0B0F19]/95 px-3 py-4 text-slate-300 shadow-[0_22px_56px_rgba(2,6,23,0.45)] backdrop-blur-md transition-all duration-300 hover:bg-slate-800 hover:text-white hover:pr-4 hover:shadow-[0_28px_80px_rgba(15,23,42,0.55)]"
+            className="hidden lg:flex fixed right-0 top-6 z-40 items-center justify-center rounded-l-xl border-y border-l border-slate-200 dark:border-slate-700/70 bg-white dark:bg-[#0B0F19] p-3 text-slate-400 dark:text-slate-500 shadow-[0_4px_24px_rgba(0,0,0,0.05)] transition-all duration-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-500/30 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:pr-4 group active:scale-95 origin-right"
             aria-label="إظهار القائمة الجانبية"
-            title="إظهار القائمة الجانبية"
+            title="إظهار القائمة الجانبية (Ctrl+B أو [)"
           >
-            <Menu className="w-4 h-4" />
-            <span className="text-[11px] font-black uppercase tracking-[0.24em] [writing-mode:vertical-rl] rotate-180">
-              القائمة
-            </span>
+            <PanelRightOpen className="w-5 h-5 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:-translate-x-1" />
           </button>
         )}
 
@@ -641,21 +640,23 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
               >
                 <Menu className="w-6 h-6" />
               </button>
-              <button
-                type="button"
-                className="hidden lg:flex items-center justify-center p-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-all shadow-sm"
-                onClick={() => setIsDesktopSidebarVisible((current) => !current)}
-                aria-label={isDesktopSidebarVisible ? "إخفاء القائمة الجانبية" : "إظهار القائمة الجانبية"}
-                title={`${isDesktopSidebarVisible ? "إخفاء القائمة الجانبية" : "إظهار القائمة الجانبية"} (Ctrl+B أو [)`}
-              >
-                <Menu className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarVisible ? "" : "rotate-180"}`} />
-              </button>
+              {isDesktopSidebarVisible && (
+                <button
+                  type="button"
+                  className="hidden lg:flex items-center justify-center p-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:border-rose-300 dark:hover:border-rose-500/30 hover:shadow-[0_0_15px_rgba(244,63,94,0.15)] transition-all duration-300 group active:scale-95"
+                  onClick={() => setIsDesktopSidebarVisible(false)}
+                  aria-label="إخفاء القائمة الجانبية"
+                  title="إخفاء القائمة الجانبية (Ctrl+B أو [)"
+                >
+                  <PanelRightClose className="w-5 h-5 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:translate-x-1" />
+                </button>
+              )}
               <div className="flex flex-col">
-                <h2 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tighter mb-1">
+                <h2 className="text-xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1 font-sans">
                   {activeTabItem?.label || "لوحة القيادة"}
                 </h2>
                 <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-teal-500 animate-pulse" />
+                  <Activity className="w-4 h-4 text-teal-500 animate-[pulse-ring_2s_infinite]" />
                   <span className="text-xs font-bold text-teal-600 dark:text-teal-400/80 uppercase tracking-widest hidden sm:inline-block">تم تأسيس الاتصال السيادي</span>
                 </div>
               </div>
@@ -707,14 +708,16 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-6 lg:p-12 custom-scrollbar relative bg-slate-50 dark:bg-[#030712] inset-shadow-sm transition-colors duration-500">
-            <div
-              className={`pointer-events-none absolute inset-0 transition-opacity duration-500 ${
-                isDesktopSidebarHidden ? "opacity-100" : "opacity-0"
-              } bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.08),transparent_28%),radial-gradient(circle_at_right_center,rgba(59,130,246,0.05),transparent_24%)]`}
-              aria-hidden="true"
-            />
-            <div className="max-w-7xl mx-auto pb-20">
+          <div className="flex-1 overflow-y-auto p-6 lg:p-12 custom-scrollbar relative bg-[#030712] inset-shadow-sm transition-colors duration-500">
+            {/* The Architectural Grid Pattern */}
+            <div className={`pointer-events-none absolute inset-0 transition-opacity duration-500 z-0 ${isDesktopSidebarHidden ? "opacity-100" : "opacity-0"}`} style={{
+              backgroundImage: 'linear-gradient(rgba(20, 184, 166, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(20, 184, 166, 0.03) 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
+              backgroundPosition: 'center center'
+            }} />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-500/5 blur-[120px] rounded-full pointer-events-none z-0"></div>
+            
+            <div className="max-w-7xl mx-auto pb-20 relative z-10">
               <Suspense fallback={<div>Loading...</div>}>
                 {effectiveTab === "sovereign" && <SovereignPanel />}
                 {effectiveTab === "entity" && <EntityDashboard />}

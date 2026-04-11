@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
               حدث خطأ غير متوقع
             </h3>
             <p className="text-sm text-slate-400 max-w-md">
-              عذراً، حدث خطأ في التطبيق. يرجى إعادة تحميل الصفحة.
+              عذراً، حدث خطأ غير متوقع. يرجى إعادة تحميل الصفحة لمواصلة رحلتك.
             </p>
             <button
               onClick={() => window.location.reload()}

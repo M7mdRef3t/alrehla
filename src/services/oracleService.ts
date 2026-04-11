@@ -182,4 +182,53 @@ export class OracleService {
             return [];
         }
     }
+
+    /**
+     * 🔥 AUTO-IGNITION (Oracle Sovereign Control)
+     * Strategically evaluates platforms and directs budgets or defensive lockdowns.
+     */
+    static async evaluateGatewayAutoIgnition(gateways: any[], diffusion: any): Promise<any[]> {
+        const prompt = `
+      أنت "The Oracle" تتحكم مركزياً في ميزانيات منصة الدواير عبر بوابات التسويق (Gateways).
+
+      وضعية المسارات حالياً:
+      ${JSON.stringify(gateways.map(g => ({
+          name: g.name,
+          id: g.id,
+          status: g.status,
+          energy_level: g.energy_level,
+          actual_spend: g.actual_spend,
+          auto: g.auto_ignition_enabled
+      })), null, 2)}
+
+      نبض الرنين والسيولة (Diffusion Health):
+      ${JSON.stringify(diffusion.gatewayHealth, null, 2)}
+
+      المطلوب:
+      تحديد إجراءات "Sovereign Control" حاسمة بناءً على المباديء الأولى (First Principles):
+      1. إذا كانت الطاقة (الصرف) عالية، لكن "Resonance" منخفض جداً، فهذا هدر -> اطلب تقليل الطاقة (scale_energy).
+      2. إذا كانت الطاقة منخفضة، و Resonance منعدم تماماً -> إغلاق دفاعي تام (lock_gateway).
+      3. إذا كان الـ Resonance عالياً بشكل استثنائي والطاقة متوفرة -> إشعال استراتيجي (ignite_market).
+      4. أي تجاوز صريح للميزانية (actual_spend > spend) -> تدخّل فوري للتقليل.
+
+      الـ JSON المنشود هو مصفوفة من القرارات، كل قرار له هيكل:
+      [{
+        "gatewayId": string,
+        "type": "ignite_market" | "lock_gateway" | "scale_energy" | "notify_admin",
+        "reasoning": string (تحليل استراتيجي بالعامية المصرية),
+        "payload": object (ex: { "energy_level": 10 } or { "status": "locked" }),
+        "severity": "low" | "medium" | "high"
+      }]
+
+      قم بتوليد قرارات للمسارات التي تحتاج تدخل (وأخرى لا تحتاج لا تذكرها).
+    `;
+
+        try {
+            const actions = await geminiClient.generateJSON<any[]>(prompt);
+            return Array.isArray(actions) ? actions : [];
+        } catch (error) {
+            logger.error("Oracle Auto-Ignition Evaluation Error:", error);
+            return [];
+        }
+    }
 }

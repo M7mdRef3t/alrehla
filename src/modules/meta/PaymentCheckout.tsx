@@ -168,7 +168,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           onClick={onClose}
           className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
         >
-          رجوع للتطبيق
+          رجوع لرحلتك
         </button>
       </motion.div>
     );
@@ -259,7 +259,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           <div className="text-center mb-6">
             <CreditCard className="w-10 h-10 text-sky-400 mx-auto mb-3" />
             <h3 className="text-lg font-black text-white mb-1">PayPal غير متاح الآن</h3>
-            <p className="text-xs text-slate-400">لم يتم ضبط رابط PayPal في إعدادات المنصة بعد.</p>
+            <p className="text-xs text-slate-400">لم يتم ضبط رابط PayPal بعد.</p>
           </div>
         </FlowWrapper>
       );
@@ -305,7 +305,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           <div className="text-center mb-6">
             <CreditCard className="w-10 h-10 text-purple-400 mx-auto mb-3" />
             <h3 className="text-lg font-black text-white mb-1">الدفع بالبطاقة غير متاح الآن</h3>
-            <p className="text-xs text-slate-400">لم يتم ضبط رابط الدفع الدولي في إعدادات المنصة بعد.</p>
+            <p className="text-xs text-slate-400">لم يتم ضبط رابط الدفع الدولي بعد.</p>
           </div>
         </FlowWrapper>
       );
@@ -352,7 +352,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
         <div className="text-center mb-6">
           <Smartphone className={`w-10 h-10 mx-auto mb-3 ${isVodafone ? "text-red-400" : "text-blue-400"}`} />
           <h3 className="text-lg font-black text-white mb-1">وسيلة الدفع غير مهيأة بعد</h3>
-          <p className="text-xs text-slate-400">بيانات هذه الوسيلة غير مكتملة في إعدادات المنصة حاليًا.</p>
+          <p className="text-xs text-slate-400">بيانات هذه الوسيلة غير مكتملة حاليًا.</p>
         </div>
       </FlowWrapper>
     );

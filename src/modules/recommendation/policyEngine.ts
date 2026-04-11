@@ -127,7 +127,7 @@ function lowRiskCandidates(phase: JourneyPhaseV1, features: FeatureVectorV1): Ne
     {
       id: withId("candidate_growth_tools"),
       title: "وسّع أدواتك",
-      message: "الآن وقت مناسب لاستخدام أداة إضافية من الرحلة.",
+      message: "الآن وقت مناسب لاستكشاف محطة جديدة في الرحلة.",
       cta: "افتح أدوات الرحلة",
       actionType: "open_tools",
       tags: ["growth", "tools"]

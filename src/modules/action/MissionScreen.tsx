@@ -337,7 +337,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
               }}
               className="rounded-full bg-[var(--soft-teal)] text-white px-4 py-2 text-xs font-semibold hover:bg-[var(--soft-teal)] shrink-0"
             >
-              {contextualAffiliateVariant === "A" ? "شاهد الآن" : "ابدأ التطبيق الآن"}
+              {contextualAffiliateVariant === "A" ? "شاهد الآن" : "ابدأ رحلتك الآن"}
             </a>
           </div>
           <p className="text-xs text-slate-500 mt-3 line-clamp-2">{contextualAffiliate.description}</p>

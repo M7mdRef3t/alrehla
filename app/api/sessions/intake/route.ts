@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { processIntake } from '@/domains/sessions';
+import { processIntake } from '@/domains/sessions/services/intake.service';
 
 /**
  * POST /api/sessions/intake

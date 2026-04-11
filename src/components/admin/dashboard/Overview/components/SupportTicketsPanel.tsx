@@ -63,6 +63,7 @@ export const SupportTicketsPanel: FC = () => {
         if (!proofImage) return null;
         if (proofImage.data_url) return proofImage.data_url;
         if (proofImage.storage_bucket && proofImage.storage_path) {
+            if (!supabase) return null;
             const { data } = supabase.storage.from(proofImage.storage_bucket).getPublicUrl(proofImage.storage_path);
             return data.publicUrl;
         }

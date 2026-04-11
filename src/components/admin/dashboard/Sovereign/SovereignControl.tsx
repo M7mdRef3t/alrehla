@@ -10,6 +10,7 @@ import { CollapsibleSection } from "../../ui/CollapsibleSection";
 import { IllusionRadar } from "./IllusionRadar";
 import { SovereignSpreadCommand } from "./SovereignSpreadCommand";
 import { SovereignOracle } from "./SovereignOracle";
+import { SovereignDecisionLog } from "./SovereignDecisionLog";
 import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
 import { useLockdownState } from "@/domains/admin/store/lockdown.store";
 import { useThemeState } from "@/domains/consciousness/store/theme.store";
@@ -418,6 +419,11 @@ export const SovereignControl: FC = () => {
            <h2 className="text-xl font-black uppercase tracking-widest">رادار الأوهام والدجل (Dajjal Collision Map)</h2>
         </header>
         <IllusionRadar scenarios={liveStats?.topScenarios ?? null} isLoading={isLoadingPulse} />
+      </div>
+
+      {/* Sovereign AI Decision Log */}
+      <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden h-[400px]">
+        <SovereignDecisionLog />
       </div>
 
       {/* Secondary Controls Grid */}

@@ -29,10 +29,10 @@ export default function Error({
         {/* Message */}
         <div className="space-y-3">
           <h1 className="text-3xl font-bold tracking-tighter text-foreground sm:text-4xl font-tajawal">
-            حصلت مشكلة في الرحلة..
+            توقف مؤقت في الرحلة..
           </h1>
           <p className="mx-auto max-w-[600px] text-muted-foreground font-ibm-arabic">
-            معلش، حاجة وقفتنا وإحنا بنرتبلك الدنيا. متقلقش، تقدر تجرب تاني أو ترجع للصفحة الرئيسية.
+            معلش، حاجة وقفتنا وإحنا بنرتبلك الطريق. متقلقش، تقدر تجرب تاني أو ترجع لرحلتك.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export default function Error({
             href="/"
             className="flex items-center gap-2 rounded-full border border-input bg-background px-8 py-3 text-lg font-medium text-foreground transition-all hover:bg-accent hover:text-accent-foreground"
           >
-            ارجع للرئيسية
+            كمّل رحلتك
             <MoveRight className="mr-2 h-5 w-5 rotate-180" />
           </a>
         </div>

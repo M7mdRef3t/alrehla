@@ -180,8 +180,13 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
   });
 
   if (error) {
-    console.error("[marketing/lead] upsert_rpc_failed:", error);
-    throw error;
+    console.error("[marketing/lead] upsert_rpc_failed details:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint
+    });
+    throw new Error(`upsert_rpc_failed: ${error.message || String(error)}`);
   }
 
   const result = Array.isArray(data) ? data[0] : (data as any);
@@ -331,9 +336,21 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
     }
 
     return NextResponse.json({ ok: true, lead: { email: input.email, phone: input.phoneNormalized, source: input.source } });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("[marketing/lead] unexpected error:", error);
-    return NextResponse.json({ ok: false, error: "lead_store_failed" }, { status: 500 });
+    
+    // Provide a more descriptive error in Dev mode to help the user
+    const isDev = process.env.NODE_ENV !== "production";
+    const errorMessage = isDev ? `lead_store_failed: ${error.message || "Unknown error"}` : "lead_store_failed";
+
+    return NextResponse.json({ 
+      ok: false, 
+      error: errorMessage,
+      diagnostics: isDev ? {
+        has_supabase_url: Boolean(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL),
+        has_service_role: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)
+      } : undefined
+    }, { status: 500 });
   }
 }
 

@@ -186,7 +186,7 @@ export const PersonalProgressDashboard: FC<PersonalProgressDashboardProps> = ({
                               <MedalIcon className="w-6 h-6 text-slate-400" />
                             </div>
                             <p className="text-sm font-bold text-slate-600 dark:text-slate-400">لا يوجد أوسمة حتى الآن</p>
-                            <p className="text-xs text-slate-500 mt-1">استمر في استكشاف المنصة لفتح إنجازاتك الأولى.</p>
+                            <p className="text-xs text-slate-500 mt-1">استمر في استكشاف رحلتك لفتح إنجازاتك الأولى.</p>
                           </div>
                         )}
                       </section>

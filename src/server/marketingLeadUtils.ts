@@ -35,8 +35,8 @@ export function sanitizePhone(value: unknown): { raw: string; normalized: string
   }
 
   // 3. For all other numbers (GCC, International, etc.)
-  // We accept any digit string between 10 and 15 digits (standard E.164 length without +)
-  if (digits.length >= 10 && digits.length <= 15) {
+  // We accept any digit string between 8 and 15 digits (standard E.164 length without +)
+  if (digits.length >= 8 && digits.length <= 15) {
     return { raw: text, normalized: digits };
   }
 

@@ -601,7 +601,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   )}
                 </SidebarSector>
 
-                <SidebarSector title="العمل والتطبيق" icon={<Target className="w-4 h-4" />} color="indigo">
+                <SidebarSector title="العمل والممارسة" icon={<Target className="w-4 h-4" />} color="indigo">
                   <SidebarItem
                     label="رصد الحالة"
                     icon={<ClipboardList className="w-5 h-5" />}

@@ -372,7 +372,7 @@ export function AppRuntimeControllers({
 
       for (const sessionId of alerts.newVisitors.sessionIds) {
         await sendOwnerNotification(
-          "زائر جديد دخل المنصة",
+          "زائر جديد بدأ رحلته",
           `Session: ${sessionId.slice(0, 14)}…`,
           `owner-visitor-${sessionId}`
         );

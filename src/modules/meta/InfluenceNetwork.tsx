@@ -75,7 +75,7 @@ export const InfluenceNetwork: FC = () => {
                     <Activity className="w-6 h-6 text-slate-500 animate-pulse" />
                 </div>
                 <h3 className="text-white font-black text-sm mb-2">جاري استكشاف الأنماط</h3>
-                <p className="text-slate-500 text-[11px] font-bold">المنصة في حالة رصد وتحليل حالياً. أول ما الداتا تتكون (٧ أيام نبض + خريطة) خريطة التأثير تظهر هنا.</p>
+                <p className="text-slate-500 text-[11px] font-bold">رحلتك في حالة رصد وتحليل حالياً. أول ما الداتا تتكون (٧ أيام نبض + خريطة) خريطة التأثير تظهر هنا.</p>
             </div>
         );
     }
@@ -242,7 +242,7 @@ export const InfluenceNetwork: FC = () => {
                                 ? "الأنماط الحالية لم تصل لمستوى دلالة إحصائية كافية (Confidence < 0.3). استمر في تسجيل النبض لتفعيل محور الربط."
                                 : isDriftMode
                                     ? "الأنماط بتوضح العلاقات اللي اتحسنت (+) أو ساءت (-) مقارنة بآخر لقطة. ده بيساعدك تشوف التطور مش مجرد صورة لحظية."
-                                    : `الشبكة بتوضح إن ${data.nodes.find(n => n.id === data.edges[0]?.source)?.label || 'المركز'} ليه أكبر تأثير ${data.edges[0]?.strength > 0 ? 'إيجابي' : 'سلبي'} حالياً. الحالة حول الدائرة بتثبت ثقة المنصة في التحليل ده.`
+                                    : `الشبكة بتوضح إن ${data.nodes.find(n => n.id === data.edges[0]?.source)?.label || 'المركز'} ليه أكبر تأثير ${data.edges[0]?.strength > 0 ? 'إيجابي' : 'سلبي'} حالياً. الحالة حول الدائرة بتثبت ثقة التحليل في القراءة دي.`
                             }
                         </p>
                     </div>

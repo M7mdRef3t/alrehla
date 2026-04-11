@@ -112,7 +112,7 @@ export async function getSmartInactiveReminder(): Promise<SmartReminderContent> 
   if (p.situationsCount >= 2 && !p.hasViewedPlan) {
     return {
       title: "خطتك مستنياك 📋",
-      body: "كتبت المواقف من زمان. افتح التطبيق وشوف خطتك الأسبوعية من تبويب الخطة."
+      body: "كتبت المواقف من زمان. ارجع لرحلتك وشوف خطتك الأسبوعية من تبويب الخطة."
     };
   }
 

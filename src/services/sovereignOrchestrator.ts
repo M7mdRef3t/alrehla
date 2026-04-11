@@ -184,6 +184,7 @@ export class SovereignOrchestrator {
         }
 
         // Here we could plug into actual system effects (e.g., dispatchNudge, toggleLockdown overrides)
+        if (!supabase) return;
         const channel = supabase.channel('sovereign_control');
         
         let sentBroadcast = false;

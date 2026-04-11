@@ -147,7 +147,7 @@ export const GhostMirror: React.FC = () => {
         if (!isSupabaseReady || !supabase) return;
         
         const { data, error } = await supabase
-          .from("journey_events")
+          .from("routing_events")
           .select("*")
           .order("occurred_at", { ascending: false })
           .limit(20);
@@ -170,13 +170,13 @@ export const GhostMirror: React.FC = () => {
     if (!isSupabaseReady || !supabase) return;
 
     // Real-time Channel Setup
-    const channel = supabase.channel("public:journey_events")
+    const channel = supabase.channel("public:routing_events")
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
-          table: "journey_events"
+          table: "routing_events"
         },
         (payload) => {
           if (!active) return;

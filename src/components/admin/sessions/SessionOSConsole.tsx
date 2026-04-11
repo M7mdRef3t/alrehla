@@ -9,6 +9,8 @@ import html2canvas from 'html2canvas';
 
 type ConsoleTab = 'dashboard' | 'triage_queue' | 'ai_brief' | 'live_session' | 'post_session' | 'analytics';
 
+const techEase: [number, number, number, number] = [0, 0.7, 0.1, 1];
+
 export function SessionOSConsole() {
   const [activeTab, setActiveTab] = useState<ConsoleTab>('dashboard');
   const [requests, setRequests] = useState<any[]>([]);
@@ -52,6 +54,7 @@ export function SessionOSConsole() {
   const sendSovereignCommand = async (type: string, payload: any) => {
     try {
       const { supabase } = await import('@/services/supabaseClient');
+      if (!supabase) return;
       const channel = supabase.channel('sovereign_control');
       channel.subscribe((status) => {
         if (status === 'SUBSCRIBED') {
@@ -60,7 +63,7 @@ export function SessionOSConsole() {
             event: 'OVERRIDE',
             payload: { type, ...payload }
           }).then(() => {
-            supabase.removeChannel(channel);
+            supabase?.removeChannel(channel);
           });
         }
       });
@@ -204,20 +207,30 @@ export function SessionOSConsole() {
           <p className="text-xs text-neutral-500 mt-1">Cognitive Coaching Engine</p>
         </div>
 
-        <nav className="space-y-2 flex-grow">
+        <nav className="space-y-2 flex-grow mt-4">
           <NavItem active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={<Activity className="w-4 h-4" />} label="نظرة عامة" />
           <NavItem active={activeTab === 'triage_queue'} onClick={() => setActiveTab('triage_queue')} icon={<Users className="w-4 h-4" />} label="طابور الفرز" badge="2" />
-          <div className="my-4 border-t border-neutral-800 pt-4"></div>
+          <div className="my-6 border-t border-white/5 pt-6"></div>
           <NavItem active={activeTab === 'ai_brief'} onClick={() => setActiveTab('ai_brief')} icon={<BrainCircuit className="w-4 h-4" />} label="ذكاء ما قبل الجلسة" />
           <NavItem active={activeTab === 'live_session'} onClick={() => setActiveTab('live_session')} icon={<Briefcase className="w-4 h-4" />} label="كونسول التنفيذ (Live)" />
           <NavItem active={activeTab === 'post_session'} onClick={() => setActiveTab('post_session')} icon={<FileCheck2 className="w-4 h-4" />} label="الإغلاق والتوثيق" />
-          <div className="my-4 border-t border-neutral-800 pt-4"></div>
+          <div className="my-6 border-t border-white/5 pt-6"></div>
           <NavItem active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={<BarChart3 className="w-4 h-4" />} label="الإحصائيات والأثر" />
         </nav>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 relative">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 relative selection:bg-teal-500/30">
+        
+        {/* Architectural Background Grid Overlay (Static Engine Pattern) */}
+        <div className="absolute inset-0 pointer-events-none z-0" style={{
+          backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+          backgroundPosition: 'center center'
+        }} />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-500/5 blur-[120px] rounded-full pointer-events-none z-0"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-500/5 blur-[150px] rounded-full pointer-events-none z-0"></div>
+
         {/* Top Intelligence Bar */}
         <div className="flex justify-end mb-6 relative z-50">
           <button 
@@ -268,21 +281,31 @@ export function SessionOSConsole() {
 
         <AnimatePresence mode="wait">
           {activeTab === 'dashboard' && (
-            <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
-              <h1 className="text-3xl font-bold mb-8">نظرة عامة على الجلسات</h1>
+            <motion.div key="dashboard" 
+              initial={{ clipPath: 'inset(100% 0 0 0)', y: 20 }} 
+              animate={{ clipPath: 'inset(0 0 0 0)', y: 0 }} 
+              exit={{ opacity: 0 }} 
+              transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" 
+              dir="rtl"
+            >
+              <h1 className="text-3xl font-black mb-8 font-sans tracking-tight">نظرة عامة على الجلسات</h1>
               <div className="grid grid-cols-3 gap-6 mb-8">
-                <StatCard title="طلبات جديدة" value={requests.filter(r => r.status === 'new_request' || r.status === 'needs_manual_review').length.toString()} icon={<Users className="text-blue-500" />} />
-                <StatCard title="جاهزون للجلسة" value={requests.filter(r => ['session_ready', 'brief_generated'].includes(r.status)).length.toString()} icon={<FileText className="text-green-500" />} />
-                <StatCard title="متابعات معلقة" value={requests.filter(r => r.status === 'followup_pending').length.toString()} icon={<Share className="text-orange-500" />} />
+                <StatCard title="طلبات جديدة" value={requests.filter(r => r.status === 'new_request' || r.status === 'needs_manual_review').length.toString()} icon={<Users className="text-teal-400" />} />
+                <StatCard title="جاهزون للجلسة" value={requests.filter(r => ['session_ready', 'brief_generated'].includes(r.status)).length.toString()} icon={<FileText className="text-indigo-400" />} />
+                <StatCard title="متابعات معلقة" value={requests.filter(r => r.status === 'followup_pending').length.toString()} icon={<Share className="text-orange-400" />} />
               </div>
             </motion.div>
           )}
 
           {activeTab === 'triage_queue' && (
-            <motion.div key="triage_queue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
+            <motion.div key="triage_queue" 
+              initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0 0 0 0)' }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" dir="rtl"
+            >
               <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">طابور الفرز والمراجعة</h1>
-                <button className="bg-neutral-800 border border-neutral-700 px-4 py-2 rounded-lg text-sm hover:bg-neutral-700 transition">تحديث القائمة</button>
+                <h1 className="text-3xl font-black font-sans tracking-tight">طابور الفرز والمراجعة</h1>
+                <button className="bg-white/5 border border-white/10 px-4 py-2 rounded-lg text-sm font-bold hover:bg-white/10 transition">تحديث القائمة</button>
               </div>
 
               <div className="space-y-4">
@@ -344,15 +367,18 @@ export function SessionOSConsole() {
           )}
 
           {activeTab === 'ai_brief' && (
-            <motion.div key="ai_brief" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
-              <h1 className="text-3xl font-bold mb-8 flex items-center gap-3">
+            <motion.div key="ai_brief" 
+              initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0 0 0 0)' }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" dir="rtl"
+            >
+              <h1 className="text-3xl font-black mb-8 flex items-center gap-3 font-sans">
                 <BrainCircuit className="text-indigo-400" />
                 ملخص الذكاء الاصطناعي (AI Brief)
               </h1>
               
-              <div className="bg-indigo-950/20 border border-indigo-900/30 rounded-2xl p-6 mb-6">
-                <h3 className="text-indigo-300 text-sm font-bold uppercase tracking-wider mb-2">أول فرضية تشغيلية</h3>
-                <p className="text-xl leading-relaxed text-indigo-50 border-l-2 border-indigo-500 pl-4">
+              <div className="bg-indigo-500/5 backdrop-blur-md border border-indigo-500/20 rounded-2xl p-6 mb-6 shadow-inner relative overflow-hidden">
+                <h3 className="text-indigo-400 text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2"><div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"/> أول فرضية تشغيلية</h3>
+                <p className="text-2xl font-bold leading-relaxed text-indigo-50 border-r-2 border-indigo-500/50 pr-4">
                   {sessionBrief.first_hypothesis}
                 </p>
               </div>
@@ -372,14 +398,17 @@ export function SessionOSConsole() {
           )}
 
           {activeTab === 'live_session' && (
-            <motion.div key="live_session" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
-              <div className="flex justify-between items-end mb-8 border-b border-neutral-800 pb-4">
+            <motion.div key="live_session" 
+              initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0 0 0 0)' }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" dir="rtl"
+            >
+              <div className="flex justify-between items-end mb-8 border-b border-white/5 pb-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-emerald-400 flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-black text-teal-400 flex items-center gap-3 mb-2 font-sans tracking-tight">
                     <Activity className="animate-pulse" />
                     كونسول التنفيذ (Live)
                   </h1>
-                  <p className="text-neutral-400">العميل: {selectedRequest?.dawayir_clients?.name || '---'} — الجلسة جارية الآن.</p>
+                  <p className="text-slate-400 font-medium">العميل: {selectedRequest?.dawayir_clients?.name || '---'} — الجلسة جارية الآن.</p>
                 </div>
                 <div className="text-right">
                   <span className="text-xs text-neutral-500 block mb-1">الافتتاح المقترح</span>
@@ -469,9 +498,12 @@ export function SessionOSConsole() {
           )}
 
           {activeTab === 'post_session' && (
-            <motion.div key="post_session" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
-              <h1 className="text-3xl font-bold mb-8 text-neutral-100 flex items-center">
-                <FileCheck2 className="w-8 h-8 ml-3 text-blue-400" />
+            <motion.div key="post_session" 
+              initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0 0 0 0)' }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" dir="rtl"
+            >
+              <h1 className="text-3xl font-black mb-8 text-white flex items-center font-sans">
+                <FileCheck2 className="w-8 h-8 ml-3 text-teal-400" />
                 شاشة الإغلاق والتوثيق
               </h1>
               
@@ -606,17 +638,20 @@ export function SessionOSConsole() {
           )}
 
           {activeTab === 'analytics' && (
-            <motion.div key="analytics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
-              <h1 className="text-3xl font-bold mb-8 flex items-center gap-3">
-                <BarChart3 className="text-blue-400" />
+            <motion.div key="analytics" 
+              initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0 0 0 0)' }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" dir="rtl"
+            >
+              <h1 className="text-3xl font-black mb-8 flex items-center gap-3 font-sans">
+                <BarChart3 className="text-teal-400" />
                 تحليلات الأثر والتحول التحويلي
               </h1>
 
               <div className="grid grid-cols-4 gap-6 mb-8">
-                <StatCard title="إجمالي الجلسات" value={requests.length.toString()} icon={<Activity className="text-blue-400" />} />
-                <StatCard title="معدل الإكمال" value={`${Math.round((requests.filter(r => r.status === 'session_done').length / (requests.length || 1)) * 100)}%`} icon={<FileCheck2 className="text-emerald-400" />} />
-                <StatCard title="متوسط الوضوح" value={`${(requests.reduce((acc, r) => acc + (r.dawayir_triage_answers?.[0]?.clarity_score || 0), 0) / (requests.length || 1)).toFixed(1)}/10`} icon={<TrendingUp className="text-indigo-400" />} />
-                <StatCard title="طلبات الفرز" value={requests.filter(r => r.status === 'needs_manual_review').length.toString()} icon={<AlertTriangle className="text-yellow-400" />} />
+                <StatCard title="إجمالي الجلسات" value={requests.length.toString()} icon={<Activity className="text-teal-400" />} />
+                <StatCard title="معدل الإكمال" value={`${Math.round((requests.filter(r => r.status === 'session_done').length / (requests.length || 1)) * 100)}%`} icon={<FileCheck2 className="text-indigo-400" />} />
+                <StatCard title="متوسط الوضوح" value={`${(requests.reduce((acc, r) => acc + (r.dawayir_triage_answers?.[0]?.clarity_score || 0), 0) / (requests.length || 1)).toFixed(1)}/10`} icon={<TrendingUp className="text-white" />} />
+                <StatCard title="طلبات الفرز" value={requests.filter(r => r.status === 'needs_manual_review').length.toString()} icon={<AlertTriangle className="text-orange-400" />} />
               </div>
 
               <div className="grid grid-cols-2 gap-8">
@@ -685,21 +720,21 @@ function NavItem({ active, icon, label, badge, onClick }: { active: boolean, ico
 
 function StatCard({ title, value, icon }: { title: string, value: string, icon: React.ReactNode }) {
   return (
-    <div className="bg-[#111] border border-neutral-800 rounded-2xl p-6 flex flex-col">
+    <div className="bg-[#111]/80 backdrop-blur-md border border-white/5 rounded-2xl p-6 flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-sm text-neutral-400 font-medium">{title}</h3>
-        <div className="bg-neutral-900 p-2 rounded-lg border border-neutral-800">{icon}</div>
+        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">{title}</h3>
+        <div className="bg-white/5 p-2 rounded-lg border border-white/10 shadow-inner">{icon}</div>
       </div>
-      <div className="text-4xl font-black">{value}</div>
+      <div className="text-4xl font-black font-sans tracking-tight text-white">{value}</div>
     </div>
   );
 }
 
 function BriefBlock({ title, content }: { title: string, content: string }) {
   return (
-    <div className="bg-[#111] border border-neutral-800 rounded-xl p-5">
-      <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3">{title}</h3>
-      <p className="text-sm text-neutral-200 leading-relaxed">{content}</p>
+    <div className="bg-[#111]/60 backdrop-blur-md border border-white/5 rounded-2xl p-6">
+      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex gap-2"><div className="w-1 h-3 rounded-full bg-slate-600"/>{title}</h3>
+      <p className="text-sm font-medium text-slate-200 leading-relaxed max-w-prose">{content}</p>
     </div>
   );
 }

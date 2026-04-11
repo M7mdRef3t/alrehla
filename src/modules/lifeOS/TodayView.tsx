@@ -732,7 +732,7 @@ export function TodayView({
           <div className="space-y-1">
             <h3 className="text-base font-black text-white">ابدأ ببناء عاداتك</h3>
             <p className="text-xs text-white/30 leading-relaxed">
-              أضف عادات يومية عشان المنصة تقدر تخطط يومك وتتابع تقدمك
+              أضف عادات يومية عشان رحلتك تقدر تخطط يومك وتتابع تقدمك
             </p>
           </div>
           <button

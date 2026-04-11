@@ -147,8 +147,7 @@ export function LandingSimulation() {
   }, []);
 
   return (
-    <div className="relative mx-auto mt-8 w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-[rgba(255,255,255,0.05)] shadow-[0_20px_80px_rgba(0,0,0,0.8)]" id="simulation" dir="rtl"
-      style={{ background: "rgba(8, 8, 14, 0.65)", backdropFilter: "blur(40px)" }}>
+    <div className="relative mx-auto mt-8 w-full max-w-lg overflow-hidden rounded-[2.5rem] glass-premium shadow-[0_20px_80px_rgba(0,0,0,0.8)]" id="simulation" dir="rtl">
       
       <div className={`absolute -inset-20 opacity-20 blur-[80px] transition-colors duration-1000 ${
             step === 'analyzing' ? 'bg-indigo-500/40 animate-pulse' : 
@@ -171,7 +170,7 @@ export function LandingSimulation() {
                 <Cpu className="h-8 w-8" />
               </div>
               <h3 className="mb-4 text-3xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>صخب لا ينتهي؟</h3>
-              <p className="mb-10 text-[15px] leading-loose text-white/50 max-w-[34ch] mx-auto">
+              <p className="mb-10 text-[15px] leading-loose text-white/50 max-w-[34ch] mx-auto text-justify" style={{ textJustify: "inter-word", textAlignLast: "center" }}>
                 لا تجري استبيانات. 3 أسئلة من الأعماق، في دقيقتين فقط، لتشغيل مرآة الوعي الخاصة بك وتحديد نقطة الانطلاق.
               </p>
               <button
@@ -253,7 +252,7 @@ export function LandingSimulation() {
                 {getResultContent()?.title}
               </h3>
               
-              <div className="mb-10 text-[15px] leading-loose text-white/60 max-w-[34ch] mx-auto text-center">
+              <div className="mb-10 text-[15px] leading-loose text-white/60 max-w-[34ch] mx-auto text-justify" style={{ textJustify: "inter-word", textAlignLast: "center" }}>
                 {getResultContent()?.message}
               </div>
 

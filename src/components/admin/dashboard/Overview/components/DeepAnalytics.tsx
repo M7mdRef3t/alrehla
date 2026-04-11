@@ -140,9 +140,18 @@ const WeeklyRhythmCard: FC<{ data: OverviewStats["weeklyRhythm"] }> = ({ data })
                 <ResponsiveContainer width="99%" height={224}>
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <RechartsTooltip
-                            cursor={{ fill: 'rgba(255,255,255,0.02)' }}
-                            contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backdropFilter: 'blur(8px)', color: '#fff' }}
-                            itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                            cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                            contentStyle={{ 
+                                backgroundColor: 'rgba(10, 15, 30, 0.85)', 
+                                borderColor: 'rgba(45, 212, 191, 0.2)', 
+                                borderRadius: '12px', 
+                                fontSize: '11px', 
+                                fontWeight: 'bold', 
+                                backdropFilter: 'blur(16px)', 
+                                color: '#fff', 
+                                boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.05)' 
+                            }}
+                            itemStyle={{ color: '#2dd4bf', fontWeight: '900', paddingTop: '4px' }}
                         />
                         <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={40}>
                             {chartData.map((entry: any, index: number) => (

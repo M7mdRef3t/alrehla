@@ -148,10 +148,13 @@ export const SovereignExpansionHub: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {markets.map((market) => (
-                <button
+                <div
                   key={market.id}
                   onClick={() => setActiveMarket(market.id)}
-                  className={`p-6 rounded-3xl border transition-all text-right group ${
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setActiveMarket(market.id); }}
+                  className={`p-6 rounded-3xl border transition-all text-right group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 ${
                     activeMarket === market.id 
                     ? "bg-rose-500/10 border-rose-500/40 ring-1 ring-rose-500/20" 
                     : "bg-slate-900/50 border-white/5 hover:border-white/20"
@@ -197,7 +200,7 @@ export const SovereignExpansionHub: React.FC = () => {
                         </button>
                      </div>
                   )}
-                </button>
+                </div>
               ))}
             </div>
           </div>

@@ -184,7 +184,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   const shareCardRef = useRef<HTMLDivElement | null>(null);
   const isForcedCtaMode = isUserMode && forcedGate;
   const shouldShowMapSyncBanner = mapSyncStatus === "error";
-  const mapSyncBannerText = "تعذر الحفظ السحابي مؤقتًا. هنحاول تلقائيًا عند فتح التطبيق.";
+  const mapSyncBannerText = "تعذر الحفظ السحابي مؤقتًا. هنحاول تلقائيًا عند العودة للرحلة.";
 
   const startMissionAndTrack = (nodeId: string) => {
     const node = useMapState.getState().nodes.find((item) => item.id === nodeId);

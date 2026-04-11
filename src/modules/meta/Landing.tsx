@@ -211,22 +211,64 @@ export const Landing: FC<LandingPropsExtended> = ({
 
       <div style={{ contentVisibility: "auto", containIntrinsicSize: "1px 2600px" }} />
 
+      <section className="relative py-28 px-4 max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease }}
+          className="glass-premium rounded-[32px] overflow-hidden p-10 sm:p-20 text-center"
+        >
+          <div className="mb-12">
+            <p className="text-xs font-black tracking-[0.4em] uppercase mb-4" style={{ fontFamily: "var(--ds-font-prestige)", color: "var(--ds-color-primary)" }}>
+              المبادئ الأولى — First Principles
+            </p>
+            <h2 className="text-3xl sm:text-5xl font-black mb-6" style={{ fontFamily: "var(--ds-font-display)", color: "var(--text-primary)", lineHeight: 1.1 }}>
+              إحنا مش بنخمّن.<br />إحنا بنحلل الـ Logic.
+            </h2>
+            <p className="text-base sm:text-lg max-w-[50ch] mx-auto" style={{ color: "var(--text-secondary)", lineHeight: 1.8, textAlign: "justify", textJustify: "inter-word" }}>
+              الرحلة بتستخدم "نظام تشغيل سيادي" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-right" dir="rtl">
+            {[
+              { title: "رصد الاستنزاف", desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية.", icon: "⚡" },
+              { title: "خرائط النبض", desc: "رسم بياني حقيقي لمين بيزودك ومين بيسحب منك.", icon: "📈" },
+              { title: "تحصين الحدود", desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي.", icon: "🛡️" }
+            ].map((f, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + i * 0.1 }}
+                className="p-8 rounded-2xl border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)]"
+              >
+                <div className="text-3xl mb-4">{f.icon}</div>
+                <h3 className="text-xl font-black mb-2" style={{ fontFamily: "var(--ds-font-display)", color: "var(--ds-color-primary)" }}>{f.title}</h3>
+                <p className="text-sm opacity-70 leading-relaxed" style={{ textAlign: "justify", textJustify: "inter-word" }}>{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
       <section className="relative py-20 px-4 max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
+          viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.7, ease }}
         >
           <div className="text-center mb-8">
-            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "var(--ds-color-accent-indigo)" }}>
-              جرّب بنفسك
+            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ fontFamily: "var(--ds-font-prestige)", color: "var(--ds-color-accent-indigo)" }}>
+              المُحاكي — Simulation
             </p>
-              <h2 className="text-2xl sm:text-3xl font-black mb-3" style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)" }}>
+            <h2 className="text-2xl sm:text-4xl font-black mb-3" style={{ fontFamily: "var(--ds-font-display)", color: "var(--text-primary)" }}>
               صمم مسارك الداخلي
             </h2>
-            <p className="text-sm max-w-[38ch] mx-auto" style={{ color: "var(--text-secondary)" }}>
-              ٣ أسئلة بسيطة — بدون تفكير — وهتكشف النمط اللي ماسك دماغك.
+            <p className="text-sm sm:text-base max-w-[38ch] mx-auto" style={{ color: "var(--text-secondary)", textAlign: "justify", textJustify: "inter-word", textAlignLast: "center" }}>
+              ٣ أسئلة بسيطة — بدون تفكير — وهتكشف النمط اللي ماسك دماغك دلوقتي.
             </p>
           </div>
           <LandingSimulation />

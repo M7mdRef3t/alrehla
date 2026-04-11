@@ -2,6 +2,6 @@
 
 import { ClientAppShell } from "./client-app-shell";
 
-export default function ClientAppEntry() {
-  return <ClientAppShell />;
+export default function ClientAppEntry({ puckData }: { puckData?: any }) {
+  return <ClientAppShell puckData={puckData} />;
 }

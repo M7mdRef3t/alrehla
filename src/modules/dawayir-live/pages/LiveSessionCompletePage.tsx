@@ -109,7 +109,7 @@ function createCopy(isArabic: boolean) {
         releaseWaiting: "انفخ في الميكروفون أو اضغط مرة ثانية",
         releaseFallback: "يمكنك الضغط مرة ثانية لإكمال التخلي.",
         releaseInProgress: "جارٍ التخلي...",
-        disclaimer: "دواير أداة بصيرة ذاتية وليست بديلاً عن الدعم المهني.",
+        disclaimer: "دواير بوصلة بصيرة ذاتية وليست بديلاً عن الدعم المهني.",
       }
     : {
         authTitle: "Start after signing in",
@@ -154,7 +154,7 @@ function createCopy(isArabic: boolean) {
         releaseWaiting: "Blow into the mic or tap again",
         releaseFallback: "Tap again to complete the detachment.",
         releaseInProgress: "Detaching...",
-        disclaimer: "Dawayir is a self-insight tool and not a substitute for professional support.",
+        disclaimer: "Dawayir is a self-insight compass and not a substitute for professional support.",
       };
 }
 

@@ -41,7 +41,7 @@ export const AnalyticsConsentBanner = ({ suppressed = false }: AnalyticsConsentB
     <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-4 left-1/2 z-[70] w-[min(44rem,calc(100vw-1rem))] -translate-x-1/2 px-2">
       <div className="rounded-2xl border border-white/15 bg-slate-900/95 p-3 shadow-xl backdrop-blur-md">
         <div className="mb-2 text-sm leading-relaxed text-slate-200">
-          نستخدم أدوات قياس بسيطة لتحسين المنصة بدون جمع محتواك الشخصي. هل توافق على التفعيل؟
+          نستخدم أدوات قياس بسيطة لتحسين رحلتك بدون جمع محتواك الشخصي. هل توافق على التفعيل؟
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <button
