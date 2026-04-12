@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/services/supabaseClient';
 import { consciousnessTheme } from '@/ai/consciousnessThemeEngine';
 import { useThemeState } from '@/domains/consciousness/store/theme.store';
 import { injectWhisper } from '@/components/ui/WhisperOverlay';
-import { triggerHapticIntervention } from '@/components/providers/ConsciousnessSensoryProvider';
+import { triggerHapticIntervention } from '@/components/providers/sensoryHaptics';
 
 export function SovereignReceiver() {
   useEffect(() => {

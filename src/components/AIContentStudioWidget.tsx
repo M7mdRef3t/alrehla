@@ -1,7 +1,7 @@
 import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState } from "react";
-import { Video, Wand2, Sparkles, Copy, RefreshCw, Layers, Zap, ShieldAlert, Brain, History, ChevronRight, ChevronLeft, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Video, Wand2, Sparkles, Copy, RefreshCw, Zap, ShieldAlert, Brain, History, ChevronRight, ChevronLeft, ThumbsUp, ThumbsDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMapState } from "@/domains/dawayir/store/map.store";
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";

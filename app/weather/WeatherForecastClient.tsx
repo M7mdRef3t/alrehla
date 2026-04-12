@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Shield, Zap, Clock, Heart, AlertTriangle, CheckCircle, ChevronRight } from "lucide-react";
+import { Zap, Clock, AlertTriangle, CheckCircle, ChevronRight } from "lucide-react";
 import html2canvas from "html2canvas";
 import { trackEvent, trackPageView } from "../../src/services/analytics";
 import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "../../src/services/marketingAttribution";
