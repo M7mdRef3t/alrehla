@@ -125,12 +125,12 @@ export async function PATCH(req: Request) {
  * POST: Complex actions (resend email, mark manual, sync from meta)
  */
 export async function POST(req: Request) {
-  const auth = await requireLiveAuth(req as any);
-  if ("status" in auth) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
-
   try {
+    const auth = await requireLiveAuth(req as any);
+    if ("status" in auth) {
+      return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
     const { email, action, id } = body;
 
@@ -148,7 +148,33 @@ export async function POST(req: Request) {
       });
 
       if (error) {
-        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+        // Fallback when RPC isn't deployed yet on some environments.
+        const { data: leadRow } = await supabase
+          .from("marketing_leads")
+          .select("metadata, note")
+          .eq("id", id)
+          .maybeSingle();
+
+        const nextMetadata =
+          leadRow?.metadata && typeof leadRow.metadata === "object"
+            ? { ...(leadRow.metadata as Record<string, unknown>), whatsapp_sent_at: whatsappSentAt, whatsapp_sent_manual: true }
+            : { whatsapp_sent_at: whatsappSentAt, whatsapp_sent_manual: true };
+
+        const noteLine = `[WHATSAPP] marked sent at ${whatsappSentAt}`;
+        const nextNote = leadRow?.note ? `${leadRow.note}\n${noteLine}` : noteLine;
+
+        const { error: fallbackError } = await supabase
+          .from("marketing_leads")
+          .update({
+            metadata: nextMetadata,
+            note: nextNote,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", id);
+
+        if (fallbackError) {
+          return NextResponse.json({ ok: false, error: `mark_whatsapp_failed: ${fallbackError.message}` }, { status: 200 });
+        }
       }
 
       return NextResponse.json({ ok: true, whatsapp_sent_at: whatsappSentAt });
@@ -196,7 +222,7 @@ export async function POST(req: Request) {
       const { metaLeadsService } = await import("../../../../../src/services/metaLeadsService");
       const metaData = await metaLeadsService.fetchLeadDetails(metaLeadId);
 
-      if (!metaData) return NextResponse.json({ ok: false, error: "meta_api_fetch_failed" }, { status: 500 });
+      if (!metaData) return NextResponse.json({ ok: false, error: "meta_api_fetch_failed" }, { status: 200 });
 
       // 3. Process Fields
       const fields: Record<string, string> = {};
@@ -240,7 +266,7 @@ export async function POST(req: Request) {
         })
         .eq("id", id);
 
-      if (updateErr) return NextResponse.json({ ok: false, error: updateErr.message }, { status: 500 });
+      if (updateErr) return NextResponse.json({ ok: false, error: updateErr.message }, { status: 200 });
 
       return NextResponse.json({ ok: true, phone: phoneParsed?.normalized });
     }
@@ -319,7 +345,7 @@ export async function POST(req: Request) {
       });
 
       if (!sendResult.ok) {
-        return NextResponse.json({ ok: false, error: `send_failed: ${sendResult.error}` }, { status: 500 });
+        return NextResponse.json({ ok: false, error: `send_failed: ${sendResult.error}` }, { status: 200 });
       }
 
       // 4. Update queue record
@@ -349,6 +375,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "unknown_action" }, { status: 400 });
   } catch (error: any) {
     console.error("[marketing-ops/lead] POST error:", error);
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: error?.message ?? "unexpected_error" }, { status: 200 });
   }
 }
