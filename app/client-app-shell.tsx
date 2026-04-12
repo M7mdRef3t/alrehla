@@ -14,6 +14,7 @@ import { AnalyticsDiagnosticsOverlay } from "@/modules/meta/AnalyticsDiagnostics
 import { PlatformHeader } from "@/modules/meta/PlatformHeader";
 import type { PostAuthIntent } from "@/utils/postAuthIntent";
 import { hasRevenueAccess } from "@/services/revenueAccess";
+import type { Data } from "@measured/puck";
 
 const App = dynamic(() => import("@/App"), { ssr: false });
 const Landing = dynamic(() => import("@/modules/meta/Landing").then((m) => m.Landing), { ssr: false }) as typeof import("@/modules/meta/Landing").Landing;
@@ -26,6 +27,17 @@ const PuckLandingAdapter = dynamic(() => import("./PuckLandingAdapter").then((m)
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
+
+function hasRenderablePuckData(data: Data | null | undefined): data is Data {
+  if (!data || typeof data !== "object") return false;
+
+  // Puck data can exist as an object but still contain no blocks to render.
+  if ("content" in data && Array.isArray(data.content)) {
+    return data.content.length > 0;
+  }
+
+  return Object.keys(data).length > 0;
+}
 
 function shouldSilenceAiLog(args: unknown[]): boolean {
   if (!runtimeEnv.isDev) return false;
@@ -288,7 +300,7 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
               onNavigate={handleLandingNavigate}
             />
             <Suspense fallback={<AwarenessSkeleton />}>
-              {puckData ? (
+              {hasRenderablePuckData(puckData) ? (
                 <PuckLandingAdapter data={puckData} />
               ) : (
                 <Landing
