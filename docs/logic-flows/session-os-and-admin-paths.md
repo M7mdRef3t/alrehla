@@ -52,3 +52,7 @@
 - Marketing catchall in `app/(marketing)/p/[...catchall]/page.tsx` now supports a guarded fallback path when Plasmic marketing is disabled.
 - Sensory providers were hardened to remove unsafe typing and split haptics helper logic into `src/components/providers/sensoryHaptics.ts`.
 - CI install step now retries `npm ci` up to 3 attempts to handle transient network failures during dependency setup.
+
+## 2026-04-12 Landing Render Guard (PR #129)
+- Home rendering in `app/client-app-shell.tsx` now validates Puck payload before rendering `PuckLandingAdapter`.
+- If CMS payload exists but has no renderable blocks (for example `content: []`), the app falls back to default `Landing` instead of showing a blank body.
