@@ -1,19 +1,23 @@
-import { PLASMIC } from "@/plasmic-init";
-import { extractPlasmicQueryData } from "@plasmicapp/loader-nextjs";
 import { notFound } from "next/navigation";
-import { PlasmicComponent } from "@plasmicapp/loader-nextjs";
 
-export const revalidate = 60; // ISR Trigger every 60 seconds
+export const revalidate = 60;
 
 export default async function PlasmicMarketingPage({
   params,
-  searchParams,
 }: {
   params: { catchall: string[] };
-  searchParams: Record<string, string | string[]>;
 }) {
-  const plasmicPath = "/" + (params.catchall?.join("/") || "");
+  const plasmicEnabled = process.env.ENABLE_PLASMIC_MARKETING === "true";
+  if (!plasmicEnabled) {
+    notFound();
+  }
 
+  const [{ PLASMIC }, { PlasmicComponent }] = await Promise.all([
+    import("@/plasmic-init"),
+    import("@plasmicapp/loader-nextjs"),
+  ]);
+
+  const plasmicPath = "/" + (params.catchall?.join("/") || "");
   const plasmicData = await PLASMIC.maybeFetchComponentData(plasmicPath);
 
   if (!plasmicData) {
@@ -22,9 +26,7 @@ export default async function PlasmicMarketingPage({
 
   return (
     <div className="bg-[#030712] min-h-screen text-white font-sans overflow-x-hidden">
-        <PlasmicComponent 
-            component={plasmicData.entryCompMetas[0].name} 
-        />
+      <PlasmicComponent component={plasmicData.entryCompMetas[0].name} />
     </div>
   );
 }

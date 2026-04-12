@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { Check, ArrowLeft, Zap, Infinity, ShieldCheck, Star } from "lucide-react";
+import { Check, ArrowLeft, Zap, Infinity as InfinityIcon, ShieldCheck, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 type PricingRow = { title: string; value: string; note: string };
@@ -16,17 +16,17 @@ type StepWelcomeProps = {
 };
 
 const ICON_MAP: Record<string, typeof Zap> = {
-  "المسار": ShieldCheck,
-  "المدة": Infinity,
-  "التحديثات": Zap,
+  "Ø§Ù„Ù…Ø³Ø§Ø±": ShieldCheck,
+  "Ø§Ù„Ù…Ø¯Ø©": InfinityIcon,
+  "Ø§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª": Zap,
 };
 
 const BENEFITS = [
-  "وصول فوري لكل بوابات الملاذ الآمن",
-  "خريطة علاقاتك التفاعلية كاملة",
-  "بوصلة التوجيه ومسارات النمو المخصصة",
-  "رفاق الطريق — الدعم، التوجيه، والمشاركة",
-  "جميع التحديثات القادمة بلا أي رسوم إضافية",
+  "ÙˆØµÙˆÙ„ ÙÙˆØ±ÙŠ Ù„ÙƒÙ„ Ø¨ÙˆØ§Ø¨Ø§Øª Ø§Ù„Ù…Ù„Ø§Ø° Ø§Ù„Ø¢Ù…Ù†",
+  "Ø®Ø±ÙŠØ·Ø© Ø¹Ù„Ø§Ù‚Ø§ØªÙƒ Ø§Ù„ØªÙØ§Ø¹Ù„ÙŠØ© ÙƒØ§Ù…Ù„Ø©",
+  "Ø¨ÙˆØµÙ„Ø© Ø§Ù„ØªÙˆØ¬ÙŠÙ‡ ÙˆÙ…Ø³Ø§Ø±Ø§Øª Ø§Ù„Ù†Ù…Ùˆ Ø§Ù„Ù…Ø®ØµØµØ©",
+  "Ø±ÙØ§Ù‚ Ø§Ù„Ø·Ø±ÙŠÙ‚ â€” Ø§Ù„Ø¯Ø¹Ù…ØŒ Ø§Ù„ØªÙˆØ¬ÙŠÙ‡ØŒ ÙˆØ§Ù„Ù…Ø´Ø§Ø±ÙƒØ©",
+  "Ø¬Ù…ÙŠØ¹ Ø§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª Ø§Ù„Ù‚Ø§Ø¯Ù…Ø© Ø¨Ù„Ø§ Ø£ÙŠ Ø±Ø³ÙˆÙ… Ø¥Ø¶Ø§ÙÙŠØ©",
 ] as const;
 
 export function StepWelcome({
@@ -41,8 +41,8 @@ export function StepWelcome({
   // Map traditional pricing titles to Journey philosophy if needed
   const displayRows = pricingRows.map(row => ({
     ...row,
-    title: row.title === "الخطة" ? "المسار" : row.title,
-    value: row.value === "العضوية التأسيسية" ? "الرفاق الأوائل" : row.value
+    title: row.title === "Ø§Ù„Ø®Ø·Ø©" ? "Ø§Ù„Ù…Ø³Ø§Ø±" : row.title,
+    value: row.value === "Ø§Ù„Ø¹Ø¶ÙˆÙŠØ© Ø§Ù„ØªØ£Ø³ÙŠØ³ÙŠØ©" ? "Ø§Ù„Ø±ÙØ§Ù‚ Ø§Ù„Ø£ÙˆØ§Ø¦Ù„" : row.value
   }));
 
   return (
@@ -64,7 +64,7 @@ export function StepWelcome({
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-teal-400/20 bg-teal-400/10 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-teal-300 shadow-[0_0_15px_rgba(45,212,191,0.2)]">
             <Star className="h-3 w-3 fill-teal-300" />
-            Founding Cohort — للرفاق الأوائل
+            Founding Cohort â€” Ù„Ù„Ø±ÙØ§Ù‚ Ø§Ù„Ø£ÙˆØ§Ø¦Ù„
           </span>
         </motion.div>
 
@@ -75,16 +75,16 @@ export function StepWelcome({
           transition={{ delay: 0.2 }}
         >
           <h1 className="mb-4 text-center text-4xl font-black leading-tight text-white drop-shadow-md">
-            {userName ? `أهلاً بك يا ${userName}،` : "أهلاً بك يا رفيق،"}
+            {userName ? `Ø£Ù‡Ù„Ø§Ù‹ Ø¨Ùƒ ÙŠØ§ ${userName}ØŒ` : "Ø£Ù‡Ù„Ø§Ù‹ Ø¨Ùƒ ÙŠØ§ Ø±ÙÙŠÙ‚ØŒ"}
             <br />
             <span className="bg-gradient-to-l from-teal-300 to-emerald-300 bg-clip-text text-transparent">
-              الملاذ الآمن بانتظارك
+              Ø§Ù„Ù…Ù„Ø§Ø° Ø§Ù„Ø¢Ù…Ù† Ø¨Ø§Ù†ØªØ¸Ø§Ø±Ùƒ
             </span>
           </h1>
           <p className="mb-8 text-center text-sm leading-7 text-slate-300">
-            خطوتان فقط لتوثيق التزامك بالرحلة وفتح البوابات.
+            Ø®Ø·ÙˆØªØ§Ù† ÙÙ‚Ø· Ù„ØªÙˆØ«ÙŠÙ‚ Ø§Ù„ØªØ²Ø§Ù…Ùƒ Ø¨Ø§Ù„Ø±Ø­Ù„Ø© ÙˆÙØªØ­ Ø§Ù„Ø¨ÙˆØ§Ø¨Ø§Øª.
             <br />
-            اختار وسيلة التأكيد، وسيقوم الفريق بتهيئة مسارك خلال ساعات.
+            Ø§Ø®ØªØ§Ø± ÙˆØ³ÙŠÙ„Ø© Ø§Ù„ØªØ£ÙƒÙŠØ¯ØŒ ÙˆØ³ÙŠÙ‚ÙˆÙ… Ø§Ù„ÙØ±ÙŠÙ‚ Ø¨ØªÙ‡ÙŠØ¦Ø© Ù…Ø³Ø§Ø±Ùƒ Ø®Ù„Ø§Ù„ Ø³Ø§Ø¹Ø§Øª.
           </p>
         </motion.div>
 
@@ -97,11 +97,11 @@ export function StepWelcome({
         >
           <div className="px-6 py-6 border-b border-white/5">
             <p className="text-xs font-black uppercase tracking-widest text-teal-400/70">
-              تذكرة العبور للمرحلة التأسيسية
+              ØªØ°ÙƒØ±Ø© Ø§Ù„Ø¹Ø¨ÙˆØ± Ù„Ù„Ù…Ø±Ø­Ù„Ø© Ø§Ù„ØªØ£Ø³ÙŠØ³ÙŠØ©
             </p>
             <p className="mt-2 text-3xl font-black text-white drop-shadow-sm">{priceLine}</p>
             <p className="mt-1 text-xs text-slate-400">
-              استثمار لمرة واحدة — رفيق لرحلتك مدى الحياة، بلا قيود.
+              Ø§Ø³ØªØ«Ù…Ø§Ø± Ù„Ù…Ø±Ø© ÙˆØ§Ø­Ø¯Ø© â€” Ø±ÙÙŠÙ‚ Ù„Ø±Ø­Ù„ØªÙƒ Ù…Ø¯Ù‰ Ø§Ù„Ø­ÙŠØ§Ø©ØŒ Ø¨Ù„Ø§ Ù‚ÙŠÙˆØ¯.
             </p>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
@@ -127,9 +127,9 @@ export function StepWelcome({
           <div className="bg-slate-950/40 px-6 py-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs text-slate-400 flex items-center gap-2">
-                مقاعد الرفاق المتاحة:{" "}
+                Ù…Ù‚Ø§Ø¹Ø¯ Ø§Ù„Ø±ÙØ§Ù‚ Ø§Ù„Ù…ØªØ§Ø­Ø©:{" "}
                 <span className="font-black text-white">
-                  {seatsLeft ?? "—"} / {totalSeats}
+                  {seatsLeft ?? "â€”"} / {totalSeats}
                 </span>
               </p>
               {typeof seatsLeft === "number" && seatsLeft <= 10 && (
@@ -138,7 +138,7 @@ export function StepWelcome({
                   transition={{ duration: 1.5, repeat: Infinity }}
                   className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-black text-amber-300 border border-amber-500/20"
                 >
-                  ⚡ الأماكن تنتهي
+                  âš¡ Ø§Ù„Ø£Ù…Ø§ÙƒÙ† ØªÙ†ØªÙ‡ÙŠ
                 </motion.span>
               )}
             </div>
@@ -196,14 +196,16 @@ export function StepWelcome({
             onClick={onNext}
             className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-teal-500 px-8 py-4 text-base font-black text-slate-950 shadow-[0_0_32px_rgba(20,184,166,0.35)] transition-all hover:bg-teal-400 hover:shadow-[0_0_48px_rgba(20,184,166,0.45)]"
           >
-            بدء توثيق العهد
+            Ø¨Ø¯Ø¡ ØªÙˆØ«ÙŠÙ‚ Ø§Ù„Ø¹Ù‡Ø¯
             <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
           </motion.button>
           <p className="mt-4 text-center text-xs text-slate-500">
-            الخطوة التالية: اختار وسيلة التأكيد لحجز مقعدك
+            Ø§Ù„Ø®Ø·ÙˆØ© Ø§Ù„ØªØ§Ù„ÙŠØ©: Ø§Ø®ØªØ§Ø± ÙˆØ³ÙŠÙ„Ø© Ø§Ù„ØªØ£ÙƒÙŠØ¯ Ù„Ø­Ø¬Ø² Ù…Ù‚Ø¹Ø¯Ùƒ
           </p>
         </motion.div>
       </div>
     </motion.div>
   );
 }
+
+
