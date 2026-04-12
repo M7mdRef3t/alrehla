@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { Puck, Data } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { config } from "../../../src/puck.config";
 import { supabase } from "../../../src/services/supabaseClient";
 import { useState } from "react";
-import { RefreshCw, Sparkles, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 
 export function EditorClient({ path, initialData }: { path: string, initialData: Data }) {
   const [data, setData] = useState<Data>(initialData);
@@ -18,7 +18,7 @@ export function EditorClient({ path, initialData }: { path: string, initialData:
 
   const save = async (dataToSave: Data) => {
     if (!supabase) {
-      alert("خطأ: لم يتم الاتصال بقاعدة البيانات.");
+      alert("Ø®Ø·Ø£: Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª.");
       return;
     }
     
@@ -28,19 +28,19 @@ export function EditorClient({ path, initialData }: { path: string, initialData:
         .upsert({ path, data: dataToSave });
         
       if (error) throw error;
-      alert("تم الحفظ بنجاح في قاعدة البيانات!");
-    } catch (err: any) {
+      alert("ØªÙ… Ø§Ù„Ø­ÙØ¸ Ø¨Ù†Ø¬Ø§Ø­ ÙÙŠ Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª!");
+    } catch (err: unknown) {
       console.error(err);
-      alert("حدث خطأ أثناء الحفظ:\n" + err.message);
+      const message = err instanceof Error ? err.message : "Ø®Ø·Ø£ ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ"; alert("Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„Ø­ÙØ¸:\n" + message);
     }
   };
 
   // AI Stage Messages
   const aiStages = [
-    "تحليل النوايا وتصميم الهيكل الطاقي...",
-    "استدعاء المكونات وبرمجة السيادة...",
-    "توليد المحتوى وربط نقاط الوعي...",
-    "مسح الترددات وتهيئة واجهة المستخدم..."
+    "ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ù†ÙˆØ§ÙŠØ§ ÙˆØªØµÙ…ÙŠÙ… Ø§Ù„Ù‡ÙŠÙƒÙ„ Ø§Ù„Ø·Ø§Ù‚ÙŠ...",
+    "Ø§Ø³ØªØ¯Ø¹Ø§Ø¡ Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª ÙˆØ¨Ø±Ù…Ø¬Ø© Ø§Ù„Ø³ÙŠØ§Ø¯Ø©...",
+    "ØªÙˆÙ„ÙŠØ¯ Ø§Ù„Ù…Ø­ØªÙˆÙ‰ ÙˆØ±Ø¨Ø· Ù†Ù‚Ø§Ø· Ø§Ù„ÙˆØ¹ÙŠ...",
+    "Ù…Ø³Ø­ Ø§Ù„ØªØ±Ø¯Ø¯Ø§Øª ÙˆØªÙ‡ÙŠØ¦Ø© ÙˆØ§Ø¬Ù‡Ø© Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…..."
   ];
   const [currentStage, setCurrentStage] = useState(0);
 
@@ -77,10 +77,10 @@ export function EditorClient({ path, initialData }: { path: string, initialData:
         setKey(k => k + 1);   // Force Puck to re-mount with new data
         setIsModalOpen(false); // Close modal
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       clearInterval(stageInterval);
       console.error(err);
-      alert("حدث خطأ أثناء التوليد:\n" + err.message);
+      const message = err instanceof Error ? err.message : "Ø®Ø·Ø£ ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ"; alert("Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„ØªÙˆÙ„ÙŠØ¯:\n" + message);
     } finally {
       setIsAIGenerating(false);
     }
@@ -122,11 +122,11 @@ export function EditorClient({ path, initialData }: { path: string, initialData:
             {!isAIGenerating ? (
               <div className="relative z-20 transition-all duration-500 opacity-100">
                 <p className="text-sm text-white/60 mb-4 text-right">
-                  اوصف الجسد اللي عايزه، واحنا هنبني الروح والهيكل.
+                  Ø§ÙˆØµÙ Ø§Ù„Ø¬Ø³Ø¯ Ø§Ù„Ù„ÙŠ Ø¹Ø§ÙŠØ²Ù‡ØŒ ÙˆØ§Ø­Ù†Ø§ Ù‡Ù†Ø¨Ù†ÙŠ Ø§Ù„Ø±ÙˆØ­ ÙˆØ§Ù„Ù‡ÙŠÙƒÙ„.
                 </p>
                 <textarea 
                   className="w-full h-32 bg-black/20 border border-white/10 rounded-lg text-white p-3 focus:outline-none focus:border-blue-500 mb-4 text-right resize-none placeholder:text-white/30"
-                  placeholder="عايز واجهة لكورس الذكاء الاصطناعي مع بانر جذاب، و3 كروت للمميزات..."
+                  placeholder="Ø¹Ø§ÙŠØ² ÙˆØ§Ø¬Ù‡Ø© Ù„ÙƒÙˆØ±Ø³ Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ù…Ø¹ Ø¨Ø§Ù†Ø± Ø¬Ø°Ø§Ø¨ØŒ Ùˆ3 ÙƒØ±ÙˆØª Ù„Ù„Ù…Ù…ÙŠØ²Ø§Øª..."
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
                 />
@@ -134,7 +134,7 @@ export function EditorClient({ path, initialData }: { path: string, initialData:
                   className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-all flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.3)]"
                   onClick={handleGenerate}
                 >
-                  تكوين السيادة 
+                  ØªÙƒÙˆÙŠÙ† Ø§Ù„Ø³ÙŠØ§Ø¯Ø© 
                 </button>
               </div>
             ) : (
@@ -176,3 +176,4 @@ export function EditorClient({ path, initialData }: { path: string, initialData:
     </div>
   );
 }
+
