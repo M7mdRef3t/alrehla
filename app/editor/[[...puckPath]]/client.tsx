@@ -1,5 +1,14 @@
-﻿"use client";
+"use client";
 
+if (typeof window !== "undefined") {
+  const originalError = console.error;
+  console.error = (...args: any[]) => {
+    if (typeof args[0] === "string" && args[0].includes('unique "key" prop')) {
+      return; // Silence puck's list key warnings
+    }
+    originalError.apply(console, args);
+  };
+}
 import { Puck, Data } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { config } from "../../../src/puck.config";

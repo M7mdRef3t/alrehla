@@ -104,7 +104,7 @@ export const DeepPatternsPanel: FC = () => {
                                     </div>
 
                                     {/* Grid background effect */}
-                                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none" />
+                                    <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.03] pointer-events-none" />
                                 </motion.div>
                             ))}
                         </div>

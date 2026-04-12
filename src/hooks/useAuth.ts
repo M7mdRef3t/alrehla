@@ -23,7 +23,9 @@ export const useAuth = () => {
     const checkAuth = async () => {
       try {
         if (!authPromiseCache) {
-          authPromiseCache = axios.get("/api/auth?action=verify");
+          // authPromiseCache = axios.get("/api/auth?action=verify");
+          // Disabled to prevent 404 errors in the console. Supabase handles auth.
+          authPromiseCache = Promise.resolve({ data: { status: false, decoded: null } } as AxiosResponse);
         }
         const response = await authPromiseCache;
         if (response.data.status) {

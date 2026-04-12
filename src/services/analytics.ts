@@ -331,12 +331,6 @@ async function sendInternalAnalytics(
   const body = JSON.stringify(telemetryPayload);
 
   try {
-    if (navigator.sendBeacon) {
-      const blob = new Blob([body], { type: "application/json" });
-      navigator.sendBeacon("/api/analytics", blob);
-      return;
-    }
-
     await fetch("/api/analytics", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -401,6 +395,10 @@ export async function trackIdentityLinked(userId: string): Promise<void> {
     }),
     keepalive: true,
     credentials: "same-origin"
+  }).catch((err) => {
+    if (runtimeEnv.isDev) {
+      console.warn("[Analytics] Internal telemetry link failed", err);
+    }
   });
 
   // 2) Database Bridge Link (Supabase RPC) — only call if session is confirmed active

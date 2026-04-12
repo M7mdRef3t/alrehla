@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -334,6 +334,7 @@ export default function ActivationPage() {
       setProofImage(null);
       setPaymentNotice(data.message || "ØªÙ… Ø§Ø³ØªÙ„Ø§Ù… Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹. Ù‡Ù†Ø±Ø§Ø¬Ø¹ Ø§Ù„ØªØ­ÙˆÙŠÙ„ ÙˆÙ†ÙØ¹Ù„ Ø§Ù„Ø­Ø³Ø§Ø¨.");
       setPaymentNoticeKind("success");
+      setWizardStep(3);
       
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -406,7 +407,7 @@ export default function ActivationPage() {
 
       <div className="relative z-10 w-full flex-1 flex flex-col">
         {/* Sticky step progress bar */}
-        <WizardProgressBar currentStep={wizardStep} />
+        <WizardProgressBar currentStep={Math.min(wizardStep, 2)} />
 
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <AnimatePresence mode="wait" initial={false}>
@@ -452,6 +453,38 @@ export default function ActivationPage() {
                 paymentNotice={paymentNotice}
                 paymentNoticeKind={paymentNoticeKind}
               />
+            )}
+
+            {/* Step 3 - Success Screen */}
+            {wizardStep === 3 && (
+              <motion.div
+                key="step-success"
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="flex w-full max-w-lg flex-col items-center justify-center py-16 text-center"
+                dir="rtl"
+              >
+                <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
+                  <svg className="w-12 h-12 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <h2 className="mb-4 text-3xl font-black text-white">
+                  خطوتك وصلت بأمان
+                </h2>
+                <p className="mb-8 text-sm leading-8 text-slate-300 max-w-sm mx-auto">
+                  {paymentNotice || "استلمنا إثبات الدفع بنجاح. سنراجع التحويل ونقوم بتفعيل حسابك يدويًا لتكمل رحلتك."}
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                  <a
+                    href="/dashboard"
+                    className="flex items-center justify-center rounded-2xl bg-teal-500 py-4 px-8 text-sm font-black text-slate-950 shadow-[0_0_24px_rgba(20,184,166,0.3)] transition-all hover:bg-teal-400 hover:shadow-[0_0_36px_rgba(20,184,166,0.4)] w-full sm:w-auto"
+                  >
+                    العودة إلى لوحة التحكم
+                  </a>
+                </div>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

@@ -135,7 +135,7 @@ async function enqueueOutreach(
 
   if (rows.length === 0) return;
 
-  const { error } = await supabaseAdmin.from("marketing_outreach_queue").insert(rows);
+  const { error } = await supabaseAdmin.from("marketing_lead_outreach_queue").insert(rows);
   if (error) throw error;
 }
 
@@ -176,8 +176,7 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     p_note: input.note || "",
     p_status: input.status || "new",
     p_intent: input.intent || null,
-    p_anonymous_id: input.anonymousId || null,
-    p_client_event_id: input.clientEventId || null
+    p_anonymous_id: input.anonymousId || null
   });
 
   if (error) {

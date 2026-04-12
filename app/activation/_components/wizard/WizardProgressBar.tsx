@@ -44,7 +44,7 @@ export function WizardProgressBar({ currentStep }: WizardProgressBarProps) {
                       ? "rgb(45, 212, 191)"
                       : isActive
                         ? "rgba(45,212,191,0.1)"
-                        : "transparent",
+                        : "rgba(0, 0, 0, 0)",
                     borderColor: isDone
                       ? "rgba(45, 212, 191, 1)"
                       : isActive

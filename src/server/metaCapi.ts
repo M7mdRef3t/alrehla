@@ -91,14 +91,20 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
   }
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    
     const res = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      keepalive: true,
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
 
-    const body = await res.json();
     if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
       logger.error("[Meta CAPI Error]", body);
       return false;
     }
