@@ -64,3 +64,7 @@
 ## 2026-04-12 User State API Fail-Safe (Hotfix)
 - `app/api/user/state/route.ts` now degrades gracefully on Supabase schema/table errors and storage write failures.
 - Instead of returning `500` for non-critical persistence failures, the endpoint returns safe fallback responses to keep client hydration and intervention generation running.
+
+## 2026-04-12 Marketing Lead Ops POST Hardening (Hotfix)
+- `app/api/admin/marketing-ops/lead/route.ts` POST actions now avoid raw `500` responses for expected infra/runtime issues.
+- `mark_whatsapp` now falls back to direct lead metadata update when RPC is unavailable, preserving operator flow on partially migrated environments.
