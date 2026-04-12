@@ -1,5 +1,5 @@
 import { logger } from "@/services/logger";
-import { supabase } from './supabaseClient';
+import { safeGetUser, supabase } from './supabaseClient';
 
 export class AccessControl {
     private static PIONEER_CODE = 'T-ZERO-SOVEREIGN';
@@ -40,7 +40,7 @@ export class AccessControl {
      */
     static async canAccessHive(userId: string): Promise<boolean> {
         if (!supabase) return false;
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = await safeGetUser();
 
         const role = user?.user_metadata?.role;
         return role === 'pioneer' || role === 'oracle' || role === 'architect';

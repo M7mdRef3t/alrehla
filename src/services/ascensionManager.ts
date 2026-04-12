@@ -1,5 +1,5 @@
 import { logger } from "@/services/logger";
-import { supabase } from "./supabaseClient";
+import { safeGetUser, supabase } from "./supabaseClient";
 
 export type AscensionStatus = 'none' | 'candidate' | 'invited' | 'ascended' | 'fallen_oracle';
 
@@ -23,7 +23,7 @@ export class AscensionManager {
     static async getStatus(): Promise<AscensionProfile | null> {
         if (!supabase) return null;
 
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = await safeGetUser();
         if (!user) return null;
 
         const { data, error } = await supabase
@@ -52,7 +52,7 @@ export class AscensionManager {
     static async acceptOath(): Promise<boolean> {
         if (!supabase) return false;
 
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = await safeGetUser();
         if (!user) return false;
 
         const { error } = await supabase

@@ -95,8 +95,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   }
 
   if (String(lastError).includes("gemini_timeout")) {
-    res.status(504).json({ error: "Generation timed out" });
+    res.status(200).json({ text: null, usage: null, fallback: true, reason: "generation_timeout" });
     return;
   }
-  res.status(500).json({ error: "Generation failed", detail: lastError ? String(lastError) : undefined });
+  res.status(200).json({
+    text: null,
+    usage: null,
+    fallback: true,
+    reason: "generation_failed",
+    detail: lastError ? String(lastError) : undefined
+  });
 }

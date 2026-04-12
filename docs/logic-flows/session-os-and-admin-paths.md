@@ -68,3 +68,7 @@
 ## 2026-04-12 Marketing Lead Ops POST Hardening (Hotfix)
 - `app/api/admin/marketing-ops/lead/route.ts` POST actions now avoid raw `500` responses for expected infra/runtime issues.
 - `mark_whatsapp` now falls back to direct lead metadata update when RPC is unavailable, preserving operator flow on partially migrated environments.
+
+## 2026-04-12 Gemini + Auth Abort Resilience (Hotfix)
+- Gemini generation handlers now return soft fallback payloads on timeout/failure instead of hard `504/500`, so the client can degrade without console-breaking error storms.
+- Supabase auth lookups in sync/access-control paths now use safe wrappers that swallow transient aborts, reducing unhandled `AbortError` noise on production domains.
