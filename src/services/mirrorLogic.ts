@@ -5,9 +5,9 @@
  * يولد أسئلة وجودية (Socratic Questions) للمواجهة.
  */
 
-import { useMapState } from "@/state/mapState";
-import { useJourneyState } from "@/state/journeyState";
-import { usePulseState } from "@/state/pulseState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useJourneyState } from "@/domains/journey/store/journey.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 
 export interface MirrorInsight {
     id: string;

@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ShieldAlert } from "lucide-react";
-import { useEmergencyState } from "@/state/emergencyState";
+import { useEmergencyState } from "@/domains/admin/store/emergency.store";
 import { AnalyticsEvents, trackEvent } from "@/services/analytics";
 
 export function EmergencyButton() {

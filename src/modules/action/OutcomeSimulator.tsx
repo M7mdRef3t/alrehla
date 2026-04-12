@@ -2,7 +2,7 @@ import { FC, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { analyzeEnergyDrain, simulateFutureSelf, simulateHypotheticalState } from "@/services/propheticEngine";
 import { Clock } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 
 function stateLabel(value: "Burnout" | "Stagnation" | "Thriving"): string {
     if (value === "Burnout") return "إا";

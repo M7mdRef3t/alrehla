@@ -1,5 +1,5 @@
 import { logger } from "@/services/logger";
-import type { PulseEntry } from "@/state/pulseState";
+import type { PulseEntry } from "@/domains/consciousness/store/pulse.store";
 import { isSupabaseReady, supabase } from "./supabaseClient";
 import { getTrackingMode, getTrackingSessionId } from "./journeyTracking";
 import { runtimeEnv } from "@/config/runtimeEnv";

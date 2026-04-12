@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, X, Send, Sparkles, Loader2, Minimize2, Maximize2 } from "lucide-react";
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { callAdminApi } from "@/services/adminApi";
 
 export const AdminCopilotModal: FC = () => {
@@ -66,11 +66,11 @@ export const AdminCopilotModal: FC = () => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="fixed bottom-6 left-6 z-[100] w-80 md:w-96 flex flex-col bg-[#0B0F19] border border-slate-700/80 rounded-2xl shadow-[0_0_80px_rgba(20,184,166,0.15)] overflow-hidden"
+          className="fixed bottom-6 left-6 z-[100] w-[380px] md:w-[420px] flex flex-col admin-glass-card shadow-2xl overflow-hidden"
           dir="rtl"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-3 border-b border-white/5 bg-slate-900/50">
+          <div className="flex items-center justify-between p-4 border-b border-white/10 bg-slate-900/40 relative z-10 backdrop-blur-md">
             <div className="flex items-center gap-2">
               <div className="p-1.5 bg-teal-500/20 rounded-md">
                 <Bot className="w-4 h-4 text-teal-400" />
@@ -91,13 +91,13 @@ export const AdminCopilotModal: FC = () => {
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[300px] min-h-[300px] bg-[#080B14]">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 max-h-[350px] min-h-[350px] relative z-10 custom-scrollbar" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.1))' }}>
              {messages.map((m, idx) => (
                 <div key={idx} className={`flex w-full ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`p-3 rounded-2xl max-w-[85%] text-sm ${
                     m.role === "user" 
-                     ? "bg-slate-700 text-white rounded-tl-none" 
-                     : "bg-teal-900/30 text-teal-100 border border-teal-500/20 rounded-tr-none"
+                     ? "bg-slate-700/80 text-white rounded-tl-none border border-white/10 backdrop-blur-md shadow-md" 
+                     : "bg-teal-900/20 text-teal-100 border border-teal-500/30 rounded-tr-none backdrop-blur-md shadow-[0_0_15px_rgba(20,184,166,0.1)]"
                   }`}>
                     {m.text}
                   </div>
@@ -114,7 +114,7 @@ export const AdminCopilotModal: FC = () => {
           </div>
 
           {/* Input */}
-          <div className="p-3 bg-slate-900/50 border-t border-white/5 flex gap-2">
+          <div className="p-4 bg-slate-900/60 border-t border-white/10 flex gap-2 relative z-10 backdrop-blur-md">
              <input 
                value={query}
                onChange={(e) => setQuery(e.target.value)}

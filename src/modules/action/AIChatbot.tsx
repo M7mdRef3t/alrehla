@@ -23,12 +23,12 @@ import { AnimatePresence } from "framer-motion";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { useGamificationState } from "@/services/gamificationEngine";
 import { scanForVampires } from "@/services/propheticEngine";
-import { useEventHistoryStore } from "@/state/eventHistoryStore";
+import { useEventHistoryStore } from "@/domains/analytics/store/eventHistory.store";
 import { SwarmPersonaSelector } from "@/modules/exploration/SwarmPersonaSelector";
 import { MemoryStore } from "@/services/memoryStore";
 import { semanticCompressor } from "@/services/semanticCompressor";
 import { dynamicContextRouter } from "@/services/dynamicContextRouter";
-import { getAuthUserId } from "@/state/authState";
+import { getAuthUserId } from "@/domains/auth/store/auth.store";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 
 const GUEST_MEMORY_ACTOR_KEY = "dawayir_guest_memory_actor_id";
@@ -386,7 +386,7 @@ export const AIChatbot: FC<AIChatbotProps> = ({
 
 **الدستور والعقيدة (Constitution):**
 "الرحلة واحدة.. والقصة قصتك" | "غرفة عمليات الوعي - نظام التشغيل الجديد لعقلك".
-المنصة ليست عصا سحرية للعلاج، بل هي "بوصلة" و"رادار" يضع القرار في يد المستخدم.
+الرحلة ليست عصا سحرية للعلاج، بل هي "بوصلة" و"رادار" يضع القرار في يد المستخدم.
 المستخدم ليس "مريضاً" يبحث عن فضفضة، بل هو "قائد ميداني" (Commander) يدافع عن مملكته النفسية ويسعى لاسترداد سيادته.
 
         ${personLabel ? `**الهدف المرصود:** التعامل مع "${personLabel}"` : ""}

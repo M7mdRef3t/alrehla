@@ -78,11 +78,11 @@ export async function POST(req: Request) {
     // Build Life Advisor system prompt from context
     const systemPrompt = buildLifeAdvisorSystemPrompt(context);
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.0-flash-exp",
       generationConfig: {
-        temperature: 0.75,
-        maxOutputTokens: 1024,
-        topP: 0.9
+        temperature: 0.85,
+        maxOutputTokens: 1500,
+        topP: 0.92
       }
     });
 

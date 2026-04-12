@@ -6,11 +6,11 @@ import {
     Share2, Heart,
     Lightbulb, Network, Grid, Archive
 } from "lucide-react";
-import { useDailyJournalState } from "@/state/dailyJournalState";
+import { useDailyJournalState } from "@/domains/journey/store/journal.store";
 import { HealingEchoModal } from '@/modules/exploration/HealingEchoModal';
 import { BlindCapsuleCreator } from '@/modules/action/BlindCapsuleCreator';
 import { calculateEntropy } from "@/services/predictiveEngine";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 export interface InsightsLibraryProps {
     isOpen: boolean;

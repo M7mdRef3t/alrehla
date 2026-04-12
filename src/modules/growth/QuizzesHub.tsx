@@ -39,11 +39,11 @@ import { QUIZZES, type QuizDef, type QuizResultBand } from "@/data/quizData";
 import { useQuizHistory, type QuizHistoryEntry } from "@/hooks/useQuizHistory";
 import { useQuizStats } from "@/hooks/useQuizStats";
 import { useDailyPulse } from "@/hooks/useDailyPulse";
-import { useMapState } from "@/state/mapState";
-import { useAchievementState } from "@/state/achievementState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { ComprehensiveAnalysis } from '@/modules/exploration/ComprehensiveAnalysis';
 import { CouplesCommunity } from "./CouplesCommunity";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import { trackingService } from "@/domains/journey";
 
 /* ══════════════════════════════════════════
    Daily Tips (rotate by day index)
@@ -1648,7 +1648,7 @@ export function QuizzesHub({ onBack }: QuizzesHubProps) {
 
   /* Fire hub_opened event + quiz achievement check on mount */
   useEffect(() => {
-    recordFlowEvent("quiz_hub_opened");
+    trackingService.recordFlow("quiz_hub_opened");
     // Show first-open onboarding if never visited
     if (!localStorage.getItem(HUB_ONBOARDED_KEY)) {
       setTimeout(() => setShowOnboarding(true), 600);
@@ -1708,7 +1708,7 @@ export function QuizzesHub({ onBack }: QuizzesHubProps) {
         clearSavedProgress();
         setSavedProgress(null);
         // Track quiz completion with proper FlowStep type
-        recordFlowEvent("quiz_completed", {
+        trackingService.recordFlow("quiz_completed", {
           meta: { quizId: quiz.id, score, band: band.title }
         });
         // Show manual node picker to link result to a person

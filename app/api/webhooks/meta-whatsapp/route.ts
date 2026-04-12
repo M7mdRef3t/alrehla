@@ -35,17 +35,17 @@ export async function POST(req: Request) {
   const entry = body.entry?.[0];
   const changes = entry?.changes?.[0];
   const value = changes?.value;
+  
   const statuses = value?.statuses;
+  const messages = value?.messages;
 
+  // 1. Handle Status Updates (Delivered, Read, Failed)
   if (statuses && statuses.length > 0) {
     for (const status of statuses) {
       const recipientId = status.recipient_id;
       const statusType = status.status; // delivered, read, failed
 
       if (statusType === "delivered" || statusType === "read") {
-        // If delivered, we can confidently mark it as verified
-        // We'll need a way to map Phone to Lead ID or just update by phone_normalized
-        // For precision, we'll prefix with + for cleaning if needed
         const phoneNormalized = `+${recipientId.replace(/\D/g, "")}`;
         
         const { data: leads } = await supabaseAdmin
@@ -64,16 +64,60 @@ export async function POST(req: Request) {
             whatsapp_validated_at: new Date().toISOString()
           };
 
-          await supabaseAdmin
+          const { error: updateError } = await supabaseAdmin
             .from("marketing_leads")
             .update({ metadata: updatedMetadata })
             .eq("lead_id", lead.lead_id);
+
+          if (updateError) {
+            console.error("[WhatsAppWebhook] Failed updating lead metadata:", updateError);
+          }
 
           console.log(`[WhatsAppWebhook] Lead ${lead.lead_id} marked as verified (Phone: ${recipientId})`);
         }
       } else if (statusType === "failed") {
         console.error(`[WhatsAppWebhook] Delivery failed for ${recipientId}:`, status.errors);
       }
+    }
+  }
+
+  // 2. Handle Inbound Messages
+  if (messages && messages.length > 0) {
+    for (const msg of messages) {
+      const fromPhoneRaw = msg.from;
+      const phoneNormalized = `+${fromPhoneRaw.replace(/\D/g, "")}`;
+      const messageBody = msg.text?.body || msg.button?.text || "";
+
+      // Map phone to lead
+      const { data: leads } = await supabaseAdmin
+        .from("marketing_leads")
+        .select("id")
+        .eq("phone_normalized", phoneNormalized)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      const leadId = leads?.[0]?.id || null;
+
+      // Log the inbound message
+      const { error: insertError } = await supabaseAdmin
+        .from("whatsapp_message_events")
+        .insert([{
+          lead_id: leadId,
+          whatsapp_message_id: msg.id,
+          from_phone: phoneNormalized,
+          to_phone: process.env.META_WA_BUSINESS_PHONE_NUMBER || "system",
+          message_body: messageBody,
+          message_type: msg.type || "text",
+          direction: "inbound",
+          raw_payload: msg
+        }]);
+
+      if (insertError) {
+        console.error("[WhatsAppWebhook] Failed logging inbound message:", insertError);
+        continue;
+      }
+
+      console.log(`[WhatsAppWebhook] Inbound message from ${fromPhoneRaw} logged (Lead: ${leadId})`);
     }
   }
 

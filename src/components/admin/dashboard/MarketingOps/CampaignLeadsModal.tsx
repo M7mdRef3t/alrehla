@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { ar } from "date-fns/locale";
-import { useAdminState } from "@/state/adminState";
-import { getAuthToken } from "@/state/authState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import { getAuthToken } from "@/domains/auth/store/auth.store";
 import { buildMarketingEmail } from "../../../../lib/marketing/emailTemplate";
 
 function getBearerToken(): string {
@@ -24,11 +24,12 @@ interface CampaignLeadsModalProps {
   title: string;
   leads: any[];
   onLeadUpdated: () => void;
+  initialExpandedId?: string;
 }
 
-export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdated }: CampaignLeadsModalProps) {
+export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdated, initialExpandedId }: CampaignLeadsModalProps) {
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(initialExpandedId || null);
   const [leadHistories, setLeadHistories] = useState<Record<string, { history: any[], routing: any[], loading: boolean }>>({});
   const [editForm, setEditForm] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -39,26 +40,42 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
   const [aiSummaries, setAiSummaries] = useState<Record<string, { summary: string, state: string, loading: boolean }>>({});
   const [validationStates, setValidationStates] = useState<Record<string, { valid: boolean, loading: boolean, reason?: string }>>({});
 
-  // Auto-expand if there is exactly 1 lead in the view (e.g., when searching specific lead via Sovereign Gateway)
+  // Clean state when modal opens
   useEffect(() => {
-    if (isOpen && leads.length === 1 && expandedId !== leads[0].id) {
-       // Only trigger expansion logic if not already handling it
-       setExpandedId(leads[0].id);
-       if (!leadHistories[leads[0].id]) {
-          setLeadHistories(prev => ({ ...prev, [leads[0].id]: { history: [], routing: [], loading: true } }));
-          fetch(`/api/admin/marketing-ops/lead?id=${leads[0].id}&email=${leads[0].email || ""}`, {
-            headers: { authorization: `Bearer ${getBearerToken()}` }
-          })
-          .then(r => r.json())
-          .then(data => {
-            if (data.ok) {
-              setLeadHistories(prev => ({ ...prev, [leads[0].id]: { history: data.history, routing: data.routing, loading: false } }));
-            }
-          })
-          .catch(() => setLeadHistories(prev => ({ ...prev, [leads[0].id]: { history: [], routing: [], loading: false } })));
-       }
+    if (isOpen) {
+      if (initialExpandedId) {
+         setExpandedId(initialExpandedId);
+      } else if (leads.length === 1) {
+         setExpandedId(leads[0].id);
+      } else {
+         setExpandedId(null);
+      }
+      // Don't reset localSearchQuery here if we want to allow persistent search, 
+      // but typically we want to clear it when opening a brand new view.
+      setLocalSearchQuery(""); 
+      setOnlyMissingPhone(false);
     }
-  }, [isOpen, leads, expandedId, leadHistories]);
+  }, [isOpen, initialExpandedId]); // Deliberately omit `leads` to avoid bouncing when array changes reference
+
+  // Auto-fetch history and routing for expanded leads
+  useEffect(() => {
+    if (isOpen && expandedId && !leadHistories[expandedId]) {
+      const lead = leads.find(l => l.id === expandedId);
+      if (lead) {
+        setLeadHistories(prev => ({ ...prev, [expandedId]: { history: [], routing: [], loading: true } }));
+        fetch(`/api/admin/marketing-ops/lead?id=${expandedId}&email=${lead.email || ""}`, {
+          headers: { authorization: `Bearer ${getBearerToken()}` }
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.ok) {
+            setLeadHistories(prev => ({ ...prev, [expandedId]: { history: data.history, routing: data.routing, loading: false } }));
+          }
+        })
+        .catch(() => setLeadHistories(prev => ({ ...prev, [expandedId]: { history: [], routing: [], loading: false } })));
+      }
+    }
+  }, [isOpen, expandedId, leadHistories, leads]);
 
   if (!isOpen) return null;
 
@@ -287,6 +304,31 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     }
   };
 
+  const handleSyncMeta = async (id: string) => {
+    showMsg(id, "⏳ جاري استرجاع البيانات من Meta...");
+    try {
+      const res = await fetch("/api/admin/marketing-ops/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
+        body: JSON.stringify({ action: "sync_with_meta", id })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showMsg(id, "✅ تم استرجاع البيانات بنجاح! رقم التليفون: " + (data.phone || "غير موجود في فيسبوك"));
+        onLeadUpdated();
+      } else {
+        if (data.error === "no_meta_id_found" || data.error === "no_meta_id_in_metadata") {
+           showMsg(id, "⚠️ مستحيل الاسترجاع: كود الـ Lead مش متسجل في الداتا القديمة دي.", true);
+        } else {
+           showMsg(id, "⚠️ فشل الاسترجاع: " + (data.error || "تأكد من الـ Token"), true);
+        }
+      }
+    } catch {
+      showMsg(id, "⚠️ فشل الاتصال بالسيرفر", true);
+    }
+  };
+
+
   const copyProfessionalTemplate = async (lead: any) => {
     try {
       const leadId = lead.id || lead.lead_id;
@@ -316,6 +358,11 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     }
     setExpandedId(lead.id);
     
+    // Smooth scroll to the lead card after state updates
+    setTimeout(() => {
+      document.getElementById(`lead-card-${lead.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+
     // Fetch history if not already loading/loaded
     if (!leadHistories[lead.id]) {
       setLeadHistories(prev => ({ ...prev, [lead.id]: { history: [], routing: [], loading: true } }));
@@ -334,18 +381,37 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
   };
 
   const handleQuickStatusChange = async (leadId: string, newStatus: string) => {
+     let amount_egp: number | undefined = undefined;
+     const isPaidStatus = ["activated", "converted", "proof_received"].includes(newStatus);
+     
+     if (isPaidStatus) {
+       const input = window.prompt("الرجاء إدخال المبلغ الفعلي المدفوع بالجنيه المصري (مثال: 500):", "");
+       if (input === null) {
+         // User cancelled
+         return;
+       }
+       const parsed = parseFloat(input);
+       if (!isNaN(parsed) && parsed > 0) {
+         amount_egp = parsed;
+       }
+     }
+
      setIsSaving(true);
      try {
        const res = await fetch("/api/admin/marketing-ops/lead", {
          method: "PATCH",
          headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
-         body: JSON.stringify({ id: leadId, status: newStatus })
+         body: JSON.stringify({ id: leadId, status: newStatus, amount_egp })
        });
        const data = await res.json();
        if (data.ok) {
          showMsg(leadId, "تم تحديث الحالة");
          onLeadUpdated();
+       } else {
+         showMsg(leadId, "فشل تعديل الحالة: " + data.error, true);
        }
+     } catch (err) {
+       showMsg(leadId, "حدث خطأ في الاتصال", true);
      } finally {
        setIsSaving(false);
      }
@@ -407,6 +473,11 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
 
   const totalConverted = leads.filter(l => l.has_converted).length;
   const conversionRate = leads.length > 0 ? Math.round((totalConverted / leads.length) * 100) : 0;
+
+  const sortedFilteredLeads = [...filteredLeads].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const expandedIndex = expandedId ? sortedFilteredLeads.findIndex((l: any) => l.id === expandedId) : -1;
+  const hasNextGlobal = expandedIndex !== -1 && expandedIndex < sortedFilteredLeads.length - 1;
+  const hasPrevGlobal = expandedIndex > 0;
 
   return (
     <AnimatePresence>
@@ -484,13 +555,26 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
                 </div>
 
                 <div className="flex items-center gap-4">
-                   <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 px-5 text-center">
+                   <AnimatePresence>
+                     {expandedId && (
+                       <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="flex items-center gap-1.5" dir="ltr">
+                          <button onClick={() => hasPrevGlobal && toggleExpand(sortedFilteredLeads[expandedIndex - 1])} disabled={!hasPrevGlobal} className="w-10 h-10 flex shrink-0 items-center justify-center bg-white/5 hover:bg-emerald-500/20 active:bg-emerald-500/40 rounded-xl border border-white/10 transition-all text-slate-300 disabled:opacity-30 disabled:hover:bg-white/5" title="السابق (أحدث)">
+                             <ChevronUp className="w-5 h-5" />
+                          </button>
+                          <button onClick={() => hasNextGlobal && toggleExpand(sortedFilteredLeads[expandedIndex + 1])} disabled={!hasNextGlobal} className="w-10 h-10 flex shrink-0 items-center justify-center bg-white/5 hover:bg-emerald-500/20 active:bg-emerald-500/40 rounded-xl border border-white/10 transition-all text-slate-300 disabled:opacity-30 disabled:hover:bg-white/5" title="التالي (أقدم)">
+                             <ChevronDown className="w-5 h-5" />
+                          </button>
+                       </motion.div>
+                     )}
+                   </AnimatePresence>
+
+                   <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 px-5 text-center hidden sm:block">
                       <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">التحويل</div>
                       <div className="text-xl font-black text-emerald-400">{conversionRate}%</div>
                    </div>
                    <button
                     onClick={onClose}
-                    className="w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all text-slate-400 hover:text-white"
+                    className="w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all text-slate-400 hover:text-white shrink-0"
                    >
                      <X className="w-6 h-6" />
                    </button>
@@ -507,7 +591,7 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4">
-                {filteredLeads.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((lead) => (
+                {sortedFilteredLeads.map((lead, idx, arr) => (
                   <LeadCommandCard 
                     key={lead.id} 
                     lead={lead} 
@@ -534,6 +618,7 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
                     onMarkBounced={() => handleMarkBounced(lead)}
                     onValidateEmail={() => validateLeadEmail(lead)}
                     validationState={validationStates[lead.id]}
+                    onSyncMeta={() => handleSyncMeta(lead.id)}
                   />
                 ))}
               </div>
@@ -546,7 +631,7 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
 }
 
 function LeadCommandCard({ 
-  lead, isEditing, isExpanded, history, editForm, setEditForm, onSave, onCancel, onStartEdit, onToggleExpand, onResend, onStatusChange, onSaveNotes, onLeadUpdated, resending, actionMessage, isSaving, aiSummary, onPulse, onTriggerBatch, onCopyTemplate, onMarkBounced, onValidateEmail, validationState
+  lead, isEditing, isExpanded, history, editForm, setEditForm, onSave, onCancel, onStartEdit, onToggleExpand, onResend, onStatusChange, onSaveNotes, onLeadUpdated, resending, actionMessage, isSaving, aiSummary, onPulse, onTriggerBatch, onCopyTemplate, onMarkBounced, onValidateEmail, validationState, hasNext, hasPrev, onNext, onPrev, onSyncMeta
 }: any) {
 
   const getSourceLabel = (s: string) => {
@@ -565,13 +650,35 @@ function LeadCommandCard({
   
   const leadName = lead.name || "يا بطل";
   const WHATSAPP_TEMPLATES = [
-    { label: "ترحيب", text: `أهلاً يا ${leadName}، نورت الرحلة 🧭 خريطة وعيك جاهزة ومستنياك تبدأ أول خطوة من هنا: ` },
-    { label: "متابعة", text: `طمنا عليك يا ${leadName} 👋 شفت إنك بدأت الرحلة بس لسه مخلصتش الخريطة، محتاج مساعدة في أي حاجة؟ ` },
+    { label: "ترحيب", text: `أهلاً يا ${leadName}، نورت الرحلة - خريطة وعيك جاهزة ومستنياك تبدأ أول خطوة من هنا: ` },
+    { label: "متابعة", text: `طمنا عليك يا ${leadName} - شفت إنك بدأت الرحلة بس لسه مخلصتش الخريطة، محتاج مساعدة في أي حاجة؟ ` },
     { label: "دعم", text: `أهلاً يا ${leadName}، لاحظت إن فيه ضغط في المرحلة الأخيرة من الخريطة، هل واجهت أي مشكلة تقنية؟ ` }
   ];
 
-  const waLink = leadPhone ? `https://wa.me/${leadPhone.replace(/\+/g, "")}?text=${encodeURIComponent(WHATSAPP_TEMPLATES[activeTemplate].text + (lead.personalLink || ""))}` : null;
+  const leadLink = `https://www.alrehla.app/go/${lead.id || lead.lead_id}`;
+  const defaultWaLink = leadPhone ? `https://wa.me/${leadPhone.replace(/\+/g, "")}?text=${encodeURIComponent(WHATSAPP_TEMPLATES[activeTemplate].text + "\n\n" + leadLink)}` : null;
   const [localNote, setLocalNote] = useState(lead.note || "");
+  const [isMarkingWa, setIsMarkingWa] = useState(false);
+  const [localWaSent, setLocalWaSent] = useState(!!lead.metadata?.whatsapp_sent);
+
+  const onMarkWhatsApp = async () => {
+    if (isMarkingWa || localWaSent) return;
+    setIsMarkingWa(true);
+    setLocalWaSent(true); // Optimistic UI update
+    try {
+      await fetch("/api/admin/marketing-ops/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
+        body: JSON.stringify({ action: "mark_whatsapp", id: lead.id })
+      });
+      // Fire-and-forget sync
+      setTimeout(() => onLeadUpdated && onLeadUpdated(), 100);
+    } catch {
+      setLocalWaSent(false);
+    } finally {
+      setIsMarkingWa(false);
+    }
+  };
 
   const MARKETING_LEAD_STATUSES = [
     "new", "engaged", "payment_requested", "hot_activation_interrupted", 
@@ -607,7 +714,7 @@ function LeadCommandCard({
   };
 
   return (
-    <div className={`group relative bg-[#121214] border rounded-[1.75rem] transition-all duration-500 overflow-hidden ${isExpanded ? 'border-emerald-500/40 shadow-2xl shadow-emerald-500/10' : 'border-white/[0.05] hover:border-emerald-500/20 shadow-none'}`}>
+    <div className={`group relative bg-[#121214] border rounded-[1.75rem] transition-all duration-500 ${isExpanded ? 'border-emerald-500/40 shadow-2xl shadow-emerald-500/10 mb-4 mt-2' : 'border-white/[0.05] hover:border-emerald-500/20 shadow-none'}`} id={"lead-card-" + lead.id}>
       
       <AnimatePresence>
         {actionMessage && (
@@ -624,12 +731,12 @@ function LeadCommandCard({
       </AnimatePresence>
 
       <div 
-        className={`p-5 cursor-pointer relative z-10 ${isExpanded ? 'bg-white/[0.03]' : ''}`}
+        className={`p-5 cursor-pointer relative z-10 transition-all ${isExpanded ? 'bg-white/[0.03] pr-12 pl-12' : ''}`}
         onClick={() => !isEditing && onToggleExpand()}
       >
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-6">
           {/* Profile Info */}
-          <div className="flex items-center gap-5 flex-1 min-w-0">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className={`w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center relative overflow-hidden transition-all duration-500 ${lead.has_converted ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-white/[0.03] border border-white/5'}`}>
                 {lead.has_converted && (
                   <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute inset-0 bg-emerald-500/20" />
@@ -682,13 +789,24 @@ function LeadCommandCard({
                         {lead.phone_normalized || "لا يوجد رقم"} <Phone className="w-3.5 h-3.5" />
                       </span>
                       {!lead.phone_normalized && (
-                        <button
-                          onClick={onStartEdit}
-                          className="px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] font-black hover:bg-amber-500/20 transition-all"
-                          title="إضافة رقم الهاتف يدويًا"
-                        >
-                          إضافة رقم
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={onStartEdit}
+                            className="px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] font-black hover:bg-amber-500/20 transition-all"
+                            title="إضافة رقم الهاتف يدويًا"
+                          >
+                            إضافة رقم
+                          </button>
+                          {(lead.source_type === 'meta_instant_form' || lead.metadata?.meta_lead_id || lead.metadata?.leadgen_id || (lead.metadata?.raw_fields && Object.keys(lead.metadata.raw_fields).length > 0)) && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onSyncMeta(); }}
+                              className="px-2 py-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-[10px] font-black hover:bg-emerald-500/20 transition-all flex items-center gap-1.5"
+                              title="استرجاع الداتا من فيسبوك"
+                            >
+                              <RefreshCw className="w-3 h-3" /> جلب من Meta
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </>
@@ -724,41 +842,22 @@ function LeadCommandCard({
             ) : (
               <>
                 <div className="flex items-center gap-1 bg-white/[0.03] p-1 rounded-2xl border border-white/5 relative">
-                  {waLink && (
+                  {defaultWaLink && (
                     <div className="relative">
-                      <button 
-                        onClick={() => setShowTemplates(!showTemplates)}
-                        onBlur={() => setTimeout(() => setShowTemplates(false), 200)}
-                        className={`p-2.5 rounded-xl transition-all active:scale-90 flex items-center gap-1 ${showTemplates ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'text-emerald-500 hover:bg-emerald-500/10'}`} 
-                        title="تواصل عبر واتساب (اختر قالب)"
+                      <a
+                        href={defaultWaLink}
+                        target="_blank" rel="noopener noreferrer"
+                        className={`p-2.5 rounded-xl transition-all flex items-center justify-center active:scale-90 ${localWaSent ? 'text-emerald-400 bg-emerald-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}
+                        onClick={() => onMarkWhatsApp()}
+                        title="مراسلة واتساب"
                       >
                         <MessageCircle className="w-5 h-5" />
-                        <ChevronDown className={`w-3 h-3 transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
-                      </button>
-                      
-                      <AnimatePresence>
-                        {showTemplates && (
-                          <motion.div 
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute bottom-full left-0 mb-3 w-48 bg-[#1a1a1e] border border-white/10 rounded-2xl p-2 shadow-2xl z-50 overflow-hidden"
-                          >
-                             <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest p-2 border-b border-white/5 mb-1">اختر القالب</div>
-                             {WHATSAPP_TEMPLATES.map((t, i) => (
-                               <a 
-                                 key={i}
-                                 href={waLink}
-                                 target="_blank" rel="noopener noreferrer"
-                                 onClick={() => setActiveTemplate(i)}
-                                 className={`block w-full text-right px-3 py-2 rounded-xl text-[11px] font-bold transition-colors ${activeTemplate === i ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
-                               >
-                                 {t.label}
-                               </a>
-                             ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      </a>
+                      {localWaSent && (
+                         <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#121214] flex items-center justify-center z-20" title={`تم الإرسال: ${lead.metadata?.whatsapp_sent_at ? new Date(lead.metadata.whatsapp_sent_at).toLocaleDateString('ar-EG') : 'الآن'}`}>
+                            <Check className="w-2 h-2 text-white" />
+                         </div>
+                      )}
                     </div>
                   )}
                   {lead.phone_normalized && (
@@ -1017,8 +1116,8 @@ function LeadCommandCard({
                    </button>
                 </div>
               </div>
-
             </div>
+
           </motion.div>
         )}
       </AnimatePresence>

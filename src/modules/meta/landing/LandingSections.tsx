@@ -276,7 +276,7 @@ export const MetricsSection: FC<{
               showModeBadge={showModeBadge}
             />
             <p className="mt-3 inline-flex items-center rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1 text-sm font-bold text-teal-100">
-              {liveEnabled ? "أرقام حيّة من المنصة" : <span lang="en">Preview</span>}
+              {liveEnabled ? "أرقام حيّة من الرحلة" : <span lang="en">Preview</span>}
               {!liveEnabled && " ثابت لحظة الإقلاع الأولى"}
             </p>
             <h3 id="metrics-section-heading" className="mt-4 mb-4 text-2xl font-black leading-tight text-white sm:text-3xl">الصفحة لا تبيع لك غموضًا، بل بداية واضحة</h3>

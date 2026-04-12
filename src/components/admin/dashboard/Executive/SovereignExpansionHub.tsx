@@ -24,7 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { fetchSovereignExecutiveReport, type SovereignExecutiveReport } from "@/services/adminApi";
 import { growthEngine, type GrowthMetrics, type DiffusionMetrics } from "@/services/growthEngine";
 import { getClients, type ClientLink } from "@/services/b2bService";
-import { revenueEngine } from "@/services/revenueEngine";
+import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
 
 export const SovereignExpansionHub: React.FC = () => {
   const [activeMarket, setActiveMarket] = useState<string | null>("Riyadh");
@@ -148,10 +148,13 @@ export const SovereignExpansionHub: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {markets.map((market) => (
-                <button
+                <div
                   key={market.id}
                   onClick={() => setActiveMarket(market.id)}
-                  className={`p-6 rounded-3xl border transition-all text-right group ${
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setActiveMarket(market.id); }}
+                  className={`p-6 rounded-3xl border transition-all text-right group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 ${
                     activeMarket === market.id 
                     ? "bg-rose-500/10 border-rose-500/40 ring-1 ring-rose-500/20" 
                     : "bg-slate-900/50 border-white/5 hover:border-white/20"
@@ -183,7 +186,21 @@ export const SovereignExpansionHub: React.FC = () => {
                       <span>مؤشر الألم الإدراكي: {market.painScore}%</span>
                     </div>
                   </div>
-                </button>
+                  
+                  {activeMarket === market.id && (
+                     <div className="mt-4 pt-4 border-t border-rose-500/20 text-center">
+                        <button
+                           onClick={(e) => {
+                               e.stopPropagation();
+                               SovereignOrchestrator.executeIntervention(`ignite_market_${market.id}`);
+                           }}
+                           className="w-full py-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-transform"
+                        >
+                           Ignite Market (Deploy AI Campaign)
+                        </button>
+                     </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>

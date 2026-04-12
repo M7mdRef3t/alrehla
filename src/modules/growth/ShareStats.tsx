@@ -3,8 +3,8 @@ import type { FC } from "react";
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share2, Download, TrendingUp, Users, Calendar, Check } from "lucide-react";
-import { useMapState } from "@/state/mapState";
-import { useJourneyState } from "@/state/journeyState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useJourneyProgress } from "@/domains/journey";
 import { downloadBlobFile } from "@/services/clientDom";
 
 interface ShareStatsProps {
@@ -14,7 +14,7 @@ interface ShareStatsProps {
 
 export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
   const nodes = useMapState((s) => s.nodes);
-  const { baselineScore, postStepScore, journeyStartedAt } = useJourneyState();
+  const { baselineScore, postStepScore, journeyStartedAt } = useJourneyProgress();
   
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
@@ -111,7 +111,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
           {/* Stats Card */}
           <div ref={statsRef} className="p-6 bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50">
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-slate-900 mb-1">رحلتي في أداة دواير</h3>
+              <h3 className="text-2xl font-bold text-slate-900 mb-1">خريطة رحلتي</h3>
               <p className="text-sm text-slate-600">إحصائيات مجهولة عن تقدمي</p>
             </div>
 
@@ -188,7 +188,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
 
             {/* Footer */}
             <div className="mt-6 text-center">
-              <p className="text-xs text-slate-500">الرحلة — أداة دواير</p>
+              <p className="text-xs text-slate-500">الرحلة — دواير</p>
               <p className="text-xs text-slate-400">alrehla.app</p>
             </div>
           </div>

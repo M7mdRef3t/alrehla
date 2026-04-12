@@ -13,12 +13,12 @@
 import type { FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, ChevronLeft } from "lucide-react";
-import { useLayoutState } from "@/state/layoutState";
+import { useLayoutState } from "@/domains/dawayir/store/layout.store";
 import { TEIWidget } from "./TEIWidget";
 import { DailyPulseWidget } from "./DailyPulseWidget";
 import { WeeklyEnergyWrapWidget } from '@/modules/action/WeeklyEnergyWrapWidget';
 import { StagnationAlertWidget } from "./StagnationAlertWidget";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { useMemo } from "react";
 
 /**

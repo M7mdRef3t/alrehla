@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { MapCanvas } from "../map/MapCanvas";
 import { FamilyTreeView } from "./FamilyTreeView";
 import { ForestView } from "./ForestView";
@@ -28,18 +28,18 @@ import { TabNavigation } from "./TabNavigation";
 import { LayoutModeSwitcher } from "./LayoutModeSwitcher";
 import { useGraphSync } from "@/hooks/useGraphSync";
 import { useAdaptiveLayout } from "@/hooks/useAdaptiveLayout";
-import { useLayoutState } from "@/state/layoutState";
+import { useLayoutState } from "@/domains/dawayir/store/layout.store";
 import { mapCopy } from "@/copy/map";
 import { EditableText } from "./EditableText";
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
-import { useJourneyState } from "@/state/journeyState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useJourneyProgress } from "@/domains/journey";
 import { PULSE_DAY_NAMES } from "@/utils/pulseInsights";
 import { NextStepCard } from "./NextStepCard";
 import type { AdviceCategory } from "@/data/adviceScripts";
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getEffectiveFeatureAccess } from "@/utils/featureFlags";
-import { getEffectiveRoleFromState, useAuthState } from "@/state/authState";
+import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
 import type { FeatureFlagKey } from "@/config/features";
 import type { NextStepDecisionV1 } from "../recommendation/types";
 import { isUserMode } from "@/config/appEnv";
@@ -48,7 +48,7 @@ import { adaptiveLayoutEngine } from "@/ai/adaptiveLayoutEngine";
 import { loadSubscription, canSendAIMessage } from "@/services/subscriptionManager";
 import { computeTEI } from "@/utils/traumaEntropyIndex";
 import { useDailyQuestion } from "@/hooks/useDailyQuestion";
-import { getShadowScore } from "@/state/shadowPulseState";
+import { getShadowScore } from "@/domains/consciousness/store/shadowPulse.store";
 import { deriveRelationshipWeather } from "@/utils/relationshipWeather";
 import { deriveContextAtlas, type ContextAtlasKey } from "@/utils/contextAtlas";
 import { assignUrl } from "@/services/navigation";
@@ -62,7 +62,7 @@ const FeelingCheckModal = lazy(() => import("@/modules/dawayir/FeelingCheckModal
 const EmergencyButton = lazy(() => import("@/modules/dawayir/EmergencyButton").then(m => ({ default: m.EmergencyButton })));
 const ActionToolkit = lazy(() => import("@/modules/dawayir/ActionToolkit").then(m => ({ default: m.ActionToolkit })));
 
-import { trackEvent, AnalyticsEvents } from "@/services/analytics";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { getGlobalHarmony } from "@/services/globalPulse";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import { ViralLoopNudge } from '@/modules/growth/growth/ViralLoopNudge';
@@ -186,6 +186,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   const mode = useLayoutState((s) => s.mode);
   const activeTab = useLayoutState((s) => s.activeTab);
+  const journey = useJourneyProgress();
+  const mirrorName = journey.mirrorName;
 
   const [showAddPerson, setShowAddPerson] = useState(false);
   const [segmentedView, setSegmentedView] = useState<"network" | "stability" | "metrics">("network");
@@ -209,7 +211,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   }, []);
 
   useEffect(() => {
-    trackEvent(AnalyticsEvents.SANCTUARY_LOADED);
+    analyticsService.track(AnalyticsEvents.SANCTUARY_LOADED);
     
     // Neural Soundscape Lifecycle
     const shouldPlay = localStorage.getItem('dawayir_ambient_sound') === 'true';
@@ -232,7 +234,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   const handleNodeDropOnAI = useCallback((nodeId: string) => {
     if (!user) {
-      trackEvent(AnalyticsEvents.AI_ATTEMPT_GUEST);
+      analyticsService.track(AnalyticsEvents.AI_ATTEMPT_GUEST);
       setIsCloudAuthOpen(true);
       return;
     }
@@ -385,6 +387,36 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     return Math.floor((Date.now() - sessionStart) / (60 * 1000));
   }, []);
 
+  // ─── Data-Driven Cinematic Engine (Parallax & Depth) ───
+  const dataWeight = useMemo(() => Math.max(1, nodes.length * 0.12), [nodes.length]);
+  
+  const globalMouseX = useMotionValue(0);
+  const globalMouseY = useMotionValue(0);
+
+  const handleGlobalMouseMove = useCallback((e: React.MouseEvent) => {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    globalMouseX.set((e.clientX - cx) / (20 * dataWeight));
+    globalMouseY.set((e.clientY - cy) / (20 * dataWeight));
+  }, [globalMouseX, globalMouseY, dataWeight]);
+
+  const gridX = useSpring(useTransform(globalMouseX, x => -x * 1.5), { stiffness: 45, damping: 20 });
+  const gridY = useSpring(useTransform(globalMouseY, y => -y * 1.5), { stiffness: 45, damping: 20 });
+  const nebulaX = useSpring(useTransform(globalMouseX, x => -x * 0.3), { stiffness: 10, damping: 40 });
+  const nebulaY = useSpring(useTransform(globalMouseY, y => -y * 0.3), { stiffness: 10, damping: 40 });
+
+  const gridRotateX = useMemo(() => {
+    const angle = 45 + Math.min((tei / 100) * 35, 35);
+    return `${angle}deg`;
+  }, [tei]);
+
+  const nebulaPalette = useMemo(() => {
+    if (pulseMode === "angry") return { c1: "rgba(225,29,72,0.15)", c2: "rgba(159,18,57,0.1)", c3: "rgba(244,63,94,0.05)" };
+    if (pulseMode === "low") return { c1: "rgba(71,85,105,0.15)", c2: "rgba(30,41,59,0.1)", c3: "rgba(148,163,184,0.05)" };
+    return { c1: "rgba(20,184,166,0.08)", c2: "rgba(79,70,229,0.05)", c3: "rgba(245,158,11,0.04)" };
+  }, [pulseMode]);
+  // ────────────────────────────────────────────────────────
+
   const adaptiveLayout = useMemo(
     () =>
       adaptiveLayoutEngine.calculateLayout({
@@ -441,7 +473,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   }, [selectedNodeId, showPlacementTooltip, dismissPlacementTooltip]);
 
   useEffect(() => {
-    const mirrorName = useJourneyState.getState().mirrorName;
     if (mirrorName && activeNodes.length === 0 && !showOnboarding) {
       const nodeId = useMapState.getState().addNode(
         mirrorName, 
@@ -457,16 +488,16 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         false, 
         true
       );
-      useJourneyState.getState().consumeMirrorName();
+      journey.consumeMirrorName();
       onSelectNode(nodeId);
       
-      import("@/state/achievementState").then(m => {
+      import("@/domains/gamification/store/achievement.store").then(m => {
         m.useAchievementState.getState().unlock("mirror_discovery");
       });
 
-      void trackEvent(AnalyticsEvents.NODE_ADDED, { label: mirrorName, source: "mirror_hook" });
+      void analyticsService.track(AnalyticsEvents.NODE_ADDED, { label: mirrorName, source: "mirror_hook" });
     }
-  }, [goalId, activeNodes.length, onSelectNode, showOnboarding]);
+  }, [goalId, activeNodes.length, journey, mirrorName, onSelectNode, showOnboarding]);
 
   const canCompleteJourneyStep =
     journeyMode &&
@@ -562,39 +593,32 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       className="flex-1 w-full h-full relative flex flex-col pb-0 atmospheric-void overflow-hidden"
       aria-label="Relationship Radar Map"
       onDrop={handleMainDrop}
+      onMouseMove={handleGlobalMouseMove}
       initial="hidden"
       animate="visible"
     >
-      {/* ── Cinematic ambient background ── */}
+      {/* ── Cinematic Data-Driven Ambient Background ── */}
       <div aria-hidden className="fixed inset-0 pointer-events-none bg-[#030712] overflow-hidden" style={{ zIndex: -1 }}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-900/15 via-[#030712] to-[#030712]" />
         
-        <div style={{
-          position: "absolute", width: "150vw", height: "150vh", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(13, 148, 136, 0.06) 0%, transparent 60%)",
-          top: "-50%", right: "-20%",
-          animation: "av-orb-drift 60s ease-in-out infinite alternate"
-        }} />
-        <div style={{
-          position: "absolute", width: "120vw", height: "120vh", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(234, 179, 8, 0.03) 0%, transparent 60%)",
-          bottom: "-30%", left: "-30%",
-          animation: "av-orb-drift 75s ease-in-out infinite alternate-reverse"
-        }} />
-        <div style={{
-          position: "absolute", width: "100vw", height: "100vh", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(225, 29, 72, 0.03) 0%, transparent 60%)",
-          top: "20%", left: "10%",
-          animation: "av-orb-drift 50s ease-in-out infinite alternate"
-        }} />
-        <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)",
-          backgroundSize: "50px 50px",
-          WebkitMaskImage: "radial-gradient(ellipse 100% 100% at 50% 50%, black 10%, transparent 80%)",
-          maskImage: "radial-gradient(ellipse 100% 100% at 50% 50%, black 10%, transparent 80%)",
-          opacity: 0.25
-        }} />
+        {/* Dynamic Nebula Layer */}
+        <motion.div style={{ x: nebulaX, y: nebulaY, width: "100%", height: "100%", position: "absolute" }}>
+          <div 
+            className="map-nebula" 
+            style={{ 
+              "--nebula-color-1": nebulaPalette.c1,
+              "--nebula-color-2": nebulaPalette.c2,
+              "--nebula-color-3": nebulaPalette.c3,
+            } as React.CSSProperties} 
+          />
+        </motion.div>
+
+        {/* Dynamic 3D Grid Layer */}
+        <motion.div style={{ x: gridX, y: gridY, width: "100%", height: "100%", position: "absolute" }}>
+          <div className="map-grid-wrapper">
+            <div className="map-grid" style={{ transform: `rotateX(${gridRotateX}) scale(1.5)` }} />
+          </div>
+        </motion.div>
       </div>
       <SovereignBroadcastOverlay message={sovereignMessage} />
       

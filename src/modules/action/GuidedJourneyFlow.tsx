@@ -2,8 +2,8 @@ import type { FC } from "react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Compass } from "lucide-react";
-import { useJourneyState } from "@/state/journeyState";
-import type { JourneyStepId } from "@/state/journeyState";
+import { useJourneyProgress } from "@/domains/journey";
+import type { JourneyStepId } from "@/domains/journey/store/journey.store";
 import { BaselineAssessment } from '@/modules/exploration/BaselineAssessment';
 import { GoalPicker } from '@/modules/meta/GoalPicker';
 import { CoreMapScreen } from '@/modules/exploration/CoreMapScreen';
@@ -11,7 +11,7 @@ import { PostStepMeasurement } from "./PostStepMeasurement";
 import { JourneyCelebration } from "./JourneyCelebration";
 import { ProgressIndicator } from '@/modules/meta/ProgressIndicator';
 import { JourneyProgressSidebar, type JourneyStage } from '@/modules/meta/JourneyProgressSidebar';
-import { useToastState } from "@/state/toastState";
+import { useToastState } from "@/domains/dawayir/store/toast.store";
 import type { AdviceCategory } from "@/data/adviceScripts";
 
 const STEP_LABELS: Record<string, string> = {
@@ -68,8 +68,7 @@ export const GuidedJourneyFlow: FC<GuidedJourneyFlowProps> = ({
   const prevIndexRef = useRef<number>(-1);
   const {
     currentStepId,
-    getStepIds,
-    getCurrentStepIndex,
+        getCurrentStepIndex,
     goBack,
     goToStep,
     canGoBack,
@@ -77,9 +76,9 @@ export const GuidedJourneyFlow: FC<GuidedJourneyFlowProps> = ({
     goalId,
     category,
     baselineCompletedAt
-  } = useJourneyState();
+  } = useJourneyProgress();
 
-  const stepIds = getStepIds();
+  const stepIds = useJourneyProgress().steps.map(s => s.id);
   const currentIndex = getCurrentStepIndex();
   const labels = stepIds.map((id) => STEP_LABELS[id] ?? id);
   const isBaselineStep = currentStepId === "baseline";
@@ -265,7 +264,7 @@ export const GuidedJourneyFlow: FC<GuidedJourneyFlowProps> = ({
       </motion.div>
 
       {/* Back Button */}
-      {canGoBack() && currentStepId !== "celebration" && (
+      {canGoBack && currentStepId !== "celebration" && (
         <div className="mt-8 flex justify-center">
           <button
             type="button"

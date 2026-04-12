@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useDigitalTwinState } from '@/state/digitalTwinState';
+import { useDigitalTwinState } from '@/domains/maraya/store/digitalTwin.store';
 import { Activity, Zap, Brain, Target, ShieldAlert, Wifi, ZapOff, Activity as PulseIcon } from 'lucide-react';
 import { InterventionEngine } from '@/services/telemetry/InterventionEngine';
 import { PredictiveEngine } from '@/services/predictiveEngine';

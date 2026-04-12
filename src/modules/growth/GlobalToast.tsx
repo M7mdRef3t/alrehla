@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useToastState } from "@/state/toastState";
+import { useToastState } from "@/domains/dawayir/store/toast.store";
 import { CheckCircle2, AlertTriangle, XCircle, Info, X } from "lucide-react";
 
 export const GlobalToast: React.FC = () => {

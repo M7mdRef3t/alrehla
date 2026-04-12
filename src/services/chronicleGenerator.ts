@@ -1,4 +1,4 @@
-import { PulseEntry } from "@/state/pulseState";
+import { PulseEntry } from "@/domains/consciousness/store/pulse.store";
 import { type MapNode } from "@/modules/map/mapTypes";
 
 // Interfaces for data we need (mocking or importing)

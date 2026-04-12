@@ -13,8 +13,8 @@ import {
   Moon, Star, Sun, ChevronLeft, CheckCircle2, Sparkles,
   Heart, Zap, Battery, BatteryLow, BatteryFull, ArrowLeft,
 } from "lucide-react";
-import { useRitualState } from "@/state/ritualState";
-import { useLifeState } from "@/state/lifeState";
+import { useRitualState } from "@/domains/journey/store/ritual.store";
+import { useLifeState } from "@/domains/dawayir/store/life.store";
 import { getTodayRituals, getDailyCompletionStats } from "@/services/ritualsEngine";
 import type { EveningReflection } from "@/types/dailyRituals";
 

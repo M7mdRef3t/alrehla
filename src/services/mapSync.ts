@@ -7,8 +7,8 @@ import {
 } from "./journeyTracking";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "./browserStorage";
-import { useSyncState } from "@/state/syncState";
-import { useJourneyState } from "@/state/journeyState";
+import { useSyncState } from "@/domains/journey/store/sync.store";
+import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { triggerMapCompletionCheck } from "../lib/gate/handoffCore";
 
 const SUPABASE_MAPS_TABLE = "journey_maps";

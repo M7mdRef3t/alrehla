@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useState, useCallback } from "react";
-import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowLeft, Zap, Shield, Heart } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────────── */
@@ -16,14 +16,14 @@ interface HeroSectionProps {
 
 /* ─── Constants ──────────────────────────────────────────────────────────────── */
 const ROTATING_WORDS = [
+  "دوايرك ملخبطة",
+  "طاقتك بتتسرب",
   "حدودك مُستباحة",
-  "شايل شيلة مش شيلتك",
-  "تايه في دواير غيرك",
+  "خايف تقول لأ",
+  "مراية لزعل غيرك",
+  "تايه في خوارزمياتهم",
   "نبضك مربوط بغيرك",
-  "سايب بابك موارب",
-  "بتدور في ساقية مش بتاعتك",
-  "مراية لزعل اللي حواليك",
-  "خايف تقول لأ"
+  "سايب بابك موارب"
 ];
 
 /* ─── Styles ─────────────────────────────────────────────────────────────────── */
@@ -48,68 +48,115 @@ const HERO_STYLES = `
     inset: 0;
     overflow: hidden;
     pointer-events: none;
+    background: radial-gradient(circle at 50% 50%, #060a16 0%, #010204 100%);
   }
 
   .ambient-orb {
     position: absolute;
     border-radius: 50%;
     will-change: transform;
+    opacity: 0.8;
   }
 
   .ambient-orb-1 {
-    width: 700px; height: 700px;
-    background: radial-gradient(circle, rgba(20,184,166,0.11) 0%, transparent 70%);
-    top: -15%; right: -8%;
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(20,184,166,0.15) 0%, transparent 60%);
+    top: -20%; right: -10%;
     animation: orb-drift1 38s infinite ease-in-out alternate;
   }
 
   .ambient-orb-2 {
-    width: 580px; height: 580px;
-    background: radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%);
-    bottom: -20%; left: -10%;
+    width: 900px; height: 900px;
+    background: radial-gradient(circle, rgba(79,70,229,0.12) 0%, transparent 65%);
+    bottom: -30%; left: -15%;
     animation: orb-drift2 52s infinite ease-in-out alternate;
   }
 
   .ambient-orb-3 {
-    width: 420px; height: 420px;
-    background: radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%);
-    top: 35%; left: 30%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 70%);
+    top: 45%; left: 20%;
     animation: orb-drift3 44s infinite ease-in-out alternate;
   }
 
   @keyframes orb-drift1 {
     0%   { transform: translate(0%,   0%)   scale(1);    }
-    50%  { transform: translate(-6%,  8%)   scale(1.12); }
-    100% { transform: translate(4%,  -5%)   scale(0.92); }
+    50%  { transform: translate(-6%,  8%)   scale(1.15); }
+    100% { transform: translate(4%,  -5%)   scale(0.85); }
   }
   @keyframes orb-drift2 {
     0%   { transform: translate(0%,   0%)   scale(1);    }
-    50%  { transform: translate(8%,  -10%)  scale(1.08); }
-    100% { transform: translate(-5%,  6%)   scale(0.95); }
+    50%  { transform: translate(8%,  -10%)  scale(1.2); }
+    100% { transform: translate(-5%,  6%)   scale(0.9); }
   }
   @keyframes orb-drift3 {
     0%   { transform: translate(0%,  0%)   scale(1);    }
-    100% { transform: translate(5%, -8%)   scale(1.15); }
+    100% { transform: translate(10%, -15%) scale(1.2); }
   }
 
   /* ── Grid ── */
+  .hero-grid-wrapper {
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    perspective: 1000px;
+  }
+
   .hero-grid {
     position: absolute;
     inset: 0;
+    width: 100%;
+    height: 100%;
     background-image:
-      linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
-    background-size: 64px 64px;
-    mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 100%);
+      linear-gradient(rgba(20,184,166,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20,184,166,0.035) 1px, transparent 1px);
+    background-size: 60px 60px;
+    background-position: center bottom;
+    mask-image: radial-gradient(ellipse 80% 50% at 50% 50%, black 10%, transparent 70%);
+    will-change: transform;
+    opacity: 0.8;
+    transform: rotateX(60deg) scale(1.5);
+    transform-origin: center center;
+  }
+
+  .hero-nebula {
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: 
+      radial-gradient(circle at 35% 65%, rgba(20,184,166,0.12) 0%, transparent 45%),
+      radial-gradient(circle at 75% 25%, rgba(79,70,229,0.1) 0%, transparent 45%),
+      radial-gradient(circle at 50% 50%, rgba(245,158,11,0.07) 0%, transparent 60%);
+    filter: blur(45px);
+    will-change: transform;
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  .hero-starfield {
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: radial-gradient(2px 2px at 40px 60px, #ffffff 50%, rgba(0,0,0,0)), radial-gradient(2px 2px at 20px 50px, rgba(255,255,255,0.8) 50%, rgba(0,0,0,0)), radial-gradient(2px 2px at 30px 100px, rgba(255,255,255,0.6) 50%, rgba(0,0,0,0)), radial-gradient(2px 2px at 40px 60px, rgba(255,255,255,0.4) 50%, rgba(0,0,0,0));
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    opacity: 0.15;
+    will-change: transform;
+    mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 90%);
   }
 
   /* ── Noise grain ── */
   .hero-grain {
     position: absolute;
     inset: 0;
-    opacity: 0.032;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+    opacity: 0.045;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
     pointer-events: none;
+    z-index: 50;
   }
 
   /* ── Badge eyebrow ── */
@@ -131,12 +178,12 @@ const HERO_STYLES = `
 
   /* ── Headline ── */
   .headline-static {
-    font-family: 'Tajawal', sans-serif;
-    font-weight: 900;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
+    font-family: var(--ds-font-display), sans-serif;
+    font-weight: 950;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
     color: var(--text-hero);
-    text-shadow: 0 0 80px rgba(45, 212, 191, 0.08);
+    text-shadow: 0 0 60px rgba(45, 212, 191, 0.12);
     text-align: right;
   }
 
@@ -259,10 +306,13 @@ const HERO_STYLES = `
     background: rgba(8, 12, 22, 0.7);
     box-shadow: 0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07);
     min-width: 130px;
-    animation: card-float 6s ease-in-out infinite alternate;
+    animation: card-hover-snap 8s steps(4) infinite alternate;
   }
-  @keyframes card-float {
+  @keyframes card-hover-snap {
     0%   { transform: translateY(0px);  }
+    25%  { transform: translateY(-4px); }
+    50%  { transform: translateY(-4px) translateX(2px); }
+    75%  { transform: translateY(-8px) translateX(2px); }
     100% { transform: translateY(-8px); }
   }
 
@@ -275,6 +325,7 @@ const HERO_STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
   }
 
   /* ── Starfield dots ── */
@@ -299,23 +350,54 @@ const HERO_STYLES = `
     pointer-events: none;
   }
 
-  /* ── Mobile: hide map ── */
+  /* ── Layout ── */
+  .hero-content-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 7rem 2rem 6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4rem;
+  }
+
+  .map-area {
+    flex: 0 0 auto;
+    width: min(46vw, 520px);
+    position: relative;
+    padding-bottom: 56px;
+  }
+
+  /* ── Mobile Layout ── */
   @media (max-width: 1023px) {
-    .map-area { display: none; }
+    .hero-content-wrapper {
+      flex-direction: column;
+      gap: 3rem;
+      padding: 6rem 1.5rem 4rem;
+    }
+    
+    .map-area {
+      width: min(90vw, 400px);
+      margin: 0 auto;
+      padding-bottom: 24px;
+    }
   }
 `;
 
 /* ─── Helpers ────────────────────────────────────────────────────────────────── */
-const ease = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const techEase = [0, 0.7, 0.1, 1] as [number, number, number, number];
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 32, filter: "blur(8px)" },
-  visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.7, ease } },
+  hidden: { opacity: 0, clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", y: 15 },
+  visible: { opacity: 1, clipPath: "polygon(0 0%, 100% 0%, 100% 100%, 0% 100%)", y: 0, transition: { duration: 0.65, ease: techEase } },
 };
 
 const stagger = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
+  visible: { transition: { staggerChildren: 0.15, delayChildren: 0.15 } },
 };
 
 /* ─── Rotating Headline Word ─────────────────────────────────────────────────── */
@@ -335,7 +417,7 @@ const RotatingWord: FC = () => {
   }, []);
 
   return (
-    <span className="rotating-word-wrapper">
+    <span className="rotating-word-wrapper relative inline-block">
       <span className="invisible select-none block" aria-hidden>
         {ROTATING_WORDS[5]}
       </span>
@@ -343,10 +425,10 @@ const RotatingWord: FC = () => {
         {show && (
           <motion.span
             key={index}
-            initial={{ opacity: 0, y: 18, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -16, filter: "blur(6px)" }}
-            transition={{ duration: 0.45, ease }}
+            initial={{ opacity: 0, y: 12, clipPath: "polygon(0 150%, 100% 150%, 100% 150%, 0% 150%)" }}
+            animate={{ opacity: 1, y: 0, clipPath: "polygon(0 -50%, 100% -50%, 100% 150%, 0% 150%)" }}
+            exit={{ opacity: 0, y: -12, clipPath: "polygon(0 -50%, 100% -50%, 100% -50%, 0% -50%)" }}
+            transition={{ duration: 0.45, ease: techEase }}
             className="absolute inset-0 flex items-center headline-accent"
           >
             {ROTATING_WORDS[index]}
@@ -361,15 +443,19 @@ const RotatingWord: FC = () => {
 const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
+  const springX = useSpring(mouseX, { stiffness: 120, damping: 50, mass: 1.5 });
+  const springY = useSpring(mouseY, { stiffness: 120, damping: 50, mass: 1.5 });
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (reduceMotion) return;
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
-    mouseX.set((e.clientX - cx) / 90);
-    mouseY.set((e.clientY - cy) / 90);
+    // Discretize mapping for robotic snap feeling
+    const rawX = (e.clientX - cx) / 90;
+    const rawY = (e.clientY - cy) / 90;
+    const step = 0.5;
+    mouseX.set(Math.round(rawX / step) * step);
+    mouseY.set(Math.round(rawY / step) * step);
   }, [reduceMotion, mouseX, mouseY]);
 
   useEffect(() => {
@@ -439,17 +525,30 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
           (() => {
             const safeRingRadius = toSafeRadius(ring.r, 1);
             return (
-          <motion.circle
-            key={i}
-            cx="190" cy="190" r={safeRingRadius}
-            stroke={ring.stroke}
-            strokeWidth="1"
-            fill="none"
-            strokeDasharray={ring.dash === "none" ? undefined : ring.dash}
-            animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
-            transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
-            style={{ transformOrigin: "190px 190px" }}
-          />
+              <g key={i}>
+                <motion.circle
+                  cx="190" cy="190" r={safeRingRadius}
+                  stroke={ring.stroke}
+                  strokeWidth="1"
+                  fill="none"
+                  strokeDasharray={ring.dash === "none" ? undefined : ring.dash}
+                  animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
+                  transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
+                  style={{ transformOrigin: "190px 190px" }}
+                />
+                {!reduceMotion && (
+                  <motion.circle
+                    cx="190" cy="190" r={safeRingRadius}
+                    fill="none"
+                    stroke={ring.stroke}
+                    strokeWidth="2"
+                    strokeDasharray="1 100"
+                    animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
+                    transition={{ duration: ring.dur * 0.4, repeat: Infinity, ease: "linear" }}
+                    style={{ transformOrigin: "190px 190px", filter: "blur(1px) drop-shadow(0 0 4px currentColor)" }}
+                  />
+                )}
+              </g>
             );
           })()
         ))}
@@ -563,7 +662,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
             style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #14b8a6, #2dd4bf)" }}
             initial={{ width: "0%" }}
             animate={{ width: "78%" }}
-            transition={{ duration: 1.2, ease, delay: 0.6 }}
+            transition={{ duration: 1.2, ease: techEase, delay: 0.6 }}
           />
         </div>
       </div>
@@ -620,7 +719,7 @@ const PulseBadge: FC<{ count: number }> = ({ count }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.85 }}
     animate={{ opacity: 1, scale: 1 }}
-    transition={{ delay: 1.4, duration: 0.6, ease }}
+    transition={{ delay: 1.4, duration: 0.6, ease: techEase }}
     style={{
       display: "inline-flex",
       alignItems: "center",
@@ -661,6 +760,31 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const reduceMotion = useReducedMotion();
   const [isWarping, setIsWarping] = useState(false);
 
+  // Global Mouse tracking for Parallax Base
+  const globalMouseX = useMotionValue(0);
+  const globalMouseY = useMotionValue(0);
+
+  const handleGlobalMouseMove = useCallback((e: React.MouseEvent) => {
+    if (reduceMotion) return;
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    // 5x more sensitive for dramatic architectural tracking
+    globalMouseX.set((e.clientX - cx) / 20);
+    globalMouseY.set((e.clientY - cy) / 20);
+  }, [reduceMotion, globalMouseX, globalMouseY]);
+
+  // Layer 1: Foreground Grid (Fastest response, moves opposite to mouse context)
+  const gridX = useSpring(useTransform(globalMouseX, x => -x * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
+  const gridY = useSpring(useTransform(globalMouseY, y => -y * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
+
+  // Layer 2: Midground Stars (Medium response)
+  const starX = useSpring(useTransform(globalMouseX, x => -x * 0.5), { stiffness: 20, damping: 30, mass: 1 });
+  const starY = useSpring(useTransform(globalMouseY, y => -y * 0.5), { stiffness: 20, damping: 30, mass: 1 });
+
+  // Layer 3: Deep Nebula (Slow, heavy response)
+  const nebulaX = useSpring(useTransform(globalMouseX, x => -x * 0.2), { stiffness: 10, damping: 40, mass: 2 });
+  const nebulaY = useSpring(useTransform(globalMouseY, y => -y * 0.2), { stiffness: 10, damping: 40, mass: 2 });
+
   const handleStart = useCallback(() => {
     setIsWarping(true);
     setTimeout(onStartJourney, 900);
@@ -674,6 +798,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
       <section
         className="hero-root"
         dir="rtl"
+        onMouseMove={handleGlobalMouseMove}
         style={{
           position: "relative",
           minHeight: "100svh",
@@ -685,29 +810,43 @@ export const HeroSection: FC<HeroSectionProps> = ({
       >
         {/* ── Ambient canvas ── */}
         <div className="hero-canvas" aria-hidden>
-          <div className="ambient-orb ambient-orb-1" />
-          <div className="ambient-orb ambient-orb-2" />
-          <div className="ambient-orb ambient-orb-3" />
-          <div className="hero-grid" />
+          
+          {/* Deep Nebula Parallax Layer */}
+          <motion.div style={{ x: nebulaX, y: nebulaY, width: "100%", height: "100%", position: "absolute" }}>
+            <div className="hero-nebula" />
+            <div className="ambient-orb ambient-orb-3" />
+          </motion.div>
+
+          {/* Deep Space Parallax Starfield Layer */}
+          <motion.div style={{ x: starX, y: starY, width: "100%", height: "100%", position: "absolute" }}>
+            <div className="hero-starfield" />
+            <div className="ambient-orb ambient-orb-2" />
+          </motion.div>
+
+          {/* Front Grid Parallax Layer with 3D perspective */}
+          <motion.div style={{ x: gridX, y: gridY, width: "100%", height: "100%", position: "absolute" }}>
+            <div className="hero-grid-wrapper">
+              <div className="hero-grid" />
+            </div>
+            <div className="ambient-orb ambient-orb-1" />
+          </motion.div>
+
           <div className="hero-grain" />
-          {/* Radial vignette */}
+          {/* Cinematic Cinematic Dark Mode Vignette */}
           <div style={{
             position: "absolute", inset: 0,
-            background: "radial-gradient(ellipse 90% 80% at 50% 50%, transparent 40%, rgba(2,4,8,0.7) 100%)",
+            background: "radial-gradient(ellipse 95% 85% at 50% 50%, transparent 35%, rgba(2,4,8,0.85) 100%)",
+            pointerEvents: "none"
+          }} />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "radial-gradient(ellipse 70% 30% at 50% 0%, rgba(20,184,166,0.06) 0%, transparent 100%)",
+            pointerEvents: "none", zIndex: 1
           }} />
         </div>
 
         {/* ── Content container ── */}
-        <div style={{
-          position: "relative", zIndex: 2,
-          width: "100%", maxWidth: 1380,
-          margin: "0 auto",
-          padding: "7rem 2rem 6rem",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "4rem",
-        }}>
+        <div className="hero-content-wrapper">
 
           {/* ════ LEFT COLUMN: TEXT CONTENT ════ */}
           <motion.div
@@ -738,6 +877,10 @@ export const HeroSection: FC<HeroSectionProps> = ({
                 fontSize: "clamp(2.4rem, 5.5vw, 4.4rem)",
                 display: "block",
                 textAlign: "right",
+                fontFamily: "var(--font-display)",
+                lineHeight: "1.4",
+                paddingTop: "0.2em",
+                paddingBottom: "0.2em"
               }}
             >
               <span style={{ display: "block", marginBottom: "0.1em" }}>أنت لست مرهقاً</span>
@@ -758,7 +901,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             />
 
             {/* Body text */}
-            <motion.p variants={fadeUp} className="hero-body" style={{ textAlign: "right" }}>
+            <motion.p variants={fadeUp} className="hero-body" style={{ textAlign: "justify", textJustify: "inter-word" }}>
               بدون جدار تسجيل مُرهق ولا استبيانات معقدة.
               مساحتك الخاصة للوضوح الفوري.. نترجم فوضى أفكارك
               لإحداثيات بصرية تساعدك على رصد استنزافك وتحديد خطوتك القادمة.
@@ -766,15 +909,12 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
             {/* Name input (optional personalization) */}
             <motion.div variants={fadeUp} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{
+              <div className="glass-premium" style={{
                 display: "flex",
                 alignItems: "center",
-                borderRadius: 16,
-                border: "1px solid rgba(255,255,255,0.1)",
-                background: "rgba(255,255,255,0.03)",
-                backdropFilter: "blur(12px)",
+                borderRadius: 20,
                 overflow: "hidden",
-                maxWidth: 380,
+                maxWidth: 420,
               }}>
                 <input
                   type="text"
@@ -790,21 +930,22 @@ export const HeroSection: FC<HeroSectionProps> = ({
                     background: "transparent",
                     border: "none",
                     outline: "none",
-                    padding: "13px 16px",
-                    fontSize: 14,
+                    padding: "15px 20px",
+                    fontSize: 15,
                     fontWeight: 600,
-                    color: "#d0e4f0",
+                    color: "#fff",
                     fontFamily: "Tajawal",
                     textAlign: "right",
                   }}
                 />
                 {mirrorName && (
                   <span style={{
-                    padding: "0 14px",
-                    fontSize: 12,
-                    color: "#14b8a6",
+                    padding: "0 18px",
+                    fontSize: 13,
+                    color: "var(--ds-color-primary)",
                     fontWeight: 800,
                     whiteSpace: "nowrap",
+                    filter: "drop-shadow(0 0 8px var(--ds-color-primary-glow))"
                   }}>
                     أهلاً {mirrorName} ✦
                   </span>
@@ -864,13 +1005,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             className="map-area"
             initial={{ opacity: 0, scale: 0.88, filter: "blur(12px)" }}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            transition={{ duration: 1.1, ease, delay: 0.35 }}
-            style={{
-              flex: "0 0 auto",
-              width: "min(46vw, 520px)",
-              position: "relative",
-              paddingBottom: 56,
-            }}
+            transition={{ duration: 1.1, ease: techEase, delay: 0.35 }}
           >
             <SovereignMap reduceMotion={reduceMotion} />
           </motion.div>

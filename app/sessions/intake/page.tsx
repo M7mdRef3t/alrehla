@@ -1,76 +1,34 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ArrowLeft, ShieldAlert } from 'lucide-react';
-
-type IntakeStep = 'welcome' | 'basic' | 'reason' | 'context' | 'safety' | 'success';
-
-interface IntakeFormData {
-  // Basic info
-  name: string;
-  phone: string;
-  email: string;
-  country: string;
-  ageRange: string;
-  preferredContact: string;
-
-  // Reason
-  requestReason: string;
-  urgencyReason: string;
-  biggestChallenge: string;
-
-  // Context
-  previousSessions: string;
-  specificPersonOrSituation: string;
-  impactScore: number;
-  durationOfProblem: string;
-
-  // Safety
-  crisisFlag: boolean;
-  medicalFlag: string; // We'll map "needs_medical" strictly
-  sessionGoalType: string;
-}
+import {
+  useSessionIntake,
+  SESSION_GOAL_OPTIONS,
+  AGE_RANGES,
+  PREVIOUS_SESSION_OPTIONS,
+} from '@/domains/sessions';
 
 export default function SessionIntakeFlow() {
-  const [step, setStep] = useState<IntakeStep>('welcome');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<IntakeFormData>({
-    name: '',
-    phone: '',
-    email: '',
-    country: '',
-    ageRange: '',
-    preferredContact: 'whatsapp',
-    requestReason: '',
-    urgencyReason: '',
-    biggestChallenge: '',
-    previousSessions: '',
-    specificPersonOrSituation: '',
-    impactScore: 5,
-    durationOfProblem: '',
-    crisisFlag: false,
-    medicalFlag: '',
-    sessionGoalType: ''
-  });
+  const {
+    step,
+    formData,
+    isSubmitting,
+    updateField,
+    goBack,
+    goNext,
+    submitIntake,
+    canProceedFromBasic,
+    canProceedFromReason,
+    canProceedFromContext,
+    canSubmitSafety,
+  } = useSessionIntake();
 
-  const updateField = (field: keyof IntakeFormData, value: string | number | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const submitIntake = async () => {
-    setIsSubmitting(true);
-    try {
-      // In a real implementation, this will send data to the backend /api/sessions/intake
-      // which will then calculate the triage score and set request status.
-      // For now we simulate the submission.
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setStep('success');
-    } catch (e) {
-      console.error(e);
-      // Handle error gracefully
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = async () => {
+    const success = await submitIntake();
+    if (!success) {
+      alert('عذراً، حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
     }
   };
 
@@ -79,11 +37,7 @@ export default function SessionIntakeFlow() {
       <div className="max-w-xl w-full">
         {step !== 'welcome' && step !== 'success' && (
           <button 
-            onClick={() => {
-              const order: IntakeStep[] = ['welcome', 'basic', 'reason', 'context', 'safety'];
-              const idx = order.indexOf(step);
-              if (idx > 0) setStep(order[idx - 1]);
-            }}
+            onClick={goBack}
             className="flex items-center text-neutral-400 hover:text-white mb-8 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -109,7 +63,7 @@ export default function SessionIntakeFlow() {
                 <p>هذا المسار ليس للتعامل مع الأزمات الطارئة أو الحالات التي تتطلب تدخلاً طبياً أو نفسياً عاجلاً.</p>
               </div>
               <button 
-                onClick={() => setStep('basic')}
+                onClick={() => goNext('basic')}
                 className="w-full py-4 bg-white text-black rounded-lg font-bold hover:bg-neutral-200 transition-colors flex justify-center items-center"
               >
                 بدء تقديم الطلب
@@ -152,15 +106,14 @@ export default function SessionIntakeFlow() {
                     <label className="block text-sm text-neutral-400 mb-1">الفئة العمرية</label>
                     <select value={formData.ageRange} onChange={e => updateField('ageRange', e.target.value)} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-3 text-white focus:outline-none focus:border-white transition-colors">
                       <option value="">اختر..</option>
-                      <option value="18-24">18-24</option>
-                      <option value="25-34">25-34</option>
-                      <option value="35-44">35-44</option>
-                      <option value="45+">45+</option>
+                      {AGE_RANGES.map(r => (
+                        <option key={r.value} value={r.value}>{r.label}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
               </div>
-              <button onClick={() => setStep('reason')} disabled={!formData.name || !formData.phone} className="w-full mt-8 py-4 bg-white text-black disabled:bg-neutral-800 disabled:text-neutral-600 rounded-lg font-bold transition-colors">
+              <button onClick={() => goNext('reason')} disabled={!canProceedFromBasic} className="w-full mt-8 py-4 bg-white text-black disabled:bg-neutral-800 disabled:text-neutral-600 rounded-lg font-bold transition-colors">
                 التالي
               </button>
             </motion.div>
@@ -191,7 +144,7 @@ export default function SessionIntakeFlow() {
                   <textarea value={formData.biggestChallenge} onChange={e => updateField('biggestChallenge', e.target.value)} rows={2} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-3 text-white focus:outline-none focus:border-white transition-colors"></textarea>
                 </div>
               </div>
-              <button onClick={() => setStep('context')} disabled={!formData.requestReason || !formData.urgencyReason} className="w-full mt-8 py-4 bg-white text-black disabled:bg-neutral-800 disabled:text-neutral-600 rounded-lg font-bold transition-colors">
+              <button onClick={() => goNext('context')} disabled={!canProceedFromReason} className="w-full mt-8 py-4 bg-white text-black disabled:bg-neutral-800 disabled:text-neutral-600 rounded-lg font-bold transition-colors">
                 التالي
               </button>
             </motion.div>
@@ -212,9 +165,9 @@ export default function SessionIntakeFlow() {
                   <label className="block text-sm font-semibold text-white mb-2">هل أخدت جلسات من قبل؟</label>
                   <select value={formData.previousSessions} onChange={e => updateField('previousSessions', e.target.value)} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-3 text-white focus:outline-none focus:border-white transition-colors">
                     <option value="">اختر..</option>
-                    <option value="none">أول مرة</option>
-                    <option value="coaching">أخدت جلسات كوتشينج قبل كده</option>
-                    <option value="therapy">أخدت علاج/دعم نفسي</option>
+                    {PREVIOUS_SESSION_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -233,7 +186,7 @@ export default function SessionIntakeFlow() {
                   <input type="text" value={formData.durationOfProblem} onChange={e => updateField('durationOfProblem', e.target.value)} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-3 text-white focus:outline-none focus:border-white transition-colors" placeholder="أيام / شهور / سنين" />
                 </div>
               </div>
-              <button onClick={() => setStep('safety')} disabled={!formData.previousSessions || !formData.durationOfProblem} className="w-full mt-8 py-4 bg-white text-black disabled:bg-neutral-800 disabled:text-neutral-600 rounded-lg font-bold transition-colors">
+              <button onClick={() => goNext('safety')} disabled={!canProceedFromContext} className="w-full mt-8 py-4 bg-white text-black disabled:bg-neutral-800 disabled:text-neutral-600 rounded-lg font-bold transition-colors">
                 التالي
               </button>
             </motion.div>
@@ -270,7 +223,7 @@ export default function SessionIntakeFlow() {
                 <div>
                   <label className="block text-sm font-semibold text-white mb-3">إيه الهدف المبدئي اللي تتوقع توصل له من الجلسة؟</label>
                   <div className="grid grid-cols-2 gap-3">
-                    {['وضوح الرؤية', 'قرار محدد', 'فهم نمط متكرر', 'مشكلة علاقة', 'تخفيف ضغط نفسي', 'شيء آخر'].map((goal) => (
+                    {SESSION_GOAL_OPTIONS.map((goal) => (
                       <button
                         key={goal}
                         onClick={() => updateField('sessionGoalType', goal)}
@@ -290,8 +243,8 @@ export default function SessionIntakeFlow() {
               )}
 
               <button 
-                onClick={submitIntake} 
-                disabled={isSubmitting || !formData.sessionGoalType} 
+                onClick={handleSubmit} 
+                disabled={isSubmitting || !canSubmitSafety} 
                 className="w-full mt-8 py-4 bg-white text-black disabled:bg-neutral-800 disabled:text-neutral-600 rounded-lg font-bold transition-colors flex justify-center items-center"
               >
                 {isSubmitting ? (

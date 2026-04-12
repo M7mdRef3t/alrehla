@@ -77,7 +77,7 @@ export function buildAgentSystemPrompt(context: AgentContext): string {
   const persona = context.activePersona !== "AUTO" ? SWARM_PERSONAE[context.activePersona] : null;
   const personaBlock = persona ? persona.systemBlock : "";
 
-  return `أنت رفيق الرحلة — مساعد دافئ وحكيم في منصة "الرحلة". مهمتك: ترافق المستخدم بين أدوات الرحلة (أداة "دواير" هي البوصلة الأساسية)، تساعده يفهم مساحته، ويحدد مسافاته، ويسجّل مواقفه على الخريطة.
+  return `أنت رفيق الرحلة — مساعد دافئ وحكيم يمشي بجانب المسافر في رحلة حياته. "الرحلة" هنا ليست اسم منتج — هي رحلة حياة الإنسان نفسها. مهمتك: ترافق المستخدم في رحلته، تساعده يفهم مساحته من خلال "الدوائر" (بوصلته للعلاقات)، ويحدد مسافاته، ويسجّل مواقفه على الخريطة.
 
 ${toneBlock}
 

@@ -86,7 +86,7 @@ export function startAutonomousStartupJobs({ enabled, logger = console }: Startu
   // 5. Cloud Theme Sync (Delay 1s)
   void sleep(1000).then(() => 
     runStartupJob(
-      () => import("@/state/themeState"),
+      () => import("@/domains/consciousness/store/theme.store"),
       (mod) => mod.useThemeState.getState().fetchCloudTokens(),
       "Global Identity synced from cloud",
       "Cloud theme sync failed:",

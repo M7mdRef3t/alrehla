@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Rocket, Shield, Zap, Palette, Brain, Users as UsersIcon } from 'lucide-react';
-import { useFleetState, FleetVessel, FleetState } from '@/state/fleetState';
+import { useFleetState, FleetVessel, FleetState } from '@/domains/admin/store/fleet.store';
 
 interface VesselCardProps {
     vessel: FleetVessel;

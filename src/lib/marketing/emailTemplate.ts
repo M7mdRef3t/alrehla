@@ -71,7 +71,7 @@ export function buildMarketingEmail({
           <td style="padding: 0 50px 40px;">
             <div style="background: rgba(255,255,255,0.03); border-radius: 24px; padding: 35px; border: 1px solid rgba(255,255,255,0.05);">
               <p style="color: #cbd5e1; font-size: 16px; line-height: 1.9; margin: 0 0 25px;">
-                يا ${name || 'بطل'}، إحنا فريق عمل المنصة. شوفنا إنك كنت عايز تبدأ رحلة اكتشاف علاقاتك بس لسه مخلصتش الخريطة.
+                يا ${name || 'بطل'}، إحنا رفاق الرحلة. شوفنا إنك كنت عايز تبدأ رحلة اكتشاف علاقاتك بس لسه مخلصتش الخريطة.
               </p>
               
               <!-- Reward Card -->
@@ -114,7 +114,7 @@ export function buildMarketingEmail({
         <tr>
           <td style="padding: 20px 40px 50px; text-align: center; border-top: 1px solid rgba(255,255,255,0.03); background: rgba(0,0,0,0.1);">
             <p style="color: #64748b; font-size: 12px; line-height: 1.6; margin: 0 0 15px;">
-              فريق عمل المنصة مستني يشوف خريطة وعيك تكتمل. إحنا هنا لمساعدتك في أي وقت.
+              رفاق الرحلة مستنيين يشوفوا خريطة وعيك تكتمل. إحنا هنا لمساعدتك في أي وقت.
             </p>
             <p style="color: #475569; font-size: 11px; margin: 0;">
               إذا أردت الرحيل من هذه الدائرة، <a href="${unsubHref}" style="color: #64748b;">اضغط هنا لإلغاء الاشتراك</a>

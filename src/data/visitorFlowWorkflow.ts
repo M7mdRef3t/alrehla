@@ -25,7 +25,7 @@ export const VISITOR_FLOW_STEPS: FlowStepConfig[] = [
   { id: "phase-core-v2", scenarioLabel: "Phase", title: "Core App", action: "التجربة الأساسية داخل التطبيق", variant: "branch", accent: "slate" },
   { id: "root-action-profile-v2", scenarioLabel: "إجراء ١ (ناجح)", title: "ضغط أيقونة الحساب", action: "فتح شاشة الحساب/الدخول", variant: "sub", accent: "teal", eventKey: "profile_clicked" },
   { id: "root-action-start-v2", scenarioLabel: "إجراء ٢ (ناجح)", title: "الضغط على «تفعيل الرادار والانطلاق»", action: "فتح شاشة ضبط البوصلة", variant: "sub", accent: "teal", eventKey: "landing_clicked_start" },
-  { id: "root-action-exit-v2", scenarioLabel: "إجراء ٣ (فشل)", title: "زائر يقفل المنصة", action: "الخروج قبل بدء الرحلة", variant: "sub", accent: "rose", eventKey: "landing_closed" },
+  { id: "root-action-exit-v2", scenarioLabel: "إجراء ٣ (فشل)", title: "زائر يغادر الرحلة", action: "الخروج قبل بدء الرحلة", variant: "sub", accent: "rose", eventKey: "landing_closed" },
   { id: "root-action-install-v2", scenarioLabel: "إجراء ٤ (ناجح)", title: "الضغط على تثبيت التطبيق", action: "محاولة تثبيت الـ PWA", variant: "sub", accent: "teal", eventKey: "install_clicked" },
 
   { id: "profile-success-v2", scenarioLabel: "نتيجة", title: "مستخدم مؤهل للدخول", action: "انتقال لرحلة المستخدم", variant: "sub", accent: "teal" },

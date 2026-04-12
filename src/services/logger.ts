@@ -78,4 +78,8 @@ export const logger = {
   log: (message: string | unknown, ...args: any[]) => {
     console.log(message, ...args);
   },
+
+  info: (message: string | unknown, ...args: any[]) => {
+    console.info(message, ...args);
+  },
 };

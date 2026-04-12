@@ -148,7 +148,7 @@ export function getNextNudge(): Nudge | null {
                 id,
                 type: "quick_win",
                 title: "خطوة واحدة بس 🌱",
-                message: "مش محتاج تعمل حاجة كبيرة. افتح التطبيق وخد نفس واحد.",
+                message: "مش محتاج تعمل حاجة كبيرة. ارجع لرحلتك وخد نفس واحد.",
                 cta: "تمام",
                 ctaAction: "dismiss_only",
                 priority: 3,

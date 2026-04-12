@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { X, Combine, ArrowLeft, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 const IMMERSION_NODES = [
   {

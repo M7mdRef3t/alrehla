@@ -1,7 +1,7 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import { getTrackingSessionId } from "@/services/journeyTracking";
-import { getAuthDisplayName, getAuthUserId } from "@/state/authState";
+import { getAuthDisplayName, getAuthUserId } from "@/domains/auth/store/auth.store";
 import { LiveStatusBar } from '@/modules/meta/shared/LiveStatusBar';
 
 const RANK_LABELS: Record<string, string> = {

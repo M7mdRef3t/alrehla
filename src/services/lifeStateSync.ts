@@ -14,7 +14,7 @@
 
 import { supabase } from "@/services/supabaseClient";
 import type { LifeEntry, DomainAssessment, LifeScore } from "@/types/lifeDomains";
-import { useLifeState } from "@/state/lifeState";
+import { useLifeState } from "@/domains/dawayir/store/life.store";
 
 // ─── Upload Functions ─────────────────────────────────────────────
 

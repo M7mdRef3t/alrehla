@@ -1,6 +1,6 @@
 import { logger } from "@/services/logger";
 import { geminiClient } from './geminiClient';
-import { CreativeSeed } from '@/state/synthesisState';
+import { CreativeSeed } from '@/domains/consciousness/store/synthesis.store';
 
 export class CreativeSeedEngine {
     /**

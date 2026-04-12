@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import { sendBroadcast } from "@/services/adminApi"; // Optional: Use for AI intervention
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 
 interface GhostTrace {
   id: string;
@@ -147,7 +147,7 @@ export const GhostMirror: React.FC = () => {
         if (!isSupabaseReady || !supabase) return;
         
         const { data, error } = await supabase
-          .from("journey_events")
+          .from("routing_events")
           .select("*")
           .order("occurred_at", { ascending: false })
           .limit(20);
@@ -170,13 +170,13 @@ export const GhostMirror: React.FC = () => {
     if (!isSupabaseReady || !supabase) return;
 
     // Real-time Channel Setup
-    const channel = supabase.channel("public:journey_events")
+    const channel = supabase.channel("public:routing_events")
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
-          table: "journey_events"
+          table: "routing_events"
         },
         (payload) => {
           if (!active) return;

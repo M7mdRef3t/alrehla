@@ -3,7 +3,7 @@ import React, { FC, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, X, ShieldAlert, HeartPulse } from 'lucide-react';
 import { soundManager } from '@/services/soundManager';
-import { useAppOverlayState } from '@/state/appOverlayState';
+import { useAppOverlayState } from '@/domains/consciousness/store/overlay.store';
 
 export type NudgeType = 'encouragement' | 'points' | 'danger';
 

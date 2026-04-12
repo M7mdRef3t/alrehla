@@ -10,7 +10,7 @@ import { type FC, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, X } from "lucide-react";
 import { loadUserMemory, resolveDisplayName } from "@/services/userMemory";
-import { usePulseState } from "@/state/pulseState";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 
 interface ReturnGreetingBannerProps {
   onOpenPulseCheck: () => void;

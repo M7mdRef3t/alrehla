@@ -37,6 +37,8 @@ export const GovernanceHub: FC = () => {
     confidencePulse: 0
   });
 
+  const [aiAutonomyEnabled, setAiAutonomyEnabled] = useState(false);
+
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 30000);
@@ -175,14 +177,27 @@ export const GovernanceHub: FC = () => {
              </div>
            </div>
 
-           <div className="p-8 rounded-3xl bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-500/20 shadow-inner relative overflow-hidden group">
+           <div className={`p-8 rounded-3xl ${aiAutonomyEnabled ? 'bg-gradient-to-br from-teal-900/40 to-slate-900 border-teal-500/20' : 'bg-gradient-to-br from-indigo-900/40 to-slate-900 border-indigo-500/20'} shadow-inner relative overflow-hidden group transition-colors duration-500`}>
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
-                 <Lock className="w-16 h-16 text-indigo-400" />
+                 {aiAutonomyEnabled ? <Zap className="w-16 h-16 text-teal-400" /> : <Lock className="w-16 h-16 text-indigo-400" />}
               </div>
-              <h4 className="text-lg font-black text-white mb-2 relative z-10">وضع الحكم الآمن</h4>
-              <p className="text-xs text-indigo-300 font-bold tracking-wide leading-relaxed relative z-10">
-                النظام الآن يعمل تحت "السيادة البشرية". القرارات المالية والاستراتيجية تتطلب موافقتك.
+              <h4 className="text-lg font-black text-white mb-2 relative z-10">{aiAutonomyEnabled ? "استقلالية كاملة للـ AI" : "وضع الحكم الآمن"}</h4>
+              <p className={`text-xs ${aiAutonomyEnabled ? 'text-teal-300' : 'text-indigo-300'} font-bold tracking-wide leading-relaxed relative z-10 mb-6`}>
+                {aiAutonomyEnabled 
+                  ? "السحابة الذكية تدير القرارات الاستراتيجية وتقوم بتنفيذ التكتيكات آلياً دون انتظار."
+                  : "النظام الآن يعمل تحت السيادة البشرية. القرارات المالية والاستراتيجية تتطلب موافقتك."}
               </p>
+              
+              <button
+                onClick={() => setAiAutonomyEnabled(!aiAutonomyEnabled)}
+                className={`relative z-10 w-full py-3 rounded-xl font-black uppercase tracking-widest text-xs transition-all ${
+                  aiAutonomyEnabled 
+                  ? "bg-slate-900 text-teal-400 hover:bg-slate-800" 
+                  : "bg-indigo-500 text-white hover:bg-indigo-400"
+                }`}
+              >
+                {aiAutonomyEnabled ? "تعليق الاستقلالية" : "تمكين السيادة المطلقة"}
+              </button>
            </div>
         </div>
 

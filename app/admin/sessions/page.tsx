@@ -1,10 +1,5 @@
 import { SessionOSConsole } from '@/components/admin/sessions/SessionOSConsole';
 
-export const metadata = {
-  title: 'Session OS | Dawayir Admin',
-  description: 'Cognitive target mapping and session intelligence console',
-};
-
 export default function AdminSessionOSPage() {
   return (
     <main className="h-screen bg-[#0A0A0A] overflow-hidden">

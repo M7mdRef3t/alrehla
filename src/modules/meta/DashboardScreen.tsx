@@ -1,6 +1,6 @@
 import React, { FC, useMemo, useRef, useEffect, useState } from "react";
 import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { EmergencySOS } from '@/modules/action/CommandCenter/EmergencySOS';
 import { StreakWidget } from '@/modules/growth/StreakWidget';
 import { QuickPathModal } from '@/modules/growth/QuickPathModal';
@@ -23,8 +23,8 @@ import {
   shouldShowWeeklySummary,
   markWeeklySummaryShown
 } from '@/modules/action/WeeklyJourneySummary';
-import { useAppOverlayState } from "@/state/appOverlayState";
-import { useJourneyState } from "@/state/journeyState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+import { useJourneyProgress } from "@/domains/journey";
 
 /*  DASHBOARD SCREEN  غرفة اعات
     */
@@ -145,7 +145,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
   const [showCommunity, setShowCommunity] = useState(false);
   const [showReferral, setShowReferral] = useState(false);
   const [showShareStats, setShowShareStats] = useState(false);
-  const { journeyStartedAt } = useJourneyState();
+  const { journeyStartedAt } = useJourneyProgress();
   const [showWeeklySummary, setShowWeeklySummary] = useState(() =>
     shouldShowWeeklySummary(journeyStartedAt ?? null)
   );

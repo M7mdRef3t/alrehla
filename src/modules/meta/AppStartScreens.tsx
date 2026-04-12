@@ -2,8 +2,8 @@ import { Suspense, lazy, type ComponentProps } from "react";
 import { Landing } from "./Landing";
 import { GoalPicker } from "./GoalPicker";
 import { OnboardingWelcomeBubble } from "./OnboardingWelcomeBubble";
-import { useJourneyState } from "@/state/journeyState";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import { useJourneyProgress } from "@/domains/journey";
+import { trackingService } from "@/domains/journey";
 import { type AdviceCategory } from "@/data/adviceScripts";
 import { type FeatureFlagKey } from "@/config/features";
 import { type WelcomeSource } from "./OnboardingWelcomeBubble";
@@ -12,7 +12,7 @@ import { type NextStepDecisionV1 } from "../recommendation";
 
 import { SafeCoreMapScreen } from "./WrappedComponents";
 import type { CoreMapScreen } from "@/modules/exploration/CoreMapScreen";
-import { trackEvent, AnalyticsEvents } from "@/services/analytics";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 
 const ResearchSurvey = lazy(() => import("./ResearchSurvey").then((m) => ({ default: m.ResearchSurvey })));
 
@@ -99,6 +99,7 @@ export function AppStartScreens({
   onOpenProfile,
   onNavigate: _onNavigate
 }: AppStartScreensProps) {
+  const journey = useJourneyProgress();
   if (screen === "landing") {
     return (
       <PageShell headerMode="none" tabBarVisible={false} disableAnimation maxWidth="max-w-none px-0 sm:px-0 lg:px-0">
@@ -125,15 +126,15 @@ export function AppStartScreens({
         <GoalPicker
           onBack={onGoalBack}
           onContinue={(nextCategory, nextGoalId) => {
-            recordFlowEvent("goal_selected", {
+            trackingService.recordFlow("goal_selected", {
               meta: { goalId: nextGoalId, category: nextCategory }
             });
-            trackEvent(AnalyticsEvents.GOAL_SELECTED, {
+            analyticsService.track(AnalyticsEvents.GOAL_SELECTED, {
               goal_id: nextGoalId,
               category: nextCategory
             });
             onClearWelcome();
-            useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
+            journey.setLastGoal(nextGoalId, nextCategory);
             onGoalSelected(nextCategory, nextGoalId);
           }}
         />

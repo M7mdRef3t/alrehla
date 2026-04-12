@@ -1,5 +1,5 @@
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { calculateEntropy } from "@/services/predictiveEngine";
 import { getDawayirSignalHistory } from "./recommendationBus";
 import { getRecentJourneyEvents, type JourneyEvent } from "@/services/journeyTracking";

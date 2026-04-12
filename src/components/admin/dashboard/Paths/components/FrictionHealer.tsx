@@ -6,7 +6,7 @@ import {
   Sparkles,
   Zap
 } from "lucide-react";
-import type { JourneyPath } from "@/state/adminState";
+import type { JourneyPath } from "@/domains/admin/store/admin.store";
 
 interface FrictionHealerProps {
   path: JourneyPath;

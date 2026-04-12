@@ -3,8 +3,8 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Map } from "lucide-react";
 import { ACHIEVEMENTS } from "@/data/achievements";
-import { useAchievementState } from "@/state/achievementState";
-import { useMapState } from "@/state/mapState";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 
 interface AchievementsProps {
   onClose: () => void;

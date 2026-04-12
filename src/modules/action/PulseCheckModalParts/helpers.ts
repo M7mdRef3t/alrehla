@@ -1,4 +1,4 @@
-import type { PulseMood, PulseFocus } from "@/state/pulseState";
+import type { PulseMood, PulseFocus } from "@/domains/consciousness/store/pulse.store";
 
 /**
  * Energy gradient background mapper

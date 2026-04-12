@@ -11,15 +11,19 @@ import {
   Leaf,
   Wind
 } from "lucide-react";
-import { useThemeState, DesignTokens } from "@/state/themeState";
+import { useThemeState, DesignTokens } from "@/domains/consciousness/store/theme.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { aiDesignService } from "@/ai/aiDesignService";
+import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
 
 const DesignLab: React.FC = () => {
   const { customTokens, updateTokens, resetTokens, theme, setTheme, publishToCloud, fetchCloudTokens } = useThemeState();
+  const resonanceScore = useAdminState(s => s.resonanceScore);
   const [activeState, setActiveState] = React.useState<"global" | "crisis" | "stable" | "flow">("global");
   const [aiPrompt, setAiPrompt] = React.useState("");
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [autoSensorySync, setAutoSensorySync] = React.useState(false);
   const [status, setStatus] = React.useState<{ type: "success" | "error"; msg: string } | null>(null);
 
   React.useEffect(() => {
@@ -44,6 +48,31 @@ const DesignLab: React.FC = () => {
       });
     }
   };
+
+  React.useEffect(() => {
+    if (!autoSensorySync) return;
+    
+    // Auto-override based on Resonance
+    if (resonanceScore < 35 && activeState !== "crisis") {
+       setActiveState("crisis");
+       updateTokens({
+          grainOpacity: 0.15,
+          chromaticAberration: 0.08,
+          ambientVolume: 0.3,
+          primaryColor: "#f43f5e" // Rose
+       });
+       setStatus({ type: "success", msg: "تفعيل الخصائص الحسية الطارئة لانخفاض التناغم" });
+    } else if (resonanceScore >= 75 && activeState !== "flow") {
+       setActiveState("flow");
+       updateTokens({
+          grainOpacity: 0.0,
+          chromaticAberration: 0.0,
+          ambientVolume: 0.8,
+          primaryColor: "#10b981" // Emerald
+       });
+       setStatus({ type: "success", msg: "تفعيل وضع التدفق الحسي للإيجابية العالية" });
+    }
+  }, [resonanceScore, autoSensorySync]);
 
   const handleAiGenerate = async () => {
     if (!aiPrompt.trim()) return;
@@ -141,6 +170,15 @@ const DesignLab: React.FC = () => {
               {status.msg}
             </div>
           )}
+          <button
+            onClick={() => setAutoSensorySync(!autoSensorySync)}
+            className={`px-4 py-2 rounded-xl border text-sm font-bold transition-all flex items-center gap-2 ${
+              autoSensorySync ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30 ring-2 ring-indigo-500/20 shadow-lg shadow-indigo-500/20" : "bg-white/5 border-white/10 text-slate-300"
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            {autoSensorySync ? "الربط الحسي الآلي: نشط" : "تفعيل التناغم الحسي الآلي"}
+          </button>
           <button 
             onClick={fetchCloudTokens}
             className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 transition-all text-sm"
@@ -240,7 +278,7 @@ const DesignLab: React.FC = () => {
           <div className="space-y-6">
             <SliderInput 
               label="انحناء الحواف (Border Radius)"
-              value={parseInt(currentLevel.borderRadius)}
+              value={parseInt(currentLevel.borderRadius || "16px") || 0}
               min={0}
               max={40}
               unit="px"
@@ -248,11 +286,43 @@ const DesignLab: React.FC = () => {
             />
             <SliderInput 
               label="شدة التمويه (Glass Blur)"
-              value={parseInt(currentLevel.blur)}
+              value={parseInt(currentLevel.blur || "8px") || 0}
               min={0}
               max={30}
               unit="px"
               onChange={(val) => handleUpdate({ blur: `${val}px` })}
+            />
+            <SliderInput 
+              label="توهج الحواف (Vignette)"
+              value={(currentLevel.vignetteStrength ?? 0.2) * 100}
+              min={0}
+              max={100}
+              unit="%"
+              onChange={(val) => handleUpdate({ vignetteStrength: val / 100 })}
+            />
+            <SliderInput 
+              label="تأثير الحبيبات (Grain)"
+              value={(currentLevel.grainOpacity ?? 0.1) * 100}
+              min={0}
+              max={100}
+              unit="%"
+              onChange={(val) => handleUpdate({ grainOpacity: val / 100 })}
+            />
+            <SliderInput 
+              label="تشويش لوني (Aberration)"
+              value={(currentLevel.chromaticAberration ?? 0) * 100}
+              min={0}
+              max={100}
+              unit="%"
+              onChange={(val) => handleUpdate({ chromaticAberration: val / 100 })}
+            />
+            <SliderInput 
+              label="حجم الصوت المحيطي (Soundscape)"
+              value={(currentLevel.ambientVolume ?? 0.5) * 100}
+              min={0}
+              max={100}
+              unit="%"
+              onChange={(val) => handleUpdate({ ambientVolume: val / 100 })}
             />
             <div className="flex items-center justify-between pt-4">
               <span className="text-slate-300 font-medium">وضع المنصة</span>

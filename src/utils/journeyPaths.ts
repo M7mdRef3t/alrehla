@@ -1,4 +1,4 @@
-import type { JourneyPath, JourneyPathStep, JourneyPathStepKind } from "@/state/adminState";
+import type { JourneyPath, JourneyPathStep, JourneyPathStepKind } from "@/domains/admin/store/admin.store";
 
 export function getJourneyPathBySlug(paths: JourneyPath[], slug: string): JourneyPath | null {
   return paths.find((path) => path.slug === slug) ?? null;

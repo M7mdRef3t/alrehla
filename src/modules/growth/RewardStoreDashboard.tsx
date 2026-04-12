@@ -5,7 +5,7 @@ import {
   ChevronLeft, Gift, Zap, ShieldCheck, Star
 } from 'lucide-react';
 import { soundManager } from '@/services/soundManager';
-import { useGamificationState } from '@/state/gamificationState';
+import { useGamification } from '@/domains/gamification';
 import { triggerGamificationNudge } from './GamificationNudgeToast';
 
 interface RewardStoreModalProps {
@@ -24,7 +24,7 @@ const REWARDS = [
 ];
 
 export const RewardStoreModal: FC<RewardStoreModalProps> = ({ isOpen, onClose }) => {
-  const { coins, spendCoins, awardBadge } = useGamificationState();
+  const { coins, spendCoins, awardBadge } = useGamification();
   const [activeTab, setActiveTab] = useState<TabType>('market');
   
   // States for sub-flows

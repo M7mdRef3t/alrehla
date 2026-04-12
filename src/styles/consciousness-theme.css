@@ -2,38 +2,96 @@
  * CONSCIOUSNESS THEME — النظام البصري الواعي
  * =====================================================
  * الواجهة تتغير بناءً على حالة المستخدم النفسية
+ * يدعم الوضع الداكن والفاتح بالكامل
  */
 
+/* ════════════════════════════════════════════════
+   LIGHT MODE — (Default / :root)
+   ════════════════════════════════════════════════ */
 :root {
-  /* 🎨 Master Design Tokens */
-  --space-void: #0a0e1f;
-  --space-950: #0f1629;
-  --space-deep: #131a35;
-  --space-mid: #1a2242;
-  --space-nebula: #212b4f;
-  --space-aurora: #2a3560;
-  
-  --amber-500: #f5a623;
-  --emerald-500: #10b981;
-  --teal-400: #2dd4bf;
+  /* 🎨 Space Palette — Light */
+  --space-void:    #f1f5f9;   /* slate-100 — الخلفية الرئيسية */
+  --space-950:     #e2e8f0;   /* slate-200 */
+  --space-deep:    #f8fafc;   /* slate-50 — خلفية أفتح */
+  --space-mid:     #e2e8f0;   /* slate-200 */
+  --space-nebula:  #cbd5e1;   /* slate-300 */
+  --space-aurora:  #94a3b8;   /* slate-400 */
 
-  /* 🧠 Consciousness Mapping */
-  --consciousness-primary: var(--teal-400);
-  --consciousness-background: var(--space-void);
-  --consciousness-text: #f0fdfa;
-  --consciousness-accent: var(--amber-500);
-  --consciousness-warning: #FFB000;
-  --consciousness-critical: #FF3333;
+  /* 🎨 Brand — same in both modes */
+  --amber-500:      #f5a623;
+  --emerald-500:    #10b981;
+  --teal-400:       #2dd4bf;
+  --soft-teal:      #2dd4bf;
+  --warm-amber:     #f5a623;
+
+  /* 🧠 Consciousness Mapping — Light */
+  --consciousness-primary:     var(--teal-400);
+  --consciousness-background:  var(--space-void);
+  --consciousness-text:        #0f172a;          /* slate-900 */
+  --consciousness-text-muted:  #475569;          /* slate-600 */
+  --consciousness-accent:      var(--amber-500);
+  --consciousness-warning:     #FFB000;
+  --consciousness-critical:    #FF3333;
   --consciousness-border-radius: 16px;
-  --consciousness-spacing: 1rem;
-  --consciousness-blur: 8px;
-  --consciousness-contrast: 1.3;
+  --consciousness-spacing:     1rem;
+  --consciousness-blur:        8px;
+  --consciousness-contrast:    1.3;
   --consciousness-animation-duration: 300ms;
   --consciousness-layout-transition: 2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 📄 Page semantic tokens — Light */
+  --page-bg:          #f1f5f9;
+  --page-bg-alt:      #e2e8f0;
+  --page-surface:     #ffffff;
+  --page-surface-2:   #f8fafc;
+  --page-border:      rgba(0, 0, 0, 0.08);
+  --page-border-soft: rgba(0, 0, 0, 0.05);
+  --page-text:        #0f172a;
+  --page-text-muted:  #64748b;
+
+  /* 🪟 Glass — Light */
+  --glass-bg:         rgba(255, 255, 255, 0.70);
+  --glass-border:     rgba(0, 0, 0, 0.07);
+  --glass-shadow:     0 4px 24px rgba(0, 0, 0, 0.08);
 }
 
-[data-layout-mode="zen"] {
+/* ════════════════════════════════════════════════
+   DARK MODE — (.dark)
+   ════════════════════════════════════════════════ */
+.dark {
+  /* 🎨 Space Palette — Dark */
+  --space-void:    #0a0e1f;   /* أعمق من الأسود */
+  --space-950:     #0f1629;   /* slate-950 */
+  --space-deep:    #131a35;   /* أزرق كوني عميق */
+  --space-mid:     #1a2242;   /* أزرق متوسط دافئ */
+  --space-nebula:  #212b4f;   /* سديم هادئ */
+  --space-aurora:  #2a3560;   /* شفق شمالي */
 
+  /* 🧠 Consciousness Mapping — Dark */
+  --consciousness-background:  var(--space-void);
+  --consciousness-text:        #f0fdfa;
+  --consciousness-text-muted:  rgba(148, 163, 184, 0.8);
+
+  /* 📄 Page semantic tokens — Dark */
+  --page-bg:          #0a0e1f;
+  --page-bg-alt:      #0f1629;
+  --page-surface:     #131a35;
+  --page-surface-2:   #1a2242;
+  --page-border:      rgba(255, 255, 255, 0.08);
+  --page-border-soft: rgba(255, 255, 255, 0.04);
+  --page-text:        #f0fdfa;
+  --page-text-muted:  rgba(148, 163, 184, 0.72);
+
+  /* 🪟 Glass — Dark */
+  --glass-bg:         rgba(255, 255, 255, 0.03);
+  --glass-border:     rgba(255, 255, 255, 0.08);
+  --glass-shadow:     0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* ════════════════════════════════════════════════
+   LAYOUT MODES
+   ════════════════════════════════════════════════ */
+[data-layout-mode="zen"] {
   .secondary-feature,
   .sidebar-menu,
   .advanced-settings {
@@ -54,7 +112,6 @@
 }
 
 [data-layout-mode="balanced"] {
-
   .secondary-feature,
   .sidebar-menu {
     opacity: 1;
@@ -64,7 +121,6 @@
 }
 
 [data-layout-mode="information-dense"] {
-
   .card,
   .section {
     padding: calc(var(--consciousness-spacing) * 0.7);
@@ -83,7 +139,9 @@
   }
 }
 
-/* Animations */
+/* ════════════════════════════════════════════════
+   ANIMATIONS
+   ════════════════════════════════════════════════ */
 [data-animation-level="minimal"] * {
   transition-duration: calc(var(--consciousness-animation-duration) * 2) !important;
   animation-iteration-count: 1 !important;
@@ -97,7 +155,9 @@
   transition-duration: var(--consciousness-animation-duration);
 }
 
-/* Consciousness States */
+/* ════════════════════════════════════════════════
+   CONSCIOUSNESS STATES
+   ════════════════════════════════════════════════ */
 [data-consciousness-state="crisis"] {
   --text-opacity: 0.85;
   --border-opacity: 0.15;
@@ -105,7 +165,11 @@
 }
 
 [data-consciousness-state="crisis"] body {
-  background: linear-gradient(135deg, var(--consciousness-background) 0%, color-mix(in srgb, var(--consciousness-background) 95%, var(--consciousness-primary)) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--consciousness-background) 0%,
+    color-mix(in srgb, var(--consciousness-background) 95%, var(--consciousness-primary)) 100%
+  );
 }
 
 [data-consciousness-state="flow"] {
@@ -115,10 +179,16 @@
 }
 
 [data-consciousness-state="flow"] body {
-  background: radial-gradient(circle at top right, color-mix(in srgb, var(--consciousness-background) 80%, var(--consciousness-primary)) 0%, var(--consciousness-background) 50%);
+  background: radial-gradient(
+    circle at top right,
+    color-mix(in srgb, var(--consciousness-background) 80%, var(--consciousness-primary)) 0%,
+    var(--consciousness-background) 50%
+  );
 }
 
-/* Elements */
+/* ════════════════════════════════════════════════
+   BASE ELEMENTS
+   ════════════════════════════════════════════════ */
 .card,
 .organic-card {
   border-radius: var(--consciousness-border-radius);
@@ -146,17 +216,12 @@ button:not(.unstyled) {
   backdrop-filter: blur(var(--consciousness-blur));
 }
 
-/* Living Effects */
+/* ════════════════════════════════════════════════
+   LIVING EFFECTS
+   ════════════════════════════════════════════════ */
 @keyframes gentle-pulse {
-
-  0%,
-  100% {
-    opacity: 0.95;
-  }
-
-  50% {
-    opacity: 1;
-  }
+  0%, 100% { opacity: 0.95; }
+  50%       { opacity: 1; }
 }
 
 [data-consciousness-state="crisis"] .living-element {
@@ -164,17 +229,8 @@ button:not(.unstyled) {
 }
 
 @keyframes active-pulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  50% {
-    transform: scale(1.02);
-    opacity: 0.95;
-  }
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%       { transform: scale(1.02); opacity: 0.95; }
 }
 
 [data-consciousness-state="flow"] .living-element {
@@ -185,17 +241,19 @@ button:not(.unstyled) {
   [data-consciousness-state="crisis"] .sidebar-menu {
     display: none;
   }
-
   :root {
     --consciousness-blur: calc(var(--consciousness-blur) * 0.5);
   }
 }
 
-/* 🛡️ Tactical Overlays */
+/* ════════════════════════════════════════════════
+   TACTICAL OVERLAYS
+   ════════════════════════════════════════════════ */
 .tactical-crt-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+  background:
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
     linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
   background-size: 100% 3px, 3px 100%;
   pointer-events: none;
@@ -216,16 +274,57 @@ button:not(.unstyled) {
 }
 
 @keyframes radar-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 .terminal-text {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   letter-spacing: -0.02em;
+}
+
+/* ════════════════════════════════════════════════
+   ATMOSPHERE ENGINE (Sensory Overlays)
+   ════════════════════════════════════════════════ */
+.atmosphere-sensory-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* z-index: -1 — always behind all content layers */
+  z-index: -1;
+  opacity: 1;
+}
+
+/* Only visible in dark mode — in light mode these effects are too heavy */
+:root:not(.dark) .atmosphere-vignette,
+:root:not(.dark) .atmosphere-grain,
+:root:not(.dark) .atmosphere-aberration {
+  opacity: 0 !important;
+}
+
+.atmosphere-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, transparent 40%, rgba(0,0,0, var(--atmosphere-vignette, 0.2)) 100%);
+  pointer-events: none;
+  transition: background 2s ease-in-out;
+}
+
+.atmosphere-grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: var(--atmosphere-grain, 0.06);
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  transition: opacity 2s ease-in-out;
+}
+
+.atmosphere-aberration {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 20px rgba(255, 0, 0, calc(var(--atmosphere-aberration, 0) * 0.5)), 
+              inset 0 0 20px rgba(0, 255, 255, calc(var(--atmosphere-aberration, 0) * 0.5));
+  transition: box-shadow 0.2s ease-in-out;
 }

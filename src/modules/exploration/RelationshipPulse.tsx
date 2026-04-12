@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import type { Ring } from "../map/mapTypes";
 
 /* ══════════════════════════════════════════

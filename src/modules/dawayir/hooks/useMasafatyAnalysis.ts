@@ -1,6 +1,6 @@
 import { logger } from "@/services/logger";
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { useMapState } from '@/state/mapState';
+import { useMapState } from '@/domains/dawayir/store/map.store';
 import { geminiClient } from '@/services/geminiClient';
 import type { MapNode, FeelingCheckResult } from '../../map/mapTypes';
 

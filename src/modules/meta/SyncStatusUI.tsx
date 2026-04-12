@@ -1,10 +1,10 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSyncState } from "@/state/syncState";
+import { useSyncState } from "@/domains/journey/store/sync.store";
 import { Cloud, CloudOff, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
 import { queueMapSync } from "@/services/mapSync";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 
 export const SyncStatusUI: FC = () => {
     const { status, lastLocalSaveAt, lastSyncAt, error } = useSyncState();

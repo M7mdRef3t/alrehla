@@ -309,7 +309,9 @@ async function sendInternalAnalytics(
 
   const anonymous_id = getOrCreateAnonymousId();
   const session_id = getOrCreateSessionId();
-  const client_event_id = generateUUID();
+  const client_event_id = typeof params?.client_event_id === "string"
+    ? params.client_event_id
+    : generateUUID();
 
   const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
   const safeParams = sanitizeAnalyticsParams(params);
@@ -466,8 +468,14 @@ export const AnalyticsEvents = {
   ONBOARDING_COMPLETED: "onboarding_completed",
   ACTIVATION_VIEWED: "activation_viewed",
   PAYMENT_INTENT_SUBMITTED: "payment_intent_submitted",
+  GATE_QUALIFIED: "gate_qualified",
+  PAYMENT_PROOF_SUBMITTED: "payment_proof_submitted",
+  ACTIVATION_UNLOCKED: "activation_unlocked",
 
   AUTH_GOOGLE_CLICKED: "auth_google_clicked",
+  AUTH_PHONE_CLICKED: "auth_phone_clicked",
+  AUTH_PHONE_OTP_SENT: "auth_phone_otp_sent",
+  AUTH_PHONE_OTP_VERIFIED: "auth_phone_otp_verified",
   AUTH_MODAL_SHOWN: "auth_modal_shown",
   AUTH_COMPLETED: "auth_completed",
   MERGE_SUCCESS: "merge_success",

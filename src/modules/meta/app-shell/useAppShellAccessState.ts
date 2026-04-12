@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import type { FeatureFlagKey } from "@/config/features";
 import type { AppScreen } from "@/navigation/navigationMachine";
-import { useAdminState } from "@/state/adminState";
-import { getEffectiveRoleFromState, useAuthState } from "@/state/authState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
 import { usePulseCheckLogic } from "@/hooks/usePulseCheckLogic";
 import { isPhaseOneUserFlow, isUserMode } from "@/config/appEnv";
 import { runtimeEnv } from "@/config/runtimeEnv";

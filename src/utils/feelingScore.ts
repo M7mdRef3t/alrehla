@@ -1,5 +1,5 @@
 import type { FeelingAnswers, FeelingOption } from '@/modules/exploration/FeelingCheck';
-import { getScoringWeights, getScoringThresholds } from "@/state/adminState";
+import { getScoringWeights, getScoringThresholds } from "@/domains/admin/store/admin.store";
 
 /** high=3، medium=2، low=1، zero=0. المجموع 0–9. 0–2 أخضر، 3–5 أصفر، 6–9 أحمر */
 function points(opt: FeelingOption): number {

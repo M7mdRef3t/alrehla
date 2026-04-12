@@ -6,11 +6,8 @@
  * المصادر:
  * - Pulse State → body, self
  * - Map State → relations
- * - Dreams → dreams
- * - Daily Journal → self, spirit
- * - Streak System → self (consistency)
- * - Consciousness History → self
- * - Life State (assessments) → all domains
+ * - Ritual Store → work, spirit, knowledge, dreams
+ * - Life State (assessments + entries) → all domains
  */
 
 import type {
@@ -19,9 +16,12 @@ import type {
   DomainAssessment,
   LifeEntry
 } from "@/types/lifeDomains";
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useRitualState } from "@/domains/journey/store/ritual.store";
+import { useLifeState } from "@/domains/dawayir/store/life.store";
 import { loadStreak } from "@/services/streakSystem";
+import { getTodayDate } from "@/types/dailyRituals";
 
 // ─── Weights ─────────────────────────────────────────────────────
 // How much each data source contributes to a domain's score
@@ -29,11 +29,11 @@ const DOMAIN_WEIGHTS: Record<LifeDomainId, { assessment: number; signals: number
   self:      { assessment: 0.4, signals: 0.6 },
   body:      { assessment: 0.5, signals: 0.5 },
   relations: { assessment: 0.3, signals: 0.7 },
-  work:      { assessment: 0.6, signals: 0.4 },
+  work:      { assessment: 0.5, signals: 0.5 },
   finance:   { assessment: 0.7, signals: 0.3 },
   dreams:    { assessment: 0.4, signals: 0.6 },
-  spirit:    { assessment: 0.6, signals: 0.4 },
-  knowledge: { assessment: 0.7, signals: 0.3 }
+  spirit:    { assessment: 0.5, signals: 0.5 },
+  knowledge: { assessment: 0.5, signals: 0.5 }
 };
 
 // Overall domain weights (how much each domain contributes to overall score)
@@ -48,6 +48,19 @@ const OVERALL_WEIGHTS: Record<LifeDomainId, number> = {
   knowledge: 0.08
 };
 
+// ─── Domain-Ritual Mapping ────────────────────────────────────────
+// Maps domain IDs to their related ritual domainId strings (same taxonomy, but explicit)
+const DOMAIN_RITUAL_MAP: Record<LifeDomainId, LifeDomainId[]> = {
+  self:      ["self"],
+  body:      ["body"],
+  relations: ["relations"],
+  work:      ["work"],
+  finance:   ["finance"],
+  dreams:    ["dreams"],
+  spirit:    ["spirit"],
+  knowledge: ["knowledge"]
+};
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
@@ -55,6 +68,50 @@ function clamp(value: number, min: number, max: number): number {
 function average(values: number[]): number {
   if (values.length === 0) return 50; // Neutral default
   return values.reduce((s, v) => s + v, 0) / values.length;
+}
+
+// ─── Ritual Completion Helper ─────────────────────────────────────
+
+/**
+ * Returns 0-100 score based on ritual completion rate for a given domain.
+ * Looks at the last 14 days of logs for domain-specific rituals.
+ */
+function getRitualCompletionScore(domainIds: LifeDomainId[]): number {
+  const ritualState = useRitualState.getState();
+  const rituals = ritualState.rituals.filter(
+    r => r.isActive && domainIds.includes(r.domainId as LifeDomainId)
+  );
+
+  if (rituals.length === 0) return 50; // No rituals = neutral
+
+  const today = getTodayDate();
+  const todayLogs = ritualState.logs.filter(l => l.logDate === today);
+  const todayRitualIds = new Set(todayLogs.map(l => l.ritualId));
+
+  // Today's completion for this domain
+  const completedToday = rituals.filter(r => todayRitualIds.has(r.id)).length;
+  const todayRate = completedToday / rituals.length;
+
+  // 7-day history
+  const last7Days: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    last7Days.push(d.toISOString().slice(0, 10));
+  }
+
+  const weekRates: number[] = last7Days.map(date => {
+    const dayLogs = new Set(
+      ritualState.logs.filter(l => l.logDate === date).map(l => l.ritualId)
+    );
+    const completed = rituals.filter(r => dayLogs.has(r.id)).length;
+    return rituals.length > 0 ? completed / rituals.length : 0;
+  });
+
+  const weekAvg = average(weekRates);
+
+  // Blend today (40%) + week average (60%)
+  return clamp(Math.round((todayRate * 0.4 + weekAvg * 0.6) * 100), 0, 100);
 }
 
 // ─── Signal Extractors ───────────────────────────────────────────
@@ -77,22 +134,34 @@ function extractSelfSignals(): number {
     signals.push(avgMood);
   }
 
-  // Streak consistency (0-100)
+  // Streak consistency (0-100, caps at streak 13 = 100)
   const streakScore = clamp(streak.currentStreak * 8, 0, 100);
   signals.push(streakScore);
+
+  // Ritual completion for self domain
+  signals.push(getRitualCompletionScore(["self"]));
 
   return signals.length > 0 ? average(signals) : 50;
 }
 
-/** Extract "body" signals from pulse energy */
+/** Extract "body" signals from pulse energy + body rituals */
 function extractBodySignals(): number {
   const pulses = usePulseState.getState().logs.slice(0, 14);
 
-  if (pulses.length === 0) return 50;
+  const signals: number[] = [];
 
-  // Energy (1-10) → normalize to 0-100
-  const avgEnergy = average(pulses.map(p => (p.energy / 10) * 100));
-  return avgEnergy;
+  if (pulses.length > 0) {
+    // Energy (1-10) → normalize to 0-100
+    const avgEnergy = average(pulses.map(p => (p.energy / 10) * 100));
+    signals.push(avgEnergy);
+  } else {
+    signals.push(50); // neutral fallback instead of returning 0
+  }
+
+  // Body-related rituals (sleep, exercise, food)
+  signals.push(getRitualCompletionScore(["body"]));
+
+  return average(signals);
 }
 
 /** Extract "relations" signals from map nodes */
@@ -117,16 +186,81 @@ function extractRelationsSignals(): number {
   return clamp(weightedScore - penalty, 0, 100);
 }
 
-/** Extract "dreams" signals from dreams progress */
-function extractDreamsSignals(): number {
-  // Dreams data comes from assessments primarily
-  // We can check if the user has active goals in journey state
-  return 50; // Neutral default, enriched by assessments
+/** Extract "work" signals from work rituals + active work problems */
+function extractWorkSignals(): number {
+  const signals: number[] = [];
+
+  // Work rituals completion
+  signals.push(getRitualCompletionScore(["work"]));
+
+  // Penalize active work-related problems
+  const lifeState = useLifeState.getState();
+  const workProblems = lifeState.getActiveProblems().filter(
+    p => p.domainId === "work"
+  ).length;
+
+  // Each work problem reduces score (max -30)
+  const problemPenalty = clamp(workProblems * 10, 0, 30);
+  signals.push(clamp(70 - problemPenalty, 10, 100));
+
+  return average(signals);
 }
 
-/** Generic fallback for domains with no signal extractor */
-function extractGenericSignals(): number {
-  return 50; // Neutral
+/** Extract "finance" signals from financial entries + assessments */
+function extractFinanceSignals(): number {
+  const lifeState = useLifeState.getState();
+
+  // Finance rituals
+  const ritualScore = getRitualCompletionScore(["finance"]);
+
+  // Financial problems → reduce score
+  const financeProblems = lifeState.getActiveProblems().filter(
+    p => p.domainId === "finance"
+  ).length;
+
+  // Financial wins → boost score
+  const financeWins = lifeState.entries.filter(
+    e => e.type === "win" && e.domainId === "finance" &&
+    Date.now() - e.createdAt < 30 * 24 * 60 * 60 * 1000
+  ).length;
+
+  const base = 60;
+  const score = clamp(base - financeProblems * 10 + financeWins * 5, 0, 100);
+
+  return average([ritualScore, score]);
+}
+
+/** Extract "dreams" signals from goals, wins, and dreams rituals */
+function extractDreamsSignals(): number {
+  const lifeState = useLifeState.getState();
+
+  // Recent wins in last 30 days (encouraging!)
+  const recentWins = lifeState.entries.filter(
+    e => e.type === "win" && Date.now() - e.createdAt < 30 * 24 * 60 * 60 * 1000
+  ).length;
+
+  // Goals/dreams entries
+  const activeGoals = lifeState.entries.filter(
+    e => e.type === "goal" && e.status === "active"
+  ).length;
+
+  // Dreams rituals
+  const ritualScore = getRitualCompletionScore(["dreams"]);
+
+  // Score: more wins + more active goals = better
+  const achievementScore = clamp(30 + recentWins * 10 + activeGoals * 8, 0, 100);
+
+  return average([ritualScore, achievementScore]);
+}
+
+/** Extract "spirit" signals from spirit-tagged rituals (prayer, meditation) */
+function extractSpiritSignals(): number {
+  return getRitualCompletionScore(["spirit"]);
+}
+
+/** Extract "knowledge" signals from learning rituals */
+function extractKnowledgeSignals(): number {
+  return getRitualCompletionScore(["knowledge"]);
 }
 
 // ─── Signal Router ───────────────────────────────────────────────
@@ -134,12 +268,26 @@ const SIGNAL_EXTRACTORS: Record<LifeDomainId, () => number> = {
   self:      extractSelfSignals,
   body:      extractBodySignals,
   relations: extractRelationsSignals,
-  work:      extractGenericSignals,
-  finance:   extractGenericSignals,
+  work:      extractWorkSignals,
+  finance:   extractFinanceSignals,
   dreams:    extractDreamsSignals,
-  spirit:    extractGenericSignals,
-  knowledge: extractGenericSignals
+  spirit:    extractSpiritSignals,
+  knowledge: extractKnowledgeSignals
 };
+
+// ─── Assessment Decay ─────────────────────────────────────────────
+
+/**
+ * If the last assessment is older than 30 days, gradually reduce its weight.
+ * After 60 days, the assessment contributes almost nothing.
+ */
+function getAssessmentDecayFactor(timestamp: number): number {
+  const daysSince = (Date.now() - timestamp) / (1000 * 60 * 60 * 24);
+  if (daysSince <= 30) return 1.0;
+  if (daysSince >= 60) return 0.3;
+  // Linear interpolation from 1.0 to 0.3 over 30 days
+  return 1.0 - ((daysSince - 30) / 30) * 0.7;
+}
 
 // ─── Main Calculator ─────────────────────────────────────────────
 
@@ -154,9 +302,14 @@ export function calculateDomainScore(
     .filter(a => a.domainId === domainId)
     .sort((a, b) => b.timestamp - a.timestamp);
 
-  const assessmentScore = relevantAssessments.length > 0
-    ? (relevantAssessments[0].score / 10) * 100 // Normalize 1-10 → 0-100
-    : 50; // Neutral if no assessment
+  let assessmentScore = 50; // Neutral if no assessment
+
+  if (relevantAssessments.length > 0) {
+    const latest = relevantAssessments[0];
+    const normalizedScore = (latest.score / 10) * 100; // 1-10 → 0-100
+    const decayFactor = getAssessmentDecayFactor(latest.timestamp);
+    assessmentScore = normalizedScore * decayFactor + 50 * (1 - decayFactor);
+  }
 
   // Get automatic signal score
   const signalScore = SIGNAL_EXTRACTORS[domainId]();
@@ -217,7 +370,7 @@ export function calculateLifeScore(
   return {
     overall,
     domains: domainScores as Record<LifeDomainId, number>,
-    trend: "stable", // Will be enriched with history comparison
+    trend: "stable", // Enriched by calculateTrend()
     weakestDomain: weakest,
     strongestDomain: strongest,
     calculatedAt: Date.now(),

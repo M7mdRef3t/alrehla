@@ -13,7 +13,7 @@ import {
   type SuccessStory,
   type FAQItem
 } from "@/data/educationalContent";
-import { useAchievementState } from "@/state/achievementState";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useAppContentString } from "@/hooks/useAppContentString";
 
 interface EducationalLibraryProps {

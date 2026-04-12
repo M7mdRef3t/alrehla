@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&amp;family=Inter:wght@300;400;600&amp;family=Manrope:wght@300;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-background": "#e5e2e1",
+                    "surface": "#131313",
+                    "inverse-primary": "#006b5f",
+                    "on-primary-container": "#00423b",
+                    "tertiary-fixed-dim": "#ffb59e",
+                    "secondary": "#ffb95f",
+                    "surface-container": "#201f1f",
+                    "on-surface-variant": "#bbcac6",
+                    "surface-variant": "#353534",
+                    "tertiary": "#ffb59e",
+                    "on-tertiary-container": "#6c2106",
+                    "secondary-fixed": "#ffddb8",
+                    "on-secondary": "#472a00",
+                    "inverse-surface": "#e5e2e1",
+                    "on-error": "#690005",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "primary-container": "#14b8a6",
+                    "tertiary-container": "#f38764",
+                    "surface-container-high": "#2a2a2a",
+                    "on-secondary-fixed": "#2a1700",
+                    "secondary-container": "#ee9800",
+                    "surface-tint": "#4fdbc8",
+                    "primary-fixed": "#71f8e4",
+                    "on-primary": "#003731",
+                    "on-surface": "#e5e2e1",
+                    "on-secondary-container": "#5b3800",
+                    "background": "#131313",
+                    "inverse-on-surface": "#313030",
+                    "surface-container-lowest": "#0e0e0e",
+                    "on-tertiary": "#5e1800",
+                    "on-primary-fixed-variant": "#005048",
+                    "primary": "#4fdbc8",
+                    "surface-bright": "#3a3939",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "on-primary-fixed": "#00201c",
+                    "surface-container-low": "#1c1b1b",
+                    "error": "#ffb4ab",
+                    "on-tertiary-fixed": "#3a0b00",
+                    "surface-container-highest": "#353534",
+                    "error-container": "#93000a",
+                    "on-error-container": "#ffdad6",
+                    "on-tertiary-fixed-variant": "#7c2d11",
+                    "tertiary-fixed": "#ffdbd0",
+                    "outline-variant": "#3c4947",
+                    "surface-dim": "#131313",
+                    "outline": "#859490",
+                    "primary-fixed-dim": "#4fdbc8"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Be Vietnam Pro", "sans-serif"],
+                    "body": ["Manrope", "sans-serif"],
+                    "label": ["Inter", "sans-serif"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0e0e0e;
+            color: #e5e2e1;
+            font-family: 'Manrope', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(32, 31, 31, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(60, 73, 71, 0.15);
+        }
+        .hero-gradient {
+            background: radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.15) 0%, transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(245, 158, 11, 0.1) 0%, transparent 40%);
+        }
+        .jeweled-cta {
+            background: linear-gradient(135deg, #4fdbc8 0%, #14b8a6 100%);
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        }
+        .arabic-leading {
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body class="bg-surface-container-lowest selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-7xl rounded-2xl border border-[#3c4947]/15 bg-surface/80 dark:bg-[#131313]/80 backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.3)] flex justify-between items-center px-8 py-4 z-50 rtl">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-bold tracking-tighter text-teal-500 dark:text-[#4fdbc8] font-['Be_Vietnam_Pro']">Dawayir</span>
+<div class="hidden md:flex gap-6">
+<a class="text-teal-400 dark:text-[#4fdbc8] font-bold border-b-2 border-[#4fdbc8] pb-1 font-['Be_Vietnam_Pro'] tracking-tight leading-[1.2]" href="#">الرئيسية</a>
+<a class="text-slate-400 dark:text-[#e5e2e1]/60 hover:text-white transition-colors font-['Be_Vietnam_Pro'] tracking-tight leading-[1.2]" href="#">المزايا</a>
+<a class="text-slate-400 dark:text-[#e5e2e1]/60 hover:text-white transition-colors font-['Be_Vietnam_Pro'] tracking-tight leading-[1.2]" href="#">الرؤية</a>
+</div>
+</div>
+<button class="bg-surface-container-high px-6 py-2 rounded-xl text-on-surface hover:bg-[#353534]/50 transition-all duration-300 scale-95 active:scale-90 font-['Be_Vietnam_Pro'] tracking-tight leading-[1.2]">
+            تسجيل الدخول
+        </button>
+</nav>
+<!-- Hero Section -->
+<main class="relative min-h-screen pt-32 pb-20 overflow-hidden flex flex-col items-center justify-center hero-gradient">
+<!-- Background decorative elements -->
+<div class="absolute inset-0 z-0 pointer-events-none">
+<div class="absolute top-1/4 left-1/4 w-2 h-2 bg-primary rounded-full blur-[2px] animate-pulse"></div>
+<div class="absolute top-3/4 right-1/3 w-3 h-3 bg-secondary rounded-full blur-[3px] opacity-60"></div>
+<div class="absolute top-1/2 right-1/4 w-1 h-1 bg-primary rounded-full blur-[1px]"></div>
+<svg class="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="100" id="grid" patternunits="userSpaceOnUse" width="100">
+<path d="M 100 0 L 0 0 0 100" fill="none" stroke="currentColor" stroke-width="0.5"></path>
+</pattern>
+</defs>
+<rect fill="url(#grid)" height="100%" width="100%"></rect>
+</svg>
+</div>
+<section class="relative z-10 max-w-5xl px-6 text-center space-y-12">
+<div class="space-y-6">
+<h1 class="text-5xl md:text-7xl lg:text-8xl font-headline font-extrabold text-on-background tracking-tight leading-tight md:leading-normal">
+                    أنت لست مرهقاً.. <br/>
+<span class="text-transparent bg-clip-text bg-gradient-to-l from-primary to-primary-container">أنت فقط... تائه في الفوضى</span>
+</h1>
+<p class="max-w-2xl mx-auto text-lg md:text-xl text-on-surface-variant font-body font-light arabic-leading">
+                    نظام تشغيل السيادة الشخصية (Sovereign Life OS). صُمم لإضاءة مساراتك الذهنية، استعادة التركيز، وبناء هيكل رقمي يتنفس معك.
+                </p>
+</div>
+<div class="max-w-md mx-auto">
+<div class="glass-panel p-2 rounded-2xl flex flex-col md:flex-row gap-2 transition-all focus-within:ring-2 ring-primary/20">
+<input class="flex-grow bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline p-4 font-body text-lg text-right" dir="rtl" placeholder="ما هو اسمك؟" type="text"/>
+<button class="jeweled-cta px-8 py-4 rounded-xl text-on-primary font-bold text-lg transition-transform active:scale-95 whitespace-nowrap">
+                        ابدأ الرحلة
+                    </button>
+</div>
+<div class="mt-4 flex items-center justify-center gap-2 text-sm text-outline font-label">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+                    بياناتك محصنة في سيادتك الخاصة
+                </div>
+</div>
+</section>
+<!-- Visual Anchor (Abstract Image) -->
+<div class="relative mt-20 w-full max-w-6xl px-6">
+<div class="aspect-video rounded-[2rem] overflow-hidden shadow-2xl border border-outline-variant/20">
+<img alt="Holographic visualization" class="w-full h-full object-cover" data-alt="Abstract 3D holographic network of glowing teal and amber nodes connected by ethereal light strands on a deep black background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiFyl_FIVXTOoTdvfM-AvoIQXYXBYM8ZLbGLDXtOZhc-IV4YMWEJp0EPqgA-0S9aU0W1RJEWhKO6F3FWX6TlZZZQzozMyhxm9RQzU2-x9G7s0Fc1633LIVIA9OKTjF68rX4UoSD0aTm_dUCDIIX-btnHPt9zNqm_aKfWkuhXQpFHtslQyX8f_h3qxYh62nosRudbr9N4ZTzS2Ao1ZGfMQH9PPvz-l3LKr7NvZ9zv8jOAg-YlPox0yeTdJtspkkFC5ne0jwi5REKLU"/>
+</div>
+<!-- Analytical Nodes -->
+<div class="absolute -top-8 -right-4 glass-panel px-6 py-4 rounded-2xl flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_#4fdbc8] animate-pulse"></div>
+<div>
+<p class="text-[10px] text-outline font-label uppercase tracking-widest">Logic Stream</p>
+<p class="text-sm font-bold text-on-surface">98.4% وضوح</p>
+</div>
+</div>
+<div class="absolute -bottom-6 left-12 glass-panel px-6 py-4 rounded-2xl flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_10px_#f59e0b]"></div>
+<div>
+<p class="text-[10px] text-outline font-label uppercase tracking-widest">Purpose Node</p>
+<p class="text-sm font-bold text-on-surface">متزامن بالكامل</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Content Sections (Bento Grid) -->
+<section class="max-w-7xl mx-auto px-6 py-24 space-y-12">
+<div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-outline-variant/10 pb-8">
+<div class="max-w-xl">
+<h2 class="text-4xl font-headline font-bold mb-4">هندسة السيادة</h2>
+<p class="text-on-surface-variant arabic-leading">نحن لا نقدم أدوات، نحن نقدم بيئة متكاملة لنمو الوعي وإدارة الحياة الحديثة.</p>
+</div>
+<div class="text-primary font-label text-sm tracking-widest uppercase flex items-center gap-2">
+                Discovery / 01
+                <span class="material-symbols-outlined">trending_flat</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 h-auto md:h-[600px]">
+<!-- Card 1: Large -->
+<div class="md:col-span-8 relative rounded-3xl bg-surface-container overflow-hidden group">
+<img alt="Cybernetic environment" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" data-alt="A futuristic command center screen displaying complex data nodes and glowing teal neural maps in a dark atmospheric room" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBM49J1x-VojxSUn_UZlScmh442rdcAJIWA6vmNnNZJxMre_1QWE0XWrjNt2K5G0kwQWX7xG812HWvSXoVMDgAi1yVpO8Lnm4QGpcBfRuehCU3eEJWtwgVObU6QzJC7i2qFtoMncr29RSFcZQkxYC7deRNMah0220MrvC3eUmYKnxLqXJGTO3gb-bzVJXPLB44fBQwCZxvak2Rbens5yzVHxF-Wg1cdKlSQR-Ek-R80Wmmt6muhcLTfWBu_hyAOEUnoVxD6Urq03Y"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-surface-container/20 to-transparent p-10 flex flex-col justify-end">
+<h3 class="text-3xl font-headline font-bold mb-4">الخرائط الذهنية الحية</h3>
+<p class="text-on-surface-variant max-w-md arabic-leading">شاهد أفكارك تترابط بشكل مرئي. لا مزيد من القوائم الخطية المملة، دوائر تمنحك الرؤية الشاملة.</p>
+</div>
+</div>
+<!-- Card 2: Vertical -->
+<div class="md:col-span-4 rounded-3xl bg-surface-container-high p-8 flex flex-col justify-between border border-outline-variant/5">
+<div class="space-y-4">
+<div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">psychology</span>
+</div>
+<h3 class="text-2xl font-headline font-bold">الوضوح النفسي</h3>
+<p class="text-on-surface-variant arabic-leading">خوارزميات صُممت لفهم أنماط تفكيرك ومساعدتك على الخروج من دوامة التشتت.</p>
+</div>
+<div class="pt-8 mt-auto border-t border-outline-variant/10">
+<span class="text-sm font-label text-outline">تزامن حي / 24/7</span>
+</div>
+</div>
+<!-- Card 3: Horizontal Small -->
+<div class="md:col-span-4 rounded-3xl bg-surface-variant p-8 flex items-center gap-6">
+<div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-3xl">hub</span>
+</div>
+<div>
+<h4 class="font-headline font-bold">ترابط ذكي</h4>
+<p class="text-sm text-on-surface-variant">ربط جميع جوانب حياتك في واجهة واحدة.</p>
+</div>
+</div>
+<!-- Card 4: Horizontal Medium -->
+<div class="md:col-span-8 rounded-3xl bg-surface-container-low p-8 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
+<div class="relative z-10">
+<h4 class="text-2xl font-headline font-bold mb-2">أمان سيادي مطلق</h4>
+<p class="text-on-surface-variant arabic-leading max-w-sm">تشفير من طرف إلى طرف. بياناتك ليست للبيع، هي ملكك وحدك.</p>
+</div>
+<div class="relative z-10 flex gap-2">
+<div class="w-24 h-24 bg-primary/5 rounded-2xl border border-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-4xl">fingerprint</span>
+</div>
+</div>
+<div class="absolute right-0 top-0 w-64 h-64 bg-primary/5 blur-[100px] rounded-full"></div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-[#0e0e0e] w-full py-12 mt-20 border-t border-[#3c4947]/10">
+<div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto px-8 rtl gap-8">
+<div class="flex flex-col items-center md:items-start gap-4">
+<span class="text-lg font-black text-[#e5e2e1] font-headline uppercase tracking-tighter">Dawayir</span>
+<p class="text-slate-500 text-sm font-['Inter'] text-center md:text-right">© 2024 دوائر. جميع الحقوق محفوظة</p>
+</div>
+<div class="flex gap-8 items-center">
+<a class="text-slate-500 hover:text-teal-400 transition-opacity font-['Inter'] text-sm tracking-wide" href="#">الخصوصية</a>
+<a class="text-slate-500 hover:text-teal-400 transition-opacity font-['Inter'] text-sm tracking-wide" href="#">الشروط</a>
+<a class="text-slate-500 hover:text-teal-400 transition-opacity font-['Inter'] text-sm tracking-wide" href="#">اتصل بنا</a>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-full border border-outline-variant/20 flex items-center justify-center text-on-surface hover:border-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm">share</span>
+</div>
+<div class="w-10 h-10 rounded-full border border-outline-variant/20 flex items-center justify-center text-on-surface hover:border-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm">language</span>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

@@ -13,7 +13,7 @@ import { generateDetachmentCurriculum, reframeGuiltThought, type DetachmentCurri
 import type { DynamicRecoveryPlan as Plan, DynamicStep } from "@/utils/dynamicPlanGenerator";
 import { generateRecoveryPathFromAI, type RelationshipRole } from "@/utils/pathGenerator";
 import { symptomIdsToSymptomType } from "../pathEngine/pathResolver";
-import { recordJourneyEvent } from "@/services/journeyTracking";
+import { trackingService } from "@/domains/journey";
 import type { PathId } from "../pathEngine/pathTypes";
 import type { RecoveryPath } from "../pathEngine/pathTypes";
 import { LiveStatusBar } from '@/modules/meta/shared/LiveStatusBar';
@@ -265,7 +265,7 @@ const PathEngineBlock: FC<{
         ...(moodScore != null && moodScore >= 1 && moodScore <= 5 && { moodScore })
       });
     }
-    recordJourneyEvent("task_completed", {
+    trackingService.record("task_completed", {
       pathId: pathSnapshot.id,
       taskId,
       date,
@@ -282,7 +282,7 @@ const PathEngineBlock: FC<{
     if (!startedTasksRef.current.has(taskId)) {
       startedTasksRef.current.add(taskId);
       const task = [...(pathSnapshot.phases.week1?.tasks ?? []), ...(pathSnapshot.phases.week2?.tasks ?? []), ...(pathSnapshot.phases.week3?.tasks ?? [])].find((t) => t.id === taskId);
-      recordJourneyEvent("task_started", {
+      trackingService.record("task_started", {
         pathId: pathSnapshot.id,
         taskId,
         taskLabel: task?.title,
@@ -771,7 +771,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
       .then((result) => {
         if (!cancelled && result && onUpdateRecoveryPathSnapshot) {
           onUpdateRecoveryPathSnapshot(result);
-          recordJourneyEvent("path_started", {
+          trackingService.record("path_started", {
             pathId: result.id,
             zone: ring,
             symptomType: symptomType ?? undefined,
@@ -945,7 +945,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
                     });
                     if (result) {
                       onUpdateRecoveryPathSnapshot(result);
-                      recordJourneyEvent("path_regenerated", { pathId, reason: "difficulty" });
+                      trackingService.record("path_regenerated", { pathId, reason: "difficulty" });
                     }
                       } finally {
                         setIsRegeneratingPath(false);
@@ -1042,7 +1042,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
                     });
                     if (result) {
                       onUpdateRecoveryPathSnapshot(result);
-                      recordJourneyEvent("path_regenerated", { pathId, reason: "difficulty" });
+                      trackingService.record("path_regenerated", { pathId, reason: "difficulty" });
                     }
                   } finally {
                     setIsRegeneratingPath(false);

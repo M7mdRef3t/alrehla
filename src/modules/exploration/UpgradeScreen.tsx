@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, Sparkles, BrainCircuit, X, Check, Lock, Star, Loader2, Zap } from "lucide-react";
-import { useAuthState } from "@/state/authState";
+import { useAuthState } from "@/domains/auth/store/auth.store";
 import { TIER_PRICES_USD } from "@/config/pricing";
 import { PaymentCheckout } from '@/modules/meta/PaymentCheckout';
 
@@ -79,7 +79,7 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ isOpen, onClose })
 
           <h2 className="text-3xl font-black text-white mb-4 leading-tight">أوقف نزيف طاقتك الآن</h2>
           <p className="text-sm font-medium text-amber-100/70 leading-relaxed max-w-sm">
-            المنصة مصممة مش عشان ترفهك، مصممة عشان تديك درع صلب تقدر تتعامل بيه مع الدجالين ودوائرك المستنزِفة.
+            الرحلة مصممة مش عشان ترفهك، مصممة عشان تديك درع صلب تقدر تتعامل بيه مع الدجالين ودوائرك المستنزِفة.
           </p>
         </div>
 

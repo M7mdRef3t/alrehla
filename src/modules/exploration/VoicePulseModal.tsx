@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Square, Check, Orbit, Zap } from 'lucide-react';
-import { useMapState } from '@/state/mapState';
+import { useMapState } from '@/domains/dawayir/store/map.store';
 
 interface VoicePulseModalProps {
     onClose: () => void;

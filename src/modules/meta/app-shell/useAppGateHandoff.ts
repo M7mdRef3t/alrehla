@@ -1,7 +1,7 @@
 import { logger } from "@/services/logger";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/services/supabaseClient";
-import { useJourneyState } from "@/state/journeyState";
+import { useJourneyProgress } from "@/domains/journey";
 import { getSearch, pushUrl } from "@/services/navigation";
 import type { AppScreen } from "@/navigation/navigationMachine";
 import type { WelcomeSource } from "../OnboardingWelcomeBubble";
@@ -25,6 +25,7 @@ export function useAppGateHandoff({
   setCategory
 }: UseAppGateHandoffParams) {
   const [gateWelcome, setGateWelcome] = useState<WelcomeState>(null);
+  const journey = useJourneyProgress();
   
   const clearGateWelcome = useCallback(() => {
     setGateWelcome(null);
@@ -48,7 +49,7 @@ export function useAppGateHandoff({
     window.history.replaceState(null, "", newUrl);
 
     // Save global session trace for `MapCompleted` Brutal rule later
-    useJourneyState.getState().setGateSessionId(gateSessionId);
+    journey.setGateSessionId(gateSessionId);
 
     // Now securely fetch the payload to construct personalized welcome
     let cancelled = false;
@@ -106,7 +107,7 @@ export function useAppGateHandoff({
     return () => {
       cancelled = true;
     };
-  }, [navigateToScreen, setGoalId, setCategory]);
+  }, [journey, navigateToScreen, setGoalId, setCategory]);
 
   return {
     gateWelcome,

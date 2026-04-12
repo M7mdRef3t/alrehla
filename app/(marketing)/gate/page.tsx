@@ -9,6 +9,7 @@ import LayerOneForm from '@/modules/meta/gate/LayerOneForm';
 import LayerTwoQualifier from '@/modules/meta/gate/LayerTwoQualifier';
 import { trackGateEventPixelOnly } from '@/lib/analytics/eventTracker';
 import type { GateState } from '@/lib/gate/types';
+import { setStoredLeadEmail } from '@/services/revenueAccess';
 
 function MarketingGateContent() {
   const router = useRouter();
@@ -88,7 +89,7 @@ function MarketingGateContent() {
     const finalState = { ...state, painPoint: q1, intent: q2, commitment: q3, step: 'handoff' as const };
     
     // Pixel Fire
-    const eventId = trackGateEventPixelOnly('CompleteRegistration', { external_id: state.sessionId }, `${state.sessionId}-reg`);
+    const eventId = trackGateEventPixelOnly('GateQualified', { external_id: state.sessionId }, `${state.sessionId}-qualified`);
     
     // Backend Idempotent Fire & Record
     const response = await fetch('/api/gate/session', {
@@ -106,8 +107,8 @@ function MarketingGateContent() {
     });
 
     if (response.ok) {
-      if (typeof window !== "undefined" && finalState.email) {
-        window.localStorage.setItem("dawayir_lead_email", finalState.email);
+      if (finalState.email) {
+        setStoredLeadEmail(finalState.email);
       }
       // Revenue-first Handoff: Go specifically to activation
       router.push(`/activation?gateSessionId=${finalState.sessionId}`);

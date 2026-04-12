@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, ShieldAlert, Zap, X, Trophy, AlertCircle, ChevronRight, CheckCircle2 } from "lucide-react";
-import { useGamificationState } from "@/state/gamificationState";
+import { useGamification } from "@/domains/gamification";
 
 interface Scenario {
     id: string;
@@ -98,7 +98,7 @@ export const BoundariesMinigame: React.FC<BoundariesMinigameProps> = ({ isOpen, 
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [showFeedback, setShowFeedback] = useState(false);
 
-    const { addXP, awardBadge } = useGamificationState();
+    const { addXP, awardBadge } = useGamification();
 
     if (!isOpen) return null;
 

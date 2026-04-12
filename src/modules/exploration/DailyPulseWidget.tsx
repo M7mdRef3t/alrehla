@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BatteryCharging, BatteryWarning, Check, Zap, Share2 } from "lucide-react";
 import { useDailyPulse } from "@/hooks/useDailyPulse";
-import { trackEvent } from "@/services/analytics";
+import { analyticsService } from "@/domains/analytics";
 import { soundManager } from "@/services/soundManager";
 import { ShareableCard } from '@/modules/exploration/ShareableCard';
 
@@ -46,7 +46,7 @@ export const DailyPulseWidget: FC = () => {
         focus: 'general'
       });
 
-      trackEvent("pulse_recorded", {
+      analyticsService.track("pulse_recorded", {
         target: "tactical_pulse",
         val: type
       });

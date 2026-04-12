@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useRitualState } from "@/state/ritualState";
+import { useRitualState } from "@/domains/journey/store/ritual.store";
 
 const NUDGE_DISMISSED_KEY = "alrehla-evening-nudge-dismissed";
 

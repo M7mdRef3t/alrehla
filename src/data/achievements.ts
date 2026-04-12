@@ -35,7 +35,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "installer_click",
     title: "جاهز دايمًا",
     description: "ضغطت على «تثبيت التطبيق»",
-    hint: "قرار ذكي يخلي المنصة قريبة منك في أي وقت.",
+    hint: "قرار ذكي يخلي رحلتك قريبة منك في أي وقت.",
     icon: "📲",
     order: 2
   },

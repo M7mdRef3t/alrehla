@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import {
   getRelationshipWeatherEntryHref,
   getRelationshipWeatherPath

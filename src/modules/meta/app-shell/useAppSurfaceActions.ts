@@ -1,12 +1,13 @@
+import { analyticsService } from '@/domains/analytics';
 import { useCallback } from "react";
 import { resolveAdviceCategory, type AdviceCategory } from "@/data/adviceScripts";
 import type { PulseCheckContext } from "@/hooks/usePulseCheckLogic";
 import { type AppScreen } from "@/navigation/navigationMachine";
 import { trackEvent } from "@/services/analytics";
 import { openInNewTab } from "@/services/clientDom";
-import { recordFlowEvent } from "@/services/journeyTracking";
-import { useEmergencyState } from "@/state/emergencyState";
-import { useMapState } from "@/state/mapState";
+import { trackingService } from "@/domains/journey";
+import { useEmergencyState } from "@/domains/admin/store/emergency.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import type { FeatureFlagKey } from "@/config/features";
 
 interface UseAppSurfaceActionsParams {
@@ -82,7 +83,7 @@ export function useAppSurfaceActions({
     rating: number;
     message: string;
   }) => {
-    recordFlowEvent("feedback_submitted", {
+    trackingService.recordFlow("feedback_submitted", {
       meta: {
         category: payload.category,
         rating: payload.rating,
@@ -180,7 +181,7 @@ export function useAppSurfaceActions({
   }, [navigateToScreen]);
 
   const handleChromeProfileOpen = useCallback(() => {
-    recordFlowEvent("profile_clicked");
+    trackingService.recordFlow("profile_clicked");
     if (authUser) {
       void navigateToScreen("profile");
       return;
@@ -188,7 +189,7 @@ export function useAppSurfaceActions({
     setPulseCheckContext("regular");
     setShowPulseCheck(false);
     clearWelcome();
-    recordFlowEvent("auth_gate_opened", { meta: { mode: "login_profile" } });
+    trackingService.recordFlow("auth_gate_opened", { meta: { mode: "login_profile" } });
     setLoginIntent();
     setShowAuthModal(true);
   }, [
@@ -202,7 +203,7 @@ export function useAppSurfaceActions({
   ]);
 
   const handleChromeWhatsAppOpen = useCallback(() => {
-    trackEvent("whatsapp_contact_clicked", { placement: "app_floating" });
+    analyticsService.track("whatsapp_contact_clicked", { placement: "app_floating" });
     if (whatsAppLink) openInNewTab(whatsAppLink);
   }, [whatsAppLink]);
 

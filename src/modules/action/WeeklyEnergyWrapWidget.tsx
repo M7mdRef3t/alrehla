@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useMemo } from "react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import type { MapNode } from "../map/mapTypes";
 
 export const WeeklyEnergyWrapWidget: FC = () => {

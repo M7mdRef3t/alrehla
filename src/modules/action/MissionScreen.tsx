@@ -1,12 +1,12 @@
 import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Info } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { buildResultTemplateFromAnswers } from "@/utils/resultScreenTemplates";
 import type { FeelingAnswers } from "../exploration/FeelingCheck";
 import type { RealityAnswers } from "../exploration/RealityCheck";
 
-import { useAchievementState } from "@/state/achievementState";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import type { ResultScenarioKey } from "@/data/resultScreenTemplates";
 import { getAudioContextConstructor } from "@/services/clientDom";
 
@@ -337,7 +337,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
               }}
               className="rounded-full bg-[var(--soft-teal)] text-white px-4 py-2 text-xs font-semibold hover:bg-[var(--soft-teal)] shrink-0"
             >
-              {contextualAffiliateVariant === "A" ? "شاهد الآن" : "ابدأ التطبيق الآن"}
+              {contextualAffiliateVariant === "A" ? "شاهد الآن" : "ابدأ رحلتك الآن"}
             </a>
           </div>
           <p className="text-xs text-slate-500 mt-3 line-clamp-2">{contextualAffiliate.description}</p>

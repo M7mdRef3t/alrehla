@@ -1,4 +1,4 @@
-import type { ShadowScore } from "@/state/shadowPulseState";
+import type { ShadowScore } from "@/domains/consciousness/store/shadowPulse.store";
 import type { MapNode } from "@/modules/map/mapTypes";
 
 /** مستويات الـ Shadow Score */

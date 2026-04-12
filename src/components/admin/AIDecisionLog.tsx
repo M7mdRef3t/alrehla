@@ -355,7 +355,7 @@ const DecisionCard: FC<DecisionCardProps> = ({ decision, isSelected, onClick, on
 };
 
 const DecisionTypeLabel: FC<{ type: DecisionType }> = ({ type }) => {
-  const labels: Record<DecisionType, string> = {
+  const labels: Partial<Record<DecisionType, string>> = {
     generate_daily_question: "سؤال يومي",
     generate_content_packet: "توليد محتوى",
     generate_recovery_script: "نص تعافي",

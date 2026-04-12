@@ -1,6 +1,6 @@
-import { useCatalystState } from '@/state/catalystState';
-import { useGrowthState } from '@/state/growthState';
-import { useFlowState } from '@/state/flowState';
+import { useCatalystState } from '@/domains/journey/store/catalyst.store';
+import { useGrowthState } from '@/domains/gamification/store/growth.store';
+import { useFlowState } from '@/domains/journey/store/flow.store';
 import { type Dream } from '@/types/dreams';
 
 /**

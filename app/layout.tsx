@@ -3,11 +3,15 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import Script from "next/script";
 import "./globals.css";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { ConsciousnessSensoryProvider } from "@/components/providers/ConsciousnessSensoryProvider";
+import { WhisperOverlay } from "@/components/ui/WhisperOverlay";
+import { SovereignReceiver } from "@/components/providers/SovereignReceiver";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.alrehla.app"),
-  title: "الرحلة — منصة الوعي الذاتي وخريطة العلاقات",
-  description: "اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
+  title: "الرحلة — بوصلة الوعي الذاتي وخريطة العلاقات",
+  description: "ابدأ رحلتك — اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -22,22 +26,22 @@ export const metadata: Metadata = {
     locale: "ar_AR",
     url: "https://www.alrehla.app/",
     siteName: "الرحلة",
-    title: "الرحلة — منصة الوعي الذاتي وخريطة العلاقات",
-    description: "اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
+    title: "الرحلة — بوصلة الوعي الذاتي وخريطة العلاقات",
+    description: "ابدأ رحلتك — اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
     images: [
       {
-        url: "/og-home.png",
+        url: "/og-home-optimized.jpg",
         width: 1200,
         height: 630,
-        alt: "الرحلة — منصة الوعي الذاتي"
+        alt: "الرحلة — بوصلة الوعي الذاتي"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "الرحلة — منصة الوعي الذاتي وخريطة العلاقات",
-    description: "اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
-    images: ["/og-home.png"]
+    title: "الرحلة — بوصلة الوعي الذاتي وخريطة العلاقات",
+    description: "ابدأ رحلتك — اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
+    images: ["/og-home-optimized.jpg"]
   }
 };
 
@@ -46,7 +50,6 @@ export const viewport: Viewport = {
   colorScheme: "dark light"
 };
 
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -84,12 +87,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Almarai:wght@300;400;700;800&family=Cairo:wght@200..1000&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Noto+Kufi+Arabic:wght@300;400;500;600;700;800;900&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&family=Zain:wght@200;300;400;700;800;900&display=swap"
         />
       </head>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <ConsciousnessSensoryProvider>
+            <WhisperOverlay />
+            <SovereignReceiver />
+            {children}
+          </ConsciousnessSensoryProvider>
         </ThemeProvider>
       </body>
     </html>

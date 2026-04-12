@@ -148,7 +148,7 @@ export async function GET(req: NextRequest) {
         .from("email_sends")
         .select("status")
         .eq("id", trackingId)
-        .single();
+        .maybeSingle();
 
       if (current && (STATUS_PRIORITY[current.status] || 0) < (STATUS_PRIORITY["opened"] || 0)) {
         await supabase
@@ -195,7 +195,7 @@ export async function GET(req: NextRequest) {
         .from("email_sends")
         .select("status")
         .eq("id", trackingId)
-        .single();
+        .maybeSingle();
 
       if (current && (STATUS_PRIORITY[current.status] || 0) < (STATUS_PRIORITY["clicked"] || 0)) {
         await supabase

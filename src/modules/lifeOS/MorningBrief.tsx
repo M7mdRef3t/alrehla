@@ -6,8 +6,8 @@ import { Sparkles, AlertTriangle, Target, TrendingUp, Flame, Moon, CalendarDays 
 import { type LifeScore, type MorningPriority, getDomainConfig } from "@/types/lifeDomains";
 import { loadStreak } from "@/services/streakSystem";
 import { resolveDisplayName } from "@/services/userMemory";
-import { useRitualState } from "@/state/ritualState";
-import { useLifeState } from "@/state/lifeState";
+import { useRitualState } from "@/domains/journey/store/ritual.store";
+import { useLifeState } from "@/domains/dawayir/store/life.store";
 import { getTodayRituals, getDailyCompletionStats } from "@/services/ritualsEngine";
 
 

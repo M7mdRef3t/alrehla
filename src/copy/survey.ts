@@ -1,6 +1,6 @@
 export const surveyCopy = {
   title: "ساعدنا نفهمك أحسن",
-  subtitle: "10 أسئلة سريعة. مجهول تماماً. بتساعدنا نبني أداة تفرق معاك فعلاً.",
+  subtitle: "10 أسئلة سريعة. مجهول تماماً. بتساعدنا نبني رحلة تفرق معاك فعلاً.",
   progress: (current: number, total: number) => `${current} من ${total}`,
   submit: "إرسال",
   submitting: "جاري الإرسال...",
@@ -63,7 +63,7 @@ export const surveyCopy = {
     },
     {
       id: "q6_daily_motivator",
-      text: "إيه اللي ممكن يخليك تستخدم أداة زي دي يومياً؟",
+      text: "إيه اللي ممكن يخليك ترجع للرحلة دي يومياً؟",
       type: "open" as const,
       placeholder: "اكتب اللي في بالك بحرية…"
     },
@@ -95,7 +95,7 @@ export const surveyCopy = {
     },
     {
       id: "q10_willingness_to_pay",
-      text: "كام تدفع في الشهر لأداة تساعدك تحط حدود صحية؟",
+      text: "كام تدفع في الشهر لبوصلة تساعدك تحط حدود صحية؟",
       type: "mc" as const,
       options: [
         { value: "0", label: "مجاناً بس" },

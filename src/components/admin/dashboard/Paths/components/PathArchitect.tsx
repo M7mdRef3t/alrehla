@@ -11,7 +11,7 @@ import {
   Eye,
   GripVertical
 } from "lucide-react";
-import type { JourneyPath, JourneyPathStep, JourneyPathStepKind } from "@/state/adminState";
+import type { JourneyPath, JourneyPathStep, JourneyPathStepKind } from "@/domains/admin/store/admin.store";
 import type { AppScreen } from "@/navigation/navigationMachine";
 
 const STEP_KIND_CONFIG: Record<
@@ -23,6 +23,8 @@ const STEP_KIND_CONFIG: Record<
   decision: { label: "قرار", icon: AlertCircle, color: "text-indigo-400" },
   intervention: { label: "تدخل", icon: Sparkles, color: "text-teal-400" },
   screen: { label: "شاشة", icon: Layout, color: "text-cyan-400" },
+  "telemetry-chaos": { label: "نبض الاضطراب", icon: AlertCircle, color: "text-rose-500" },
+  "telemetry-idle": { label: "نبض الخمول", icon: Layout, color: "text-violet-400" },
   outcome: { label: "مخرج", icon: CheckCircle2, color: "text-purple-400" }
 };
 

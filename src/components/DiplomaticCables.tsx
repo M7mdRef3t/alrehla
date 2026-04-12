@@ -44,7 +44,7 @@ export const DiplomaticCables: React.FC<DiplomaticCablesProps> = ({ onBack }) =>
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col" style={{ background: "var(--space-void)" }} dir="rtl">
+    <div className="w-full min-h-screen flex flex-col bg-[var(--page-bg)]" dir="rtl">
       {/* Header */}
       <header className="flex items-center gap-3 p-6 border-b border-white/5 sticky top-0 z-10 backdrop-blur-md" style={{ background: "rgba(8,14,30,0.85)" }}>
         {onBack && (
@@ -95,7 +95,7 @@ export const DiplomaticCables: React.FC<DiplomaticCablesProps> = ({ onBack }) =>
                 className="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all"
                 style={
                   selectedCategory === cat
-                    ? { background: "var(--soft-teal)", color: "var(--space-void)" }
+                    ? { background: "var(--soft-teal)", color: "var(--page-bg)" }
                     : { background: "rgba(255,255,255,0.05)", color: "var(--text-secondary)", border: "1px solid rgba(255,255,255,0.06)" }
                 }
               >

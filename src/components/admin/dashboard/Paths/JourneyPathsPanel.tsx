@@ -4,21 +4,25 @@ import {
   Plus, 
   Trash2, 
   Route, 
+  BookOpen,
   Sparkles, 
   Loader2, 
   History,
   Workflow,
   Activity,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Shield
 } from "lucide-react";
 import {
   useAdminState,
   type JourneyPath,
   type JourneyPathStep,
   type JourneyPathStepKind
-} from "@/state/adminState";
-import { generateJourneyPath, updateJourneyPaths, auditJourneyPath, getRevenueMetrics } from "@/services/adminApi";
+} from "@/domains/admin/store/admin.store";
+import { generateJourneyPath, updateJourneyPaths, auditJourneyPath, getRevenueMetrics, simulateJourneyPath } from "@/services/adminApi";
+import type { CognitiveSimulationResult } from "@/services/adminApi";
+import { createCurrentUrl, pushUrl } from "@/services/navigation";
 import {
   RELATIONSHIP_WEATHER_PATH_SLUG,
   getRelationshipWeatherEntryHref,
@@ -43,6 +47,8 @@ import { PathArchitect } from "./components/PathArchitect";
 import { TelemetryPulse } from "./components/TelemetryPulse";
 import { FrictionHealer } from "./components/FrictionHealer";
 import { GhostMirror } from "./GhostMirror";
+import { PathConstellationPreview } from "./PathConstellationPreview";
+import { OPS_DOCS } from "../OpsDocs/OpsDocsPanel";
 
 interface AuditResult {
   scores: {
@@ -58,12 +64,24 @@ interface AuditResult {
 
 // Types
 type SaveState = "idle" | "saving" | "saved" | "error";
-type OperationLogAction = "import-ready" | "import-confirmed" | "import-cancelled" | "backup-restored";
+type OperationLogAction =
+  | "import-ready"
+  | "import-confirmed"
+  | "import-cancelled"
+  | "backup-restored"
+  | "checklist-toggled"
+  | "checklist-marked-all"
+  | "checklist-reset"
+  | "checklist-exported";
 type OperationLogEntry = {
   action: OperationLogAction;
   fileName?: string;
   details: string;
   createdAt: number;
+  pathId?: string;
+  pathSlug?: string;
+  docId?: string;
+  itemLabel?: string;
 };
 type OperationLogFilter = "all" | OperationLogAction;
 
@@ -71,6 +89,23 @@ interface JourneyPathsBackup {
   paths: JourneyPath[];
   createdAt: number;
 }
+
+type ChecklistEntry = {
+  checked: boolean;
+  updatedAt?: number;
+  docId?: string;
+};
+type ChecklistStore = Record<string, ChecklistEntry>;
+type OpsDocReviewFilter = "all" | "not-started" | "in-progress" | "completed";
+
+const REVIEW_TIMELINE_ACTIONS: OperationLogAction[] = [
+  "checklist-toggled",
+  "checklist-marked-all",
+  "checklist-reset",
+  "checklist-exported"
+];
+
+const DOC_CHECKLIST_STORAGE_KEY = "journey_paths_doc_checklists";
 
 function toStableToken(value: string | undefined, fallback: string): string {
   const normalized = (value ?? "")
@@ -170,6 +205,13 @@ export function JourneyPathsPanel() {
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditResults, setAuditResults] = useState<Record<string, AuditResult>>({});
   const [revenueMetrics, setRevenueMetrics] = useState<any | null>(null);
+  const [docChecklistStore, setDocChecklistStore] = useState<ChecklistStore>({});
+  const [opsDocReviewFilter, setOpsDocReviewFilter] = useState<OpsDocReviewFilter>("all");
+  
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulationResults, setSimulationResults] = useState<CognitiveSimulationResult[] | null>(null);
+  const [activeTab, setActiveTab] = useState<"linear" | "constellation">("linear");
+  const [activePanelTab, setActivePanelTab] = useState<"design" | "analytics" | "ops">("design");
 
   const handleRunAudit = async () => {
     if (!selectedPath) return;
@@ -229,6 +271,27 @@ export function JourneyPathsPanel() {
       });
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DOC_CHECKLIST_STORAGE_KEY);
+      if (!saved) return;
+      const parsed = JSON.parse(saved) as ChecklistStore;
+      if (parsed && typeof parsed === "object") {
+        setDocChecklistStore(parsed);
+      }
+    } catch (error) {
+      console.error("Failed to load doc checklist state", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DOC_CHECKLIST_STORAGE_KEY, JSON.stringify(docChecklistStore));
+    } catch (error) {
+      console.error("Failed to persist doc checklist state", error);
+    }
+  }, [docChecklistStore]);
 
   useEffect(() => {
     const normalized = normalizeJourneyPaths(journeyPaths);
@@ -302,6 +365,23 @@ export function JourneyPathsPanel() {
       console.error("Path generation failed", err);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleSimulatePath = async () => {
+    if (!selectedPath) return;
+    setIsSimulating(true);
+    try {
+      const results = await simulateJourneyPath(selectedPath.steps);
+      setSimulationResults(results);
+      appendOperationLog({
+        action: "checklist-toggled" as any, 
+        details: "تم تنفيذ المحاكاة الشعورية بنجاح."
+      });
+    } catch (err) {
+      console.error("Simulation failed", err);
+    } finally {
+      setIsSimulating(false);
     }
   };
 
@@ -458,52 +538,490 @@ export function JourneyPathsPanel() {
 
   const formatWeatherStageLabel = (stage: "questions" | "analyzing" | "result" | "complete" | null) => {
     switch (stage) {
-      case "questions":
-        return "الأسئلة";
-      case "analyzing":
-        return "التحليل";
-      case "result":
-        return "شاشة النتيجة";
-      case "complete":
-        return "الخروج المباشر";
-      default:
-        return "غير محدد";
+      case "questions": return "الأسئلة";
+      case "analyzing": return "التحليل";
+      case "result": return "شاشة النتيجة";
+      case "complete": return "الخروج المباشر";
+      default: return "غير محدد";
     }
   };
 
+  const pathOpsDocs = useMemo(() => {
+    if (!selectedPath) return [];
+
+    const commonDocIds = ["route-matrix", "ownership", "feature-flags", "critical-flows"];
+    const journeySpecificDocIds =
+      selectedPath.slug === RELATIONSHIP_WEATHER_PATH_SLUG
+        ? ["functional-map", "critical-flows", "release", "triage"]
+        : selectedPath.slug === DAWAYIR_LIVE_PATH_SLUG
+          ? ["functional-map", "critical-flows", "post-release", "triage"]
+          : selectedPath.slug === MARAYA_STORY_PATH_SLUG
+            ? ["functional-map", "critical-flows", "owner-manual", "triage"]
+            : ["functional-map", "critical-flows", "owner-manual", "release"];
+
+    const ids = Array.from(new Set([...commonDocIds, ...journeySpecificDocIds]));
+    return OPS_DOCS.filter((doc) => ids.includes(doc.id));
+  }, [selectedPath]);
+
+  const pathOpsGuidance = useMemo(() => {
+    if (!selectedPath) return null;
+
+    if (selectedPath.slug === RELATIONSHIP_WEATHER_PATH_SLUG) {
+      return "استخدم هذه المراجع عندما تعدل funnel طقس العلاقات، خاصة إذا كنت تغيّر الترتيب أو الـ CTA أو bridge إلى دواير.";
+    }
+
+    if (selectedPath.slug === DAWAYIR_LIVE_PATH_SLUG) {
+      return "هذه المراجع مفيدة عندما تغيّر launch أو complete أو فروع history/couple/coach، لأن هذا المسار يعيش بين route مستقلة وعودة إلى المنصة.";
+    }
+
+    if (selectedPath.slug === MARAYA_STORY_PATH_SLUG) {
+      return "هذه المراجع تساعدك عندما تريد إبقاء مرايا جزءًا من المنتج لا تجربة معزولة، خصوصًا في نقاط الدخول والعودة بعد النهاية.";
+    }
+
+    return "هذه المراجع هي الحزمة الأساسية لتعديل أي path حساسة داخل المنصة، خصوصًا عندما تغيّر entryScreen أو targetScreen أو ترتيب الخطوات.";
+  }, [selectedPath]);
+
+  const openAdminSurface = (tab: string, extraParams: Record<string, string> = {}) => {
+    const url = createCurrentUrl();
+    if (!url) return;
+    url.searchParams.set("tab", tab);
+    Object.entries(extraParams).forEach(([key, value]) => {
+      url.searchParams.set(key, value);
+    });
+    pushUrl(url);
+  };
+
+  const handleOpenOpsDoc = (docId: string) => {
+    if (!selectedPath) return;
+    openAdminSurface("ops-docs", {
+      opsDoc: docId,
+      opsPath: selectedPath.slug
+    });
+  };
+
+  const handleRunOpsAction = (docId: string) => {
+    if (!selectedPath) return;
+
+    if (docId === "feature-flags") {
+      openAdminSurface("feature-flags", { opsPath: selectedPath.slug });
+      return;
+    }
+
+    if (docId === "critical-flows" || docId === "release" || docId === "post-release") {
+      openAdminSurface("ops-docs", {
+        opsDoc: docId,
+        opsPath: selectedPath.slug
+      });
+      return;
+    }
+
+    handleOpenOpsDoc(docId);
+  };
+
+  const getDocActionLabel = (docId: string) => {
+    if (docId === "feature-flags") return "اذهب إلى الرايات";
+    if (docId === "critical-flows") return "راجع التحقق";
+    if (docId === "release") return "راجع الجاهزية";
+    if (docId === "post-release") return "راجع ما بعد النشر";
+    return "استخدم هذا المرجع";
+  };
+
+  const getDocChecklistItems = (docId: string) => {
+    if (docId === "route-matrix") {
+      return [
+        "تأكد أن entryScreen يطابق بداية الرحلة الفعلية",
+        "تأكد أن targetScreen يطابق الخروج المقصود",
+        "راجع أن ترتيب الخطوات يخدم هذا الانتقال"
+      ];
+    }
+
+    if (docId === "critical-flows") {
+      return [
+        "مرّ على happy path كاملًا",
+        "راجع edge cases عند تعطيل خطوة",
+        "تأكد أن CTA النهائية تقود للوجهة الصحيحة"
+      ];
+    }
+
+    if (docId === "feature-flags") {
+      return [
+        "راجع flags المؤثرة على هذا المسار",
+        "تأكد أن السلوك نفسه متسق بين user و owner",
+        "افحص إن كانت ميزة مخفية تمنع خطوة من الظهور"
+      ];
+    }
+
+    if (docId === "release") {
+      return [
+        "راجع المسار قبل النشر النهائي",
+        "تأكد من عدم وجود تحذيرات حرجة",
+        "اعبر نقطة الدخول والخروج مرة أخيرة"
+      ];
+    }
+
+    if (docId === "post-release") {
+      return [
+        "افحص المسار بعد النشر مباشرة",
+        "تأكد أن الوجهة النهائية تعمل حيًا",
+        "راجع أي انحراف في behavior أو routing"
+      ];
+    }
+
+    if (docId === "ownership") {
+      return [
+        "حدد هل هذا المسار user أم owner",
+        "تأكد أن التعديل لا يضرب surface أخرى",
+        "راجع من يملك قرار هذا المسار وظيفيًا"
+      ];
+    }
+
+    if (docId === "triage") {
+      return [
+        "ابدأ من state ثم route ثم service",
+        "راجع أين ينكسر الدخول أو الخروج",
+        "حدد إن كان الخلل runtime أم config"
+      ];
+    }
+
+    if (docId === "owner-manual") {
+      return [
+        "راجع تأثير المسار على التشغيل اليومي",
+        "حدد القرار الذي يحتاج موافقة owner",
+        "وثّق ما الذي تغيّر قبل الحفظ"
+      ];
+    }
+
+    if (docId === "functional-map") {
+      return [
+        "راجع مكان المسار داخل المنصة ككل",
+        "تأكد أنه متصل بالـ flow الصحيح",
+        "افحص أثره على الرحلات المجاورة"
+      ];
+    }
+
+    if (docId === "inventory") {
+      return [
+        "ابحث عن مكوّن موجود قبل إضافة جديد",
+        "راجع services الحالية المرتبطة بالمسار",
+        "تأكد من عدم خلق duplication"
+      ];
+    }
+
+    return [
+      "راجع هذا المرجع قبل التعديل",
+      "أكد أن القرار الحالي موثق",
+      "تحقق من عدم وجود أثر جانبي مخفي"
+    ];
+  };
+
+  const getDocChecklistKey = (docId: string, item: string) => {
+    return `${selectedPath?.slug ?? "unknown"}::${docId}::${item}`;
+  };
+
+  const isChecklistItemDone = (docId: string, item: string) => {
+    return Boolean(docChecklistStore[getDocChecklistKey(docId, item)]?.checked);
+  };
+
+  const toggleChecklistItem = (docId: string, item: string) => {
+    const key = getDocChecklistKey(docId, item);
+    const nextChecked = !docChecklistStore[key]?.checked;
+    const docTitle = pathOpsDocs.find((doc) => doc.id === docId)?.title ?? docId;
+
+    setDocChecklistStore((current) => ({
+      ...current,
+      [key]: {
+        checked: nextChecked,
+        updatedAt: Date.now(),
+        docId
+      }
+    }));
+
+    appendOperationLog({
+      action: "checklist-toggled",
+      details: `${nextChecked ? "تم تعليم" : "تم إلغاء"} عنصر مراجعة داخل ${docTitle}: ${item}`,
+      pathId: selectedPath?.id,
+      pathSlug: selectedPath?.slug,
+      docId,
+      itemLabel: item
+    });
+  };
+
+  const markAllChecklistItems = () => {
+    if (!selectedPath) return;
+
+    const nextEntries = pathOpsDocs.flatMap((doc) =>
+      getDocChecklistItems(doc.id).map((item) => [
+        getDocChecklistKey(doc.id, item),
+        { checked: true, updatedAt: Date.now(), docId: doc.id }
+      ] as const)
+    );
+
+    setDocChecklistStore((current) => ({
+      ...current,
+      ...Object.fromEntries(nextEntries)
+    }));
+
+    appendOperationLog({
+      action: "checklist-marked-all",
+      details: `تم تعليم كل عناصر المراجعة كمكتملة لمسار ${selectedPath.title}.`,
+      pathId: selectedPath.id,
+      pathSlug: selectedPath.slug
+    });
+  };
+
+  const resetChecklistItems = () => {
+    if (!selectedPath) return;
+
+    const keysToRemove = new Set(
+      pathOpsDocs.flatMap((doc) =>
+        getDocChecklistItems(doc.id).map((item) => getDocChecklistKey(doc.id, item))
+      )
+    );
+
+    setDocChecklistStore((current) =>
+      Object.fromEntries(Object.entries(current).filter(([key]) => !keysToRemove.has(key)))
+    );
+
+    appendOperationLog({
+      action: "checklist-reset",
+      details: `تمت إعادة ضبط مراجعة المسار ${selectedPath.title}.`,
+      pathId: selectedPath.id,
+      pathSlug: selectedPath.slug
+    });
+  };
+
+  const exportChecklistReport = () => {
+    if (!selectedPath) return;
+
+    const sections = pathOpsDocs.map((doc) => {
+      const completion = getChecklistCompletion(doc.id);
+      const checklist = getDocChecklistItems(doc.id);
+      const status =
+        completion.completed === 0 ? "غير مراجع" : completion.completed === completion.total ? "مكتمل" : "قيد المراجعة";
+
+      const items = checklist
+        .map((item) => `- [${isChecklistItemDone(doc.id, item) ? "x" : " "}] ${item}`)
+        .join("\n");
+
+      return [
+        `## ${doc.title}`,
+        `الحالة: ${status}`,
+        `الإنجاز: ${completion.completed}/${completion.total}`,
+        `المرجع: ${doc.docPath}`,
+        items
+      ].join("\n");
+    });
+
+    const report = [
+      `# تقرير مراجعة المسار: ${selectedPath.title}`,
+      ``,
+      `Slug: ${selectedPath.slug}`,
+      `Entry: ${selectedPath.entryScreen}`,
+      `Target: ${selectedPath.targetScreen}`,
+      `التحذيرات الحالية: ${selectedPathWarnings.length + globalWarnings.length}`,
+      `إجمالي الإنجاز: ${pathOpsProgressSummary.completed}/${pathOpsProgressSummary.total} (${pathOpsProgressSummary.percent}%)`,
+      ``,
+      ...sections
+    ].join("\n");
+
+    const blob = new Blob([report], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${selectedPath.slug}-review-report.md`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+
+    appendOperationLog({
+      action: "checklist-exported",
+      fileName: `${selectedPath.slug}-review-report.md`,
+      details: `تم تصدير تقرير مراجعة للمسار ${selectedPath.title}.`,
+      pathId: selectedPath.id,
+      pathSlug: selectedPath.slug
+    });
+  };
+
+  const getChecklistCompletion = (docId: string) => {
+    const items = getDocChecklistItems(docId);
+    const completed = items.filter((item) => isChecklistItemDone(docId, item)).length;
+    return { completed, total: items.length };
+  };
+
+  const getDocWidgetMeta = (docId: string) => {
+    const activeStepsCount = selectedPath?.steps.filter((step) => step.enabled).length ?? 0;
+    const totalWarnings = selectedPathWarnings.length + globalWarnings.length;
+
+    if (docId === "route-matrix") {
+      return {
+        status: `الدخول: ${selectedPath?.entryScreen ?? "غير محدد"} -> الخروج: ${selectedPath?.targetScreen ?? "غير محدد"}`,
+        accent: "cyan",
+        items: [
+          `الخطوات الفعالة الآن: ${activeStepsCount}`,
+          `نقطة البدء الحالية: ${runtimePreview?.startsFrom ?? "غير محدد"}`,
+          `الوجهة النهائية الحالية: ${runtimePreview?.finalScreen ?? "غير محدد"}`
+        ]
+      };
+    }
+
+    if (docId === "critical-flows") {
+      return {
+        status: totalWarnings > 0 ? `يحتاج مراجعة (${totalWarnings})` : "جاهز مبدئيًا",
+        accent: totalWarnings > 0 ? "amber" : "emerald",
+        items: [
+          `عدد التحذيرات الحالية: ${totalWarnings}`,
+          `إجمالي الخطوات: ${runtimePreview?.stepsCount ?? 0}`,
+          `الخطوات الفعالة: ${runtimePreview?.activeSteps ?? 0}`
+        ]
+      };
+    }
+
+    if (docId === "feature-flags") {
+      return {
+        status: "افحص gating قبل أي نشر",
+        accent: "violet",
+        items: [
+          "راجع ما إذا كان هذا المسار يتأثر بوضع user أو owner.",
+          "تأكد أن أي feature hidden ليست سبب اختفاء خطوة.",
+          "افتح الرايات عند الشك في اختلاف السلوك بين البيئات."
+        ]
+      };
+    }
+
+    if (docId === "release" || docId === "post-release") {
+      return {
+        status: selectedPath?.isActive ? "مسار مفعّل ويؤثر على التشغيل الحي" : "مسار غير مفعّل حاليًا",
+        accent: selectedPath?.isActive ? "rose" : "slate",
+        items: [
+          `حالة المسار: ${selectedPath?.isActive ? "Active" : "Inactive"}`,
+          `Slug المسار: ${selectedPath?.slug ?? "غير محدد"}`,
+          "استخدم هذه البطاقة قبل وبعد أي تعديل مؤثر."
+        ]
+      };
+    }
+
+    return {
+      status: "مرجع تشغيلي جاهز للاستخدام",
+      accent: "slate",
+      items: docId === "ownership"
+        ? [
+            "راجع هل هذا المسار يخص user أم owner.",
+            "تأكد أن surface الصحيحة هي التي تتأثر بالتعديل.",
+            `المسار الحالي: ${selectedPath?.slug ?? "غير محدد"}`
+          ]
+        : docId === "triage"
+          ? [
+              "استخدمه إذا انكسر entry أو target أو CTA.",
+              "ابدأ من state ثم route ثم service.",
+              `التحذيرات الحالية: ${totalWarnings}`
+            ]
+          : docId === "owner-manual"
+            ? [
+                "يفيد في اتخاذ قرار سريع على هذا المسار.",
+                "ارجع له عند تغيير ترتيب الخطوات أو التفعيل.",
+                `المسار الحالي: ${selectedPath?.title ?? "غير محدد"}`
+              ]
+            : docId === "functional-map"
+              ? [
+                  "راجع موقع هذا المسار داخل المنصة ككل.",
+                  "يفيد قبل ربطه بمسار آخر أو surface إضافية.",
+                  `الوجهة الحالية: ${selectedPath?.targetScreen ?? "غير محدد"}`
+                ]
+              : docId === "inventory"
+                ? [
+                    "استخدمه قبل إنشاء أي شاشة أو service جديدة.",
+                    "ابحث أولًا عن المكونات الموجودة بالفعل.",
+                    `إجمالي الخطوات الحالية: ${runtimePreview?.stepsCount ?? 0}`
+                  ]
+                : [
+                    "مرجع مساعد مرتبط بهذا المسار.",
+                    "يفيد أثناء التعديل والتحقق والتشغيل.",
+                    `Slug: ${selectedPath?.slug ?? "غير محدد"}`
+                  ]
+    };
+  };
+
+  const pathOpsProgressSummary = useMemo(() => {
+    const completionStats = pathOpsDocs.map((doc) => ({
+      docId: doc.id,
+      title: doc.title,
+      ...getChecklistCompletion(doc.id)
+    }));
+
+    const completed = completionStats.reduce((sum, item) => sum + item.completed, 0);
+    const total = completionStats.reduce((sum, item) => sum + item.total, 0);
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const warningCount = selectedPathWarnings.length + globalWarnings.length;
+    const fullyReviewedDocs = completionStats.filter((item) => item.total > 0 && item.completed === item.total).length;
+    const pathPrefix = `${selectedPath?.slug ?? "unknown"}::`;
+    const latestEntry = Object.entries(docChecklistStore)
+      .filter(([key, value]) => key.startsWith(pathPrefix) && typeof value?.updatedAt === "number")
+      .sort((a, b) => (b[1].updatedAt ?? 0) - (a[1].updatedAt ?? 0))[0]?.[1];
+    const latestDocTitle = latestEntry?.docId
+      ? pathOpsDocs.find((doc) => doc.id === latestEntry.docId)?.title ?? latestEntry.docId
+      : null;
+
+    return {
+      completed,
+      total,
+      percent,
+      warningCount,
+      fullyReviewedDocs,
+      docsCount: completionStats.length,
+      latestUpdatedAt: latestEntry?.updatedAt ?? null,
+      latestDocTitle
+    };
+  }, [pathOpsDocs, selectedPathWarnings, globalWarnings, docChecklistStore, selectedPath]);
+
+  const filteredPathOpsDocs = useMemo(() => {
+    const docsWithProgress = pathOpsDocs.map((doc) => {
+      const completion = getChecklistCompletion(doc.id);
+      const status: Exclude<OpsDocReviewFilter, "all"> =
+        completion.completed === 0 ? "not-started" : completion.completed === completion.total ? "completed" : "in-progress";
+
+      return { doc, completion, status };
+    });
+
+    const filtered = opsDocReviewFilter === "all" ? docsWithProgress : docsWithProgress.filter((item) => item.status === opsDocReviewFilter);
+
+    return filtered.sort((a, b) => {
+      const rank = { "not-started": 0, "in-progress": 1, "completed": 2 } as const;
+      return rank[a.status] - rank[b.status];
+    });
+  }, [pathOpsDocs, opsDocReviewFilter, docChecklistStore]);
+
   const formatLiveStageLabel = (stage: "setup" | "live" | "complete" | "return" | null) => {
     switch (stage) {
-      case "setup":
-        return "التهيئة";
-      case "live":
-        return "الجلسة الحية";
-      case "complete":
-        return "شاشة الإكمال";
-      case "return":
-        return "العودة النهائية";
-      default:
-        return "غير محدد";
+      case "setup": return "التهيئة";
+      case "live": return "الجلسة الحية";
+      case "complete": return "شاشة الإكمال";
+      case "return": return "العودة النهائية";
+      default: return "غير محدد";
     }
   };
 
   const formatMarayaStageLabel = (stage: "landing" | "story" | "ending" | "return" | null) => {
     switch (stage) {
-      case "landing":
-        return "التهيئة / اختيار البداية";
-      case "story":
-        return "القصة الحية";
-      case "ending":
-        return "الخاتمة";
-      case "return":
-        return "العودة النهائية";
-      default:
-        return "غير محدد";
+      case "landing": return "التهيئة / اختيار البداية";
+      case "story": return "القصة الحية";
+      case "ending": return "الخاتمة";
+      case "return": return "العودة النهائية";
+      default: return "غير محدد";
     }
   };
 
-  const filteredOperationLog = operationLog.filter(log => 
-    operationLogFilter === "all" || log.action === operationLogFilter
-  );
+  const filteredOperationLog = operationLog.filter(log => operationLogFilter === "all" || log.action === operationLogFilter);
+
+  const reviewTimelineEntries = useMemo(() => {
+    if (!selectedPath) return [];
+    return operationLog
+      .filter((entry) => {
+        if (!REVIEW_TIMELINE_ACTIONS.includes(entry.action)) return false;
+        if (entry.pathId) return entry.pathId === selectedPath.id;
+        if (entry.pathSlug) return entry.pathSlug === selectedPath.slug;
+        return entry.details.includes(selectedPath.title) || entry.details.includes(selectedPath.slug);
+      })
+      .slice(0, 5);
+  }, [operationLog, selectedPath]);
 
   const getOperationLogMeta = (action: OperationLogAction) => {
     switch(action) {
@@ -511,6 +1029,10 @@ export function JourneyPathsPanel() {
       case "import-confirmed": return { label: "مكتمل", badge: "text-emerald-400" };
       case "import-cancelled": return { label: "ملغى", badge: "text-rose-400" };
       case "backup-restored": return { label: "مسترجع", badge: "text-indigo-400" };
+      case "checklist-toggled": return { label: "مراجعة", badge: "text-cyan-400" };
+      case "checklist-marked-all": return { label: "تعليم جماعي", badge: "text-emerald-400" };
+      case "checklist-reset": return { label: "إعادة ضبط", badge: "text-rose-400" };
+      case "checklist-exported": return { label: "تصدير", badge: "text-violet-400" };
     }
   };
 
@@ -584,314 +1106,157 @@ export function JourneyPathsPanel() {
         </div>
       </section>
 
-      {/* Main Grid — Spatial Architecture */}
+      {/* Premium Tab Navigation */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#0B0F19] p-2 rounded-[2rem] border border-slate-800 shadow-xl backdrop-blur-xl sticky top-0 z-30">
+        <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800/50 w-full sm:w-auto">
+          {[
+            { id: "design", label: "التصميم الهندسي", icon: Workflow },
+            { id: "analytics", label: "الرادار والنبض", icon: Activity },
+            { id: "ops", label: "التشغيل والتعافي", icon: Shield }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activePanelTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActivePanelTab(tab.id as any)}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                  isActive 
+                    ? "bg-cyan-500/20 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.1)] border border-cyan-500/20" 
+                    : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? "animate-pulse" : ""}`} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-2 px-4">
+           <div className="h-1 w-1 rounded-full bg-cyan-500 animate-ping" />
+           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+             {activePanelTab === "design" ? "Architect Mode" : activePanelTab === "analytics" ? "Forensics Mode" : "Ops Mode"}
+           </span>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Sidebar: Path Selection */}
-        <aside className="lg:col-span-3 space-y-4">
-           <div className="flex items-center justify-between px-2">
-             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">المسارات المسجلة</h3>
-             <button onClick={handleAddPath} className="text-cyan-400 hover:text-cyan-300 transition-colors">
-               <Plus className="w-4 h-4" />
-             </button>
-           </div>
-           
-           <div className="space-y-3">
-             {journeyPaths.map((path, index) => {
-               const isSelected = path.id === selectedPath.id;
-               return (
-                 <button
-                   key={getSafePathKey(path, index)}
-                   onClick={() => setSelectedPathId(path.id)}
-                   className={`w-full group text-right rounded-[1.75rem] border p-5 transition-all duration-300 ${
-                     isSelected
-                       ? "border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.1)]"
-                       : "border-slate-800 bg-slate-900/40 hover:border-slate-700"
-                   }`}
-                 >
-                   <div className="flex items-center justify-between gap-3 mb-2">
-                     <span className={`text-[10px] font-black uppercase tracking-widest ${path.isActive ? "text-emerald-400" : "text-slate-500"}`}>
-                       {path.isActive ? "ACTIVE" : "INACTIVE"}
+        {/* Sidebar Mini-nav (Always visible or contextual) */}
+        <div className="lg:col-span-3 space-y-6">
+           {/* Path Pick Group */}
+           <div className="space-y-2">
+              <h4 className="px-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4">اختيار المسار</h4>
+              {journeyPaths.map((path, index) => (
+                <button
+                  key={getSafePathKey(path, index)}
+                  onClick={() => setSelectedPathId(path.id)}
+                  className={`w-full text-right p-4 rounded-[1.5rem] transition-all duration-300 group relative overflow-hidden ${
+                    selectedPathId === path.id 
+                      ? "bg-gradient-to-l from-cyan-500/10 to-transparent border border-cyan-500/20" 
+                      : "hover:bg-white/5"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                     <span className={`text-[11px] font-black tracking-wide ${selectedPathId === path.id ? "text-white" : "text-slate-400"}`}>
+                        {path.title}
                      </span>
-                     {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_5px_cyan]" />}
-                   </div>
-                   <div className="text-sm font-black text-white group-hover:text-cyan-200 transition-colors">{path.title}</div>
-                   <div className="mt-1 text-[10px] text-slate-600 font-mono">{path.slug}</div>
-                 </button>
-               );
-             })}
-           </div>
-
-           <div className="rounded-2xl border border-slate-800/50 bg-slate-900/20 p-4">
-              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">الحالة العامة</h4>
-              <div className="space-y-3">
-                 <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400 font-bold">المسارات الفعالة</span>
-                    <span className="text-xs text-white font-black">{activePaths.length}</span>
-                 </div>
-                 <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-teal-500" style={{ width: `${journeyPaths.length > 0 ? (activePaths.length / journeyPaths.length) * 100 : 0}%` }} />
-                 </div>
-              </div>
-           </div>
-        </aside>
-
-        {/* Focus Area: Path Architect & Telemetry */}
-        <div className="lg:col-span-9 space-y-8">
-           
-           {/* Primary Control Zone */}
-           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-              
-              {/* Architect Deck */}
-              <div className="space-y-6">
-                 <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm">
-                    <div className="flex items-center justify-between mb-8">
-                       <h3 className="text-lg font-black text-white">بيانات الوعي (Core Metadata)</h3>
-                       <button
-                         type="button"
-                         onClick={() => patchPath(selectedPath.id, p => ({ ...p, isActive: !p.isActive }))}
-                         className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${selectedPath.isActive ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : 'border-slate-700 bg-slate-800 text-slate-500'}`}
-                       >
-                         {selectedPath.isActive ? 'تشغيل حي' : 'متوقف'}
-                       </button>
-                    </div>
-
-                    <div className="grid gap-6">
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Field label="اسم المسار">
-                            <input
-                              value={selectedPath.title}
-                              onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, title: e.target.value }))}
-                              className="admin-input bg-slate-900/50"
-                            />
-                          </Field>
-                          <Field label="Slug العبور">
-                            <input
-                              value={selectedPath.slug}
-                              onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, slug: e.target.value }))}
-                              className="admin-input bg-slate-900/50"
-                            />
-                          </Field>
-                       </div>
-                       <Field label="وصف غرض المسار">
-                          <textarea
-                            value={selectedPath.description}
-                            onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, description: e.target.value }))}
-                            className="admin-input bg-slate-900/50 min-h-[80px]"
-                          />
-                       </Field>
-                    </div>
-                 </section>
-
-                 <PathArchitect 
-                   path={selectedPath} 
-                   onUpdate={(updater) => setJourneyPaths(journeyPaths.map(p => p.id === selectedPath.id ? updater(p) : p))}
-                   onGenerate={handleGeneratePath}
-                   isGenerating={isGenerating}
-                 />
-              </div>
-
-              {/* Monitoring & Healing Deck */}
-              <div className="space-y-8">
-                 <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm h-fit">
-                    <TelemetryPulse path={selectedPath} revenueMetrics={revenueMetrics} />
-                 </section>
-
-                 <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm h-fit">
-                    <FrictionHealer 
-                      path={selectedPath} 
-                      warnings={[...selectedPathWarnings, ...globalWarnings]} 
-                      onApplyHealing={handleApplyHealing}
-                      auditData={auditResults[selectedPath.id]}
-                      isAuditing={isAuditing}
-                      onRunAudit={handleRunAudit}
-                    />
-                 </section>
-
-                 {/* Simulated Logic Preview */}
-                 <section className="rounded-[2.5rem] border border-cyan-500/10 bg-gradient-to-br from-cyan-500/5 to-transparent p-8">
-                    <div className="flex items-center gap-3 mb-6">
-                       <Workflow className="w-5 h-5 text-cyan-400" />
-                       <h3 className="text-sm font-black text-white uppercase tracking-widest">محاكاة التشغيل (Simulation)</h3>
-                    </div>
-                    {runtimePreview && (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                           <div className="text-[9px] font-black text-slate-500 uppercase">نقطة الدخول</div>
-                           <div className="text-xs font-bold text-white">{runtimePreview.startsFrom}</div>
-                        </div>
-                        <div className="space-y-1">
-                           <div className="text-[9px] font-black text-slate-500 uppercase">الوجهة المستهدفة</div>
-                           <div className="text-xs font-bold text-white">{runtimePreview.finalScreen}</div>
-                        </div>
-                        <div className="space-y-1">
-                           <div className="text-[9px] font-black text-slate-500 uppercase">Ø¹Ø¯Ø¯ Ø§Ù„Ø®Ø·ÙˆØ§Øª</div>
-                           <div className="text-xs font-bold text-white">{runtimePreview.stepsCount}</div>
-                        </div>
-                        <div className="space-y-1">
-                           <div className="text-[9px] font-black text-slate-500 uppercase">Ø§Ù„Ø®Ø·ÙˆØ§Øª Ø§Ù„Ù…ÙØ¹Ù„Ø©</div>
-                           <div className="text-xs font-bold text-white">{runtimePreview.activeSteps}</div>
-                        </div>
-                        {runtimePreview.isRelationshipWeather && (
-                          <div className="col-span-2 mt-2 rounded-2xl border border-cyan-500/10 bg-slate-950/30 p-4 space-y-4">
-                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-cyan-300">
-                              <Activity className="h-4 w-4" />
-                              Relationship Weather Runtime
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">ÙŠØ¨Ø¯Ø£ Ù…Ù†</div>
-                                <div className="text-xs font-bold text-white">{formatWeatherStageLabel(runtimePreview.weatherInitialStage)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">Ø¨Ø¹Ø¯ Ø§Ù„Ø£Ø³Ø¦Ù„Ø©</div>
-                                <div className="text-xs font-bold text-white">{formatWeatherStageLabel(runtimePreview.weatherAfterQuestions)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">Ø¨Ø¹Ø¯ Ø§Ù„ØªØ­Ù„ÙŠÙ„</div>
-                                <div className="text-xs font-bold text-white">{formatWeatherStageLabel(runtimePreview.weatherAfterAnalyzing)}</div>
-                              </div>
-                            </div>
-                            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/20 p-4 text-xs text-slate-300 leading-7 font-bold">
-                              {runtimePreview.weatherInitialStage === "complete"
-                                ? "Ù‡Ø°Ø§ Ø§Ù„Ù…Ø³Ø§Ø± Ø³ÙŠØªØ¬Ø§ÙˆØ² ÙÙ†Ù„ Ø§Ù„Ø·Ù‚Ø³ ÙƒØ§Ù…Ù„Ø§Ù‹ ÙˆÙŠØ®Ø±Ø¬ Ù…Ø¨Ø§Ø´Ø±Ø© Ø¥Ù„Ù‰ Ø§Ù„ÙˆØ¬Ù‡Ø© Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠØ©."
-                                : runtimePreview.weatherAfterAnalyzing === "complete"
-                                  ? "Ø¨Ø¹Ø¯ Ø§Ù„ØªØ­Ù„ÙŠÙ„ØŒ Ø§Ù„Ù…Ø³Ø§Ø± Ø³ÙŠÙ‚ÙØ² Ù…Ø¨Ø§Ø´Ø±Ø© Ø¥Ù„Ù‰ Ø§Ù„Ø®Ø±ÙˆØ¬ Ø¨Ø¯ÙˆÙ† Ø§Ù„ØªÙˆÙ‚Ù Ø¹Ù†Ø¯ Ø´Ø§Ø´Ø© Ø§Ù„Ù†ØªÙŠØ¬Ø©."
-                                  : "Ø§Ù„Ù…Ø³Ø§Ø± Ø³ÙŠØ³Ù„Ùƒ ÙÙ†Ù„ Ø·Ù‚Ø³ Ø§Ù„Ø¹Ù„Ø§Ù‚Ø§Øª Ø­Ø³Ø¨ Ø§Ù„ØªØ±ØªÙŠØ¨ Ø§Ù„Ø¥Ø¯Ø§Ø±ÙŠ Ø§Ù„Ø­Ø§Ù„ÙŠ Ø¨Ø¯ÙˆÙ† Ø§ÙØªØ±Ø§Ø¶Ø§Øª Ø«Ø§Ø¨ØªØ© ÙÙŠ Ø§Ù„ÙƒÙˆØ¯."}
-                            </div>
-                          </div>
-                        )}
-                        {runtimePreview.isDawayirLive && (
-                          <div className="col-span-2 mt-2 rounded-2xl border border-fuchsia-500/10 bg-slate-950/30 p-4 space-y-4">
-                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-fuchsia-300">
-                              <Activity className="h-4 w-4" />
-                              Dawayir Live Runtime
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">يبدأ من</div>
-                                <div className="text-xs font-bold text-white">{formatLiveStageLabel(runtimePreview.liveInitialStage)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">بعد التهيئة</div>
-                                <div className="text-xs font-bold text-white">{formatLiveStageLabel(runtimePreview.liveAfterSetup)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">بعد الجلسة</div>
-                                <div className="text-xs font-bold text-white">{formatLiveStageLabel(runtimePreview.liveAfterSession)}</div>
-                              </div>
-                            </div>
-                            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/20 p-4 text-xs text-slate-300 leading-7 font-bold space-y-2">
-                              <div>
-                                المسار سيطلق اللايف عبر route الدخول الفعلية، ثم ينتقل إلى شاشة الإكمال، ثم يخرج إلى:
-                                <span className="text-fuchsia-300"> {runtimePreview.liveReturnHref || runtimePreview.finalScreen}</span>
-                              </div>
-                              <div>
-                                {runtimePreview.liveAfterSession === "return"
-                                  ? "هذا يعني أن المسار سيتجاوز شاشة الإكمال ويعود مباشرة بعد نهاية الجلسة."
-                                  : "هذا يعني أن الجلسة ستمر على شاشة الإكمال أولًا قبل العودة النهائية."}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {runtimePreview.isMarayaStory && (
-                          <div className="col-span-2 mt-2 rounded-2xl border border-amber-500/10 bg-slate-950/30 p-4 space-y-4">
-                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-amber-300">
-                              <Activity className="h-4 w-4" />
-                              Maraya Story Runtime
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">يبدأ من</div>
-                                <div className="text-xs font-bold text-white">{formatMarayaStageLabel(runtimePreview.marayaInitialStage)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">بعد التهيئة</div>
-                                <div className="text-xs font-bold text-white">{formatMarayaStageLabel(runtimePreview.marayaAfterLanding)}</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3 space-y-1">
-                                <div className="text-[9px] font-black uppercase text-slate-500">بعد القصة</div>
-                                <div className="text-xs font-bold text-white">{formatMarayaStageLabel(runtimePreview.marayaAfterStory)}</div>
-                              </div>
-                            </div>
-                            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/20 p-4 text-xs text-slate-300 leading-7 font-bold space-y-2">
-                              <div>
-                                المسار سيطلق تجربة مرايا عبر route الدخول الفعلية، ثم يمر على الخاتمة، ثم يخرج إلى:
-                                <span className="text-amber-300"> {runtimePreview.marayaReturnHref || runtimePreview.finalScreen}</span>
-                              </div>
-                              <div>
-                                {runtimePreview.marayaAfterStory === "return"
-                                  ? "هذا يعني أن المسار سيتجاوز شاشة الخاتمة ويخرج مباشرة بعد اكتمال القصة."
-                                  : "هذا يعني أن مرايا ستمر على شاشة الخاتمة أولًا قبل حمل أثرها إلى الوجهة التالية."}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        <div className="col-span-2 pt-2">
-                           <button 
-                             onClick={handleRunPathNow}
-                             className="w-full py-3 rounded-xl bg-slate-900 border border-slate-800 text-cyan-400 hover:text-white hover:border-cyan-500/40 transition-all font-black text-[10px] uppercase tracking-widest"
-                           >
-                             بدء تجربة المستخدم
-                           </button>
-                        </div>
-                      </div>
-                    )}
-                 </section>
-              </div>
-
+                     {selectedPathId === path.id && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />
+                     )}
+                  </div>
+                </button>
+              ))}
            </div>
         </div>
 
+        {/* Focus Area Content */}
+        <div className="lg:col-span-9">
+           
+           {/* Section 1: DESIGN */}
+           {activePanelTab === "design" && (
+             <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm">
+                   <div className="flex items-center justify-between mb-8">
+                      <h3 className="text-lg font-black text-white">بيانات الوعي (Core Metadata)</h3>
+                      <button
+                        type="button"
+                        onClick={() => patchPath(selectedPath.id, p => ({ ...p, isActive: !p.isActive }))}
+                        className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${selectedPath.isActive ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : 'border-slate-700 bg-slate-800 text-slate-500'}`}
+                      >
+                        {selectedPath.isActive ? 'تشغيل حي' : 'متوقف'}
+                      </button>
+                   </div>
+                   <div className="grid gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <Field label="اسم المسار"><input value={selectedPath.title} onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, title: e.target.value }))} className="admin-input bg-slate-900/50" /></Field>
+                         <Field label="Slug العبور"><input value={selectedPath.slug} onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, slug: e.target.value }))} className="admin-input bg-slate-900/50" /></Field>
+                      </div>
+                      <Field label="وصف غرض المسار"><textarea value={selectedPath.description} onChange={(e) => patchPath(selectedPath.id, p => ({ ...p, description: e.target.value }))} className="admin-input bg-slate-900/50 min-h-[80px]" /></Field>
+                   </div>
+                </section>
+
+                <div className="flex bg-slate-900/50 p-1 rounded-2xl border border-slate-800 w-fit mb-4">
+                  <button onClick={() => setActiveTab("linear")} className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "linear" ? "bg-cyan-500/20 text-cyan-400" : "text-slate-500 hover:text-white"}`}>التسلسل الخطي</button>
+                  <button onClick={() => setActiveTab("constellation")} className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "constellation" ? "bg-indigo-500/20 text-indigo-400" : "text-slate-500 hover:text-white"}`}>الشبكة البصرية</button>
+                </div>
+
+                {activeTab === "linear" ? (
+                  <PathArchitect path={selectedPath} onUpdate={(updater) => setJourneyPaths(journeyPaths.map(p => p.id === selectedPath.id ? updater(p) : p))} onGenerate={handleGeneratePath} isGenerating={isGenerating} />
+                ) : (
+                  <div className="animate-in fade-in zoom-in-95 duration-500"><PathConstellationPreview steps={selectedPath.steps} /></div>
+                )}
+             </div>
+           )}
+
+           {/* Section 2: ANALYTICS */}
+           {activePanelTab === "analytics" && (
+             <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                   <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm h-fit"><TelemetryPulse path={selectedPath} revenueMetrics={revenueMetrics} /></section>
+                   <section className="rounded-[2.5rem] border border-cyan-500/10 bg-gradient-to-br from-cyan-500/5 to-transparent p-8">
+                      <div className="flex items-center gap-3 mb-6"><Workflow className="w-5 h-5 text-cyan-400" /><h3 className="text-sm font-black text-white uppercase tracking-widest">محاكاة التشغيل (Simulation)</h3></div>
+                      <button onClick={handleSimulatePath} disabled={isSimulating || selectedPath.steps.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500/10 py-3 text-sm font-black text-cyan-400 hover:bg-cyan-500/20 transition-all disabled:opacity-50">
+                        {isSimulating ? <Loader2 className="h-4 w-4 animate-spin text-cyan-400" /> : <Sparkles className="h-4 w-4" />}
+                        {isSimulating ? "جاري استدعاء الشخصيات المحاكية..." : "تشغيل المحاكي الشعوري (Personas Playtest)"}
+                      </button>
+                   </section>
+                </div>
+                <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 lg:p-12 shadow-sm"><GhostMirror /></section>
+             </div>
+           )}
+
+           {/* Section 3: OPS */}
+           {activePanelTab === "ops" && (
+             <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                   <section className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-sm h-fit">
+                      <FrictionHealer path={selectedPath} warnings={[...selectedPathWarnings, ...globalWarnings]} onApplyHealing={handleApplyHealing} auditData={auditResults[selectedPath.id]} isAuditing={isAuditing} onRunAudit={handleRunAudit} />
+                   </section>
+                   <section className="rounded-[2.5rem] border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent p-8 shadow-sm">
+                      <div className="flex items-center justify-between gap-4 mb-6"><div className="space-y-2"><div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.28em] text-amber-300"><BookOpen className="h-3.5 w-3.5" />عناصر مكتبة التشغيل</div><h3 className="text-lg font-black text-white">مراجع قابلة للاستخدام</h3></div></div>
+                      <div className="grid gap-4">
+                         {filteredPathOpsDocs.slice(0, 4).map(({ doc }) => (
+                            <div key={doc.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-900 border border-slate-800"><div className="flex items-center gap-3"><doc.icon className="w-4 h-4 text-amber-500" /><span className="text-xs font-black text-white">{doc.title}</span></div><button onClick={() => handleOpenOpsDoc(doc.id)} className="text-[10px] font-black text-cyan-400">فتح</button></div>
+                         ))}
+                      </div>
+                   </section>
+                </div>
+                {operationLog.length > 0 && (
+                   <div className="rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 shadow-inner overflow-hidden relative">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 blur-[80px] pointer-events-none" />
+                      <div className="flex items-center justify-between mb-8 relative z-10"><h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">سجل العمليات التقنية (Engine Logs)</h4><button onClick={handleClearOperationLog} className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-400 transition-colors">مسح السجل</button></div>
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 no-scrollbar font-mono relative z-10">
+                         {filteredOperationLog.map((entry, index) => (
+                            <div key={index} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 group hover:border-cyan-500/30 transition-all"><div className="flex items-center gap-4"><div className={`w-1.5 h-1.5 rounded-full ${index === 0 ? "bg-cyan-400 animate-pulse" : "bg-slate-700"}`} /><div className="text-xs text-slate-300 leading-relaxed font-bold">{entry.details}</div></div><span className="text-[10px] text-slate-600 font-black">{new Date(entry.createdAt).toLocaleTimeString('ar-EG')}</span></div>
+                         ))}
+                      </div>
+                   </div>
+                )}
+             </div>
+           )}
+        </div>
       </div>
-
-      {/* Operation Logs (Condensed at bottom) */}
-      {operationLog.length > 0 && (
-         <div className="mt-12 rounded-[2.5rem] border border-white/5 bg-slate-950/20 p-8">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h4 className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">سجل العمليات (System Logs)</h4>
-                <div className="mt-2 text-[10px] text-slate-600 uppercase font-black tracking-widest">{filteredOperationLog.length} سجل من أصل {operationLog.length}</div>
-              </div>
-              <div className="flex gap-4">
-                <select
-                  value={operationLogFilter}
-                  onChange={(e) => setOperationLogFilter(e.target.value as OperationLogFilter)}
-                  className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-slate-400 focus:ring-0 cursor-pointer"
-                >
-                  <option value="all">الكل</option>
-                  <option value="import-ready">الجاهزة</option>
-                  <option value="import-confirmed">المعتمدة</option>
-                  <option value="import-cancelled">الملغاة</option>
-                  <option value="backup-restored">المسترجعة</option>
-                </select>
-                <button
-                  onClick={handleClearOperationLog}
-                  className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-400 transition-colors"
-                >
-                  مسح السجل
-                </button>
-              </div>
-            </div>
-            
-            <div className="mt-6 space-y-2 max-h-[200px] overflow-y-auto no-scrollbar">
-               {filteredOperationLog.map((entry, index) => (
-                 <div key={index} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors group">
-                    <div className="flex items-center gap-4">
-                       <span className={`w-2 h-2 rounded-full ${getOperationLogMeta(entry.action)?.badge.includes('emerald') ? 'bg-emerald-500' : 'bg-slate-500'}`} />
-                       <div className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">{entry.details}</div>
-                    </div>
-                    <div className="text-[10px] font-mono text-slate-600 tracking-tighter">{new Date(entry.createdAt).toLocaleTimeString('ar-EG')}</div>
-                 </div>
-               ))}
-            </div>
-         </div>
-      )}
-
-      {/* Psychological Layer: Ghost Mirror */}
-      <section className="mt-12 rounded-[2.5rem] border border-slate-800 bg-[#0B0F19] p-8 lg:p-12 shadow-sm">
-         <GhostMirror />
-      </section>
 
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none z-[-1] opacity-30 select-none overflow-hidden">

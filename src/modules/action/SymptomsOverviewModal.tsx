@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ClipboardList } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { SymptomsChecklist } from '@/modules/exploration/SymptomsChecklist';
 
 interface SymptomsOverviewModalProps {

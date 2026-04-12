@@ -1,8 +1,8 @@
 import React, { useState, type FC } from "react";
 import { X, Send, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useBlindCapsuleState } from "@/state/blindCapsuleState";
-import { useToastState } from "@/state/toastState";
+import { useBlindCapsuleState } from "@/domains/journey/store/blindCapsule.store";
+import { useToastState } from "@/domains/dawayir/store/toast.store";
 
 interface BlindCapsuleCreatorProps {
    isOpen: boolean;
@@ -61,7 +61,7 @@ export const BlindCapsuleCreator: FC<BlindCapsuleCreatorProps> = ({ isOpen, onCl
                   </div>
 
                   <p className="text-sm font-medium text-emerald-100/80 mb-6 leading-relaxed">
-                     أنت الآن في وضع هادئ وإدراكك منتظم. اكتب رسالة لنفسك لتقرأها في يوم عصيب ومربك. <strong>بمجرد الإرسال، سيتم تشفيرها وإخفائها كلياً من النظام. المنصة وحدها ستعرف متى تحتاجها وستفجرها في وجهك.</strong>
+                     أنت الآن في وضع هادئ وإدراكك منتظم. اكتب رسالة لنفسك لتقرأها في يوم عصيب ومربك. <strong>بمجرد الإرسال، سيتم تشفيرها وإخفائها كلياً من النظام. رحلتك وحدها ستعرف متى تحتاجها وستفجرها في وجهك.</strong>
                   </p>
 
                   <textarea

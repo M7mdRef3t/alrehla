@@ -9,7 +9,7 @@ import {
   Copy, Check, Skull
 } from "lucide-react";
 import { supabase } from "@/services/supabaseClient";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 /* ══════════════════════════════════════════
    Types & Storage
@@ -805,7 +805,7 @@ export function PrivacySecuritySettings({ onBack }: PrivacySecuritySettingsProps
         <GlassCard glow={C.cyan}>
           <SectionHeader icon={<Eye size={13} color={C.cyan} />}
             title="خصوصية الملف الشخصي"
-            subtitle="تحكّم في ظهورك لمستخدمي المنصة" color={C.cyan} />
+            subtitle="تحكّم في ظهورك لمسافري الرحلة" color={C.cyan} />
           <ToggleRow label="ملف شخصي عام" desc="يسمح لأعضاء المجتمع بمشاهدة ملفك"
             value={prefs.profileVisible} onChange={(v) => updatePref("profileVisible", v)} />
           <ToggleRow label="إخفاء من نتائج البحث" desc="لن يظهر اسمك في البحث الداخلي أو محركات خارجية"
@@ -839,7 +839,7 @@ export function PrivacySecuritySettings({ onBack }: PrivacySecuritySettingsProps
             value={prefs.partnerShareEnabled} onChange={(v) => updatePref("partnerShareEnabled", v)}
             color={C.pink} />
           <ToggleRow label="التحليلات والإحصائيات"
-            desc="مساعدة تطوير المنصة (بيانات مجهولة فقط)"
+            desc="مساعدة تطوير الرحلة (بيانات مجهولة فقط)"
             value={prefs.analyticsEnabled} onChange={(v) => updatePref("analyticsEnabled", v)} />
         </GlassCard>
 

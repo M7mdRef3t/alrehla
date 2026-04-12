@@ -19,15 +19,15 @@ import {
   Trophy,
 } from "lucide-react";
 import { AlrehlaIcon } from "./logo/AlrehlaIcon";
-import { useAuthState, getEffectiveRoleFromState } from "@/state/authState";
-import { useAchievementState } from "@/state/achievementState";
-import { useThemeState } from "@/state/themeState";
+import { useAuthState, getEffectiveRoleFromState } from "@/domains/auth/store/auth.store";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
+import { useThemeState } from "@/domains/consciousness/store/theme.store";
 import { signOut } from "@/services/authService";
 import { NotificationsPanel } from "./NotificationsPanel";
 import { isPrivilegedRole } from "@/utils/featureFlags";
 import { assignUrl } from "@/services/navigation";
-import { useGamificationState } from "@/state/gamificationState";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useGamificationState } from "@/domains/gamification/store/gamification.store";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 // Re-importing missing icons correctly
 import { BookOpen, Info } from "lucide-react";
@@ -207,8 +207,8 @@ export const PlatformHeader = memo(function PlatformHeader({
       }}
       className={`
         fixed top-0 right-0 left-0 z-50
-        hidden md:flex items-center justify-between
-        px-6 lg:px-12 h-20
+        flex items-center justify-between
+        px-4 md:px-6 lg:px-12 h-16 md:h-20
         transition-all duration-500
         ${
           scrolled
@@ -260,7 +260,7 @@ export const PlatformHeader = memo(function PlatformHeader({
 
       <nav
         aria-label="التنقل الرئيسي"
-        className="flex items-center relative gap-2"
+        className="hidden md:flex items-center relative gap-2"
       >
         {visibleNavLinks.map(({ id, label, icon: Icon }) => {
           const isActive = activeNavId === id;

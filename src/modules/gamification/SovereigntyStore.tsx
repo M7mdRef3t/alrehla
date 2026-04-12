@@ -7,7 +7,7 @@ import {
   Coins, CheckCircle2, Lock, ArrowRight,
   Info, Cpu, MessageSquare, X
 } from "lucide-react";
-import { useGamificationState } from "@/state/gamificationState";
+import { useGamification } from "@/domains/gamification";
 import { STORE_ITEMS, StoreCategory, StoreItem } from "@/data/storeItems";
 import { getStoreRecommendations, StoreRecommendation } from "@/services/storeAdvisor";
 
@@ -20,9 +20,9 @@ export function SovereigntyStore({ onClose }: { onClose: () => void }) {
     purchaseItem, 
     setActiveTheme, 
     setActiveVoice,
-    lastPurchaseFeedback,
-    clearPurchaseFeedback
-  } = useGamificationState();
+  } = useGamification();
+  const [lastPurchaseFeedback, setLastPurchaseFeedback] = useState<{ title: string; message: string } | null>(null);
+  const clearPurchaseFeedback = () => setLastPurchaseFeedback(null);
   
   const [activeTab, setActiveTab] = useState<StoreCategory>("evolutions");
   const [buyingId, setBuyingId] = useState<string | null>(null);
@@ -63,6 +63,7 @@ export function SovereigntyStore({ onClose }: { onClose: () => void }) {
 
         setTimeout(() => {
           if (purchaseItem(item.id, finalPrice, feedback)) {
+            setLastPurchaseFeedback(feedback);
             // Auto equip on purchase
             if (item.category === "sanctuaries") setActiveTheme(item.id);
             if (item.category === "evolutions") setActiveVoice(item.id);

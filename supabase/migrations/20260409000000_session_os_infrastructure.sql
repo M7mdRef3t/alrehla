@@ -2,15 +2,15 @@
 -- Date: 2026-04-09
 -- Description: Core tables for the Dawayir Session OS Journey Flow
 
--- Clean up any partial state (Safe for dev reset)
-DROP TABLE IF EXISTS public.dawayir_session_followups CASCADE;
-DROP TABLE IF EXISTS public.dawayir_session_summaries CASCADE;
-DROP TABLE IF EXISTS public.dawayir_sessions CASCADE;
-DROP TABLE IF EXISTS public.dawayir_ai_session_briefs CASCADE;
-DROP TABLE IF EXISTS public.dawayir_prep_forms CASCADE;
-DROP TABLE IF EXISTS public.dawayir_triage_answers CASCADE;
-DROP TABLE IF EXISTS public.dawayir_session_requests CASCADE;
-DROP TABLE IF EXISTS public.dawayir_clients CASCADE;
+-- Clean up any partial state (Safe for dev reset - Commented for prod safety)
+-- DROP TABLE IF EXISTS public.dawayir_session_followups CASCADE;
+-- DROP TABLE IF EXISTS public.dawayir_session_summaries CASCADE;
+-- DROP TABLE IF EXISTS public.dawayir_sessions CASCADE;
+-- DROP TABLE IF EXISTS public.dawayir_ai_session_briefs CASCADE;
+-- DROP TABLE IF EXISTS public.dawayir_prep_forms CASCADE;
+-- DROP TABLE IF EXISTS public.dawayir_triage_answers CASCADE;
+-- DROP TABLE IF EXISTS public.dawayir_session_requests CASCADE;
+-- DROP TABLE IF EXISTS public.dawayir_clients CASCADE;
 
 -- 1. ENUM Types
 DO $$ BEGIN

@@ -2,8 +2,8 @@ import { logger } from "@/services/logger";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { consciousnessService, type MemoryMatch } from "@/services/consciousnessService";
 import { getWindowOrNull } from "@/services/clientRuntime";
-import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "@/state/pulseState";
-import { usePulseState } from "@/state/pulseState";
+import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "@/domains/consciousness/store/pulse.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 
 type PulseDeltaToastTone = "up" | "down" | "same" | "neutral";
 

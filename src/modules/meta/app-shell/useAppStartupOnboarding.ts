@@ -1,11 +1,12 @@
+import { analyticsService } from '@/domains/analytics';
 import { useCallback, useEffect, useRef } from "react";
 import { AnalyticsEvents, trackEvent } from "@/services/analytics";
 import type { AdviceCategory } from "@/data/adviceScripts";
 import { resolveAdviceCategory } from "@/data/adviceScripts";
 import { getWindowOrNull } from "@/services/clientRuntime";
 import type { AppScreen } from "@/navigation/navigationMachine";
-import type { AppOverlayFlag } from "@/state/appOverlayState";
-import type { LandingIntent } from "@/state/journeyState";
+import type { AppOverlayFlag } from "@/domains/consciousness/store/overlay.store";
+import type { LandingIntent } from "@/domains/journey/store/journey.store";
 import { ensureValidJourneyState } from "@/utils/journeyState";
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
@@ -61,14 +62,14 @@ export function useAppStartupOnboarding({
             : "general";
       setGoalId(mappedGoalId);
       setCategory(resolveAdviceCategory(mappedGoalId));
-      trackEvent(AnalyticsEvents.CTA_CLICK, {
+      analyticsService.track(AnalyticsEvents.CTA_CLICK, {
         source: "landing_intent",
         intent,
         mappedGoalId
       });
     }
 
-    trackEvent("journey_started_frictionless", { source: "landing" });
+    analyticsService.track("journey_started_frictionless", { source: "landing" });
     void navigateToScreen("map");
   }, [consumeLandingIntent, navigateToScreen, setCategory, setGoalId]);
 

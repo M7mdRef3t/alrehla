@@ -11,8 +11,7 @@ export const LegalPage: FC<LegalPageProps> = ({ type }) => {
 
   return (
     <div
-      className="min-h-screen min-h-[100dvh] w-full overflow-auto isolate relative"
-      style={{ background: "var(--space-void)" }}
+      className="min-h-screen min-h-[100dvh] w-full overflow-auto isolate relative bg-[var(--page-bg)]"
       dir="rtl"
     >
       <div className="nebula-bg absolute inset-0 -z-10" aria-hidden="true" />
@@ -27,7 +26,7 @@ export const LegalPage: FC<LegalPageProps> = ({ type }) => {
 
         <h1
           id="legal-title"
-          className="text-2xl sm:text-3xl font-bold text-white mb-2"
+          className="text-2xl sm:text-3xl font-bold mb-2 text-[var(--page-text)]"
           style={{ fontFamily: 'var(--font-sans)' }}
         >
           {copy.title}

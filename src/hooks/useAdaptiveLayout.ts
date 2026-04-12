@@ -13,11 +13,11 @@
  */
 
 import { useEffect, useMemo } from "react";
-import { useLayoutState } from "@/state/layoutState";
-import { useMapState } from "@/state/mapState";
+import { useLayoutState } from "@/domains/dawayir/store/layout.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { useDailyQuestion } from "./useDailyQuestion";
 import { computeTEI } from "@/utils/traumaEntropyIndex";
-import { getShadowScore } from "@/state/shadowPulseState";
+import { getShadowScore } from "@/domains/consciousness/store/shadowPulse.store";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════

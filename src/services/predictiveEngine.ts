@@ -1,9 +1,9 @@
 import { logger } from "@/services/logger";
 import { geminiClient } from "./geminiClient";
-import { useConsciousnessHistory } from "@/state/consciousnessHistoryState";
-import { usePredictiveState } from "@/state/predictiveState";
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
+import { useConsciousnessHistory } from "@/domains/consciousness/store/history.store";
+import { usePredictiveState } from "@/domains/consciousness/store/predictive.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { GrowthEngine } from "./growthEngine";
 import { fetchOverviewStats } from "./adminApi";
 

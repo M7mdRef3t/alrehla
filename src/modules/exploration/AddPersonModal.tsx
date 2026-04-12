@@ -3,15 +3,15 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { addPersonCopy } from "@/copy/addPerson";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import type { FeelingAnswers } from "./FeelingCheck";
 import type { RealityAnswers } from "./RealityCheck";
 import { feelingScore } from "@/utils/feelingScore";
 import { realityScoreToRing } from "@/utils/realityScore";
 import type { QuickAnswer1, QuickAnswer2 } from "@/utils/suggestInitialRing";
-import { recordJourneyEvent, recordFlowEvent } from "@/services/journeyTracking";
-import { trackEvent, AnalyticsEvents } from "@/services/analytics";
-import { useEmergencyState } from "@/state/emergencyState";
+import { trackingService } from "@/domains/journey";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
+import { useEmergencyState } from "@/domains/admin/store/emergency.store";
 import { quick1Tier, quick2Tier } from "@/utils/optionColors";
 import { SelectPersonStep } from "./AddPersonModal/SelectPersonStep";
 import { QuickQuestionsStep } from "./AddPersonModal/QuickQuestionsStep";
@@ -178,28 +178,28 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
       realityAnswers: answers,
       isAnalyzing: false
     });
-    recordJourneyEvent("node_added", { ring, detachmentMode: detachmentMode ?? false, isEmergency: isEmergency === true, personLabel: finalLabel, nodeId: addedNodeId });
-    trackEvent(AnalyticsEvents.PERSON_ADDED, {
+    trackingService.record("node_added", { ring, detachmentMode: detachmentMode ?? false, isEmergency: isEmergency === true, personLabel: finalLabel, nodeId: addedNodeId });
+    analyticsService.track(AnalyticsEvents.PERSON_ADDED, {
       person_label: finalLabel,
       ring: ring,
       is_emergency: isEmergency === true,
       goal_id: goalId
     });
     if (nodes.filter(n => !n.isNodeArchived).length >= 2) {
-      trackEvent(AnalyticsEvents.BASELINE_COMPLETED, { goal_id: goalId });
+      analyticsService.track(AnalyticsEvents.BASELINE_COMPLETED, { goal_id: goalId });
     }
     setPendingPlacement(null);
     setStep("diagnostic");
   };
 
   useEffect(() => {
-    recordFlowEvent("add_person_opened");
+    trackingService.recordFlow("add_person_opened");
   }, []);
 
   useEffect(() => {
     if (!isForcedResultGate || forcedCtaShownRef.current) return;
     forcedCtaShownRef.current = true;
-    recordFlowEvent("add_person_cta_forced_shown", {
+    trackingService.recordFlow("add_person_cta_forced_shown", {
       meta: { nodeId: addedNodeId ?? null }
     });
   }, [addedNodeId, isForcedResultGate]);
@@ -212,16 +212,16 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
 
   const handleClose = (openNodeId?: string) => {
     if (step === "result" && openNodeId) {
-      recordFlowEvent("add_person_done_show_on_map", { meta: { nodeId: openNodeId } });
+      trackingService.recordFlow("add_person_done_show_on_map", { meta: { nodeId: openNodeId } });
     } else if (step !== "result") {
-      recordFlowEvent("add_person_dropped", { atStep: step });
+      trackingService.recordFlow("add_person_dropped", { atStep: step });
     }
     onClose(openNodeId);
   };
 
   const handleCloseAttempt = (reason: "backdrop" | "close_button") => {
     if (isForcedResultGate) {
-      recordFlowEvent("add_person_cta_forced_blocked_close", {
+      trackingService.recordFlow("add_person_cta_forced_blocked_close", {
         meta: { reason, step }
       });
       return;

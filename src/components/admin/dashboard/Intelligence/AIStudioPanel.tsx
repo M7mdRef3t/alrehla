@@ -21,10 +21,81 @@ import {
     CheckCircle
 } from "lucide-react";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
-import { julesService, JulesSession, JulesSource } from "@/services/julesService";
+import { julesService, JulesSession, JulesSource, JulesActivity } from "@/services/julesService";
+
+const JulesTerminal: FC<{ sessionId: string }> = ({ sessionId }) => {
+    const [activities, setActivities] = useState<JulesActivity[]>([]);
+    const [open, setOpen] = useState(false);
+    const endRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!open) return;
+        let mounted = true;
+        const fetchActs = async () => {
+            const acts = await julesService.listActivities(sessionId);
+            if (mounted) setActivities(acts);
+        };
+        fetchActs();
+        const timer = setInterval(fetchActs, 4000);
+        return () => { mounted = false; clearInterval(timer); };
+    }, [open, sessionId]);
+
+    useEffect(() => {
+        if (open && endRef.current) {
+            endRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [activities, open]);
+
+    return (
+        <div className="mt-4 border-t border-white/5 pt-4">
+            <button 
+                onClick={() => setOpen(!open)}
+                className="flex items-center gap-2 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors bg-indigo-500/10 px-4 py-2 rounded-lg border border-indigo-500/20 w-fit"
+            >
+                <Terminal className="w-4 h-4" />
+                {open ? "إغلاق التيرمينال" : "مراقبة العمليات (Live Terminal)"}
+            </button>
+            <AnimatePresence>
+                {open && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="mt-4 bg-[#0a0a0d] border border-white/10 rounded-xl overflow-hidden shadow-inner flex flex-col font-mono"
+                        dir="ltr"
+                    >
+                        <div className="bg-slate-900 border-b border-white/5 px-4 py-2 flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase tracking-widest shrink-0">
+                            <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" /> Jules Autonomous Feed</span>
+                            <span>{activities.length} EVENTS</span>
+                        </div>
+                        <div className="p-4 overflow-y-auto min-h-[150px] max-h-[300px] text-xs space-y-2 custom-scrollbar">
+                            {activities.length === 0 ? (
+                                <div className="text-slate-600 flex items-center gap-2 select-none"><Loader2 className="w-3 h-3 animate-spin"/> Booting autonomous context...</div>
+                            ) : (
+                                activities.map((act, i) => (
+                                    <div key={i} className="flex items-start gap-3 hover:bg-white/5 p-1 rounded transition-colors group">
+                                        <span className="text-slate-600 shrink-0 select-none">[{new Date(act.timestamp).toLocaleTimeString()}]</span>
+                                        <span className={`shrink-0 font-bold w-20 select-none ${act.type === 'ERROR' ? 'text-rose-400' : act.type === 'TESTING' ? 'text-amber-400' : act.type === 'CODE_EDIT' ? 'text-emerald-400' : 'text-indigo-400'}`}>
+                                            {act.type}
+                                        </span>
+                                        <div className="flex-1 text-slate-300 break-all leading-relaxed">
+                                            {act.message}
+                                            {act.details && <div className="text-slate-500 text-[10px] mt-1 p-1 bg-black/40 rounded border border-white/5 group-hover:border-white/10">{act.details}</div>}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                            <div ref={endRef} />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { isSupabaseReady } from "@/services/supabaseClient";
 import { geminiClient } from "@/services/geminiClient";
 import { saveSystemPrompt, saveScoring, saveAiLog, rateAiLog as rateAiLogRemote } from "@/services/adminApi";
@@ -62,7 +133,8 @@ export const AIStudioPanel: FC = () => {
         title: "",
         prompt: "",
         source: "",
-        autoCreatePR: true
+        autoCreatePR: true,
+        injectRepoIntel: false
     });
     const [creatingTask, setCreatingTask] = useState(false);
 
@@ -114,7 +186,7 @@ export const AIStudioPanel: FC = () => {
         });
 
         if (session) {
-            setNewTask({ title: "", prompt: "", source: "", autoCreatePR: true });
+            setNewTask({ title: "", prompt: "", source: "", autoCreatePR: true, injectRepoIntel: false });
             setShowTaskCreator(false);
             loadJulesData();
         }
@@ -505,15 +577,26 @@ export const AIStudioPanel: FC = () => {
                                                 />
                                             </div>
                                             <div className="flex items-center justify-between pt-2">
-                                                <label className="flex items-center gap-3 cursor-pointer group">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={newTask.autoCreatePR}
-                                                        onChange={(e) => setNewTask({ ...newTask, autoCreatePR: e.target.checked })}
-                                                        className="w-4 h-4 rounded border-white/10 bg-slate-950 text-indigo-500 focus:ring-indigo-500"
-                                                    />
-                                                    <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-200 transition-colors uppercase tracking-widest">إنشاء PR تلقائياً</span>
-                                                </label>
+                                                <div className="flex items-center gap-6">
+                                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={newTask.autoCreatePR}
+                                                            onChange={(e) => setNewTask({ ...newTask, autoCreatePR: e.target.checked })}
+                                                            className="w-4 h-4 rounded border-white/10 bg-slate-950 text-indigo-500 focus:ring-indigo-500"
+                                                        />
+                                                        <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-200 transition-colors uppercase tracking-widest">إنشاء PR تلقائياً</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={newTask.injectRepoIntel}
+                                                            onChange={(e) => setNewTask({ ...newTask, injectRepoIntel: e.target.checked })}
+                                                            className="w-4 h-4 rounded border-white/10 bg-slate-950 text-teal-500 focus:ring-teal-500"
+                                                        />
+                                                        <span className="text-[10px] font-bold text-teal-500/70 group-hover:text-teal-400 transition-colors uppercase tracking-widest flex items-center gap-1">حقن خريطة المنصة <AdminTooltip content="هيبعت خريطة الوعي كاملة (Repo Intel) لجولز عشان يفهم بنية المشروع (Context) وميضطرش يخمن مكان الملفات." position="top" /></span>
+                                                    </label>
+                                                </div>
                                                 <button
                                                     type="submit"
                                                     disabled={creatingTask}
@@ -584,6 +667,9 @@ export const AIStudioPanel: FC = () => {
                                                         </button>
                                                     )}
                                                 </div>
+
+                                                {/* Jules Terminal Stream */}
+                                                <JulesTerminal sessionId={session.id} />
                                             </div>
                                         ))}
                                     </div>

@@ -49,6 +49,10 @@ export async function GET() {
     .select("id", { count: "exact", head: true })
     .gte("created_at", oneDayAgo);
 
+  // 5. Get Sovereign Diffusion Metrics
+  const { growthEngine } = await import("@/services/growthEngine");
+  const diffusion = await growthEngine.getDiffusionMetrics();
+
   return NextResponse.json({
     ok: true,
     stats: {
@@ -61,6 +65,7 @@ export async function GET() {
             conversionRate: uniqueVisitors?.length ? ((newLeads?.length || 0) / uniqueVisitors.length) * 100 : 0
         }
     },
+    diffusion,
     distribution: grades || [],
     recentInsights
   });

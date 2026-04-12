@@ -88,7 +88,7 @@ export async function exportMapToPDF(nodes: MapNode[]): Promise<void> {
 
     // العنوان
     pdf.setFontSize(20);
-    pdf.text("خريطة علاقاتي — أداة دواير (الرحلة)", pageWidth / 2, yPosition, { align: "center" });
+    pdf.text("خريطة علاقاتي — الرحلة", pageWidth / 2, yPosition, { align: "center" });
     yPosition += 15;
 
     // التاريخ

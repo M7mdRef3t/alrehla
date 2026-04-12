@@ -9,12 +9,12 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { resolveAdviceCategory, type AdviceCategory } from "@/data/adviceScripts";
 import { goalPickerCopy } from "@/copy/goalPicker";
-import { useJourneyState } from "@/state/journeyState";
-import { usePulseState } from "@/state/pulseState";
-import type { PulseFocus, PulseMood } from "@/state/pulseState";
+import { useJourneyProgress } from "@/domains/journey";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import type { PulseFocus, PulseMood } from "@/domains/consciousness/store/pulse.store";
 import { soundManager } from "@/services/soundManager";
 import type { BaselineAnswers } from "@/data/baselineQuestions";
-import { trackEvent, AnalyticsEvents } from "@/services/analytics";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 
 /* ─── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -191,8 +191,8 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
   const [recommendedGoals, setRecommendedGoals] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(initialGoalId ?? null);
   const [isWarping, setIsWarping] = useState(false);
-  const mirrorName = useJourneyState((s) => s.mirrorName);
-  const baselineAnswers = useJourneyState((s) => s.baselineAnswers);
+  const mirrorName = useJourneyProgress().mirrorName;
+  const baselineAnswers = useJourneyProgress().baselineAnswers;
   const lastPulse = usePulseState((s) => s.lastPulse);
 
   useEffect(() => {
@@ -208,7 +208,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
     setIsWarping(true);
     
     const category = resolveAdviceCategory(goalId);
-    trackEvent(AnalyticsEvents.GOAL_SELECTED, { goal_id: goalId, category });
+    analyticsService.track(AnalyticsEvents.GOAL_SELECTED, { goal_id: goalId, category });
     
     // Warp delay for cinematic effect
     setTimeout(() => {
@@ -349,7 +349,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="fixed inset-0 z-[100] flex items-center justify-center p-1"
-          style={{ background: "radial-gradient(circle at center, var(--ds-color-space-deep) 0%, var(--ds-color-space-void) 100%)" }}
+          style={{ background: "radial-gradient(circle at center, var(--page-surface) 0%, var(--page-bg) 100%)" }}
         >
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}

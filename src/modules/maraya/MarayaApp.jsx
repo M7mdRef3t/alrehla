@@ -19,7 +19,7 @@ import KineticText from './components/ui/KineticText.jsx';
 import useMarayaRuntime from './hooks/useMarayaRuntime.js';
 import { APP_STATES, JUDGE_MODE_QUERY_PARAM } from './utils/constants.js';
 import { buildTransformationSummary, toDisplayEmotionLabel } from './utils/transformation.js';
-import { useAdminState } from '@/state/adminState';
+import { useAdminState } from '@/domains/admin/store/admin.store';
 import {
   getMarayaStoryPath,
   getMarayaStoryRestartLabel,

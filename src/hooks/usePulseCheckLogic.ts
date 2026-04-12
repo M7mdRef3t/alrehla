@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
-import { usePulseState } from "@/state/pulseState";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 export type PulseCheckContext = "regular" | "start_recovery";
 

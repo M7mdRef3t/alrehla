@@ -131,9 +131,9 @@ export async function processTelegramMessage(chatId: string, messageText: string
            // Check marketing leads as a fallback
           const leadData = (await (supabase as any).from('marketing_leads').select('phone, status').eq('phone', phone).maybeSingle()).data as { phone?: string | null; status?: string | null } | null;
           if (leadData) {
-            return { text: "لقيت رقمك متسجل معانا كعميل فعلاً، بس حسابك الكامل لسه متحددش. افتح المنصة وكمل تسجيل عشان أقدر أتابع معاك شخصياً!" };
+            return { text: "لقيت رقمك متسجل معانا كعميل فعلاً، بس حسابك الكامل لسه متحددش. ارجع لرحلتك وكمل تسجيل عشان أقدر أتابع معاك شخصياً!" };
           }
-          return { text: "للأسف ملقيتش الرقم ده متسجل عندنا في المنصة خالص يا هندسة. ممكن تدخل تبدأ رحلتك الأول على الموقع وتعمل حساب بنفس الرقم؟" };
+          return { text: "للأسف ملقيتش الرقم ده متسجل عندنا في الرحلة خالص يا هندسة. ممكن تدخل تبدأ رحلتك الأول على الموقع وتعمل حساب بنفس الرقم؟" };
        }
     } else {
        // Request contact
@@ -146,7 +146,7 @@ export async function processTelegramMessage(chatId: string, messageText: string
 
   // If we just successfully linked them now
   if (contactPhoneNumber && profile) {
-    return { text: `عظمة أوي يا ${profile.full_name || username || 'صاحبي'}, تم ربط حسابك في المنصة بتليجرام بنجاح! تحب نبدأ منين النهاردة؟ 💪` };
+    return { text: `عظمة أوي يا ${profile.full_name || username || 'صاحبي'}, تم ربط حسابك في الرحلة بتليجرام بنجاح! تحب نبدأ منين النهاردة؟ 💪` };
   }
 
   // 2. We have a linked profile, continue with normal GenAI Chat

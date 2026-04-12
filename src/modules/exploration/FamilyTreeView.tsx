@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import type { MapNode, Ring } from "../map/mapTypes";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { mapCopy } from "@/copy/map";
 import { guardianCopy } from "@/copy/guardianCopy";
 import { Target } from "lucide-react";

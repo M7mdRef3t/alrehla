@@ -9,7 +9,7 @@ import { supabase } from '@/services/supabaseClient';
 import { consumeKineticTelemetryOnce, peekLatestKineticTelemetry } from '@/services/kineticTelemetry';
 import { isPublicPaymentsEnabled } from '@/config/payments';
 import { VoiceInput } from '@/modules/meta/VoiceInput';
-import { useAppOverlayState } from '@/state/appOverlayState';
+import { useAppOverlayState } from '@/domains/consciousness/store/overlay.store';
 import { ShadowMemory } from '@/services/shadowMemory';
 import ReactMarkdown from 'react-markdown';
 

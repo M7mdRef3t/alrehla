@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sun, Moon, Monitor } from "lucide-react";
-import { useThemeState } from "@/state/themeState";
+import { useThemeState } from "@/domains/consciousness/store/theme.store";
 
 interface ThemeSettingsProps {
   isOpen: boolean;

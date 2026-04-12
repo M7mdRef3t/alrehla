@@ -1,7 +1,7 @@
 import { logger } from "@/services/logger";
 import { inngestMock } from "./inngestMock";
 import { pineconeMock } from "./pineconeMock";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { geminiClient } from "./geminiClient";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { consciousnessService } from "./consciousnessService";

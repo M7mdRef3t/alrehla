@@ -53,7 +53,7 @@ export const COLORS = {
 } as const;
 
 // Types from pulseState to avoid circular deps if needed
-import type { PulseMood, PulseFocus } from "@/state/pulseState";
+import type { PulseMood, PulseFocus } from "@/domains/consciousness/store/pulse.store";
 
 export const TOPIC_OPTIONS = [
   { id: "work", label: "الشغل" },

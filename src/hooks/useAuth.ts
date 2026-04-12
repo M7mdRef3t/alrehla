@@ -1,29 +1,47 @@
 import { logger } from "@/services/logger";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 
 type AuthUser = Record<string, unknown> | null;
 type AuthResult = { status: boolean; msg?: string; decoded?: Record<string, unknown> | null };
 
+// Global promise cache to avoid duplicate network requests across multiple blocks
+let authPromiseCache: Promise<AxiosResponse<any, any>> | null = null;
+let globalAuthUser: AuthUser | undefined = undefined;
+
 export const useAuth = () => {
-  const [user, setUser] = useState<AuthUser>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser>(globalAuthUser !== undefined ? globalAuthUser : null);
+  const [loading, setLoading] = useState(globalAuthUser === undefined);
 
   useEffect(() => {
+    if (globalAuthUser !== undefined) {
+      setUser(globalAuthUser);
+      setLoading(false);
+      return;
+    }
+
     const checkAuth = async () => {
       try {
-        const response = await axios.get("/api/auth?action=verify");
-        if (response.data.status) {
-          setUser(response.data.decoded);
-        } else {
-          setUser(null);
+        if (!authPromiseCache) {
+          authPromiseCache = axios.get("/api/auth?action=verify");
         }
-        setLoading(false);
+        const response = await authPromiseCache;
+        if (response.data.status) {
+          globalAuthUser = response.data.decoded;
+        } else {
+          globalAuthUser = null;
+        }
+        setUser(globalAuthUser || null);
       } catch (err) {
+        globalAuthUser = null;
         setUser(null);
+        // Clear cache so it retries later if it was a network failure
+        authPromiseCache = null; 
+      } finally {
         setLoading(false);
       }
     };
+    
     checkAuth();
   }, []);
 

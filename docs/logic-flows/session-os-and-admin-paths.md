@@ -46,3 +46,9 @@
 - Supabase public and service-role credentials are required for the session and admin APIs.
 - Email provider configuration is required for followup delivery.
 - The cron path is safe to deploy only when `CRON_SECRET` and backend envs are configured.
+
+## 2026-04-12 Stability Update (PR #128)
+- Activation wizard render stability was tightened in `StepWelcome` and `StepSendProof` to prevent production type/build breaks.
+- Marketing catchall in `app/(marketing)/p/[...catchall]/page.tsx` now supports a guarded fallback path when Plasmic marketing is disabled.
+- Sensory providers were hardened to remove unsafe typing and split haptics helper logic into `src/components/providers/sensoryHaptics.ts`.
+- CI install step now retries `npm ci` up to 3 attempts to handle transient network failures during dependency setup.

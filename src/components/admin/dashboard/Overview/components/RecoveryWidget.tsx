@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { AlertTriangle, Sparkles, ArrowRight, CheckCircle2, Loader2, Zap, Repeat, HeartPulse } from "lucide-react";
 import { detectContradictions, MirrorInsight, dismissMirrorInsight } from "@/services/mirrorLogic";
 import { RecoveryEngine } from "@/services/RecoveryEngine";
-import { useRecoveryState } from "@/state/recoveryState";
+import { useRecoveryState } from "@/domains/journey/store/recovery.store";
 import { CatalystEngine } from "@/services/CatalystEngine";
 import { AdminTooltip } from "./AdminTooltip";
 

@@ -23,7 +23,7 @@ import {
   type FAQItem,
 } from "@/data/educationalContent";
 import { trackAffiliateLinkClicked, trackAffiliateLinkExposed } from "../analytics/affiliateTracking";
-import { useAchievementState } from "@/state/achievementState";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { ContentDetailSheet, type ContentDetailType } from "../exploration/ContentDetailSheet";
 
 import { CourseDetailPage } from "./CourseDetailPage";
@@ -831,7 +831,7 @@ export function ResourcesCenter({
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                     <Sparkles size={11} color="#F43F5E" />
-                    <span style={{ fontSize: 9, fontWeight: 900, color: "#F43F5E", textTransform: "uppercase", letterSpacing: "0.06em" }}>فيديوهات من المنصة</span>
+                    <span style={{ fontSize: 9, fontWeight: 900, color: "#F43F5E", textTransform: "uppercase", letterSpacing: "0.06em" }}>فيديوهات من الرحلة</span>
                     <span style={{ fontSize: 8, color: "#334155", marginRight: "auto" }}>DB</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

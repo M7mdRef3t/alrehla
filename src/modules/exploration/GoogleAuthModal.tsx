@@ -2,12 +2,13 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Shield, Lock, Heart, Loader, Sparkles } from "lucide-react";
-import { signInWithGoogle } from "@/services/authService";
-import { AnalyticsEvents, trackEvent } from "@/services/analytics";
+import { signInWithGoogle, signInWithPhone, verifyOtp } from "@/services/authService";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { isSupabaseReady } from "@/services/supabaseClient";
-import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "@/state/pulseState";
+import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "@/domains/consciousness/store/pulse.store";
 import { GoogleMark } from '@/modules/meta/GoogleMark';
 import { clearPostAuthIntent, setPostAuthIntent, type PostAuthIntent } from "@/utils/postAuthIntent";
+import { Phone, ChevronLeft, ArrowRight } from "lucide-react";
 
 interface GoogleAuthModalProps {
   isOpen: boolean;
@@ -63,6 +64,9 @@ function getAuthTitle(intent: PostAuthIntent): string {
   return "يلا نحفظ اللحظة دي";
 }
 
+type AuthMode = "google" | "phone";
+type PhoneStep = "input" | "otp" | "info";
+
 export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
   isOpen,
   intent,
@@ -71,6 +75,11 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
   onNotNow
 }) => {
   const resolvedIntent: PostAuthIntent = intent ?? { kind: "login", createdAt: Date.now() };
+  const [mode, setMode] = useState<AuthMode>("google");
+  const [phoneStep, setPhoneStep] = useState<PhoneStep>("input");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +91,12 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
     setMessage(null);
     setError(null);
     setIsAgeVerified(false);
-    trackEvent(AnalyticsEvents.AUTH_MODAL_SHOWN, { trigger: resolvedIntent.kind });
+    setMode("google");
+    setPhoneStep("input");
+    setPhone("");
+    setOtp("");
+    setName("");
+    analyticsService.track(AnalyticsEvents.AUTH_MODAL_SHOWN, { trigger: resolvedIntent.kind });
   }, [isOpen, resolvedIntent.kind]);
 
   const handleGoogle = async () => {
@@ -92,43 +106,75 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
     }
 
     if (!isSupabaseReady) {
-      setError("Google login is currently unavailable. Continue as guest or configure Supabase OAuth.");
+      setError("خدمة جوجل غير متاحة حالياً.");
       return;
     }
 
     setLoading(true);
     setMessage(null);
     setError(null);
-    trackEvent(AnalyticsEvents.AUTH_GOOGLE_CLICKED, {
+    analyticsService.track(AnalyticsEvents.AUTH_GOOGLE_CLICKED, {
       source: resolvedIntent.kind === "start_recovery" ? "micro_commitment" : "login_icon",
-      ...(resolvedIntent.kind === "start_recovery"
-        ? {
-          pulse_energy: resolvedIntent.pulse.energy,
-          pulse_mood: resolvedIntent.pulse.mood,
-          pulse_focus: resolvedIntent.pulse.focus,
-          pulse_auto: resolvedIntent.pulse.auto ?? false
-        }
-        : {})
     });
     setPostAuthIntent(resolvedIntent);
 
     const { error: signInError } = await signInWithGoogle();
     if (signInError) {
       clearPostAuthIntent();
-      const raw = (signInError as { message?: unknown })?.message;
-      const text = typeof raw === "string" ? raw : "";
-      const providerUnavailable = /Unsupported provider/i.test(text) || /provider is not enabled/i.test(text);
-      if (providerUnavailable) {
-        setError("خدمة جوجل مؤقتاً متوقفة. جرّب تاني بعد شوية.");
-      } else {
-        setError("حصلت مشكلة في الاتصال. جرّب تاني.");
-      }
+      setError("حصلت مشكلة في الاتصال بجوجل. جرّب تاني.");
       setLoading(false);
       return;
     }
 
     setMessage("تمام... بنحوّلك على Google.");
     setLoading(false);
+  };
+
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isAgeVerified) {
+      setError("أكّد أن عمرك +18 للمتابعة.");
+      return;
+    }
+    if (phone.length < 8) {
+      setError("برجاء إدخال رقم تليفون صحيح.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    analyticsService.track(AnalyticsEvents.AUTH_PHONE_CLICKED);
+
+    const { error: signInError } = await signInWithPhone(phone);
+    if (signInError) {
+      setError("مش عارفين نبعت الكود حالياً. اتأكد من الرقم وجرّب تاني.");
+      setLoading(false);
+      return;
+    }
+
+    analyticsService.track(AnalyticsEvents.AUTH_PHONE_OTP_SENT);
+    setPhoneStep("otp");
+    setLoading(false);
+  };
+
+  const handleOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length < 6) return;
+
+    setLoading(true);
+    setError(null);
+
+    const { data: sessionData, error: verifyError } = await verifyOtp(phone, otp);
+    if (verifyError) {
+      setError("الكود ده غلط أو انتهت صلاحيته. جرّب تاني.");
+      setLoading(false);
+      return;
+    }
+
+    analyticsService.track(AnalyticsEvents.AUTH_PHONE_OTP_VERIFIED);
+    analyticsService.track(AnalyticsEvents.AUTH_COMPLETED, { method: "phone" });
+    setMessage("تم الدخول بنجاح!");
+    onClose();
   };
 
   const handleNotNow = () => {
@@ -223,6 +269,23 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
             {/* ── body ── */}
             <div className="p-6 sm:p-5 space-y-4 text-right">
 
+              {/* Back Button (Only for Phone mode) */}
+              {mode === "phone" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (phoneStep === "otp") setPhoneStep("input");
+                    else setMode("google");
+                    setError(null);
+                  }}
+                  className="flex items-center gap-1.5 text-[13px] font-medium transition-colors hover:text-white"
+                  style={{ color: "rgba(203, 213, 225, 0.6)" }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>رجوع</span>
+                </button>
+              )}
+
               {/* trust signals */}
               <div className="flex items-center justify-center gap-5">
                 <div className="flex items-center gap-1.5">
@@ -235,16 +298,15 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                 />
                 <div className="flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5" style={{ color: "#fbbf24" }} />
-                  <span className="text-[12px] font-medium" style={{ color: "rgba(251, 191, 36, 0.8)" }}>بياناتك محمية ومش بتتشارك</span>
+                  <span className="text-[12px] font-medium" style={{ color: "rgba(251, 191, 36, 0.8)" }}>بياناتك محمية</span>
                 </div>
               </div>
 
               {/* pulse data (recovery intent) */}
-              {resolvedIntent.kind === "start_recovery" && (
+              {resolvedIntent.kind === "start_recovery" && mode === "google" && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   className="rounded-xl p-4"
                   style={{
                     background: "rgba(255, 255, 255, 0.03)",
@@ -278,137 +340,197 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                 </motion.div>
               )}
 
-              {/* Age Verification Checkbox */}
-              <div
-                onClick={() => setIsAgeVerified(!isAgeVerified)}
-                className="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5 border border-transparent hover:border-white/10"
-              >
-                <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all ${isAgeVerified
-                  ? "bg-teal-500 border-teal-500"
-                  : "border-slate-500 bg-slate-800/50"
-                  }`}>
-                  {isAgeVerified && <Sparkles className="w-3 h-3 text-white" />}
+              {/* Age Verification Checkbox (Visible in start screens) */}
+              {(mode === "google" || (mode === "phone" && phoneStep === "input")) && (
+                <div
+                  onClick={() => setIsAgeVerified(!isAgeVerified)}
+                  className="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5 border border-transparent hover:border-white/10"
+                >
+                  <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all ${isAgeVerified
+                    ? "bg-teal-500 border-teal-500"
+                    : "border-slate-500 bg-slate-800/50"
+                    }`}>
+                    {isAgeVerified && <Sparkles className="w-3 h-3 text-white" />}
+                  </div>
+                  <p className="text-[13px] text-slate-300 leading-snug select-none">
+                    أقر بأن عمري <span className="text-teal-400 font-bold">18 عاماً أو أكثر</span>
+                  </p>
                 </div>
-                <p className="text-[13px] text-slate-300 leading-snug select-none">
-                  أقر بأن عمري <span className="text-teal-400 font-bold">18 عاماً أو أكثر</span>، وأنني مسؤول مسؤولية كاملة عن قراراتي داخل غرفة العمليات.
-                </p>
-              </div>
+              )}
 
-              {/* Google sign-in button */}
-              <motion.button
-                type="button"
-                onClick={handleGoogle}
-                disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-3 rounded-xl px-6 py-3.5 text-[15px] font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  background: "rgba(255, 255, 255, 0.95)",
-                  color: "#1a1a2e",
-                  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)",
-                }}
-                whileHover={!loading ? { y: -1, boxShadow: "0 8px 28px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15)" } : {}}
-                whileTap={!loading ? { scale: 0.98 } : {}}
-              >
-                {loading ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              <AnimatePresence mode="wait">
+                {mode === "google" ? (
+                  <motion.div
+                    key="google"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-3"
+                  >
+                    <motion.button
+                      type="button"
+                      onClick={handleGoogle}
+                      disabled={loading}
+                      className="w-full inline-flex items-center justify-center gap-3 rounded-xl px-6 py-3.5 text-[15px] font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.95)",
+                        color: "#1a1a2e",
+                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
+                      }}
+                      whileHover={!loading ? { y: -1 } : {}}
+                      whileTap={!loading ? { scale: 0.98 } : {}}
                     >
-                      <Loader className="w-5 h-5" style={{ color: "#1a1a2e" }} />
-                    </motion.div>
-                    <span>بنوصل بجوجل...</span>
-                  </>
-                ) : (
-                  <>
-                    <GoogleMark className="w-5 h-5" />
-                    <span>تسجيل الدخول بجوجل</span>
-                  </>
-                )}
-              </motion.button>
+                      {loading ? <Loader className="w-5 h-5 animate-spin" /> : <GoogleMark className="w-5 h-5" />}
+                      <span>دخول بجوجل</span>
+                    </motion.button>
 
-              {!isSupabaseReady && onGuestMode && (
+                    <button
+                      type="button"
+                      onClick={() => setMode("phone")}
+                      className="w-full inline-flex items-center justify-center gap-3 rounded-xl px-6 py-3.5 text-[14px] font-medium transition-all duration-200"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.05)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "rgba(255, 255, 255, 0.9)",
+                      }}
+                    >
+                      <Phone className="w-4 h-4" />
+                      <span>تسجيل دخول بالموبايل</span>
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="phone"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
+                    {phoneStep === "input" ? (
+                      <form onSubmit={handlePhoneSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[13px] text-slate-400 block px-1">رقم موبايلك (مصر)</label>
+                          <div className="relative">
+                            <input
+                              type="tel"
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              placeholder="01xxxxxxxxx"
+                              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-lg ltr placeholder:text-slate-600 focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 transition-all outline-none"
+                              autoFocus
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium ltr">
+                              +20
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={loading || phone.length < 8}
+                          className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-[15px] font-semibold bg-teal-500 text-white transition-all hover:bg-teal-400 disabled:opacity-50"
+                        >
+                          {loading ? <Loader className="w-5 h-5 animate-spin" /> : <span>ابعت كود الدخول</span>}
+                          {!loading && <ArrowRight className="w-4 h-4" />}
+                        </button>
+                      </form>
+                    ) : phoneStep === "otp" ? (
+                      <form onSubmit={handleOtpVerify} className="space-y-4">
+                        <div className="space-y-2 text-center">
+                          <p className="text-[13px] text-slate-400">كتبنا الكود اللي وصلك على {phone}</p>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                            placeholder="------"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white text-3xl font-bold tracking-[0.5em] text-center placeholder:text-slate-700 focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 transition-all outline-none"
+                            autoFocus
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={loading || otp.length < 6}
+                          className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-[15px] font-semibold bg-teal-500 text-white transition-all hover:bg-teal-400 disabled:opacity-50"
+                        >
+                          {loading ? <Loader className="w-5 h-5 animate-spin" /> : <span>تأكيد الدخول</span>}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPhoneStep("input")}
+                          className="w-full text-[12px] text-teal-400/70 hover:text-teal-400 transition-colors"
+                        >
+                          تعديل الرقم؟
+                        </button>
+                      </form>
+                    ) : null}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* notification area for errors/success */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="rounded-xl p-3 bg-red-500/10 border border-red-500/20">
+                      <p className="text-[12px] text-red-400">{error}</p>
+                    </div>
+                  </motion.div>
+                )}
+                {message && !error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="rounded-xl p-3 bg-teal-500/10 border border-teal-500/20">
+                      <p className="text-[12px] text-teal-400">{message}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* privacy note (Only in main screen) */}
+              {mode === "google" && (
+                <div
+                  className="rounded-xl p-3.5"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.03)",
+                    border: "1px solid rgba(255, 255, 255, 0.05)",
+                  }}
+                >
+                  <p className="text-[12px] leading-relaxed" style={{ color: "rgba(148, 163, 184, 0.65)" }}>
+                    <span className="font-semibold" style={{ color: "rgba(203, 213, 225, 0.85)" }}>خصوصيتنا:</span>{" "}
+                    بنستخدم تسجيل الدخول بس عشان نحفظ قرايتك وتقدمك.
+                  </p>
+                </div>
+              )}
+
+              {/* not now button (Only in main screen) */}
+              {mode === "google" && (
                 <motion.button
                   type="button"
-                  onClick={onGuestMode}
+                  onClick={handleNotNow}
                   className="w-full inline-flex items-center justify-center rounded-xl px-6 py-3 text-[14px] font-medium transition-all duration-200"
                   style={{
-                    background: "rgba(244, 63, 94, 0.08)",
-                    border: "1px solid rgba(244, 63, 94, 0.25)",
-                    color: "rgba(251, 113, 133, 0.95)",
+                    background: "rgba(255, 255, 255, 0.04)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    color: "rgba(203, 213, 225, 0.7)",
                   }}
-                  whileHover={{ background: "rgba(244, 63, 94, 0.12)" }}
+                  whileHover={{ background: "rgba(255, 255, 255, 0.07)" }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span style={{ fontSize: "14px", lineHeight: 1.2 }}>
-                    Login is unavailable right now.
-                  </span>
+                  مش دلوقتي
                 </motion.button>
               )}
-
-              {/* privacy note */}
-              <div
-                className="rounded-xl p-3.5"
-                style={{
-                  background: "rgba(255, 255, 255, 0.03)",
-                  border: "1px solid rgba(255, 255, 255, 0.05)",
-                }}
-              >
-                <p className="text-[12px] leading-relaxed" style={{ color: "rgba(148, 163, 184, 0.65)" }}>
-                  <span className="font-semibold" style={{ color: "rgba(203, 213, 225, 0.85)" }}>خصوصيتنا:</span>{" "}
-                  بنستخدم تسجيل الدخول بس عشان نحفظ قرايتك وتقدمك. مفيش نشر أو مشاركة بياناتك مع حد.
-                </p>
-              </div>
-
-              {/* not now button */}
-              <motion.button
-                type="button"
-                onClick={handleNotNow}
-                className="w-full inline-flex items-center justify-center rounded-xl px-6 py-3 text-[14px] font-medium transition-all duration-200"
-                style={{
-                  background: "rgba(255, 255, 255, 0.04)",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                  color: "rgba(203, 213, 225, 0.7)",
-                }}
-                whileHover={{ background: "rgba(255, 255, 255, 0.07)" }}
-                whileTap={{ scale: 0.98 }}
-              >
-                مش دلوقتي
-              </motion.button>
-
-              {/* error message */}
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-xl p-3.5"
-                  style={{
-                    background: "rgba(248, 113, 113, 0.08)",
-                    border: "1px solid rgba(248, 113, 113, 0.2)",
-                  }}
-                >
-                  <p className="text-[13px]" style={{ color: "#f87171" }}>
-                    {error}
-                  </p>
-                </motion.div>
-              )}
-
-              {/* success message */}
-              {message && !error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-xl p-3.5"
-                  style={{
-                    background: "rgba(45, 212, 191, 0.08)",
-                    border: "1px solid rgba(45, 212, 191, 0.2)",
-                  }}
-                >
-                  <p className="text-[13px]" style={{ color: "#2dd4bf" }}>
-                    {message}
-                  </p>
-                </motion.div>
-              )}
             </div>
+
           </motion.div>
         </>
       )}

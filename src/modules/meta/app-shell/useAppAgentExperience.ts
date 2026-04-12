@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from "react";
-import { useEmergencyState } from "@/state/emergencyState";
-import { useSwarmState } from "@/state/swarmState";
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
+import { useEmergencyState } from "@/domains/admin/store/emergency.store";
+import { useSwarmState } from "@/domains/admin/store/swarm.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import type { FeatureFlagKey } from "@/config/features";
 import type { AdviceCategory } from "@/data/adviceScripts";
 import type { AppScreen } from "@/navigation/navigationMachine";

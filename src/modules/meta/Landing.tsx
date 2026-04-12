@@ -2,21 +2,21 @@ import type { FC } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Shield, Zap, Heart } from "lucide-react";
-import { recordFlowEvent } from "@/services/journeyTracking";
+import { trackingService } from "@/domains/journey";
 import { usePWAInstall } from "@/contexts/PWAInstallContext";
 import { getLivePulseCount } from "@/services/pulseEngagement";
 import { soundManager } from "@/services/soundManager";
 import { LandingSimulation } from "./LandingSimulation";
-import { useJourneyState } from "@/state/journeyState";
-import { useMapState } from "@/state/mapState";
+import { useJourneyProgress } from "@/domains/journey";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
 import { getGoalMeta } from "@/data/goalMeta";
 import { LandingFooter } from "./landing/LandingFooter";
-import { trackEvent, AnalyticsEvents, trackLandingView } from "@/services/analytics";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { isUserMode } from "@/config/appEnv";
 import { landingCopy } from "@/copy/landing";
 import { HeroSection } from "./HeroSection";
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import {
   getRelationshipWeatherEntryHref,
   getRelationshipWeatherPath
@@ -66,12 +66,12 @@ export const Landing: FC<LandingPropsExtended> = ({
   ownerInstallRequestNonce = 0,
   onOwnerInstallRequestHandled,
 }) => {
-  const storedMirrorName = useJourneyState((s) => s.mirrorName);
+  const storedMirrorName = useJourneyProgress().mirrorName;
   const nodesCount = useMapState((s) => s.nodes.length);
-  const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
-  const lastGoalId = useJourneyState((s) => s.goalId);
-  const lastGoalCategory = useJourneyState((s) => s.category);
-  const lastGoalById = useJourneyState((s) => s.lastGoalById);
+  const baselineCompletedAt = useJourneyProgress().baselineCompletedAt;
+  const lastGoalId = useJourneyProgress().goalId;
+  const lastGoalCategory = useJourneyProgress().category;
+  const lastGoalById = useJourneyProgress().lastGoalById;
   const weatherPath = useAdminState((state) => {
     const path = getRelationshipWeatherPath(state.journeyPaths);
     return path?.isActive ? path : null;
@@ -110,7 +110,7 @@ export const Landing: FC<LandingPropsExtended> = ({
       window.alert('على Chrome أو Edge من الكمبيوتر: افتح قائمة المتصفح ثم اختر "Install app" أو "تثبيت التطبيق".');
     }
     onOwnerInstallRequestHandled?.();
-    void recordFlowEvent("install_clicked");
+    void trackingService.recordFlow("install_clicked");
   }, [pwaInstall, onOwnerInstallRequestHandled]);
 
   if (ownerInstallRequestNonce !== lastNonceRef.current && ownerInstallRequestNonce > 0) {
@@ -118,22 +118,22 @@ export const Landing: FC<LandingPropsExtended> = ({
     handleInstall();
   }
 
-  const [mirrorName, setMirrorName] = useState((storedMirrorName ?? "").trim());
+  const [mirrorName, setMirrorName] = useState(storedMirrorName ?? "");
   const [pulseCount, setPulseCount] = useState(getLivePulseCount());
   const landingViewTrackedRef = useRef(false);
   const startTrackedRef = useRef(false);
 
-  useEffect(() => {
-    const trimmedName = mirrorName.trim();
-    if (!trimmedName) return;
-    if (useJourneyState.getState().mirrorName !== trimmedName) {
-      useJourneyState.getState().setMirrorName(trimmedName);
-    }
-  }, [mirrorName]);
+  const setStoreMirrorName = useJourneyProgress().setMirrorName;
 
   useEffect(() => {
-    const nextName = (storedMirrorName ?? "").trim();
-    if (nextName && nextName !== mirrorName) {
+    if (storedMirrorName !== mirrorName) {
+      setStoreMirrorName(mirrorName);
+    }
+  }, [mirrorName, storedMirrorName, setStoreMirrorName]);
+
+  useEffect(() => {
+    const nextName = storedMirrorName ?? "";
+    if (nextName && nextName.trim() !== mirrorName.trim()) {
       setMirrorName(nextName);
     }
   }, [storedMirrorName, mirrorName]);
@@ -163,7 +163,7 @@ export const Landing: FC<LandingPropsExtended> = ({
   useEffect(() => {
     if (!isUserMode || landingViewTrackedRef.current) return;
     landingViewTrackedRef.current = true;
-    trackLandingView({
+    analyticsService.trackLanding({
       entry_variant: "default"
     });
   }, []);
@@ -172,8 +172,8 @@ export const Landing: FC<LandingPropsExtended> = ({
     if (startTrackedRef.current) return;
     startTrackedRef.current = true;
 
-    void recordFlowEvent("landing_clicked_start");
-    trackEvent(AnalyticsEvents.CTA_CLICK, {
+    void trackingService.recordFlow("landing_clicked_start");
+    analyticsService.track(AnalyticsEvents.CTA_CLICK, {
       source: "landing",
       cta_name: "start_journey",
       intent: mirrorName ? "mirror_named" : "default"
@@ -194,8 +194,8 @@ export const Landing: FC<LandingPropsExtended> = ({
 
   return (
     <div
-      className="relative min-h-screen w-full overflow-x-hidden"
-      style={{ background: "var(--ds-color-space-void)", fontFamily: "var(--font-sans)" }}
+      className="relative min-h-screen w-full overflow-x-hidden bg-[var(--page-bg)]"
+      style={{ fontFamily: "var(--font-sans)" }}
       dir="rtl"
     >
       {/* ════ NEW HERO SECTION ════ */}
@@ -211,22 +211,64 @@ export const Landing: FC<LandingPropsExtended> = ({
 
       <div style={{ contentVisibility: "auto", containIntrinsicSize: "1px 2600px" }} />
 
+      <section className="relative py-28 px-4 max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease }}
+          className="glass-premium rounded-[32px] overflow-hidden p-10 sm:p-20 text-center"
+        >
+          <div className="mb-12">
+            <p className="text-xs font-black tracking-[0.4em] uppercase mb-4" style={{ fontFamily: "var(--ds-font-prestige)", color: "var(--ds-color-primary)" }}>
+              المبادئ الأولى — First Principles
+            </p>
+            <h2 className="text-3xl sm:text-5xl font-black mb-6" style={{ fontFamily: "var(--ds-font-display)", color: "var(--text-primary)", lineHeight: 1.1 }}>
+              إحنا مش بنخمّن.<br />إحنا بنحلل الـ Logic.
+            </h2>
+            <p className="text-base sm:text-lg max-w-[50ch] mx-auto" style={{ color: "var(--text-secondary)", lineHeight: 1.8, textAlign: "justify", textJustify: "inter-word" }}>
+              الرحلة بتستخدم "نظام تشغيل سيادي" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-right" dir="rtl">
+            {[
+              { title: "رصد الاستنزاف", desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية.", icon: "⚡" },
+              { title: "خرائط النبض", desc: "رسم بياني حقيقي لمين بيزودك ومين بيسحب منك.", icon: "📈" },
+              { title: "تحصين الحدود", desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي.", icon: "🛡️" }
+            ].map((f, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + i * 0.1 }}
+                className="p-8 rounded-2xl border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)]"
+              >
+                <div className="text-3xl mb-4">{f.icon}</div>
+                <h3 className="text-xl font-black mb-2" style={{ fontFamily: "var(--ds-font-display)", color: "var(--ds-color-primary)" }}>{f.title}</h3>
+                <p className="text-sm opacity-70 leading-relaxed" style={{ textAlign: "justify", textJustify: "inter-word" }}>{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
       <section className="relative py-20 px-4 max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
+          viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.7, ease }}
         >
           <div className="text-center mb-8">
-            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "var(--ds-color-accent-indigo)" }}>
-              جرّب بنفسك
+            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ fontFamily: "var(--ds-font-prestige)", color: "var(--ds-color-accent-indigo)" }}>
+              المُحاكي — Simulation
             </p>
-              <h2 className="text-2xl sm:text-3xl font-black mb-3" style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)" }}>
+            <h2 className="text-2xl sm:text-4xl font-black mb-3" style={{ fontFamily: "var(--ds-font-display)", color: "var(--text-primary)" }}>
               صمم مسارك الداخلي
             </h2>
-            <p className="text-sm max-w-[38ch] mx-auto" style={{ color: "var(--text-secondary)" }}>
-              ٣ أسئلة بسيطة — بدون تفكير — وهتكشف النمط اللي ماسك دماغك.
+            <p className="text-sm sm:text-base max-w-[38ch] mx-auto" style={{ color: "var(--text-secondary)", textAlign: "justify", textJustify: "inter-word", textAlignLast: "center" }}>
+              ٣ أسئلة بسيطة — بدون تفكير — وهتكشف النمط اللي ماسك دماغك دلوقتي.
             </p>
           </div>
           <LandingSimulation />
@@ -316,7 +358,7 @@ export const Landing: FC<LandingPropsExtended> = ({
       </section>
 
       <div className="max-w-5xl mx-auto px-8 mt-8" aria-hidden="true">
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, var(--page-border), transparent)" }} />
       </div>
 
       <LandingFooter

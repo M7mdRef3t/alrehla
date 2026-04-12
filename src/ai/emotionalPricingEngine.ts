@@ -18,7 +18,7 @@ import { supabase } from "@/services/supabaseClient";
 import { telegramBot } from "@/services/telegramBot";
 import { decisionEngine } from "./decision-framework";
 import type { MapNode } from "@/modules/map/mapTypes";
-import type { DailyJournalEntry } from "@/state/dailyJournalState";
+import type { DailyJournalEntry } from "@/domains/journey/store/journal.store";
 import { grantEmotionalFreeMonth, saveEmotionalOffer } from "@/services/subscriptionManager";
 import { recordEmotionalPricingEvent } from "@/services/emotionalPricingAnalytics";
 

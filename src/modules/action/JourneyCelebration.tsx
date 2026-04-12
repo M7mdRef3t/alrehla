@@ -1,15 +1,14 @@
 import type { FC } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
-import { useJourneyState } from "@/state/journeyState";
+import { useJourneyProgress } from "@/domains/journey";
 
 interface JourneyCelebrationProps {
   onFinish: () => void;
 }
 
 export const JourneyCelebration: FC<JourneyCelebrationProps> = ({ onFinish }) => {
-  const baselineScore = useJourneyState((s) => s.baselineScore);
-  const postStepScore = useJourneyState((s) => s.postStepScore);
+  const { baselineScore, postStepScore } = useJourneyProgress();
 
   const baseline = baselineScore ?? 0;
   const after = postStepScore ?? 0;

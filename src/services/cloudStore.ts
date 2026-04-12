@@ -1,4 +1,4 @@
-import { getAuthToken } from "@/state/authState";
+import { getAuthToken } from "@/domains/auth/store/auth.store";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { CircuitBreaker } from "../architecture/circuitBreaker";

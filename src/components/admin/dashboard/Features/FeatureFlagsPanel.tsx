@@ -19,9 +19,9 @@ import {
     Cpu,
     Eye
 } from "lucide-react";
-import { useAdminState } from "@/state/adminState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
-import { useAuthState, getEffectiveRoleFromState } from "@/state/authState";
+import { useAuthState, getEffectiveRoleFromState } from "@/domains/auth/store/auth.store";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "@/utils/featureFlags";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { FEATURE_FLAGS, type FeatureFlagKey, type FeatureFlagMode } from "@/config/features";

@@ -2,8 +2,8 @@ import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, X } from "lucide-react";
-import { useShadowPulseState } from "@/state/shadowPulseState";
-import { useMapState } from "@/state/mapState";
+import { useShadowPulseState } from "@/domains/consciousness/store/shadowPulse.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { getShadowMessage, getShadowLevel } from "@/utils/shadowPulseEngine";
 
 const DISMISSED_KEY = "dawayir-shadow-dismissed";

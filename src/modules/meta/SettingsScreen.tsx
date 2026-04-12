@@ -18,11 +18,11 @@ import { loadUserMemory } from "@/services/userMemory";
 import { getLanguage, LANGUAGE_OPTIONS } from "@/services/i18n";
 import { getCulturalContext, saveCulturalContext, PROFILES, type CulturalContext } from "@/services/culturalAdapter";
 import { syncSubscription } from "@/services/subscriptionManager";
-import { useJourneyState } from "@/state/journeyState";
+import { useJourneyProgress } from "@/domains/journey";
 import { resolveDisplayName } from "@/services/userMemory";
 import { soundManager } from "@/services/soundManager";
 import { Volume2, VolumeX } from "lucide-react";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 
 type SettingsSection = "main" | "language" | "b2b" | "referral" | "subscription" | "culture" | "privacy" | "appearance";
@@ -64,7 +64,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
     const streak = loadStreak();
   const memory = loadUserMemory();
   const displayName = resolveDisplayName();
-    const { isSoundEnabled, setSoundEnabled, isSensoryDepthEnabled, setSensoryDepthEnabled } = useJourneyState();
+    const { isSoundEnabled, setSoundEnabled, isSensoryDepthEnabled, setSensoryDepthEnabled } = useJourneyProgress();
 
     useEffect(() => {
         soundManager.toggle(isSoundEnabled ?? true);
@@ -344,7 +344,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                     {section === "language" && (
                         <motion.div key="language" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="mt-4">
                             <h2 className="text-base font-bold text-white mb-1">اختر اللغة</h2>
-                            <p className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>ستتغير واجهة التطبيق فوراً</p>
+                            <p className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>ستتغير واجهة الرحلة فوراً</p>
                             <LanguageSwitcher onLanguageChange={() => { }} />
                         </motion.div>
                     )}

@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { MessageCircle, User } from "lucide-react";
 import type { LandingChromeVisibility } from '@/orchestration/chromeVisibility';
-import type { AppShellScreen } from "@/state/appShellNavigationState";
-import { useMapState } from "@/state/mapState";
+import type { AppShellScreen } from "@/domains/dawayir/store/navigation.store";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 
 interface AppChromeShellProps {
   chromeVisibility: LandingChromeVisibility;
@@ -51,7 +51,7 @@ export function AppChromeShell({
               {authUser && (
                 <span
                   className="absolute top-0 right-0 w-2 h-2 rounded-full"
-                  style={{ background: "var(--soft-teal)", boxShadow: "0 0 0 2px var(--space-void)" }}
+                  style={{ background: "var(--soft-teal)", boxShadow: "0 0 0 2px var(--page-bg)" }}
                   aria-hidden="true"
                 />
               )}

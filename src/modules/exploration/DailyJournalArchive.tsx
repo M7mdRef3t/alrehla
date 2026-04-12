@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, BookOpen, Calendar, TrendingUp } from "lucide-react";
-import { useDailyJournalState } from "@/state/dailyJournalState";
+import { useDailyJournalState } from "@/domains/journey/store/journal.store";
 
 interface DailyJournalArchiveProps {
   isOpen: boolean;

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef } from "react";
 import { type AdviceCategory } from "@/data/adviceScripts";
-import { recordFlowEvent } from "@/services/journeyTracking";
-import { useMapState } from "@/state/mapState";
+import { trackingService } from "@/domains/journey";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import type { FeatureFlagKey } from "@/config/features";
 import { isPhaseOneUserFlow, isUserMode } from "@/config/appEnv";
 import { getLastGoalMeta } from "@/utils/goalLabel";
 import { ensureValidJourneyState } from "@/utils/journeyState";
 import { requestIdleCallback, cancelIdleCallback } from "@/utils/performanceOptimizations";
-import type { AppShellScreen } from "@/state/appShellNavigationState";
+import type { AppShellScreen } from "@/domains/dawayir/store/navigation.store";
 
 const preloadCoreMap = () => import('@/modules/exploration/CoreMapScreen');
 const preloadGym = () => import('@/modules/exploration/RelationshipGym');
@@ -147,7 +147,7 @@ export function useAppJourneyEntryActions({
   const openMissionFromAddPerson = useCallback((nodeId: string) => {
     const safeId = String(nodeId ?? "").trim();
     if (!safeId) {
-      recordFlowEvent("add_person_start_path_blocked_missing_node", {
+      trackingService.recordFlow("add_person_start_path_blocked_missing_node", {
         meta: { reason: "empty_node_id" }
       });
       return;
@@ -155,7 +155,7 @@ export function useAppJourneyEntryActions({
 
     const nodeExists = useMapState.getState().nodes.some((node) => node.id === safeId);
     if (!nodeExists) {
-      recordFlowEvent("add_person_start_path_blocked_missing_node", {
+      trackingService.recordFlow("add_person_start_path_blocked_missing_node", {
         meta: { reason: "node_not_found", nodeId: safeId }
       });
       return;
@@ -173,7 +173,7 @@ export function useAppJourneyEntryActions({
       return;
     }
 
-    recordFlowEvent("tools_opened");
+    trackingService.recordFlow("tools_opened");
     setToolsBackScreen(screen === "tools" ? "landing" : screen);
     void navigateToScreen("tools");
   }, [

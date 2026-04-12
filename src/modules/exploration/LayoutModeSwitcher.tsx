@@ -14,7 +14,7 @@ import type { FC } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Layers, X, Sparkles, Check } from "lucide-react";
-import { useLayoutState, type LayoutMode } from "@/state/layoutState";
+import { useLayoutState, type LayoutMode } from "@/domains/dawayir/store/layout.store";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════

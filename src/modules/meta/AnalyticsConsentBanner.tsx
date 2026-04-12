@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { setAnalyticsConsent, trackEvent, AnalyticsEvents } from "@/services/analytics";
+import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { isUserMode } from "@/config/appEnv";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 
@@ -41,15 +41,15 @@ export const AnalyticsConsentBanner = ({ suppressed = false }: AnalyticsConsentB
     <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-4 left-1/2 z-[70] w-[min(44rem,calc(100vw-1rem))] -translate-x-1/2 px-2">
       <div className="rounded-2xl border border-white/15 bg-slate-900/95 p-3 shadow-xl backdrop-blur-md">
         <div className="mb-2 text-sm leading-relaxed text-slate-200">
-          نستخدم أدوات قياس بسيطة لتحسين المنصة بدون جمع محتواك الشخصي. هل توافق على التفعيل؟
+          نستخدم أدوات قياس بسيطة لتحسين رحلتك بدون جمع محتواك الشخصي. هل توافق على التفعيل؟
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <button
             className="rounded-full bg-teal-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-teal-500"
             onClick={() => {
-              setAnalyticsConsent(true);
+              analyticsService.setConsent(true);
               try {
-                trackEvent(AnalyticsEvents.CONSENT_GIVEN);
+                analyticsService.track(AnalyticsEvents.CONSENT_GIVEN);
               } catch {
                 // ignore analytics failures in UI flow
               }
@@ -61,9 +61,9 @@ export const AnalyticsConsentBanner = ({ suppressed = false }: AnalyticsConsentB
           <button
             className="rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm text-slate-200 hover:bg-white/10"
             onClick={() => {
-              setAnalyticsConsent(false);
+              analyticsService.setConsent(false);
               try {
-                trackEvent(AnalyticsEvents.CONSENT_DENIED);
+                analyticsService.track(AnalyticsEvents.CONSENT_DENIED);
               } catch {
                 // ignore analytics failures in UI flow
               }

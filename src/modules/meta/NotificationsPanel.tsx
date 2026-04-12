@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Bell, Award } from "lucide-react";
-import { useAchievementState } from "@/state/achievementState";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { ACHIEVEMENTS } from "@/data/achievements";
 import { useMemo } from "react";
 

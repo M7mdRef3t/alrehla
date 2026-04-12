@@ -8,13 +8,13 @@ import type { QuickAnswer2 } from "@/utils/suggestInitialRing";
 import type { PersonGender } from "@/utils/resultScreenAI";
 import { buildResultTemplateFromAnswers } from "@/utils/resultScreenTemplates";
 import { realityScoreToRing } from "@/utils/realityScore";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { trackEvent, AnalyticsEvents } from "@/services/analytics";
 import type { AdviceCategory } from "@/data/adviceScripts";
 import type { AdviceZone } from "@/data/adviceScripts";
 import { emergencyCopy } from "@/copy/emergency";
 import { recordFlowEvent, recordPathStartedOnce } from "@/services/journeyTracking";
-import { useSyncState } from "@/state/syncState";
+import { useSyncState } from "@/domains/journey/store/sync.store";
 import { isUserMode } from "@/config/appEnv";
 import { SovereigntySnapshotCard } from "../SovereigntySnapshotCard";
 import { deriveSovereigntySnapshot } from "@/utils/sovereigntySnapshot";
@@ -184,7 +184,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   const shareCardRef = useRef<HTMLDivElement | null>(null);
   const isForcedCtaMode = isUserMode && forcedGate;
   const shouldShowMapSyncBanner = mapSyncStatus === "error";
-  const mapSyncBannerText = "تعذر الحفظ السحابي مؤقتًا. هنحاول تلقائيًا عند فتح التطبيق.";
+  const mapSyncBannerText = "تعذر الحفظ السحابي مؤقتًا. هنحاول تلقائيًا عند العودة للرحلة.";
 
   const startMissionAndTrack = (nodeId: string) => {
     const node = useMapState.getState().nodes.find((item) => item.id === nodeId);

@@ -1,19 +1,57 @@
 import type { FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Heart, Zap, AlertTriangle } from "lucide-react";
-import { useAdminState } from "@/state/adminState";
-import { useLockdownState } from "@/state/lockdownState";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import { useLockdownState } from "@/domains/admin/store/lockdown.store";
+import { useEffect, useRef } from "react";
 
 export const SovereignHUD: FC = () => {
   const resonanceScore = useAdminState((s) => s.resonanceScore);
   const latestFriction = useAdminState((s) => s.latestFriction);
   const isLockdownActive = useLockdownState((s) => s.checkLockdownStatus());
+  const prevStatus = useRef<string>("");
 
-  const getStatusColor = () => {
-    if (isLockdownActive) return "text-rose-500 border-rose-500/30 bg-rose-500/10";
-    if (resonanceScore < 40) return "text-amber-500 border-amber-500/30 bg-amber-500/10";
-    if (resonanceScore < 70) return "text-teal-400 border-teal-500/30 bg-teal-500/10";
-    return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
+  // 🔱 Edge Flash Logic
+  useEffect(() => {
+    const currentStatus = 
+      resonanceScore >= 80 ? "harmony" : 
+      resonanceScore >= 50 ? "stable" : 
+      resonanceScore >= 25 ? "friction" : "crisis";
+
+    if (prevStatus.current && prevStatus.current !== currentStatus) {
+      const root = document.documentElement;
+      const flashColor = 
+        currentStatus === "harmony" ? "#10b981" : 
+        currentStatus === "stable" ? "#6366f1" : 
+        currentStatus === "friction" ? "#f59e0b" : "#f43f5e";
+
+      root.style.setProperty("--admin-edge-flash", flashColor);
+      
+      // Update global resonance vars for consistency if needed, though they are already set in AdminDashboard
+      // We will rely on AdminDashboard's global CSS vars for the pill style below.
+      
+      // Flash Reset
+      setTimeout(() => {
+        root.style.setProperty("--admin-edge-flash", "transparent");
+      }, 1000);
+    }
+    prevStatus.current = currentStatus;
+  }, [resonanceScore]);
+
+  const getStatusStyle = () => {
+    if (isLockdownActive) {
+      return {
+        color: "#f43f5e",
+        borderColor: "rgba(244, 63, 94, 0.3)",
+        backgroundColor: "rgba(244, 63, 94, 0.1)"
+      };
+    }
+    return {
+      color: "var(--admin-resonance-primary)",
+      borderColor: "var(--admin-resonance-primary)",
+      borderOpacity: 0.3,
+      backgroundColor: "var(--admin-resonance-glow)"
+    };
   };
 
   const getStatusIcon = () => {
@@ -34,7 +72,8 @@ export const SovereignHUD: FC = () => {
       {/* Resonance Pill */}
       <motion.div 
         layout
-        className={`flex items-center gap-2.5 px-3 py-1.5 rounded-full border backdrop-blur-md transition-colors duration-500 ${getStatusColor()}`}
+        className="flex items-center gap-2.5 px-3 py-1.5 rounded-full border backdrop-blur-md transition-colors duration-500"
+        style={getStatusStyle()}
       >
         <div className="relative">
           {getStatusIcon()}

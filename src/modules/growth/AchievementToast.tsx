@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAchievementById } from "@/data/achievements";
-import { useAchievementState } from "@/state/achievementState";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { soundManager } from "@/services/soundManager";
 
 /** تهنئة سيادية تظهر عند فتح إنجاز جديد — احتفال كوني كامل */

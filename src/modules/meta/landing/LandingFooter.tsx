@@ -68,14 +68,14 @@ export const LandingFooter: FC<LandingFooterProps> = ({
       </a>
     </nav>
 
-    <div className="flex flex-col items-center gap-3 mb-2 bg-white/[0.02] border border-white/5 rounded-2xl px-4 py-3">
-      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+    <div className="flex flex-col items-center gap-3 mb-2 glass-dark rounded-2xl px-6 py-4">
+      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">
         ما نعد به
       </p>
-      <div className="flex flex-col items-center gap-1.5">
+      <div className="flex flex-col items-center gap-2">
         {trustPoints.map((point, idx) => (
-          <p key={idx} className="text-sm text-slate-500 font-bold flex items-center gap-2">
-            <span className="w-1 h-1 rounded-full bg-teal-500/40" />
+          <p key={idx} className="text-sm text-slate-400 font-bold flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-500 shadow-[0_0_8px_var(--ds-color-primary-glow)]" />
             {point}
           </p>
         ))}

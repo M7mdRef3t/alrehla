@@ -2,10 +2,14 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, BrainCircuit, Users, FileText, Briefcase, ChevronRight, Share, FileCheck2, AlertTriangle, MessageCircle, BarChart3, TrendingUp, PieChart as PieChartIcon, Zap } from 'lucide-react';
+import { Activity, BrainCircuit, Users, FileText, Briefcase, ChevronRight, Share, FileCheck2, AlertTriangle, MessageCircle, BarChart3, TrendingUp, PieChart as PieChartIcon, Zap, Bell, Download, Clock } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from 'recharts';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 type ConsoleTab = 'dashboard' | 'triage_queue' | 'ai_brief' | 'live_session' | 'post_session' | 'analytics';
+
+const techEase: [number, number, number, number] = [0, 0.7, 0.1, 1];
 
 export function SessionOSConsole() {
   const [activeTab, setActiveTab] = useState<ConsoleTab>('dashboard');
@@ -20,8 +24,14 @@ export function SessionOSConsole() {
   // Form states for post-session
   const [summary, setSummary] = useState('');
   const [assignment, setAssignment] = useState('');
+  const [mainTopic, setMainTopic] = useState('');
+  const [dominantPattern, setDominantPattern] = useState('');
+  const [mainIntervention, setMainIntervention] = useState('');
+  const [firstShift, setFirstShift] = useState('');
   const [recommendFollowup, setRecommendFollowup] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [lastSeenRequests, setLastSeenRequests] = useState<string[]>([]);
 
   React.useEffect(() => {
     fetchSessions();
@@ -41,6 +51,27 @@ export function SessionOSConsole() {
     } catch (e) { console.error(e); }
   };
 
+  const sendSovereignCommand = async (type: string, payload: any) => {
+    try {
+      const { supabase } = await import('@/services/supabaseClient');
+      if (!supabase) return;
+      const channel = supabase.channel('sovereign_control');
+      channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          channel.send({
+            type: 'broadcast',
+            event: 'OVERRIDE',
+            payload: { type, ...payload }
+          }).then(() => {
+            supabase?.removeChannel(channel);
+          });
+        }
+      });
+    } catch (e) {
+      console.error('Failed to send sovereign command', e);
+    }
+  };
+
   const fetchSessions = async () => {
     setLoading(true);
     try {
@@ -56,6 +87,61 @@ export function SessionOSConsole() {
     }
   };
 
+  const generatePDF = async () => {
+    const element = document.getElementById('report-export-container');
+    if (!element) return;
+
+    try {
+      const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#000000' });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Alrehla-Session-Report-${selectedRequest?.dawayir_clients?.name || 'Client'}.pdf`);
+    } catch (e) {
+      console.error('PDF Export Error:', e);
+    }
+  };
+
+  const notifications = React.useMemo(() => {
+    return requests.filter(r => ['new_request', 'needs_manual_review', 'prep_form_completed'].includes(r.status))
+      .map(r => ({
+        id: r.id,
+        title: r.status === 'prep_form_completed' ? 'نموذج تحضير مكتمل' : 'طلب جديد يحتاج مراجعة',
+        client: r.dawayir_clients?.name,
+        time: new Date(r.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+        type: r.status
+      }));
+  }, [requests]);
+
+  const updateRequestStatus = async (requestId: string, status: string) => {
+    try {
+      const res = await fetch('/api/admin/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_status', requestId, status })
+      });
+      if (res.ok) fetchSessions();
+    } catch (e) { console.error(e); }
+  };
+
+  const generateBrief = async (req: any) => {
+    try {
+      const res = await fetch('/api/admin/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'generate_brief', 
+          requestId: req.id,
+          biggestChallenge: req.biggest_challenge || 'غير محدد'
+        })
+      });
+      if (res.ok) fetchSessions();
+    } catch (e) { console.error(e); }
+  };
+
   const closeSession = async () => {
     if (!selectedRequest) return;
     setIsClosing(true);
@@ -68,6 +154,10 @@ export function SessionOSConsole() {
           requestId: selectedRequest.id,
           summary,
           assignment,
+          mainTopic,
+          dominantPattern,
+          mainIntervention,
+          firstShift,
           recommendFollowup,
           notes: `تم عن طريق كونسول الإغلاق. مربط بعقدة: ${selectedNodeId || 'None'}`,
           linkedNodeId: selectedNodeId
@@ -75,6 +165,10 @@ export function SessionOSConsole() {
       });
       setSummary('');
       setAssignment('');
+      setMainTopic('');
+      setDominantPattern('');
+      setMainIntervention('');
+      setFirstShift('');
       setRecommendFollowup(false);
       setSelectedNodeId('');
       setActiveTab('dashboard');
@@ -86,7 +180,7 @@ export function SessionOSConsole() {
     }
   };
 
-  const pendingRequests = requests.filter(r => ['new_request', 'intake_completed', 'manual_review', 'prep_pending'].includes(r.status));
+  const pendingRequests = requests.filter(r => ['new_request', 'intake_completed', 'needs_manual_review', 'prep_pending'].includes(r.status));
   const readyRequests = requests.filter(r => r.status === 'session_ready' || r.status === 'brief_generated');
 
   const handleSelectRequest = (req: any) => {
@@ -94,7 +188,8 @@ export function SessionOSConsole() {
     setActiveTab('live_session');
   };
 
-  const sessionBrief = selectedRequest?.dawayir_ai_session_briefs?.[0] || {
+  const rawBrief = selectedRequest?.dawayir_ai_session_briefs;
+  const sessionBrief = (Array.isArray(rawBrief) ? rawBrief[0] : rawBrief) || {
     visible_problem: 'جاري استخراج المشكلة...',
     emotional_signal: 'جاري تحليل الإشارة...',
     hidden_need: 'جاري القراءة ما بين السطور...',
@@ -112,37 +207,105 @@ export function SessionOSConsole() {
           <p className="text-xs text-neutral-500 mt-1">Cognitive Coaching Engine</p>
         </div>
 
-        <nav className="space-y-2 flex-grow">
+        <nav className="space-y-2 flex-grow mt-4">
           <NavItem active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={<Activity className="w-4 h-4" />} label="نظرة عامة" />
           <NavItem active={activeTab === 'triage_queue'} onClick={() => setActiveTab('triage_queue')} icon={<Users className="w-4 h-4" />} label="طابور الفرز" badge="2" />
-          <div className="my-4 border-t border-neutral-800 pt-4"></div>
+          <div className="my-6 border-t border-white/5 pt-6"></div>
           <NavItem active={activeTab === 'ai_brief'} onClick={() => setActiveTab('ai_brief')} icon={<BrainCircuit className="w-4 h-4" />} label="ذكاء ما قبل الجلسة" />
           <NavItem active={activeTab === 'live_session'} onClick={() => setActiveTab('live_session')} icon={<Briefcase className="w-4 h-4" />} label="كونسول التنفيذ (Live)" />
           <NavItem active={activeTab === 'post_session'} onClick={() => setActiveTab('post_session')} icon={<FileCheck2 className="w-4 h-4" />} label="الإغلاق والتوثيق" />
-          <div className="my-4 border-t border-neutral-800 pt-4"></div>
+          <div className="my-6 border-t border-white/5 pt-6"></div>
           <NavItem active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={<BarChart3 className="w-4 h-4" />} label="الإحصائيات والأثر" />
         </nav>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-8 relative">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 relative selection:bg-teal-500/30">
+        
+        {/* Architectural Background Grid Overlay (Static Engine Pattern) */}
+        <div className="absolute inset-0 pointer-events-none z-0" style={{
+          backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+          backgroundPosition: 'center center'
+        }} />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-500/5 blur-[120px] rounded-full pointer-events-none z-0"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-500/5 blur-[150px] rounded-full pointer-events-none z-0"></div>
+
+        {/* Top Intelligence Bar */}
+        <div className="flex justify-end mb-6 relative z-50">
+          <button 
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="p-2 bg-[#111] border border-neutral-800 rounded-full hover:bg-neutral-800 transition relative"
+          >
+            <Bell className="w-5 h-5 text-neutral-400" />
+            {notifications.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-bold">
+                {notifications.length}
+              </span>
+            )}
+          </button>
+
+          <AnimatePresence>
+            {showNotifications && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                className="absolute top-12 left-0 w-80 bg-[#151515] border border-neutral-800 rounded-2xl shadow-2xl p-4 overflow-hidden"
+              >
+                <h3 className="text-sm font-bold border-b border-neutral-800 pb-3 mb-3 flex items-center justify-between">
+                  <span>التنبيهات الذكية</span>
+                  <Zap className="w-3 h-3 text-indigo-400" />
+                </h3>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <p className="text-xs text-neutral-500 text-center py-4">لا توجد تنبيهات جديدة</p>
+                  ) : (
+                    notifications.map(n => (
+                      <div key={n.id} className="p-3 bg-neutral-900/50 rounded-xl hover:bg-neutral-900 transition cursor-pointer" dir="rtl">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${n.type === 'prep_form_completed' ? 'bg-green-900/30 text-green-400' : 'bg-blue-900/30 text-blue-400'}`}>
+                            {n.title}
+                          </span>
+                          <span className="text-[10px] text-neutral-500 flex items-center"><Clock className="w-2 h-2 ml-1" /> {n.time}</span>
+                        </div>
+                        <p className="text-sm font-bold text-neutral-200">{n.client}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         <AnimatePresence mode="wait">
           {activeTab === 'dashboard' && (
-            <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
-              <h1 className="text-3xl font-bold mb-8">نظرة عامة على الجلسات</h1>
+            <motion.div key="dashboard" 
+              initial={{ clipPath: 'inset(100% 0 0 0)', y: 20 }} 
+              animate={{ clipPath: 'inset(0 0 0 0)', y: 0 }} 
+              exit={{ opacity: 0 }} 
+              transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" 
+              dir="rtl"
+            >
+              <h1 className="text-3xl font-black mb-8 font-sans tracking-tight">نظرة عامة على الجلسات</h1>
               <div className="grid grid-cols-3 gap-6 mb-8">
-                <StatCard title="طلبات جديدة" value="2" icon={<Users className="text-blue-500" />} />
-                <StatCard title="جاهزون للجلسة" value="1" icon={<FileText className="text-green-500" />} />
-                <StatCard title="متابعات معلقة" value="3" icon={<Share className="text-orange-500" />} />
+                <StatCard title="طلبات جديدة" value={requests.filter(r => r.status === 'new_request' || r.status === 'needs_manual_review').length.toString()} icon={<Users className="text-teal-400" />} />
+                <StatCard title="جاهزون للجلسة" value={requests.filter(r => ['session_ready', 'brief_generated'].includes(r.status)).length.toString()} icon={<FileText className="text-indigo-400" />} />
+                <StatCard title="متابعات معلقة" value={requests.filter(r => r.status === 'followup_pending').length.toString()} icon={<Share className="text-orange-400" />} />
               </div>
             </motion.div>
           )}
 
           {activeTab === 'triage_queue' && (
-            <motion.div key="triage_queue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
+            <motion.div key="triage_queue" 
+              initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0 0 0 0)' }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" dir="rtl"
+            >
               <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">طابور الفرز والمراجعة</h1>
-                <button className="bg-neutral-800 border border-neutral-700 px-4 py-2 rounded-lg text-sm hover:bg-neutral-700 transition">تحديث القائمة</button>
+                <h1 className="text-3xl font-black font-sans tracking-tight">طابور الفرز والمراجعة</h1>
+                <button className="bg-white/5 border border-white/10 px-4 py-2 rounded-lg text-sm font-bold hover:bg-white/10 transition">تحديث القائمة</button>
               </div>
 
               <div className="space-y-4">
@@ -159,7 +322,7 @@ export function SessionOSConsole() {
                         <span className={`text-xs px-2 py-1 rounded-full ${urgency > 5 ? 'bg-red-900/30 text-red-400 border border-red-900/50' : 'bg-blue-900/30 text-blue-400 border border-blue-900/50'}`}>
                           {urgency > 5 ? 'استعجال عالي' : 'عادي'}
                         </span>
-                        {req.status === 'manual_review' && (
+                        {req.status === 'needs_manual_review' && (
                           <span className="text-xs bg-yellow-900/30 text-yellow-500 border border-yellow-900/50 px-2 py-1 rounded-full flex items-center">
                             <AlertTriangle className="w-3 h-3 mr-1" />
                             مراجعة يدوية للسلامة
@@ -172,9 +335,30 @@ export function SessionOSConsole() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <button className="bg-white text-black px-4 py-2 rounded-lg text-sm font-bold hover:bg-neutral-200">تحويل للاستكشاف</button>
-                      <button className="bg-[#1A1A1A] border border-neutral-700 px-4 py-2 rounded-lg text-sm hover:bg-neutral-800">إرسال رابط الـ Prep Form</button>
-                      <button className="text-red-400 hover:text-red-300 text-sm mt-2">رفض مهذب / إحالة</button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); updateRequestStatus(req.id, 'prep_pending'); }}
+                        className="bg-white text-black px-4 py-2 rounded-lg text-sm font-bold hover:bg-neutral-200"
+                      >
+                        تحويل للاستكشاف
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); generateBrief(req); }}
+                        className="bg-indigo-600/20 text-indigo-400 border border-indigo-600/50 px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-600/40"
+                      >
+                        <BrainCircuit className="w-4 h-4 inline ml-2" /> توليد AI Brief
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); updateRequestStatus(req.id, 'prep_pending'); }}
+                        className="bg-[#1A1A1A] border border-neutral-700 px-4 py-2 rounded-lg text-sm hover:bg-neutral-800"
+                      >
+                        إرسال رابط الـ Prep Form
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); updateRequestStatus(req.id, 'rejected'); }}
+                        className="text-red-400 hover:text-red-300 text-sm mt-2"
+                      >
+                        رفض مهذب / إحالة
+                      </button>
                     </div>
                   </div>
                 )})}
@@ -183,42 +367,48 @@ export function SessionOSConsole() {
           )}
 
           {activeTab === 'ai_brief' && (
-            <motion.div key="ai_brief" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
-              <h1 className="text-3xl font-bold mb-8 flex items-center gap-3">
+            <motion.div key="ai_brief" 
+              initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0 0 0 0)' }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" dir="rtl"
+            >
+              <h1 className="text-3xl font-black mb-8 flex items-center gap-3 font-sans">
                 <BrainCircuit className="text-indigo-400" />
                 ملخص الذكاء الاصطناعي (AI Brief)
               </h1>
               
-              <div className="bg-indigo-950/20 border border-indigo-900/30 rounded-2xl p-6 mb-6">
-                <h3 className="text-indigo-300 text-sm font-bold uppercase tracking-wider mb-2">أول فرضية تشغيلية</h3>
-                <p className="text-xl leading-relaxed text-indigo-50 border-l-2 border-indigo-500 pl-4">
-                  {sessionBrief.hypothesis}
+              <div className="bg-indigo-500/5 backdrop-blur-md border border-indigo-500/20 rounded-2xl p-6 mb-6 shadow-inner relative overflow-hidden">
+                <h3 className="text-indigo-400 text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2"><div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"/> أول فرضية تشغيلية</h3>
+                <p className="text-2xl font-bold leading-relaxed text-indigo-50 border-r-2 border-indigo-500/50 pr-4">
+                  {sessionBrief.first_hypothesis}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-6">
-                <BriefBlock title="المشكلة الظاهرة (حسب كلامه)" content={sessionBrief.visibleProblem} />
-                <BriefBlock title="الإشارة العاطفية" content={sessionBrief.emotionalSignal} />
-                <BriefBlock title="الاحتياج المخفي (الدفين)" content={sessionBrief.hiddenNeed} />
-                <BriefBlock title="الهدف المتوقع من الجلسة" content={sessionBrief.expectedGoal} />
+                <BriefBlock title="المشكلة الظاهرة (حسب كلامه)" content={sessionBrief.visible_problem} />
+                <BriefBlock title="الإشارة العاطفية" content={sessionBrief.emotional_signal} />
+                <BriefBlock title="الاحتياج المخفي (الدفين)" content={sessionBrief.hidden_need} />
+                <BriefBlock title="الهدف المتوقع من الجلسة" content={sessionBrief.expected_goal} />
               </div>
 
               <div className="mt-6 bg-red-950/20 border border-red-900/30 rounded-xl p-5">
                 <h3 className="text-red-400 text-sm font-bold flex items-center mb-2"><AlertTriangle className="w-4 h-4 ml-2"/> حدود الأمان للجلسة</h3>
-                <p className="text-red-200 text-sm">{sessionBrief.boundaries}</p>
+                <p className="text-red-200 text-sm">{sessionBrief.session_boundaries}</p>
               </div>
             </motion.div>
           )}
 
           {activeTab === 'live_session' && (
-            <motion.div key="live_session" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
-              <div className="flex justify-between items-end mb-8 border-b border-neutral-800 pb-4">
+            <motion.div key="live_session" 
+              initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0 0 0 0)' }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" dir="rtl"
+            >
+              <div className="flex justify-between items-end mb-8 border-b border-white/5 pb-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-emerald-400 flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-black text-teal-400 flex items-center gap-3 mb-2 font-sans tracking-tight">
                     <Activity className="animate-pulse" />
                     كونسول التنفيذ (Live)
                   </h1>
-                  <p className="text-neutral-400">العميل: السيد/ أحمد محمود — الجلسة جارية الآن.</p>
+                  <p className="text-slate-400 font-medium">العميل: {selectedRequest?.dawayir_clients?.name || '---'} — الجلسة جارية الآن.</p>
                 </div>
                 <div className="text-right">
                   <span className="text-xs text-neutral-500 block mb-1">الافتتاح المقترح</span>
@@ -251,7 +441,11 @@ export function SessionOSConsole() {
                     <h3 className="text-sm font-bold text-neutral-400 mb-4 uppercase tracking-widest">كشف النمط الظاهر</h3>
                     <div className="flex flex-wrap gap-2">
                       {['التجنب', 'الاسترضاء', 'الانسحاب', 'التضخيم', 'التعلق', 'السيطرة', 'Overthinking'].map(pat => (
-                        <button key={pat} className="px-3 py-1.5 rounded-lg border border-neutral-700 text-xs text-neutral-300 hover:bg-neutral-800 transition">
+                        <button 
+                          key={pat} 
+                          onClick={() => setDominantPattern(pat)}
+                          className={`px-3 py-1.5 rounded-lg border text-xs transition ${dominantPattern === pat ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-neutral-700 text-neutral-300 hover:bg-neutral-800'}`}
+                        >
                           {pat}
                         </button>
                       ))}
@@ -264,7 +458,7 @@ export function SessionOSConsole() {
                       <select 
                         value={selectedNodeId}
                         onChange={(e) => setSelectedNodeId(e.target.value)}
-                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-neutral-600"
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-neutral-600 mb-4"
                       >
                         <option value="">اختر شخص/دائرة من الخريطة..</option>
                         {nodes.map(n => (
@@ -272,8 +466,31 @@ export function SessionOSConsole() {
                         ))}
                       </select>
                     ) : (
-                      <p className="text-xs text-neutral-500">لا توجد خريطة مفعلة لهذا العميل حالياً.</p>
+                      <p className="text-xs text-neutral-500 mb-4">لا توجد خريطة مفعلة لهذا العميل حالياً.</p>
                     )}
+
+                    <div className="pt-4 border-t border-neutral-800">
+                      <h3 className="text-sm font-bold text-red-400 mb-4 uppercase tracking-widest flex items-center">
+                        <Zap className="w-4 h-4 ml-2" /> Sovereign Control (Live Override)
+                      </h3>
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <button onClick={() => sendSovereignCommand('FORCE_STATE', { state: 'crisis' })} className="flex-1 bg-red-900/20 hover:bg-red-900/40 border border-red-900/50 text-red-400 text-xs py-2 rounded-lg transition">Force Crisis</button>
+                          <button onClick={() => sendSovereignCommand('FORCE_STATE', { state: 'flow' })} className="flex-1 bg-blue-900/20 hover:bg-blue-900/40 border border-blue-900/50 text-blue-400 text-xs py-2 rounded-lg transition">Force Flow</button>
+                        </div>
+                        <button onClick={() => sendSovereignCommand('TRIGGER_HAPTIC', { severity: 'crisis' })} className="w-full bg-orange-900/20 hover:bg-orange-900/40 border border-orange-900/50 text-orange-400 text-xs py-2 rounded-lg transition">Haptic Shock</button>
+                        <div className="flex gap-2">
+                          <input id="whisper-text" type="text" placeholder="اهمس للمستخدم..." className="flex-1 bg-neutral-900 border border-neutral-800 rounded-lg px-3 text-xs" />
+                          <button onClick={() => {
+                            const input = document.getElementById('whisper-text') as HTMLInputElement;
+                            if (input && input.value) {
+                              sendSovereignCommand('INJECT_WHISPER', { text: input.value });
+                              input.value = '';
+                            }
+                          }} className="bg-indigo-600 hover:bg-indigo-500 px-3 rounded-lg text-xs font-bold text-white transition">إرسال</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -281,21 +498,42 @@ export function SessionOSConsole() {
           )}
 
           {activeTab === 'post_session' && (
-            <motion.div key="post_session" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
-              <h1 className="text-3xl font-bold mb-8 text-neutral-100 flex items-center">
-                <FileCheck2 className="w-8 h-8 ml-3 text-blue-400" />
+            <motion.div key="post_session" 
+              initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0 0 0 0)' }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" dir="rtl"
+            >
+              <h1 className="text-3xl font-black mb-8 text-white flex items-center font-sans">
+                <FileCheck2 className="w-8 h-8 ml-3 text-teal-400" />
                 شاشة الإغلاق والتوثيق
               </h1>
               
               <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-500 mb-1">الموضوع الأساسي</label>
+                      <input type="text" value={mainTopic} onChange={(e) => setMainTopic(e.target.value)} className="w-full bg-[#111] border border-neutral-800 rounded-lg p-3 text-sm" placeholder="مثلاً: الخوف من الفقد" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-500 mb-1">النمط السائد</label>
+                      <input type="text" value={dominantPattern} onChange={(e) => setDominantPattern(e.target.value)} className="w-full bg-[#111] border border-neutral-800 rounded-lg p-3 text-sm" placeholder="مثلاً: تجنب الصراع" />
+                    </div>
+                  </div>
                   <div>
-                    <label className="block text-sm font-semibold text-neutral-400 mb-2">الخلاصة: ماذا اكتشفنا وما النمط؟</label>
-                    <textarea rows={4} className="w-full bg-[#111] border border-neutral-800 rounded-xl p-4 text-white focus:outline-none focus:border-neutral-600"></textarea>
+                    <label className="block text-sm font-semibold text-neutral-400 mb-2">التدخل الأساسي (ماذا فعلنا؟)</label>
+                    <input type="text" value={mainIntervention} onChange={(e) => setMainIntervention(e.target.value)} className="w-full bg-[#111] border border-neutral-800 rounded-xl p-4 text-white" placeholder="مثلاً: فصل الوقائع عن التفسير" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-neutral-400 mb-2">أول علامة تحول (First Shift)</label>
+                    <input type="text" value={firstShift} onChange={(e) => setFirstShift(e.target.value)} className="w-full bg-[#111] border border-neutral-800 rounded-xl p-4 text-white" placeholder="ماذا حدث في ملامحه أو كلامه؟" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-neutral-400 mb-2">الخلاصة الكبرى</label>
+                    <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} className="w-full bg-[#111] border border-neutral-800 rounded-xl p-4 text-white focus:outline-none focus:border-neutral-600"></textarea>
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-neutral-400 mb-2">الإجراء المطلوب (الواجب)</label>
-                    <input type="text" className="w-full bg-[#111] border border-neutral-800 rounded-xl p-4 text-white focus:outline-none focus:border-neutral-600" placeholder="خطوة واحدة خلال 48 ساعة..." />
+                    <input type="text" value={assignment} onChange={(e) => setAssignment(e.target.value)} className="w-full bg-[#111] border border-neutral-800 rounded-xl p-4 text-white focus:outline-none focus:border-neutral-600" placeholder="خطوة واحدة خلال 48 ساعة..." />
                   </div>
                   <div className="flex items-center justify-between bg-[#111] border border-neutral-800 p-4 rounded-xl">
                     <span className="text-sm font-bold">تفعيل المتابعة الآلية (بعد 48س)؟</span>
@@ -320,30 +558,100 @@ export function SessionOSConsole() {
                   <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-lg text-sm text-neutral-300 font-mono leading-relaxed">
                     شكرًا لحضورك الجلسة.<br/><br/>
                     ملخص سريع:<br/>
-                    • الموضوع الأساسي: [سيتم إدخاله]<br/>
-                    • النمط اللي ظهر: [سيتم إدخاله]<br/>
-                    • أهم نقطة خرجنا بيها: [سيتم إدخاله]<br/><br/>
-                    المطلوب منك حاليًا: [الواجب المكتوب]<br/><br/>
+                    • الموضوع الأساسي: {mainTopic || '[سيتم إدخاله]'}<br/>
+                    • النمط اللي ظهر: {dominantPattern || '[سيتم إدخاله]'}<br/>
+                    • أهم نقطة خرجنا بيها: {summary.substring(0, 50) + '...'}<br/><br/>
+                    المطلوب منك حاليًا: {assignment}<br/><br/>
                     ركز على التنفيذ الفعلي، مش مجرد الإحساس بعد الجلسة.
                   </div>
-                  <button className="w-full mt-6 py-3 bg-white text-black rounded-lg font-bold hover:bg-neutral-200 transition">توثيق الجلسة وإرسال الرسالة</button>
+                  <div className="flex gap-2 mt-6">
+                    <button 
+                        onClick={closeSession}
+                        disabled={isClosing || !summary}
+                        className="flex-1 py-3 bg-white text-black rounded-lg font-bold hover:bg-neutral-200 transition disabled:bg-neutral-700 disabled:text-neutral-500"
+                    >
+                        {isClosing ? 'جاري الحفظ...' : 'توثيق الجلسة وإرسال الرسالة'}
+                    </button>
+                    <button 
+                        onClick={generatePDF}
+                        disabled={!selectedRequest}
+                        className="p-3 bg-neutral-800 border border-neutral-700 text-white rounded-lg hover:bg-neutral-700 transition"
+                        title="تحميل تقرير PDF"
+                    >
+                        <Download className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hidden Report Container for PDF Export */}
+              <div id="report-export-container" className="fixed -left-[10000px] top-0 w-[800px] bg-black text-white p-12 font-sans" dir="rtl">
+                <div className="border-b-2 border-indigo-500 pb-8 mb-8 flex justify-between items-end">
+                    <div>
+                        <h1 className="text-4xl font-black text-indigo-400 mb-2">ALREHLA</h1>
+                        <p className="text-neutral-500">Session OS Intelligence Report</p>
+                    </div>
+                    <div className="text-left text-sm text-neutral-500">
+                        {new Date().toLocaleDateString('ar-EG')}
+                    </div>
+                </div>
+
+                <div className="mb-12">
+                    <h2 className="text-2xl font-bold mb-4 text-neutral-400">ملف العميل</h2>
+                    <div className="bg-neutral-900/50 p-6 rounded-2xl border border-neutral-800">
+                        <p className="text-xl font-bold mb-2">{selectedRequest?.dawayir_clients?.name}</p>
+                        <p className="text-neutral-500 text-sm">العمر: {selectedRequest?.dawayir_clients?.age_range} • تاريخ الطلب: {new Date(selectedRequest?.created_at).toLocaleDateString('ar-EG')}</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 mb-12">
+                    <div className="p-6 border border-neutral-800 rounded-2xl">
+                        <h3 className="text-sm font-bold text-neutral-500 mb-4 uppercase">الموضوع الأساسي</h3>
+                        <p className="text-lg">{mainTopic || 'غير محدد'}</p>
+                    </div>
+                    <div className="p-6 border border-neutral-800 rounded-2xl">
+                        <h3 className="text-sm font-bold text-neutral-500 mb-4 uppercase">النمط السائد</h3>
+                        <p className="text-lg">{dominantPattern || 'غير محدد'}</p>
+                    </div>
+                </div>
+
+                <div className="mb-12">
+                    <h3 className="text-sm font-bold text-neutral-500 mb-4 uppercase">خلاصة الجلسة والتدخل</h3>
+                    <div className="bg-neutral-900 p-8 rounded-2xl border border-neutral-800 text-xl leading-relaxed">
+                        {summary}
+                    </div>
+                </div>
+
+                <div className="mb-12">
+                     <h3 className="text-sm font-bold text-indigo-400 mb-4 uppercase">التكليف المطلوب (48 ساعة)</h3>
+                     <div className="bg-indigo-950/20 border border-indigo-900/30 p-8 rounded-2xl text-2xl font-bold text-indigo-50 leading-relaxed">
+                        {assignment}
+                     </div>
+                </div>
+
+                <div className="mt-20 pt-8 border-t border-neutral-900 flex justify-between items-center text-xs text-neutral-600">
+                    <span>Generated by Session OS Intelligence Engine</span>
+                    <span>alrehla.io</span>
                 </div>
               </div>
             </motion.div>
           )}
 
           {activeTab === 'analytics' && (
-            <motion.div key="analytics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} dir="rtl">
-              <h1 className="text-3xl font-bold mb-8 flex items-center gap-3">
-                <BarChart3 className="text-blue-400" />
+            <motion.div key="analytics" 
+              initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0 0 0 0)' }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: techEase }}
+              className="relative z-10" dir="rtl"
+            >
+              <h1 className="text-3xl font-black mb-8 flex items-center gap-3 font-sans">
+                <BarChart3 className="text-teal-400" />
                 تحليلات الأثر والتحول التحويلي
               </h1>
 
               <div className="grid grid-cols-4 gap-6 mb-8">
-                <StatCard title="إجمالي الجلسات" value={requests.length.toString()} icon={<Activity className="text-blue-400" />} />
-                <StatCard title="معدل الإكمال" value="85%" icon={<FileCheck2 className="text-emerald-400" />} />
-                <StatCard title="متوسط الوضوح" value="7.2/10" icon={<TrendingUp className="text-indigo-400" />} />
-                <StatCard title="نقاط الأثر" value="124" icon={<Zap className="text-yellow-400" />} />
+                <StatCard title="إجمالي الجلسات" value={requests.length.toString()} icon={<Activity className="text-teal-400" />} />
+                <StatCard title="معدل الإكمال" value={`${Math.round((requests.filter(r => r.status === 'session_done').length / (requests.length || 1)) * 100)}%`} icon={<FileCheck2 className="text-indigo-400" />} />
+                <StatCard title="متوسط الوضوح" value={`${(requests.reduce((acc, r) => acc + (r.dawayir_triage_answers?.[0]?.clarity_score || 0), 0) / (requests.length || 1)).toFixed(1)}/10`} icon={<TrendingUp className="text-white" />} />
+                <StatCard title="طلبات الفرز" value={requests.filter(r => r.status === 'needs_manual_review').length.toString()} icon={<AlertTriangle className="text-orange-400" />} />
               </div>
 
               <div className="grid grid-cols-2 gap-8">
@@ -353,10 +661,10 @@ export function SessionOSConsole() {
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={[
-                        { name: 'علاقات', value: 45 },
-                        { name: 'عمل', value: 30 },
-                        { name: 'ذات', value: 25 },
-                        { name: 'مستقبل', value: 15 }
+                        { name: 'علاقات', value: requests.filter(r => r.dawayir_triage_answers?.[0]?.session_goal_type === 'علاقات').length },
+                        { name: 'عمل', value: requests.filter(r => r.dawayir_triage_answers?.[0]?.session_goal_type === 'عمل').length },
+                        { name: 'ذات', value: requests.filter(r => r.dawayir_triage_answers?.[0]?.session_goal_type === 'ذات').length },
+                        { name: 'أخرى', value: requests.filter(r => !['علاقات', 'عمل', 'ذات'].includes(r.dawayir_triage_answers?.[0]?.session_goal_type)).length }
                       ]}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#222" />
                         <XAxis dataKey="name" stroke="#666" fontSize={12} />
@@ -412,21 +720,21 @@ function NavItem({ active, icon, label, badge, onClick }: { active: boolean, ico
 
 function StatCard({ title, value, icon }: { title: string, value: string, icon: React.ReactNode }) {
   return (
-    <div className="bg-[#111] border border-neutral-800 rounded-2xl p-6 flex flex-col">
+    <div className="bg-[#111]/80 backdrop-blur-md border border-white/5 rounded-2xl p-6 flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-sm text-neutral-400 font-medium">{title}</h3>
-        <div className="bg-neutral-900 p-2 rounded-lg border border-neutral-800">{icon}</div>
+        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">{title}</h3>
+        <div className="bg-white/5 p-2 rounded-lg border border-white/10 shadow-inner">{icon}</div>
       </div>
-      <div className="text-4xl font-black">{value}</div>
+      <div className="text-4xl font-black font-sans tracking-tight text-white">{value}</div>
     </div>
   );
 }
 
 function BriefBlock({ title, content }: { title: string, content: string }) {
   return (
-    <div className="bg-[#111] border border-neutral-800 rounded-xl p-5">
-      <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3">{title}</h3>
-      <p className="text-sm text-neutral-200 leading-relaxed">{content}</p>
+    <div className="bg-[#111]/60 backdrop-blur-md border border-white/5 rounded-2xl p-6">
+      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex gap-2"><div className="w-1 h-3 rounded-full bg-slate-600"/>{title}</h3>
+      <p className="text-sm font-medium text-slate-200 leading-relaxed max-w-prose">{content}</p>
     </div>
   );
 }

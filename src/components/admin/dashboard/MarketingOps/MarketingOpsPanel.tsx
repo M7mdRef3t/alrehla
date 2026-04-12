@@ -36,9 +36,12 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Trophy,
-  Repeat
+  Repeat,
+  Brain
 } from "lucide-react";
 import { ManualLeadEntry } from "./ManualLeadEntry";
+import { OracleLeadsAnalysis } from "./OracleLeadsAnalysis";
+import { WhatsAppThreadModal } from "./WhatsAppThreadModal";
 import { QuickSendRow } from "./QuickSendRow";
 import { SovereignGatewayCommand, AVAILABLE_GATEWAYS } from "../Sovereign/SovereignGatewayCommand";
 import { StatCard } from "../Executive/components/StatCard";
@@ -118,8 +121,8 @@ const OWNER_EMAIL = "hello@alrehla.app";
 
 // --- Helpers ---
 
-import { getAuthToken } from "@/state/authState";
-import { useAdminState } from "@/state/adminState";
+import { getAuthToken } from "@/domains/auth/store/auth.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { CampaignLeadsModal } from "./CampaignLeadsModal";
 
 function getBearerToken(): string {
@@ -240,7 +243,7 @@ function CollapsibleSection({
     >
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-5 text-right hover:bg-white/5 transition-all"
+        className="w-full flex items-center justify-between p-5 text-right hover:bg-white/5 transition-all cursor-default"
       >
         <div className="text-right">
           <div className="flex items-center gap-2">
@@ -351,7 +354,6 @@ function MarketingSpendConsole({
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">ميزانية الإنفاق الإعلاني</p>
             {isEditing ? (
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-xl font-black text-indigo-400">$</span>
                 <input 
                   type="number" 
                   value={spend} 
@@ -359,9 +361,10 @@ function MarketingSpendConsole({
                   className="bg-black/60 border border-indigo-500/50 rounded-xl px-3 py-1 text-2xl font-black text-white w-40 focus:outline-none focus:ring-2 ring-indigo-500/20"
                   autoFocus
                 />
+                <span className="text-xl font-black text-indigo-400">ج.م</span>
               </div>
             ) : (
-              <p className="text-3xl font-black text-white mt-1">${(spend || 0).toLocaleString()}</p>
+              <p className="text-3xl font-black text-white mt-1">{(spend || 0).toLocaleString()} ج.م</p>
             )}
           </div>
         </div>
@@ -412,11 +415,20 @@ export function MarketingOpsPanel() {
   const [contacted, setContacted] = useState<Set<string>>(new Set());
   const [ghostMode, setGhostMode] = useState(false);
   const [growthMetrics, setGrowthMetrics] = useState<GrowthMetrics | null>(null);
-  const [selectedFilter, setSelectedFilter] = useState<{ type: "campaign" | "source"; value: string } | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<{ type: "campaign" | "source"; value: string; expandedId?: string } | null>(null);
   const [repairLoading, setRepairLoading] = useState(false);
   const [warmupLoading, setWarmupLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const toastRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // WhatsApp Modal State
+  const [whatsappModalObj, setWhatsappModalObj] = useState<{ 
+    leadId: string; 
+    phone: string; 
+    name: string;
+    oracleAdvice?: string;
+    leadGrade?: string;
+  } | null>(null);
 
   const showToast = (msg: string, ok: boolean) => {
     setToast({ msg, ok });
@@ -667,7 +679,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         title={"التحليل المالي والعائد"}
         icon={<DollarSign className="w-5 h-5 text-indigo-400" />}
         subtitle={"الذكاء المالي الفوقي لمراقبة كفاءة الإنفاق والتحويل النقدي."}
-        defaultExpanded={true}
+        defaultExpanded={false}
         headerColors="border-indigo-500/20 bg-indigo-500/5 text-indigo-300"
       >
         <div className="space-y-8">
@@ -681,21 +693,21 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
             />
             <StatCard 
               title={"تكلفة الاستحواذ"} 
-              value={"$" + (growthMetrics?.cpa ?? 0).toFixed(2)} 
+              value={(growthMetrics?.cpa ?? 0).toFixed(2) + " ج.م"} 
               icon={<Target className="w-5 h-5" />} 
               glowColor="indigo" 
               tooltip={"متوسط تكلفة تحويل ليد عادي إلى مشترك أو عميل مفعل."} 
             />
             <StatCard 
               title={"تكلفة الروح الجديدة"} 
-              value={"$" + (growthMetrics?.cpl ?? 0).toFixed(2)} 
+              value={(growthMetrics?.cpl ?? 0).toFixed(2) + " ج.م"} 
               icon={<Users className="w-5 h-5" />} 
               glowColor="sky" 
               tooltip={"متوسط تكلفة الحصول على ليد واحد جديد في قاعدة البيانات."} 
             />
             <StatCard 
               title={"صافي الربح"} 
-              value={"$" + (growthMetrics?.netProfit ?? 0).toLocaleString()} 
+              value={(growthMetrics?.netProfit ?? 0).toLocaleString() + " ج.م"} 
               icon={<Trophy className="w-5 h-5" />} 
               glowColor="amber" 
               tooltip={"الإجمالي المتبقي بعد خصم تكاليف التسويق من الإيرادات الكلية."} 
@@ -711,7 +723,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
                </div>
                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">إجمالي الإيرادات المرصودة</p>
                <h3 className="text-4xl font-black text-white tabular-nums tracking-tighter">
-                 ${growthMetrics?.totalRevenue.toLocaleString() ?? "0"}
+                 {growthMetrics?.totalRevenue.toLocaleString() ?? "0"} ج.م
                </h3>
                <div className="flex items-center gap-2 mt-4">
                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -729,16 +741,21 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         title={"رحلات العبور ونبض الانتشار"}
         icon={<Orbit className="w-5 h-5 text-fuchsia-400" />}
         subtitle={"مراقبة ترددات القنوات الإعلانية (Meta, TikTok, etc) والتحكم في تدفق الأرواح."}
-        defaultExpanded={true}
+        defaultExpanded={false}
         headerColors="border-fuchsia-500/20 bg-fuchsia-500/5 text-fuchsia-300"
       >
         <SovereignGatewayCommand
           stats={stats}
+          onOpenWhatsapp={(leadId, phone, name) => setWhatsappModalObj({ leadId, phone, name })}
           onFilterSelect={(filter) => {
             if (filter.type === "source" || filter.type === "campaign") {
-              setSelectedFilter({ type: filter.type, value: filter.value });
-              if (filter.query) {
+              setSelectedFilter({ type: filter.type, value: filter.value, expandedId: filter.expandedId });
+              // Only set searchQuery if we are NOT expanding a specific lead. 
+              // Expanding a specific lead should show all leads of that source.
+              if (filter.query && !filter.expandedId) {
                  setSearchQuery(filter.query);
+              } else if (filter.expandedId) {
+                 setSearchQuery(""); // Clear search to show the list context
               }
               return;
             }
@@ -748,6 +765,18 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         />
       </CollapsibleSection>
 
+      {/* Oracle Leads Analysis */}
+      <CollapsibleSection
+        title={"تحليل الذكاء الفوقي (Oracle Leads)"}
+        icon={<Brain className="w-5 h-5 text-purple-400" />}
+        subtitle={"تحليل النوايا، أسباب الدخول، والتوصيات لـ Meta Leads."}
+        defaultExpanded={false}
+        headerColors="border-purple-500/20 bg-purple-500/5 text-purple-300"
+      >
+        <OracleLeadsAnalysis 
+           onOpenWhatsapp={(leadId, phone, name, oracleAdvice, leadGrade) => setWhatsappModalObj({ leadId, phone, name, oracleAdvice, leadGrade })}
+        />
+      </CollapsibleSection>
 
       {/* Awareness Funnel */}
       {(stats?.flowStats || stats?.conversionHealth) && (
@@ -755,7 +784,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
           title={"مسار الوعي"}
           icon={<Ghost className="w-5 h-5 text-indigo-400" />}
           subtitle={"رصد نقاط الاحتكاك ومعدلات هروب الأرواح في رحلة التعافي داخل الملاذ."}
-          defaultExpanded={true}
+          defaultExpanded={false}
           headerColors="border-indigo-500/20 bg-indigo-500/5 text-indigo-300"
         >
           <div className="space-y-8">
@@ -824,6 +853,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
       <CampaignLeadsModal 
         isOpen={!!selectedFilter}
         onClose={() => setSelectedFilter(null)}
+        initialExpandedId={selectedFilter?.expandedId}
         title={
           selectedFilter 
             ? (selectedFilter.value === "undefined" || selectedFilter.value === "unattributed" || selectedFilter.value === "unknown" 
@@ -893,7 +923,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         title={"مصفوفة استجابة الملاذ (Resonance Matrix)"}
         icon={<Radar className="w-5 h-5" />}
         subtitle={"رصد وتتبع انبعاثات الإشعاع ونسب التجاوب في محيط الإطلاق."}
-        defaultExpanded={true}
+        defaultExpanded={false}
         headerColors="border-purple-500/20 bg-purple-500/5 text-purple-300"
       >
         <div className="space-y-6">
@@ -924,7 +954,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         icon={<Orbit className="w-5 h-5 text-emerald-400" />}
         subtitle={"توجيه النداء بشكل خاص وحصري للأفراد الجدد."}
         badge={<span className="text-[11px] bg-emerald-500/20 px-2 py-0.5 rounded-full text-emerald-400 font-black border border-emerald-500/30">{availableLeads.length} كيانات متاحة للنداء</span>}
-        defaultExpanded={true}
+        defaultExpanded={false}
         headerColors="border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
       >
         <div className="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2 pb-4">
@@ -967,6 +997,17 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         <Users className="w-3.5 h-3.5" />
         إجمالي سجلات قائمة الانتظار: {stats?.totalLeads ?? "—"}
       </div>
+
+      {whatsappModalObj && (
+        <WhatsAppThreadModal
+          leadId={whatsappModalObj.leadId}
+          phone={whatsappModalObj.phone}
+          name={whatsappModalObj.name}
+          oracleAdvice={whatsappModalObj.oracleAdvice}
+          leadGrade={whatsappModalObj.leadGrade}
+          onClose={() => setWhatsappModalObj(null)}
+        />
+      )}
     </div>
   );
 }

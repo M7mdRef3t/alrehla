@@ -7,7 +7,7 @@ import {
   TrendingDown,
   Waves
 } from "lucide-react";
-import type { JourneyPath } from "@/state/adminState";
+import type { JourneyPath } from "@/domains/admin/store/admin.store";
 
 interface TelemetryPulseProps {
   path: JourneyPath;

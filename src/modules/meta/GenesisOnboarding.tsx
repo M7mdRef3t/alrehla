@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useKineticSensors } from "@/hooks/useKineticSensors";
 import { supabase } from "@/services/supabaseClient";
 import { isPublicPaymentsEnabled } from "@/config/payments";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 interface GenesisOnboardingProps {
   userId: string;

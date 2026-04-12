@@ -8,8 +8,8 @@ import {
   Sparkles, MessageCircle, ClipboardCheck
 } from "lucide-react";
 import { LIFE_DOMAINS, getDomainConfig, type LifeDomainId, type LifeEntryType } from "@/types/lifeDomains";
-import { useLifeState } from "@/state/lifeState";
-import { useAuthState } from "@/state/authState";
+import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useAuthState } from "@/domains/auth/store/auth.store";
 import { LifeScoreRing } from "./LifeScoreRing";
 import { DomainRadar } from "./DomainRadar";
 import { MorningBrief } from "./MorningBrief";
@@ -22,6 +22,7 @@ import { DomainAssessmentModal } from "./DomainAssessmentModal";
 import { LifeAdvisorChat } from "./LifeAdvisorChat";
 import { TodayView } from "./TodayView";
 import { EveningReview } from "./EveningReview";
+import { LifeOSOnboarding } from "./LifeOSOnboarding";
 import { buildLifeContext, generateMorningBrief, detectLifePatterns } from "@/services/lifeAdvisor";
 import { syncLifeStateWithDB } from "@/services/lifeStateSync";
 
@@ -67,6 +68,9 @@ export default function CommandCenter({ onBack, onOpenLibrary }: CommandCenterPr
   const recalculateLifeScore = useLifeState((s) => s.recalculateLifeScore);
   const resolveEntry = useLifeState((s) => s.resolveEntry);
   const authUser = useAuthState((s) => s.user);
+
+  // Show onboarding for first-time users (no assessments)
+  const [showOnboarding, setShowOnboarding] = useState(assessments.length === 0);
 
   // Recalculate on mount + sync with Supabase if logged in
   useEffect(() => {
@@ -121,7 +125,18 @@ export default function CommandCenter({ onBack, onOpenLibrary }: CommandCenterPr
       style={{ background: "#050510", scrollbarWidth: "thin" }}
       dir="rtl"
     >
+      {/* Onboarding — shown to first-time users */}
+      {showOnboarding && (
+        <LifeOSOnboarding
+          onComplete={() => {
+            setShowOnboarding(false);
+            recalculateLifeScore();
+          }}
+        />
+      )}
+
       {/* Background ambient */}
+
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute w-[600px] h-[600px] rounded-full top-[-20%] right-[-10%]"
           style={{ background: "radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 65%)" }} />

@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 import { AlertTriangle, Clock } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 
 export const StagnationAlertWidget: FC = () => {
     const nodes = useMapState((s) => s.nodes);

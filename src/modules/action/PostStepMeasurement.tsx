@@ -6,7 +6,7 @@ import {
   computePostStepScore,
   type PostStepAnswers
 } from "@/data/postStepQuestions";
-import { useJourneyState } from "@/state/journeyState";
+import { useJourneyProgress } from "@/domains/journey";
 
 interface PostStepMeasurementProps {
   onComplete: () => void;
@@ -15,7 +15,7 @@ interface PostStepMeasurementProps {
 export const PostStepMeasurement: FC<PostStepMeasurementProps> = ({ onComplete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<PostStepAnswers>({});
-  const completePostStep = useJourneyState((s) => s.completePostStep);
+  const completePostStep = useJourneyProgress().completePostStep;
 
   const question = POST_STEP_QUESTIONS[currentIndex];
   const isLast = currentIndex === POST_STEP_QUESTIONS.length - 1;

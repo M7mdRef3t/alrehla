@@ -1,8 +1,8 @@
 import React, { useEffect, useState, type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArchiveRestore, Check, Sparkles } from "lucide-react";
-import { useBlindCapsuleState } from "@/state/blindCapsuleState";
-import { useAppOverlayState } from "@/state/appOverlayState";
+import { useBlindCapsuleState } from "@/domains/journey/store/blindCapsule.store";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 export const BlindCapsuleOpener: FC = () => {
    const isOpen = useAppOverlayState((s) => s.flags.blindCapsuleOpener);

@@ -10,7 +10,7 @@
 import { type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Flame, Users, Heart, Trophy } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { loadStreak } from "@/services/streakSystem";
 
 const WEEKLY_SHOWN_KEY = "dawayir-weekly-summary-shown";
@@ -46,7 +46,7 @@ interface WeeklyJourneySummaryProps {
 }
 
 const MOTIVATIONAL = [
-  "الاستمرار هو السر. كل يوم بتفتح التطبيق هو فوز.",
+  "الاستمرار هو السر. كل يوم بترجع للرحلة هو فوز.",
   "التعافي مش سباق — هو وعي يومي. وأنت واعي.",
   "كل نبضة سجّلتها دي شجاعة حقيقية.",
   "أنت بتكتب قصة تستحق تتروى.",

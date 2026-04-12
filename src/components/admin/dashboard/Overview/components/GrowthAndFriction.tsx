@@ -14,8 +14,8 @@ interface GrowthAndFrictionProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-slate-900/95 backdrop-blur-md border border-white/10 p-4 rounded-xl shadow-2xl text-xs">
-                <p className="text-slate-400 mb-3 font-mono font-bold border-b border-white/5 pb-2 text-center">{label}</p>
+            <div className="admin-glass-card p-4 rounded-xl text-xs z-50">
+                <p className="text-slate-400 mb-3 font-mono font-bold border-b border-white/5 pb-2 text-center drop-shadow-md">{label}</p>
                 {payload.map((entry: any, index: number) => (
                     <div key={index} className="flex items-center justify-between gap-4 mb-2 last:mb-0">
                         <div className="flex items-center gap-2">

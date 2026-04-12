@@ -3,7 +3,7 @@
  * للاستخدام: استدعِ من لوحة الأدمن أو من Console عبر window.__seedStressTest
  */
 
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import type { JourneyEvent, JourneyEventPayload } from "@/services/journeyTracking";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { runtimeEnv } from "@/config/runtimeEnv";

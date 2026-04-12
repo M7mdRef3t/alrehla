@@ -23,6 +23,7 @@ import {
   Mail,
   Route,
   Gavel,
+  LibraryBig,
 } from "lucide-react";
 
 export type AdminTab =
@@ -62,7 +63,9 @@ export type AdminTab =
   | "mail-command"
   | "design-lab"
   | "governance-ledger"
-  | "journey-paths";
+  | "journey-paths"
+  | "ops-docs"
+  | "support-tickets";
 
 export type NavGroup = {
   title: string;
@@ -108,6 +111,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "flow-map", label: "خريطة الدواير", icon: <MapPin className="h-4 w-4" /> },
       { id: "journey-paths", label: "مسارات المستخدم", icon: <Route className="h-4 w-4 text-cyan-300" /> },
+      { id: "ops-docs", label: "مكتبة التشغيل", icon: <LibraryBig className="h-4 w-4 text-amber-300" /> },
       { id: "map-registry", label: "دليل الخرائط", icon: <Compass className="h-4 w-4 text-emerald-400" /> },
       { id: "content", label: "مخزن المحتوى", icon: <Database className="h-4 w-4" /> },
       { id: "dreams-matrix", label: "مصفوفة الأهداف", icon: <Target className="h-4 w-4 text-teal-400" /> },
@@ -118,6 +122,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "مجتمع المسافرين",
     items: [
       { id: "users-state", label: "سجلات وبيانات الأعضاء", icon: <Users className="h-4 w-4" /> },
+      { id: "support-tickets", label: "تفعيل المشتركين والدعم", icon: <MessageSquare className="h-4 w-4 text-rose-400" /> },
       { id: "digital-twin", label: "التوأم الرقمي", icon: <User className="h-4 w-4 text-indigo-400" /> },
       { id: "feedback-survey", label: "أصوات ونتائج الأعضاء", icon: <MessageSquare className="h-4 w-4 text-teal-400" /> },
       { id: "dawayir-live", label: "دواير لايف", icon: <Sparkles className="h-4 w-4 text-teal-300" /> },
@@ -158,6 +163,7 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "war-room": "غرفة العمليات",
   "flow-map": "خريطة التدفق",
   "journey-paths": "مسارات المستخدم",
+  "ops-docs": "مكتبة التشغيل",
   "map-registry": "دليل الخرائط",
   "feedback-survey": "أصوات ونتائج الأعضاء",
   "feature-flags": "مفاتيح النظام",
@@ -183,6 +189,7 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "marketing-ops": "رحلة الانتشار",
   "mail-command": "قيادة البريد",
   "expansion-hub": "إستراتيجية التوسع",
+  "support-tickets": "تفعيل المشتركين والدعم",
 };
 
 export const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "users-state"];
@@ -200,6 +207,7 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "war-room": "غرفة العمليات: الإنذارات الحرجة والمشاكل التي تتطلب تدخلاً طارئاً.",
   "flow-map": "خريطة التدفق: الرؤية البصرية لشجرة المنصة ومسارات الذكاء الاصطناعي بالكامل.",
   "journey-paths": "مسارات المستخدم: لوحة تحكم لبناء وتعديل وإعادة ترتيب المسارات الكاملة مثل مسار الملاذ خطوة بخطوة.",
+  "ops-docs": "مكتبة التشغيل: مرجع حي يضم الخرائط الوظيفية، المصفوفات التشغيلية، قوائم التحقق، ودليل تشغيل الأونر من داخل لوحة التحكم.",
   "map-registry": "دليل الخرائط: شاشة تعرض المعمارية التقنية والتخطيطية لجميع الخرائط داخل المنصة بمساراتها الكلية.",
   "feedback-survey": "أصوات ونتائج الأعضاء: دمج لرسائل الزوار والاستبيانات المتقدمة.",
   "feature-flags": "مفاتيح النظام: التحكم اللحظي في تفعيل وإغلاق ميزات المنصة.",
@@ -225,4 +233,5 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "marketing-ops": "رحلة الانتشار: حملات البريد الإلكتروني وإدارة الإشعارات والرسائل الترويجية.",
   "mail-command": "قيادة البريد: نظام بريد إلكتروني متكامل للإرسال والقوالب وتتبع الأداء.",
   "expansion-hub": "إستراتيجية التوسع: تحليل القوة الشرائية العالمية مقابل نقاط الألم النفسية لتحديد الأسواق المحتملة.",
+  "support-tickets": "التفعيل والدعم: مركز مراجعة تحويلات الدفع اليدوية وتفعيل الاشتراكات للمستخدمين فوراً.",
 };

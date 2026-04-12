@@ -10,7 +10,7 @@
  */
 
 import { supabase } from "@/services/supabaseClient";
-import { useRitualState } from "@/state/ritualState";
+import { useRitualState } from "@/domains/journey/store/ritual.store";
 import type { DailyRitual, RitualLog, DailyPlan } from "@/types/dailyRituals";
 
 // ─── Upload ──────────────────────────────────────────────────────

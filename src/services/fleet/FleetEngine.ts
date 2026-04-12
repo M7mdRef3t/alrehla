@@ -1,7 +1,7 @@
 import { logger } from "@/services/logger";
-import { useFleetState, FleetVessel } from '@/state/fleetState';
-import { useDigitalTwinState } from '@/state/digitalTwinState';
-import { usePredictiveState } from '@/state/predictiveState';
+import { useFleetState, FleetVessel } from '@/domains/admin/store/fleet.store';
+import { useDigitalTwinState } from '@/domains/maraya/store/digitalTwin.store';
+import { usePredictiveState } from '@/domains/consciousness/store/predictive.store';
 import { fetchDreams } from '../adminApi';
 import { Dream } from '@/types/dreams';
 

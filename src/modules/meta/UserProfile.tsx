@@ -9,9 +9,9 @@ import {
   Sparkles, Orbit
 } from "lucide-react";
 import { useGamificationState } from "@/services/gamificationEngine";
-import { useAchievementState } from "@/state/achievementState";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useQuizHistory } from "@/hooks/useQuizHistory";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { ACHIEVEMENTS } from "@/data/achievements";
 import { DailyQuests } from "../growth/Gamification/DailyQuests";
 import { calculateEntropy } from "@/services/predictiveEngine";

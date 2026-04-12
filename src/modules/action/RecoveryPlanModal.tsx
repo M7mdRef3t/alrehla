@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Target } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 import { DynamicRecoveryPlan } from "./DynamicRecoveryPlan";
 import { RelapsePrevention } from "./RelapsePrevention";
 import { ShieldAlert } from "lucide-react";

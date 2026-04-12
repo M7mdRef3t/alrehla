@@ -107,7 +107,7 @@ export function buildExpertInsight(topic: string, detail: LiveSessionDetail) {
   return {
     ok: true,
     topic,
-    headline: `المنصة ترى أن ${topic} ليس عرضًا منفصلًا، بل رحلة لفهم النمط الحاضر الآن.`,
+    headline: `رحلتك ترى أن ${topic} ليس عرضًا منفصلًا، بل رحلة لفهم النمط الحاضر الآن.`,
     guidance: [
       "سمِّ التوتر بدقة قبل أن تحاول حله.",
       "اربط الموضوع بدائرة واحدة مهيمنة بدل نشره على كل المساحات.",

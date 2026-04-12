@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { trackPageView } from "@/services/analytics";
+import { analyticsService } from "@/domains/analytics";
 
 /**
  * Hook لتتبع الصفحات تلقائياً
  */
 export function usePageTracking(pageName: string): void {
   useEffect(() => {
-    trackPageView(pageName);
+    analyticsService.trackPage(pageName);
   }, [pageName]);
 }

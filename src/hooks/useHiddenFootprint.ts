@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useMapState } from '@/state/mapState';
+import { useMapState } from '@/domains/dawayir/store/map.store';
 
 // Thresholds for stagnation (in milliseconds)
 // For demo purposes, we set these low so the effect can be seen quickly.

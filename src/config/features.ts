@@ -36,7 +36,7 @@ export interface FeatureFlagDefinition {
 export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   {
     key: "dawayir_map",
-    label: "أداة دواير (الخريطة)",
+    label: "خريطة الدوائر",
     description: "تشغيل/إيقاف خريطة العلاقات الأساسية",
     group: "Core"
   },
@@ -54,7 +54,7 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   },
   {
     key: "mirror_tool",
-    label: "أداة المراية (أنا)",
+    label: "مرآة الذات",
     description: "بطاقة الذات في مركز الخريطة",
     group: "Core"
   },

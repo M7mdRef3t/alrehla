@@ -11,8 +11,10 @@ import { logger } from "@/services/logger";
 
 import type { MapNode } from "@/modules/map/mapTypes";
 import type { DailyQuestion } from "@/data/dailyQuestions";
-import { useEmergencyState } from "@/state/emergencyState";
-import { useToastState } from "@/state/toastState";
+import { useEmergencyState } from "@/domains/admin/store/emergency.store";
+import { useToastState } from "@/domains/dawayir/store/toast.store";
+import { supabase } from "@/services/supabaseClient";
+import { isAlignedWithPrinciples } from "./CORE_PRINCIPLES";
 
 
 
@@ -58,6 +60,14 @@ export type DecisionType =
   | "grant_discount"
   | "subscription_activated"
   | "subscription_cancelled"
+
+  // ── تدخلات سيادية (Sovereign Interventions) ──
+  | "sovereign_intervention_deployed"
+  | "tactical_preset_deployed"
+  | "market_ignition_campaign"
+  | "ignite_market"
+  | "lock_gateway"
+  | "scale_energy"
 
   // ── تقنية ──
   | "optimize_performance"
@@ -124,6 +134,14 @@ export const DECISION_RULES: Record<DecisionType, AutonomyLevel> = {
   subscription_activated: "AUTONOMOUS_WITH_LOG",
   subscription_cancelled: "AUTONOMOUS_WITH_LOG",
 
+  // ── تدخلات سيادية ── (تحتاج تصديق إلا الأوامر السريعة)
+  sovereign_intervention_deployed: "REQUIRES_APPROVAL", // الافتراضي للتدخلات عالية التأثير
+  tactical_preset_deployed: "AUTONOMOUS_WITH_LOG",     // الأوامر النصية المجهزة مسبقا يتم تسجيلها
+  market_ignition_campaign: "REQUIRES_APPROVAL",       // الحملات الإعلانية الجديدة تحتاج موافقة
+  ignite_market: "AUTONOMOUS_WITH_LOG",                // الأوراكل يستطيع إطلاق شرارة للسوق 
+  lock_gateway: "AUTONOMOUS_WITH_LOG",                 // إغلاق بوابة فاشلة 
+  scale_energy: "AUTONOMOUS_WITH_LOG",                 // تقليل الميزانيات آلياً لتقليل الخسائر
+
   // ── تقنية ──
   optimize_performance: "AUTONOMOUS_WITH_LOG",
   fix_bug: "AUTONOMOUS_WITH_LOG",
@@ -161,6 +179,54 @@ export interface AIDecision {
  */
 export class DecisionEngine {
   private decisionLog: AIDecision[] = [];
+  private isLoaded = false;
+
+  constructor() {
+    this.loadInitialDecisions();
+  }
+
+  private async loadInitialDecisions() {
+    try {
+      // Load local first for fast UI
+      if (typeof window !== 'undefined') {
+        const local = JSON.parse(localStorage.getItem("dawayir-ai-decisions") || "[]");
+        if (local.length > 0) {
+          this.decisionLog = local;
+        }
+      }
+      this.isLoaded = true;
+
+      // Sync with Supabase (run in background)
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('dawayir_ai_decisions')
+          .select('*')
+          .order('timestamp', { ascending: false })
+          .limit(100);
+          
+        if (!error && data && data.length > 0) {
+           // map db columns to JS camelCase
+           const mapped: AIDecision[] = data.map(d => ({
+              id: d.id,
+              type: d.type as DecisionType,
+              timestamp: Number(d.timestamp),
+              reasoning: d.reasoning,
+              payload: d.payload,
+              outcome: d.outcome,
+              approvedBy: d.approved_by,
+              executedAt: d.executed_at ? Number(d.executed_at) : undefined
+           }));
+           // Reverse to keep oldest first in array (if we display .reverse() in getRecentDecisions)
+           // Actually `select` returned descending (newest first). 
+           // Arrays usually push to end, so we should reverse.
+           this.decisionLog = mapped.reverse();
+           this.saveLogToStorage(false); // save to local only
+        }
+      }
+    } catch {
+       // local storage error, ignore
+    }
+  }
 
   /**
    * تقييم قرار من الـ AI
@@ -310,11 +376,32 @@ export class DecisionEngine {
     }
   }
 
-  private saveLogToStorage() {
+  private async saveLogToStorage(syncCloud: boolean = true) {
     try {
-      localStorage.setItem("dawayir-ai-decisions", JSON.stringify(this.decisionLog));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("dawayir-ai-decisions", JSON.stringify(this.decisionLog));
+      }
     } catch {
       // Storage unavailable or quota exceeded
+    }
+    
+    // Sync single newest decision or batch update if requested
+    if (syncCloud && supabase && this.decisionLog.length > 0) {
+       const latest = this.decisionLog[this.decisionLog.length - 1];
+       try {
+          await supabase.from('dawayir_ai_decisions').upsert({
+             id: latest.id,
+             type: latest.type,
+             timestamp: latest.timestamp,
+             reasoning: latest.reasoning,
+             payload: latest.payload,
+             outcome: latest.outcome,
+             approved_by: latest.approvedBy,
+             executed_at: latest.executedAt
+          });
+       } catch (e) {
+          console.error("Failed to sync AI decision to cloud", e);
+       }
     }
   }
 
@@ -342,14 +429,7 @@ export class DecisionEngine {
    * رجوع آخر القرارات (للمراجعة)
    */
   getRecentDecisions(limit = 20): AIDecision[] {
-    try {
-      const log = JSON.parse(
-        localStorage.getItem("dawayir-ai-decisions") || "[]"
-      ) as AIDecision[];
-      return log.slice(-limit).reverse();
-    } catch {
-      return [];
-    }
+    return this.decisionLog.slice(-limit).reverse();
   }
 
   /**
@@ -368,11 +448,24 @@ export class DecisionEngine {
    * تحقق من جودة المحتوى المُولّد
    */
   private async validateContentQuality(
-    _decision: Omit<AIDecision, "timestamp">
+    decision: Omit<AIDecision, "timestamp">
   ): Promise<{ passed: boolean; reason?: string }> {
-    // TODO: استخدم isAlignedWithPrinciples() من CORE_PRINCIPLES.ts
+    // 1. استخراج النص المُولّد من الـ payload
+    const p = decision.payload as { text?: string; greeting?: string; missionDescription?: string } | null;
+    const contentToTest = p?.text || (p?.greeting ? `${p.greeting} ${p.missionDescription}` : "");
 
-    // مؤقتاً: نقبل كل حاجة
+    if (!contentToTest) return { passed: true }; // لا يوجد نص للفحص
+
+    // 2. التحقق من المبادئ
+    const check = isAlignedWithPrinciples(contentToTest);
+    
+    if (!check.aligned) {
+      return { 
+        passed: false, 
+        reason: `مخالفة للمبادئ: ${check.violations.join(", ")}` 
+      };
+    }
+
     return { passed: true };
   }
 }

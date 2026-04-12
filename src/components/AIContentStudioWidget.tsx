@@ -1,11 +1,11 @@
 import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState } from "react";
-import { Video, Wand2, Sparkles, Copy, RefreshCw, Layers, Zap, ShieldAlert, Brain, History, ChevronRight, ChevronLeft, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Video, Wand2, Sparkles, Copy, RefreshCw, Zap, ShieldAlert, Brain, History, ChevronRight, ChevronLeft, ThumbsUp, ThumbsDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMapState } from "@/state/mapState";
-import { usePulseState } from "@/state/pulseState";
-import { useAuthState } from "@/state/authState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useAuthState } from "@/domains/auth/store/auth.store";
 import { geminiClient } from "@/services/geminiClient";
 import { UpgradeScreen } from '@/modules/exploration/UpgradeScreen';
 import { trackEvent, AnalyticsEvents } from "@/services/analytics";

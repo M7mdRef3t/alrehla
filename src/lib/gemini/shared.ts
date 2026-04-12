@@ -1,9 +1,9 @@
 import { GoogleGenerativeAI, type GenerativeModel } from "@google/generative-ai";
 
 export const DEFAULT_MODEL_ORDER: string[] = [
-  "gemini-1.5-flash",
-  "gemini-1.5-pro",
-  "gemini-1.5-flash-8b"
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-flash-latest"
 ];
 
 export const DEFAULT_GENERATION_CONFIG = {

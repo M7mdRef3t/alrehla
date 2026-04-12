@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { useAchievementState } from "@/state/achievementState";
+import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 
 interface BreathingOverlayProps {
   onClose: () => void;

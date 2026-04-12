@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 import { Tag, TrendingDown } from "lucide-react";
-import { usePulseState } from "@/state/pulseState";
+import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 
 const TOPIC_LABELS: Record<string, string> = {
     work: "العمل",

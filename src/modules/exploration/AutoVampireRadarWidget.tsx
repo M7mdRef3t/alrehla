@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 import { Radar, Ghost, AlertOctagon } from "lucide-react";
-import { useMapState } from "@/state/mapState";
+import { useMapState } from "@/domains/dawayir/store/map.store";
 
 export const AutoVampireRadarWidget: FC = () => {
     const nodes = useMapState((s) => s.nodes);
