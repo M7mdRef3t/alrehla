@@ -32,23 +32,52 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Missing 'phone' in payload" }, { status: 400 });
     }
 
-    if (action === "session_completed") {
-      // TODO: Connect to Firebase Admin to update user's journey progress
-      // Example logic structure:
-      // const user = await getUserByPhone(phone);
-      // if (user) {
-      //   await updateUserDocument(user.uid, {
-      //     last_session_date: new Date(),
-      //     current_impact_score: impact_score,
-      //     unlocked_milestone: recommended_stage
-      //   });
-      // }
+    if (action === "session_completed" || action === "intake_submitted") {
+      const { getSupabaseAdminClient } = await import("@/server/supabaseAdmin").catch(() => 
+        import("../../_lib/supabaseAdmin")
+      );
+      
+      const supabaseAdmin = getSupabaseAdminClient?.();
+      
+      if (supabaseAdmin) {
+        // 1. Sanitize Phone to match format in DB
+        let normalizedPhone = phone.replace(/[^\d+]/g, '');
+        if (!normalizedPhone.startsWith('+')) {
+          normalizedPhone = '+' + normalizedPhone; // Basic fallback
+        }
 
-      console.log(`[SessionOS Webhook] Successfully processed session completion for phone: ${phone}`);
+        // 2. Find matching lead or user profile
+        const { data: lead } = await supabaseAdmin
+          .from("marketing_leads")
+          .select("lead_id, note")
+          .eq("phone_normalized", normalizedPhone)
+          .maybeSingle();
+
+        if (lead) {
+          // 3. Update their journey/CRM status
+          const updatedNote = `[SessionOS] ${action} (Impact: ${impact_score}/10) - Stage: ${recommended_stage || 'Unknown'}\n${lead.note || ''}`;
+          
+          await supabaseAdmin
+            .from("marketing_leads")
+            .update({ 
+              status: "engaged", 
+              intent: action === "intake_submitted" ? "session_requested" : "session_completed",
+              note: updatedNote,
+              updated_at: new Date().toISOString()
+            })
+            .eq("lead_id", lead.lead_id);
+            
+          console.log(`[SessionOS Webhook] Successfully updated Supabase marketing_lead for: ${normalizedPhone}`);
+        } else {
+           console.log(`[SessionOS Webhook] Phone ${normalizedPhone} not found in leads, cannot update DB.`);
+        }
+      } else {
+        console.warn("[SessionOS Webhook] Supabase Admin client not available.");
+      }
       
       return NextResponse.json({ 
         success: true, 
-        message: "User journey updated successfully based on SessionOS feedback." 
+        message: "User journey and CRM updated successfully based on SessionOS feedback." 
       }, { status: 200 });
     }
 
