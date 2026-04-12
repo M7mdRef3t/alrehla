@@ -45,5 +45,7 @@ export type {
 
 // ─── Hooks ────────────────────────────────────────────
 
+import { useJourneyState } from "./store/journey.store";
+export const useJourneyStore = useJourneyState;
 export { useJourneyProgress } from "./hooks/useJourneyProgress";
 export { useJourneyTracking } from "./hooks/useJourneyTracking";

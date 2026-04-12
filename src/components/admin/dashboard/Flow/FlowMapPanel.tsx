@@ -122,19 +122,20 @@ export const FlowMapPanel: FC = () => {
 
     if (isSandboxEnforced) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[500px] text-center p-8 space-y-6 bg-slate-950/20 rounded-3xl border border-white/5">
-                <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/30 animate-pulse">
-                    <Compass className="w-10 h-10 text-indigo-500" />
+            <div className="flex flex-col items-center justify-center min-h-[500px] text-center p-8 space-y-6 admin-glass-card border-indigo-500/20 bg-[#0B0F19]/60 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.1),transparent_70%)] pointer-events-none" />
+                <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/30 animate-[pulse_3s_ease-in-out_Infinity] shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+                    <Compass className="w-10 h-10 text-indigo-400" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 relative z-10">
                     <h2 className="text-2xl font-black text-indigo-400 uppercase tracking-tighter">PROTOCOL: SECURE BRIDGE ACTIVE</h2>
-                    <p className="text-slate-400 max-w-md mx-auto">
+                    <p className="text-slate-400 max-w-md mx-auto leading-relaxed">
                         البوصلة مقفولة حالياً على إحداثيات المشغل: <span className="text-white font-bold">{activeVessel?.title}</span>.
                         تم حجب الخرائط العامة للحفاظ على مسار السفينة ومنع الانحراف الذهني.
                     </p>
                 </div>
-                <div className="flex gap-4">
-                    <div className="px-4 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase">
+                <div className="flex gap-4 relative z-10">
+                    <div className="px-4 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-widest shadow-[0_0_15px_rgba(99,102,241,0.1)]">
                         Zero Distraction Mode
                     </div>
                 </div>
@@ -211,8 +212,8 @@ export const FlowMapPanel: FC = () => {
                 </div>
             </div>
 
-            <div className="admin-glass-card p-0 h-[600px] relative overflow-hidden group">
-                <div className="absolute top-3 left-3 z-20 inline-flex rounded-xl border border-white/10 bg-slate-900/70 p-1 backdrop-blur-md">
+            <div className="admin-glass-card p-0 h-[600px] relative overflow-hidden group border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                <div className="absolute top-3 left-3 z-20 inline-flex rounded-xl border border-white/10 bg-[#0B0F19]/60 p-1 backdrop-blur-3xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
                     <button
                         type="button"
                         onClick={() => setPathScope("core")}

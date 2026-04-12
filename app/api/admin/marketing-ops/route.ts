@@ -77,7 +77,7 @@ export async function GET(req: Request) {
   // ─── Lead Acquisition & Attribution ─────────────────────────────────────────
   const { data: dbLeads, count: dbLeadsCount, error: dbLeadsError } = await supabase
     .from("marketing_leads")
-    .select("id, name, email, phone_normalized, source_type, campaign, adset, ad, status, email_status, created_at, unsubscribed, utm, note", { count: "exact" });
+    .select("id, name, email, phone_normalized, source_type, campaign, adset, ad, status, email_status, created_at, unsubscribed, utm, note, metadata", { count: "exact" });
 
   if (dbLeadsError) {
     console.error("[MarketingOps] marketing_leads fetch error:", dbLeadsError);
@@ -168,6 +168,9 @@ export async function GET(req: Request) {
   const conversionsBySource: Record<string, number> = {};
   const deepConversionsByCampaign: Record<string, number> = {};
   const deepConversionsBySource: Record<string, number> = {};
+  const revenueByCampaign: Record<string, number> = {};
+  const revenueBySource: Record<string, number> = {};
+  let totalRevenue = 0;
   
   for (const lead of rawLeads) {
     const c = (lead.campaign as string) || "unattributed";
@@ -185,6 +188,16 @@ export async function GET(req: Request) {
     if (deepConverted) {
       deepConversionsByCampaign[c] = (deepConversionsByCampaign[c] ?? 0) + 1;
       deepConversionsBySource[s] = (deepConversionsBySource[s] ?? 0) + 1;
+    }
+    
+    // Revenue Attributions 
+    if (["activated", "converted", "proof_received"].includes((lead.status as string)?.toLowerCase())) {
+        const metadata = (lead.metadata as any) || {};
+        const amount = Number(metadata.amount) || Number(metadata.amount_egp) || 0;
+        
+        revenueByCampaign[c] = (revenueByCampaign[c] ?? 0) + amount;
+        revenueBySource[s] = (revenueBySource[s] ?? 0) + amount;
+        totalRevenue += amount;
     }
   }
   const { data: recentErrors } = await supabase
@@ -373,6 +386,9 @@ export async function GET(req: Request) {
     conversionsBySource,
     deepConversionsByCampaign,
     deepConversionsBySource,
+    revenueByCampaign,
+    revenueBySource,
+    totalRevenue,
     rawLeads,
     realStarts: realStarts ?? 0,
     recentErrors: recentErrors ?? [],

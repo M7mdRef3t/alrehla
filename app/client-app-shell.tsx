@@ -31,12 +31,18 @@ const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
 function hasRenderablePuckData(data: Data | null | undefined): data is Data {
   if (!data || typeof data !== "object") return false;
 
-  // Puck data can exist as an object but still contain no blocks to render.
+  // Puck requires a `content` array with at least one block to render anything.
+  // Other shapes (e.g. {title, sections, is_active}) are CMS metadata, not Puck layouts.
   if ("content" in data && Array.isArray(data.content)) {
     return data.content.length > 0;
   }
 
-  return Object.keys(data).length > 0;
+  // Also accept if Puck root config exists with children
+  if ("root" in data && data.root && typeof data.root === "object") {
+    return true;
+  }
+
+  return false;
 }
 
 function shouldSilenceAiLog(args: unknown[]): boolean {

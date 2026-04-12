@@ -84,6 +84,8 @@ const LeadCard: FC<{ lead: any, onFilterSelect: any, onAward: (id: string) => vo
   const reasoning = l.metadata?.oracle_reasoning;
   const action = l.metadata?.oracle_recommended_action;
   const phone = l.phone_normalized || l.metadata?.phone || l.metadata?.fb_phone || "";
+  const campaign = l.metadata?.campaign || l.campaign;
+  const source = l.metadata?.source || l.source || l.source_type;
   
   const points = l.metadata?.boarding_gamification?.awareness_points || 0;
 
@@ -127,7 +129,7 @@ const LeadCard: FC<{ lead: any, onFilterSelect: any, onAward: (id: string) => vo
               </button>
             )}
             <button 
-                onClick={(e) => { e.stopPropagation(); onOpenWhatsapp(l.id, phone, l.name); }} 
+                onClick={(e) => { e.stopPropagation(); onOpenWhatsapp(l.id, phone, l.name, campaign, source); }} 
                 className={`p-2.5 rounded-xl transition-all border ${l.metadata?.whatsapp_sent ? 'text-emerald-300 bg-emerald-500/20 border-emerald-500/30' : 'text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/10'}`}
                 title={l.metadata?.whatsapp_sent ? "تم التواصل عبر واتساب" : "تواصل عبر واتساب"}
             >
@@ -164,7 +166,11 @@ const LeadCard: FC<{ lead: any, onFilterSelect: any, onAward: (id: string) => vo
   );
 };
 
-export const SovereignGatewayCommand: FC<{ onFilterSelect: (f: any) => void, onOpenWhatsapp: (id: string, phone: string, name: string) => void, stats?: any }> = ({ onFilterSelect, onOpenWhatsapp, stats }) => {
+export const SovereignGatewayCommand: FC<{ 
+  onFilterSelect: (f: any) => void, 
+  onOpenWhatsapp: (id: string, phone: string, name: string, campaign?: string, source?: string) => void, 
+  stats?: any 
+}> = ({ onFilterSelect, onOpenWhatsapp, stats }) => {
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
   const [oracleData, setOracleData] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);

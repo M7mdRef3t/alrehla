@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getGeminiClient } from "@/lib/gemini/shared";
 import { getSupabaseAdminClient } from "../_lib/supabaseAdmin";
-import { buildLifeAdvisorSystemPrompt } from "@/services/lifeAdvisor";
+import { buildLifeAdvisorPrompt } from "@/services/lifeAdvisor";
 import type { LifeContext } from "@/services/lifeAdvisor";
 
 /**
@@ -76,9 +76,9 @@ export async function POST(req: Request) {
     }
 
     // Build Life Advisor system prompt from context
-    const systemPrompt = buildLifeAdvisorSystemPrompt(context);
+    const systemPrompt = buildLifeAdvisorPrompt(context);
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-2.0-flash",
       generationConfig: {
         temperature: 0.85,
         maxOutputTokens: 1500,

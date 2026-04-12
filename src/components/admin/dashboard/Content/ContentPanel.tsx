@@ -64,6 +64,7 @@ export const ContentPanel: FC = () => {
     const [contentPageFilter, setContentPageFilter] = useState("");
     const [, setContentStatus] = useState("");
     const [savingContentKey, setSavingContentKey] = useState<string | null>(null);
+    const [deletingContentKey, setDeletingContentKey] = useState<string | null>(null);
     const [newContentKey, setNewContentKey] = useState("");
     const [newContentPage, setNewContentPage] = useState("");
     const [newContentValue, setNewContentValue] = useState("");
@@ -195,7 +196,11 @@ export const ContentPanel: FC = () => {
     };
 
     const handleDeleteContent = async (key: string) => {
-        if (!confirm("هل أنت متأكد من حذف هذا النص؟")) return;
+        if (deletingContentKey !== key) {
+            setDeletingContentKey(key);
+            return;
+        }
+        setDeletingContentKey(null);
         setSavingContentKey(key);
         const ok = await deleteAppContentEntry(key);
         if (ok) {
@@ -402,13 +407,21 @@ export const ContentPanel: FC = () => {
                                                         {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                                     </button>
                                                 )}
-                                                <button
-                                                    onClick={() => handleDeleteContent(entry.key)}
-                                                    className="p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 transition-colors"
-                                                    title="حذف"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
+                                                {deletingContentKey === entry.key ? (
+                                                    <span className="flex items-center gap-1 text-[10px] font-black text-rose-400">
+                                                        <button onClick={() => handleDeleteContent(entry.key)} className="hover:text-rose-300 transition-colors">تأكيد</button>
+                                                        <span className="text-slate-700 mx-0.5">|</span>
+                                                        <button onClick={() => setDeletingContentKey(null)} className="text-slate-500 hover:text-slate-300 font-bold transition-colors">إلغاء</button>
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleDeleteContent(entry.key)}
+                                                        className="p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 transition-colors"
+                                                        title="حذف"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                         <textarea

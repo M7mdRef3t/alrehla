@@ -42,6 +42,7 @@ import {
 import { ManualLeadEntry } from "./ManualLeadEntry";
 import { OracleLeadsAnalysis } from "./OracleLeadsAnalysis";
 import { WhatsAppThreadModal } from "./WhatsAppThreadModal";
+import { WhatsAppActivityFeed } from "./WhatsAppActivityFeed";
 import { QuickSendRow } from "./QuickSendRow";
 import { SovereignGatewayCommand, AVAILABLE_GATEWAYS } from "../Sovereign/SovereignGatewayCommand";
 import { StatCard } from "../Executive/components/StatCard";
@@ -93,6 +94,9 @@ interface OpsStats {
   conversionsBySource?: Record<string, number>;
   deepConversionsByCampaign?: Record<string, number>;
   deepConversionsBySource?: Record<string, number>;
+  revenueByCampaign?: Record<string, number>;
+  revenueBySource?: Record<string, number>;
+  totalRevenue?: number;
   realStarts: number;
   recentErrors: Array<{ lead_email: string; channel: string; last_error: string; updated_at: string }>;
   recentSent: Array<{ lead_email: string; channel: string; sent_at: string }>;
@@ -428,7 +432,20 @@ export function MarketingOpsPanel() {
     name: string;
     oracleAdvice?: string;
     leadGrade?: string;
+    campaign?: string;
+    adSource?: string;
   } | null>(null);
+
+  const [campaignBudgets, setCampaignBudgets] = useState<Record<string, number>>({});
+  const [editingCampaign, setEditingCampaign] = useState<string | null>(null);
+  const [tempBudget, setTempBudget] = useState<string>("");
+
+  const fetchStats = async (force = false): Promise<OpsStats> => {
+    const res = await fetch(`/api/admin/marketing-ops${force ? "?force=true" : ""}`, {
+      headers: { authorization: `Bearer ${getBearerToken()}` }
+    });
+    return await res.json();
+  };
 
   const showToast = (msg: string, ok: boolean) => {
     setToast({ msg, ok });
@@ -439,10 +456,14 @@ export function MarketingOpsPanel() {
   const load = useCallback(async (force = false) => {
     setLoading(true);
     try {
-      const data = await fetchStats(force);
+      const [data, metrics, budgets] = await Promise.all([
+        fetchStats(force),
+        growthEngine.getGrowthMetrics(),
+        adminApi.fetchCampaignBudgets()
+      ]);
       setStats(data);
-      const metrics = await growthEngine.getGrowthMetrics();
       setGrowthMetrics(metrics);
+      setCampaignBudgets(budgets);
     } catch {
       showToast("فشل تحميل البيانات", false);
     } finally {
@@ -487,6 +508,17 @@ export function MarketingOpsPanel() {
       showToast("خطأ في الشبكة", false);
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const updateBudget = async (id: string, val: number) => {
+    try {
+      await adminApi.updateCampaignBudget(id, val);
+      setCampaignBudgets(prev => ({ ...prev, [id]: val }));
+      showToast(`تم تحديث ميزانية ${id} ✅`, true);
+      setEditingCampaign(null);
+    } catch {
+      showToast("فشل تحديث الميزانية", false);
     }
   };
 
@@ -674,6 +706,21 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
       </div>
     </header>
 
+      {/* Real-time WhatsApp Activity Feed */}
+      <CollapsibleSection
+        title={"نبض الملاذ اللحظي (WhatsApp Live Feed)"}
+        icon={<Activity className="w-5 h-5 text-emerald-400" />}
+        subtitle={"رصد حي للرواح المتواصلة مع الملاذ واستجابات الـ AI اللحظية."}
+        defaultExpanded={true}
+        headerColors="border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
+      >
+        <WhatsAppActivityFeed 
+          onOpenWhatsapp={(leadId, phone, name, oracleAdvice, leadGrade, campaign, source) => 
+            setWhatsappModalObj({ leadId, phone, name, oracleAdvice, leadGrade, campaign, adSource: source })
+          } 
+        />
+      </CollapsibleSection>
+
       {/* Financial ROI Dashboard (New) */}
       <CollapsibleSection
         title={"التحليل المالي والعائد"}
@@ -723,7 +770,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
                </div>
                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">إجمالي الإيرادات المرصودة</p>
                <h3 className="text-4xl font-black text-white tabular-nums tracking-tighter">
-                 {growthMetrics?.totalRevenue.toLocaleString() ?? "0"} ج.م
+                 {(stats?.totalRevenue ?? 0).toLocaleString()} ج.م
                </h3>
                <div className="flex items-center gap-2 mt-4">
                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -733,6 +780,85 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
                </div>
             </div>
           </div>
+
+          {(stats?.revenueByCampaign && Object.keys(stats.revenueByCampaign).length > 0) && (
+            <div className="mt-8">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Target className="w-4 h-4 text-indigo-400" />
+                تحليل ربحية الحملات (Campaign ROI)
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(stats.revenueByCampaign)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([campaign, revenue]) => {
+                    const budget = campaignBudgets[campaign] || 0;
+                    const roi = budget > 0 ? Math.round((revenue / budget) * 100) : null;
+                    const isEditing = editingCampaign === campaign;
+
+                    return (
+                      <div key={campaign} className="p-5 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all flex flex-col gap-4 relative overflow-hidden group">
+                        {roi !== null && (
+                          <div className={`absolute top-4 left-4 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                            roi > 200 ? "bg-emerald-500/20 text-emerald-400" : roi > 100 ? "bg-indigo-500/20 text-indigo-400" : "bg-rose-500/20 text-rose-400"
+                          }`}>
+                            ROI: {roi}%
+                          </div>
+                        )}
+                        <div className="flex flex-col">
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{campaign === 'undefined' ? "بدون حملة" : campaign.replace(/_/g, ' ')}</p>
+                          <p className="text-2xl font-black text-white">{revenue.toLocaleString()} <span className="text-[10px] text-slate-500">ج.م</span></p>
+                        </div>
+
+                        <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">الميزانية</span>
+                            {isEditing ? (
+                              <div className="flex items-center gap-2 mt-1">
+                                <input
+                                  type="number"
+                                  value={tempBudget}
+                                  onChange={(e) => setTempBudget(e.target.value)}
+                                  className="w-20 bg-black/40 border border-indigo-500/40 rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
+                                  autoFocus
+                                />
+                                <button onClick={() => updateBudget(campaign, Number(tempBudget))} className="text-emerald-400 hover:text-emerald-300">
+                                  <CheckCircle2 className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => setEditingCampaign(null)} className="text-rose-400 hover:text-rose-300">
+                                  <RotateCcw className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-sm font-black text-slate-400">{budget > 0 ? budget.toLocaleString() : "—"}</span>
+                                <button 
+                                  onClick={() => {
+                                    setEditingCampaign(campaign);
+                                    setTempBudget(String(budget));
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400 hover:text-indigo-300"
+                                >
+                                  <RotateCcw className="w-3 h-3" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {roi !== null && (
+                            <div className="text-right">
+                              <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">الصافي</span>
+                              <p className={`text-sm font-black ${revenue - budget > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                                {(revenue - budget).toLocaleString()}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
         </div>
       </CollapsibleSection>
 
@@ -746,7 +872,9 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
       >
         <SovereignGatewayCommand
           stats={stats}
-          onOpenWhatsapp={(leadId, phone, name) => setWhatsappModalObj({ leadId, phone, name })}
+          onOpenWhatsapp={(leadId, phone, name, campaign, source) => 
+            setWhatsappModalObj({ leadId, phone, name, campaign, adSource: source })
+          }
           onFilterSelect={(filter) => {
             if (filter.type === "source" || filter.type === "campaign") {
               setSelectedFilter({ type: filter.type, value: filter.value, expandedId: filter.expandedId });
@@ -774,7 +902,8 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         headerColors="border-purple-500/20 bg-purple-500/5 text-purple-300"
       >
         <OracleLeadsAnalysis 
-           onOpenWhatsapp={(leadId, phone, name, oracleAdvice, leadGrade) => setWhatsappModalObj({ leadId, phone, name, oracleAdvice, leadGrade })}
+           onOpenWhatsapp={(leadId, phone, name, oracleAdvice, leadGrade, campaign, source) => 
+             setWhatsappModalObj({ leadId, phone, name, oracleAdvice, leadGrade, campaign, adSource: source })}
         />
       </CollapsibleSection>
 
@@ -1005,6 +1134,8 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
           name={whatsappModalObj.name}
           oracleAdvice={whatsappModalObj.oracleAdvice}
           leadGrade={whatsappModalObj.leadGrade}
+          campaign={whatsappModalObj.campaign}
+          adSource={whatsappModalObj.adSource}
           onClose={() => setWhatsappModalObj(null)}
         />
       )}

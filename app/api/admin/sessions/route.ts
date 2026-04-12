@@ -2,11 +2,33 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+function getBearerToken(req: Request): string | null {
+  const auth = req.headers.get('authorization') || req.headers.get('Authorization');
+  if (typeof auth === 'string' && auth.toLowerCase().startsWith('bearer ')) {
+    return auth.slice(7).trim();
+  }
+  return null;
+}
+
 export async function GET(request: Request) {
   try {
+    const bearer = getBearerToken(request);
+    if (!bearer) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    
+    const clientAuth = createClient(supabaseUrl, anonKey);
+    const { data: userAuth, error: authErr } = await clientAuth.auth.getUser(bearer);
+    if (authErr || !userAuth?.user?.id) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
+
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', userAuth.user.id).single();
+    if (!profile?.role || !['admin', 'owner', 'superadmin'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     // Fetch requests mixed with triage answers + client info + sessions
     const { data: requests, error: reqErr } = await supabase
@@ -39,13 +61,52 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const bearer = getBearerToken(request);
+    if (!bearer) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    
+    const clientAuth = createClient(supabaseUrl, anonKey);
+    const { data: userAuth, error: authErr } = await clientAuth.auth.getUser(bearer);
+    if (authErr || !userAuth?.user?.id) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', userAuth.user.id).single();
+    if (!profile?.role || !['admin', 'owner', 'superadmin'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const body = await request.json();
+
     if (body.action === 'update_status') {
-      await supabase.from('dawayir_session_requests').update({ status: body.status }).eq('id', body.requestId);
+      const { data: currentReq } = await supabase.from('dawayir_session_requests').select('status').eq('id', body.requestId).single();
+      const currentStatus = currentReq?.status || 'new_request';
+      
+      const allowedTransitions: Record<string, string[]> = {
+        'new_request': ['triage_processing', 'needs_manual_review', 'prep_pending', 'rejected', 'canceled_by_client'],
+        'needs_manual_review': ['prep_pending', 'brief_generated', 'rejected', 'canceled_by_client'],
+        'prep_pending': ['intake_completed', 'session_ready', 'brief_generated', 'canceled_by_client'],
+        'intake_completed': ['session_ready', 'brief_generated', 'canceled_by_client'],
+        'session_ready': ['brief_generated', 'session_done', 'postponed', 'canceled_by_client'],
+        'brief_generated': ['session_done', 'followup_pending', 'rejected', 'prep_pending', 'postponed', 'canceled_by_client'],
+        'followup_pending': ['session_done', 'postponed', 'canceled_by_client'],
+        'postponed': ['session_ready', 'canceled_by_client'],
+        'session_done': ['followup_pending']
+      };
+
+      const allowed = allowedTransitions[currentStatus];
+      // Deny transitioning to an invalid status if we know the rules for the current one
+      if (allowed && !allowed.includes(body.status)) {
+        return NextResponse.json({ error: `Invalid status transition from ${currentStatus} to ${body.status}` }, { status: 400 });
+      }
+
+      await supabase.from('dawayir_session_requests').update({ 
+        status: body.status,
+        rejection_reason: body.reason || null 
+      }).eq('id', body.requestId);
       return NextResponse.json({ success: true, message: 'Status updated' });
     }
 
@@ -87,10 +148,10 @@ export async function POST(request: Request) {
         };
       }
 
-      const { data: brief, error: briefErr } = await supabase.from('dawayir_ai_session_briefs').insert({
+      const { data: brief, error: briefErr } = await supabase.from('dawayir_ai_session_briefs').upsert({
         request_id: body.requestId,
         ...parsed
-      }).select().single();
+      }, { onConflict: 'request_id' }).select().single();
 
       if (briefErr) throw briefErr;
 
@@ -104,18 +165,33 @@ export async function POST(request: Request) {
       // 1. Mark request as done or followup
       await supabase.from('dawayir_session_requests').update({ status: finalStatus }).eq('id', body.requestId);
       
-      // 2. Insert session execution record
-      const { data: session, error: sessErr } = await supabase.from('dawayir_sessions').insert({
-        request_id: body.requestId,
-        status: 'completed',
-        coach_notes: body.notes
-      }).select('id').single();
-
-      if (sessErr) throw sessErr;
+      // 2. Upsert session execution record to prevent duplicates
+      let { data: session, error: sessErr } = await supabase.from('dawayir_sessions')
+        .select('id').eq('request_id', body.requestId).single();
+        
+      if (!session) {
+        const res = await supabase.from('dawayir_sessions').insert({
+          request_id: body.requestId,
+          status: 'completed',
+          coach_notes: body.notes
+        }).select('id').single();
+        session = res.data;
+        if (res.error) throw res.error;
+      } else {
+        const res = await supabase.from('dawayir_sessions').update({
+          status: 'completed',
+          coach_notes: body.notes
+        }).eq('id', session.id).select('id').single();
+        session = res.data;
+        if (res.error) throw res.error;
+      }
 
       if (session) {
-        // 3. Insert enriched summary
-        await supabase.from('dawayir_session_summaries').insert({
+        // 3. Upsert enriched summary (checking first to handle if session_id is not inherently unique)
+        const { data: existingSummary } = await supabase.from('dawayir_session_summaries')
+          .select('id').eq('session_id', session.id).single();
+          
+        const summaryData = {
           session_id: session.id,
           session_summary_text: body.summary,
           main_topic: body.mainTopic,
@@ -125,7 +201,13 @@ export async function POST(request: Request) {
           assignment: body.assignment,
           followup_needed: body.recommendFollowup,
           second_session_recommended: body.recommendFollowup
-        });
+        };
+
+        if (existingSummary) {
+          await supabase.from('dawayir_session_summaries').update(summaryData).eq('id', existingSummary.id);
+        } else {
+          await supabase.from('dawayir_session_summaries').insert(summaryData);
+        }
       }
       return NextResponse.json({ success: true, message: 'Session closed and documented' });
     }

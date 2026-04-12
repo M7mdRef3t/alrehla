@@ -44,6 +44,7 @@ import {
   Map
 } from "lucide-react";
 import { useJourneyProgress } from "@/domains/journey";
+import { useJourneyState as useJourneyStore } from "@/domains/journey/store/journey.store";
 import { useNotificationState } from "@/domains/notifications/store/notification.store";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { useEmergencyState } from "@/domains/admin/store/emergency.store";
@@ -73,6 +74,7 @@ import { assignUrl, getHref, pushUrl } from "@/services/navigation";
 import { openInNewTab } from "@/services/clientDom";
 import { HealthBar as SidebarHealthBar } from '@/modules/meta/HealthBar';
 import { getJourneyPathBySlug } from "@/utils/journeyPaths";
+import { PROTOCOLS } from "./ProtocolEngine";
 
 
 const NotificationSettings = lazy(() =>
@@ -198,6 +200,7 @@ interface AppSidebarProps {
   onOpenMission?: (nodeId: string) => void;
   viewingNodeId?: string | null;
   onNoiseSessionComplete?: () => void;
+  onOpenProtocol?: () => void;
 }
 
 export const AppSidebar: FC<AppSidebarProps> = ({
@@ -211,7 +214,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   onFeatureLocked,
   onOpenMission,
   viewingNodeId = null,
-  onNoiseSessionComplete
+  onNoiseSessionComplete,
+  onOpenProtocol
 }) => {
   /**
    * Sidebar Sector UI Component
@@ -242,7 +246,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       onClick={onClick}
       className="flex items-center gap-3 w-full px-3 py-2 rounded-xl transition-all hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white relative"
       data-active={active}
-      style={{ "--ds-item-glow-color": color } as React.CSSProperties}
+      {...({ style: { "--ds-item-glow-color": color } } as any)}
     >
       <div className="w-5 h-5 flex items-center justify-center">
         {icon}
@@ -264,7 +268,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   );
 
   const setOverlay = useAppOverlayState((state) => state.setOverlay);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [showShareStats, setShowShareStats] = useState(false);
@@ -296,6 +301,9 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showClassicRecovery, setShowClassicRecovery] = useState(false);
   const [showManualPlacement, setShowManualPlacement] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const activeProtocolId = useJourneyStore((s) => s.activeProtocol);
+  const activeProtocol = activeProtocolId ? PROTOCOLS[activeProtocolId as keyof typeof PROTOCOLS] : null;
+
   const [initialRecoveryOptions, setInitialRecoveryOptions] = useState<RecoveryPlanOpenWith | null>(null);
   
   const whatsAppNumber = runtimeEnv.whatsappContactNumber || DEFAULT_WHATSAPP_CONTACT;
@@ -411,8 +419,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     return map[lastGoalRecord.goalId] || "var(--ds-color-brand-teal-400)";
   }, [lastGoalRecord]);
 
-  const handleClose = () => setIsOpen(false);
-  const handleOpen = () => setIsOpen(true);
+  const handleClose = () => setIsMobileSidebarOpen(false);
+  const handleOpen = () => setIsMobileSidebarOpen(true);
 
   const openWhatsAppChat = (placement: "desktop_sidebar" | "mobile_sidebar" | "floating_fab") => {
     if (!whatsAppLink) return;
@@ -477,7 +485,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         className="fixed top-0 right-0 z-40 h-full hidden md:flex flex-row-reverse group/sidebar"
         aria-label="القائمة الرئيسية"
       >
-        <div className="h-full w-56 shrink-0 overflow-hidden border-l border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40">
+        <div className={`h-full w-56 shrink-0 overflow-hidden border-l border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40 transition-transform duration-300 ${isDesktopSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
           <aside className="h-full w-full flex flex-col gap-3 py-6 px-4">
             {viewingNode?.analysis && (
               <div className="shrink-0 space-y-1 mb-1">
@@ -500,6 +508,15 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => onOpenDawayir?.()}
                   color={goalColor}
                 />
+                {activeProtocol && (
+                  <SidebarItem
+                    label={`بروتوكول: ${activeProtocol.title}`}
+                    icon={<Activity className="w-4 h-4" />}
+                    onClick={() => onOpenProtocol?.()}
+                    color="#10b981"
+                    badge="جاري"
+                  />
+                )}
                 <SidebarItem
                   label="الملاذ الآمن"
                   icon={<ShieldCheck className="w-4 h-4" />}
@@ -520,10 +537,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         {/* Desktop Handle */}
         <div
           className="h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600/90 text-white border-l border-teal-700/50 cursor-pointer py-4"
-          onClick={handleOpen}
-          title="افتح محطة الانطلاق"
+          onClick={() => setIsDesktopSidebarOpen((current) => !current)}
+          title={isDesktopSidebarOpen ? "أغلق محطة الانطلاق" : "افتح محطة الانطلاق"}
         >
-          <PanelRightOpen className="w-5 h-5" />
+          <PanelRightOpen className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0"}`} />
         </div>
       </div>
 
@@ -531,6 +548,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       {whatsAppLink && (
         <button
           type="button"
+          title="تواصل عبر واتساب"
           onClick={() => openWhatsAppChat("floating_fab")}
           className="fixed z-30 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+1rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
         >
@@ -541,6 +559,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       {/* ───── MOBILE MENU TRIGGER ───── */}
       <button
         type="button"
+        title="افتح القائمة"
         onClick={handleOpen}
         className="fixed top-4 right-4 z-40 md:hidden w-11 h-11 flex items-center justify-center rounded-full bg-slate-900/40 backdrop-blur-md border border-white/10 text-slate-400"
       >
@@ -549,7 +568,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* ───── MOBILE SIDEBAR ───── */}
       <AnimatePresence>
-        {isOpen && (
+        {isMobileSidebarOpen && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
@@ -570,6 +589,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <h2 className="text-lg font-bold text-white">محطة الانطلاق</h2>
                 <button
                   type="button"
+                  title="إغلاق"
                   onClick={handleClose}
                   className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5"
                 >
@@ -585,6 +605,15 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     onClick={() => { onOpenDawayir?.(); handleClose(); }}
                     color={goalColor}
                   />
+                  {activeProtocol && (
+                    <SidebarItem
+                      label={`بروتوكول: ${activeProtocol.title}`}
+                      icon={<Activity className="w-5 h-5" />}
+                      onClick={() => { onOpenProtocol?.(); handleClose(); }}
+                      color="#10b981"
+                      badge="جاري"
+                    />
+                  )}
                   <SidebarItem
                     label="الملاذ الآمن"
                     icon={<ShieldCheck className="w-5 h-5" />}

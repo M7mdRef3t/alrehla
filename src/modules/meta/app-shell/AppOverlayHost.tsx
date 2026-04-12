@@ -16,6 +16,8 @@ import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { JourneyTimeline } from '@/modules/action/JourneyTimeline';
 import type { FeedbackSubmission } from "../FeedbackModal";
 import { usePulseCheckLogic } from "@/hooks/usePulseCheckLogic";
+import { useGamificationSignals } from "@/domains/gamification/hooks/useGamificationSignals";
+import { useGamification } from "@/domains/gamification";
 import { useAppMindSignals } from "./useAppMindSignals";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { SafePulseCheckModal, SafeAIChatbot } from "../WrappedComponents";
@@ -163,6 +165,8 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   const skipNextPulseCheck = usePulseState((s) => s.clearSnooze);
 
   const featureFlags = useAdminState((s) => s.featureFlags);
+  const gamification = useGamification();
+  const gamificationSignals = useGamificationSignals();
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
   const role = useAuthState(getEffectiveRoleFromState);
@@ -355,7 +359,8 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     clearPostAuthState: () => setAuthIntent(null),
     showNoiseSessionToast: () => {},
     showBreathingSessionToast: () => {},
-    skipNextPulseCheck
+    skipNextPulseCheck,
+    completeDailyQuest: gamification.completeDailyQuest
   });
 
   const {
@@ -377,7 +382,8 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     // يفتح pulse check باستخدام setPulseCheck الصحيح لا setOverlay
     openPulseCheck: () => setPulseCheck(true, "regular"),
     // يفتح ShareStats overlay للمشاركة عند milestone
-    openShareStats: () => setOverlay("shareStats", true)
+    openShareStats: () => setOverlay("shareStats", true),
+    openChronicle: () => setOverlay("sovereignChronicle", true)
   });
 
   const onOnboardingComplete = useCallback((skipped: boolean = false) => {

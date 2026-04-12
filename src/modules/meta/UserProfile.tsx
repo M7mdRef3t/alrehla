@@ -13,7 +13,7 @@ import { useAchievementState } from "@/domains/gamification/store/achievement.st
 import { useQuizHistory } from "@/hooks/useQuizHistory";
 import { useMapState } from "@/domains/dawayir/store/map.store";
 import { ACHIEVEMENTS } from "@/data/achievements";
-import { DailyQuests } from "../growth/Gamification/DailyQuests";
+import { QuestBoard as DailyQuests } from "../gamification/QuestBoard";
 import { calculateEntropy } from "@/services/predictiveEngine";
 
 

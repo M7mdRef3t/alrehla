@@ -1,0 +1,64 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { verifyAdmin, type AdminRequest, type AdminResponse } from "../../../../server/admin/_shared";
+
+export const dynamic = "force-dynamic";
+
+function buildClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    { auth: { persistSession: false } }
+  );
+}
+
+async function checkAuth(req: Request): Promise<boolean> {
+  const mockReq: AdminRequest = {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries()),
+  };
+  const mockRes: AdminResponse = {
+    status: () => mockRes,
+    json: () => mockRes,
+  };
+  
+  return await verifyAdmin(mockReq, mockRes);
+}
+
+export async function GET(req: Request) {
+  if (!(await checkAuth(req))) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const supabase = buildClient();
+
+  try {
+    const { data: events, error } = await supabase
+      .from('whatsapp_message_events')
+      .select(`
+        id,
+        created_at,
+        phone,
+        message_text,
+        direction,
+        intent,
+        status_assigned,
+        metadata,
+        lead_id,
+        marketing_leads(name, status, campaign, source, ad)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (error) {
+      console.error('[WhatsAppEventsAPI] Error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ events });
+  } catch (err) {
+    console.error('[WhatsAppEventsAPI] Fatal:', err);
+    return NextResponse.json({ error: 'internal_error' }, { status: 500 });
+  }
+}

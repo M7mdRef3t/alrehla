@@ -17,6 +17,28 @@ export interface IntakeResult {
   error?: string;
 }
 
+function deriveAgeRange(birthDate: string): string | null {
+  if (!birthDate) return null;
+
+  const parsedBirthDate = new Date(birthDate);
+  if (Number.isNaN(parsedBirthDate.getTime())) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - parsedBirthDate.getFullYear();
+  const beforeBirthday =
+    today.getMonth() < parsedBirthDate.getMonth() ||
+    (today.getMonth() === parsedBirthDate.getMonth() && today.getDate() < parsedBirthDate.getDate());
+
+  if (beforeBirthday) age -= 1;
+  if (age < 0) return null;
+  if (age < 18) return "under_18";
+  if (age <= 24) return "18_24";
+  if (age <= 34) return "25_34";
+  if (age <= 44) return "35_44";
+  if (age <= 54) return "45_54";
+  return "55_plus";
+}
+
 /**
  * Process a complete intake submission.
  * 1. Upsert client
@@ -28,6 +50,8 @@ export async function processIntake(data: IntakeFormData): Promise<IntakeResult>
   if (!supabaseAdmin) {
     return { success: false, nextStatus: "prep_pending", error: "Database not available" };
   }
+
+  const ageRange = deriveAgeRange(data.birthDate);
 
   // 1. Upsert Client
   let clientId: string;
@@ -47,7 +71,7 @@ export async function processIntake(data: IntakeFormData): Promise<IntakeResult>
         phone: data.phone,
         email: data.email,
         country: data.country,
-        age_range: data.ageRange,
+        age_range: ageRange,
         preferred_contact: data.preferredContact,
       })
       .select("id")

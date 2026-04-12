@@ -32,7 +32,8 @@ type RuntimeKey =
   | "VITE_DAWAYIR_LIVE_ENABLED"
   | "VITE_DAWAYIR_LIVE_API_KEY"
   | "VITE_DAWAYIR_LIVE_MODEL"
-  | "VITE_DAWAYIR_LIVE_VOICE";
+  | "VITE_DAWAYIR_LIVE_VOICE"
+  | "VITE_USERBACK_ACCESS_TOKEN";
 
 type NextPublicKey =
   | "NEXT_PUBLIC_APP_ENV"
@@ -68,7 +69,8 @@ type NextPublicKey =
   | "NEXT_PUBLIC_DAWAYIR_LIVE_ENABLED"
   | "NEXT_PUBLIC_DAWAYIR_LIVE_API_KEY"
   | "NEXT_PUBLIC_DAWAYIR_LIVE_MODEL"
-  | "NEXT_PUBLIC_DAWAYIR_LIVE_VOICE";
+  | "NEXT_PUBLIC_DAWAYIR_LIVE_VOICE"
+  | "NEXT_PUBLIC_USERBACK_ACCESS_TOKEN";
 
 /** Safe accessor for process.env that never throws in browser/Vite */
 function safeProcessEnv(): Record<string, unknown> {
@@ -121,7 +123,8 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
     NEXT_PUBLIC_DAWAYIR_LIVE_ENABLED: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_ENABLED,
     NEXT_PUBLIC_DAWAYIR_LIVE_API_KEY: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_API_KEY,
     NEXT_PUBLIC_DAWAYIR_LIVE_MODEL: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_MODEL,
-    NEXT_PUBLIC_DAWAYIR_LIVE_VOICE: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_VOICE
+    NEXT_PUBLIC_DAWAYIR_LIVE_VOICE: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_VOICE,
+    NEXT_PUBLIC_USERBACK_ACCESS_TOKEN: process.env.NEXT_PUBLIC_USERBACK_ACCESS_TOKEN
   };
   const value = candidates[key];
   return typeof value === "string" && value.length > 0 ? normalizeEnvValue(value) : undefined;
@@ -212,4 +215,5 @@ export const runtimeEnv = {
   dawayirLiveApiKey: readEnv("VITE_DAWAYIR_LIVE_API_KEY"),
   dawayirLiveModel: readEnv("VITE_DAWAYIR_LIVE_MODEL"),
   dawayirLiveVoice: readEnv("VITE_DAWAYIR_LIVE_VOICE"),
+  userbackToken: readEnv("VITE_USERBACK_ACCESS_TOKEN"),
 } as const;

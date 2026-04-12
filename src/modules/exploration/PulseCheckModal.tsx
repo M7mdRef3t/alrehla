@@ -8,10 +8,11 @@ import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { useAdminState, isFeatureAllowed, type PulseCopyOverrideValue } from "@/domains/admin/store/admin.store";
 import { trackingService } from "@/domains/journey";
 import {
-  getEnergySuggestion,
   getWeeklyEnergyRecommendation,
+  getEnergySuggestion,
   type EnergyCopyVariant
 } from "@/utils/pulseEnergy";
+import { useGamificationState, XP_ACTIONS } from "@/services/gamificationEngine";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { setDocumentBodyOverflow, getAudioContextConstructor } from "@/services/clientDom";
 import { usePulseManagement } from "@/hooks/usePulseManagement";
@@ -192,6 +193,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const isStartRecovery = context === "start_recovery";
   const pulseLogs = usePulseState((s) => s.logs);
   const pulseCopyOverrides = useAdminState((s) => s.pulseCopyOverrides);
+  const addXP = useGamificationState((s) => s.addXP);
+  const completeDailyQuest = useGamificationState((s) => s.completeDailyQuest);
   const _allowWeekly = isFeatureAllowed("pulse_weekly_recommendation");
   const _allowImmediate = isFeatureAllowed("pulse_immediate_action");
   const _allowGoldenNeedle = isFeatureAllowed("golden_needle_enabled");
@@ -555,6 +558,11 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
           energyReasons: energyReasons.length > 0 ? energyReasons : undefined,
           energyConfidence: energyConfidence ?? undefined
         });
+
+        // Gamification: Reward awareness
+        completeDailyQuest("dq_pulse", "pulse_completed", XP_ACTIONS.PULSE_COMPLETED);
+        addXP(XP_ACTIONS.PULSE_COMPLETED, "فحص النبض السِيادي");
+
         clearDraft();
         clearUndoState();
       } finally {

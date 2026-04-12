@@ -30,6 +30,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   profile: "Profile",
   sanctuary: "Sanctuary",
   "life-os": "Life OS",
+  protocol: "Action Protocol",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -57,6 +58,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   profile: { title: "Profile | Alrehla", description: "Review your progress, achievements, and personal bio." },
   sanctuary: { title: "Sanctuary | Alrehla", description: "A private space for reflection and restoration." },
   "life-os": { title: "Life OS | Alrehla", description: "Your unified operating system for self-growth and decisions." },
+  protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {

@@ -229,8 +229,10 @@ export async function syncLifeStateWithDB(userId: string): Promise<void> {
     }
 
     // 4. Sync rituals (fire-and-forget, non-blocking)
-    import("@/services/ritualsSync").then(({ syncRitualsWithDB }) => {
-      syncRitualsWithDB(userId).catch(() => {});
+    import("@/services/ritualsSync").then(({ syncRitualsWithDB, setupRitualsAutoSync }) => {
+      syncRitualsWithDB(userId).then(() => {
+        setupRitualsAutoSync(userId);
+      }).catch(() => {});
     });
 
   } catch (err) {

@@ -443,6 +443,7 @@ function TemplatesTab({ templates, onRefresh }: { templates: EmailTemplate[]; on
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", subject: "", html: "", preview_text: "", category: "marketing" });
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const handleSave = async () => {
     if (!form.name || !form.subject || !form.html) return;
@@ -483,7 +484,11 @@ function TemplatesTab({ templates, onRefresh }: { templates: EmailTemplate[]; on
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("هل أنت متأكد من حذف هذا القالب؟")) return;
+    if (deleteConfirmId !== id) {
+      setDeleteConfirmId(id);
+      return;
+    }
+    setDeleteConfirmId(null);
     await fetch("/api/admin/email/templates", {
       method: "DELETE",
       headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
@@ -576,7 +581,15 @@ function TemplatesTab({ templates, onRefresh }: { templates: EmailTemplate[]; on
             )}
             <div className="flex gap-2 pt-2">
               <button onClick={() => handleEdit(t)} className="text-[11px] font-bold text-slate-400 hover:text-teal-400 transition-colors">تعديل</button>
-              <button onClick={() => handleDelete(t.id)} className="text-[11px] font-bold text-slate-400 hover:text-red-400 transition-colors">حذف</button>
+              {deleteConfirmId === t.id ? (
+                <span className="flex items-center gap-1.5">
+                  <button onClick={() => handleDelete(t.id)} className="text-[11px] font-black text-rose-400 hover:text-rose-300 transition-colors">تأكيد الحذف</button>
+                  <span className="text-slate-700">|</span>
+                  <button onClick={() => setDeleteConfirmId(null)} className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors">إلغاء</button>
+                </span>
+              ) : (
+                <button onClick={() => handleDelete(t.id)} className="text-[11px] font-bold text-slate-400 hover:text-red-400 transition-colors">حذف</button>
+              )}
             </div>
           </div>
         ))}

@@ -14,12 +14,14 @@ import { SafeCoreMapScreen } from "./WrappedComponents";
 import type { CoreMapScreen } from "@/modules/exploration/CoreMapScreen";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 
-const ResearchSurvey = lazy(() => import("./ResearchSurvey").then((m) => ({ default: m.ResearchSurvey })));
-
-
 import { PageShell } from "./app-shell/PageShell";
+import { AdaptiveIntake } from "./AdaptiveIntake";
+import { ReflectionOutput } from "./ReflectionOutput";
+import { ProtocolEngine } from "./ProtocolEngine";
+import { useJourneyState } from "@/domains/journey/store/journey.store";
+import { useState } from "react";
 
-type StartScreen = "landing" | "goal" | "survey" | "map";
+type StartScreen = "landing" | "goal" | "survey" | "map" | "protocol";
 
 type WelcomeState = {
   message: string;
@@ -100,6 +102,8 @@ export function AppStartScreens({
   onNavigate: _onNavigate
 }: AppStartScreensProps) {
   const journey = useJourneyProgress();
+  const [showReflection, setShowReflection] = useState(true);
+  const detectedState = useJourneyState((s) => s.detectedState);
   if (screen === "landing") {
     return (
       <PageShell headerMode="none" tabBarVisible={false} disableAnimation maxWidth="max-w-none px-0 sm:px-0 lg:px-0">
@@ -135,7 +139,7 @@ export function AppStartScreens({
             });
             onClearWelcome();
             journey.setLastGoal(nextGoalId, nextCategory);
-            onGoalSelected(nextCategory, nextGoalId);
+            onOpenSurvey(); // Open Adaptive Intake instead of direct map
           }}
         />
       </PageShell>
@@ -145,15 +149,21 @@ export function AppStartScreens({
   if (screen === "survey") {
     return (
       <PageShell headerMode="none" tabBarVisible={false}>
-        <Suspense fallback={null}>
-          <ResearchSurvey onComplete={onSurveyComplete} />
-        </Suspense>
+        <AdaptiveIntake onComplete={onSurveyComplete} />
+      </PageShell>
+    );
+  }
+
+  if (screen === "protocol") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={false}>
+          <ProtocolEngine onFinish={() => _onNavigate?.("map")} />
       </PageShell>
     );
   }
 
   return (
-    <div className="w-full flex-1 flex flex-col overflow-hidden">
+    <div className="w-full flex-1 flex flex-col overflow-hidden relative">
       <SafeCoreMapScreen
         category={category}
         goalId={goalId}
@@ -179,6 +189,13 @@ export function AppStartScreens({
         onOpenProfile={onOpenProfile}
         hideBottomDock={hideBottomDock}
       />
+      
+      {screen === "map" && detectedState && showReflection && (
+          <ReflectionOutput onStartProtocol={() => {
+              setShowReflection(false);
+              _onNavigate?.("protocol");
+          }} />
+      )}
     </div>
   );
 }

@@ -78,6 +78,7 @@ interface UseAppPulseSanctuaryFlowParams {
   showNoiseSessionToast: () => void;
   showBreathingSessionToast: () => void;
   skipNextPulseCheck: () => void;
+  completeDailyQuest: (questId: string, actionKey: string, xp: number) => void;
 }
 
 function isDefaultPulseSubmit(payload: PulseSubmitPayload) {
@@ -131,7 +132,8 @@ export function useAppPulseSanctuaryFlow({
   clearPostAuthState,
   showNoiseSessionToast,
   showBreathingSessionToast,
-  skipNextPulseCheck
+  skipNextPulseCheck,
+  completeDailyQuest
 }: UseAppPulseSanctuaryFlowParams) {
   const [returnToGoalOnBreathingClose, setReturnToGoalOnBreathingClose] = useState(false);
   const [suppressLowPulseCocoonUntil, setSuppressLowPulseCocoonUntil] = useState(0);
@@ -308,6 +310,12 @@ export function useAppPulseSanctuaryFlow({
 
     if (hasConcretePulseSelection(payload)) {
       logPulse(payload);
+      completeDailyQuest("dq_pulse", "pulse_completed", 30);
+      
+      // Clarity Bonus for High Energy
+      if (payload.energy && payload.energy >= 8) {
+        completeDailyQuest("bq_clarity", "high_energy_flow", 10);
+      }
     }
 
     const autoTriggerMaxEnergy = sanctuaryPath?.autoTriggerMaxEnergy ?? 3;
@@ -353,7 +361,8 @@ export function useAppPulseSanctuaryFlow({
     shouldPromptAuthAfterPulse,
     snoozeNotifications,
     theme,
-    themeBeforePulse
+    themeBeforePulse,
+    completeDailyQuest
   ]);
 
   const handlePulseSubmit = useCallback((payload: PulseSubmitPayload) => {
@@ -364,6 +373,12 @@ export function useAppPulseSanctuaryFlow({
     if (hasConcretePulseSelection(payload)) {
       logPulse(payload);
       capturePulseReflection(payload, authUserId ?? null);
+      completeDailyQuest("dq_pulse", "pulse_completed", 30);
+
+      // Clarity Bonus for High Energy
+      if (payload.energy && payload.energy >= 8) {
+        completeDailyQuest("bq_clarity", "high_energy_flow", 10);
+      }
     }
 
     closePulseCheck(true, "programmatic");

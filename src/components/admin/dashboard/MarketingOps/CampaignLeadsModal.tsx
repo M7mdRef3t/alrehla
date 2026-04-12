@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect, useMemo, useRef } from "react";
 import { logger } from "@/services/logger";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -39,6 +39,16 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
   const [onlyMissingPhone, setOnlyMissingPhone] = useState(false);
   const [aiSummaries, setAiSummaries] = useState<Record<string, { summary: string, state: string, loading: boolean }>>({});
   const [validationStates, setValidationStates] = useState<Record<string, { valid: boolean, loading: boolean, reason?: string }>>({});
+  const [pendingStatusChange, setPendingStatusChange] = useState<{leadId: string, status: string, amount: string} | null>(null);
+  const [bouncingLeadId, setBouncingLeadId] = useState<string | null>(null);
+  const loadingHistoryIds = useRef(new Set<string>());
+  const historyCache = useRef(new Map<string, { history: any[]; routing: any[]; timestamp: number }>());
+  const historyTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const summaryCache = useRef(new Map<string, { summary: string; state: string; timestamp: number }>());
+  const validationCache = useRef(new Map<string, { valid: boolean; reason?: string; timestamp: number }>());
+  const listViewportRef = useRef<HTMLDivElement | null>(null);
+  const [listScrollTop, setListScrollTop] = useState(0);
+  const [listViewportHeight, setListViewportHeight] = useState(0);
 
   // Clean state when modal opens
   useEffect(() => {
@@ -61,21 +71,45 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
   useEffect(() => {
     if (isOpen && expandedId && !leadHistories[expandedId]) {
       const lead = leads.find(l => l.id === expandedId);
-      if (lead) {
+      if (!lead) return;
+      const cached = historyCache.current.get(expandedId);
+      if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+        setLeadHistories(prev => ({
+          ...prev,
+          [expandedId]: { history: cached.history, routing: cached.routing, loading: false }
+        }));
+        return;
+      }
+      if (loadingHistoryIds.current.has(expandedId)) return;
+
+      const timer = setTimeout(() => {
+        loadingHistoryIds.current.add(expandedId);
         setLeadHistories(prev => ({ ...prev, [expandedId]: { history: [], routing: [], loading: true } }));
         fetch(`/api/admin/marketing-ops/lead?id=${expandedId}&email=${lead.email || ""}`, {
           headers: { authorization: `Bearer ${getBearerToken()}` }
         })
         .then(r => r.json())
         .then(data => {
-          if (data.ok) {
-            setLeadHistories(prev => ({ ...prev, [expandedId]: { history: data.history, routing: data.routing, loading: false } }));
-          }
+          const nextState = data.ok
+            ? { history: data.history ?? [], routing: data.routing ?? [], loading: false }
+            : { history: [], routing: [], loading: false };
+          historyCache.current.set(expandedId, { ...nextState, timestamp: Date.now() });
+          setLeadHistories(prev => ({ ...prev, [expandedId]: nextState }));
         })
-        .catch(() => setLeadHistories(prev => ({ ...prev, [expandedId]: { history: [], routing: [], loading: false } })));
-      }
+        .catch(() => {
+          const nextState = { history: [], routing: [], loading: false };
+          historyCache.current.set(expandedId, { ...nextState, timestamp: Date.now() });
+          setLeadHistories(prev => ({ ...prev, [expandedId]: nextState }));
+        })
+        .finally(() => {
+          loadingHistoryIds.current.delete(expandedId);
+          historyTimers.current.delete(expandedId);
+        });
+      }, 250);
+
+      historyTimers.current.set(expandedId, timer);
     }
-  }, [isOpen, expandedId, leadHistories, leads]);
+  }, [isOpen, expandedId, leads]);
 
   if (!isOpen) return null;
 
@@ -185,10 +219,6 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     window.open(gmailUrl, "_blank");
 
     // 4. Optimistic UI update (prepare API already updated the DB)
-    lead.status = "engaged";
-    lead.email_status = "sent";
-    lead.sent_at = new Date().toISOString();
-
     // If the prepare API succeeded, DB is already updated — just refresh UI
     if (trackedHtml) {
       showMsg(lead.id, "✅ تم إرسال يدوي مُتتبع عبر Gmail — Open + Click سيتم رصدهم تلقائياً 📡");
@@ -259,8 +289,11 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
   };
 
   const handleMarkBounced = async (lead: any) => {
-    if (!confirm(`هل أنت متأكد أن الإيميل (${lead.email}) مرتد (Bounced)؟`)) return;
-    
+    if (bouncingLeadId !== lead.id) {
+      setBouncingLeadId(lead.id);
+      return;
+    }
+    setBouncingLeadId(null);
     try {
       showMsg(lead.id, "⏳ جاري تحديث الحالة...");
       const res = await fetch("/api/admin/marketing-ops", {
@@ -268,7 +301,6 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
         headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
         body: JSON.stringify({ action: "mark_bounced", leadId: lead.id })
       });
-      
       if (res.ok) {
         showMsg(lead.id, "🚫 تم تسجيل الارتداد بنجاح.");
         onLeadUpdated();
@@ -280,8 +312,20 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     }
   };
 
+  const cancelBounce = () => setBouncingLeadId(null);
+
   const validateLeadEmail = async (lead: any) => {
     if (!lead.email) return;
+    const cacheKey = `${lead.id}:${String(lead.email).toLowerCase().trim()}`;
+    const cached = validationCache.current.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 10 * 60 * 1000) {
+      setValidationStates(prev => ({
+        ...prev,
+        [lead.id]: { valid: cached.valid, loading: false, reason: cached.reason }
+      }));
+      return;
+    }
+
     setValidationStates(prev => ({ ...prev, [lead.id]: { valid: false, loading: true } }));
     
     try {
@@ -292,14 +336,21 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
       });
       const data = await res.json();
       if (data.ok) {
+        validationCache.current.set(cacheKey, {
+          valid: data.valid,
+          reason: data.reason,
+          timestamp: Date.now()
+        });
         setValidationStates(prev => ({ 
           ...prev, 
           [lead.id]: { valid: data.valid, loading: false, reason: data.reason } 
         }));
       } else {
+        validationCache.current.set(cacheKey, { valid: false, reason: "api_error", timestamp: Date.now() });
         setValidationStates(prev => ({ ...prev, [lead.id]: { valid: false, loading: false, reason: "api_error" } }));
       }
     } catch {
+      validationCache.current.set(cacheKey, { valid: false, reason: "network_error", timestamp: Date.now() });
       setValidationStates(prev => ({ ...prev, [lead.id]: { valid: false, loading: false, reason: "network_error" } }));
     }
   };
@@ -363,39 +414,27 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
       document.getElementById(`lead-card-${lead.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
 
-    // Fetch history if not already loading/loaded
-    if (!leadHistories[lead.id]) {
-      setLeadHistories(prev => ({ ...prev, [lead.id]: { history: [], routing: [], loading: true } }));
-      try {
-        const res = await fetch(`/api/admin/marketing-ops/lead?id=${lead.id}&email=${lead.email || ""}`, {
-          headers: { authorization: `Bearer ${getBearerToken()}` }
-        });
-        const data = await res.json();
-        if (data.ok) {
-          setLeadHistories(prev => ({ ...prev, [lead.id]: { history: data.history, routing: data.routing, loading: false } }));
-        }
-      } catch (err) {
-        setLeadHistories(prev => ({ ...prev, [lead.id]: { history: [], routing: [], loading: false } }));
-      }
-    }
   };
 
-  const handleQuickStatusChange = async (leadId: string, newStatus: string) => {
-     let amount_egp: number | undefined = undefined;
+  const initiateStatusChange = (leadId: string, newStatus: string) => {
      const isPaidStatus = ["activated", "converted", "proof_received"].includes(newStatus);
-     
      if (isPaidStatus) {
-       const input = window.prompt("الرجاء إدخال المبلغ الفعلي المدفوع بالجنيه المصري (مثال: 500):", "");
-       if (input === null) {
-         // User cancelled
-         return;
-       }
-       const parsed = parseFloat(input);
-       if (!isNaN(parsed) && parsed > 0) {
-         amount_egp = parsed;
-       }
+       setPendingStatusChange({ leadId, status: newStatus, amount: "" });
+     } else {
+       handleQuickStatusChange(leadId, newStatus, undefined);
      }
+  };
 
+  const confirmStatusChange = () => {
+     if (!pendingStatusChange) return;
+     const parsed = parseFloat(pendingStatusChange.amount);
+     const amount_egp = (!isNaN(parsed) && parsed > 0) ? parsed : undefined;
+     
+     handleQuickStatusChange(pendingStatusChange.leadId, pendingStatusChange.status, amount_egp);
+     setPendingStatusChange(null);
+  };
+
+  const handleQuickStatusChange = async (leadId: string, newStatus: string, amount_egp?: number) => {
      setIsSaving(true);
      try {
        const res = await fetch("/api/admin/marketing-ops/lead", {
@@ -436,6 +475,13 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
   };
 
   const pulseLead = async (lead: any) => {
+    const cacheKey = `${lead.id}:${String(lead.email || "").toLowerCase().trim()}`;
+    const cached = summaryCache.current.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 10 * 60 * 1000) {
+      setAiSummaries(prev => ({ ...prev, [lead.id]: { summary: cached.summary, state: cached.state, loading: false } }));
+      return;
+    }
+
     setAiSummaries(prev => ({ ...prev, [lead.id]: { summary: "", state: "", loading: true } }));
     try {
       const res = await fetch(`/api/admin/marketing-ops/lead/summary?id=${lead.id}&email=${lead.email || ""}`, {
@@ -443,11 +489,21 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
       });
       const data = await res.json();
       if (data.ok) {
+        summaryCache.current.set(cacheKey, {
+          summary: data.summary,
+          state: data.state,
+          timestamp: Date.now()
+        });
         setAiSummaries(prev => ({ ...prev, [lead.id]: { summary: data.summary, state: data.state, loading: false } }));
       } else {
         throw new Error(data.error);
       }
     } catch (err) {
+      summaryCache.current.set(cacheKey, {
+        summary: "الأوراكل مشوش حالياً. حاول مرة تانية.",
+        state: "ERROR",
+        timestamp: Date.now()
+      });
       setAiSummaries(prev => ({ ...prev, [lead.id]: { summary: "الأوراكل مشوش حالياً. حاول مرة تانية.", state: "ERROR", loading: false } }));
     }
   };
@@ -458,26 +514,52 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     return metadataMissing || !normalizedPhone;
   };
 
-  const missingPhoneCount = leads.filter(isLeadMissingPhone).length;
+  const { missingPhoneCount, filteredLeads, conversionRate, sortedFilteredLeads, expandedIndex, hasNextGlobal, hasPrevGlobal } = useMemo(() => {
+    const missingPhoneCount = leads.filter(isLeadMissingPhone).length;
+    const query = localSearchQuery.toLowerCase();
+    const filteredLeads = leads.filter((l) => {
+      if (onlyMissingPhone && !isLeadMissingPhone(l)) return false;
+      if (!query) return true;
+      return (
+        l.name?.toLowerCase().includes(query) ||
+        l.email?.toLowerCase().includes(query) ||
+        l.phone?.includes(query)
+      );
+    });
+    const totalConverted = leads.filter((l) => l.has_converted).length;
+    const conversionRate = leads.length > 0 ? Math.round((totalConverted / leads.length) * 100) : 0;
+    const sortedFilteredLeads = [...filteredLeads].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const expandedIndex = expandedId ? sortedFilteredLeads.findIndex((l: any) => l.id === expandedId) : -1;
+    const hasNextGlobal = expandedIndex !== -1 && expandedIndex < sortedFilteredLeads.length - 1;
+    const hasPrevGlobal = expandedIndex > 0;
+    return { missingPhoneCount, filteredLeads, conversionRate, sortedFilteredLeads, expandedIndex, hasNextGlobal, hasPrevGlobal };
+  }, [leads, localSearchQuery, onlyMissingPhone, expandedId]);
 
-  const filteredLeads = leads.filter(l => {
-    if (onlyMissingPhone && !isLeadMissingPhone(l)) return false;
-    if (!localSearchQuery) return true;
-    const q = localSearchQuery.toLowerCase();
-    return (
-      l.name?.toLowerCase().includes(q) ||
-      l.email.toLowerCase().includes(q) ||
-      l.phone?.includes(q)
-    );
-  });
+  useEffect(() => {
+    const el = listViewportRef.current;
+    if (!el) return;
+    const update = () => {
+      setListScrollTop(el.scrollTop);
+      setListViewportHeight(el.clientHeight);
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, [isOpen]);
 
-  const totalConverted = leads.filter(l => l.has_converted).length;
-  const conversionRate = leads.length > 0 ? Math.round((totalConverted / leads.length) * 100) : 0;
-
-  const sortedFilteredLeads = [...filteredLeads].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  const expandedIndex = expandedId ? sortedFilteredLeads.findIndex((l: any) => l.id === expandedId) : -1;
-  const hasNextGlobal = expandedIndex !== -1 && expandedIndex < sortedFilteredLeads.length - 1;
-  const hasPrevGlobal = expandedIndex > 0;
+  const VIRTUAL_ROW_HEIGHT = 290;
+  const overscan = 4;
+  const totalItems = sortedFilteredLeads.length;
+  const startIndex = Math.max(0, Math.floor(listScrollTop / VIRTUAL_ROW_HEIGHT) - overscan);
+  const endIndex = Math.min(totalItems, Math.ceil((listScrollTop + listViewportHeight) / VIRTUAL_ROW_HEIGHT) + overscan);
+  const visibleLeads = sortedFilteredLeads.slice(startIndex, endIndex);
+  const topSpacer = startIndex * VIRTUAL_ROW_HEIGHT;
+  const bottomSpacer = Math.max(0, (totalItems - endIndex) * VIRTUAL_ROW_HEIGHT);
 
   return (
     <AnimatePresence>
@@ -583,7 +665,7 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
           </div>
 
           {/* Leads Grid */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar bg-black/20">
+          <div ref={listViewportRef} className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar bg-black/20">
             {filteredLeads.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
                 <GhostIcon className="w-16 h-16 mb-4 text-slate-700" />
@@ -591,10 +673,11 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4">
-                {sortedFilteredLeads.map((lead, idx, arr) => (
-                  <LeadCommandCard 
-                    key={lead.id} 
-                    lead={lead} 
+                {topSpacer > 0 ? <div style={{ height: topSpacer }} aria-hidden="true" /> : null}
+                {visibleLeads.map((lead) => (
+                  <MemoLeadCommandCard 
+                    key={lead.id}
+                    lead={lead}
                     isEditing={editingLeadId === lead.id}
                     isExpanded={expandedId === lead.id}
                     history={leadHistories[lead.id]}
@@ -605,7 +688,7 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
                     onStartEdit={() => startEdit(lead)}
                     onToggleExpand={() => toggleExpand(lead)}
                     onResend={() => handleResend(lead)}
-                    onStatusChange={(status: string) => handleQuickStatusChange(lead.id, status)}
+                    onStatusChange={(status: string) => initiateStatusChange(lead.id, status)}
                     onSaveNotes={(note: string) => handleSaveNotes(lead.id, note)}
                     onLeadUpdated={onLeadUpdated}
                     resending={resendingId === lead.id}
@@ -615,16 +698,63 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
                     onPulse={() => pulseLead(lead)}
                     onTriggerBatch={() => handleTriggerBatch(lead)}
                     onCopyTemplate={() => copyProfessionalTemplate(lead)}
-                    onMarkBounced={() => handleMarkBounced(lead)}
+                    onMarkBounced={() => setBouncingLeadId(lead.id)}
+                    isBouncePending={bouncingLeadId === lead.id}
+                    onCancelBounce={() => setBouncingLeadId(null)}
+                    onConfirmBounce={() => {
+                      handleMarkBounced(lead);
+                      setBouncingLeadId(null);
+                    }}
                     onValidateEmail={() => validateLeadEmail(lead)}
                     validationState={validationStates[lead.id]}
                     onSyncMeta={() => handleSyncMeta(lead.id)}
                   />
                 ))}
+                {bottomSpacer > 0 ? <div style={{ height: bottomSpacer }} aria-hidden="true" /> : null}
               </div>
             )}
           </div>
         </motion.div>
+
+        {/* Amount Input Modal */}
+        {pendingStatusChange && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setPendingStatusChange(null)} />
+            <div className="relative bg-[#0a0a0c] border border-white/10 rounded-2xl p-6 shadow-2xl max-w-sm w-full" dir="rtl">
+              <h3 className="text-lg font-black text-white mb-2">إدخال المبلغ المدفوع</h3>
+              <p className="text-xs text-slate-400 mb-6">الروح دي اتحولت لحالة مالية. أرجوك دخل المبلغ الفعلي اللي اتدفع بالجنيه المصري عشان الحسابات تظبط.</p>
+              
+              <div className="relative mb-6">
+                <input 
+                  type="number" 
+                  value={pendingStatusChange.amount}
+                  onChange={e => setPendingStatusChange({...pendingStatusChange, amount: e.target.value})}
+                  onKeyDown={e => e.key === 'Enter' && confirmStatusChange()}
+                  className="w-full bg-white/5 border border-emerald-500/30 rounded-xl px-4 py-3 text-white text-lg font-bold focus:outline-none focus:border-emerald-500 transition-all text-right"
+                  placeholder="مثال: 500"
+                  autoFocus
+                />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">EGP</div>
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setPendingStatusChange(null)}
+                  className="flex-1 py-3 text-slate-400 font-bold hover:bg-white/5 rounded-xl transition-all"
+                >
+                  إلغاء
+                </button>
+                <button 
+                  onClick={confirmStatusChange}
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
+                >
+                  تأكيد المبلغ
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </AnimatePresence>
   );
@@ -659,22 +789,24 @@ function LeadCommandCard({
   const defaultWaLink = leadPhone ? `https://wa.me/${leadPhone.replace(/\+/g, "")}?text=${encodeURIComponent(WHATSAPP_TEMPLATES[activeTemplate].text + "\n\n" + leadLink)}` : null;
   const [localNote, setLocalNote] = useState(lead.note || "");
   const [isMarkingWa, setIsMarkingWa] = useState(false);
-  const [localWaSent, setLocalWaSent] = useState(!!lead.metadata?.whatsapp_sent);
+  const isWhatsAppMarked = Boolean(lead.metadata?.whatsapp_sent_at || lead.metadata?.whatsapp_sent || lead.metadata?.whatsapp_sent_manual);
 
   const onMarkWhatsApp = async () => {
-    if (isMarkingWa || localWaSent) return;
+    if (isMarkingWa || isWhatsAppMarked) return;
     setIsMarkingWa(true);
-    setLocalWaSent(true); // Optimistic UI update
     try {
-      await fetch("/api/admin/marketing-ops/lead", {
+      const res = await fetch("/api/admin/marketing-ops/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
         body: JSON.stringify({ action: "mark_whatsapp", id: lead.id })
       });
-      // Fire-and-forget sync
-      setTimeout(() => onLeadUpdated && onLeadUpdated(), 100);
+      const data = await res.json().catch(() => null);
+      if (!res.ok || data?.ok === false) {
+        throw new Error(data?.error || `request_failed_${res.status}`);
+      }
+      onLeadUpdated && onLeadUpdated();
     } catch {
-      setLocalWaSent(false);
+      // بنسيب الحالة تتصحح مع أول refresh من السيرفر.
     } finally {
       setIsMarkingWa(false);
     }
@@ -847,13 +979,13 @@ function LeadCommandCard({
                       <a
                         href={defaultWaLink}
                         target="_blank" rel="noopener noreferrer"
-                        className={`p-2.5 rounded-xl transition-all flex items-center justify-center active:scale-90 ${localWaSent ? 'text-emerald-400 bg-emerald-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}
+                        className={`p-2.5 rounded-xl transition-all flex items-center justify-center active:scale-90 ${isWhatsAppMarked ? 'text-emerald-400 bg-emerald-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}
                         onClick={() => onMarkWhatsApp()}
                         title="مراسلة واتساب"
                       >
                         <MessageCircle className="w-5 h-5" />
                       </a>
-                      {localWaSent && (
+                      {isWhatsAppMarked && (
                          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#121214] flex items-center justify-center z-20" title={`تم الإرسال: ${lead.metadata?.whatsapp_sent_at ? new Date(lead.metadata.whatsapp_sent_at).toLocaleDateString('ar-EG') : 'الآن'}`}>
                             <Check className="w-2 h-2 text-white" />
                          </div>
@@ -1124,6 +1256,8 @@ function LeadCommandCard({
     </div>
   );
 }
+
+const MemoLeadCommandCard = memo(LeadCommandCard);
 
 function EngagementMeter({ status }: { status: string }) {
   const steps = ["sent", "opened", "clicked"];

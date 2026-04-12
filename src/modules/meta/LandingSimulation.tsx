@@ -170,7 +170,7 @@ export function LandingSimulation() {
                 <Cpu className="h-8 w-8" />
               </div>
               <h3 className="mb-4 text-3xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>صخب لا ينتهي؟</h3>
-              <p className="mb-10 text-[15px] leading-loose text-white/50 max-w-[34ch] mx-auto text-justify" style={{ textJustify: "inter-word", textAlignLast: "center" }}>
+              <p className="mb-10 text-[15px] leading-loose text-white/70 max-w-[34ch] mx-auto text-justify" style={{ textJustify: "inter-word", textAlignLast: "center" }}>
                 لا تجري استبيانات. 3 أسئلة من الأعماق، في دقيقتين فقط، لتشغيل مرآة الوعي الخاصة بك وتحديد نقطة الانطلاق.
               </p>
               <button
@@ -252,7 +252,7 @@ export function LandingSimulation() {
                 {getResultContent()?.title}
               </h3>
               
-              <div className="mb-10 text-[15px] leading-loose text-white/60 max-w-[34ch] mx-auto text-justify" style={{ textJustify: "inter-word", textAlignLast: "center" }}>
+              <div className="mb-10 text-base leading-loose text-white/90 max-w-[34ch] mx-auto text-justify" style={{ textJustify: "inter-word", textAlignLast: "center" }}>
                 {getResultContent()?.message}
               </div>
 

@@ -31,33 +31,47 @@ export async function POST(req: Request) {
     // 1. Fetch current session to strictly prevent duplicates
     const { data: existingSession } = await db
       .from('gate_sessions')
-      .select('id, lead_submitted_at, qualified_at')
+      .select('id, email, lead_submitted_at, qualified_at')
       .eq('id', sessionId)
       .single();
 
     const timestamp = new Date().toISOString();
 
     if (step === 'layer1') {
-      if (existingSession?.lead_submitted_at) {
-        return NextResponse.json({ status: 'already_recorded', reason: 'idempotency' });
+      const { data: rpcData, error: rpcError } = await db.rpc('rpc_submit_gate_lead', {
+        p_id: sessionId,
+        p_email: payload.email,
+        p_source_area: payload.sourceArea,
+        p_timestamp: timestamp,
+        p_utm_source: utm_source,
+        p_utm_medium: utm_medium,
+        p_utm_campaign: utm_campaign,
+        p_utm_content: utm_content,
+        p_utm_term: utm_term,
+        p_fbclid: fbclid,
+        p_fbp: fbp,
+        p_fbc: fbc
+      });
+
+      if (rpcError) {
+        console.error('[Gate API] Supabase Layer 1 DB Error', rpcError);
+        return NextResponse.json({ error: 'Failed DB insertion' }, { status: 500 });
       }
 
-      // First creation & insertion
-      const insertPayload = {
-        id: sessionId,
-        email: payload.email,
-        source_area: payload.sourceArea,
-        lead_submitted_at: timestamp,
-        // Optional UTM mapping
-        utm_source, utm_medium, utm_campaign, utm_content, utm_term, fbclid, fbp, fbc
-      };
+      // If no ID returned, it means the update was rejected by the WHERE clause (already submitted)
+      if (!rpcData || rpcData.length === 0) {
+        return NextResponse.json({ status: 'already_recorded', reason: 'idempotency_rpc_reject' });
+      }
 
-      const { error } = await db.from('gate_sessions').upsert(insertPayload, { onConflict: 'id' });
-      if (error) console.error('[Gate API] Supabase Layer 1 DB Error', error);
-
-      // Trigger CAPI
-      // Server ensures exactly 1 CAPI request
-      await sendToCapi('Lead', eventId, { em: payload.email, fbp, fbc, external_id: sessionId }, { source_area: payload.sourceArea });
+      // Trigger CAPI only on successful atomic write
+      await sendToCapi('Lead', eventId, { 
+        em: payload.email, 
+        fbp, 
+        fbc, 
+        external_id: sessionId 
+      }, { 
+        source_area: payload.sourceArea 
+      });
 
       return NextResponse.json({ status: 'success' });
     }
@@ -97,7 +111,7 @@ export async function POST(req: Request) {
 
       // Trigger CAPI for layer 2
       await sendToCapi('CompleteRegistration', eventId, 
-        { em: payload.email, external_id: sessionId }, // Note: fbp, fbc should persist on client
+        { em: existingSession.email || payload.email, external_id: sessionId }, 
         { intent: payload.intent, commitment: payload.commitment }
       );
 

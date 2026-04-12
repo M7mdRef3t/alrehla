@@ -1,5 +1,6 @@
-'use client';
+"use client";
 
+import { memo } from "react";
 import { Ghost, Mail, MessageCircle, Phone, Send } from "lucide-react";
 
 type QuickSendLead = {
@@ -17,7 +18,7 @@ type QuickSendRowProps = {
   isGhostMode: boolean;
 };
 
-export function QuickSendRow({ lead, onMarkContacted, isGhostMode }: QuickSendRowProps) {
+function QuickSendRowImpl({ lead, onMarkContacted, isGhostMode }: QuickSendRowProps) {
   const whatsappHref = lead.phone
     ? `https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(lead.personalLink)}`
     : null;
@@ -81,3 +82,5 @@ export function QuickSendRow({ lead, onMarkContacted, isGhostMode }: QuickSendRo
     </div>
   );
 }
+
+export const QuickSendRow = memo(QuickSendRowImpl);

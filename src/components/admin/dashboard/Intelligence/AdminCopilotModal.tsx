@@ -66,7 +66,7 @@ export const AdminCopilotModal: FC = () => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="fixed bottom-6 left-6 z-[100] w-[380px] md:w-[420px] flex flex-col admin-glass-card shadow-2xl overflow-hidden"
+          className="!fixed bottom-6 left-6 z-[100] w-[380px] md:w-[420px] flex flex-col admin-glass-card shadow-2xl overflow-hidden"
           dir="rtl"
         >
           {/* Header */}

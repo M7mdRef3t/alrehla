@@ -24,13 +24,11 @@ const BOOKMARKLET_CODE = `javascript:(function(){
     var rawText = document.querySelector('#main header') ? document.querySelector('#main header').innerText : '';
     var match = rawText.replace(/[\\s-]/g,'').match(/\\+?\\d{10,15}/);
     var defaultPhone = match ? match[0] : '';
-    var phone = prompt("🧭 تسجيل عميل لـ الرحلة\\nرقم الهاتف:", defaultPhone);
-    if(!phone) return;
-    var notes = prompt("ملاحظات (اختياري):", "Lead من واتساب مباشر");
-    var url = 'https://www.alrehla.app/admin?tab=marketing-ops&add_lead_flag=1&phone=' + encodeURIComponent(phone) + '&note=' + encodeURIComponent(notes || '');
-    window.open(url, '_blank');
+    var url = 'https://www.alrehla.app/admin?tab=marketing-ops&add_lead_flag=1&phone=' + encodeURIComponent(defaultPhone);
+    window.open(url, 'DawayirLead', 'width=500,height=700,left='+(screen.width-500)/2+',top='+(screen.height-700)/2);
   } catch(e) {
-    alert("افتح شات العميل الأول في واتساب ويب!");
+    var url = 'https://www.alrehla.app/admin?tab=marketing-ops&add_lead_flag=1';
+    window.open(url, 'DawayirLead', 'width=500,height=700');
   }
 })();`.trim();
 

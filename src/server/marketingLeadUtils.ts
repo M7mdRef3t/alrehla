@@ -159,7 +159,8 @@ export function normalizeMarketingLeadPayload(
     lastContactedAt: sanitizeIsoDate(payload.lastContactedAt),
     qualifiedAt: sanitizeIsoDate(payload.qualifiedAt),
     intent: sanitizeText(payload.intent, 100),
-    anonymousId: sanitizeText(payload.anonymousId || payload.anonymous_id, 128)
+    anonymousId: sanitizeText(payload.anonymousId || payload.anonymous_id, 128),
+    clientEventId: sanitizeText(payload.clientEventId || payload.client_event_id, 128)
   };
 }
 

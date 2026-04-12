@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Clock, AlertTriangle, CheckCircle, ChevronRight } from "lucide-react";
 import html2canvas from "html2canvas";
-import { trackEvent, trackPageView } from "../../src/services/analytics";
+import { trackEvent, trackPageView, generateUUID } from "../../src/services/analytics";
 import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "../../src/services/marketingAttribution";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { fetchJourneyPaths } from "../../src/services/adminApi";
@@ -266,6 +266,10 @@ export default function WeatherForecastClient() {
   const resultRef = useRef<HTMLDivElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const clientEventIdRef = useRef<string | null>(null);
+  if (!clientEventIdRef.current) {
+    clientEventIdRef.current = generateUUID();
+  }
   const setJourneyPaths = useAdminState((state) => state.setJourneyPaths);
   const weatherPath = useAdminState((state) => {
     const path = getRelationshipWeatherPath(state.journeyPaths);
@@ -283,7 +287,12 @@ export default function WeatherForecastClient() {
 
   useEffect(() => {
     if (step === "result" && result) {
-      trackEvent("weather_result_view", { level: result.weatherLevel, pattern: result.pattern, zone: result.drainZone });
+      trackEvent("weather_result_view", { 
+        level: result.weatherLevel, 
+        pattern: result.pattern, 
+        zone: result.drainZone,
+        client_event_id: clientEventIdRef.current!
+      });
     }
   }, [step, result]);
 
@@ -338,7 +347,7 @@ export default function WeatherForecastClient() {
   }, [weatherPath]);
 
   const handleStart = useCallback(() => {
-    trackEvent("weather_start_clicked");
+    trackEvent("weather_start_clicked", { client_event_id: clientEventIdRef.current! });
     const initialStage = getRelationshipWeatherInitialStage(weatherPath);
 
     if (initialStage === "questions") {
@@ -412,7 +421,7 @@ export default function WeatherForecastClient() {
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url; a.download = "weather-report.png"; a.click();
-          trackEvent("weather_share_completed");
+          trackEvent("weather_share_completed", { client_event_id: clientEventIdRef.current! });
         }
       });
     } catch { setIsCapturing(false); }
@@ -420,14 +429,18 @@ export default function WeatherForecastClient() {
 
   const handleCTA = useCallback(() => {
     if (!result || typeof window === "undefined") return;
-    trackEvent("weather_onboarding_clicked", { pattern: result.pattern, level: result.weatherLevel });
+    trackEvent("weather_onboarding_clicked", { 
+      pattern: result.pattern, 
+      level: result.weatherLevel,
+      client_event_id: clientEventIdRef.current!
+    });
     launchRelationshipWeatherFlow(weatherPath, result, "weather_v3");
   }, [result, weatherPath]);
 
   const ease = [0.22, 1, 0.36, 1] as const;
 
   return (
-    <div className="wf-page relative overflow-x-hidden" dir="rtl">
+    <main className="wf-page relative overflow-x-hidden" dir="rtl">
       <style>{STYLES}</style>
       <div className="orb-1" />
       <div className="orb-2" />
@@ -657,6 +670,6 @@ export default function WeatherForecastClient() {
 
         </AnimatePresence>
       </div>
-    </div>
+    </main>
   );
 }

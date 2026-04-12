@@ -176,7 +176,8 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     p_note: input.note || "",
     p_status: input.status || "new",
     p_intent: input.intent || null,
-    p_anonymous_id: input.anonymousId || null
+    p_anonymous_id: input.anonymousId || null,
+    p_client_event_id: input.clientEventId || null
   });
 
   if (error) {
@@ -311,7 +312,7 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
       // Fire and forget Meta CAPI Event
       void sendMetaCapiEvent({
         eventName: "Lead",
-        eventId: result.lead_id,
+        eventId: input.clientEventId || result.lead_id, // Hardened Deduplication: Unified ID with Browser
         sourceUrl: refUrl,
         userData: {
           email: input.email,

@@ -20,9 +20,7 @@ import {
   type PaymentMode,
 } from "../../src/config/paymentConfig";
 import { WizardProgressBar } from "./_components/wizard/WizardProgressBar";
-import { StepWelcome } from "./_components/wizard/StepWelcome";
 import { StepChooseMethod } from "./_components/wizard/StepChooseMethod";
-import { StepPaymentDetails } from "./_components/wizard/StepPaymentDetails";
 import { StepSendProof } from "./_components/wizard/StepSendProof";
 import {
   ALLOWED_PROOF_IMAGE_TYPES,
@@ -46,6 +44,20 @@ type ScarcityResponse = {
 
 const ACTIVATION_PUBLIC_ENABLED = paymentConfig.activationPublicEnabled;
 
+function getPreferredMethod(mode: PaymentMode): ManualProofMethod {
+  if (mode === "international") {
+    if (paymentConfig.paypalUrl || paymentConfig.paypalEmail) return "paypal";
+    if (paymentConfig.etisalatCashNumber) return "etisalat_cash";
+    return "paypal";
+  }
+
+  if (paymentConfig.instapayAlias || paymentConfig.instapayNumber) return "instapay";
+  if (paymentConfig.vodafoneCashNumber) return "vodafone_cash";
+  if (paymentConfig.etisalatCashNumber) return "etisalat_cash";
+  if (paymentConfig.bankIban || paymentConfig.bankAccountNumber) return "bank_transfer";
+  return "fawry";
+}
+
 export default function ActivationPage() {
   const [mode, setMode] = useState<PaymentMode>("local");
   const [email, setEmail] = useState("");
@@ -58,7 +70,7 @@ export default function ActivationPage() {
   const [proofNote, setProofNote] = useState("");
   const [proofImage, setProofImage] = useState<ProofImageState | null>(null);
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
-  // Wizard step: 1=welcome, 2=choose method, 3=payment details, 4=send proof
+  // Wizard step: 1=choose method, 2=payment + proof
   const [wizardStep, setWizardStep] = useState(1);
   // Selected method id & track id for the wizard
   const [selectedMethodId, setSelectedMethodId] = useState<ManualProofMethod | null>(null);
@@ -114,6 +126,25 @@ export default function ActivationPage() {
         : availableProofMethods[0]?.value ?? "instapay"
     );
   }, [availableProofMethods]);
+
+  useEffect(() => {
+    const preferredMethod = getPreferredMethod(mode);
+    setSelectedMethodId((current) => {
+      if (current === preferredMethod) return current;
+      if (current && availableProofMethods.some((method) => method.value === current)) {
+        return current;
+      }
+      return preferredMethod;
+    });
+
+    setProofMethod((current) => {
+      if (current === preferredMethod) return current;
+      if (availableProofMethods.some((method) => method.value === current)) {
+        return current;
+      }
+      return preferredMethod;
+    });
+  }, [mode, availableProofMethods]);
 
   useEffect(() => {
     if (!ACTIVATION_PUBLIC_ENABLED) return;
@@ -379,22 +410,8 @@ export default function ActivationPage() {
 
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <AnimatePresence mode="wait" initial={false}>
-            {/* Step 1 â€” Welcome */}
+            {/* Step 1 â€” Choose payment method */}
             {wizardStep === 1 && (
-              <StepWelcome
-                key="step-welcome"
-                userName={userName}
-                priceLine={priceLine}
-                pricingRows={pricingRows}
-                seatsLeft={seatsLeft}
-                totalSeats={totalSeats}
-                scarcityPct={scarcityPct}
-                onNext={() => { goNext(); scrollTop(); }}
-              />
-            )}
-
-            {/* Step 2 â€” Choose payment method */}
-            {wizardStep === 2 && (
               <StepChooseMethod
                 key="step-choose-method"
                 mode={mode}
@@ -408,22 +425,12 @@ export default function ActivationPage() {
               />
             )}
 
-            {/* Step 3 â€” Payment details / copy data */}
-            {wizardStep === 3 && selectedMethodId && (
-              <StepPaymentDetails
-                key="step-payment-details"
-                selectedMethod={selectedMethodId}
-                mode={mode}
-                email={email}
-                onNext={() => { goNext(); scrollTop(); }}
-                onBack={() => { goBack(); scrollTop(); }}
-              />
-            )}
-
-            {/* Step 4 â€” Send proof */}
-            {wizardStep === 4 && (
+            {/* Step 2 â€” Payment + send proof */}
+            {wizardStep === 2 && (
               <StepSendProof
                 key="step-send-proof"
+                selectedMethod={selectedMethodId ?? proofMethod}
+                mode={mode}
                 email={email}
                 setEmail={setEmail}
                 proofMethod={proofMethod}

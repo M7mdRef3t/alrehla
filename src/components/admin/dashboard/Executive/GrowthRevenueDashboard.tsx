@@ -65,12 +65,12 @@ export const GrowthRevenueDashboard: FC = () => {
 
     return (
         <div className="space-y-6" dir="rtl">
-            <header className="admin-glass-card rounded-2xl p-6 border-slate-800 flex flex-col md:flex-row items-center justify-between relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/10 blur-[80px] rounded-full pointer-events-none" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[2px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent pointer-events-none" />
-                <div className="flex items-center gap-4 relative z-10 w-full md:w-auto mb-4 md:mb-0">
-                    <div className="p-3 bg-slate-900 rounded-xl border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+            <header className="admin-glass-card rounded-3xl p-8 border-slate-700/50 flex flex-col md:flex-row items-center justify-between relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                <div className="absolute -top-10 -right-10 w-80 h-80 bg-emerald-500/15 blur-[100px] rounded-full pointer-events-none" />
+                <div className="absolute -bottom-10 -left-10 w-80 h-80 bg-teal-500/15 blur-[100px] rounded-full pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent pointer-events-none" />
+                <div className="flex items-center gap-5 relative z-10 w-full md:w-auto mb-4 md:mb-0">
+                    <div className="p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.25)]">
                         <Zap className="w-6 h-6 text-emerald-400" />
                     </div>
                     <div>
@@ -84,7 +84,7 @@ export const GrowthRevenueDashboard: FC = () => {
             </header>
             
             {/* Business Harmony Index (LTV/CAC Resonance) */}
-            <div className="hud-glass p-6 rounded-3xl border-emerald-500/20 relative overflow-hidden group">
+            <div className="hud-glass p-8 rounded-3xl border-emerald-500/20 relative overflow-hidden group bg-[#0B0F19]/40 backdrop-blur-3xl shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
                 <div className="hud-edge-accent top-0 right-0" />
                 <div className="hud-edge-accent bottom-0 left-0" />
                 
@@ -110,8 +110,8 @@ export const GrowthRevenueDashboard: FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col items-center justify-center p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 min-w-[200px]">
-                        <div className="relative mb-2">
+                    <div className="flex flex-col items-center justify-center p-6 bg-white/5 backdrop-blur-2xl rounded-3xl border border-emerald-500/20 min-w-[200px] shadow-[0_0_30px_rgba(16,185,129,0.05)] hover:border-emerald-500/40 hover:shadow-[0_0_40px_rgba(16,185,129,0.15)] transition-all duration-500">
+                        <div className="relative mb-3">
                             <motion.div 
                                 animate={{ scale: [1, 1.05, 1], rotate: [0, 5, 0] }}
                                 transition={{ duration: 6, repeat: Infinity }}
@@ -120,7 +120,7 @@ export const GrowthRevenueDashboard: FC = () => {
                                 <span className="text-2xl font-black text-emerald-400">92%</span>
                             </motion.div>
                         </div>
-                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] animate-resonance-glow px-4 py-1 rounded-full border border-emerald-500/20">رنين فائق</span>
+                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] animate-resonance-glow px-5 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.2)]">رنين فائق</span>
                     </div>
                 </div>
             </div>

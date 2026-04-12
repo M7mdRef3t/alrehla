@@ -9,16 +9,7 @@ import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribu
 type AnalyticsValue = string | number | boolean;
 type AnalyticsParams = Record<string, AnalyticsValue>;
 
-// Circuit breaker: disable Supabase INSERT after first RLS/permission error
-let supabaseTrackingEnabled = true;
 
-// In-memory cache to prevent safeGetSession blocking inside telemetry
-let inMemoryUserId: string | null = null;
-if (isClientRuntime() && supabase) {
-  supabase.auth.onAuthStateChange((_event, session) => {
-    inMemoryUserId = session?.user?.id || null;
-  });
-}
 
 function isAnalyticsEnabled(): boolean {
   return getFromLocalStorage("dawayir-analytics-consent") === "true";
@@ -266,7 +257,7 @@ export function trackLandingView(
 export const ANALYTICS_ANON_KEY = "alrehla_anonymous_id";
 export const ANALYTICS_SESSION_KEY = "alrehla_session_id";
 
-function generateUUID(): string {
+export function generateUUID(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
@@ -321,13 +312,11 @@ async function sendInternalAnalytics(
     client_event_id,
     anonymous_id,
     session_id,
-    user_id: inMemoryUserId || null, // Synchronous enrichment, no blocking config
     lead_id: leadAttr?.lead_id || null,
     lead_source: leadAttr?.lead_source || null,
     utm_source: utm?.utm_source || null,
     utm_medium: utm?.utm_medium || null,
     utm_campaign: utm?.utm_campaign || null,
-    occurred_at: new Date().toISOString(),
     payload: {
       ...(safeParams || {}),
       pathname: windowRef?.location?.pathname || null,
@@ -408,8 +397,6 @@ export async function trackIdentityLinked(userId: string): Promise<void> {
       client_event_id: generateUUID(),
       anonymous_id,
       session_id: getOrCreateSessionId(),
-      user_id: userId,
-      occurred_at: new Date().toISOString(),
       payload: {}
     }),
     keepalive: true,
@@ -526,7 +513,28 @@ export const AnalyticsEvents = {
   WEATHER_SHARE_FAILED: "weather_share_failed",
   WEATHER_ONBOARDING_CLICKED: "weather_onboarding_clicked",
   WEATHER_WHATSAPP_CLICKED: "weather_whatsapp_clicked",
+
+  // --- External Attribution Persistence ---
+  EXTERNAL_ID_SYNCED: "external_id_synced",
 } as const;
+
+/**
+ * Persists the client_event_id for cross-component attribution (e.g. Onboarding -> Payment)
+ */
+export function setStoredClientEventId(id: string): void {
+  setInLocalStorage("dawayir-client-event-id", id);
+}
+
+/**
+ * Retrieves the persisted client_event_id
+ */
+export function getStoredClientEventId(): string | null {
+  return getFromLocalStorage("dawayir-client-event-id");
+}
+
+function resolveEventId(params?: Record<string, AnalyticsValue | null | undefined>): string {
+  return (params?.client_event_id as string) || getStoredClientEventId() || generateUUID();
+}
 
 export function trackLead(params?: Record<string, AnalyticsValue | null | undefined>): void {
   const safeParams = sanitizeAnalyticsParams(params);
@@ -538,17 +546,36 @@ export function trackLead(params?: Record<string, AnalyticsValue | null | undefi
     sendGtagEvent("conversion", { ...(safeParams ?? {}), send_to: googleAdsSendTo });
   }
 
-  const client_event_id = (params?.client_event_id as string) || generateUUID();
+  const client_event_id = resolveEventId(params);
   sendMetaEvent("Lead", safeParams, { bypassConsent: true, client_event_id });
+}
+
+/**
+ * Fired when onboarding survey is finished (non-conversion, just state)
+ */
+export function trackOnboardingCompleted(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams(params);
+  const client_event_id = resolveEventId(params);
+  trackEvent(AnalyticsEvents.ONBOARDING_COMPLETED, { ...safeParams, client_event_id });
+  // We do NOT send Meta CompleteRegistration here anymore to keep it for actual revenue
 }
 
 export function trackCompleteRegistration(
   params?: Record<string, AnalyticsValue | null | undefined>
 ): void {
   const safeParams = sanitizeAnalyticsParams(params);
-  trackEvent(AnalyticsEvents.ONBOARDING_COMPLETED, safeParams);
+  const client_event_id = resolveEventId(params);
+  
+  trackEvent("registration_finalized", { ...safeParams, client_event_id });
   sendGtagEvent("sign_up", safeParams);
-  sendMetaEvent("CompleteRegistration", safeParams, { bypassConsent: true });
+
+  // Meta standard CompleteRegistration (Revenue-generating according to business logic)
+  sendMetaEvent("CompleteRegistration", safeParams, { 
+    bypassConsent: true, 
+    client_event_id 
+  });
 }
 
 export function trackCheckoutViewed(
@@ -556,7 +583,26 @@ export function trackCheckoutViewed(
 ): void {
   const safeParams = sanitizeAnalyticsParams(params);
   trackEvent(AnalyticsEvents.ACTIVATION_VIEWED, safeParams);
-  sendMetaEvent("ViewContent", safeParams);
+  const client_event_id = resolveEventId(params);
+  sendMetaEvent("ViewContent", safeParams, { client_event_id });
+}
+
+export function trackAddPaymentInfo(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams(params);
+  trackEvent("add_payment_info", safeParams);
+  const client_event_id = resolveEventId(params);
+  sendMetaEvent("AddPaymentInfo", safeParams, { client_event_id });
+}
+
+export function trackActivationUnlocked(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams(params);
+  trackEvent(AnalyticsEvents.ACTIVATION_UNLOCKED, safeParams);
+  const client_event_id = resolveEventId(params);
+  sendMetaEvent("InitiateCheckout", safeParams, { client_event_id });
 }
 
 export function trackInitiateCheckout(
@@ -564,8 +610,10 @@ export function trackInitiateCheckout(
 ): void {
   const safeParams = sanitizeAnalyticsParams(params);
   trackEvent(AnalyticsEvents.PAYMENT_INTENT_SUBMITTED, safeParams);
+  const client_event_id = resolveEventId(params);
+
   sendGtagEvent("begin_activation", safeParams);
-  sendMetaEvent("InitiateCheckout", safeParams);
+  sendMetaEvent("InitiateCheckout", safeParams, { client_event_id });
 }
 
 export function setAnalyticsConsent(consent: boolean): void {

@@ -2214,6 +2214,29 @@ export const MapCanvas: FC<MapCanvasProps> = ({
           transition={{ duration: 4 }}
         />
 
+        {/* ── Energy Crisis Warning (Glassmorphic) ── */}
+        <AnimatePresence>
+          {lastPulse && (lastPulse.energy <= 3 || lastPulse.mood === "overwhelmed") && (
+            <motion.div
+              className="absolute top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none w-full max-w-sm px-4"
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: "spring", damping: 20 }}
+            >
+              <div className="glass-card bg-rose-900/30 border border-rose-500/30 p-3 rounded-2xl flex items-center gap-3 backdrop-blur-xl shadow-[0_0_30px_rgba(244,63,94,0.15)]">
+                <div className="w-8 h-8 rounded-full bg-rose-500/20 border border-rose-500/50 flex items-center justify-center shrink-0">
+                  <Flame className="w-4 h-4 text-rose-400" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-rose-200">طاقتك منخفضة جداً</h4>
+                  <p className="text-xs text-rose-300/80 leading-tight">احترس من اتخاذ قرارات تجاه العلاقات دلوقتي.. الوعي مشوش.</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/*  Pending Move Confirmation (Glass)  */}
         {pendingMove && (
           <motion.div

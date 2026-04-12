@@ -1,7 +1,8 @@
 import { logger } from "@/services/logger";
 import { adminApi } from "./adminApi";
 import { useToastState } from "@/domains/dawayir/store/toast.store";
-import { revenueEngine, type RevenueMetricSnapshot } from "./revenueEngine";
+import { revenueService } from "@/domains/billing";
+import type { RevenueMetricSnapshot } from "@/domains/billing/types";
 import { MarketingGatewayService } from "./marketingGatewayService";
 
 export interface GrowthMetrics {
@@ -40,7 +41,7 @@ class SovereignGrowthEngine {
     try {
       const rawSpend = await adminApi.fetchMarketingSpend();
       const spend = rawSpend ?? 0;
-      const revenueSnapshot: RevenueMetricSnapshot = await revenueEngine.getExecutiveRevenueSnapshot();
+      const revenueSnapshot: RevenueMetricSnapshot = await revenueService.getExecutiveSnapshot();
       const totalRevenue = revenueSnapshot.totalRevenue;
       const totalLeads = await this.getTotalLeadsCount();
       const totalAcquisitions = revenueSnapshot.activeSubscriptions;
@@ -105,7 +106,7 @@ class SovereignGrowthEngine {
         getCounts(["google"]),
         supabase.from("marketing_leads").select("*", { count: "exact", head: true }),
         supabase.from("marketing_leads").select("*", { count: "exact", head: true }).gte("created_at", twentyFourAgo),
-        revenueEngine.getExecutiveRevenueSnapshot()
+        revenueService.getExecutiveSnapshot()
       ]);
 
       const totalLeadsCount = totalCount.count || 0;

@@ -122,6 +122,7 @@ export const GhostMirror: React.FC = () => {
   const [traces, setTraces] = useState<GhostTrace[]>([]);
   const [isLive, setIsLive] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [injectionToast, setInjectionToast] = useState<{ sessionId: string, visible: boolean }>({ sessionId: "", visible: false });
 
   const visibleTraces = useMemo(() => traces.slice(0, 20), [traces]);
   const positiveCount = useMemo(
@@ -224,8 +225,8 @@ export const GhostMirror: React.FC = () => {
   }, []);
 
   const handleInjectInsight = (sessionId: string) => {
-    // In the future, this can dispatch an intervention directly to the given session
-    alert(`تم حقن إدراك سيادي للمستخدم ${sessionId}:\n\n'نحن بجانبك، النظام يلاحظ ترددك في هذه الخطوة. خذ نفساً عميقاً.'`);
+    setInjectionToast({ sessionId, visible: true });
+    setTimeout(() => setInjectionToast(prev => ({ ...prev, visible: false })), 4000);
   };
 
   return (
@@ -395,6 +396,25 @@ export const GhostMirror: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {injectionToast.visible && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] bg-indigo-600 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-indigo-400/50"
+          >
+            <div className="p-2 bg-indigo-500 rounded-lg">
+              <Zap className="w-4 h-4 text-white animate-pulse" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Cognitive Injection Deployed</p>
+              <p className="text-xs font-bold font-mono">Session ID: {injectionToast.sessionId}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

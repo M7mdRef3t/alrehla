@@ -11,6 +11,7 @@ import {
   trackLandingView,
   trackLead,
   trackCompleteRegistration,
+  trackActivationUnlocked,
   trackCheckoutViewed,
   trackInitiateCheckout,
   trackIdentityLinked,
@@ -21,6 +22,10 @@ import {
   logAnalyticsDiagnostics,
   getOrCreateAnonymousId,
   getOrCreateSessionId,
+  setStoredClientEventId,
+  getStoredClientEventId,
+  trackOnboardingCompleted,
+  trackAddPaymentInfo,
   AnalyticsEvents,
 } from "@/services/analytics";
 import type { AnalyticsOptionalParams, AnalyticsDiagnostics } from "../types";
@@ -125,6 +130,22 @@ export const analyticsService = {
   },
 
   // ─── Events Map ───────────────────────────────────
+
+  setStoredClientEventId(id: string): void {
+    setStoredClientEventId(id);
+  },
+
+  getStoredClientEventId(): string | null {
+    return getStoredClientEventId();
+  },
+
+  trackOnboardingCompleted(params?: AnalyticsOptionalParams): void {
+    trackOnboardingCompleted(params);
+  },
+
+  trackAddPaymentInfo(params?: AnalyticsOptionalParams): void {
+    trackAddPaymentInfo(params);
+  },
 
   Events: AnalyticsEvents,
 };

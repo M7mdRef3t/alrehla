@@ -57,7 +57,7 @@ function getSystemTheme(): "light" | "dark" {
   return windowRef.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-function injectTokens(tokens: DesignTokens) {
+export function injectTokens(tokens: DesignTokens) {
   const documentRef = getDocumentOrNull();
   if (!documentRef) return;
   const root = documentRef.documentElement;

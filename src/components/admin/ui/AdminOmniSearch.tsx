@@ -2,8 +2,9 @@ import type { FC } from "react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Command, ArrowRight } from "lucide-react";
-import { NAV_ITEMS, CLEAN_NAV_LABELS, type AdminTab } from "../adminNavigation";
+import { NAV_ITEMS, CLEAN_NAV_LABELS, NAV_TOOLTIPS, type AdminTab } from "../adminNavigation";
 import { createCurrentUrl, pushUrl } from "@/services/navigation";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 
 export const AdminOmniSearch: FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,6 +20,23 @@ export const AdminOmniSearch: FC = () => {
       if (e.key === "Escape" && isOpen) {
         setIsOpen(false);
       }
+      
+      // Hotkeys for Quick Actions
+      if (e.ctrlKey && e.shiftKey) {
+        switch (e.key.toLowerCase()) {
+          case 'c':
+            e.preventDefault();
+            useAdminState.getState().setCopilotOpen(true);
+            setIsOpen(false);
+            break;
+          case 'e':
+            e.preventDefault();
+            const state = useAdminState.getState();
+            state.toggleContentEditing(!state.isContentEditingEnabled);
+            setIsOpen(false);
+            break;
+        }
+      }
     };
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
@@ -33,7 +51,13 @@ export const AdminOmniSearch: FC = () => {
 
   const filteredItems = NAV_ITEMS.filter((item) => {
     const label = CLEAN_NAV_LABELS[item.id] ?? item.label;
-    return label.toLowerCase().includes(query.toLowerCase()) || item.id.toLowerCase().includes(query.toLowerCase());
+    const tooltip = NAV_TOOLTIPS[item.id] ?? "";
+    const searchTerm = query.toLowerCase();
+    return (
+      label.toLowerCase().includes(searchTerm) || 
+      item.id.toLowerCase().includes(searchTerm) ||
+      tooltip.toLowerCase().includes(searchTerm)
+    );
   });
 
   const handleSelect = (tab: AdminTab) => {

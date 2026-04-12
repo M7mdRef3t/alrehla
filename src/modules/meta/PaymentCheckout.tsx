@@ -28,6 +28,8 @@ import {
 import { TIER_PRICES_USD, TIER_LABELS } from "@/config/pricing";
 import { telegramBot } from "@/services/telegramBot";
 import { supabase } from "@/services/supabaseClient";
+import * as analyticsService from "@/services/analytics";
+import { useEffect } from "react";
 
 // ═══════════════════════════════════════════════════════════════════
 // Types
@@ -73,6 +75,14 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
   const localPriceLabel = paymentConfig.localMonthlyPriceLabel || "200 ج.م / شهر";
   const whatsappNumber = normalizeWhatsappNumber(paymentConfig.whatsappNumberRaw);
 
+  useEffect(() => {
+    // Fired when the payment selector is shown
+    analyticsService.trackAddPaymentInfo({ 
+      course: TIER_LABELS.premium,
+      price: price.monthly 
+    });
+  }, [price]);
+
   // ── Copy ──────────────────────────────────────────────────────────
   const copyText = useCallback((text: string, key: string) => {
     navigator.clipboard.writeText(text).catch(() => {
@@ -116,6 +126,14 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           "👇 *المطلوب:* تأكيد استلام الفلوس ثم تفعيل الحساب",
         ].join("\n"),
         parseMode: "Markdown",
+      });
+
+      // Perfect place for CompleteRegistration - User committed to paying
+      analyticsService.trackCompleteRegistration({
+        method,
+        value: price.monthly,
+        currency: "USD",
+        content_name: TIER_LABELS.premium
       });
 
       setRequestSent(true);
@@ -207,7 +225,10 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             iconBg="bg-red-500/15"
             label="فودافون كاش"
             sub={localPriceLabel}
-            onClick={() => setSelectedMethod("vodafone_cash")}
+            onClick={() => {
+              analyticsService.trackInitiateCheckout({ method: "vodafone_cash" });
+              setSelectedMethod("vodafone_cash");
+            }}
           />
 
           {/* InstaPay */}
@@ -216,7 +237,10 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             iconBg="bg-blue-500/15"
             label="InstaPay"
             sub={localPriceLabel}
-            onClick={() => setSelectedMethod("instapay")}
+            onClick={() => {
+              analyticsService.trackInitiateCheckout({ method: "instapay" });
+              setSelectedMethod("instapay");
+            }}
           />
 
           {/* PayPal */}
@@ -226,7 +250,10 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             label="PayPal"
             sub={`$${price.monthly}/شهر`}
             badge="دولي"
-            onClick={() => setSelectedMethod("paypal")}
+            onClick={() => {
+              analyticsService.trackInitiateCheckout({ method: "paypal" });
+              setSelectedMethod("paypal");
+            }}
           />
 
           {/* Gumroad / Card */}
@@ -236,7 +263,10 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             label="بطاقة ائتمان"
             sub={`$${price.monthly}/شهر — Apple Pay, Visa, Mastercard`}
             badge="دولي"
-            onClick={() => setSelectedMethod("gumroad")}
+            onClick={() => {
+              analyticsService.trackInitiateCheckout({ method: "gumroad" });
+              setSelectedMethod("gumroad");
+            }}
           />
         </div>
 

@@ -1,6 +1,6 @@
 import { logger } from "@/services/logger";
 import type { MarketingLeadPayload } from "@/types/marketingLead";
-import { trackLead, getOrCreateAnonymousId } from "./analytics";
+import { trackLead, getOrCreateAnonymousId, getStoredClientEventId } from "./analytics";
 import { recordFlowEvent } from "./journeyTracking";
 import { getStoredUtmParams } from "./marketingAttribution";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
@@ -51,6 +51,7 @@ function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayloa
     utm: utm ?? undefined,
     campaign: utm?.utm_campaign,
     anonymousId: input.anonymousId || getOrCreateAnonymousId(),
+    clientEventId: getStoredClientEventId(), // Unified ID for Meta Deduplication
     metadata: {
       ...input.metadata,
       capturedAt: new Date().toISOString(),

@@ -33,6 +33,7 @@ import { usePersonalizedBiometrics } from "@/hooks/usePersonalizedBiometrics";
 import { useWeatherFunnelBridge } from "@/hooks/useWeatherFunnelBridge";
 import { BoardingPassModal } from "../BoardingPassModal";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
+import { UserbackWidget } from "@/components/UserbackWidget";
 
 function hasOAuthCallbackParams(): boolean {
   const search = new URLSearchParams(getSearch());
@@ -118,8 +119,11 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     snoozedUntil,
     logPulse,
     snoozeNotifications,
-    setAuthIntent
+    setAuthIntent,
+    recordActivity,
+    completeDailyQuest
   } = useAppShellBootstrapState();
+
 
   // ── CONSUME LANDING INTENT (Cross-Shell Navigation) ──
   useEffect(() => {
@@ -204,6 +208,16 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     setScreen,
     setLockedFeature
   });
+
+  // ── DAILY ACTIVITY & QUESTS ──
+  useEffect(() => {
+    if (authStatus === "ready") {
+      const { streakMaintained } = recordActivity();
+      // Auto-complete the check-in quest
+      completeDailyQuest("dq_checkin", "daily_visit", 20);
+    }
+  }, [authStatus, recordActivity, completeDailyQuest]);
+
 
   // ── BOARDING PASS LOGIC ──
   useEffect(() => {
@@ -440,7 +454,8 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     clearPostAuthState,
     showNoiseSessionToast,
     showBreathingSessionToast,
-    skipNextPulseCheck
+    skipNextPulseCheck,
+    completeDailyQuest
   });
 
   const {
@@ -781,6 +796,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
           onNavigateToMap={navigateToMap}
           onOpenLogin={handleHeaderLogin}
         />
+        <UserbackWidget />
         <SanctuaryLockdownExperience />
         <BoardingPassModal 
           isOpen={isBoardingPassOpen} 

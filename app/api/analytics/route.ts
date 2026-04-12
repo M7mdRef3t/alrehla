@@ -32,7 +32,7 @@ const analyticsSchema = z.object({
     utm_source: z.string().optional().nullable(),
     utm_medium: z.string().optional().nullable(),
     utm_campaign: z.string().optional().nullable()
-}).passthrough();
+}).strict();
 
 export async function POST(req: Request) {
     try {
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
         }
 
         const response = NextResponse.json({ status: "success" });
-        response.headers.set("X-Analytics-Version", "v2-hardened-zod");
+        response.headers.set("X-Analytics-Version", "v3-clean-strict");
         return response;
     } catch (e) {
         console.error("[Analytics Ingestion] Server Error:", e);

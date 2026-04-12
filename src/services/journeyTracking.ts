@@ -18,7 +18,6 @@ const KEY_EVENTS = "dawayir-journey-events";
 const KEY_SESSION_ID = ANALYTICS_SESSION_KEY;
 const KEY_API_URL = "dawayir-tracking-api-url";
 const MAX_EVENTS = 2000;
-const SUPABASE_EVENTS_TABLE = "journey_events";
 const SUPABASE_PROFILES_TABLE = "profiles";
 const trackingApiBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
 
@@ -182,8 +181,7 @@ async function flushSupabaseSync(): Promise<void> {
     payload: {
       ...(event.payload ?? {}),
       mode
-    },
-    occurred_at: new Date(event.timestamp).toISOString()
+    }
   }));
 
   // Redirect to unified analytics API instead of direct Supabase insertion

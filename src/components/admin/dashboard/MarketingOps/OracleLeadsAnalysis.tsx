@@ -27,7 +27,17 @@ function getBearerToken(): string {
   return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
 }
 
-export function OracleLeadsAnalysis({ onOpenWhatsapp }: { onOpenWhatsapp: (leadId: string, phone: string, name: string, oracleAdvice?: string, leadGrade?: string) => void }) {
+export function OracleLeadsAnalysis({ onOpenWhatsapp }: { 
+  onOpenWhatsapp: (
+    leadId: string, 
+    phone: string, 
+    name: string, 
+    oracleAdvice?: string, 
+    leadGrade?: string,
+    campaign?: string,
+    source?: string
+  ) => void 
+}) {
   const [stats, setStats] = useState<OracleStats | null>(null);
   const [recentInsights, setRecentInsights] = useState<OracleLead[]>([]);
   const [distribution, setDistribution] = useState<any[]>([]);
@@ -183,7 +193,15 @@ export function OracleLeadsAnalysis({ onOpenWhatsapp }: { onOpenWhatsapp: (leadI
                     {/* Actions */}
                     <div className="flex flex-col gap-2 w-full md:w-auto">
                       <button 
-                        onClick={() => onOpenWhatsapp(lead.id, phone, lead.name, reasoning, grade)}
+                        onClick={() => onOpenWhatsapp(
+                          lead.id, 
+                          phone, 
+                          lead.name, 
+                          reasoning, 
+                          grade,
+                          lead.metadata?.campaign,
+                          lead.metadata?.source
+                        )}
                         className="px-4 py-2 border border-slate-700 hover:border-emerald-500/50 bg-slate-800 text-slate-300 hover:text-emerald-400 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
                       >
                         عرض رسائل WhatsApp

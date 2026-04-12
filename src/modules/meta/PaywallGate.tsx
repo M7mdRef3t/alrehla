@@ -9,6 +9,8 @@ import {
 
 import { isPublicPaymentsEnabled } from "@/config/payments";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+import { useEffect } from "react";
+import * as analyticsService from "@/services/analytics";
 
 interface PaywallGateProps {
   reason: "ai_limit" | "map_limit" | "pdf" | "training";
@@ -46,6 +48,10 @@ const PREMIUM_FEATURES = [
 export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose }) => {
   const copy = REASON_COPY[reason];
   const openOverlay = useAppOverlayState((s) => s.openOverlay);
+
+  useEffect(() => {
+    analyticsService.trackCheckoutViewed({ reason });
+  }, [reason]);
 
   const handleUpgrade = () => {
     if (!isPublicPaymentsEnabled) return;

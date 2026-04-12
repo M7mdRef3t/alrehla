@@ -253,6 +253,59 @@ export async function syncRitualsWithDB(userId: string): Promise<void> {
   }
 }
 
+// ─── Auto Sync (Realtime Sync) ──────────────────────────────────────
+
+let syncTimeout: NodeJS.Timeout | null = null;
+let isUnsubscribed = false;
+
+/**
+ * Setup a background sync that watches the local state and pushes to DB automatically.
+ * Debounced to 5 seconds to prevent spamming the database.
+ */
+export function setupRitualsAutoSync(userId: string) {
+  if (!userId || !supabase) return () => {};
+  
+  isUnsubscribed = false;
+  
+  const unsubscribe = useRitualState.subscribe((state, prevState) => {
+     if (isUnsubscribed) return;
+     
+     // Only trigger if data actually changed
+     if (
+        state.rituals === prevState.rituals &&
+        state.logs === prevState.logs &&
+        state.plans === prevState.plans
+     ) {
+        return;
+     }
+
+     if (syncTimeout) {
+        clearTimeout(syncTimeout);
+     }
+     
+     syncTimeout = setTimeout(async () => {
+        try {
+           // We only need to upload deltas or recent state, same as full sync logic
+           await Promise.allSettled([
+              uploadRituals(state.rituals, userId),
+              uploadRitualLogs(state.logs, userId),
+              ...state.plans.slice(0, 5).map((p) => uploadDailyPlan(p, userId))
+           ]);
+        } catch (e) {
+           console.error("[RitualsSync] Auto-sync failed:", e);
+        }
+     }, 5000); // 5 second debounce
+  });
+  
+  return () => {
+     isUnsubscribed = true;
+     unsubscribe();
+     if (syncTimeout) clearTimeout(syncTimeout);
+  };
+}
+
 export function resetRitualsSyncSession(): void {
   hasSyncedRitualsThisSession = false;
+  isUnsubscribed = true;
+  if (syncTimeout) clearTimeout(syncTimeout);
 }

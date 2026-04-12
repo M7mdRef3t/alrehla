@@ -12,6 +12,7 @@ import { useMapState } from "@/domains/dawayir/store/map.store";
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
 import { getGoalMeta } from "@/data/goalMeta";
 import { LandingFooter } from "./landing/LandingFooter";
+import { AmbientBackground } from "./landing/AmbientBackground";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { isUserMode } from "@/config/appEnv";
 import { landingCopy } from "@/copy/landing";
@@ -194,10 +195,15 @@ export const Landing: FC<LandingPropsExtended> = ({
 
   return (
     <div
-      className="relative min-h-screen w-full overflow-x-hidden bg-[var(--page-bg)]"
-      style={{ fontFamily: "var(--font-sans)" }}
+      className="relative min-h-screen w-full overflow-x-hidden"
+      style={{ fontFamily: "var(--font-sans)", background: "transparent" }}
       dir="rtl"
     >
+      <AmbientBackground 
+        ambientBackground="var(--ds-color-space-void)" 
+        showHeavyAmbientLayers={true} 
+        reduceMotion={false} 
+      />
       {/* ════ NEW HERO SECTION ════ */}
       <HeroSection
         onStartJourney={handleStart}
