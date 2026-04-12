@@ -181,8 +181,9 @@ export const AppOverlayHost = memo(function AppOverlayHost({
       }).pulse_check,
     [featureFlags, betaAccess, role, adminAccess]
   );
-  const goalId = useJourneyProgress().goalId;
-  const storedMirrorName = useJourneyProgress().mirrorName;
+  const goalId = useJourneyProgress((state) => state.goalId);
+  const storedMirrorName = useJourneyProgress((state) => state.mirrorName);
+  const setLastGoal = useJourneyProgress((state) => state.setLastGoal);
 
   const {
     gym: showGym,
@@ -383,13 +384,12 @@ export const AppOverlayHost = memo(function AppOverlayHost({
       externalOnboardingComplete(skipped);
     } else {
       setOverlay("onboarding", false);
-      const journeyState = useJourneyProgress();
-      if (!journeyState.goalId) {
-        journeyState.setLastGoal("unknown", "general");
+      if (!goalId) {
+        setLastGoal("unknown", "general");
       }
       setScreen("map");
     }
-  }, [externalOnboardingComplete, setOverlay, setScreen]);
+  }, [externalOnboardingComplete, goalId, setLastGoal, setOverlay, setScreen]);
 
   const onJourneyTimelineCardClick = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId);

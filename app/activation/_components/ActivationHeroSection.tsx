@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { ShieldCheck, Zap, Infinity } from "lucide-react";
+import { ShieldCheck, Zap, Infinity as InfinityIcon } from "lucide-react";
 
 type PricingRow = {
   title: string;
@@ -21,9 +21,9 @@ type ActivationHeroSectionProps = {
 };
 
 const FUNNEL_STEPS = [
-  { n: 1, label: "اختيار وسيلة الدفع" },
-  { n: 2, label: "إتمام التحويل" },
-  { n: 3, label: "إرسال الإثبات" },
+  { n: 1, label: "Ø§Ø®ØªÙŠØ§Ø± ÙˆØ³ÙŠÙ„Ø© Ø§Ù„Ø¯ÙØ¹" },
+  { n: 2, label: "Ø¥ØªÙ…Ø§Ù… Ø§Ù„ØªØ­ÙˆÙŠÙ„" },
+  { n: 3, label: "Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø¥Ø«Ø¨Ø§Øª" },
 ] as const;
 
 export function ActivationHeroSection({
@@ -44,7 +44,7 @@ export function ActivationHeroSection({
 
       <div className="relative z-10 mx-auto max-w-5xl px-4 pt-10 pb-6">
 
-        {/* ─── Funnel progress ─── */}
+        {/* â”€â”€â”€ Funnel progress â”€â”€â”€ */}
         <div className="mb-8 flex items-center justify-center gap-0">
           {FUNNEL_STEPS.map((step, index) => (
             <div key={step.n} className="contents">
@@ -56,7 +56,7 @@ export function ActivationHeroSection({
                       : "bg-white/10 text-slate-500"
                   }`}
                 >
-                  {funnelStep > step.n ? "✓" : step.n}
+                  {funnelStep > step.n ? "âœ“" : step.n}
                 </div>
                 <span
                   className={`hidden text-center text-[10px] font-bold sm:block ${
@@ -77,24 +77,24 @@ export function ActivationHeroSection({
           ))}
         </div>
 
-        {/* ─── Main hero split ─── */}
+        {/* â”€â”€â”€ Main hero split â”€â”€â”€ */}
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]" dir="rtl">
 
           {/* Left: Copy */}
           <div>
             {userName ? (
               <p className="mb-2 text-sm font-bold text-teal-400">
-                أهلاً {userName} 👋
+                Ø£Ù‡Ù„Ø§Ù‹ {userName} ðŸ‘‹
               </p>
             ) : null}
             <p className="text-xs font-black uppercase tracking-[0.28em] text-teal-500/70">
               Founding Cohort
             </p>
             <h1 className="mt-3 text-3xl font-black leading-tight text-white md:text-4xl">
-              فعِّل وصولك إلى الرحلة
+              ÙØ¹ÙÙ‘Ù„ ÙˆØµÙˆÙ„Ùƒ Ø¥Ù„Ù‰ Ø§Ù„Ø±Ø­Ù„Ø©
             </h1>
             <p className="mt-3 max-w-lg text-sm leading-7 text-slate-300">
-              اختر وسيلة الدفع المناسبة، أتمّ التحويل، وأرسل الإثبات — سيتولى الفريق ربط حسابك فوراً.
+              Ø§Ø®ØªØ± ÙˆØ³ÙŠÙ„Ø© Ø§Ù„Ø¯ÙØ¹ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©ØŒ Ø£ØªÙ…Ù‘ Ø§Ù„ØªØ­ÙˆÙŠÙ„ØŒ ÙˆØ£Ø±Ø³Ù„ Ø§Ù„Ø¥Ø«Ø¨Ø§Øª â€” Ø³ÙŠØªÙˆÙ„Ù‰ Ø§Ù„ÙØ±ÙŠÙ‚ Ø±Ø¨Ø· Ø­Ø³Ø§Ø¨Ùƒ ÙÙˆØ±Ø§Ù‹.
             </p>
 
             {/* Price badge */}
@@ -110,11 +110,11 @@ export function ActivationHeroSection({
                   className="flex items-center gap-2 rounded-xl border border-white/5 bg-slate-900/50 px-4 py-2.5 backdrop-blur-sm"
                 >
                   <div className="h-5 w-5 shrink-0 text-teal-400">
-                    {row.title === "المدة" ? <Infinity className="h-5 w-5" /> : row.title === "التحديثات" ? <Zap className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+                    {row.title === "Ø§Ù„Ù…Ø¯Ø©" ? <InfinityIcon className="h-5 w-5" /> : row.title === "Ø§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª" ? <Zap className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
                   </div>
                   <div>
                     <span className="text-xs font-black text-white">{row.value}</span>
-                    <span className="mx-1 text-slate-600">·</span>
+                    <span className="mx-1 text-slate-600">Â·</span>
                     <span className="text-xs text-slate-400">{row.note}</span>
                   </div>
                 </div>
@@ -132,11 +132,11 @@ export function ActivationHeroSection({
                   <ShieldCheck className="h-5 w-5 text-amber-300" />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-white">المقاعد المتاحة</p>
-                  <p className="text-xs text-amber-200/60">تحديث فوري</p>
+                  <p className="text-sm font-black text-white">Ø§Ù„Ù…Ù‚Ø§Ø¹Ø¯ Ø§Ù„Ù…ØªØ§Ø­Ø©</p>
+                  <p className="text-xs text-amber-200/60">ØªØ­Ø¯ÙŠØ« ÙÙˆØ±ÙŠ</p>
                 </div>
                 <p className="mr-auto text-3xl font-black text-white tabular-nums">
-                  {typeof seatsLeft === "number" ? seatsLeft : "—"}
+                  {typeof seatsLeft === "number" ? seatsLeft : "â€”"}
                 </p>
               </div>
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
@@ -147,15 +147,15 @@ export function ActivationHeroSection({
               </div>
               <p className="mt-2 text-[11px] text-slate-500">
                 {typeof seatsLeft === "number"
-                  ? `${seatsLeft} من أصل ${totalSeats} مقعد متاح`
-                  : "جارٍ تحميل بيانات الأماكن"}
+                  ? `${seatsLeft} Ù…Ù† Ø£ØµÙ„ ${totalSeats} Ù…Ù‚Ø¹Ø¯ Ù…ØªØ§Ø­`
+                  : "Ø¬Ø§Ø±Ù ØªØ­Ù…ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø£Ù…Ø§ÙƒÙ†"}
               </p>
             </div>
 
             {/* Steps */}
             <div className="rounded-2xl border border-white/5 bg-slate-900/50 p-5 backdrop-blur-sm">
               <p className="text-[10px] font-black uppercase tracking-widest text-teal-400/70">
-                خطوات التفعيل
+                Ø®Ø·ÙˆØ§Øª Ø§Ù„ØªÙØ¹ÙŠÙ„
               </p>
               <ol className="mt-4 space-y-3">
                 {steps.map((step, index) => (
@@ -174,3 +174,4 @@ export function ActivationHeroSection({
     </div>
   );
 }
+

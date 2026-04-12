@@ -20,6 +20,7 @@ export type {
 
 // startConsciousnessTheme — facade for backwards compat
 import { consciousnessEngine } from "@/domains/consciousness";
+import { soundscape } from "@/domains/consciousness";
 import { logger } from "@/infrastructure/monitoring";
 
 export function startConsciousnessTheme(): void {
@@ -75,7 +76,6 @@ Object.assign(consciousnessEngine, {
   applyTheme: (theme: Parameters<typeof consciousnessEngine.apply>[0], opts?: { smooth?: boolean }) =>
     consciousnessEngine.apply(theme, opts?.smooth),
   handleSensoryInput: (type: 'motion' | 'scroll', value: number) => {
-    const { soundscape } = require('@/domains/consciousness');
     soundscape.handleSensoryInput(type, value);
   },
 });

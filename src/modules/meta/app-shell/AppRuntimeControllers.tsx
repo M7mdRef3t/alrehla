@@ -101,6 +101,8 @@ export function AppRuntimeControllers({
   const openOverlay = useAppOverlayState((state) => state.openOverlay);
   const isMapHydrated = useMapState((state) => state.isHydrated);
   const mapNodeCount = useMapState((state) => state.nodes.length);
+  const recordGamificationActivity = useGamification((state) => state.recordActivity);
+  const gamificationStreak = useGamification((state) => state.streak);
 
   // P0: Capture UTM + lead attribution from URL on very first render
   // This ensures users arriving from ad campaigns are tracked before any navigation
@@ -456,14 +458,14 @@ export function AppRuntimeControllers({
     if (!authUser) return;
 
     // Fast local-only operation — run immediately
-    const { xpLost, streakMaintained } = useGamification().recordActivity();
+    const { xpLost, streakMaintained } = recordGamificationActivity();
     if (xpLost > 0) {
       useToastState.getState().showToast(
         `فقدت ${xpLost} XP بسبب انقطاعك عن تسجيل الدخول. العزم يتجدد كل يوم!`,
         "error"
       );
     } else if (streakMaintained) {
-      const currentStreak = useGamification().streak;
+      const currentStreak = gamificationStreak;
       if (currentStreak > 1) {
         useToastState.getState().showToast(
           `أبقيت على شعلة الوعي! سلسلة الحضور: ${currentStreak} يوم 🔥`,
@@ -481,7 +483,7 @@ export function AppRuntimeControllers({
     return () => {
       cancelIdleCallback(idleHandle);
     };
-  }, [authUser]);
+  }, [authUser, gamificationStreak, recordGamificationActivity]);
 
   return null;
 }
