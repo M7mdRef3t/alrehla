@@ -56,3 +56,7 @@
 ## 2026-04-12 Landing Render Guard (PR #129)
 - Home rendering in `app/client-app-shell.tsx` now validates Puck payload before rendering `PuckLandingAdapter`.
 - If CMS payload exists but has no renderable blocks (for example `content: []`), the app falls back to default `Landing` instead of showing a blank body.
+
+## 2026-04-12 Marketing Gateway Fallback (PR #130)
+- `src/services/marketingGatewayService.ts` now returns safe default gateway configs when Supabase client/admin credentials are unavailable.
+- This prevents diffusion metrics screens from throwing runtime errors on production domains that don't expose admin service-role configuration to client-side flows.
