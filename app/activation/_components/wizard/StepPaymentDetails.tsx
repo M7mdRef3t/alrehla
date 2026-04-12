@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import {
@@ -8,7 +8,7 @@ import {
   Check,
   ExternalLink,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import type { ManualProofMethod, PaymentMode } from "../../../../src/config/paymentConfig";
 import { paymentConfig, buildPaymentWhatsappHref } from "../../../../src/config/paymentConfig";
 
@@ -34,7 +34,7 @@ function getFields(
         fields: [
           c.instapayAlias ? { label: "Alias", value: c.instapayAlias } : null,
           c.instapayNumber
-            ? { label: "رقم الهاتف", value: c.instapayNumber }
+            ? { label: "Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ", value: c.instapayNumber }
             : null,
         ].filter(Boolean) as FieldDef[],
       };
@@ -42,14 +42,14 @@ function getFields(
     case "vodafone_cash":
       return {
         fields: c.vodafoneCashNumber
-          ? [{ label: "رقم المحفظة", value: c.vodafoneCashNumber }]
+          ? [{ label: "Ø±Ù‚Ù… Ø§Ù„Ù…Ø­ÙØ¸Ø©", value: c.vodafoneCashNumber }]
           : [],
       };
 
     case "etisalat_cash":
       return {
         fields: c.etisalatCashNumber
-          ? [{ label: "رقم المحفظة", value: c.etisalatCashNumber }]
+          ? [{ label: "Ø±Ù‚Ù… Ø§Ù„Ù…Ø­ÙØ¸Ø©", value: c.etisalatCashNumber }]
           : [],
         paypalHref: mode === "international"
           ? "https://www.eand.com.eg/portal/pages/services/International_money_remittance.html"
@@ -61,11 +61,11 @@ function getFields(
         fields: [
           c.bankIban ? { label: "IBAN", value: c.bankIban } : null,
           c.bankAccountNumber
-            ? { label: "رقم الحساب", value: c.bankAccountNumber }
+            ? { label: "Ø±Ù‚Ù… Ø§Ù„Ø­Ø³Ø§Ø¨", value: c.bankAccountNumber }
             : null,
-          c.bankName ? { label: "البنك", value: c.bankName } : null,
+          c.bankName ? { label: "Ø§Ù„Ø¨Ù†Ùƒ", value: c.bankName } : null,
           c.bankBeneficiary
-            ? { label: "اسم المستفيد", value: c.bankBeneficiary }
+            ? { label: "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªÙÙŠØ¯", value: c.bankBeneficiary }
             : null,
           c.bankSwift ? { label: "Swift / BIC", value: c.bankSwift } : null,
         ].filter(Boolean) as FieldDef[],
@@ -91,9 +91,9 @@ const METHOD_LABELS: Record<ManualProofMethod, string> = {
   instapay: "InstaPay",
   vodafone_cash: "Vodafone Cash",
   etisalat_cash: "Etisalat Cash / e& money",
-  bank_transfer: "تحويل بنكي",
+  bank_transfer: "ØªØ­ÙˆÙŠÙ„ Ø¨Ù†ÙƒÙŠ",
   paypal: "PayPal",
-  fawry: "فوري",
+  fawry: "ÙÙˆØ±ÙŠ",
 };
 
 function CopyField({ label, value }: FieldDef) {
@@ -131,7 +131,7 @@ function CopyField({ label, value }: FieldDef) {
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}
-          {copied ? "تم!" : "نسخ البيانات"}
+          {copied ? "ØªÙ…!" : "Ù†Ø³Ø® Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª"}
         </button>
       </div>
       <p className="border-t border-white/5 px-5 py-4 font-mono text-base font-bold text-white break-all">
@@ -170,7 +170,7 @@ export function StepPaymentDetails({
            className="mb-4 flex justify-center"
         >
           <span className="rounded-full border border-teal-500/20 bg-teal-500/10 px-4 py-1.5 text-xs font-black tracking-wider text-teal-300 shadow-[0_0_15px_rgba(45,212,191,0.2)]">
-            مسار التوثيق: {methodLabel}
+            Ù…Ø³Ø§Ø± Ø§Ù„ØªÙˆØ«ÙŠÙ‚: {methodLabel}
           </span>
         </motion.div>
 
@@ -180,12 +180,12 @@ export function StepPaymentDetails({
            transition={{ delay: 0.2 }}
         >
           <h2 className="mb-2 text-center text-3xl font-black text-white drop-shadow-md">
-            بيانات التوثيق
+            Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„ØªÙˆØ«ÙŠÙ‚
           </h2>
           <p className="mb-8 text-center text-sm text-slate-400">
             {isFawry
-              ? "هذا المسار يتطلب التنسيق مع الفريق — تواصل معهم لترتيب العبور."
-              : "انسخ البيانات لتوثيق الميثاق وإتمام الدفع — ثم نلتقي للخطوة الختامية."}
+              ? "Ù‡Ø°Ø§ Ø§Ù„Ù…Ø³Ø§Ø± ÙŠØªØ·Ù„Ø¨ Ø§Ù„ØªÙ†Ø³ÙŠÙ‚ Ù…Ø¹ Ø§Ù„ÙØ±ÙŠÙ‚ â€” ØªÙˆØ§ØµÙ„ Ù…Ø¹Ù‡Ù… Ù„ØªØ±ØªÙŠØ¨ Ø§Ù„Ø¹Ø¨ÙˆØ±."
+              : "Ø§Ù†Ø³Ø® Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ù„ØªÙˆØ«ÙŠÙ‚ Ø§Ù„Ù…ÙŠØ«Ø§Ù‚ ÙˆØ¥ØªÙ…Ø§Ù… Ø§Ù„Ø¯ÙØ¹ â€” Ø«Ù… Ù†Ù„ØªÙ‚ÙŠ Ù„Ù„Ø®Ø·ÙˆØ© Ø§Ù„Ø®ØªØ§Ù…ÙŠØ©."}
           </p>
         </motion.div>
 
@@ -215,12 +215,12 @@ export function StepPaymentDetails({
                }}
                className="mb-6 rounded-3xl border border-amber-500/20 bg-amber-500/5 p-8 text-center backdrop-blur-sm"
             >
-              <p className="text-3xl drop-shadow-md">📩</p>
+              <p className="text-3xl drop-shadow-md">ðŸ“©</p>
               <p className="mt-4 text-base font-black text-amber-200">
-                التواصل عبر واتسآب المباشر
+                Ø§Ù„ØªÙˆØ§ØµÙ„ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø¢Ø¨ Ø§Ù„Ù…Ø¨Ø§Ø´Ø±
               </p>
               <p className="mt-2 text-sm text-slate-400">
-                الفريق بانتظارك لترتيب التفاصيل وتوجيهك (عادة الرد خلال دقائق).
+                Ø§Ù„ÙØ±ÙŠÙ‚ Ø¨Ø§Ù†ØªØ¸Ø§Ø±Ùƒ Ù„ØªØ±ØªÙŠØ¨ Ø§Ù„ØªÙØ§ØµÙŠÙ„ ÙˆØªÙˆØ¬ÙŠÙ‡Ùƒ (Ø¹Ø§Ø¯Ø© Ø§Ù„Ø±Ø¯ Ø®Ù„Ø§Ù„ Ø¯Ù‚Ø§Ø¦Ù‚).
               </p>
             </motion.div>
           )}
@@ -240,7 +240,7 @@ export function StepPaymentDetails({
             className="mb-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-teal-500/20 bg-teal-500/10 py-4 text-sm font-black text-teal-300 transition-all hover:bg-teal-500/20 shadow-[0_0_15px_rgba(20,184,166,0.15)]"
           >
             <ExternalLink className="h-4 w-4" />
-            الانتقال بوابة الدفع الدولية
+            Ø§Ù„Ø§Ù†ØªÙ‚Ø§Ù„ Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙØ¹ Ø§Ù„Ø¯ÙˆÙ„ÙŠØ©
           </motion.a>
         )}
 
@@ -257,8 +257,8 @@ export function StepPaymentDetails({
             rel="noreferrer"
             className="mb-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 py-4 text-sm font-black text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all hover:bg-emerald-500/20 hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]"
           >
-            <span className="text-lg">💬</span>
-            انتقل للمحادثة مع الفريق
+            <span className="text-lg">ðŸ’¬</span>
+            Ø§Ù†ØªÙ‚Ù„ Ù„Ù„Ù…Ø­Ø§Ø¯Ø«Ø© Ù…Ø¹ Ø§Ù„ÙØ±ÙŠÙ‚
           </motion.a>
         )}
 
@@ -270,9 +270,9 @@ export function StepPaymentDetails({
             transition={{ delay: 0.5 }}
             className="mb-8 flex items-start gap-4 rounded-2xl border border-amber-500/15 bg-amber-500/5 px-5 py-4 backdrop-blur-sm"
           >
-            <span className="text-xl">💡</span>
+            <span className="text-xl">ðŸ’¡</span>
             <p className="text-xs leading-6 text-amber-200/80 font-medium">
-              تذكر التقاط صورة للإيصال أو نسخ رقم العملية البنكية، ستحتاجها لإرسال الإثبات في الخطوة الأخيرة.
+              ØªØ°ÙƒØ± Ø§Ù„ØªÙ‚Ø§Ø· ØµÙˆØ±Ø© Ù„Ù„Ø¥ÙŠØµØ§Ù„ Ø£Ùˆ Ù†Ø³Ø® Ø±Ù‚Ù… Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ø§Ù„Ø¨Ù†ÙƒÙŠØ©ØŒ Ø³ØªØ­ØªØ§Ø¬Ù‡Ø§ Ù„Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø¥Ø«Ø¨Ø§Øª ÙÙŠ Ø§Ù„Ø®Ø·ÙˆØ© Ø§Ù„Ø£Ø®ÙŠØ±Ø©.
             </p>
           </motion.div>
         )}
@@ -290,14 +290,14 @@ export function StepPaymentDetails({
             className="flex items-center gap-2 rounded-2xl border border-white/10 px-5 py-4 text-sm font-bold text-slate-400 transition hover:border-white/20 hover:text-slate-200 hover:bg-white/5"
           >
             <ArrowRight className="h-4 w-4" />
-            تراجع
+            ØªØ±Ø§Ø¬Ø¹
           </button>
           <button
             type="button"
             onClick={onNext}
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-teal-500 px-6 py-4 text-sm font-black text-slate-950 shadow-[0_0_24px_rgba(20,184,166,0.3)] transition-all hover:bg-teal-400 hover:shadow-[0_0_36px_rgba(20,184,166,0.4)]"
           >
-            {isFawry ? "لا، اختار مساراً آخر" : "أتممت العملية — للخطوة الختامية"}
+            {isFawry ? "Ù„Ø§ØŒ Ø§Ø®ØªØ§Ø± Ù…Ø³Ø§Ø±Ø§Ù‹ Ø¢Ø®Ø±" : "Ø£ØªÙ…Ù…Øª Ø§Ù„Ø¹Ù…Ù„ÙŠØ© â€” Ù„Ù„Ø®Ø·ÙˆØ© Ø§Ù„Ø®ØªØ§Ù…ÙŠØ©"}
             <ArrowLeft className="h-4 w-4" />
           </button>
         </motion.div>
@@ -305,3 +305,4 @@ export function StepPaymentDetails({
     </motion.div>
   );
 }
+

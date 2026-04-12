@@ -1,11 +1,10 @@
-"use client";
+﻿"use client";
 
 import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import {
-  trackCompleteRegistration,
   trackInitiateCheckout as trackActivationInitiated,
   trackCheckoutViewed as trackActivationViewed,
   trackEvent,
@@ -27,8 +26,6 @@ import { StepPaymentDetails } from "./_components/wizard/StepPaymentDetails";
 import { StepSendProof } from "./_components/wizard/StepSendProof";
 import {
   ALLOWED_PROOF_IMAGE_TYPES,
-  COMPLETE_REGISTRATION_SESSION_KEY,
-  copyValue,
   isLikelyEgyptUser,
   LAST_PAYMENT_MODE_KEY,
   MAX_PROOF_IMAGE_BYTES,
@@ -53,9 +50,7 @@ export default function ActivationPage() {
   const [mode, setMode] = useState<PaymentMode>("local");
   const [email, setEmail] = useState("");
   const [seatsLeft, setSeatsLeft] = useState<number | null>(null);
-  const [totalSeats, setTotalSeats] = useState(50);
-  const [source, setSource] = useState("unavailable");
-  const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
+  const [totalSeats, setTotalSeats] = useState(50);  const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
   const [paymentNoticeKind, setPaymentNoticeKind] = useState<"info" | "success" | "error">("info");
   const [proofMethod, setProofMethod] = useState<ManualProofMethod>("instapay");
   const [proofReference, setProofReference] = useState("");
@@ -149,8 +144,6 @@ export default function ActivationPage() {
         setEmail(resolvedEmail);
         setSeatsLeft(isLive && typeof scarcity?.seats_left === "number" ? Number(scarcity.seats_left) : null);
         setTotalSeats(Number(scarcity?.total_seats ?? 50));
-        setSource(String(scarcity?.source || (isLive ? "supabase" : "unavailable")));
-
         if (!syncAttemptedRef.current) {
           syncAttemptedRef.current = true;
           const storedPhone = marketingLeadService.getStoredLeadPhone();
@@ -171,9 +164,7 @@ export default function ActivationPage() {
         if (!mounted) return;
         setEmail("");
         setSeatsLeft(null);
-        setTotalSeats(50);
-        setSource("unavailable");
-      }
+        setTotalSeats(50);      }
     };
     void load();
     return () => {
@@ -186,10 +177,10 @@ export default function ActivationPage() {
     const params = new URLSearchParams(window.location.search);
     const paymentState = params.get("payment");
     if (paymentState === "success") {
-      setPaymentNotice("تمَّت عملية الدفع بنجاح. إذا لم يصلك تأكيد التفعيل بعد، أرسل رقم العملية أو لقطة الشاشة أدناه.");
+      setPaymentNotice("ØªÙ…ÙŽÙ‘Øª Ø¹Ù…Ù„ÙŠØ© Ø§Ù„Ø¯ÙØ¹ Ø¨Ù†Ø¬Ø§Ø­. Ø¥Ø°Ø§ Ù„Ù… ÙŠØµÙ„Ùƒ ØªØ£ÙƒÙŠØ¯ Ø§Ù„ØªÙØ¹ÙŠÙ„ Ø¨Ø¹Ø¯ØŒ Ø£Ø±Ø³Ù„ Ø±Ù‚Ù… Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ø£Ùˆ Ù„Ù‚Ø·Ø© Ø§Ù„Ø´Ø§Ø´Ø© Ø£Ø¯Ù†Ø§Ù‡.");
       setPaymentNoticeKind("success");
     } else if (paymentState === "cancelled") {
-      setPaymentNotice("لم تكتمل العملية. يمكنك المحاولة مجدداً أو اختيار وسيلة دفع مختلفة.");
+      setPaymentNotice("Ù„Ù… ØªÙƒØªÙ…Ù„ Ø§Ù„Ø¹Ù…Ù„ÙŠØ©. ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø¬Ø¯Ø¯Ø§Ù‹ Ø£Ùˆ Ø§Ø®ØªÙŠØ§Ø± ÙˆØ³ÙŠÙ„Ø© Ø¯ÙØ¹ Ù…Ø®ØªÙ„ÙØ©.");
       setPaymentNoticeKind("error");
     }
   }, []);
@@ -205,22 +196,10 @@ export default function ActivationPage() {
   const amountPlaceholder = getPaymentAmountPlaceholder(mode);
 
   const pricingRows = [
-    { title: "الخطة", value: "العضوية التأسيسية", note: "عضوية حصرية للمشتركين الأوائل" },
-    { title: "المدة", value: "مدى الحياة", note: "وصول كامل ودائم لكافة المميزات" },
-    { title: "التحديثات", value: "تلقائية", note: "مشمولة دائماً دون أي تكاليف إضافية" },
+    { title: "Ø§Ù„Ø®Ø·Ø©", value: "Ø§Ù„Ø¹Ø¶ÙˆÙŠØ© Ø§Ù„ØªØ£Ø³ÙŠØ³ÙŠØ©", note: "Ø¹Ø¶ÙˆÙŠØ© Ø­ØµØ±ÙŠØ© Ù„Ù„Ù…Ø´ØªØ±ÙƒÙŠÙ† Ø§Ù„Ø£ÙˆØ§Ø¦Ù„" },
+    { title: "Ø§Ù„Ù…Ø¯Ø©", value: "Ù…Ø¯Ù‰ Ø§Ù„Ø­ÙŠØ§Ø©", note: "ÙˆØµÙˆÙ„ ÙƒØ§Ù…Ù„ ÙˆØ¯Ø§Ø¦Ù… Ù„ÙƒØ§ÙØ© Ø§Ù„Ù…Ù…ÙŠØ²Ø§Øª" },
+    { title: "Ø§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª", value: "ØªÙ„Ù‚Ø§Ø¦ÙŠØ©", note: "Ù…Ø´Ù…ÙˆÙ„Ø© Ø¯Ø§Ø¦Ù…Ø§Ù‹ Ø¯ÙˆÙ† Ø£ÙŠ ØªÙƒØ§Ù„ÙŠÙ Ø¥Ø¶Ø§ÙÙŠØ©" },
   ];
-
-  const activationSteps = [
-    "اختر وسيلة الدفع التي تناسبك من القائمة",
-    "حول المبلغ وصور لقطة الشاشة أو احتفظ برقم العملية",
-    "ارفع الإثبات في النموذج بالأسفل لربط حسابك",
-  ];
-
-  const hasBankDetails = Boolean(paymentConfig.bankIban || paymentConfig.bankAccountNumber);
-  const bankValue = paymentConfig.bankIban || paymentConfig.bankAccountNumber || "";
-  const bankSecondaryValue = [paymentConfig.bankName, paymentConfig.bankBeneficiary, paymentConfig.bankSwift].filter(Boolean).join(" - ");
-  const paypalHref = paymentConfig.paypalUrl || buildPaymentWhatsappHref({ email, method: "PayPal", note: "محتاج رابط PayPal" });
-
   const selectPaymentMethod = (method: ManualProofMethod, trackingMethod: string) => {
     setProofMethod(method);
     setSelectedMethodId(method);
@@ -240,14 +219,14 @@ export default function ActivationPage() {
     }
     if (!ALLOWED_PROOF_IMAGE_TYPES.includes(file.type as (typeof ALLOWED_PROOF_IMAGE_TYPES)[number])) {
       setProofImage(null);
-      setPaymentNotice("ارفع PNG أو JPG أو WEBP فقط.");
+      setPaymentNotice("Ø§Ø±ÙØ¹ PNG Ø£Ùˆ JPG Ø£Ùˆ WEBP ÙÙ‚Ø·.");
       setPaymentNoticeKind("error");
       event.target.value = "";
       return;
     }
     if (file.size > MAX_PROOF_IMAGE_BYTES) {
       setProofImage(null);
-      setPaymentNotice("الصورة أكبر من المسموح. الحد الأقصى 900KB.");
+      setPaymentNotice("Ø§Ù„ØµÙˆØ±Ø© Ø£ÙƒØ¨Ø± Ù…Ù† Ø§Ù„Ù…Ø³Ù…ÙˆØ­. Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰ 900KB.");
       setPaymentNoticeKind("error");
       event.target.value = "";
       return;
@@ -255,11 +234,11 @@ export default function ActivationPage() {
     try {
       const dataUrl = await readFileAsDataUrl(file);
       setProofImage({ name: file.name, type: file.type, bytes: file.size, dataUrl });
-      setPaymentNotice("الصورة اترفعت. كمل إرسال الإثبات.");
+      setPaymentNotice("Ø§Ù„ØµÙˆØ±Ø© Ø§ØªØ±ÙØ¹Øª. ÙƒÙ…Ù„ Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø¥Ø«Ø¨Ø§Øª.");
       setPaymentNoticeKind("success");
     } catch (error) {
       setProofImage(null);
-      setPaymentNotice(error instanceof Error ? error.message : "تعذر تجهيز صورة الإثبات.");
+      setPaymentNotice(error instanceof Error ? error.message : "ØªØ¹Ø°Ø± ØªØ¬Ù‡ÙŠØ² ØµÙˆØ±Ø© Ø§Ù„Ø¥Ø«Ø¨Ø§Øª.");
       setPaymentNoticeKind("error");
     }
   };
@@ -273,7 +252,7 @@ export default function ActivationPage() {
     const modeValue = mode;
 
     if (!referenceValue && !hasProofImage) {
-      setPaymentNotice("أضف رقم العملية أو ارفع لقطة واضحة قبل الإرسال.");
+      setPaymentNotice("Ø£Ø¶Ù Ø±Ù‚Ù… Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ø£Ùˆ Ø§Ø±ÙØ¹ Ù„Ù‚Ø·Ø© ÙˆØ§Ø¶Ø­Ø© Ù‚Ø¨Ù„ Ø§Ù„Ø¥Ø±Ø³Ø§Ù„.");
       setPaymentNoticeKind("error");
       return;
     }
@@ -299,7 +278,7 @@ export default function ActivationPage() {
 
       const data = (await response.json().catch(() => ({}))) as { error?: string; message?: string };
       if (!response.ok) {
-        throw new Error(data.error || "تعذر إرسال إثبات الدفع.");
+        throw new Error(data.error || "ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹.");
       }
 
       trackEvent(AnalyticsEvents.PAYMENT_PROOF_SUBMITTED, {
@@ -322,14 +301,14 @@ export default function ActivationPage() {
       setProofAmount("");
       setProofNote("");
       setProofImage(null);
-      setPaymentNotice(data.message || "تم استلام إثبات الدفع. هنراجع التحويل ونفعل الحساب.");
+      setPaymentNotice(data.message || "ØªÙ… Ø§Ø³ØªÙ„Ø§Ù… Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹. Ù‡Ù†Ø±Ø§Ø¬Ø¹ Ø§Ù„ØªØ­ÙˆÙŠÙ„ ÙˆÙ†ÙØ¹Ù„ Ø§Ù„Ø­Ø³Ø§Ø¨.");
       setPaymentNoticeKind("success");
       
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } catch (error) {
-      setPaymentNotice(error instanceof Error ? error.message : "تعذر إرسال إثبات الدفع.");
+      setPaymentNotice(error instanceof Error ? error.message : "ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹.");
       setPaymentNoticeKind("error");
     } finally {
       setIsSubmittingProof(false);
@@ -349,23 +328,23 @@ export default function ActivationPage() {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="relative z-10 mx-auto max-w-2xl rounded-[32px] border border-white/5 bg-slate-900/40 backdrop-blur-xl p-10 text-center shadow-[0_30px_120px_-60px_rgba(20,184,166,0.3)]"
         >
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-400/80 mb-6">رحلة المغادرة</p>
-          <h1 className="text-3xl font-black mb-4">بوابة الملاذ مغلقة مؤقتاً</h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-400/80 mb-6">Ø±Ø­Ù„Ø© Ø§Ù„Ù…ØºØ§Ø¯Ø±Ø©</p>
+          <h1 className="text-3xl font-black mb-4">Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ù…Ù„Ø§Ø° Ù…ØºÙ„Ù‚Ø© Ù…Ø¤Ù‚ØªØ§Ù‹</h1>
           <p className="text-sm leading-8 text-slate-400 mb-8 max-w-lg mx-auto">
-            أنت الآن على أعتاب الرحلة، لكن الأبواب حالياً في فترة صيانة وتجهيز لاستقبال الرفاق الجدد. 
-            قريباً ستفتح البوابات. إذا كانت لديك حالة خاصة، رفاق الطريق في انتظارك.
+            Ø£Ù†Øª Ø§Ù„Ø¢Ù† Ø¹Ù„Ù‰ Ø£Ø¹ØªØ§Ø¨ Ø§Ù„Ø±Ø­Ù„Ø©ØŒ Ù„ÙƒÙ† Ø§Ù„Ø£Ø¨ÙˆØ§Ø¨ Ø­Ø§Ù„ÙŠØ§Ù‹ ÙÙŠ ÙØªØ±Ø© ØµÙŠØ§Ù†Ø© ÙˆØªØ¬Ù‡ÙŠØ² Ù„Ø§Ø³ØªÙ‚Ø¨Ø§Ù„ Ø§Ù„Ø±ÙØ§Ù‚ Ø§Ù„Ø¬Ø¯Ø¯. 
+            Ù‚Ø±ÙŠØ¨Ø§Ù‹ Ø³ØªÙØªØ­ Ø§Ù„Ø¨ÙˆØ§Ø¨Ø§Øª. Ø¥Ø°Ø§ ÙƒØ§Ù†Øª Ù„Ø¯ÙŠÙƒ Ø­Ø§Ù„Ø© Ø®Ø§ØµØ©ØŒ Ø±ÙØ§Ù‚ Ø§Ù„Ø·Ø±ÙŠÙ‚ ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø±Ùƒ.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <a href="/" className="rounded-2xl border border-teal-500/20 bg-teal-500/10 px-6 py-3.5 text-sm font-black text-teal-300 transition hover:bg-teal-500/20">
-              العودة إلى الساحة
+              Ø§Ù„Ø¹ÙˆØ¯Ø© Ø¥Ù„Ù‰ Ø§Ù„Ø³Ø§Ø­Ø©
             </a>
             <a
-              href={buildPaymentWhatsappHref({ email: "", method: "استفسار عام" })}
+              href={buildPaymentWhatsappHref({ email: "", method: "Ø§Ø³ØªÙØ³Ø§Ø± Ø¹Ø§Ù…" })}
               target="_blank"
               rel="noreferrer"
               className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
             >
-              تواصل مع الرفاق (واتسآب)
+              ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ø§Ù„Ø±ÙØ§Ù‚ (ÙˆØ§ØªØ³Ø¢Ø¨)
             </a>
           </div>
         </motion.div>
@@ -400,7 +379,7 @@ export default function ActivationPage() {
 
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <AnimatePresence mode="wait" initial={false}>
-            {/* Step 1 — Welcome */}
+            {/* Step 1 â€” Welcome */}
             {wizardStep === 1 && (
               <StepWelcome
                 key="step-welcome"
@@ -414,7 +393,7 @@ export default function ActivationPage() {
               />
             )}
 
-            {/* Step 2 — Choose payment method */}
+            {/* Step 2 â€” Choose payment method */}
             {wizardStep === 2 && (
               <StepChooseMethod
                 key="step-choose-method"
@@ -429,7 +408,7 @@ export default function ActivationPage() {
               />
             )}
 
-            {/* Step 3 — Payment details / copy data */}
+            {/* Step 3 â€” Payment details / copy data */}
             {wizardStep === 3 && selectedMethodId && (
               <StepPaymentDetails
                 key="step-payment-details"
@@ -441,7 +420,7 @@ export default function ActivationPage() {
               />
             )}
 
-            {/* Step 4 — Send proof */}
+            {/* Step 4 â€” Send proof */}
             {wizardStep === 4 && (
               <StepSendProof
                 key="step-send-proof"
@@ -473,3 +452,4 @@ export default function ActivationPage() {
     </main>
   );
 }
+

@@ -32,7 +32,7 @@ export function ActivationHeroSection({
   pricingRows,
   seatsLeft,
   totalSeats,
-  source,
+  source: _source,
   scarcityPct,
   steps,
   userName,
@@ -174,4 +174,5 @@ export function ActivationHeroSection({
     </div>
   );
 }
+
 
