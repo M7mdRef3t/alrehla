@@ -10,7 +10,7 @@ async function run() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   
-  const targetUrl = 'http://localhost:3030/';
+  const targetUrl = process.env.LANDING_EXPORT_URL || 'http://localhost:3030/';
   console.log(`Navigating to: ${targetUrl}`);
   
   await page.goto(targetUrl);

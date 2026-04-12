@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+﻿import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, MessageCircle, RefreshCw, Send, AlertCircle, Bot, Check, CheckCheck, Clock, Brain } from "lucide-react";
 import { getAuthToken } from "@/domains/auth/store/auth.store";
 import { useAdminState } from "@/domains/admin/store/admin.store";
+import { useToastState } from "@/domains/dawayir/store/toast.store";
 
 interface WhatsAppEvent {
   id: string;
@@ -31,10 +32,10 @@ function getBearerToken(): string {
 }
 
 const QUICK_REPLIES = [
-  "أهلاً بك في رحلة 'دوائر'! ممكن أعرف هدفك الأساسي من الانضمام لينا؟",
-  "بخصوص الاستفسار عن المواعيد، نقدر ننسق مكالمة تكتيكية سريعة لو تحب.",
-  "الأوراكل بيقترح إننا نبدأ بجلسة تعريفية عشان نحدد مستوى الطاقة الحالي.",
-  "تقدر تكمل عملية التفعيل من الرابط ده مباشرة: https://alrehla.app/activation"
+  "Ø£Ù‡Ù„Ø§Ù‹ Ø¨Ùƒ ÙÙŠ Ø±Ø­Ù„Ø© 'Ø¯ÙˆØ§Ø¦Ø±'! Ù…Ù…ÙƒÙ† Ø£Ø¹Ø±Ù Ù‡Ø¯ÙÙƒ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ Ù…Ù† Ø§Ù„Ø§Ù†Ø¶Ù…Ø§Ù… Ù„ÙŠÙ†Ø§ØŸ",
+  "Ø¨Ø®ØµÙˆØµ Ø§Ù„Ø§Ø³ØªÙØ³Ø§Ø± Ø¹Ù† Ø§Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯ØŒ Ù†Ù‚Ø¯Ø± Ù†Ù†Ø³Ù‚ Ù…ÙƒØ§Ù„Ù…Ø© ØªÙƒØªÙŠÙƒÙŠØ© Ø³Ø±ÙŠØ¹Ø© Ù„Ùˆ ØªØ­Ø¨.",
+  "Ø§Ù„Ø£ÙˆØ±Ø§ÙƒÙ„ Ø¨ÙŠÙ‚ØªØ±Ø­ Ø¥Ù†Ù†Ø§ Ù†Ø¨Ø¯Ø£ Ø¨Ø¬Ù„Ø³Ø© ØªØ¹Ø±ÙŠÙÙŠØ© Ø¹Ø´Ø§Ù† Ù†Ø­Ø¯Ø¯ Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø·Ø§Ù‚Ø© Ø§Ù„Ø­Ø§Ù„ÙŠ.",
+  "ØªÙ‚Ø¯Ø± ØªÙƒÙ…Ù„ Ø¹Ù…Ù„ÙŠØ© Ø§Ù„ØªÙØ¹ÙŠÙ„ Ù…Ù† Ø§Ù„Ø±Ø§Ø¨Ø· Ø¯Ù‡ Ù…Ø¨Ø§Ø´Ø±Ø©: https://alrehla.app/activation"
 ];
 
 export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice, leadGrade }: WhatsAppThreadModalProps) {
@@ -43,6 +44,7 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const showToast = useToastState((s) => s.showToast);
 
   const fetchEvents = async () => {
     if (!leadId) return;
@@ -56,7 +58,7 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
       const data = await res.json();
       setEvents(data.events || []);
     } catch (e: any) {
-      setError("تعذر تحميل المحادثات");
+      setError("ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø§Øª");
     } finally {
       setLoading(false);
     }
@@ -98,12 +100,12 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
               </div>
               <div>
                 <h3 className="text-sm font-black text-white flex items-center gap-2">
-                  {name || "زائر مستكشف"}
+                  {name || "Ø²Ø§Ø¦Ø± Ù…Ø³ØªÙƒØ´Ù"}
                   {leadGrade && (
                      <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 text-[8px] font-black border border-indigo-500/20">GRADE {leadGrade}</span>
                   )}
                 </h3>
-                <p className="text-[10px] uppercase font-bold tracking-widest text-emerald-400/80">{phone || "رقم مجهول"} • WhatsApp Cloud</p>
+                <p className="text-[10px] uppercase font-bold tracking-widest text-emerald-400/80">{phone || "Ø±Ù‚Ù… Ù…Ø¬Ù‡ÙˆÙ„"} â€¢ WhatsApp Cloud</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -127,7 +129,7 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
                <div className="flex items-start gap-3">
                   <Bot className="w-4 h-4 text-indigo-400 mt-1 shrink-0" />
                   <div className="space-y-1">
-                     <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest">توجيه الأوركال للمحادثة</p>
+                     <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest">ØªÙˆØ¬ÙŠÙ‡ Ø§Ù„Ø£ÙˆØ±ÙƒØ§Ù„ Ù„Ù„Ù…Ø­Ø§Ø¯Ø«Ø©</p>
                      <p className="text-xs text-slate-300 leading-relaxed font-medium italic">"{oracleAdvice}"</p>
                   </div>
                </div>
@@ -145,7 +147,7 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
             ) : events.length === 0 && !loading ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-8 text-slate-500">
                 <MessageCircle className="w-8 h-8 mb-2 opacity-20" />
-                <p className="text-xs font-bold uppercase tracking-widest">لا توجد محادثات مسجلة</p>
+                <p className="text-xs font-bold uppercase tracking-widest">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ø­Ø§Ø¯Ø«Ø§Øª Ù…Ø³Ø¬Ù„Ø©</p>
               </div>
             ) : (
               events.map((ev) => {
@@ -170,7 +172,7 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
                         <span className="text-[9px] uppercase font-black tracking-widest text-[#2bd7af] mb-1 block">Template Message</span>
                       )}
                       
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{ev.message_body || "رسالة بدون نص (ميديا أو قالب مسجل)"}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{ev.message_body || "Ø±Ø³Ø§Ù„Ø© Ø¨Ø¯ÙˆÙ† Ù†Øµ (Ù…ÙŠØ¯ÙŠØ§ Ø£Ùˆ Ù‚Ø§Ù„Ø¨ Ù…Ø³Ø¬Ù„)"}</p>
                       
                       <div className="flex items-center justify-end gap-1 mt-1.5 opacity-60">
                         <span className="text-[10px] font-bold">{time}</span>
@@ -227,16 +229,17 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
                    
                    if (!res.ok) {
                      if (data.isWindowClosed) {
-                       alert("❌ لا يمكن الرد: نافذة الـ 24 ساعة مغلقة. لازم العميل هو اللي يبعت رسالة الأول.");
+                       showToast("لا يمكن الرد: نافذة الـ 24 ساعة مغلقة. لازم العميل هو اللي يبعت رسالة الأول.", "warning");
                      } else {
-                       alert("❌ فشل الإرسال: " + (data.error || "خطأ غير معروف"));
+                       showToast(`فشل الإرسال: ${data.error || "خطأ غير معروف"}`, "error");
                      }
                    } else {
                      input.value = "";
                      await fetchEvents();
+                     showToast("تم إرسال الرسالة بنجاح", "success");
                    }
                  } catch (err) {
-                   alert("❌ خطأ في الاتصال بالسيرفر");
+                   showToast("خطأ في الاتصال بالسيرفر", "error");
                  } finally {
                    setLoading(false);
                  }
@@ -247,7 +250,7 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
                  ref={inputRef}
                  name="message"
                  type="text" 
-                 placeholder="اكتب ردك هنا..." 
+                 placeholder="Ø§ÙƒØªØ¨ Ø±Ø¯Ùƒ Ù‡Ù†Ø§..." 
                  className="flex-1 bg-transparent text-sm text-slate-300 placeholder:text-slate-600 focus:outline-none"
                  autoComplete="off"
                />
@@ -265,3 +268,5 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
     </AnimatePresence>
   );
 }
+
+

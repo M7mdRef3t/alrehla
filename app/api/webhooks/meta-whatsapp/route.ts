@@ -64,10 +64,14 @@ export async function POST(req: Request) {
             whatsapp_validated_at: new Date().toISOString()
           };
 
-          await supabaseAdmin
+          const { error: updateError } = await supabaseAdmin
             .from("marketing_leads")
             .update({ metadata: updatedMetadata })
             .eq("lead_id", lead.lead_id);
+
+          if (updateError) {
+            console.error("[WhatsAppWebhook] Failed updating lead metadata:", updateError);
+          }
 
           console.log(`[WhatsAppWebhook] Lead ${lead.lead_id} marked as verified (Phone: ${recipientId})`);
         }
@@ -95,7 +99,7 @@ export async function POST(req: Request) {
       const leadId = leads?.[0]?.id || null;
 
       // Log the inbound message
-      await supabaseAdmin
+      const { error: insertError } = await supabaseAdmin
         .from("whatsapp_message_events")
         .insert([{
           lead_id: leadId,
@@ -107,6 +111,11 @@ export async function POST(req: Request) {
           direction: "inbound",
           raw_payload: msg
         }]);
+
+      if (insertError) {
+        console.error("[WhatsAppWebhook] Failed logging inbound message:", insertError);
+        continue;
+      }
 
       console.log(`[WhatsAppWebhook] Inbound message from ${fromPhoneRaw} logged (Lead: ${leadId})`);
     }

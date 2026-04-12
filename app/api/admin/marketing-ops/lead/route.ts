@@ -140,19 +140,18 @@ export async function POST(req: Request) {
     // --- Action: Mark WhatsApp Sent ---
     if (action === "mark_whatsapp") {
       if (!id) return NextResponse.json({ ok: false, error: "missing_lead_id" }, { status: 400 });
-      
-      const { data: existingLead } = await supabase.from("marketing_leads").select("metadata").eq("id", id).maybeSingle();
-      const meta = (existingLead?.metadata as Record<string, unknown>) || {};
 
-      const { error } = await supabase.from("marketing_leads").update({
-        metadata: {
-          ...meta,
-          whatsapp_sent: true,
-          whatsapp_sent_at: new Date().toISOString()
-        }
-      }).eq("id", id);
-      
-      return NextResponse.json({ ok: !error, error: error?.message });
+      const whatsappSentAt = new Date().toISOString();
+      const { error } = await supabase.rpc("mark_lead_whatsapp_sent", {
+        p_lead_id: id,
+        p_sent_at: whatsappSentAt,
+      });
+
+      if (error) {
+        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ ok: true, whatsapp_sent_at: whatsappSentAt });
     }
 
     // --- Action: Sync with Meta ---

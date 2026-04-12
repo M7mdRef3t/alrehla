@@ -3,10 +3,13 @@ import { getSupabaseAdminClient } from "../../../_lib/supabaseAdmin";
 import fs from "fs";
 
 export async function GET(req: Request) {
-  const path = 'C:\\Users\\ty\\Downloads\\energy_map_eg_v1_ad_01_Leads_2026-03-19_2026-04-10.xls';
-  if (!fs.existsSync(path)) return NextResponse.json({ error: "File not found" });
+  const filePath = process.env.MARKETING_DEBUG_LEAD_FILE_PATH;
+  if (!filePath) {
+    return NextResponse.json({ error: "missing_MARKETING_DEBUG_LEAD_FILE_PATH" }, { status: 400 });
+  }
+  if (!fs.existsSync(filePath)) return NextResponse.json({ error: "File not found" }, { status: 404 });
 
-  const xml = fs.readFileSync(path, 'utf8');
+  const xml = fs.readFileSync(filePath, "utf8");
   
   // Facebook XML Spreadsheet format parsing
   const rowRegex = /<Row>([\s\S]*?)<\/Row>/g;
