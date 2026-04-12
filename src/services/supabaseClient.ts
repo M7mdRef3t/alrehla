@@ -1,6 +1,7 @@
 import { logger } from "@/services/logger";
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import type { User } from "@supabase/supabase-js";
 
 const supabaseUrl = runtimeEnv.supabaseUrl;
 const supabaseAnonKey = runtimeEnv.supabaseAnonKey;
@@ -72,6 +73,20 @@ export async function safeGetSession(): Promise<Session | null> {
   try {
     const { data } = await supabase.auth.getSession();
     return data.session ?? null;
+  } catch (error) {
+    if (isSupabaseAbortError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export async function safeGetUser(): Promise<User | null> {
+  if (!supabase) return null;
+
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data.user ?? null;
   } catch (error) {
     if (isSupabaseAbortError(error)) {
       return null;

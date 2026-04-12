@@ -96,8 +96,9 @@ export default async function generateHandler(req: ApiRequest, res: ApiResponse)
 
   const errorMsg = lastError instanceof Error ? lastError.message : String(lastError || "unknown_error");
   if (errorMsg.includes("gemini_timeout")) {
-    res.status(504).json({ error: "Generation timed out" });
+    // Keep client UX stable: return soft fallback instead of hard 504 noise.
+    res.status(200).json({ text: null, usage: null, fallback: true, reason: "generation_timeout" });
     return;
   }
-  res.status(500).json({ error: "Generation failed", detail: errorMsg });
+  res.status(200).json({ text: null, usage: null, fallback: true, reason: "generation_failed", detail: errorMsg });
 }

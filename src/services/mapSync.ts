@@ -1,7 +1,7 @@
 import { logger } from "@/services/logger";
 // mapSync.ts
 import type { MapNode } from "@/modules/map/mapTypes";
-import { isSupabaseReady, supabase } from "./supabaseClient";
+import { isSupabaseReady, safeGetUser, supabase } from "./supabaseClient";
 import {
   getTrackingSessionId
 } from "./journeyTracking";
@@ -85,7 +85,7 @@ async function tryCloudSync() {
     useSyncState.getState().setOffline(true);
     return;
   }
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await safeGetUser();
   if (!user) {
     return;
   }
@@ -100,7 +100,7 @@ async function flushMapSync(): Promise<void> {
     return;
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await safeGetUser();
   if (!user) return; // Guard against mid-sync sign out
 
   isFlushing = true;
@@ -158,7 +158,7 @@ async function flushMapSync(): Promise<void> {
  */
 export async function syncLocalMapOnLogin(): Promise<void> {
   if (!isSupabaseReady || !supabase) return;
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await safeGetUser();
   if (!user) return;
 
   const buffer = loadPendingBuffer();
