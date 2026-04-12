@@ -101,8 +101,9 @@ export function AppRuntimeControllers({
   const openOverlay = useAppOverlayState((state) => state.openOverlay);
   const isMapHydrated = useMapState((state) => state.isHydrated);
   const mapNodeCount = useMapState((state) => state.nodes.length);
-  const recordGamificationActivity = useGamification((state) => state.recordActivity);
-  const gamificationStreak = useGamification((state) => state.streak);
+  const gamification = useGamification();
+  const recordGamificationActivity = gamification.recordActivity;
+  const gamificationStreak = gamification.streak;
 
   // P0: Capture UTM + lead attribution from URL on very first render
   // This ensures users arriving from ad campaigns are tracked before any navigation

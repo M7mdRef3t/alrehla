@@ -99,7 +99,7 @@ export function AppStartScreens({
   onOpenProfile,
   onNavigate: _onNavigate
 }: AppStartScreensProps) {
-  const setLastGoal = useJourneyProgress((state) => state.setLastGoal);
+  const journey = useJourneyProgress();
   if (screen === "landing") {
     return (
       <PageShell headerMode="none" tabBarVisible={false} disableAnimation maxWidth="max-w-none px-0 sm:px-0 lg:px-0">
@@ -134,7 +134,7 @@ export function AppStartScreens({
               category: nextCategory
             });
             onClearWelcome();
-            setLastGoal(nextGoalId, nextCategory);
+            journey.setLastGoal(nextGoalId, nextCategory);
             onGoalSelected(nextCategory, nextGoalId);
           }}
         />

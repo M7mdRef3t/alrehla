@@ -181,9 +181,10 @@ export const AppOverlayHost = memo(function AppOverlayHost({
       }).pulse_check,
     [featureFlags, betaAccess, role, adminAccess]
   );
-  const goalId = useJourneyProgress((state) => state.goalId);
-  const storedMirrorName = useJourneyProgress((state) => state.mirrorName);
-  const setLastGoal = useJourneyProgress((state) => state.setLastGoal);
+  const journey = useJourneyProgress();
+  const goalId = journey.goalId;
+  const storedMirrorName = journey.mirrorName;
+  const setLastGoal = journey.setLastGoal;
 
   const {
     gym: showGym,

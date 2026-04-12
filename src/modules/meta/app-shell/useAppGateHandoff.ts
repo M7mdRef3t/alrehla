@@ -25,7 +25,7 @@ export function useAppGateHandoff({
   setCategory
 }: UseAppGateHandoffParams) {
   const [gateWelcome, setGateWelcome] = useState<WelcomeState>(null);
-  const setGateSessionId = useJourneyProgress((state) => state.setGateSessionId);
+  const journey = useJourneyProgress();
   
   const clearGateWelcome = useCallback(() => {
     setGateWelcome(null);
@@ -49,7 +49,7 @@ export function useAppGateHandoff({
     window.history.replaceState(null, "", newUrl);
 
     // Save global session trace for `MapCompleted` Brutal rule later
-    setGateSessionId(gateSessionId);
+    journey.setGateSessionId(gateSessionId);
 
     // Now securely fetch the payload to construct personalized welcome
     let cancelled = false;
@@ -107,7 +107,7 @@ export function useAppGateHandoff({
     return () => {
       cancelled = true;
     };
-  }, [navigateToScreen, setGoalId, setCategory, setGateSessionId]);
+  }, [journey, navigateToScreen, setGoalId, setCategory]);
 
   return {
     gateWelcome,

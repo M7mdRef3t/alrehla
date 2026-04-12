@@ -186,8 +186,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   const mode = useLayoutState((s) => s.mode);
   const activeTab = useLayoutState((s) => s.activeTab);
-  const mirrorName = useJourneyProgress((state) => state.mirrorName);
-  const consumeMirrorName = useJourneyProgress((state) => state.consumeMirrorName);
+  const journey = useJourneyProgress();
+  const mirrorName = journey.mirrorName;
 
   const [showAddPerson, setShowAddPerson] = useState(false);
   const [segmentedView, setSegmentedView] = useState<"network" | "stability" | "metrics">("network");
@@ -488,7 +488,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         false, 
         true
       );
-      consumeMirrorName();
+      journey.consumeMirrorName();
       onSelectNode(nodeId);
       
       import("@/domains/gamification/store/achievement.store").then(m => {
@@ -497,7 +497,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       void analyticsService.track(AnalyticsEvents.NODE_ADDED, { label: mirrorName, source: "mirror_hook" });
     }
-  }, [goalId, activeNodes.length, consumeMirrorName, mirrorName, onSelectNode, showOnboarding]);
+  }, [goalId, activeNodes.length, journey, mirrorName, onSelectNode, showOnboarding]);
 
   const canCompleteJourneyStep =
     journeyMode &&
