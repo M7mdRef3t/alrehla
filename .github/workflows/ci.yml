@@ -25,8 +25,21 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install
-        run: npm ci
+      - name: Install (with retry)
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            echo "npm ci attempt $attempt/3"
+            if npm ci; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "npm ci failed, retrying in 10s..."
+              sleep 10
+            fi
+          done
+          echo "npm ci failed after 3 attempts"
+          exit 1
 
       - name: Typecheck
         run: npm run typecheck
