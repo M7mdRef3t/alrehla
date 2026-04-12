@@ -60,3 +60,7 @@
 ## 2026-04-12 Marketing Gateway Fallback (PR #130)
 - `src/services/marketingGatewayService.ts` now returns safe default gateway configs when Supabase client/admin credentials are unavailable.
 - This prevents diffusion metrics screens from throwing runtime errors on production domains that don't expose admin service-role configuration to client-side flows.
+
+## 2026-04-12 User State API Fail-Safe (Hotfix)
+- `app/api/user/state/route.ts` now degrades gracefully on Supabase schema/table errors and storage write failures.
+- Instead of returning `500` for non-critical persistence failures, the endpoint returns safe fallback responses to keep client hydration and intervention generation running.
