@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef } from "react";
 import { type AdviceCategory } from "@/data/adviceScripts";
 import { trackingService } from "@/domains/journey";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import type { FeatureFlagKey } from "@/config/features";
 import { isPhaseOneUserFlow, isUserMode } from "@/config/appEnv";
 import { getLastGoalMeta } from "@/utils/goalLabel";
 import { ensureValidJourneyState } from "@/utils/journeyState";
 import { requestIdleCallback, cancelIdleCallback } from "@/utils/performanceOptimizations";
-import type { AppShellScreen } from "@/domains/dawayir/store/navigation.store";
+import type { AppShellScreen } from '@/modules/map/dawayirIndex';
 
 const preloadCoreMap = () => import('@/modules/exploration/CoreMapScreen');
 const preloadGym = () => import('@/modules/exploration/RelationshipGym');

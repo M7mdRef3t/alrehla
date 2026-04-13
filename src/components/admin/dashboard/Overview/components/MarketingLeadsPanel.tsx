@@ -102,14 +102,14 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
                 <p className="text-[10px] uppercase tracking-widest text-slate-500 font-black">إجمالي الزيارات</p>
                 <AdminTooltip content="كل الزوار اللي قدرنا نرصدهم كـ (Leads) محتملين لحد دلوقتي." position="bottom" />
             </div>
-            <p className="text-3xl font-black text-white tabular-nums drop-shadow-md">{(data.total || 0).toLocaleString("ar-EG")}</p>
+            <p className="text-3xl font-black text-white tabular-nums drop-shadow-md">{(data.total || 0).toLocaleString("en-US")}</p>
           </div>
           <div className="rounded-2xl border border-teal-500/20 bg-teal-500/5 p-4 relative overflow-hidden shadow-inner">
             <div className="flex items-center justify-between mb-2">
                 <p className="text-[10px] uppercase tracking-widest text-teal-500 font-black">النبض (آخر 24 ساعة)</p>
                 <AdminTooltip content="زخم الـ 24 ساعة اللي فاتت، لو الرقم قل فجأة يبقى فيه هبوط في الترافيك." position="bottom" />
             </div>
-            <p className="text-3xl font-black text-teal-400 drop-shadow-[0_0_12px_rgba(45,212,191,0.5)] tabular-nums">{(data.last24h || 0).toLocaleString("ar-EG")}</p>
+            <p className="text-3xl font-black text-teal-400 drop-shadow-[0_0_12px_rgba(45,212,191,0.5)] tabular-nums">{(data.last24h || 0).toLocaleString("en-US")}</p>
           </div>
         </div>
 

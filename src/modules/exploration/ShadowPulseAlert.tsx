@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, X } from "lucide-react";
 import { useShadowPulseState } from "@/domains/consciousness/store/shadowPulse.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { getShadowMessage, getShadowLevel } from "@/utils/shadowPulseEngine";
 
 const DISMISSED_KEY = "dawayir-shadow-dismissed";

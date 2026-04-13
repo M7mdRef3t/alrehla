@@ -22,13 +22,13 @@ export function SovereignReceiver() {
         if (cmd.type === 'FORCE_STATE') {
           // Send direct state application to Theme Engine
           // generate a synthetic theme ignoring local emotion
-          const fakeTheme = consciousnessTheme.generateTheme({
-            emotionalState: cmd.state,
+          const fakeTheme = consciousnessTheme.generate({
+            emotion: { state: cmd.state as any, tension: 0, shadow: 0, engagement: 0 },
             timeOfDay: 'afternoon',
-            sessionDuration: 30,
-            preferredMode: 'auto'
+            sessionMinutes: 30,
+            mode: 'auto'
           });
-          consciousnessTheme.applyTheme(fakeTheme, { smooth: true });
+          consciousnessTheme.apply(fakeTheme, { smooth: true });
           
           // Also explicitly update the Atmoshere Engine custom tokens
           useThemeState.getState().updateTokens({

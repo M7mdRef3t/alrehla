@@ -163,7 +163,7 @@ export const useRitualState = create<RitualState>()(
           feelingAfter: feeling,
         };
         
-        let newLogs = [log, ...get().logs].slice(0, 5000);
+        const newLogs = [log, ...get().logs].slice(0, 5000);
         
         set(() => ({
           logs: newLogs,

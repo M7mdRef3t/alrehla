@@ -8,19 +8,29 @@
 "use client";
 import { useCallback } from "react";
 import { useThemeState } from "@/domains/consciousness/store/theme.store";
-import { consciousnessEngine } from "../services/engine.service";
-import { soundscape } from "../services/soundscape.service";
-import type { ThemeEngineParams, ConsciousnessTheme } from "../types";
+import { Atmosfera } from "@alrehla/atmosfera";
+import type { AtmosferaTheme } from "@alrehla/atmosfera";
+import type { ThemeEngineParams } from "../types";
 
 export function useConsciousnessTheme() {
   const { liteMode, customTokens, updateTokens, resetTokens } = useThemeState();
 
   const applyState = useCallback(
-    (params: ThemeEngineParams): ConsciousnessTheme => {
+    (params: ThemeEngineParams): AtmosferaTheme => {
       // Check for custom Design Lab overrides per state
       const stateOverride = customTokens.states?.[params.emotionalState.state];
 
-      const theme = consciousnessEngine.generate(params);
+      const theme = Atmosfera.generate({
+        emotion: {
+           state: params.emotionalState.state,
+           tension: params.emotionalState.tei,
+           shadow: params.emotionalState.shadowPulse,
+           engagement: params.emotionalState.engagement
+        },
+        timeOfDay: params.timeOfDay,
+        sessionMinutes: params.sessionDuration,
+        mode: params.preferredMode
+      });
 
       // Merge Design Lab overrides into domain theme
       if (stateOverride) {
@@ -31,10 +41,13 @@ export function useConsciousnessTheme() {
         if (stateOverride.blur) theme.blur = parseInt(stateOverride.blur);
       }
 
-      consciousnessEngine.apply(theme);
-      consciousnessEngine.save(theme);
+      Atmosfera.apply(theme);
+      
+      try {
+         localStorage.setItem("dawayir-consciousness-theme", JSON.stringify(theme));
+      } catch { /* noop */ }
 
-      soundscape.sync(theme.state, customTokens.ambientVolume ?? 0.5, !liteMode);
+      Atmosfera.soundscape.sync(theme.state, customTokens.ambientVolume ?? 0.5, !liteMode);
 
       return theme;
     },

@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useAppContentState } from "@/domains/dawayir/store/content.store";
+import { useAppContentState } from '@/modules/map/dawayirIndex';
 
 interface UseAppContentStringOptions {
   page?: string;

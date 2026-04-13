@@ -8,7 +8,7 @@ import {
   captureLeadAttributionFromCurrentUrl,
   captureUtmFromCurrentUrl,
 } from "../../src/services/marketingAttribution";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from "@/modules/map/store/map.store";
 import { getStoredLeadEmail, setStoredLeadEmail, hasRevenueAccess } from "../../src/services/revenueAccess";
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
@@ -100,7 +100,7 @@ export default function OnboardingRouteClient() {
     if (skipped) params.set("skipped", "1");
     params.set("source", "onboarding");
 
-    const nextUrl = `/activation?${params.toString()}`;
+    const nextUrl = `/pricing?${params.toString()}`;
 
     // 2. Cinematic delay
     setTimeout(() => {

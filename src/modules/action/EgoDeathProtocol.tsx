@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 
 export default function EgoDeathProtocol() {
   const { flags, closeOverlay } = useAppOverlayState();

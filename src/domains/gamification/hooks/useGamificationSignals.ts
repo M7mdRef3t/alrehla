@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { subscribeToDawayirSignals } from "@/modules/recommendation/recommendationBus";
 import { useGamification } from "@/domains/gamification";
 import { getDailyQuests } from "@/services/gamificationEngine";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { soundManager } from "@/services/soundManager";
 import { triggerConfetti } from "@/utils/confetti";
 

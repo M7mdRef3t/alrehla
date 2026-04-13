@@ -776,7 +776,7 @@ const PulseBadge: FC<{ count: number }> = ({ count }) => (
       transition={{ duration: 1.6, repeat: Infinity }}
     />
     <span style={{ fontSize: 11, fontWeight: 800, color: "#a8bfcc", letterSpacing: "0.18em", textTransform: "uppercase" }}>
-      {count.toLocaleString("ar-EG")} يستعيدون نبضهم الآن
+      {count.toLocaleString("en-US")} يستعيدون نبضهم الآن
     </span>
   </motion.div>
 );

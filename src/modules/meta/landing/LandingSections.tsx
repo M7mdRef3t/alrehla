@@ -230,19 +230,19 @@ export const MetricsSection: FC<{
     (liveEnabled && !isFallback
       ? [
         {
-          val: metricsState.data.activeUnits30d.toLocaleString("ar-EG"),
+          val: metricsState.data.activeUnits30d.toLocaleString("en-US"),
           label: "جلسات بدأت خلال 30 يوم",
           icon: Users,
           color: "text-teal-400"
         },
         {
-          val: `${metricsState.data.retentionRate30d.toLocaleString("ar-EG")}%`,
+          val: `${metricsState.data.retentionRate30d.toLocaleString("en-US")}%`,
           label: "استمرار بعد البداية الأولى",
           icon: TrendingUp,
           color: "text-[var(--color-primary)]"
         },
         {
-          val: metricsState.data.activity24h.toLocaleString("ar-EG"),
+          val: metricsState.data.activity24h.toLocaleString("en-US"),
           label: "نشاط آخر 24 ساعة",
           icon: Zap,
           color: "text-rose-400"

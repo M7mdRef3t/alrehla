@@ -15,6 +15,5 @@ export type {
   ThemeStoreState,
 } from "./types";
 
-export { consciousnessEngine } from "./services/engine.service";
-export { soundscape } from "./services/soundscape.service";
+export { Atmosfera as consciousnessEngine, soundscape } from "@alrehla/atmosfera";
 export { useConsciousnessTheme } from "./hooks/useConsciousnessTheme";

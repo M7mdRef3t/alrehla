@@ -1,7 +1,7 @@
 import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState } from "react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { DatabaseZap, Loader2, CheckCircle2 } from "lucide-react";
 import type { Ring } from "@/modules/map/mapTypes";

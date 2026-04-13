@@ -5,7 +5,7 @@ import { getEffectiveFeatureAccess, isPrivilegedRole } from "@/utils/featureFlag
 import { isUserMode } from "@/config/appEnv";
 import type { AgentActions, AgentContext } from '@/agent/types';
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
-import { useAppShellNavigationState, type AppShellScreen } from "@/domains/dawayir/store/navigation.store";
+import { useAppShellNavigationState, type AppShellScreen } from '@/modules/map/dawayirIndex';
 import { useEmergencyState } from "@/domains/admin/store/emergency.store";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useThemeState } from "@/domains/consciousness/store/theme.store";

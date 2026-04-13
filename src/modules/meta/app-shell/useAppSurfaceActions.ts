@@ -7,7 +7,7 @@ import { trackEvent } from "@/services/analytics";
 import { openInNewTab } from "@/services/clientDom";
 import { trackingService } from "@/domains/journey";
 import { useEmergencyState } from "@/domains/admin/store/emergency.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import type { FeatureFlagKey } from "@/config/features";
 
 interface UseAppSurfaceActionsParams {

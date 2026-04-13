@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, Users, Target, AlertTriangle, ArrowLeft, BarChart2 } from "lucide-react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import type { MapNode, Ring } from "../map/mapTypes";
 
 /* ═══════════════════════════════════════════════

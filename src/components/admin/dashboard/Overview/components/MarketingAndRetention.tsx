@@ -80,7 +80,7 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
                                         <div className="h-full bg-teal-400 group-hover/source:shadow-[0_0_10px_rgba(45,212,191,0.5)] transition-all" style={{ width: `${sources[0]?.count ? (src.count / sources[0].count) * 100 : 0}%` }} />
                                     </div>
                                 </div>
-                                <span className="text-sm font-black font-mono text-teal-300 mr-6 px-3 py-1 bg-black/40 rounded-lg">{src.count.toLocaleString("ar-EG")}</span>
+                                <span className="text-sm font-black font-mono text-teal-300 mr-6 px-3 py-1 bg-black/40 rounded-lg">{src.count.toLocaleString("en-US")}</span>
                             </div>
                         ))
                     )}

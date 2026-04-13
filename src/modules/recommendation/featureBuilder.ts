@@ -1,4 +1,4 @@
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { calculateEntropy } from "@/services/predictiveEngine";
 import { getDawayirSignalHistory } from "./recommendationBus";

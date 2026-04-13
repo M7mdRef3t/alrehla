@@ -84,6 +84,7 @@ export const ExecutiveDashboard: FC = () => {
     }
 
     const totalUsers = remoteStats?.totalUsers ?? 0;
+    const marketingLeadsTotal = remoteStats?.marketingLeads?.total ?? 0;
     const activeNowValue = remoteStats?.activeNow ?? 0;
     const avgMoodValue = remoteStats?.avgMood ?? null;
     const aiTokensUsed = remoteStats?.aiTokensUsed ?? 0;
@@ -121,6 +122,22 @@ export const ExecutiveDashboard: FC = () => {
     const successDecisionClass = successDecision === "scale" ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : successDecision === "optimize" ? "text-amber-400 border-amber-500/30 bg-amber-500/10" : successDecision === "pivot" ? "text-rose-400 border-rose-500/30 bg-rose-500/10" : "text-slate-500 border-white/5 bg-slate-900/50";
 
     const handleCommitDecision = async () => {};
+    const navigateToTab = (tab: string) => {
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", tab);
+        window.history.pushState({}, "", url.toString());
+        window.dispatchEvent(new PopStateEvent("popstate"));
+    };
+
+    const renderSectionLink = (tab: string, label: string) => (
+        <button
+            onClick={(e) => { e.preventDefault(); navigateToTab(tab); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold transition-all shadow-sm"
+        >
+            {label}
+            <ArrowUpRight className="w-3.5 h-3.5" />
+        </button>
+    );
 
     return (
         <div className="space-y-6" dir="rtl">
@@ -156,12 +173,14 @@ export const ExecutiveDashboard: FC = () => {
                         subtitle="إحصائيات شاملة في الوقت الفعلي"
                         defaultExpanded={true}
                         headerColors="border-indigo-500/20 bg-indigo-500/5 text-indigo-400"
+                        headerAction={renderSectionLink("users-state", "تفاصيل الأعضاء")}
                     >
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
-                            <StatCard title="إجمالي المسافرين" value={formatNumber(totalUsers)} hint="مزامنة موثقة" tooltip="إجمالي عدد المستخدمين المسجلين في المنصة من البداية وحتى اللحظة." />
-                            <StatCard title="نشط الآن" value={formatNumber(activeNowValue)} hint="حضور مداري" tooltip="عدد الأعضاء الموجودين أونلاين وبيستخدموا المنصة حالياً." />
-                            <StatCard title="متوسط الطاقة" value={avgMoodValue !== null ? avgMoodValue.toFixed(1) : "—"} hint="تدفق المزاج" glowColor="indigo" tooltip="متوسط الحالة المزاجية أو الصفاء لكل الزوار النشطين." />
-                            <StatCard title="عمليات الذكاء" value={formatNumber(aiTokensUsed)} hint="احتمال التفكير الاصطناعي" glowColor="indigo" tooltip="حجم الأوامر أو الكلمات (Tokens) اللي جارفيس استهلكها في مساعدة المستخدمين النهارده." />
+                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-2">
+                            <StatCard title="إجمالي المسافرين" value={formatNumber(totalUsers)} hint="مزامنة موثقة" tooltip="إجمالي عدد المستخدمين المسجلين في المنصة من البداية وحتى اللحظة." onClick={() => navigateToTab("users-state")} />
+                            <StatCard title="العملاء المحتملين" value={formatNumber(marketingLeadsTotal)} hint="فرص نمو" tooltip="إجمالي عدد الزوار الذين قاموا بإدخال بياناتهم أو بريدهم الإلكتروني كعملاء محتملين." onClick={() => navigateToTab("marketing-ops")} />
+                            <StatCard title="نشط الآن" value={formatNumber(activeNowValue)} hint="حضور مداري" tooltip="عدد الأعضاء الموجودين أونلاين وبيستخدموا المنصة حالياً." onClick={() => navigateToTab("flow-map")} />
+                            <StatCard title="متوسط الطاقة" value={avgMoodValue !== null ? avgMoodValue.toFixed(1) : "—"} hint="تدفق المزاج" glowColor="indigo" tooltip="متوسط الحالة المزاجية أو الصفاء لكل الزوار النشطين." onClick={() => navigateToTab("consciousness-atlas")} />
+                            <StatCard title="عمليات الذكاء" value={formatNumber(aiTokensUsed)} hint="احتمال التفكير الاصطناعي" glowColor="indigo" tooltip="حجم الأوامر أو الكلمات (Tokens) اللي جارفيس استهلكها في مساعدة المستخدمين النهارده." onClick={() => navigateToTab("ai-studio")} />
                         </div>
                     </CollapsibleSection>
 
@@ -173,6 +192,7 @@ export const ExecutiveDashboard: FC = () => {
                             subtitle="قياس وتقييم الفرضيات"
                             defaultExpanded={true}
                             headerColors="border-amber-500/20 bg-amber-500/5 text-amber-500"
+                            headerAction={renderSectionLink("growth-revenue", "لوحة الإيرادات")}
                         >
                             <div className="pt-2">
                                 <SuccessIndexCard
@@ -215,6 +235,7 @@ export const ExecutiveDashboard: FC = () => {
                             subtitle="مؤشرات الأداء"
                             defaultExpanded={true}
                             headerColors="border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
+                            headerAction={renderSectionLink("flow-map", "تحليل المسارات")}
                         >
                             <div className="pt-2">
                                 <PhaseOneGoal
@@ -232,6 +253,7 @@ export const ExecutiveDashboard: FC = () => {
                             subtitle="تقرير آلي لتحليل حالة المنصة"
                             defaultExpanded={false}
                             headerColors="border-purple-500/20 bg-purple-500/5 text-purple-400"
+                            headerAction={renderSectionLink("ai-studio", "إستوديو الذكاء")}
                         >
                             <div className="pt-2">
                                 <ExecutiveReport data={executiveReport} loading={initialLoading} />
@@ -246,6 +268,7 @@ export const ExecutiveDashboard: FC = () => {
                         subtitle="تحليل فرصة النمو العالمي"
                         defaultExpanded={successDecision === "scale"}
                         headerColors="border-rose-500/20 bg-rose-500/5 text-rose-400"
+                        headerAction={renderSectionLink("expansion-hub", "بوابة التوسع")}
                     >
                         <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-rose-500/5 rounded-3xl border border-rose-500/10">
                             <div>

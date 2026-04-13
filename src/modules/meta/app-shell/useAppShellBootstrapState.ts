@@ -7,7 +7,7 @@ import { useThemeState } from "@/domains/consciousness/store/theme.store";
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import type { FeatureFlagKey } from "@/config/features";
 import { runtimeEnv } from "@/config/runtimeEnv";
-import { useAppShellNavigationState } from "@/domains/dawayir/store/navigation.store";
+import { useAppShellNavigationState } from '@/modules/map/dawayirIndex';
 import { useAppOverlayState, useOverlayFlag } from "@/domains/consciousness/store/overlay.store";
 import { useGamification } from "@/domains/gamification";
 

@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Ticket, XCircle, ArrowRight, Loader2, Image as ImageIcon } from "lucide-react";
+import { CheckCircle2, Ticket, XCircle, ArrowRight, Loader2, Image as ImageIcon, Zap } from "lucide-react";
 import { fetchOpenSupportTickets, resolveActivationTicket, rejectActivationTicket, type SupportTicketEntry } from "@/services/adminApi";
 import { supabase } from "@/services/supabaseClient";
 
@@ -12,6 +12,10 @@ export const SupportTicketsPanel: FC = () => {
     const [rejectReason, setRejectReason] = useState("");
     const [activatingTicket, setActivatingTicket] = useState<SupportTicketEntry | null>(null);
     const [localError, setLocalError] = useState<string | null>(null);
+
+    const [bypassEmailOrPhone, setBypassEmailOrPhone] = useState("");
+    const [bypassLoading, setBypassLoading] = useState(false);
+    const [bypassSuccess, setBypassSuccess] = useState(false);
 
     const showError = (msg: string) => {
         setLocalError(msg);
@@ -96,6 +100,38 @@ export const SupportTicketsPanel: FC = () => {
         return null;
     };
 
+    const handleBypassSubmit = async () => {
+        if (!bypassEmailOrPhone.trim()) return;
+        setBypassLoading(true);
+        setLocalError(null);
+        setBypassSuccess(false);
+        try {
+            const isEmail = bypassEmailOrPhone.includes("@");
+            const payload = {
+                code: "DAWAYIR-VIP", // Local admin bypass relying on the master default, if changed in env they can use the promo box
+                email: isEmail ? bypassEmailOrPhone.trim() : "",
+                phone: !isEmail ? bypassEmailOrPhone.trim() : ""
+            };
+            const res = await fetch("/api/checkout/vip", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                setBypassSuccess(true);
+                setBypassEmailOrPhone("");
+                setTimeout(() => setBypassSuccess(false), 3000);
+            } else {
+                showError(data.message || "فشل التفعيل السريع. هل كود الإدارة صحيح؟");
+            }
+        } catch (e) {
+            showError("خطأ في الاتصال");
+        } finally {
+            setBypassLoading(false);
+        }
+    };
+
     return (
         <div className="admin-glass-card rounded-3xl p-6 border-emerald-500/20 relative" dir="rtl">
             {localError && (
@@ -118,6 +154,28 @@ export const SupportTicketsPanel: FC = () => {
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-xs font-bold text-emerald-400">{tickets.length} طلبات مستنية</span>
                 </div>
+            </div>
+
+            {/* Direct Admin Bypass */}
+            <div className="mb-6 p-4 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex flex-col md:flex-row items-center gap-4">
+                <div className="flex items-center gap-2 text-teal-400">
+                    <Zap className="w-5 h-5" />
+                    <span className="text-sm font-black uppercase">تسريع التفعيل:</span>
+                </div>
+                <input
+                    type="text"
+                    value={bypassEmailOrPhone}
+                    onChange={e => setBypassEmailOrPhone(e.target.value)}
+                    placeholder="إيميل أو هاتف المستخدم..."
+                    className="flex-1 bg-black/50 border border-teal-500/30 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-teal-400"
+                />
+                <button
+                    onClick={() => handleBypassSubmit()}
+                    disabled={bypassLoading || !bypassEmailOrPhone.trim()}
+                    className="px-6 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-teal-950 font-black text-sm transition-all disabled:opacity-50"
+                >
+                    {bypassLoading ? "..." : (bypassSuccess ? "تم بنجاح!" : "تفعيل فوري")}
+                </button>
             </div>
 
             {loading && tickets.length === 0 ? (

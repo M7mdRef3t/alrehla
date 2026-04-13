@@ -5,7 +5,7 @@ import { ACHIEVEMENTS } from "@/data/achievements";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { loadStreak } from "@/services/streakSystem";
 import { useRitualState } from "@/domains/journey/store/ritual.store";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 
 const STORAGE_KEY = "dawayir-achievements";
 

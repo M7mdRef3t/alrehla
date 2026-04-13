@@ -254,7 +254,7 @@ const DecisionCard: FC<DecisionCardProps> = ({ decision, isSelected, onClick, on
 
           <div className="flex items-center gap-2 mt-3 text-[10px] uppercase font-bold text-slate-500 tracking-widest">
             <Clock className="w-3 h-3" />
-            <span>{new Date(decision.timestamp).toLocaleString("ar-EG")}</span>
+            <span>{new Date(decision.timestamp).toLocaleString("en-US")}</span>
           </div>
         </div>
 

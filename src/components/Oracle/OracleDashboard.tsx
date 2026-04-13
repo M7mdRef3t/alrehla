@@ -329,8 +329,8 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                         {stats && (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                                 {[
-                                    { label: 'Total Sovereigns', value: stats.totalUsers?.toLocaleString() || '0', icon: Users, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
-                                    { label: 'Neural Activity', value: stats.activeNow?.toLocaleString() || '0', icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+                                    { label: 'Total Sovereigns', value: stats.totalUsers?.toLocaleString("en-US") || '0', icon: Users, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
+                                    { label: 'Neural Activity', value: stats.activeNow?.toLocaleString("en-US") || '0', icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
                                     { label: 'Avg Swarm Energy', value: stats.avgMood?.toFixed(1) || '', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
                                     { label: 'AI Cognitive Load', value: (stats.aiTokensUsed || 0) > 1000 ? `${((stats.aiTokensUsed || 0) / 1000).toFixed(1)}k` : stats.aiTokensUsed || '0', icon: Brain, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
                                 ].map((item, i) => (

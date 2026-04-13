@@ -3,7 +3,7 @@
 import type { FC } from "react";
 import { useState, useCallback, useEffect, useRef, memo, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useJourneyProgress } from "@/domains/journey";
 import { setInLocalStorage } from "@/services/browserStorage";
 import { trackingService } from "@/domains/journey";

@@ -4,7 +4,7 @@
  * يحول العلاقات إلى كتل جاذبية (Gravity Mass) وأنماط صدى (Echo Patterns).
  */
 
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useEventHistoryStore } from "@/domains/analytics/store/eventHistory.store";
 import { type MapNode, type Ring } from "@/modules/map/mapTypes";
 

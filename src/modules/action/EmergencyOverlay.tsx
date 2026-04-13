@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useEmergencyState } from "@/domains/admin/store/emergency.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { emergencyCopy } from "@/copy/emergency";
 import { EditableText } from '@/modules/exploration/EditableText';

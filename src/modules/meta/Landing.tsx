@@ -8,7 +8,7 @@ import { getLivePulseCount } from "@/services/pulseEngagement";
 import { soundManager } from "@/services/soundManager";
 import { LandingSimulation } from "./LandingSimulation";
 import { useJourneyProgress } from "@/domains/journey";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
 import { getGoalMeta } from "@/data/goalMeta";
 import { LandingFooter } from "./landing/LandingFooter";

@@ -8,7 +8,7 @@ import {
 import { growthEngine, type DiffusionMetrics } from "@/services/growthEngine";
 import { getAuthToken } from "@/domains/auth/store/auth.store";
 import { useAdminState } from "@/domains/admin/store/admin.store";
-import { useToastState } from "@/domains/dawayir/store/toast.store";
+import { useToastState } from '@/modules/map/dawayirIndex';
 
 function getBearerToken(): string {
   return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
@@ -370,7 +370,7 @@ export const SovereignGatewayCommand: FC<{
         </div>
         <div className="hud-glass p-8 rounded-[2.5rem] border-white/5 bg-white/[0.02]">
            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">الزوار (٢٤ ساعة)</p>
-           <h3 className="text-4xl font-black text-white">{(oracleData?.stats?.funnel?.visitors24h || 0).toLocaleString("ar-EG")}</h3>
+           <h3 className="text-4xl font-black text-white">{(oracleData?.stats?.funnel?.visitors24h || 0).toLocaleString("en-US")}</h3>
         </div>
         <div className="hud-glass p-8 rounded-[2.5rem] border-indigo-500/10 bg-indigo-500/5">
            <div className="flex items-center justify-between mb-2">

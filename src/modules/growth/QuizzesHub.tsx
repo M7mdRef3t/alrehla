@@ -39,7 +39,7 @@ import { QUIZZES, type QuizDef, type QuizResultBand } from "@/data/quizData";
 import { useQuizHistory, type QuizHistoryEntry } from "@/hooks/useQuizHistory";
 import { useQuizStats } from "@/hooks/useQuizStats";
 import { useDailyPulse } from "@/hooks/useDailyPulse";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { ComprehensiveAnalysis } from '@/modules/exploration/ComprehensiveAnalysis';
 import { CouplesCommunity } from "./CouplesCommunity";

@@ -187,7 +187,7 @@ function PulseDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
             <StatCard title="سرعة النمو" value="+12%" trend="up" subtitle="مقارنة بالأسبوع الماضي" color="emerald" tooltip="معدل زيادة المستخدمين وإتمام الجلسات (مؤشر تسارع انتشار الوعي)." />
             <StatCard title="القادة النشطون" value="1,240" trend="up" subtitle="+84 جدد هذا الشهر" color="teal" tooltip="المستخدمين اللي وصلوا لمراحل متقدمة في الملاذ وبيجذبوا أرواح تانية للنظام." />
-            <StatCard title="نقاط التطور الكلية" value={totalXp?.toLocaleString() ?? "0"} subtitle="محاربة عشوائية النظام" color="violet" tooltip="إجمالي الطاقة والتطور (XP) لكل النظام. كل ما زاد المجموع، قلت نسبة النزيف الطاقي." />
+            <StatCard title="نقاط التطور الكلية" value={totalXp?.toLocaleString("en-US") ?? "0"} subtitle="محاربة عشوائية النظام" color="violet" tooltip="إجمالي الطاقة والتطور (XP) لكل النظام. كل ما زاد المجموع، قلت نسبة النزيف الطاقي." />
 
             <div className="col-span-1 md:col-span-2 bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 h-[400px] flex items-center justify-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent" />

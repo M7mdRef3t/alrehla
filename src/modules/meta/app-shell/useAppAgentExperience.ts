@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useEmergencyState } from "@/domains/admin/store/emergency.store";
 import { useSwarmState } from "@/domains/admin/store/swarm.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import type { FeatureFlagKey } from "@/config/features";
 import type { AdviceCategory } from "@/data/adviceScripts";

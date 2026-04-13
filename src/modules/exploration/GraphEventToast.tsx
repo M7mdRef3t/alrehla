@@ -1,6 +1,6 @@
 import { FC, useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { runAutomagicLoop, type GraphEvent, type Prescription } from "@/services/automagicLoop";
 import { type MapNode } from "../map/mapTypes";
 import { Zap, X } from "lucide-react";

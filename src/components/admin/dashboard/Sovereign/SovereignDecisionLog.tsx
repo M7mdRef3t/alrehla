@@ -115,7 +115,7 @@ export const SovereignDecisionLog: FC = () => {
                                         </div>
                                         <p className="text-xs text-white/70 font-bold leading-relaxed">{decision.reasoning}</p>
                                         <span className="text-[9px] text-white/30 font-mono mt-1">
-                                            {new Date(decision.timestamp).toLocaleString("ar-EG")}
+                                            {new Date(decision.timestamp).toLocaleString("en-US")}
                                         </span>
                                     </div>
                                 </div>

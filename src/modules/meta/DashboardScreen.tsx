@@ -1,6 +1,6 @@
 import React, { FC, useMemo, useRef, useEffect, useState } from "react";
 import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { EmergencySOS } from '@/modules/action/CommandCenter/EmergencySOS';
 import { StreakWidget } from '@/modules/growth/StreakWidget';
 import { QuickPathModal } from '@/modules/growth/QuickPathModal';

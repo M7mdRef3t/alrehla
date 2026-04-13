@@ -56,6 +56,8 @@
     "lint:journey": "node scripts/lint-journey-language.mjs"
   },
   "dependencies": {
+    "@alrehla/atmosfera": "github:M7mdRef3t/atmosfera",
+    "@alrehla/dawayir": "file:../dawayir",
     "@dnd-kit/core": "^6.1.0",
     "@google/genai": "^1.46.0",
     "@google/generative-ai": "^0.24.1",

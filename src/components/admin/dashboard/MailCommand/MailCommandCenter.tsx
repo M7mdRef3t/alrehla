@@ -92,7 +92,7 @@ function StatCard({ label, value, rate, icon, color }: {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-2">{label}</p>
-          <p className={`text-3xl font-black ${color}`}>{value.toLocaleString()}</p>
+          <p className={`text-3xl font-black ${color}`}>{value.toLocaleString("en-US")}</p>
           {rate !== undefined && (
             <p className="text-xs font-bold text-slate-400 mt-1">{rate}%</p>
           )}

@@ -1,4 +1,4 @@
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { isKnownSymptomId } from "./tools";
 import type { AgentActions } from "./types";
 import type { FeatureFlagKey } from "@/config/features";

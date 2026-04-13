@@ -28,7 +28,7 @@ import { useAppShellAccessState } from "./useAppShellAccessState";
 import { useAppShellBootstrapState } from "./useAppShellBootstrapState";
 import { useAppExperienceSurfaceState } from "./useAppExperienceSurfaceState";
 import { SanctuaryLockdownExperience } from "@/modules/action/SanctuaryLockdownExperience";
-import type { AppShellScreen } from "@/domains/dawayir/store/navigation.store";
+import type { AppShellScreen } from '@/modules/map/dawayirIndex';
 import { usePersonalizedBiometrics } from "@/hooks/usePersonalizedBiometrics";
 import { useWeatherFunnelBridge } from "@/hooks/useWeatherFunnelBridge";
 import { BoardingPassModal } from "../BoardingPassModal";

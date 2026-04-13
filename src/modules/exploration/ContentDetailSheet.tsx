@@ -265,7 +265,7 @@ export function ContentDetailSheet({ itemId, itemType, isOpen, onClose, bookmark
                     <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                       {item.rating && (
                         <span style={{ fontSize: 9, color: "#F59E0B", fontWeight: 800, display: "flex", alignItems: "center", gap: 3 }}>
-                          <Star size={9} fill="#F59E0B" /> {item.rating} ({item.reviewCount?.toLocaleString()})
+                          <Star size={9} fill="#F59E0B" /> {item.rating} ({item.reviewCount?.toLocaleString("en-US")})
                         </span>
                       )}
                       {item.duration && (

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import type { MapNode } from "../map/mapTypes";
 import { deriveJourneyPhaseV1 } from "./featureBuilder";
 import type { FeatureVectorV1 } from "./types";

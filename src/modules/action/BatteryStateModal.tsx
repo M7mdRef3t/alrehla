@@ -2,8 +2,8 @@ import type { FC } from "react";
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Zap, TrendingDown, TrendingUp, Battery, BatteryLow, BatteryFull } from "lucide-react";
-import { useMeState } from "@/domains/dawayir/store/me.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMeState } from '@/modules/map/dawayirIndex';
+import { useMapState } from '@/modules/map/dawayirIndex';
 
 interface BatteryStateModalProps {
   isOpen: boolean;

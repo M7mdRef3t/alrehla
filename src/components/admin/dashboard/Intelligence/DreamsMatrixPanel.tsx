@@ -6,7 +6,7 @@ import { fetchOverviewStats, fetchDreams, saveDream, type OverviewStats } from "
 import { OracleService } from "@/services/oracleService";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { type Dream } from "@/types/dreams";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { type MapNode } from "@/modules/map/mapTypes";
 import { Loader2, Sparkles, Brain, Target, ShieldAlert, Activity, Zap, Radio, AlertCircle } from "lucide-react";
 import { DreamsMatrix } from "@/modules/map/DreamsMatrix";

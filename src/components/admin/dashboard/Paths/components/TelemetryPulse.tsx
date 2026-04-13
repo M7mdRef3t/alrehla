@@ -163,11 +163,11 @@ export const TelemetryPulse = memo(function TelemetryPulse({
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
               <div className="text-[9px] font-black text-slate-500 uppercase mb-1">MRR الحالي</div>
-              <div className="text-xs font-black text-white">$ {revenueMetrics.mrr.toLocaleString()}</div>
+              <div className="text-xs font-black text-white">$ {revenueMetrics.mrr.toLocaleString("en-US")}</div>
             </div>
             <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
               <div className="text-[9px] font-black text-slate-500 uppercase mb-1">إجمالي المستخدمين</div>
-              <div className="text-xs font-black text-white">{revenueMetrics.totalUsers.toLocaleString()}</div>
+              <div className="text-xs font-black text-white">{revenueMetrics.totalUsers.toLocaleString("en-US")}</div>
             </div>
           </div>
         </div>

@@ -121,7 +121,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           `💵 *السعر:* ${price.label} (أو ${localPriceLabel})`,
           `📱 *طريقة الدفع:* ${methodLabels[method]}`,
           "",
-          `⏰ ${new Date().toLocaleString("ar-EG")}`,
+          `⏰ ${new Date().toLocaleString("en-US")}`,
           "",
           "👇 *المطلوب:* تأكيد استلام الفلوس ثم تفعيل الحساب",
         ].join("\n"),

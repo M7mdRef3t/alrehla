@@ -50,8 +50,8 @@ import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store"
 import { useEmergencyState } from "@/domains/admin/store/emergency.store";
 import { BreathingOverlay } from '@/modules/exploration/BreathingOverlay';
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
-import type { RecoveryPlanOpenWith } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
+import type { RecoveryPlanOpenWith } from '@/modules/map/dawayirIndex';
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { trackingService } from "@/domains/journey";
 import { HealthBar } from "./HealthBar";

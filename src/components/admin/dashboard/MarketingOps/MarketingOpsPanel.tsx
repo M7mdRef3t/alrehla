@@ -368,7 +368,7 @@ function MarketingSpendConsole({
                 <span className="text-xl font-black text-indigo-400">ج.م</span>
               </div>
             ) : (
-              <p className="text-3xl font-black text-white mt-1">{(spend || 0).toLocaleString()} ج.م</p>
+              <p className="text-3xl font-black text-white mt-1">{(spend || 0).toLocaleString("en-US")} ج.م</p>
             )}
           </div>
         </div>
@@ -754,7 +754,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
             />
             <StatCard 
               title={"صافي الربح"} 
-              value={(growthMetrics?.netProfit ?? 0).toLocaleString() + " ج.م"} 
+              value={(growthMetrics?.netProfit ?? 0).toLocaleString("en-US") + " ج.م"} 
               icon={<Trophy className="w-5 h-5" />} 
               glowColor="amber" 
               tooltip={"الإجمالي المتبقي بعد خصم تكاليف التسويق من الإيرادات الكلية."} 
@@ -770,7 +770,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
                </div>
                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">إجمالي الإيرادات المرصودة</p>
                <h3 className="text-4xl font-black text-white tabular-nums tracking-tighter">
-                 {(stats?.totalRevenue ?? 0).toLocaleString()} ج.م
+                 {(stats?.totalRevenue ?? 0).toLocaleString("en-US")} ج.م
                </h3>
                <div className="flex items-center gap-2 mt-4">
                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -806,7 +806,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
                         )}
                         <div className="flex flex-col">
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{campaign === 'undefined' ? "بدون حملة" : campaign.replace(/_/g, ' ')}</p>
-                          <p className="text-2xl font-black text-white">{revenue.toLocaleString()} <span className="text-[10px] text-slate-500">ج.م</span></p>
+                          <p className="text-2xl font-black text-white">{revenue.toLocaleString("en-US")} <span className="text-[10px] text-slate-500">ج.م</span></p>
                         </div>
 
                         <div className="pt-3 border-t border-white/5 flex items-center justify-between">
@@ -830,7 +830,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
                               </div>
                             ) : (
                               <div className="flex items-center gap-2 mt-1">
-                                <span className="text-sm font-black text-slate-400">{budget > 0 ? budget.toLocaleString() : "—"}</span>
+                                <span className="text-sm font-black text-slate-400">{budget > 0 ? budget.toLocaleString("en-US") : "—"}</span>
                                 <button 
                                   onClick={() => {
                                     setEditingCampaign(campaign);
@@ -848,7 +848,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
                             <div className="text-right">
                               <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">الصافي</span>
                               <p className={`text-sm font-black ${revenue - budget > 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                                {(revenue - budget).toLocaleString()}
+                                {(revenue - budget).toLocaleString("en-US")}
                               </p>
                             </div>
                           )}

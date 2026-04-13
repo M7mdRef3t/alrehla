@@ -75,21 +75,20 @@ export async function POST(req: Request) {
         const finalUserId = verifiedUserId || null;
 
         const mergedPayload = {
-            ...(data.payload || {}),
-            lead_id: data.lead_id || null,
-            lead_source: data.lead_source || null,
-            utm_source: data.utm_source || null,
-            utm_medium: data.utm_medium || null,
-            utm_campaign: data.utm_campaign || null,
+            ...(data.payload || {})
         };
 
         const { error } = await supabase.from("routing_events").insert({
             event_type: data.event_type,
             client_event_id: data.client_event_id || null,
-            // 5. Separate anonymous_id and session_id
             anonymous_id: data.anonymous_id || null,
             session_id: data.session_id || null,
             user_id: finalUserId,
+            lead_id: data.lead_id || null,
+            lead_source: data.lead_source || null,
+            utm_source: data.utm_source || null,
+            utm_medium: data.utm_medium || null,
+            utm_campaign: data.utm_campaign || null,
             payload: mergedPayload,
             // 3. Server-side timestamps only (No client spoofing)
             occurred_at: new Date().toISOString()
@@ -102,6 +101,9 @@ export async function POST(req: Request) {
             
             if (process.env.NODE_ENV === "development") {
                 console.error("[Analytics Ingestion] Database Error:", error);
+                try {
+                    require('fs').appendFileSync('analytics_err.log', new Date().toISOString() + ' DB Error: ' + JSON.stringify(error) + '\n');
+                } catch (fsErr) {}
             }
             
             return NextResponse.json({ error: "Ingestion failed", code: error.code }, { status: 500 });
@@ -112,7 +114,10 @@ export async function POST(req: Request) {
         return response;
     } catch (e) {
         console.error("[Analytics Ingestion] Server Error:", e);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        try {
+            require('fs').appendFileSync('analytics_err.log', new Date().toISOString() + ' Server Error: ' + (e instanceof Error ? e.stack : JSON.stringify(e)) + '\n');
+        } catch (fsErr) {}
+        return NextResponse.json({ error: "Internal Server Error", detail: String(e) }, { status: 500 });
     }
 }
 

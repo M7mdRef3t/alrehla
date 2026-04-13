@@ -7,7 +7,7 @@
  * 3. محاكي المستقبل (Future Simulator): يتوقع حالتك بعد سنة.
  */
 
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { type MapNode } from "@/modules/map/mapTypes";
 import { calculateGravityMass } from "./physicsEngine";
 

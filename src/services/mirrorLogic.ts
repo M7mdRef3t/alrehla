@@ -5,7 +5,7 @@
  * يولد أسئلة وجودية (Socratic Questions) للمواجهة.
  */
 
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 

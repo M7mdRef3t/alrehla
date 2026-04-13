@@ -10,6 +10,7 @@ import { FunnelAndEmergency } from "../Overview/components/FunnelAndEmergency";
 import { ConversionDiagnosis } from "../Overview/components/ConversionDiagnosis";
 import { MarketingAndRetention } from "../Overview/components/MarketingAndRetention";
 import { SupportTicketsPanel } from "../Overview/components/SupportTicketsPanel";
+import { PromoCodesPanel } from "../Overview/components/PromoCodesPanel";
 
 import { fetchOverviewStats, type OverviewStats, fetchWeeklyReport, type WeeklyReport } from "@/services/adminApi";
 
@@ -136,8 +137,9 @@ export const GrowthRevenueDashboard: FC = () => {
                  <EmotionalPricingCard loading={initialLoading} />
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <SupportTicketsPanel />
+                <PromoCodesPanel />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

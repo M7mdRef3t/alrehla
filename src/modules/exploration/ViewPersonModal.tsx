@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FC, type MouseEvent as ReactMouseEvent } from "react";
 import { motion } from "framer-motion";
 import { X, Share2, Target, ClipboardList } from "lucide-react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import type { AdviceCategory } from "@/data/adviceScripts";
 import { ResultScreen } from "./AddPersonModal/ResultScreen";
 import type { QuickAnswer2 } from "@/utils/suggestInitialRing";

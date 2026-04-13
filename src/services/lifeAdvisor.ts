@@ -25,9 +25,9 @@ import type {
   DomainAssessment
 } from "@/types/lifeDomains";
 import { getDomainConfig, LIFE_DOMAINS } from "@/types/lifeDomains";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { resolveDisplayName } from "@/services/userMemory";
 

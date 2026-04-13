@@ -33,11 +33,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "session_completed" || action === "intake_submitted") {
-      const { getSupabaseAdminClient } = await import("@/server/supabaseAdmin").catch(() => 
-        import("../../_lib/supabaseAdmin")
-      );
-      
-      const supabaseAdmin = getSupabaseAdminClient?.();
+      const { supabaseAdmin } = await import("@/services/supabaseClient");
       
       if (supabaseAdmin) {
         // 1. Sanitize Phone to match format in DB

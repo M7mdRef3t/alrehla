@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Compass, Star, BookOpen, Wind, ShieldAlert, Sparkles, Activity, Radar, Fingerprint, Database } from "lucide-react";
 import { getJourneyToolsView } from "@/data/journeyTools";
 import { useJourneyProgress } from "@/domains/journey";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";

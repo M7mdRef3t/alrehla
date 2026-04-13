@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, Clock, Zap, Coins, Maximize, Heart, ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { FeelingCheckAsset } from "../map/mapTypes";
 
 interface AssetQuestion {

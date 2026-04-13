@@ -4,7 +4,7 @@ import { memo, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Check, ArrowLeft, Plus, Flame, TrendingDown, Clock } from "lucide-react";
 import { getDomainConfig, type LifeDomainId } from "@/types/lifeDomains";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 
 interface ProblemTrackerProps {
   onBack?: () => void;

@@ -4,7 +4,7 @@ import { getNextNudge, dismissNudge } from "@/services/nudgeEngine";
 import { detectContradictions, dismissMirrorInsight, type MirrorInsight } from "@/services/mirrorLogic";
 import { calculateEntropy } from "@/services/predictiveEngine";
 import { runtimeEnv } from "@/config/runtimeEnv";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { useNotifications } from "@/hooks/useNotifications";

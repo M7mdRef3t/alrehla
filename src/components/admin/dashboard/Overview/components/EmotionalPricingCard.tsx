@@ -87,13 +87,13 @@ export const EmotionalPricingCard: FC<EmotionalPricingCardProps> = ({ loading })
       <div className="relative z-10 grid grid-cols-1 gap-4 md:grid-cols-3">
         <Kpi 
             title="بطاقات مجانية" 
-            value={stats.giftsGrantedCount.toLocaleString("ar-EG")} 
+            value={stats.giftsGrantedCount.toLocaleString("en-US")} 
             icon={Gift} 
             hint="عدد المرات التي استنجد فيها النظام بمنح بطاقات مجانية (Gifts) لإنقاذ أشخاص في حالة حزن/غضب شديد ولم يقدروا على الدفع."
         />
         <Kpi
           title="خصومات ذكية"
-          value={stats.discountOffersCount.toLocaleString("ar-EG")}
+          value={stats.discountOffersCount.toLocaleString("en-US")}
           icon={PercentCircle}
           hint="عدد الخصومات الديناميكية (Dynamic Discounts) التي ظهرت لمن واجهوا عقبة مالية بسيطة وظهرت عليهم علامات التردد."
         />

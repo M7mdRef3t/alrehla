@@ -4,4 +4,4 @@
  * useGraphSync → useDawayirGraphSync
  */
 
-export { useDawayirGraphSync as useGraphSync } from "@/domains/dawayir";
+export { useDawayirGraphSync as useGraphSync } from '@/modules/map/dawayirIndex';

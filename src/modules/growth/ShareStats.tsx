@@ -3,7 +3,7 @@ import type { FC } from "react";
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share2, Download, TrendingUp, Users, Calendar, Check } from "lucide-react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useJourneyProgress } from "@/domains/journey";
 import { downloadBlobFile } from "@/services/clientDom";
 

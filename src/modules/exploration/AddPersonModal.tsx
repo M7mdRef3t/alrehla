@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { addPersonCopy } from "@/copy/addPerson";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import type { FeelingAnswers } from "./FeelingCheck";
 import type { RealityAnswers } from "./RealityCheck";
 import { feelingScore } from "@/utils/feelingScore";

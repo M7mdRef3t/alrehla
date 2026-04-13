@@ -17,6 +17,16 @@ type Props = {
   FeatureListBlock: { features: { title: string; description: string; icon?: string }[]; padding: SpacingMode; visibility: VisibilityMode };
   ButtonBlock: { text: string; url: string; variant: "default" | "outline" | "ghost"; size: "sm" | "default" | "lg"; align: "right" | "center" | "left"; padding: SpacingMode; visibility: VisibilityMode };
   SpacerBlock: { size: SpacingMode; visibility: VisibilityMode };
+  TestimonialBlock: { quote: string; author: string; role?: string; avatarEmoji?: string; accentColor: "teal" | "amber" | "rose" | "indigo"; padding: SpacingMode; visibility: VisibilityMode };
+  PricingTableBlock: { planName: string; price: string; currency: string; period: string; features: { text: string; included: boolean }[]; ctaText: string; ctaLink: string; highlighted: boolean; padding: SpacingMode; visibility: VisibilityMode };
+  FAQBlock: { title: string; subtitle?: string; items: { question: string; answer: string; tag?: string }[]; padding: SpacingMode; visibility: VisibilityMode };
+  CTABannerBlock: { headline: string; description?: string; ctaText: string; ctaLink: string; variant: "glow" | "glass" | "solid"; padding: SpacingMode; visibility: VisibilityMode };
+  FooterBlock: { brandName: string; tagline?: string; links: { label: string; url: string }[]; trustBadges: string[]; padding: SpacingMode; visibility: VisibilityMode };
+  SocialProofBlock: { stats: { value: string; label: string; icon?: string }[]; padding: SpacingMode; visibility: VisibilityMode };
+  DividerBlock: { style: "line" | "gradient" | "dots"; padding: SpacingMode; visibility: VisibilityMode };
+  ImageBlock: { src: string; alt?: string; caption?: string; rounded: boolean; padding: SpacingMode; visibility: VisibilityMode };
+  VideoBlock: { url: string; caption?: string; padding: SpacingMode; visibility: VisibilityMode };
+  AccordionBlock: { items: { title: string; content: string }[]; padding: SpacingMode; visibility: VisibilityMode };
 };
 
 const visibilityField = {
@@ -465,6 +475,453 @@ export const config: Config<Props> = {
           </AuthVisibilityWrapper>
         );
       }
-    }
+    },
+    // ═══════════════════════════════════════════════════
+    // New Components — Platform Pages Integration
+    // ═══════════════════════════════════════════════════
+    TestimonialBlock: {
+      fields: {
+        quote: { type: "textarea" },
+        author: { type: "text" },
+        role: { type: "text" },
+        avatarEmoji: { type: "text" },
+        accentColor: {
+          type: "select",
+          options: [
+            { label: "Teal", value: "teal" },
+            { label: "Amber", value: "amber" },
+            { label: "Rose", value: "rose" },
+            { label: "Indigo", value: "indigo" },
+          ],
+        },
+        padding: paddingField,
+        visibility: visibilityField,
+      },
+      defaultProps: {
+        quote: "تجربة مذهلة — لأول مرة أشوف اللي بيحصل جوايا بوضوح.",
+        author: "مستخدم",
+        role: "استعاد هدوءه",
+        avatarEmoji: "🌟",
+        accentColor: "teal",
+        padding: "md",
+        visibility: "all",
+      },
+      render: ({ quote, author, role, avatarEmoji, accentColor, padding, visibility }) => {
+        const colors: Record<string, string> = {
+          teal: "border-teal-400/30 bg-teal-400/5",
+          amber: "border-amber-400/30 bg-amber-400/5",
+          rose: "border-rose-400/30 bg-rose-400/5",
+          indigo: "border-indigo-400/30 bg-indigo-400/5",
+        };
+        return (
+          <AuthVisibilityWrapper visibility={visibility}>
+            <AnalyticsOverlay id={`testimonial-${author}`}>
+              <div className={`${getPaddingClass(padding)} w-full`} dir="rtl">
+                <div className={`max-w-2xl mx-auto p-8 rounded-3xl border ${colors[accentColor] || colors.teal} backdrop-blur-md shadow-lg`}>
+                  <div className="text-4xl mb-4">{avatarEmoji || "💬"}</div>
+                  <blockquote className="text-xl text-on-surface font-medium leading-relaxed mb-6 italic">"{quote}"</blockquote>
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <div className="font-bold text-on-surface">{author}</div>
+                      {role && <div className="text-sm text-on-surface-variant">{role}</div>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </AnalyticsOverlay>
+          </AuthVisibilityWrapper>
+        );
+      },
+    },
+    PricingTableBlock: {
+      fields: {
+        planName: { type: "text" },
+        price: { type: "text" },
+        currency: { type: "text" },
+        period: { type: "text" },
+        features: {
+          type: "array",
+          arrayFields: {
+            text: { type: "text" },
+            included: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }] },
+          },
+        },
+        ctaText: { type: "text" },
+        ctaLink: { type: "text" },
+        highlighted: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }] },
+        padding: paddingField,
+        visibility: visibilityField,
+      },
+      defaultProps: {
+        planName: "العضوية التأسيسية",
+        price: "٢٩٩",
+        currency: "ج.م",
+        period: "مدى الحياة",
+        features: [{ text: "وصول كامل ودائم", included: true }],
+        ctaText: "فعّل حسابك الآن",
+        ctaLink: "/activation",
+        highlighted: true,
+        padding: "lg",
+        visibility: "all",
+      },
+      render: ({ planName, price, currency, period, features, ctaText, ctaLink, highlighted, padding, visibility }) => (
+        <AuthVisibilityWrapper visibility={visibility}>
+          <AnalyticsOverlay id={`pricing-${planName}`}>
+            <div className={`${getPaddingClass(padding)} w-full`} dir="rtl">
+              <div className={`max-w-md mx-auto p-8 rounded-3xl border shadow-2xl ${highlighted ? "border-primary/40 bg-primary/5 ring-2 ring-primary/20" : "border-on-surface/10 bg-surface/40"}`}>
+                <h3 className="text-2xl font-extrabold text-on-surface mb-2">{planName}</h3>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-5xl font-black text-primary">{price}</span>
+                  <span className="text-on-surface-variant">{currency} / {period}</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {features.map((f, i) => (
+                    <li key={i} className="flex items-center gap-3 text-on-surface">
+                      <span className={f.included ? "text-green-400" : "text-red-400"}>{f.included ? "✓" : "✗"}</span>
+                      <span className={f.included ? "" : "line-through opacity-50"}>{f.text}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a href={ctaLink || "#"} className="block w-full text-center py-4 bg-primary text-on-primary rounded-2xl font-bold text-lg hover:scale-105 transition-transform shadow-lg">
+                  {ctaText}
+                </a>
+              </div>
+            </div>
+          </AnalyticsOverlay>
+        </AuthVisibilityWrapper>
+      ),
+    },
+    FAQBlock: {
+      fields: {
+        title: { type: "text" },
+        subtitle: { type: "text" },
+        items: {
+          type: "array",
+          arrayFields: {
+            question: { type: "text" },
+            answer: { type: "textarea" },
+            tag: { type: "text" },
+          },
+        },
+        padding: paddingField,
+        visibility: visibilityField,
+      },
+      defaultProps: {
+        title: "أسئلة شائعة",
+        subtitle: "كل اللي محتاج تعرفه",
+        items: [{ question: "هل فيه اشتراك شهري؟", answer: "لا، العضوية دفعة واحدة ومدى الحياة.", tag: "pricing" }],
+        padding: "lg",
+        visibility: "all",
+      },
+      render: ({ title, subtitle, items, padding, visibility }) => (
+        <AuthVisibilityWrapper visibility={visibility}>
+          <AnalyticsOverlay id={`faq-${title}`}>
+            <div className={`${getPaddingClass(padding)} w-full`} dir="rtl">
+              <div className="max-w-3xl mx-auto">
+                <h2 className="text-3xl font-extrabold text-on-surface text-center mb-2">{title}</h2>
+                {subtitle && <p className="text-on-surface-variant text-center mb-8">{subtitle}</p>}
+                <div className="space-y-4">
+                  {items.map((item, i) => (
+                    <details key={i} className="group rounded-2xl border border-on-surface/10 bg-surface/30 backdrop-blur-md overflow-hidden">
+                      <summary className="cursor-pointer p-5 font-bold text-on-surface flex items-center justify-between hover:bg-surface/50 transition-colors">
+                        <span>{item.question}</span>
+                        <span className="text-primary group-open:rotate-45 transition-transform text-xl">+</span>
+                      </summary>
+                      <div className="px-5 pb-5 text-on-surface-variant leading-relaxed">{item.answer}</div>
+                    </details>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </AnalyticsOverlay>
+        </AuthVisibilityWrapper>
+      ),
+    },
+    CTABannerBlock: {
+      fields: {
+        headline: { type: "text" },
+        description: { type: "textarea" },
+        ctaText: { type: "text" },
+        ctaLink: { type: "text" },
+        variant: {
+          type: "select",
+          options: [
+            { label: "Glow", value: "glow" },
+            { label: "Glass", value: "glass" },
+            { label: "Solid", value: "solid" },
+          ],
+        },
+        padding: paddingField,
+        visibility: visibilityField,
+      },
+      defaultProps: {
+        headline: "الوضوح موجود — هو بس محتاج خريطة.",
+        description: "ابدأ رحلتك بدون ضغط أو تعقيد.",
+        ctaText: "ابدأ الآن",
+        ctaLink: "/onboarding",
+        variant: "glow",
+        padding: "lg",
+        visibility: "all",
+      },
+      render: ({ headline, description, ctaText, ctaLink, variant, padding, visibility }) => {
+        const variants: Record<string, string> = {
+          glow: "bg-gradient-to-br from-primary/10 via-background to-tertiary/10 border-primary/30 shadow-[0_0_60px_rgba(79,219,200,0.15)]",
+          glass: "bg-surface/20 backdrop-blur-xl border-on-surface/10",
+          solid: "bg-primary/10 border-primary/20",
+        };
+        return (
+          <AuthVisibilityWrapper visibility={visibility}>
+            <AnalyticsOverlay id={`cta-${headline}`}>
+              <div className={`${getPaddingClass(padding)} w-full`} dir="rtl">
+                <div className={`max-w-3xl mx-auto text-center p-12 rounded-3xl border ${variants[variant] || variants.glow}`}>
+                  <h2 className="text-3xl md:text-4xl font-black text-on-surface mb-4 tracking-tight">{headline}</h2>
+                  {description && <p className="text-lg text-on-surface-variant mb-8 max-w-xl mx-auto">{description}</p>}
+                  <a href={ctaLink || "#"} className="inline-block px-10 py-4 bg-primary text-on-primary rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-[0_0_30px_rgba(79,219,200,0.3)]">
+                    {ctaText}
+                  </a>
+                </div>
+              </div>
+            </AnalyticsOverlay>
+          </AuthVisibilityWrapper>
+        );
+      },
+    },
+    FooterBlock: {
+      fields: {
+        brandName: { type: "text" },
+        tagline: { type: "text" },
+        links: {
+          type: "array",
+          arrayFields: {
+            label: { type: "text" },
+            url: { type: "text" },
+          },
+        },
+        trustBadges: {
+          type: "array",
+          arrayFields: {
+            value: { type: "text" },
+          },
+        } as any,
+        padding: paddingField,
+        visibility: visibilityField,
+      },
+      defaultProps: {
+        brandName: "الرحلة",
+        tagline: "بوصلة الوعي الذاتي",
+        links: [{ label: "الرئيسية", url: "/" }],
+        trustBadges: ["🔒 بياناتك آمنة ومشفرة"],
+        padding: "lg",
+        visibility: "all",
+      },
+      render: ({ brandName, tagline, links, trustBadges, padding, visibility }) => (
+        <AuthVisibilityWrapper visibility={visibility}>
+          <footer className={`${getPaddingClass(padding)} w-full border-t border-on-surface/10 bg-surface/20`} dir="rtl">
+            <div className="max-w-4xl mx-auto text-center">
+              <h3 className="text-2xl font-black text-on-surface mb-2">{brandName}</h3>
+              {tagline && <p className="text-on-surface-variant mb-6">{tagline}</p>}
+              <div className="flex flex-wrap justify-center gap-4 mb-6">
+                {links.map((link, i) => (
+                  <a key={i} href={link.url} className="text-primary hover:underline text-sm font-medium">{link.label}</a>
+                ))}
+              </div>
+              {Array.isArray(trustBadges) && trustBadges.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-3 opacity-70">
+                  {trustBadges.map((badge, i) => (
+                    <span key={i} className="text-xs text-on-surface-variant bg-surface/40 px-3 py-1 rounded-full border border-on-surface/5">
+                      {typeof badge === "string" ? badge : (badge as any)?.value || ""}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-on-surface-variant/50 mt-6">© {new Date().getFullYear()} {brandName}</p>
+            </div>
+          </footer>
+        </AuthVisibilityWrapper>
+      ),
+    },
+    SocialProofBlock: {
+      fields: {
+        stats: {
+          type: "array",
+          arrayFields: {
+            value: { type: "text" },
+            label: { type: "text" },
+            icon: { type: "text" },
+          },
+        },
+        padding: paddingField,
+        visibility: visibilityField,
+      },
+      defaultProps: {
+        stats: [
+          { value: "١٠+", label: "مستخدم", icon: "🫂" },
+          { value: "٣", label: "دقائق لأول خريطة", icon: "⏱️" },
+        ],
+        padding: "lg",
+        visibility: "all",
+      },
+      render: ({ stats, padding, visibility }) => (
+        <AuthVisibilityWrapper visibility={visibility}>
+          <AnalyticsOverlay id="social-proof">
+            <div className={`${getPaddingClass(padding)} w-full`} dir="rtl">
+              <div className="flex flex-wrap justify-center gap-8">
+                {stats.map((stat, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2 p-6 rounded-2xl bg-surface/30 border border-on-surface/10 backdrop-blur-md min-w-[140px]">
+                    {stat.icon && <span className="text-3xl">{stat.icon}</span>}
+                    <span className="text-3xl font-black text-primary">{stat.value}</span>
+                    <span className="text-sm text-on-surface-variant font-medium">{stat.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </AnalyticsOverlay>
+        </AuthVisibilityWrapper>
+      ),
+    },
+    DividerBlock: {
+      fields: {
+        style: {
+          type: "select",
+          options: [
+            { label: "Line", value: "line" },
+            { label: "Gradient", value: "gradient" },
+            { label: "Dots", value: "dots" },
+          ],
+        },
+        padding: paddingField,
+        visibility: visibilityField,
+      },
+      defaultProps: {
+        style: "gradient",
+        padding: "md",
+        visibility: "all",
+      },
+      render: ({ style, padding, visibility }) => {
+        const dividerStyles: Record<string, ReactNode> = {
+          line: <hr className="border-on-surface/10" />,
+          gradient: <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />,
+          dots: (
+            <div className="flex justify-center gap-2">
+              {[0,1,2].map(i => <div key={i} className="w-2 h-2 rounded-full bg-primary/30" />)}
+            </div>
+          ),
+        };
+        return (
+          <AuthVisibilityWrapper visibility={visibility}>
+            <div className={`${getPaddingClass(padding)} w-full`}>
+              {dividerStyles[style] || dividerStyles.gradient}
+            </div>
+          </AuthVisibilityWrapper>
+        );
+      },
+    },
+    ImageBlock: {
+      fields: {
+        src: { type: "text" },
+        alt: { type: "text" },
+        caption: { type: "text" },
+        rounded: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }] },
+        padding: paddingField,
+        visibility: visibilityField,
+      },
+      defaultProps: {
+        src: "",
+        alt: "صورة",
+        caption: "",
+        rounded: true,
+        padding: "md",
+        visibility: "all",
+      },
+      render: ({ src, alt, caption, rounded, padding, visibility }) => (
+        <AuthVisibilityWrapper visibility={visibility}>
+          <div className={`${getPaddingClass(padding)} w-full`}>
+            <div className="max-w-3xl mx-auto">
+              {src ? (
+                <img src={src} alt={alt || ""} className={`w-full h-auto ${rounded ? "rounded-2xl" : ""} shadow-lg`} />
+              ) : (
+                <div className={`w-full h-64 bg-surface/30 border-2 border-dashed border-on-surface/20 flex items-center justify-center ${rounded ? "rounded-2xl" : ""}`}>
+                  <span className="text-on-surface-variant text-lg">📷 أضف رابط الصورة</span>
+                </div>
+              )}
+              {caption && <p className="text-center text-sm text-on-surface-variant mt-3">{caption}</p>}
+            </div>
+          </div>
+        </AuthVisibilityWrapper>
+      ),
+    },
+    VideoBlock: {
+      fields: {
+        url: { type: "text" },
+        caption: { type: "text" },
+        padding: paddingField,
+        visibility: visibilityField,
+      },
+      defaultProps: {
+        url: "",
+        caption: "",
+        padding: "md",
+        visibility: "all",
+      },
+      render: ({ url, caption, padding, visibility }) => {
+        const isYT = url?.includes("youtube.com") || url?.includes("youtu.be");
+        const ytId = url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/)?.[1];
+        return (
+          <AuthVisibilityWrapper visibility={visibility}>
+            <div className={`${getPaddingClass(padding)} w-full`}>
+              <div className="max-w-3xl mx-auto">
+                {isYT && ytId ? (
+                  <div className="relative w-full pt-[56.25%] rounded-2xl overflow-hidden shadow-lg">
+                    <iframe src={`https://www.youtube.com/embed/${ytId}`} className="absolute inset-0 w-full h-full" allowFullScreen />
+                  </div>
+                ) : url ? (
+                  <video src={url} controls className="w-full rounded-2xl shadow-lg" />
+                ) : (
+                  <div className="w-full h-64 bg-surface/30 border-2 border-dashed border-on-surface/20 flex items-center justify-center rounded-2xl">
+                    <span className="text-on-surface-variant text-lg">🎬 أضف رابط الفيديو</span>
+                  </div>
+                )}
+                {caption && <p className="text-center text-sm text-on-surface-variant mt-3">{caption}</p>}
+              </div>
+            </div>
+          </AuthVisibilityWrapper>
+        );
+      },
+    },
+    AccordionBlock: {
+      fields: {
+        items: {
+          type: "array",
+          arrayFields: {
+            title: { type: "text" },
+            content: { type: "textarea" },
+          },
+        },
+        padding: paddingField,
+        visibility: visibilityField,
+      },
+      defaultProps: {
+        items: [{ title: "عنوان السؤال", content: "الإجابة هنا..." }],
+        padding: "md",
+        visibility: "all",
+      },
+      render: ({ items, padding, visibility }) => (
+        <AuthVisibilityWrapper visibility={visibility}>
+          <div className={`${getPaddingClass(padding)} w-full`} dir="rtl">
+            <div className="max-w-3xl mx-auto space-y-3">
+              {items.map((item, i) => (
+                <details key={i} className="group rounded-2xl border border-on-surface/10 bg-surface/30 backdrop-blur-md overflow-hidden">
+                  <summary className="cursor-pointer p-5 font-bold text-on-surface flex items-center justify-between hover:bg-surface/50 transition-colors">
+                    <span>{item.title}</span>
+                    <span className="text-primary group-open:rotate-45 transition-transform text-xl">+</span>
+                  </summary>
+                  <div className="px-5 pb-5 text-on-surface-variant leading-relaxed">{item.content}</div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </AuthVisibilityWrapper>
+      ),
+    },
   },
 };

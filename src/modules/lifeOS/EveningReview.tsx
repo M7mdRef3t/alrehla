@@ -14,7 +14,7 @@ import {
   Heart, Zap, Battery, BatteryLow, BatteryFull, ArrowLeft,
 } from "lucide-react";
 import { useRitualState } from "@/domains/journey/store/ritual.store";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 import { getTodayRituals, getDailyCompletionStats } from "@/services/ritualsEngine";
 import type { EveningReflection } from "@/types/dailyRituals";
 

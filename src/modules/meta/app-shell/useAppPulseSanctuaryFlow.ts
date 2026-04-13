@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AppShellScreen } from "@/domains/dawayir/store/navigation.store";
+import type { AppShellScreen } from '@/modules/map/dawayirIndex';
 import type { PulseCheckContext } from "@/hooks/usePulseCheckLogic";
 import {
   AUTO_COCOON_LAST_SHOWN_DATE_KEY,

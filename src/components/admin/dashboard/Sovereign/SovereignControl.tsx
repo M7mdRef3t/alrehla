@@ -377,7 +377,7 @@ export const SovereignControl: FC = () => {
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">أرواح متصلة</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-white tabular-nums drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                      {isLoadingPulse ? "..." : (liveStats?.activeNow ?? 0).toLocaleString("ar-EG")}
+                      {isLoadingPulse ? "..." : (liveStats?.activeNow ?? 0).toLocaleString("en-US")}
                     </span>
                     <span className="text-[10px] text-teal-500 font-black animate-pulse tracking-widest">LIVE</span>
                   </div>
@@ -636,7 +636,7 @@ export const SovereignControl: FC = () => {
                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                      <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest">{item.title || "Universal Outreach"}</span>
                   </div>
-                  <span className="text-[10px] text-slate-600 font-mono">{new Date(item.createdAt).toLocaleString("ar-EG")}</span>
+                  <span className="text-[10px] text-slate-600 font-mono">{new Date(item.createdAt).toLocaleString("en-US")}</span>
                 </div>
                 <p className="text-sm text-slate-400 leading-relaxed font-bold group-hover:text-slate-200 transition-colors pr-3">{item.body}</p>
               </div>

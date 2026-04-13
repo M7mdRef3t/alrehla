@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useGamification } from "@/domains/gamification";
 import { getDailyQuests, DailyQuest } from "@/services/gamificationEngine";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { soundManager } from "@/services/soundManager";
 import { triggerConfetti } from "@/utils/confetti";
 

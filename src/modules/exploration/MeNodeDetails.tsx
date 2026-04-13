@@ -2,8 +2,8 @@ import type { FC } from "react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { X, PenLine, Wind, Shield } from "lucide-react";
-import { useMeState, type BatteryState } from "@/domains/dawayir/store/me.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMeState, type BatteryState } from '@/modules/map/dawayirIndex';
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useAppContentString } from "@/hooks/useAppContentString";
 
 interface MeNodeDetailsProps {

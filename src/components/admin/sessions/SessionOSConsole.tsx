@@ -53,7 +53,7 @@ export function SessionOSConsole() {
         const data = payload.payload;
         setLiveIntakes(prev => {
           const now = Date.now();
-          let filtered = prev.filter(p => now - p.updatedAt < 5 * 60 * 1000);
+          const filtered = prev.filter(p => now - p.updatedAt < 5 * 60 * 1000);
           const exists = filtered.find((p: any) => p.phone === data.phone);
           if (exists) {
             return filtered.map((p: any) => p.phone === data.phone ? { ...p, ...data, updatedAt: now } : p);

@@ -2,7 +2,7 @@ import type { ElementType, KeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pencil, Check, X } from "lucide-react";
 import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
-import { useAppContentState } from "@/domains/dawayir/store/content.store";
+import { useAppContentState } from '@/modules/map/dawayirIndex';
 import { isSupabaseReady } from "@/services/supabaseClient";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 

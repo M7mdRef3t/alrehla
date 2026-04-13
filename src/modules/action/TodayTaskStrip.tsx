@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 import { Target } from "lucide-react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import type { RecoveryPath } from "../pathEngine/pathTypes";
 import type { MapNode } from "../map/mapTypes";
 

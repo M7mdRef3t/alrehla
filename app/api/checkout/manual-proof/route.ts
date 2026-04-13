@@ -202,6 +202,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to submit payment proof." }, { status: 500 });
   }
 
+  // Fire and forget telegram notification
+  import("@/server/telegramNotifier").then(({ sendAdminTelegramNotice }) => {
+    const publicUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.PUBLIC_APP_URL || "https://alrehla.app";
+    const telegramMessage = `
+🚨 <b>إثبات دفع جديد!</b>
+
+👤 <b>المستخدم:</b> ${identifier}
+💳 <b>الطريقة:</b> ${methodLabel}
+💰 <b>المبلغ:</b> ${amount || "غير محدد"}
+📄 <b>رقم العملية:</b> ${reference || "بدون"}
+
+<a href="${publicUrl}/admin?tab=exec-overview">راجع التذكرة من لوحة التحكم</a>
+    `.trim();
+    sendAdminTelegramNotice(telegramMessage);
+  }).catch((err) => console.error("Telegram dynamic import failed:", err));
+
   return NextResponse.json(
     {
       ok: true,

@@ -14,7 +14,7 @@ import {
   Plus, Sparkles, Zap, Trophy, Battery, BatteryLow, BatteryMedium, Award, ShoppingBag,
 } from "lucide-react";
 import { useRitualState } from "@/domains/journey/store/ritual.store";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { useGamification } from "@/domains/gamification";

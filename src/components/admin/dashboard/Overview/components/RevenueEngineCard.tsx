@@ -130,8 +130,8 @@ export const RevenueEngineCard: FC<RevenueEngineCardProps> = ({
                 </h3>
                 <span className="text-[10px] text-slate-500 font-mono tracking-wider">
                     {lastGeneratedAt
-                    ? new Date(lastGeneratedAt).toLocaleString("ar-EG")
-                    : new Date(data.to).toLocaleDateString("ar-EG")}
+                    ? new Date(lastGeneratedAt).toLocaleString("en-US")
+                    : new Date(data.to).toLocaleDateString("en-US")}
                 </span>
             </div>
         </div>

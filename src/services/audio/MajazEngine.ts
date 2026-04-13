@@ -1,6 +1,6 @@
 import { useSynthesisState } from '@/domains/consciousness/store/synthesis.store';
 import { usePulseState } from '@/domains/consciousness/store/pulse.store';
-import { useMapState } from '@/domains/dawayir/store/map.store';
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { computeTEI } from '@/utils/traumaEntropyIndex';
 
 /*

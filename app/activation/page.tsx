@@ -385,7 +385,15 @@ export default function ActivationPage() {
   }
 
   const goNext = () => setWizardStep((s) => Math.min(s + 1, 4));
-  const goBack = () => setWizardStep((s) => Math.max(s - 1, 1));
+  const goBack = () => {
+    setWizardStep((s) => {
+      if (s === 1) {
+        window.location.href = "/pricing";
+        return s;
+      }
+      return Math.max(s - 1, 1);
+    });
+  };
   const scrollTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
@@ -478,10 +486,10 @@ export default function ActivationPage() {
                 
                 <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
                   <a
-                    href="/dashboard"
+                    href="/app"
                     className="flex items-center justify-center rounded-2xl bg-teal-500 py-4 px-8 text-sm font-black text-slate-950 shadow-[0_0_24px_rgba(20,184,166,0.3)] transition-all hover:bg-teal-400 hover:shadow-[0_0_36px_rgba(20,184,166,0.4)] w-full sm:w-auto"
                   >
-                    العودة إلى لوحة التحكم
+                    العودة إلى التطبيق
                   </a>
                 </div>
               </motion.div>

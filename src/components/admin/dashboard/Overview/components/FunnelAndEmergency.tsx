@@ -155,7 +155,7 @@ export const FunnelAndEmergency: FC<FunnelAndEmergencyProps> = ({ funnelData, em
                                     <div className="absolute top-0 right-0 w-1 h-full bg-rose-500 group-hover/item:shadow-[0_0_10px_rgba(244,63,94,1)] transition-shadow" />
                                     <div>
                                         <p className="text-sm font-black text-rose-100 group-hover/item:text-white transition-colors">{log.personLabel || "مجهول"}</p>
-                                        <p className="text-[10px] text-rose-400 opacity-70 font-mono mt-1 font-bold">{new Date(log.createdAt).toLocaleString('ar-EG')}</p>
+                                        <p className="text-[10px] text-rose-400 opacity-70 font-mono mt-1 font-bold">{new Date(log.createdAt).toLocaleString("en-US")}</p>
                                     </div>
                                     <button className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest bg-rose-500/20 hover:bg-rose-500 text-rose-200 hover:text-white rounded-lg border border-rose-500/30 transition-all shadow-md">
                                         تتبع

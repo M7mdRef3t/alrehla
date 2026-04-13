@@ -15,7 +15,7 @@ import {
     Filter
 } from "lucide-react";
 import { useAdminState, getScoringWeights, getScoringThresholds } from "@/domains/admin/store/admin.store";
-import { useAppContentState } from "@/domains/dawayir/store/content.store";
+import { useAppContentState } from '@/modules/map/dawayirIndex';
 import { useFleetState } from "@/domains/admin/store/fleet.store";
 import { isSupabaseReady } from "@/services/supabaseClient";
 import {
@@ -602,7 +602,7 @@ export const ContentPanel: FC = () => {
                                     <div className="flex-1">
                                         <h4 className="text-sm font-bold text-white">{b.title}</h4>
                                         <p className="text-xs text-slate-400">{b.body}</p>
-                                        <span className="text-[10px] text-slate-600 mt-1 block">{b.createdAt ? new Date(b.createdAt).toLocaleString() : "—"}</span>
+                                        <span className="text-[10px] text-slate-600 mt-1 block">{b.createdAt ? new Date(b.createdAt).toLocaleString("en-US") : "—"}</span>
                                     </div>
                                     <button onClick={() => { removeBroadcast(b.id); if (isSupabaseReady) deleteBroadcast(b.id); }} className="p-2 hover:bg-rose-500/10 rounded-lg text-rose-500 transition-colors">
                                         <Trash2 className="w-4 h-4" />

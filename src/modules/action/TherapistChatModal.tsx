@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BrainCircuit, X, Send, Loader2, AlertTriangle } from "lucide-react";
 import { geminiClient } from "@/services/geminiClient";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 
 interface Message {
     id: string;

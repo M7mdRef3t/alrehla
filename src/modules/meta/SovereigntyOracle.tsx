@@ -1,7 +1,7 @@
 import { FC, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Shield, Zap, Info } from "lucide-react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { calculateEntropy } from "@/services/predictiveEngine";
 import { VaultService } from "@/services/truthVault";
 import { useGamificationState } from "@/services/gamificationEngine";

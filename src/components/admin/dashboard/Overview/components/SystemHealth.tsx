@@ -62,7 +62,7 @@ export const SystemHealth: FC<SystemHealthProps> = ({ data, loading }) => {
                          </span>
                     </div>
                 </div>
-                <span className="text-[10px] font-mono text-slate-500 px-3 py-1.5 bg-black/30 rounded-lg">{new Date(data.generatedAt).toLocaleString()}</span>
+                <span className="text-[10px] font-mono text-slate-500 px-3 py-1.5 bg-black/30 rounded-lg">{new Date(data.generatedAt).toLocaleString("en-US")}</span>
             </div>
 
             {/* Main Status Bar */}

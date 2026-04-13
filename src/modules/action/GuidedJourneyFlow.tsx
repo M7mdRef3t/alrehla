@@ -11,7 +11,7 @@ import { PostStepMeasurement } from "./PostStepMeasurement";
 import { JourneyCelebration } from "./JourneyCelebration";
 import { ProgressIndicator } from '@/modules/meta/ProgressIndicator';
 import { JourneyProgressSidebar, type JourneyStage } from '@/modules/meta/JourneyProgressSidebar';
-import { useToastState } from "@/domains/dawayir/store/toast.store";
+import { useToastState } from '@/modules/map/dawayirIndex';
 import type { AdviceCategory } from "@/data/adviceScripts";
 
 const STEP_LABELS: Record<string, string> = {

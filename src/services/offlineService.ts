@@ -167,7 +167,7 @@ export class OfflineService {
   private formatDataAsText(data: OfflineData): string {
     let text = "تقرير بيانات الرحلة\n";
     text += "==================\n\n";
-    text += `آخر مزامنة: ${new Date(data.lastSync).toLocaleString("ar-EG")}\n\n`;
+    text += `آخر مزامنة: ${new Date(data.lastSync).toLocaleString("en-US")}\n\n`;
     
     text += `العُقد: ${data.nodes.length}\n`;
     text += `النبضات: ${data.pulses.length}\n`;
