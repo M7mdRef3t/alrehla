@@ -47,9 +47,14 @@ function round(value: number, digits = 3) {
 
 interface FirstSparkProps {
   onComplete: () => void;
+  gateContext?: {
+    message: string;
+    painPoint?: string | null;
+    intent?: string | null;
+  } | null;
 }
 
-export const FirstSparkOnboarding: FC<FirstSparkProps> = memo(({ onComplete }) => {
+export const FirstSparkOnboarding: FC<FirstSparkProps> = memo(({ onComplete, gateContext = null }) => {
   const [stage, setStage] = useState<0 | 1 | 2>(0);
   const [, startTransition] = useTransition();
 
@@ -77,7 +82,14 @@ export const FirstSparkOnboarding: FC<FirstSparkProps> = memo(({ onComplete }) =
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-teal-500/5 blur-[100px] rounded-full mix-blend-screen" />
       </div>
 
-      {stage === 0 && <StageChaos key="chaos" onNext={nextStage} />}
+      {gateContext && stage === 0 && (
+        <div className="relative z-10 mx-4 mb-2 w-full max-w-sm rounded-3xl border border-teal-400/20 bg-teal-500/8 px-4 py-3 text-right shadow-[0_0_25px_rgba(45,212,191,0.08)]">
+          <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-teal-300">Gate Signal</div>
+          <p className="text-sm leading-relaxed text-slate-200">{gateContext.message}</p>
+        </div>
+      )}
+
+      {stage === 0 && <StageChaos key="chaos" onNext={nextStage} gateContext={gateContext} />}
       {stage === 1 && <StageOrder key="order" onNext={nextStage} />}
       {stage === 2 && <StageValue key="value" onNext={handleComplete} />}
 
@@ -100,7 +112,7 @@ export const FirstSparkOnboarding: FC<FirstSparkProps> = memo(({ onComplete }) =
 FirstSparkOnboarding.displayName = "FirstSparkOnboarding";
 
 /* ── Stage 1: Chaos (The Reality Check) ── */
-const StageChaos: FC<{ onNext: () => void }> = memo(({ onNext }) => {
+const StageChaos: FC<{ onNext: () => void; gateContext?: FirstSparkProps["gateContext"] }> = memo(({ onNext }) => {
   const dots = useMemo(() => Array.from({ length: 12 }, (_, i) => ({
     id: i,
     x: round((seededUnit(i, 1) - 0.5) * 280),

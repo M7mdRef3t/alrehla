@@ -1,4 +1,4 @@
-import { logger } from "@/services/logger";
+﻿import { logger } from "@/services/logger";
 import type { FC, ReactNode } from "react";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -198,7 +198,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   const handleLogin = async () => {
     const normalizedCode = code.trim();
     if (!normalizedCode) {
-      setError("أدخ د ادر.");
+      setError("ادخل رمز العبور.");
       return;
     }
 
@@ -212,7 +212,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
       });
 
       if (!response.ok) {
-        setError("اد غر صحح.");
+        setError("الرمز غير صحيح.");
         return;
       }
 
@@ -220,7 +220,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
       setAdminCode(normalizedCode);
       setError("");
     } catch {
-      setError("تعذر اتح  اد حاا.");
+      setError("تعذر التحقق من الرمز حاليًا.");
       } finally {
       setIsSubmitting(false);
     }
@@ -705,7 +705,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 </button>
               </AdminTooltip>
 
-              <AdminTooltip content="المساعد الإداري (Copilot): استعلم سريعاً عن حالة المنصة. الأرقام والشكاوي." position="bottom">
+              <AdminTooltip content="المساعد الإداري (Copilot): استعلم سريعًا عن حالة المنصة والأرقام والشكاوى." position="bottom">
                 <button
                   onClick={() => useAdminState.getState().setCopilotOpen(true)}
                   className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-teal-300 dark:hover:border-teal-500/50 transition-all active:scale-95 group shadow-lg"
@@ -714,7 +714,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 </button>
               </AdminTooltip>
 
-              <AdminTooltip content="إدارة بيانات النظام (Data Management): لوحة لعمل نسخ احتياطية (JSON/PDF)، ومزامنة البيانات محلياً أو سحابياً." position="bottom">
+              <AdminTooltip content="إدارة بيانات النظام (Data Management): لوحة للنسخ الاحتياطي (JSON/PDF) ومزامنة البيانات محليًا أو سحابيًا." position="bottom">
                 <button
                   onClick={() => setShowAccount(true)}
                   className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all active:scale-95 group shadow-lg"

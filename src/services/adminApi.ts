@@ -549,6 +549,7 @@ export interface OverviewStats {
   } | null;
   marketingLeads?: MarketingLeadsStats;
   topScenarios?: TopScenario[] | null;
+  verificationGapIndex?: number | null;
   awarenessGap?: {
     total?: number | null;
     resolved?: number | null;
@@ -1004,22 +1005,17 @@ export async function fetchSessionEvents(
 ): Promise<SessionEventRow[] | null> {
   const sid = sessionId.trim();
   if (!sid) return null;
-  if (!isSupabaseReady || !supabase) return null;
   const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 1000) : 200;
-  const { data, error } = await supabase
-    .from("routing_events")
-    .select("id,session_id,event_type,payload,occurred_at")
-    .eq("session_id", sid)
-    .order("occurred_at", { ascending: false })
-    .limit(safeLimit);
-  if (error || !data) return null;
-  return (data as Array<Record<string, unknown>>).map((row) => ({
-    id: String(row.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
-    sessionId: String(row.session_id ?? sid),
-    type: String(row.event_type ?? "unknown"),
-    payload: (row.payload as Record<string, unknown> | null) ?? null,
-    createdAt: row.occurred_at ? new Date(String(row.occurred_at)).getTime() : null
-  }));
+  
+  const apiData = await callAdminApi<{ events: SessionEventRow[] }>(
+    `session-events?sessionId=${encodeURIComponent(sid)}&limit=${safeLimit}`
+  );
+  
+  if (apiData?.events) {
+    return apiData.events;
+  }
+  
+  return null;
 }
 
 export async function fetchVisitorSessions(limit = 300): Promise<VisitorSessionSummary[] | null> {
@@ -1513,6 +1509,7 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
         addPersonOpened: 0,
         addPersonDoneShowOnMap: 0
       },
+      verificationGapIndex: (marketingLeadsTotalCount ?? 0) > 0 ? Math.round(((marketingByStatus.get("pending") ?? 0) / (marketingLeadsTotalCount ?? 0)) * 100) : 0,
       marketingLeads: {
         total: marketingLeadsTotalCount ?? 0,
         last24h: marketingLeadsLast24hCount ?? 0,

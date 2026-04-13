@@ -2,7 +2,7 @@ import { logger } from "@/services/logger";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/services/supabaseClient";
 import { useJourneyProgress } from "@/domains/journey";
-import { getSearch, pushUrl } from "@/services/navigation";
+import { assignUrl, getSearch } from "@/services/navigation";
 import type { AppScreen } from "@/navigation/navigationMachine";
 import type { WelcomeSource } from "../OnboardingWelcomeBubble";
 
@@ -17,6 +17,12 @@ interface UseAppGateHandoffParams {
   navigateToScreen: (screen: AppScreen) => boolean;
   setGoalId: (goalId: string) => void;
   setCategory: (category: AdviceCategory) => void;
+}
+
+const GATE_ONBOARDING_PAYLOAD_KEY = "dawayir-gate-onboarding-payload";
+
+function redirectGateUserToOnboarding(): void {
+  assignUrl("/onboarding?source=gate");
 }
 
 export function useAppGateHandoff({
@@ -54,14 +60,14 @@ export function useAppGateHandoff({
     // Now securely fetch the payload to construct personalized welcome
     let cancelled = false;
 
-    // By default set relationship and general baseline category since they came through Gate Funnel
+    // Keep defaults aligned, but let onboarding own the actual routing decision.
     setGoalId("family");
     setCategory("family");
 
     void (async () => {
       try {
         if (!supabase) {
-          if (!cancelled) navigateToScreen("map");
+          if (!cancelled) redirectGateUserToOnboarding();
           return;
         }
 
@@ -73,7 +79,7 @@ export function useAppGateHandoff({
 
         if (error || !data) {
           logger.error("[Gate Handoff] Failed to retrieve session.", error);
-          if (!cancelled) navigateToScreen("map");
+          if (!cancelled) redirectGateUserToOnboarding();
           return;
         }
 
@@ -94,13 +100,22 @@ export function useAppGateHandoff({
         }
 
         setGateWelcome({ message, source: "template" });
-        
-        // Immediately bypass onboarding & redirect to Map
-        navigateToScreen("map");
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(
+            GATE_ONBOARDING_PAYLOAD_KEY,
+            JSON.stringify({
+              message,
+              source: "template" as WelcomeSource,
+              painPoint: data.pain_point ?? null,
+              intent: data.intent ?? null,
+            })
+          );
+        }
+        redirectGateUserToOnboarding();
         
       } catch (err) {
         logger.error("[Gate Handoff] Unexpected error", err);
-        if (!cancelled) navigateToScreen("map");
+        if (!cancelled) redirectGateUserToOnboarding();
       }
     })();
 

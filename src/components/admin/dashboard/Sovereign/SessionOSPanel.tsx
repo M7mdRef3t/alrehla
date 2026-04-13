@@ -63,6 +63,8 @@ export const SessionOSPanel: React.FC = () => {
   const [form, setForm] = useState(EMPTY_SESSION);
   const [filter, setFilter] = useState<SessionStatus | "all">("all");
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+  const [isMasaratRunning, setIsMasaratRunning] = useState(false);
 
   // ─── Load sessions ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -175,6 +177,51 @@ export const SessionOSPanel: React.FC = () => {
     setIsGeneratingAI(false);
   };
 
+  const triggerWhatsApp = async (session: Session) => {
+    if (!session.ai_summary) {
+      alert("لازم تولد خلاصة الأول (AI Summary) عشان نبعتها للعميل!");
+      return;
+    }
+    setIsSendingWhatsApp(true);
+    try {
+      const res = await fetch("/api/admin/sovereign/whatsapp", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: session.id })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      alert("✅ تم دفع الرسالة للواتساب بنجاح!");
+    } catch (e: any) {
+      alert("❌ حصل مشكلة: " + e.message);
+    } finally {
+      setIsSendingWhatsApp(false);
+    }
+  };
+
+  const triggerMasarat = async (session: Session) => {
+    setIsMasaratRunning(true);
+    try {
+      const res = await fetch("/api/admin/sovereign/masarat", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: session.id })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      const summary = data.ai_summary;
+      const updated = sessions.map(s => s.id === session.id ? { ...s, ai_summary: summary, status: "active" as SessionStatus } : s);
+      setSessions(updated);
+      saveToLocalStorage(updated);
+      if (selected?.id === session.id) setSelected(prev => prev ? { ...prev, ai_summary: summary, status: "active" as SessionStatus } : null);
+      
+      alert("✅ محرك مسارات خلص التحليل!");
+    } catch (e: any) {
+      alert("❌ حصل مشكلة في المحرك: " + e.message);
+    } finally {
+      setIsMasaratRunning(false);
+    }
+  };
+
   // ─── Computed ─────────────────────────────────────────────────────────────────────
   const filtered = filter === "all" ? sessions : sessions.filter(s => s.status === filter);
   const counts = {
@@ -186,8 +233,10 @@ export const SessionOSPanel: React.FC = () => {
 
   // ─── Render ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700" dir="rtl">
-      
+    <div
+      className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700"
+      dir="rtl"
+    >
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -419,6 +468,39 @@ export const SessionOSPanel: React.FC = () => {
                     لسه مفيش خلاصة.. دوس "هات الخلاصة" وشوف الأوركل هيقولك إيه.
                   </p>
                 )}
+              </div>
+
+              {/* ── Sovereign Action Bar ── */}
+              <div className="pt-4 border-t border-white/5 space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                  <Activity className="w-3.5 h-3.5" />
+                  أدوات القيادة السيادية
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <button 
+                    disabled={isSendingWhatsApp}
+                    onClick={() => triggerWhatsApp(selected)}
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 hover:from-emerald-500/20 hover:to-teal-500/10 border border-emerald-500/20 hover:border-emerald-500/40 transition-all text-emerald-400 gap-2 group disabled:opacity-50"
+                  >
+                    {isSendingWhatsApp ? <Activity className="w-5 h-5 animate-spin" /> : <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />}
+                    <span className="text-[10px] font-black">{isSendingWhatsApp ? "جاري الإرسال.." : "أتمتة الواتساب"}</span>
+                  </button>
+                  <button 
+                    disabled={isMasaratRunning}
+                    onClick={() => triggerMasarat(selected)}
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 hover:from-cyan-500/20 hover:to-blue-500/10 border border-cyan-500/20 hover:border-cyan-500/40 transition-all text-cyan-400 gap-2 group disabled:opacity-50"
+                  >
+                    {isMasaratRunning ? <Sparkles className="w-5 h-5 animate-pulse" /> : <Target className="w-5 h-5 group-hover:scale-110 transition-transform" />}
+                    <span className="text-[10px] font-black">{isMasaratRunning ? "المحرك شغال.." : "تحليل مسارات"}</span>
+                  </button>
+                  <button 
+                    onClick={() => alert("سيتم عرض عائد الطاقة والأموال الخاص بهذه الجلسة.")}
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 hover:from-amber-500/20 hover:to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-all text-amber-400 gap-2 group"
+                  >
+                    <TrendingUp className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-black">Psychological P&amp;L</span>
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}

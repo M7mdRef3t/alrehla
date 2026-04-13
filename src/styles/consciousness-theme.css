@@ -59,33 +59,33 @@
    DARK MODE — (.dark)
    ════════════════════════════════════════════════ */
 .dark {
-  /* 🎨 Space Palette — Dark */
-  --space-void:    #0a0e1f;   /* أعمق من الأسود */
-  --space-950:     #0f1629;   /* slate-950 */
-  --space-deep:    #131a35;   /* أزرق كوني عميق */
-  --space-mid:     #1a2242;   /* أزرق متوسط دافئ */
-  --space-nebula:  #212b4f;   /* سديم هادئ */
-  --space-aurora:  #2a3560;   /* شفق شمالي */
+  /* 🎨 Space Palette — Sovereign Dark */
+  --space-void:    #02040a;   /* Obsidian Void */
+  --space-950:     #060b17;   /* Extremely Deep Blue */
+  --space-deep:    #0a1128;   /* Deep Oceanic Blue */
+  --space-mid:     #121d3f;   /* Azure Shadow */
+  --space-nebula:  #1e293b;   /* Slate Muted */
+  --space-aurora:  #4f46e5;   /* Indigo Core */
 
-  /* 🧠 Consciousness Mapping — Dark */
+  /* 🧠 Consciousness Mapping — Sovereign Dark */
   --consciousness-background:  var(--space-void);
-  --consciousness-text:        #f0fdfa;
-  --consciousness-text-muted:  rgba(148, 163, 184, 0.8);
+  --consciousness-text:        #f0fdfa; /* Teal Tinted White */
+  --consciousness-text-muted:  rgba(148, 163, 184, 0.72);
 
-  /* 📄 Page semantic tokens — Dark */
-  --page-bg:          #0a0e1f;
-  --page-bg-alt:      #0f1629;
-  --page-surface:     #131a35;
-  --page-surface-2:   #1a2242;
-  --page-border:      rgba(255, 255, 255, 0.08);
-  --page-border-soft: rgba(255, 255, 255, 0.04);
-  --page-text:        #f0fdfa;
-  --page-text-muted:  rgba(148, 163, 184, 0.72);
+  /* 📄 Page semantic tokens — Sovereign Dark */
+  --page-bg:          #02040a;
+  --page-bg-alt:      #060b17;
+  --page-surface:     rgba(10, 17, 40, 0.5);
+  --page-surface-2:   rgba(18, 29, 63, 0.6);
+  --page-border:      rgba(45, 212, 191, 0.15); /* Soft Teal Border */
+  --page-border-soft: rgba(45, 212, 191, 0.05);
+  --page-text:        #ffffff;
+  --page-text-muted:  rgba(203, 213, 225, 0.85);
 
-  /* 🪟 Glass — Dark */
-  --glass-bg:         rgba(255, 255, 255, 0.03);
-  --glass-border:     rgba(255, 255, 255, 0.08);
-  --glass-shadow:     0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  /* 🪟 Premium Glassmorphism — Dark */
+  --glass-bg:         rgba(5, 8, 20, 0.6);
+  --glass-border:     rgba(45, 212, 191, 0.18);
+  --glass-shadow:     0 12px 40px -10px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.08);
 }
 
 /* ════════════════════════════════════════════════

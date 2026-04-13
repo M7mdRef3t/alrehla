@@ -12,13 +12,9 @@ const MarayaApp = dynamic(
 export default function MarayaPage() {
   return (
     <Suspense fallback={
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', background: '#0a0a0f', color: '#ffd700',
-        fontFamily: 'Inter, sans-serif', fontSize: '1.2rem',
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>مرايا</div>
+      <div className="maraya-fallback">
+        <div className="maraya-fallback-inner">
+          <div className="maraya-fallback-title">مرايا</div>
           <div>Loading Maraya...</div>
         </div>
       </div>

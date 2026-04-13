@@ -24,6 +24,13 @@
   --ds-color-brand-amber-500: #f5a623;
   --ds-color-brand-amber-600: #d97706;
 
+  /* Sovereign 3.0 Tokens */
+  --teal: #00f0ff;
+  --gold: #f5a623;
+  --gold-bright: #fbbf24;
+  --cyan-glow: rgba(0, 240, 255, 0.4);
+  --gold-glow: rgba(245, 166, 35, 0.4);
+
   /* Primary */
   --ds-color-primary:       var(--ds-color-brand-teal-400);
   --ds-color-primary-strong: var(--ds-color-brand-teal-500);
@@ -74,21 +81,21 @@
    ════════════════════════════════════════ */
 .dark {
   /* Text */
-  --ds-theme-text-primary:   #f8fafc;
+  --ds-theme-text-primary:   #ffffff;
   --ds-theme-text-secondary: #cbd5e1;
   --ds-theme-text-muted:     rgba(148, 163, 184, 0.72);
 
   /* Surfaces */
-  --ds-theme-surface:       color-mix(in srgb, var(--ds-color-space-deep) 82%, transparent);
-  --ds-theme-surface-hover: color-mix(in srgb, var(--ds-color-space-nebula) 85%, transparent);
+  --ds-theme-surface:       rgba(10, 17, 40, 0.5);
+  --ds-theme-surface-hover: rgba(18, 29, 63, 0.6);
   --ds-theme-void:          var(--space-void);
 
   /* Border & Shadow */
-  --ds-color-border-default: rgba(255, 255, 255, 0.08);
-  --ds-color-border-hover:   rgba(45, 212, 191, 0.35);
-  --ds-color-glass-default:  rgba(255, 255, 255, 0.03);
-  --ds-color-glass-hover:    rgba(255, 255, 255, 0.06);
-  --ds-shadow-base:          0 8px 32px rgba(0, 0, 0, 0.37);
+  --ds-color-border-default: rgba(45, 212, 191, 0.15);
+  --ds-color-border-hover:   rgba(45, 212, 191, 0.45);
+  --ds-color-glass-default:  rgba(5, 8, 20, 0.6);
+  --ds-color-glass-hover:    rgba(5, 8, 20, 0.8);
+  --ds-shadow-base:          0 12px 40px -10px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.08);
 
   /* Page shorthand */
   --ds-color-text-primary:   var(--ds-theme-text-primary);
@@ -96,9 +103,15 @@
   --ds-color-text-muted:     var(--ds-theme-text-muted);
 
   /* ⚡ Short aliases for inline usage — dark overrides */
-  --text-primary:   #f8fafc;
+  --text-primary:   #ffffff;
   --text-secondary: #cbd5e1;
   --text-muted:     rgba(148, 163, 184, 0.72);
+
+  /* Overwrite for Dark Sovereign Mode */
+  --ds-color-primary: var(--teal);
+  --ds-color-primary-strong: #2dd4bf;
+  --ds-color-primary-glow: var(--cyan-glow);
+  --ds-color-accent-amber: var(--gold);
 }
 
 /* Kill white focus rectangle on SVG interactive elements (dnd-kit injects tabIndex) */
@@ -132,19 +145,19 @@ svg [role="button"]:focus-visible {
 }
 
 .glass-heavy {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  background: rgba(5, 8, 20, 0.65);
+  backdrop-filter: blur(32px) saturate(150%);
+  -webkit-backdrop-filter: blur(32px) saturate(150%);
+  border: 1px solid rgba(45, 212, 191, 0.2);
+  box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
 .glass-dark {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
+  background: rgba(2, 4, 10, 0.7);
+  backdrop-filter: blur(24px) saturate(120%);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
+  border: 1px solid rgba(45, 212, 191, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
 }
 
 .ds-badge {
@@ -347,11 +360,11 @@ svg [role="button"]:focus-visible {
    ════════════════════════════════════════ */
 .admin-glass-card {
   border-radius: var(--ds-radius-xl) !important;
-  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.03), transparent), rgba(5, 8, 20, 0.45) !important;
+  background: radial-gradient(circle at top left, rgba(0, 240, 255, 0.05), transparent), rgba(2, 4, 10, 0.65) !important;
   backdrop-filter: blur(32px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(0, 240, 255, 0.15) !important;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.05) !important;
   position: relative;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
@@ -364,15 +377,15 @@ svg [role="button"]:focus-visible {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(45, 212, 191, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
   opacity: 0;
   transition: opacity 0.4s ease;
 }
 
 .admin-glass-card:hover {
-  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent), rgba(5, 8, 20, 0.65) !important;
-  border-color: rgba(45, 212, 191, 0.3) !important;
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8), inset 0 1px 5px rgba(45, 212, 191, 0.15) !important;
+  background: radial-gradient(circle at top left, rgba(0, 240, 255, 0.1), transparent), rgba(2, 4, 10, 0.85) !important;
+  border-color: rgba(0, 240, 255, 0.4) !important;
+  box-shadow: 0 20px 50px -10px rgba(0, 240, 255, 0.15), inset 0 1px 5px rgba(0, 240, 255, 0.25) !important;
   transform: translateY(-2px);
 }
 

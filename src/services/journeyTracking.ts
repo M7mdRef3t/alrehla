@@ -359,6 +359,8 @@ export type FlowStep =
   | "screen_armory_viewed"
   | "screen_exit_scripts_viewed"
   | "screen_grounding_viewed"
+  | "mirror_journey_started"
+  | "mirror_journey_completed"
   | "install_clicked"
   | "profile_clicked"
   | "pulse_opened"
@@ -396,6 +398,7 @@ export type FlowStep =
   | "next_step_action_taken"
   | "next_step_dismissed"
   | "routing_intervention_triggered"
+  | "safety_triage_triggered"
   | "quiz_completed"
   | "quiz_hub_opened";
 

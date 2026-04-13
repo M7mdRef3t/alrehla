@@ -112,3 +112,23 @@
   pointer-events: none;
   transition: background-image 2s ease-in-out;
 }
+
+.maraya-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #0a0a0f;
+  color: #ffd700;
+  font-family: Inter, sans-serif;
+  font-size: 1.2rem;
+}
+
+.maraya-fallback-inner {
+  text-align: center;
+}
+
+.maraya-fallback-title {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}

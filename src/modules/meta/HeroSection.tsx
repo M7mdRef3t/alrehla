@@ -1,5 +1,4 @@
-import type { FC } from "react";
-import { useEffect, useState, useCallback } from "react";
+import React, { type FC, useEffect, useState, useCallback, useMemo, Fragment } from "react";
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowLeft, Zap, Shield, Heart } from "lucide-react";
 
@@ -28,18 +27,520 @@ const ROTATING_WORDS = [
 
 /* ─── Styles ─────────────────────────────────────────────────────────────────── */
 const HERO_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;700;800;900&display=swap');
 
   .hero-root {
-    --void: var(--ds-color-space-void);
-    --teal: var(--ds-color-primary);
-    --teal-bright: var(--ds-color-brand-teal-400);
-    --gold: var(--ds-color-brand-amber-500);
-    --crimson: #ef4444; /* Standard alert color */
-    --text-hero: var(--ds-theme-text-primary);
-    --text-sub: var(--ds-theme-text-secondary);
-    --glass: var(--ds-color-glass-default);
-    --glass-border: var(--ds-color-border-default);
+    --void: #02040a;
+    --cyan: #00f0ff;
+    --cyan-glow: rgba(0, 240, 255, 0.4);
+    --gold: #f5a623;
+    --gold-glow: rgba(245, 166, 35, 0.4);
+    --crimson: #ff0055;
+    --text-main: #ffffff;
+    --text-muted: #8faab8;
+    
+    /* Glassmorphism 3.0 Tokens */
+    --glass-bg: rgba(5, 8, 20, 0.75);
+    --glass-border: rgba(0, 240, 255, 0.25);
+    --glass-reflection: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
+    
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: var(--void);
+  }
+
+  .hero-layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+  }
+
+  .hero-screen-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 95% 85% at 50% 50%, transparent 35%, rgba(2,4,8,0.85) 100%);
+    pointer-events: none;
+  }
+
+  .hero-screen-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 30% at 50% 0%, rgba(0, 240, 255, 0.06) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .hero-copy-column {
+    flex: 1 1 0;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .hero-eyebrow-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .hero-badge__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--cyan);
+    box-shadow: 0 0 14px var(--cyan-glow);
+  }
+
+  /* ليه موجود؟ علشان السطر الأول مايتقصش من فوق/تحت مع أحجام الخط الكبيرة. Time Complexity: O(1) */
+  .headline-line {
+    display: flex;
+    align-items: flex-start;
+    min-height: 70px;
+    height: auto;
+    line-height: 1.2;
+    overflow: visible;
+    margin-bottom: 0.1em;
+    color: var(--amber-500);
+    font-family: "Noto Kufi Arabic";
+  }
+
+  /* ليه موجود؟ علشان السطر التاني يتمدّد طبيعي بدل height ثابت يسبب clipping. Time Complexity: O(1) */
+  .headline-subline {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 0;
+    flex-wrap: wrap;
+    min-height: 45px;
+    height: auto;
+    line-height: 1.2;
+    overflow: visible;
+    color: var(--color-amber-50);
+    font-size: 0.78em;
+    font-weight: 600;
+    margin-bottom: 0.1em;
+    font-family: "Noto Kufi Arabic";
+  }
+
+  .hero-divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--cyan-glow), var(--gold-glow), transparent);
+    border-radius: 1px;
+  }
+
+  .hero-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .hero-input-wrapper {
+    display: flex;
+    align-items: center;
+    border-radius: 20px;
+    overflow: hidden;
+    max-width: 420px;
+    position: relative;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+  }
+
+  .hero-input-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--glass-reflection);
+    pointer-events: none;
+  }
+
+  .hero-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 15px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    font-family: "Tajawal", sans-serif;
+    text-align: right;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-input-greeting {
+    padding: 0 18px;
+    font-size: 13px;
+    color: var(--gold);
+    font-weight: 800;
+    white-space: nowrap;
+    filter: drop-shadow(0 0 12px var(--gold-glow));
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-input-note {
+    font-size: 10.5px;
+    color: #627a8e;
+    font-weight: 600;
+    padding-right: 4px;
+  }
+
+  /* ليه موجود؟ علشان container الهيدلاين يستوعب 3 سطور بدون قص. Time Complexity: O(1) */
+  .hero-headline {
+    font-size: clamp(2.4rem, 5.5vw, 4.4rem);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    overflow: visible;
+    font-family: "Alexandria", sans-serif;
+    line-height: 1.4;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+    color: var(--text-main);
+  }
+
+  .hero-copy-column .hero-body {
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.85);
+  }
+
+  .hero-trust-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .hero-bottom-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 160px;
+    pointer-events: none;
+    background: linear-gradient(to top, var(--void), transparent);
+  }
+
+  .warp-overlay__content {
+    text-align: center;
+  }
+
+  .warp-icon-shell {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyan), #2dd4bf);
+    box-shadow: 0 0 60px var(--cyan-glow);
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .warp-text {
+    font-size: 14px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.7);
+    font-family: "Tajawal", sans-serif;
+    letter-spacing: 0.2em;
+  }
+
+  .sovereign-map {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 520px;
+    perspective: 1200px;
+  }
+
+  .sovereign-map__atmosphere {
+    position: absolute;
+    inset: -18%;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, rgba(99, 102, 241, 0.04) 40%, transparent 75%);
+    filter: blur(50px);
+    pointer-events: none;
+  }
+
+  .sovereign-map__svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .orbit-line {
+    transition: opacity 0.3s;
+  }
+
+  .orbit-ring {
+    transform-origin: 190px 190px;
+  }
+
+  .orbit-ring--glow {
+    filter: blur(1px) drop-shadow(0 0 4px currentColor);
+  }
+
+  .node-group {
+    cursor: pointer;
+  }
+
+  .node-core {
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.08));
+  }
+
+  .pulse-ring {
+    animation: pulse-ring 1.4s ease-out infinite;
+  }
+
+  .center-core {
+    transform-origin: 190px 190px;
+  }
+
+  .center-core__glow {
+    filter: drop-shadow(0 0 32px var(--cyan));
+  }
+
+  .metric-card {
+    position: absolute;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(16px);
+    padding: 16px;
+    border-radius: 24px;
+    min-width: 150px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    z-index: 10;
+  }
+
+  .metric-card--health {
+    top: 8%;
+    right: -8%;
+  }
+
+  .metric-card--drain {
+    bottom: 12%;
+    left: -10%;
+  }
+
+  .metric-card-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .metric-card-label--alert {
+    color: var(--crimson);
+  }
+
+  .metric-card-value {
+    font-size: 26px;
+    font-weight: 900;
+    color: #fff;
+    font-family: "Tajawal", sans-serif;
+  }
+
+  .metric-card-value--small {
+    font-size: 22px;
+  }
+
+  .metric-card-text {
+    font-size: 11px;
+    color: #6b8a9e;
+    font-weight: 700;
+  }
+
+  .metric-card-bar {
+    margin-top: 8px;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+
+  .metric-card-bar__fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--cyan), #2dd4bf);
+  }
+
+  .metric-card-dots {
+    margin-top: 8px;
+    display: flex;
+    gap: 4px;
+  }
+
+  .metric-card-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--crimson);
+  }
+
+  .legend {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+  }
+
+  .legend-dot--teal { color: var(--cyan); }
+  .legend-dot--gold { color: var(--gold); }
+  .legend-dot--crimson { color: var(--crimson); }
+
+  .legend-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #7a95a8;
+    text-transform: uppercase;
+    font-family: "Tajawal", sans-serif;
+  }
+
+  .node-tooltip-body {
+    background: rgba(4,8,18,0.9);
+    border: 1px solid rgba(0, 240, 255, 0.27);
+    border-radius: 12px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    white-space: nowrap;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 20px rgba(0, 240, 255, 0.14);
+    font-family: "Tajawal", sans-serif;
+  }
+
+  .metric-card-values {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .metric-card-values--inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .trust-icon {
+    width: 13px;
+    height: 13px;
+    color: var(--cyan);
+  }
+
+  .warp-icon {
+    width: 24px;
+    height: 24px;
+    fill: white;
+    color: white;
+  }
+
+  .pulse-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-radius: 100px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: rgba(239, 68, 68, 0.06);
+    backdrop-filter: blur(12px);
+  }
+
+  .pulse-badge__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 12px #ef4444;
+    display: inline-block;
+  }
+
+  .pulse-badge__text {
+    font-size: 11px;
+    font-weight: 800;
+    color: #a8bfcc;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .hero-layer--nebula,
+  .hero-layer--starfield,
+  .hero-layer--grid {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+  }
+
+  .hero-cta-icon {
+    width: 18px;
+    height: 18px;
+    fill: white;
+  }
+
+  .hero-cta-icon--arrow {
+    width: 17px;
+    height: 17px;
+  }
+
+  .trust-pill svg {
+    width: 13px;
+    height: 13px;
+    color: #14b8a6;
+  }
+
+  .hero-layer--dust {
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .neural-dust-field {
+    position: absolute;
+    inset: -20%;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px);
+    background-size: 80px 80px;
+    filter: blur(1px);
+    opacity: 0.25;
+  }
+
+  .warp-line {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  }
+
+  .hero-canvas > .hero-screen-vignette,
+  .hero-canvas > .hero-screen-glow {
+    pointer-events: none;
   }
 
   /* ── Ambient Canvas ── */
@@ -60,21 +561,21 @@ const HERO_STYLES = `
 
   .ambient-orb-1 {
     width: 800px; height: 800px;
-    background: radial-gradient(circle, rgba(20,184,166,0.15) 0%, transparent 60%);
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.14) 0%, transparent 60%);
     top: -20%; right: -10%;
     animation: orb-drift1 38s infinite ease-in-out alternate;
   }
 
   .ambient-orb-2 {
     width: 900px; height: 900px;
-    background: radial-gradient(circle, rgba(79,70,229,0.12) 0%, transparent 65%);
+    background: radial-gradient(circle, rgba(245, 166, 35, 0.1) 0%, transparent 65%);
     bottom: -30%; left: -15%;
     animation: orb-drift2 52s infinite ease-in-out alternate;
   }
 
   .ambient-orb-3 {
     width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.05) 0%, transparent 70%);
     top: 45%; left: 20%;
     animation: orb-drift3 44s infinite ease-in-out alternate;
   }
@@ -109,13 +610,13 @@ const HERO_STYLES = `
     width: 100%;
     height: 100%;
     background-image:
-      linear-gradient(rgba(20,184,166,0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(20,184,166,0.035) 1px, transparent 1px);
+      linear-gradient(var(--cyan-glow) 1px, transparent 1px),
+      linear-gradient(90deg, var(--cyan-glow) 1px, transparent 1px);
     background-size: 60px 60px;
     background-position: center bottom;
     mask-image: radial-gradient(ellipse 80% 50% at 50% 50%, black 10%, transparent 70%);
     will-change: transform;
-    opacity: 0.8;
+    opacity: 0.6;
     transform: rotateX(60deg) scale(1.5);
     transform-origin: center center;
   }
@@ -126,9 +627,9 @@ const HERO_STYLES = `
     width: 200%;
     height: 200%;
     background-image: 
-      radial-gradient(circle at 35% 65%, rgba(20,184,166,0.12) 0%, transparent 45%),
-      radial-gradient(circle at 75% 25%, rgba(79,70,229,0.1) 0%, transparent 45%),
-      radial-gradient(circle at 50% 50%, rgba(245,158,11,0.07) 0%, transparent 60%);
+      radial-gradient(circle at 35% 65%, rgba(0, 240, 255, 0.1) 0%, transparent 45%),
+      radial-gradient(circle at 75% 25%, rgba(245, 166, 35, 0.08) 0%, transparent 45%),
+      radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 60%);
     filter: blur(45px);
     will-change: transform;
     opacity: 0.8;
@@ -167,21 +668,22 @@ const HERO_STYLES = `
     padding: 7px 18px;
     border-radius: 100px;
     border: 1px solid var(--ds-color-border-default);
-    background: var(--ds-color-glass-default);
+    background: rgba(245, 166, 35, 0.05);
     backdrop-filter: blur(12px);
     font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.3em;
-    color: var(--ds-theme-text-muted);
+    font-weight: 950;
+    letter-spacing: 0.35em;
+    color: var(--gold);
     text-transform: uppercase;
+    box-shadow: inset 0 1px rgba(245, 166, 35, 0.1);
   }
 
   /* ── Headline ── */
   .headline-static {
-    font-family: var(--ds-font-display), sans-serif;
-    font-weight: 950;
+    font-family: "Alexandria", sans-serif;
+    font-weight: 800;
     line-height: 1.05;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     color: var(--text-hero);
     text-shadow: 0 0 60px rgba(45, 212, 191, 0.12);
     text-align: right;
@@ -198,13 +700,22 @@ const HERO_STYLES = `
   }
 
   /* ── Rotating word ── */
+  /* ليه موجود؟ علشان كلمة الـ rotation تاخد ارتفاع ثابت كافي بدون قص أثناء الأنيميشن. Time Complexity: O(1) */
   .rotating-word-wrapper {
-    position: relative;
-    display: block;
+    position: static;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    column-gap: 0;
+    grid-template-columns: repeat(2, 1fr);
     width: 100%;
-    min-height: 1.2em;
-    padding: 0.25em 0;
+    min-height: 70px;
+    padding: 0;
     overflow: visible;
+    box-sizing: content-box;
+    font-family: "Noto Kufi Arabic";
+    line-height: 1.2;
+    vertical-align: middle;
     text-align: right;
   }
 
@@ -223,25 +734,26 @@ const HERO_STYLES = `
     display: inline-flex;
     align-items: center;
     gap: 12px;
-    padding: 18px 32px;
+    padding: 18px 36px;
     border-radius: 20px;
-    background: rgba(255,255,255,0.03);
-    backdrop-filter: blur(12px);
+    background: rgba(0, 240, 255, 0.08);
+    backdrop-filter: blur(20px) saturate(180%);
     font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 900;
+    font-size: 1.15rem;
+    font-weight: 950;
     color: #fff;
     cursor: pointer;
-    border: 1px solid rgba(20,184,166,0.3);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.1);
-    transition: all 0.4s ease;
+    border: 1px solid rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 40px rgba(0, 240, 255, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.15);
+    transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
     white-space: nowrap;
+    letter-spacing: -0.01em;
   }
   .cta-primary:hover {
-    box-shadow: 0 18px 50px rgba(20,184,166,0.15), inset 0 1px rgba(255,255,255,0.2);
-    border-color: rgba(20,184,166,0.6);
-    background: rgba(255,255,255,0.06);
-    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 0 50px rgba(0,240,255,0.3), inset 0 2px 6px rgba(255,255,255,0.2);
+    border-color: rgba(0,240,255,0.8);
+    background: rgba(0,240,255,0.15);
+    transform: translateY(-4px) scale(1.02);
   }
 
   /* ── Secondary CTA ── */
@@ -451,7 +963,8 @@ const RotatingWord: FC = () => {
   }, []);
 
   return (
-    <span className="rotating-word-wrapper relative inline-block">
+    <span className="rotating-word-wrapper static block w-full">
+      {/* ليه موجود؟ علشان wrapper ياخد عرض كتلة العنوان كامل ويتحاذى معاها بصريًا. Time Complexity: O(1) */}
       <span className="invisible select-none block" aria-hidden>
         {ROTATING_WORDS[5]}
       </span>
@@ -463,7 +976,8 @@ const RotatingWord: FC = () => {
             animate={{ opacity: 1, y: 0, clipPath: "polygon(0 -50%, 100% -50%, 100% 150%, 0% 150%)" }}
             exit={{ opacity: 0, y: -12, clipPath: "polygon(0 -50%, 100% -50%, 100% -50%, 0% -50%)" }}
             transition={{ duration: 0.45, ease: techEase }}
-            className="absolute inset-0 flex items-center headline-accent"
+            /* ليه موجود؟ علشان الكلمة المتحركة تفضل سطر واحد وارتفاعها يبقى طبيعي بدون قص أو لف. Time Complexity: O(1) */
+            className="static flex items-center headline-accent w-fit h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal font-['Noto_Kufi_Arabic']"
           >
             {ROTATING_WORDS[index]}
           </motion.span>
@@ -498,20 +1012,20 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   }, [handleMouseMove]);
 
   const rings = [
-    { r: 68,  stroke: "rgba(45,212,191,0.3)",  dash: "none", dur: 22 },
-    { r: 110, stroke: "rgba(245,158,11,0.2)",  dash: "4 14", dur: 38 },
-    { r: 152, stroke: "rgba(239,68,68,0.15)",  dash: "2 22", dur: 60 },
-    { r: 194, stroke: "rgba(99,102,241,0.1)",  dash: "1 30", dur: 90 },
+    { r: 68,  stroke: "rgba(0, 240, 255, 0.35)", dash: "none", dur: 22 },
+    { r: 110, stroke: "rgba(245, 166, 35, 0.25)", dash: "4 14", dur: 38 },
+    { r: 152, stroke: "rgba(239, 68, 68, 0.2)",   dash: "2 22", dur: 60 },
+    { r: 194, stroke: "rgba(0, 240, 255, 0.15)",  dash: "1 30", dur: 90 },
   ];
 
   const nodes = [
-    { cx: 190, cy: 190 - 68,  r: 13, color: "#2dd4bf", label: "علاقة بميزانها",  w: 1.2 },
-    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#14b8a6", label: "دعم سيادي",    w: 0.8 },
-    { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f59e0b", label: "نبض متذبذب",  w: 1.5 },
-    { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#f59e0b", label: "تشويش روح",   w: 0.9 },
-    { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#2dd4bf", label: "احتواء حقيقي",w: 1.1 },
-    { cx: 190 - 28, cy: 190 - 148, r: 12, color: "#ef4444", label: "نزيف طاقة",   w: 2.0 },
-    { cx: 190 + 118, cy: 190 - 100, r: 11, color: "#ef4444", label: "حدود مهدورة", w: 1.7 },
+    { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "علاقة بميزانها",  w: 1.2 },
+    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم سيادي",    w: 0.8 },
+    { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "نبض متذبذب",  w: 1.5 },
+    { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "تشويش روح",   w: 0.9 },
+    { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "احتواء حقيقي",w: 1.1 },
+    { cx: 190 - 28, cy: 190 - 148, r: 12, color: "#ff0055", label: "نزيف طاقة",   w: 2.0 },
+    { cx: 190 + 118, cy: 190 - 100, r: 11, color: "#ff0044", label: "حدود مهدورة", w: 1.7 },
   ];
 
   const [hovered, setHovered] = useState<number | null>(null);
@@ -521,40 +1035,48 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   return (
     <motion.div
       className="sovereign-map"
-      style={{ rotateX: springY, rotateY: springX, perspective: 1000 }}
+      style={{ rotateX: springY, rotateY: springX }}
     >
-      {/* Atmospheric glow */}
-      <div
-        className="absolute rounded-full pointer-events-none"
-        style={{
-          inset: "-18%",
-          background: "radial-gradient(circle, rgba(20,184,166,0.14) 0%, rgba(99,102,241,0.06) 40%, transparent 75%)",
-          filter: "blur(50px)",
-        }}
-      />
-
-      {/* Scan line */}
+      <div className="sovereign-map__atmosphere" aria-hidden />
       <div className="hero-scan-line" aria-hidden />
 
-      {/* SVG orbit */}
       <svg
         viewBox="0 0 380 380"
         fill="none"
-        style={{ width: "100%", height: "100%", overflow: "visible" }}
+        className="sovereign-map__svg"
       >
-        {/* Connection lines from center */}
         {nodes.map((n, i) => (
-          <motion.line
-            key={`line-${i}`}
-            x1="190" y1="190" x2={n.cx} y2={n.cy}
-            stroke={n.color}
-            strokeWidth="0.5"
-            opacity={hovered === i ? 0.5 : 0.12}
-            style={{ transition: "opacity 0.3s" }}
-          />
+          <Fragment key={`nexus-${i}`}>
+            <motion.line
+              x1="190" y1="190" x2={n.cx} y2={n.cy}
+              stroke={n.color}
+              strokeWidth="0.5"
+              opacity={hovered === i ? 0.6 : 0.15}
+              className="orbit-line"
+            />
+            {/* Neural Pulse - Data traveling from core to node */}
+            <motion.circle
+              r="1.5"
+              fill={n.color}
+              initial={{ offsetDistance: "0%", opacity: 0 }}
+              animate={{ 
+                offsetDistance: ["0%", "100%"],
+                opacity: [0, 1, 0]
+              }}
+              transition={{ 
+                duration: 2 + Math.random() * 2, 
+                repeat: Infinity, 
+                delay: Math.random() * 3,
+                ease: "easeInOut"
+              }}
+              style={{
+                offsetPath: `path('M 190 190 L ${n.cx} ${n.cy}')`,
+                filter: `drop-shadow(0 0 4px ${n.color})`
+              }}
+            />
+          </Fragment>
         ))}
 
-        {/* Rings */}
         {rings.map((ring, i) => (
           (() => {
             const safeRingRadius = toSafeRadius(ring.r, 1);
@@ -568,7 +1090,8 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
                   strokeDasharray={ring.dash === "none" ? undefined : ring.dash}
                   animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
                   transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
-                  style={{ transformOrigin: "190px 190px" }}
+                  className="orbit-ring"
+                  transformOrigin="190px 190px"
                 />
                 {!reduceMotion && (
                   <motion.circle
@@ -579,7 +1102,8 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
                     strokeDasharray="1 100"
                     animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
                     transition={{ duration: ring.dur * 0.4, repeat: Infinity, ease: "linear" }}
-                    style={{ transformOrigin: "190px 190px", filter: "blur(1px) drop-shadow(0 0 4px currentColor)" }}
+                    className="orbit-ring orbit-ring--glow"
+                    transformOrigin="190px 190px"
                   />
                 )}
               </g>
@@ -587,113 +1111,86 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
           })()
         ))}
 
-        {/* Nodes */}
         {nodes.map((node, i) => (
           (() => {
             const safeNodeRadius = toSafeRadius(node.r, 1);
             return (
-          <motion.g
-            key={i}
-            onMouseEnter={() => setHovered(i)}
-            onMouseLeave={() => setHovered(null)}
-            animate={reduceMotion ? {} : {
-              x: springX.get() * node.w,
-              y: springY.get() * node.w,
-              opacity: hovered === i ? 1 : [0.7, 1, 0.7],
-            }}
-            transition={{
-              opacity: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 },
-            }}
-            style={{ transformOrigin: `${node.cx}px ${node.cy}px`, cursor: "pointer" }}
-          >
-            {/* Pulse ring */}
-            {hovered === i && (
-              <circle
-                cx={node.cx} cy={node.cy} r={safeNodeRadius + 6}
-                fill="none" stroke={node.color} strokeWidth="1.5"
-                opacity={0.4}
-                style={{
-                  animation: "pulse-ring 1.4s ease-out infinite",
-                  transformOrigin: `${node.cx}px ${node.cy}px`
+              <motion.g
+                key={i}
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+                animate={reduceMotion ? {} : {
+                  x: springX.get() * node.w,
+                  y: springY.get() * node.w,
+                  opacity: hovered === i ? 1 : [0.7, 1, 0.7],
                 }}
-              />
-            )}
-            {/* Halo */}
-            <circle cx={node.cx} cy={node.cy} r={safeNodeRadius + 8} fill={node.color} opacity={0.07} />
-            {/* Core */}
-            <circle
-              cx={node.cx} cy={node.cy} r={safeNodeRadius}
-              fill={node.color}
-              style={{ filter: `drop-shadow(0 0 ${hovered === i ? 28 : 10}px ${node.color}bb)` }}
-            />
-            {/* Inner dot */}
-            <circle cx={node.cx} cy={node.cy} r={safeNodeRadius * 0.35} fill="rgba(0,0,0,0.55)" />
+                transition={{
+                  opacity: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 },
+                }}
+                transformOrigin={`${node.cx}px ${node.cy}px`}
+                cursor="pointer"
+                className="node-group"
+              >
+                {hovered === i && (
+                  <circle
+                    cx={node.cx} cy={node.cy} r={safeNodeRadius + 6}
+                    fill="none" stroke={node.color} strokeWidth="1.5"
+                    opacity={0.4}
+                    className="pulse-ring"
+                    transformOrigin={`${node.cx}px ${node.cy}px`}
+                  />
+                )}
+                <circle cx={node.cx} cy={node.cy} r={safeNodeRadius + 8} fill={node.color} opacity={0.07} />
+                <circle
+                  cx={node.cx} cy={node.cy} r={safeNodeRadius}
+                  fill={node.color}
+                  className="node-core"
+                />
+                <circle cx={node.cx} cy={node.cy} r={safeNodeRadius * 0.35} fill="rgba(0,0,0,0.55)" />
 
-            {/* Tooltip */}
-            <AnimatePresence>
-              {hovered === i && (
-                <motion.foreignObject
-                  x={node.cx > 190 ? node.cx - 160 : node.cx + 18}
-                  y={node.cy - 16}
-                  width="150" height="36"
-                  initial={{ opacity: 0, filter: "blur(4px)" }}
-                  animate={{ opacity: 1, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, filter: "blur(4px)" }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <div style={{
-                    background: "rgba(4,8,18,0.9)",
-                    border: `1px solid ${node.color}44`,
-                    borderRadius: 12,
-                    padding: "7px 14px",
-                    fontSize: 12,
-                    fontWeight: 800,
-                    color: "#fff",
-                    whiteSpace: "nowrap",
-                    backdropFilter: "blur(12px)",
-                    boxShadow: `0 8px 24px rgba(0,0,0,0.5), 0 0 20px ${node.color}22`,
-                    fontFamily: "Tajawal",
-                  }}>
-                    {node.label}
-                  </div>
-                </motion.foreignObject>
-              )}
-            </AnimatePresence>
-          </motion.g>
+                <AnimatePresence>
+                  {hovered === i && (
+                    <motion.foreignObject
+                      x={node.cx > 190 ? node.cx - 160 : node.cx + 18}
+                      y={node.cy - 16}
+                      width="150" height="36"
+                      initial={{ opacity: 0, filter: "blur(4px)" }}
+                      animate={{ opacity: 1, filter: "blur(0px)" }}
+                      exit={{ opacity: 0, filter: "blur(4px)" }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      <div className="node-tooltip-body">
+                        {node.label}
+                      </div>
+                    </motion.foreignObject>
+                  )}
+                </AnimatePresence>
+              </motion.g>
             );
           })()
         ))}
 
-        {/* Center core */}
         <motion.g
           animate={reduceMotion ? {} : { scale: [1, 1.18, 1], opacity: [0.9, 1, 0.9] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-          style={{ transformOrigin: "190px 190px" }}
+          className="center-core"
+          transformOrigin="190px 190px"
         >
-          <circle cx="190" cy="190" r="22" fill="rgba(45,212,191,0.12)" />
-          <circle cx="190" cy="190" r="14" fill="#14b8a6" style={{ filter: "drop-shadow(0 0 32px #14b8a6)" }} />
-          <circle cx="190" cy="190" r="6" fill="#fff" opacity={0.85} />
+          <circle cx="190" cy="190" r="22" fill="rgba(0, 240, 255, 0.15)" />
+          <circle cx="190" cy="190" r="14" fill="var(--teal)" className="center-core__glow" />
+          <circle cx="190" cy="190" r="6" fill="#fff" opacity={0.9} />
         </motion.g>
       </svg>
 
-      {/* Floating metric cards */}
-      <div
-        className="metric-card"
-        style={{ top: "8%", right: "-8%", animationDelay: "0s" }}
-      >
-        <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", color: "#2dd4bf", marginBottom: 4, textTransform: "uppercase" }}>
-          صحتك الداخلية
-        </p>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-          <span style={{ fontSize: 26, fontWeight: 900, color: "#fff", fontFamily: "Tajawal" }}>٧٨</span>
-          <span style={{ fontSize: 11, color: "#6b8a9e", fontWeight: 700 }}>/ ١٠٠</span>
+      <div className="metric-card metric-card--health">
+        <p className="metric-card-label">صحتك الداخلية</p>
+        <div className="metric-card-values">
+          <span className="metric-card-value">٧٨</span>
+          <span className="metric-card-text">/ ١٠٠</span>
         </div>
-        <div style={{
-          marginTop: 8, height: 3, borderRadius: 2,
-          background: "rgba(255,255,255,0.08)"
-        }}>
+        <div className="metric-card-bar">
           <motion.div
-            style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #14b8a6, #2dd4bf)" }}
+            className="metric-card-bar__fill"
             initial={{ width: "0%" }}
             animate={{ width: "78%" }}
             transition={{ duration: 1.2, ease: techEase, delay: 0.6 }}
@@ -701,22 +1198,17 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
         </div>
       </div>
 
-      <div
-        className="metric-card"
-        style={{ bottom: "12%", left: "-10%", animationDelay: "2s" }}
-      >
-        <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", color: "#f87171", marginBottom: 4, textTransform: "uppercase" }}>
-          نزيف طاقة
-        </p>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 22, fontWeight: 900, color: "#fff", fontFamily: "Tajawal" }}>٣</span>
-          <span style={{ fontSize: 11, color: "#6b8a9e", fontWeight: 700 }}>مصادر الاستنزاف</span>
+      <div className="metric-card metric-card--drain">
+        <p className="metric-card-label metric-card-label--alert">نزيف طاقة</p>
+        <div className="metric-card-values metric-card-values--inline">
+          <span className="metric-card-value metric-card-value--small">٣</span>
+          <span className="metric-card-text">مصادر الاستنزاف</span>
         </div>
-        <div style={{ marginTop: 8, display: "flex", gap: 4 }}>
-          {[1, 2, 3].map(dot => (
+        <div className="metric-card-dots">
+          {[1, 2, 3].map((dot) => (
             <motion.div
               key={dot}
-              style={{ width: 8, height: 8, borderRadius: 2, background: "#ef4444" }}
+              className="metric-card-dot"
               animate={{ opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 2, repeat: Infinity, delay: dot * 0.3 }}
             />
@@ -724,23 +1216,15 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
         </div>
       </div>
 
-      {/* Legend */}
-      <div style={{
-        position: "absolute",
-        bottom: "-40px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        display: "flex",
-        gap: 20,
-      }}>
+      <div className="legend">
         {[
-          { color: "#14b8a6", label: "توازن ذاتي" },
-          { color: "#f59e0b", label: "تشتت" },
-          { color: "#ef4444", label: "استنزاف" },
-        ].map(({ color, label }) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, boxShadow: `0 0 8px ${color}` }} />
-            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", color: "#7a95a8", textTransform: "uppercase", fontFamily: "Tajawal" }}>{label}</span>
+          { dotClass: "legend-dot legend-dot--teal", label: "توازن ذاتي" },
+          { dotClass: "legend-dot legend-dot--gold", label: "تشتت" },
+          { dotClass: "legend-dot legend-dot--crimson", label: "استنزاف" },
+        ].map(({ dotClass, label }) => (
+          <div key={label} className="legend-item">
+            <span className={dotClass} />
+            <span className="legend-label">{label}</span>
           </div>
         ))}
       </div>
@@ -748,34 +1232,19 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   );
 };
 
-/* ─── Live Pulse Counter ─────────────────────────────────────────────────────── */
 const PulseBadge: FC<{ count: number }> = ({ count }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.85 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ delay: 1.4, duration: 0.6, ease: techEase }}
-    style={{
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 10,
-      padding: "8px 16px",
-      borderRadius: 100,
-      border: "1px solid rgba(239,68,68,0.2)",
-      background: "rgba(239,68,68,0.06)",
-      backdropFilter: "blur(12px)",
-    }}
+    className="pulse-badge"
   >
     <motion.span
-      style={{
-        width: 7, height: 7, borderRadius: "50%",
-        background: "#ef4444",
-        boxShadow: "0 0 12px #ef4444",
-        display: "inline-block",
-      }}
+      className="pulse-badge__dot"
       animate={{ opacity: [1, 0.3, 1] }}
       transition={{ duration: 1.6, repeat: Infinity }}
     />
-    <span style={{ fontSize: 11, fontWeight: 800, color: "#a8bfcc", letterSpacing: "0.18em", textTransform: "uppercase" }}>
+    <span className="pulse-badge__text">
       {count.toLocaleString("en-US")} يستعيدون نبضهم الآن
     </span>
   </motion.div>
@@ -819,136 +1288,114 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const nebulaX = useSpring(useTransform(globalMouseX, x => -x * 0.2), { stiffness: 10, damping: 40, mass: 2 });
   const nebulaY = useSpring(useTransform(globalMouseY, y => -y * 0.2), { stiffness: 10, damping: 40, mass: 2 });
 
+  // Layer 4: Neural Dust (Extreme foreground, super fast)
+  const dustX = useSpring(useTransform(globalMouseX, x => -x * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
+  const dustY = useSpring(useTransform(globalMouseY, y => -y * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
+
+  // Tilt transforms for content
+  const tiltX = useSpring(useTransform(globalMouseY, y => y * 0.4), { stiffness: 45, damping: 25 });
+  const tiltY = useSpring(useTransform(globalMouseX, x => -x * 0.4), { stiffness: 45, damping: 25 });
+
   const handleStart = useCallback(() => {
     setIsWarping(true);
     setTimeout(onStartJourney, 900);
   }, [onStartJourney]);
 
+  const warpLines = useMemo(() => (
+    Array.from({ length: 40 }, (_, i) => ({
+      id: `warp-line-${i}`,
+      top: `${(i / 40) * 110 - 5}%`,
+      width: `${15 + Math.random() * 45}%`,
+      opacity: 0.15 + Math.random() * 0.55,
+      delay: Math.random() * 0.4,
+      duration: 0.25 + Math.random() * 0.3,
+    }))
+  ), []);
+
+  const warpLineStyles = useMemo(() => warpLines.map((line) => `
+    .${line.id} {
+      top: ${line.top};
+      width: ${line.width};
+      opacity: ${line.opacity};
+    }
+  `).join('\n'), [warpLines]);
+
   return (
     <>
       <style>{HERO_STYLES}</style>
+      <style>{warpLineStyles}</style>
 
       {/* ── Section wrapper ── */}
       <section
         className="hero-root"
         dir="rtl"
         onMouseMove={handleGlobalMouseMove}
-        style={{
-          position: "relative",
-          minHeight: "100svh",
-          display: "flex",
-          alignItems: "center",
-          overflow: "hidden",
-          background: "var(--void)",
-        }}
       >
         {/* ── Ambient canvas ── */}
         <div className="hero-canvas" aria-hidden>
-          
-          {/* Deep Nebula Parallax Layer */}
-          <motion.div style={{ x: nebulaX, y: nebulaY, width: "100%", height: "100%", position: "absolute" }}>
+          {/* Layer 3: Deep Nebula */}
+          <motion.div className="hero-layer hero-layer--nebula" style={{ x: nebulaX, y: nebulaY }}>
             <div className="hero-nebula" />
             <div className="ambient-orb ambient-orb-3" />
           </motion.div>
 
-          {/* Deep Space Parallax Starfield Layer */}
-          <motion.div style={{ x: starX, y: starY, width: "100%", height: "100%", position: "absolute" }}>
+          {/* Layer 2: Starfield */}
+          <motion.div className="hero-layer hero-layer--starfield" style={{ x: starX, y: starY }}>
             <div className="hero-starfield" />
             <div className="ambient-orb ambient-orb-2" />
           </motion.div>
 
-          {/* Front Grid Parallax Layer with 3D perspective */}
-          <motion.div style={{ x: gridX, y: gridY, width: "100%", height: "100%", position: "absolute" }}>
+          {/* Layer 1: Foreground Grid */}
+          <motion.div className="hero-layer hero-layer--grid" style={{ x: gridX, y: gridY }}>
             <div className="hero-grid-wrapper">
               <div className="hero-grid" />
             </div>
             <div className="ambient-orb ambient-orb-1" />
           </motion.div>
 
+          {/* Layer 4: Neural Dust (Near plane) */}
+          <motion.div className="hero-layer hero-layer--dust" style={{ x: dustX, y: dustY }}>
+            <div className="neural-dust-field" />
+          </motion.div>
+
           <div className="hero-grain" />
-          {/* Cinematic Cinematic Dark Mode Vignette */}
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "radial-gradient(ellipse 95% 85% at 50% 50%, transparent 35%, rgba(2,4,8,0.85) 100%)",
-            pointerEvents: "none"
-          }} />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "radial-gradient(ellipse 70% 30% at 50% 0%, rgba(20,184,166,0.06) 0%, transparent 100%)",
-            pointerEvents: "none", zIndex: 1
-          }} />
+          <div className="hero-screen-vignette" />
+          <div className="hero-screen-glow" />
         </div>
 
         {/* ── Content container ── */}
         <div className="hero-content-wrapper">
-
-          {/* ════ LEFT COLUMN: TEXT CONTENT ════ */}
           <motion.div
             variants={stagger}
             initial="hidden"
             animate="visible"
-            style={{ flex: "1 1 0", maxWidth: 600, display: "flex", flexDirection: "column", gap: "1.5rem" }}
+            className="hero-copy-column"
+            style={{ rotateX: tiltX, rotateY: tiltY }}
           >
-            {/* Eyebrow badges row */}
-            <motion.div variants={fadeUp} style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <motion.div variants={fadeUp} className="hero-eyebrow-row">
               <span className="hero-badge">
-                <span style={{
-                  width: 7, height: 7, borderRadius: "50%",
-                  background: "var(--ds-color-primary)",
-                  boxShadow: "0 0 14px var(--ds-color-primary-glow)",
-                  flexShrink: 0,
-                }} />
+                <span className="hero-badge__dot" />
                 DAWAYIR — الرحلة
               </span>
               <PulseBadge count={pulseCount} />
             </motion.div>
 
-            {/* Headline */}
-            <motion.h1
-              variants={fadeUp}
-              className="headline-static"
-              style={{
-                fontSize: "clamp(2.4rem, 5.5vw, 4.4rem)",
-                display: "block",
-                fontFamily: "var(--font-display)",
-                lineHeight: "1.4",
-                paddingTop: "0.2em",
-                paddingBottom: "0.2em"
-              }}
-            >
-              <span style={{ display: "block", marginBottom: "0.1em" }}>أنت لست مرهقاً</span>
-              <span style={{ display: "block", color: "#8faab8", fontSize: "0.78em", fontWeight: 600, marginBottom: "0.1em" }}>
-                أنت فقط
-              </span>
+            <motion.h1 variants={fadeUp} className="headline-static hero-headline">
+              <span className="headline-line">أنت لست مرهقاً</span>
+              <span className="headline-subline">أنت فقط</span>
               <RotatingWord />
             </motion.h1>
 
-            {/* Divider line */}
-            <motion.div
-              variants={fadeUp}
-              style={{
-                height: 1,
-                background: "linear-gradient(90deg, rgba(20,184,166,0.5), rgba(245,158,11,0.3), transparent)",
-                borderRadius: 1,
-              }}
-            />
+            <motion.div variants={fadeUp} className="hero-divider" />
 
-            {/* Body text */}
-            <motion.p variants={fadeUp} className="hero-body" style={{ fontWeight: 500, fontSize: "1.1rem" }}>
+            <motion.p variants={fadeUp} className="hero-body">
               قف. خذ نفساً عميقاً.
               أنت لست بحاجة إلى المزيد من المهام. أنت بحاجة إلى <strong>خريطة تصبح فيها مرئياً لنفسك</strong>.
               نترجم فوضى أفكارك فوراً لإحداثيات بصرية ترصد نزيف طاقتك.
             </motion.p>
 
-            {/* Name input (optional personalization) */}
-            <motion.div variants={fadeUp} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div className="glass-premium" style={{
-                display: "flex",
-                alignItems: "center",
-                borderRadius: 20,
-                overflow: "hidden",
-                maxWidth: 420,
-              }}>
+            <motion.div variants={fadeUp} className="hero-input-group">
+              <div className="glass-premium hero-input-wrapper">
                 <input
                   type="text"
                   id="mirror-name"
@@ -958,41 +1405,22 @@ export const HeroSection: FC<HeroSectionProps> = ({
                   onChange={e => setMirrorName(e.target.value)}
                   maxLength={24}
                   dir="rtl"
-                  style={{
-                    flex: 1,
-                    background: "transparent",
-                    border: "none",
-                    outline: "none",
-                    padding: "15px 20px",
-                    fontSize: 15,
-                    fontWeight: 600,
-                    color: "#fff",
-                    fontFamily: "Tajawal",
-                    textAlign: "right",
-                  }}
+                  className="hero-input"
                 />
                 {mirrorName && (
-                  <span style={{
-                    padding: "0 18px",
-                    fontSize: 13,
-                    color: "var(--ds-color-primary)",
-                    fontWeight: 800,
-                    whiteSpace: "nowrap",
-                    filter: "drop-shadow(0 0 8px var(--ds-color-primary-glow))"
-                  }}>
+                  <span className="hero-input-greeting">
                     أهلاً {mirrorName} ✦
                   </span>
                 )}
               </div>
               {!mirrorName && (
-                <p style={{ fontSize: 10.5, color: "#627a8e", fontWeight: 600, paddingRight: 4 }}>
+                <p className="hero-input-note">
                   اضف اسمك عشان تجربتك تبقى شخصية
                 </p>
               )}
             </motion.div>
 
-            {/* CTAs */}
-            <motion.div variants={fadeUp} className="cta-group" style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+            <motion.div variants={fadeUp} className="cta-group">
               <motion.button
                 type="button"
                 className="cta-primary"
@@ -1001,9 +1429,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
                 whileTap={{ scale: 0.97 }}
                 id="hero-cta-start"
               >
-                <Zap style={{ width: 18, height: 18, fill: "white" }} />
+                <Zap className="hero-cta-icon" />
                 <span>{ctaJourney}</span>
-                <ArrowLeft style={{ width: 17, height: 17 }} />
+                <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
               </motion.button>
 
               <motion.button
@@ -1018,12 +1446,11 @@ export const HeroSection: FC<HeroSectionProps> = ({
               </motion.button>
             </motion.div>
 
-            {/* Trust pills */}
-            <motion.div variants={fadeUp} style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <motion.div variants={fadeUp} className="hero-trust-row">
               {[
-                { icon: <Zap style={{ width: 13, height: 13, color: "#14b8a6" }} />, label: trustPoints[0] },
-                { icon: <Heart style={{ width: 13, height: 13, color: "#14b8a6" }} />, label: trustPoints[1] },
-                { icon: <Shield style={{ width: 13, height: 13, color: "#14b8a6" }} />, label: trustPoints[2] },
+                { icon: <Zap className="trust-icon" />, label: trustPoints[0] },
+                { icon: <Heart className="trust-icon" />, label: trustPoints[1] },
+                { icon: <Shield className="trust-icon" />, label: trustPoints[2] },
               ].map(({ icon, label }) => (
                 <span key={label} className="trust-pill">
                   {icon}
@@ -1033,7 +1460,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
             </motion.div>
           </motion.div>
 
-          {/* ════ RIGHT COLUMN: SOVEREIGN MAP ════ */}
           <motion.div
             className="map-area"
             initial={{ opacity: 0, scale: 0.88, filter: "blur(12px)" }}
@@ -1044,16 +1470,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
           </motion.div>
         </div>
 
-        {/* ── Bottom fade ── */}
-        <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          height: 160,
-          background: "transparent",
-          pointerEvents: "none", zIndex: 3,
-        }} />
+        <div className="hero-bottom-fade" />
       </section>
 
-      {/* ── Warp transition overlay ── */}
       <AnimatePresence>
         {isWarping && (
           <motion.div
@@ -1063,42 +1482,28 @@ export const HeroSection: FC<HeroSectionProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
           >
-            {[...Array(40)].map((_, i) => (
+            {warpLines.map((line) => (
               <motion.div
-                key={i}
-                style={{
-                  position: "absolute",
-                  height: 1,
-                  background: "linear-gradient(90deg, transparent, rgba(45,212,191,0.7), transparent)",
-                  top: `${(i / 40) * 110 - 5}%`,
-                  left: "-150%",
-                  width: `${15 + Math.random() * 45}%`,
-                  opacity: 0.15 + Math.random() * 0.55,
-                }}
-                animate={{ left: ["−150%", "300%"] }}
+                key={line.id}
+                className={`warp-line ${line.id}`}
+                animate={{ left: ["-150%", "300%"] }}
                 transition={{
-                  duration: 0.25 + Math.random() * 0.3,
+                  duration: line.duration,
                   repeat: Infinity,
                   ease: "linear",
-                  delay: Math.random() * 0.4,
+                  delay: line.delay,
                 }}
               />
             ))}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              style={{ textAlign: "center" }}
+              className="warp-overlay__content"
             >
-              <div style={{
-                width: 56, height: 56, borderRadius: "50%",
-                background: "linear-gradient(135deg, #14b8a6, #2dd4bf)",
-                boxShadow: "0 0 60px rgba(20,184,166,0.6)",
-                margin: "0 auto 16px",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <Zap style={{ width: 24, height: 24, fill: "white", color: "white" }} />
+              <div className="warp-icon-shell">
+                <Zap className="warp-icon" />
               </div>
-              <p style={{ fontSize: 14, fontWeight: 800, color: "rgba(255,255,255,0.7)", fontFamily: "Tajawal", letterSpacing: "0.2em" }}>
+              <p className="warp-text">
                 جاري تحليل وعيك...
               </p>
             </motion.div>

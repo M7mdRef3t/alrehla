@@ -12,7 +12,14 @@ import { useMapState } from "@/modules/map/store/map.store";
 import { getStoredLeadEmail, setStoredLeadEmail, hasRevenueAccess } from "../../src/services/revenueAccess";
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
-void APP_BOOT_ACTION_KEY;
+const GATE_ONBOARDING_PAYLOAD_KEY = "dawayir-gate-onboarding-payload";
+
+type GateOnboardingPayload = {
+  message: string;
+  source: "template" | "ai" | "offline_intervention";
+  painPoint?: string | null;
+  intent?: string | null;
+};
 
 const WarpOverlay = () => (
   <motion.div 
@@ -69,10 +76,25 @@ const WarpOverlay = () => (
 export default function OnboardingRouteClient() {
   const mirrorName = useJourneyState((s) => s.mirrorName);
   const [isWarping, setIsWarping] = useState(false);
+  const [gateContext, setGateContext] = useState<GateOnboardingPayload | null>(null);
 
   useEffect(() => {
     captureUtmFromCurrentUrl();
     captureLeadAttributionFromCurrentUrl();
+
+    const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const source = searchParams?.get("source");
+    if (typeof window !== "undefined" && source === "gate") {
+      const rawPayload = window.sessionStorage.getItem(GATE_ONBOARDING_PAYLOAD_KEY);
+      if (rawPayload) {
+        try {
+          setGateContext(JSON.parse(rawPayload) as GateOnboardingPayload);
+        } catch {
+          setGateContext(null);
+        }
+        window.sessionStorage.removeItem(GATE_ONBOARDING_PAYLOAD_KEY);
+      }
+    }
 
     const nodesCount = useMapState.getState().nodes.length;
     const baselineCompletedAt = useJourneyState.getState().baselineCompletedAt;
@@ -99,8 +121,11 @@ export default function OnboardingRouteClient() {
     if (existingEmail) params.set("email", existingEmail);
     if (skipped) params.set("skipped", "1");
     params.set("source", "onboarding");
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "navigate:map");
+    }
 
-    const nextUrl = `/pricing?${params.toString()}`;
+    const nextUrl = `/?${params.toString()}`;
 
     // 2. Cinematic delay
     setTimeout(() => {
@@ -116,6 +141,7 @@ export default function OnboardingRouteClient() {
       
       <OnboardingFlow
         initialMirrorName={mirrorName}
+        gateContext={gateContext}
         onComplete={handleComplete}
       />
     </>

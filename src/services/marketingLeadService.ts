@@ -55,7 +55,9 @@ function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayloa
     metadata: {
       ...input.metadata,
       capturedAt: new Date().toISOString(),
-      url: typeof window !== "undefined" ? window.location.href : undefined
+      url: typeof window !== "undefined" ? window.location.href : undefined,
+      poeticState: input.metadata?.state,
+      leadIntent: input.metadata?.intent
     }
   };
 }

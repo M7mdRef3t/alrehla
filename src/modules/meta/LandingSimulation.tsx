@@ -110,24 +110,24 @@ export function LandingSimulation() {
     switch (dominantCategory) {
       case "future":
         return {
-          title: "الفوضى في التوقع، مش في الواقع",
-          message: "عقلك يستبق الأحداث لدرجة الشلل. أنت لا تحتاج لخطة خمسية، بل تحتاج تحديد إحداثية الخطوة القادمة فقط لفك الاشتباك المعرفي.",
-          action: "اكتشف إحداثية استقرارك",
-          icon: <Target className="h-10 w-10 text-emerald-400" />
+          title: "هدفك محتاج إعادة توصيل",
+          message: "الشعور بالضياع مش معناه إنك ضعيف. معناه إنك واعي كفاية إنك تحس بالفجوة. في الملاذ، بنساعدك ترسم خريطة هدف حقيقي.",
+          action: "اعرف إتجاهك الحقيقي",
+          icon: <Target className="h-10 w-10 text-[var(--teal)]" />
         };
       case "progress":
         return {
           title: "محاولة اللحاق المستمرة تستنزفك",
           message: "أنت لست متأخراً، أنت تستخدم مقياساً خاطئاً. المقارنة الصامتة تغذي جلد الذات وتأكل إنجازك. الحقيقة تكمن في تحديد سرعتك الخاصة.",
           action: "استعد سيادتك على إيقاعك",
-          icon: <Cpu className="h-10 w-10 text-amber-400" />
+          icon: <Cpu className="h-10 w-10 text-[var(--gold)]" />
         };
       case "relationships":
         return {
           title: "هناك ثغرة في جدارك",
           message: "طاقتك تتسرب عبر حدود غير مرسمة بوضوح. الردود والمجاملات تأكل توازنك. تحتاج لخريطة طقس تكشف مصدر الاستنزاف الخفي.",
           action: "اكتشف طقس علاقاتك الآن",
-          icon: <ShieldAlert className="h-10 w-10 text-red-400" />
+          icon: <ShieldAlert className="h-10 w-10 text-rose-500" />
         };
       default:
          return {
@@ -166,12 +166,12 @@ export function LandingSimulation() {
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="text-center flex flex-col items-center"
             >
-              <div className="mb-6 inline-flex rounded-full bg-[rgba(255,255,255,0.03)] p-5 text-[var(--ds-color-brand-teal-400)] shadow-[inset_0_1px_rgba(255,255,255,0.1)] border border-[rgba(20,184,166,0.2)]">
+              <div className="mb-6 inline-flex rounded-full bg-[rgba(255,255,255,0.03)] p-5 text-[var(--teal)] shadow-[inset_0_1px_rgba(255,255,255,0.1)] border border-[rgba(0,240,255,0.25)]">
                 <Cpu className="h-8 w-8" />
               </div>
-              <h3 className="mb-4 text-3xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>صخب لا ينتهي؟</h3>
+              <h3 className="mb-4 text-3xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>تهيئة مرآة الوعي</h3>
               <p className="mb-10 text-[15px] leading-loose text-white/70 max-w-[34ch] mx-auto text-justify" style={{ textJustify: "inter-word", textAlignLast: "center" }}>
-                لا تجري استبيانات. 3 أسئلة من الأعماق، في دقيقتين فقط، لتشغيل مرآة الوعي الخاصة بك وتحديد نقطة الانطلاق.
+                لا نجري استبيانات تقليدية. هنا 3 أسئلة من المبادئ الأولى، في دقيقتين فقط، لتشغيل بروتوكول الرصد وتحديد ثغرات طاقتك.
               </p>
               <button
                 onClick={handleStart}
@@ -230,9 +230,9 @@ export function LandingSimulation() {
               exit={{ opacity: 0, filter: "blur(10px)" }}
               className="flex flex-col items-center justify-center text-center py-10"
             >
-              <Loader2 className="mb-8 h-12 w-12 animate-spin text-[var(--ds-color-brand-teal-400)] drop-shadow-[0_0_20px_rgba(45,212,191,0.5)]" />
-              <h3 className="text-xl font-black text-white mb-3" style={{ fontFamily: "var(--font-display)" }}>جاري فك التشفير</h3>
-              <p className="text-sm text-white/40">يتم رصد الإشارات الخفية للتبعية والاستنزاف..</p>
+              <Loader2 className="mb-8 h-12 w-12 animate-spin text-[var(--teal)] drop-shadow-[0_0_20px_rgba(0,240,255,0.5)]" />
+              <h3 className="text-xl font-black text-white mb-3" style={{ fontFamily: "var(--font-display)" }}>جاري تحليل الأنماط..</h3>
+              <p className="text-sm text-white/40">يتم رصد الإشارات الخفية للتبعية والاستنزاف وفك شفرة طاقتك.</p>
             </motion.div>
           )}
 

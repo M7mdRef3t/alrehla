@@ -32,6 +32,7 @@ import type { AppShellScreen } from '@/modules/map/dawayirIndex';
 import { usePersonalizedBiometrics } from "@/hooks/usePersonalizedBiometrics";
 import { useWeatherFunnelBridge } from "@/hooks/useWeatherFunnelBridge";
 import { BoardingPassModal } from "../BoardingPassModal";
+import { useMapState } from "@/modules/map/store/map.store";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { UserbackWidget } from "@/components/UserbackWidget";
 
@@ -169,6 +170,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
   }, [screen, onExitToLanding, showAuthModal]);
 
   const tier = useAuthState((s) => s.tier);
+  const transformationDiagnosis = useMapState((s) => s.transformationDiagnosis);
   const [isBoardingPassOpen, setIsBoardingPassOpen] = useState(false);
 
   // Goal Guard moved below authStatus declaration to avoid Temporal Dead Zone.
@@ -804,6 +806,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
           userName={authFirstName || (authUser?.user_metadata?.full_name as string) || (authUser?.email as string)}
           userId={authUser?.id}
           joinDate={authUser?.created_at ? new Date(authUser.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : undefined}
+          poeticState={transformationDiagnosis?.state}
         />
       </>
     </AppShellRouteGate>

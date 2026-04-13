@@ -201,6 +201,347 @@ const CATEGORY_LABELS: Record<string, string> = {
   composite: "🎨 مركّب",
 };
 
+const DEBUG_LOGO_LAB_STYLES = `
+  .debug-logo-lab-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #050A14 0%, #0A1628 40%, #0F172A 100%);
+    color: #E2E8F0;
+    font-family: Cairo, 'Segoe UI', Arial, sans-serif;
+    padding: 0 0 60px 0;
+  }
+
+  .debug-logo-lab-header {
+    position: relative;
+    text-align: center;
+    padding: 48px 24px 32px;
+    overflow: hidden;
+  }
+
+  .debug-logo-lab-header-glow {
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(20,184,166,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .debug-logo-lab-title {
+    font-size: 36px;
+    font-weight: 800;
+    margin: 0;
+    background: linear-gradient(135deg, #67E8F9 0%, #14B8A6 50%, #A78BFA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+  }
+
+  .debug-logo-lab-title-icon {
+    -webkit-text-fill-color: initial;
+    margin-left: 8px;
+  }
+
+  .debug-logo-lab-subtitle {
+    font-size: 16px;
+    color: #94A3B8;
+    margin-top: 8px;
+  }
+
+  .debug-logo-lab-filter-bar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 24px 32px;
+    flex-wrap: wrap;
+  }
+
+  .debug-logo-lab-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 24px;
+    border: 1px solid rgba(100,116,139,0.3);
+    background: rgba(15,23,42,0.6);
+    color: #94A3B8;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .debug-logo-lab-filter-btn--active {
+    border-color: #14B8A6;
+    background: rgba(20,184,166,0.15);
+    color: #5EEAD4;
+    box-shadow: 0 0 20px rgba(20,184,166,0.2);
+  }
+
+  .debug-logo-lab-filter-count {
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(100,116,139,0.2);
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+
+  .debug-logo-lab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+    padding: 0 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .debug-logo-lab-card {
+    background: rgba(15,23,42,0.7);
+    border: 1px solid rgba(100,116,139,0.2);
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+  }
+
+  .debug-logo-lab-card--hovered {
+    border-color: rgba(103,232,249,0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(20,184,166,0.15);
+  }
+
+  .debug-logo-lab-card--selected {
+    border-color: #14B8A6;
+    box-shadow: 0 0 30px rgba(20,184,166,0.25), inset 0 0 30px rgba(20,184,166,0.05);
+  }
+
+  .debug-logo-lab-category-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 10px;
+    background: rgba(30,41,59,0.8);
+    border: 1px solid rgba(100,116,139,0.25);
+    color: #94A3B8;
+  }
+
+  .debug-logo-lab-logo-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+    padding: 16px 8px;
+    border-radius: 12px;
+    background: radial-gradient(ellipse at center, rgba(8,13,24,0.9) 0%, rgba(15,23,42,0.6) 100%);
+    margin-bottom: 16px;
+    border: 1px solid rgba(51,65,85,0.3);
+  }
+
+  .debug-logo-lab-svg-logo {
+    max-width: 100%;
+    max-height: 80px;
+    filter: drop-shadow(0 0 8px rgba(20,184,166,0.3));
+  }
+
+  .debug-logo-lab-png-logo {
+    max-width: 85%;
+    max-height: 100px;
+    object-fit: contain;
+    border-radius: 8px;
+    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.4));
+  }
+
+  .debug-logo-lab-card-info {
+    text-align: center;
+  }
+
+  .debug-logo-lab-card-name {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 0 2px;
+    color: #F1F5F9;
+  }
+
+  .debug-logo-lab-card-name-en {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748B;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .debug-logo-lab-card-tagline {
+    font-size: 14px;
+    color: #5EEAD4;
+    font-weight: 600;
+    margin: 0;
+    font-style: italic;
+  }
+
+  .debug-logo-lab-expanded-details {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(100,116,139,0.2);
+    animation: fadeIn 0.3s ease;
+  }
+
+  .debug-logo-lab-description {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #CBD5E1;
+    margin: 0 0 14px;
+  }
+
+  .debug-logo-lab-strengths-section {
+    margin-bottom: 12px;
+  }
+
+  .debug-logo-lab-strengths-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #94A3B8;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .debug-logo-lab-strengths-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .debug-logo-lab-strength-tag {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 14px;
+    background: rgba(20,184,166,0.12);
+    border: 1px solid rgba(20,184,166,0.25);
+    color: #5EEAD4;
+  }
+
+  .debug-logo-lab-best-for-section {
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(59,130,246,0.08);
+    border: 1px solid rgba(59,130,246,0.15);
+  }
+
+  .debug-logo-lab-best-for-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #93C5FD;
+  }
+
+  .debug-logo-lab-best-for-text {
+    font-size: 13px;
+    color: #CBD5E1;
+  }
+
+  .debug-logo-lab-comparison-panel {
+    max-width: 1000px;
+    margin: 40px auto 0;
+    padding: 0 24px;
+  }
+
+  .debug-logo-lab-comparison-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #F1F5F9;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .debug-logo-lab-comparison-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .debug-logo-lab-preview-box {
+    text-align: center;
+  }
+
+  .debug-logo-lab-preview-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748B;
+    margin-bottom: 8px;
+  }
+
+  .debug-logo-lab-preview-area {
+    border-radius: 12px;
+    border: 1px solid rgba(100,116,139,0.25);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+  }
+
+  .debug-logo-lab-preview-area--dark {
+    background: #080D18;
+  }
+
+  .debug-logo-lab-preview-area--light {
+    background: #F1F5F9;
+  }
+
+  .debug-logo-lab-preview-area--small {
+    min-height: 80px;
+  }
+
+  .debug-logo-lab-preview-svg {
+    max-width: 100%;
+    max-height: 72px;
+  }
+
+  .debug-logo-lab-preview-png {
+    max-width: 90%;
+    max-height: 100px;
+    object-fit: contain;
+    border-radius: 6px;
+  }
+
+  .debug-logo-lab-preview-svg--inverted {
+    filter: invert(0.85) hue-rotate(180deg);
+  }
+
+  .debug-logo-lab-preview-small {
+    max-height: 32px;
+    max-width: 100px;
+  }
+
+  .debug-logo-lab-footer {
+    text-align: center;
+    padding: 40px 24px 0;
+    color: #475569;
+    font-size: 14px;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
 /* ── Component ── */
 export default function DebugLogoLab() {
   const [activeFilter, setActiveFilter] = useState<string>("all");
@@ -215,21 +556,22 @@ export default function DebugLogoLab() {
   const selected = LOGO_CONCEPTS.find((c) => c.id === selectedId);
 
   return (
-    <div style={styles.page} dir="rtl">
+    <div className="debug-logo-lab-page" dir="rtl">
+      <style>{DEBUG_LOGO_LAB_STYLES}</style>
       {/* ── Header ── */}
-      <header style={styles.header}>
-        <div style={styles.headerGlow} />
-        <h1 style={styles.title}>
-          <span style={styles.titleIcon}>🔬</span>
+      <header className="debug-logo-lab-header">
+        <div className="debug-logo-lab-header-glow" />
+        <h1 className="debug-logo-lab-title">
+          <span className="debug-logo-lab-title-icon">🔬</span>
           معمل شعارات الرحلة
         </h1>
-        <p style={styles.subtitle}>
+        <p className="debug-logo-lab-subtitle">
           {LOGO_CONCEPTS.length} مقترح شعار — اختار اللي يمثّلك
         </p>
       </header>
 
       {/* ── Filter Bar ── */}
-      <nav style={styles.filterBar}>
+      <nav className="debug-logo-lab-filter-bar">
         {[
           { key: "all", label: "📋 الكل", count: LOGO_CONCEPTS.length },
           { key: "geometric", label: "🔷 هندسي", count: LOGO_CONCEPTS.filter((c) => c.category === "geometric").length },
@@ -239,78 +581,72 @@ export default function DebugLogoLab() {
         ].map((f) => (
           <button
             key={f.key}
+            type="button"
             onClick={() => setActiveFilter(f.key)}
-            style={{
-              ...styles.filterBtn,
-              ...(activeFilter === f.key ? styles.filterBtnActive : {}),
-            }}
+            className={`debug-logo-lab-filter-btn ${activeFilter === f.key ? "debug-logo-lab-filter-btn--active" : ""}`}
           >
             {f.label}
-            <span style={styles.filterCount}>{f.count}</span>
+            <span className="debug-logo-lab-filter-count">{f.count}</span>
           </button>
         ))}
       </nav>
 
       {/* ── Grid ── */}
-      <div style={styles.grid}>
+      <div className="debug-logo-lab-grid">
         {filtered.map((concept) => (
           <div
             key={concept.id}
             onClick={() => setSelectedId(selectedId === concept.id ? null : concept.id)}
             onMouseEnter={() => setHoveredId(concept.id)}
             onMouseLeave={() => setHoveredId(null)}
-            style={{
-              ...styles.card,
-              ...(selectedId === concept.id ? styles.cardSelected : {}),
-              ...(hoveredId === concept.id && selectedId !== concept.id ? styles.cardHovered : {}),
-            }}
+            className={`debug-logo-lab-card ${selectedId === concept.id ? "debug-logo-lab-card--selected" : ""} ${hoveredId === concept.id && selectedId !== concept.id ? "debug-logo-lab-card--hovered" : ""}`}
           >
             {/* Category Badge */}
-            <div style={styles.categoryBadge}>
+            <div className="debug-logo-lab-category-badge">
               {CATEGORY_LABELS[concept.category]}
             </div>
 
             {/* Logo Preview */}
-            <div style={styles.logoPreview}>
+            <div className="debug-logo-lab-logo-preview">
               {concept.type === "svg" ? (
                 <img
                   src={concept.src}
                   alt={concept.name}
-                  style={styles.svgLogo}
+                  className="debug-logo-lab-svg-logo"
                 />
               ) : (
                 <img
                   src={concept.src}
                   alt={concept.name}
-                  style={styles.pngLogo}
+                  className="debug-logo-lab-png-logo"
                 />
               )}
             </div>
 
             {/* Info */}
-            <div style={styles.cardInfo}>
-              <h3 style={styles.cardName}>{concept.name}</h3>
-              <span style={styles.cardNameEn}>{concept.nameEn}</span>
-              <p style={styles.cardTagline}>« {concept.tagline} »</p>
+            <div className="debug-logo-lab-card-info">
+              <h3 className="debug-logo-lab-card-name">{concept.name}</h3>
+              <span className="debug-logo-lab-card-name-en">{concept.nameEn}</span>
+              <p className="debug-logo-lab-card-tagline">« {concept.tagline} »</p>
             </div>
 
             {/* Expanded Details */}
             {selectedId === concept.id && (
-              <div style={styles.expandedDetails}>
-                <p style={styles.description}>{concept.description}</p>
+              <div className="debug-logo-lab-expanded-details">
+                <p className="debug-logo-lab-description">{concept.description}</p>
 
-                <div style={styles.strengthsSection}>
-                  <span style={styles.strengthsLabel}>💪 نقاط القوة:</span>
-                  <div style={styles.strengthsList}>
+                <div className="debug-logo-lab-strengths-section">
+                  <span className="debug-logo-lab-strengths-label">💪 نقاط القوة:</span>
+                  <div className="debug-logo-lab-strengths-list">
                     {concept.strengths.map((s, i) => (
-                      <span key={i} style={styles.strengthTag}>{s}</span>
+                      <span key={i} className="debug-logo-lab-strength-tag">{s}</span>
                     ))}
                   </div>
                 </div>
 
-                <div style={styles.bestForSection}>
-                  <span style={styles.bestForLabel}>🎯 مناسب: </span>
-                  <span style={styles.bestForText}>{concept.bestFor}</span>
+                <div className="debug-logo-lab-best-for-section">
+                  <span className="debug-logo-lab-best-for-label">🎯 مناسب: </span>
+                  <span className="debug-logo-lab-best-for-text">{concept.bestFor}</span>
                 </div>
               </div>
             )}
@@ -320,48 +656,41 @@ export default function DebugLogoLab() {
 
       {/* ── Selected Comparison Panel ── */}
       {selected && (
-        <div style={styles.comparisonPanel}>
-          <h2 style={styles.comparisonTitle}>
+        <div className="debug-logo-lab-comparison-panel">
+          <h2 className="debug-logo-lab-comparison-title">
             👁️ معاينة مكبّرة — {selected.name}
           </h2>
-          <div style={styles.comparisonContent}>
+          <div className="debug-logo-lab-comparison-content">
             {/* Dark Preview */}
-            <div style={styles.previewBox}>
-              <span style={styles.previewLabel}>على خلفية داكنة</span>
-              <div style={{ ...styles.previewArea, background: "#080D18" }}>
+            <div className="debug-logo-lab-preview-box">
+              <span className="debug-logo-lab-preview-label">على خلفية داكنة</span>
+              <div className="debug-logo-lab-preview-area debug-logo-lab-preview-area--dark">
                 <img
                   src={selected.src}
                   alt={selected.name}
-                  style={selected.type === "svg" ? styles.previewSvg : styles.previewPng}
+                  className={selected.type === "svg" ? "debug-logo-lab-preview-svg" : "debug-logo-lab-preview-png"}
                 />
               </div>
             </div>
             {/* Light Preview */}
-            <div style={styles.previewBox}>
-              <span style={styles.previewLabel}>على خلفية فاتحة</span>
-              <div style={{ ...styles.previewArea, background: "#F1F5F9" }}>
+            <div className="debug-logo-lab-preview-box">
+              <span className="debug-logo-lab-preview-label">على خلفية فاتحة</span>
+              <div className="debug-logo-lab-preview-area debug-logo-lab-preview-area--light">
                 <img
                   src={selected.src}
                   alt={selected.name}
-                  style={{
-                    ...(selected.type === "svg" ? styles.previewSvg : styles.previewPng),
-                    filter: selected.type === "svg" ? "invert(0.85) hue-rotate(180deg)" : "none",
-                  }}
+                  className={selected.type === "svg" ? "debug-logo-lab-preview-svg debug-logo-lab-preview-svg--inverted" : "debug-logo-lab-preview-png"}
                 />
               </div>
             </div>
             {/* Small Preview */}
-            <div style={styles.previewBox}>
-              <span style={styles.previewLabel}>حجم صغير (favicon)</span>
-              <div style={{ ...styles.previewArea, background: "#080D18", minHeight: 80 }}>
+            <div className="debug-logo-lab-preview-box">
+              <span className="debug-logo-lab-preview-label">حجم صغير (favicon)</span>
+              <div className="debug-logo-lab-preview-area debug-logo-lab-preview-area--dark debug-logo-lab-preview-area--small">
                 <img
                   src={selected.src}
                   alt={selected.name}
-                  style={{
-                    ...(selected.type === "svg" ? styles.previewSvg : styles.previewPng),
-                    maxHeight: 32,
-                    maxWidth: 100,
-                  }}
+                  className={`debug-logo-lab-preview-small ${selected.type === "svg" ? "debug-logo-lab-preview-svg" : "debug-logo-lab-preview-png"}`}
                 />
               </div>
             </div>
@@ -370,280 +699,10 @@ export default function DebugLogoLab() {
       )}
 
       {/* ── Footer ── */}
-      <footer style={styles.footer}>
+      <footer className="debug-logo-lab-footer">
         <p>اضغط على أي شعار لمعاينة التفاصيل والمقارنة 👆</p>
       </footer>
     </div>
   );
 }
 
-/* ── Styles ── */
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "linear-gradient(180deg, #050A14 0%, #0A1628 40%, #0F172A 100%)",
-    color: "#E2E8F0",
-    fontFamily: "Cairo, 'Segoe UI', Arial, sans-serif",
-    padding: "0 0 60px 0",
-  },
-  header: {
-    position: "relative",
-    textAlign: "center",
-    padding: "48px 24px 32px",
-    overflow: "hidden",
-  },
-  headerGlow: {
-    position: "absolute",
-    top: "-50%",
-    left: "50%",
-    transform: "translateX(-50%)",
-    width: 600,
-    height: 400,
-    borderRadius: "50%",
-    background: "radial-gradient(ellipse, rgba(20,184,166,0.15) 0%, transparent 70%)",
-    pointerEvents: "none" as const,
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: 800,
-    margin: 0,
-    background: "linear-gradient(135deg, #67E8F9 0%, #14B8A6 50%, #A78BFA 100%)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    position: "relative" as const,
-  },
-  titleIcon: {
-    WebkitTextFillColor: "initial",
-    marginLeft: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#94A3B8",
-    marginTop: 8,
-  },
-  filterBar: {
-    display: "flex",
-    justifyContent: "center",
-    gap: 10,
-    padding: "0 24px 32px",
-    flexWrap: "wrap" as const,
-  },
-  filterBtn: {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    padding: "8px 18px",
-    borderRadius: 24,
-    border: "1px solid rgba(100,116,139,0.3)",
-    background: "rgba(15,23,42,0.6)",
-    color: "#94A3B8",
-    fontSize: 14,
-    fontWeight: 600,
-    fontFamily: "inherit",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-  },
-  filterBtnActive: {
-    borderColor: "#14B8A6",
-    background: "rgba(20,184,166,0.15)",
-    color: "#5EEAD4",
-    boxShadow: "0 0 20px rgba(20,184,166,0.2)",
-  },
-  filterCount: {
-    fontSize: 11,
-    fontWeight: 700,
-    background: "rgba(100,116,139,0.2)",
-    padding: "2px 7px",
-    borderRadius: 10,
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-    gap: 20,
-    padding: "0 24px",
-    maxWidth: 1400,
-    margin: "0 auto",
-  },
-  card: {
-    background: "rgba(15,23,42,0.7)",
-    border: "1px solid rgba(100,116,139,0.2)",
-    borderRadius: 16,
-    padding: 20,
-    cursor: "pointer",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    position: "relative" as const,
-    overflow: "hidden",
-    backdropFilter: "blur(12px)",
-  },
-  cardHovered: {
-    borderColor: "rgba(103,232,249,0.4)",
-    transform: "translateY(-4px)",
-    boxShadow: "0 12px 40px rgba(20,184,166,0.15)",
-  },
-  cardSelected: {
-    borderColor: "#14B8A6",
-    boxShadow: "0 0 30px rgba(20,184,166,0.25), inset 0 0 30px rgba(20,184,166,0.05)",
-  },
-  categoryBadge: {
-    position: "absolute" as const,
-    top: 12,
-    left: 12,
-    fontSize: 11,
-    fontWeight: 700,
-    padding: "3px 10px",
-    borderRadius: 10,
-    background: "rgba(30,41,59,0.8)",
-    border: "1px solid rgba(100,116,139,0.25)",
-    color: "#94A3B8",
-  },
-  logoPreview: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 120,
-    padding: "16px 8px",
-    borderRadius: 12,
-    background: "radial-gradient(ellipse at center, rgba(8,13,24,0.9) 0%, rgba(15,23,42,0.6) 100%)",
-    marginBottom: 16,
-    border: "1px solid rgba(51,65,85,0.3)",
-  },
-  svgLogo: {
-    maxWidth: "100%",
-    maxHeight: 80,
-    filter: "drop-shadow(0 0 8px rgba(20,184,166,0.3))",
-  },
-  pngLogo: {
-    maxWidth: "85%",
-    maxHeight: 100,
-    objectFit: "contain" as const,
-    borderRadius: 8,
-    filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.4))",
-  },
-  cardInfo: {
-    textAlign: "center" as const,
-  },
-  cardName: {
-    fontSize: 20,
-    fontWeight: 800,
-    margin: "0 0 2px",
-    color: "#F1F5F9",
-  },
-  cardNameEn: {
-    fontSize: 12,
-    fontWeight: 500,
-    color: "#64748B",
-    letterSpacing: "0.5px",
-    display: "block",
-    marginBottom: 8,
-  },
-  cardTagline: {
-    fontSize: 14,
-    color: "#5EEAD4",
-    fontWeight: 600,
-    margin: 0,
-    fontStyle: "italic" as const,
-  },
-  expandedDetails: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTop: "1px solid rgba(100,116,139,0.2)",
-    animation: "fadeIn 0.3s ease",
-  },
-  description: {
-    fontSize: 14,
-    lineHeight: 1.7,
-    color: "#CBD5E1",
-    margin: "0 0 14px",
-  },
-  strengthsSection: {
-    marginBottom: 12,
-  },
-  strengthsLabel: {
-    fontSize: 13,
-    fontWeight: 700,
-    color: "#94A3B8",
-    display: "block",
-    marginBottom: 6,
-  },
-  strengthsList: {
-    display: "flex",
-    flexWrap: "wrap" as const,
-    gap: 6,
-  },
-  strengthTag: {
-    fontSize: 12,
-    fontWeight: 600,
-    padding: "4px 12px",
-    borderRadius: 14,
-    background: "rgba(20,184,166,0.12)",
-    border: "1px solid rgba(20,184,166,0.25)",
-    color: "#5EEAD4",
-  },
-  bestForSection: {
-    padding: "10px 14px",
-    borderRadius: 10,
-    background: "rgba(59,130,246,0.08)",
-    border: "1px solid rgba(59,130,246,0.15)",
-  },
-  bestForLabel: {
-    fontSize: 13,
-    fontWeight: 700,
-    color: "#93C5FD",
-  },
-  bestForText: {
-    fontSize: 13,
-    color: "#CBD5E1",
-  },
-  comparisonPanel: {
-    maxWidth: 1000,
-    margin: "40px auto 0",
-    padding: "0 24px",
-  },
-  comparisonTitle: {
-    fontSize: 22,
-    fontWeight: 800,
-    color: "#F1F5F9",
-    textAlign: "center" as const,
-    marginBottom: 20,
-  },
-  comparisonContent: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-    gap: 16,
-  },
-  previewBox: {
-    textAlign: "center" as const,
-  },
-  previewLabel: {
-    display: "block",
-    fontSize: 12,
-    fontWeight: 600,
-    color: "#64748B",
-    marginBottom: 8,
-  },
-  previewArea: {
-    borderRadius: 12,
-    border: "1px solid rgba(100,116,139,0.25)",
-    padding: 20,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 120,
-  },
-  previewSvg: {
-    maxWidth: "100%",
-    maxHeight: 72,
-  },
-  previewPng: {
-    maxWidth: "90%",
-    maxHeight: 100,
-    objectFit: "contain" as const,
-    borderRadius: 6,
-  },
-  footer: {
-    textAlign: "center" as const,
-    padding: "40px 24px 0",
-    color: "#475569",
-    fontSize: 14,
-  },
-};

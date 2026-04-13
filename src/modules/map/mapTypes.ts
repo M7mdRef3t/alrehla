@@ -1,6 +1,14 @@
 export type Ring = "green" | "yellow" | "red";
 export type MapType = "classic" | "masafaty";
 
+// Import types from Masarat SDK via the Path Engine bridge
+import type { 
+  DetectedPattern, 
+  DynamicRecoveryPlan, 
+  PatternType,
+  SymptomType 
+} from "@/modules/pathEngine/pathTypes";
+
 /** إجابات شاشة "فين الشخص في حياتك" — للاستنزاف عن بُعد وتخزينها على العقدة */
 export type RealityOption = "often" | "sometimes" | "rarely" | "never";
 export interface RealityAnswers {
@@ -105,6 +113,14 @@ export interface RecoveryProgress {
   lastPathGeneratedAt?: number;
   /** مؤشر شرعية الحدود (0–100) — لمسار الصيام الشعوري: مدى تصالح المستخدم مع وضع الحد */
   boundaryLegitimacyScore?: number;
+  /** الخطة الديناميكية المولّدة من المحرك السيادي */
+  dynamicPlan?: DynamicRecoveryPlan;
+  /** الأنماط المرصودة في هذه العلاقة */
+  detectedPatterns?: DetectedPattern[];
+  /** نوع العرض السائد المكتشف */
+  symptomType?: SymptomType;
+  /** النمط الرئيسي المستهدف في الخطة */
+  primaryPattern?: PatternType;
 }
 
 export type QuickAnswerValue = "high" | "medium" | "low" | "zero";
@@ -166,9 +182,16 @@ export interface MapNode {
   notes?: PersonNote[];
   recoveryProgress?: RecoveryProgress;
   firstStepProgress?: FirstStepProgress;
-  dynamicPlanGenerated?: boolean; // Flag to check if dynamic plan was generated
-  patternsAnalyzed?: boolean; // Flag to check if patterns were analyzed
-  lastViewedStep?: "result" | "firstStep" | "recoveryPlan"; // Track last viewed step for "complete later" feature
+  dynamicPlanGenerated?: boolean; 
+  patternsAnalyzed?: boolean; 
+  /** التشخيص السيادي: لقطة من المحرك اللحظي */
+  sovereignDiagnostic?: {
+    pathId: string;
+    symptomType: SymptomType;
+    confidence: number;
+    timestamp: number;
+  };
+  lastViewedStep?: "result" | "firstStep" | "recoveryPlan"; 
   journeyStartDate?: number; // Timestamp when user started the recovery journey
   hasCompletedTraining?: boolean; // Flag to track if user completed personalized training
   /** اختياري: ربط في الشجرة — لو موجود يُستخدم في عرض شجرة العيلة/الشغل */

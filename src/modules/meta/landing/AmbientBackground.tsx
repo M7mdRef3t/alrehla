@@ -16,16 +16,28 @@ export const OrbitalRings: FC = () => (
   </div>
 );
 
+export const NebulaLayer: FC = () => (
+   <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+     <div 
+       className="absolute top-[-10%] left-[-10%] w-[120%] h-[120%] animate-[pulse_10s_ease-in-out_infinite]"
+       style={{
+         background: "radial-gradient(circle at 30% 70%, rgba(0, 240, 255, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 30%, rgba(124, 58, 237, 0.1) 0%, transparent 50%)",
+         filter: "blur(60px)"
+       }} 
+     />
+   </div>
+ );
+
 export const RadarSweep: FC = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-30">
+  <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40">
     <div
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-[spin_12s_linear_infinite]"
+      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-[spin_15s_linear_infinite]"
       style={{
-        width: "120vh",
-        height: "120vh",
-        background: "conic-gradient(from 0deg, rgba(45,212,191,0.15) 0deg, rgba(45,212,191,0) 60deg, transparent 360deg)",
+        width: "140vh",
+        height: "140vh",
+        background: "conic-gradient(from 0deg, rgba(0, 240, 255, 0.15) 0deg, rgba(0, 240, 255, 0) 40deg, transparent 360deg)",
         borderRadius: "50%",
-        filter: "blur(40px)"
+        filter: "blur(50px)"
       }}
     />
   </div>
@@ -44,6 +56,7 @@ export const AmbientBackground: FC<AmbientBackgroundProps> = ({
 }) => (
   <div className="fixed inset-0 pointer-events-none z-0" aria-hidden="true">
     <div className="absolute inset-0" style={{ background: ambientBackground }} />
+    {showHeavyAmbientLayers && <NebulaLayer />}
     {showHeavyAmbientLayers && <FloatingParticles />}
     {!reduceMotion && <OrbitalRings />}
     {showHeavyAmbientLayers && <RadarSweep />}

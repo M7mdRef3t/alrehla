@@ -23,7 +23,11 @@ export async function handleJourneyMap(req: AdminRequest, res: AdminResponse) {
     .eq("session_id", sessionId)
     .maybeSingle();
   if (error || !data) {
-    res.status(404).json({ error: "Map not found" });
+    res.status(200).json({
+      sessionId: sessionId,
+      nodes: [],
+      updatedAt: null
+    });
     return;
   }
   res.status(200).json({

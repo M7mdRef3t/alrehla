@@ -78,14 +78,14 @@ export const UsersPanel: FC = () => {
           <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 blur-[80px] rounded-full pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 blur-[80px] rounded-full pointer-events-none" />
           <div className="flex items-center gap-4 relative z-10 w-full md:w-auto mb-4 md:mb-0">
-              <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-                  <Eye className="w-6 h-6 text-cyan-400" />
+              <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                  <UserCircle className="w-6 h-6 text-amber-500" />
               </div>
               <div>
-                  <h2 className="text-2xl font-black text-white tracking-tight">رادار الكيانات (God-Eye Ledger)</h2>
+                  <h2 className="text-2xl font-black text-white tracking-tight">رادار الأرواح <span className="text-amber-500/50 text-sm font-mono">(Soul Radar)</span></h2>
                   <div className="flex items-center gap-2 mt-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
-                      <p className="text-sm font-medium text-cyan-400">مراقبة حية لمستوى نشاط جميع الأرواح في المنصة</p>
+                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
+                      <p className="text-sm font-black text-amber-500">تتبع حي لنبض النفوس المسافرة في الملكوت</p>
                   </div>
               </div>
           </div>
@@ -93,8 +93,8 @@ export const UsersPanel: FC = () => {
              <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="ابحث بالبصمة (Session ID)..."
-                className="w-full rounded-xl border border-slate-700/50 bg-slate-950/60 px-4 py-2.5 text-xs text-cyan-100 placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all font-mono shadow-inner"
+                placeholder="تتبع أثر روح معينة (Session ID)..."
+                className="w-full rounded-xl border border-slate-700/50 bg-slate-950/60 px-4 py-2.5 text-xs text-amber-100 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all font-mono shadow-inner"
                 dir="ltr"
              />
           </div>
@@ -103,10 +103,17 @@ export const UsersPanel: FC = () => {
       {/* Grid of users */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredSessions.map((s) => {
+           const isRegistered = Boolean(s.linkedEmail);
            const activityLevel = s.eventsCount > 50 ? 'high' : s.eventsCount > 10 ? 'medium' : 'low';
-           const glowColor = activityLevel === 'high' ? 'shadow-[0_0_15px_rgba(20,184,166,0.15)] border-teal-500/30' : 
-                             activityLevel === 'medium' ? 'border-indigo-500/20' : 'border-slate-800';
-           const dotColor = activityLevel === 'high' ? 'bg-teal-400' : activityLevel === 'medium' ? 'bg-indigo-400' : 'bg-slate-500';
+           
+           // الـ Glow الذهبي للمسجل والسياني للمجهول
+           const glowColor = isRegistered 
+             ? 'shadow-[0_0_20px_rgba(245,158,11,0.15)] border-amber-500/30 bg-amber-500/5' 
+             : activityLevel === 'high' 
+               ? 'shadow-[0_0_15px_rgba(34,211,238,0.15)] border-cyan-500/30' 
+               : 'border-slate-800';
+
+           const dotColor = isRegistered ? 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]' : activityLevel === 'high' ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'bg-slate-500';
 
            return (
             <motion.div 
@@ -115,37 +122,58 @@ export const UsersPanel: FC = () => {
                key={s.sessionId} 
                className={`relative overflow-hidden group admin-glass-card rounded-2xl p-4 transition-all duration-500 hover:scale-[1.02] ${glowColor}`}
             >
+              {isRegistered && (
+                <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-[8px] font-black text-amber-400 uppercase tracking-widest z-10">
+                  نفس مُعمدة
+                </div>
+              )}
               <div className="flex items-start justify-between mb-4">
                  <div className="flex items-center gap-3">
-                    <div className="relative flex items-center justify-center w-10 h-10 rounded-full bg-slate-900 border border-slate-800 text-slate-400">
-                       <UserCircle className="w-5 h-5" />
-                       {activityLevel === 'high' && <span className="absolute inset-0 rounded-full border border-teal-400/50 animate-ping opacity-20" />}
+                    <div className={`relative flex items-center justify-center w-10 h-10 rounded-full bg-slate-900 border ${isRegistered ? 'border-amber-500/40' : 'border-slate-800'} text-slate-400`}>
+                       <UserCircle className={`w-5 h-5 ${isRegistered ? 'text-amber-400' : ''}`} />
+                       {activityLevel === 'high' && <span className={`absolute inset-0 rounded-full border ${isRegistered ? 'border-amber-400/50' : 'border-cyan-400/50'} animate-ping opacity-20`} />}
                        <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-950 ${dotColor}`} />
                     </div>
                     <div>
                        <p className="font-mono text-xs text-white truncate max-w-[120px]" title={s.sessionId}>{s.sessionId}</p>
-                       <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1">
-                          <Activity className="w-3 h-3" />
-                          نبضة: {s.eventsCount}
+                       <p className="text-[10px] text-slate-400 font-bold mt-1">
+                          {s.linkedEmail 
+                            ? s.linkedEmail 
+                            : (s.lastFlowStep?.toLowerCase().includes('login') || s.lastFlowStep?.toLowerCase().includes('captured'))
+                              ? <span className="text-amber-500 animate-pulse">تأكيد الهوية البيومترية...</span>
+                              : "مسافر مجهول"}
                        </p>
                     </div>
                  </div>
               </div>
 
-              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-800/50">
+              <div className="space-y-1.5 mb-4">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-slate-500 font-bold uppercase tracking-widest">النبض</span>
+                  <span className="text-white font-mono">{s.eventsCount}</span>
+                </div>
+                {s.lastFlowStep && (
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-slate-500 font-bold uppercase tracking-widest">آخر محطة</span>
+                    <span className="text-amber-400 font-black truncate max-w-[120px]" title={s.lastFlowStep}>{s.lastFlowStep}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 pt-4 border-t border-slate-800/50">
                  <button 
                    onClick={() => openGodView(s.sessionId)} 
-                   className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 text-[10px] font-bold border border-cyan-500/20 transition-all uppercase tracking-widest"
+                   className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 text-[10px] font-black border border-amber-500/20 transition-all uppercase tracking-widest"
                  >
                    <Network className="w-3.5 h-3.5" />
-                   NEXUS
+                   عصب الخريطة
                  </button>
                  <button 
                    onClick={() => openJourneyLog(s.sessionId)} 
-                   className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-[10px] font-bold border border-indigo-500/20 transition-all uppercase tracking-widest"
+                   className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-[10px] font-black border border-indigo-500/20 transition-all uppercase tracking-widest"
                  >
                    <History className="w-3.5 h-3.5" />
-                   TIMELINE
+                   تتبع الأثر
                  </button>
               </div>
             </motion.div>
@@ -185,18 +213,18 @@ const GodViewModal: FC<GodViewModalProps> = ({ isOpen, onClose, loading, error, 
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="w-full max-w-5xl h-[80vh] flex flex-col rounded-3xl border border-cyan-500/20 bg-[#060B14] overflow-hidden shadow-[0_0_50px_rgba(34,211,238,0.1)]" 
+          className="w-full max-w-5xl h-[80vh] flex flex-col rounded-3xl border border-amber-500/20 bg-[#060B14] overflow-hidden shadow-[0_0_50px_rgba(245,158,11,0.1)]" 
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex justify-between items-center px-6 py-4 border-b border-white/5 bg-black/20 z-20">
              <div className="flex justify-center items-center gap-3">
-               <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+               <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20">
                  <Network className="w-5 h-5" />
                </div>
                <div>
-                  <h3 className="font-black text-white tracking-widest uppercase">الرؤية المكانية (God View)</h3>
-                  {sessionId && <p className="text-[10px] font-mono text-cyan-400/60 mt-0.5" dir="ltr">{sessionId}</p>}
+                  <h3 className="font-black text-white tracking-widest uppercase">عصب الخريطة (The Neural Nexus)</h3>
+                  {sessionId && <p className="text-[10px] font-mono text-amber-500/60 mt-0.5" dir="ltr">{sessionId}</p>}
                </div>
              </div>
             <button onClick={onClose} className="p-2 rounded-full text-slate-500 hover:text-white hover:bg-white/10 transition-colors">
@@ -208,8 +236,8 @@ const GodViewModal: FC<GodViewModalProps> = ({ isOpen, onClose, loading, error, 
           <div className="flex-1 relative overflow-auto p-8 custom-scrollbar">
             {loading ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
-                <p className="text-xs text-cyan-500/60 font-bold uppercase tracking-widest animate-pulse">جاري بناء خريطة التجربة...</p>
+                <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+                <p className="text-xs text-amber-500/60 font-bold uppercase tracking-widest animate-pulse">بنقرأ الخريطة العصبية للمسافر...</p>
               </div>
             ) : error ? (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -229,12 +257,12 @@ const GodViewModal: FC<GodViewModalProps> = ({ isOpen, onClose, loading, error, 
                        >
                           {/* Connection line to next node */}
                           {i !== snapshot.nodes!.length - 1 && (
-                             <div className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-12 bg-gradient-to-b from-cyan-500/50 to-indigo-500/10" />
+                             <div className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-12 bg-gradient-to-b from-amber-500/50 to-indigo-500/10" />
                           )}
-                          <div className="flex items-center gap-4 bg-slate-900 border border-cyan-500/30 rounded-full py-2 px-6 shadow-[0_0_20px_rgba(34,211,238,0.1)] z-10 hover:scale-105 hover:border-cyan-400 transition-transform cursor-crosshair">
-                             <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-                             <span className="text-xs font-bold text-cyan-100 uppercase tracking-widest">{node.label}</span>
-                             <span className="text-[10px] text-cyan-500/50 font-mono bg-black/40 px-2 py-0.5 rounded-md uppercase" dir="ltr">{node.ring}</span>
+                          <div className="flex items-center gap-4 bg-slate-900 border border-amber-500/30 rounded-full py-2 px-6 shadow-[0_0_20px_rgba(245,158,11,0.1)] z-10 hover:scale-105 hover:border-amber-400 transition-transform cursor-crosshair">
+                             <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+                             <span className="text-xs font-bold text-amber-100 uppercase tracking-widest">{node.label}</span>
+                             <span className="text-[10px] text-amber-500/50 font-mono bg-black/40 px-2 py-0.5 rounded-md uppercase" dir="ltr">{node.ring}</span>
                           </div>
                        </motion.div>
                     ))}
@@ -248,7 +276,7 @@ const GodViewModal: FC<GodViewModalProps> = ({ isOpen, onClose, loading, error, 
             
             {/* Ambient background decoration */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-lg max-h-lg opacity-10 pointer-events-none">
-              <div className="absolute inset-0 border border-cyan-500 rounded-full rounded-[40%] animate-spin-slow mix-blend-screen" style={{ animationDuration: '40s' }} />
+              <div className="absolute inset-0 border border-amber-500 rounded-full rounded-[40%] animate-spin-slow mix-blend-screen" style={{ animationDuration: '40s' }} />
               <div className="absolute inset-4 border border-indigo-500 rounded-full rounded-[40%] animate-reverse-spin mix-blend-screen" style={{ animationDuration: '50s' }} />
             </div>
           </div>
@@ -309,8 +337,8 @@ const VisitorJourneyModal: FC<VisitorJourneyModalProps> = ({ isOpen, onClose, lo
                  <History className="w-5 h-5" />
                </div>
                <div>
-                  <h3 className="font-black text-white tracking-widest uppercase text-sm">التسلسل الزمني</h3>
-                  <p className="text-[10px] text-indigo-400/60 mt-0.5 tracking-wider font-bold">Time-Lapse Chronicle</p>
+                  <h3 className="font-black text-white tracking-widest uppercase text-sm">تتبع الأثر</h3>
+                  <p className="text-[10px] text-indigo-400/60 mt-0.5 tracking-widest font-black uppercase">CHRONICLE OF THE SOUL</p>
                </div>
              </div>
             <button onClick={onClose} className="p-2 rounded-full text-slate-500 hover:text-white hover:bg-white/10 transition-colors">
@@ -322,7 +350,7 @@ const VisitorJourneyModal: FC<VisitorJourneyModalProps> = ({ isOpen, onClose, lo
             {loading ? (
               <div className="flex flex-col items-center justify-center h-full gap-3">
                 <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-                <p className="text-xs text-indigo-500/60 font-bold uppercase tracking-widest animate-pulse">جاري سحب الترددات...</p>
+                <p className="text-xs text-indigo-500/60 font-bold uppercase tracking-widest animate-pulse">بنسترجع ذكريات المسار...</p>
               </div>
             ) : events.length === 0 ? (
                <div className="flex items-center justify-center h-full">

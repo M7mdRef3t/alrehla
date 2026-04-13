@@ -67,7 +67,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {process.env.NODE_ENV !== "production" && (
           <Script
             id="silence-react-devtools-info"
-            strategy="beforeInteractive"
+            strategy="lazyOnload"
             dangerouslySetInnerHTML={{
               __html: `
                 (function () {

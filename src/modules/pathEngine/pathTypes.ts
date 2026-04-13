@@ -15,4 +15,9 @@ export type {
   RecoveryPath,
   DailyProgress,
   UserPathContext,
+  DetectedPattern,
+  DynamicRecoveryPlan,
+  PatternType,
+  DynamicStep,
+  DynamicAction
 } from "@alrehla/masarat";

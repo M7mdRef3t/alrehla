@@ -10,6 +10,40 @@ interface OnboardingWelcomeBubbleProps {
   onClose: () => void;
 }
 
+const WELCOME_BUBBLE_STYLES = `
+  .welcome-bubble-card {
+    border-color: rgba(45, 212, 191, 0.2);
+  }
+
+  .welcome-bubble-avatar-shell {
+    background: linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(139, 92, 246, 0.15));
+    border: 1px solid rgba(45, 212, 191, 0.3);
+    box-shadow: 0 0 16px rgba(45, 212, 191, 0.15);
+  }
+
+  .welcome-bubble-icon {
+    color: var(--soft-teal);
+  }
+
+  .welcome-bubble-pill {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+  }
+
+  .welcome-bubble-eyebrow {
+    color: var(--soft-teal);
+  }
+
+  .welcome-bubble-message {
+    color: var(--text-primary);
+  }
+
+  .welcome-bubble-close {
+    color: var(--text-muted);
+  }
+`;
+
 export const OnboardingWelcomeBubble: FC<OnboardingWelcomeBubbleProps> = ({
   message,
   source,
@@ -27,34 +61,24 @@ export const OnboardingWelcomeBubble: FC<OnboardingWelcomeBubbleProps> = ({
         exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       >
+        <style>{WELCOME_BUBBLE_STYLES}</style>
         <div
-          className="glass-card px-4 py-3 text-right"
-          style={{ borderColor: "rgba(45, 212, 191, 0.2)" }}
+          className="glass-card px-4 py-3 text-right welcome-bubble-card"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3 min-w-0">
               <div
-                className="mt-0.5 w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                style={{
-                  background: "linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(139, 92, 246, 0.15))",
-                  border: "1px solid rgba(45, 212, 191, 0.3)",
-                  boxShadow: "0 0 16px rgba(45, 212, 191, 0.15)"
-                }}
+                className="mt-0.5 w-9 h-9 rounded-full flex items-center justify-center shrink-0 welcome-bubble-avatar-shell"
               >
-                <Bot className="w-4 h-4" style={{ color: "var(--soft-teal)" }} aria-hidden="true" />
+                <Bot className="w-4 h-4 welcome-bubble-icon" aria-hidden="true" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-extrabold" style={{ color: "var(--soft-teal)" }}>
+                  <p className="text-xs font-extrabold welcome-bubble-eyebrow">
                     {isOfflineIntervention ? "????? ???? ????? ??? ???? ????..." : "?????? ??"}
                   </p>
                   <span
-                    className="inline-flex items-center justify-center text-[10px] font-semibold rounded-full px-2 py-0.5"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.05)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      color: "var(--text-muted)"
-                    }}
+                    className="inline-flex items-center justify-center text-[10px] font-semibold rounded-full px-2 py-0.5 welcome-bubble-pill"
                     title={isAi ? "AI" : isOfflineIntervention ? "Intervention" : "???? ?????"}
                     aria-label={isAi ? "AI" : isOfflineIntervention ? "Intervention" : "???? ?????"}
                   >
@@ -62,8 +86,7 @@ export const OnboardingWelcomeBubble: FC<OnboardingWelcomeBubbleProps> = ({
                   </span>
                 </div>
                 <p
-                  className="mt-1 text-sm font-semibold leading-relaxed"
-                  style={{ color: "var(--text-primary)" }}
+                  className="mt-1 text-sm font-semibold leading-relaxed welcome-bubble-message"
                 >
                   {message}
                 </p>
@@ -73,8 +96,7 @@ export const OnboardingWelcomeBubble: FC<OnboardingWelcomeBubbleProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors"
-              style={{ color: "var(--text-muted)" }}
+              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors welcome-bubble-close"
               aria-label="?????"
             >
               <X className="w-4 h-4" />

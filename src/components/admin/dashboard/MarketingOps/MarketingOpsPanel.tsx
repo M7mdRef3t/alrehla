@@ -535,6 +535,10 @@ export function MarketingOpsPanel() {
   const failed = (c["failed"] ?? 0);
   const realStarts = stats?.realStarts ?? 0;
   const convRate = uniqueEntities > 0 ? `${Math.round((realStarts / uniqueEntities) * 100)}%` : "—";
+  
+  // Verification Gap Index (VGI)
+  const totalLeadsCount = stats?.totalLeads ?? 0;
+  const vgiRate = totalLeadsCount > 0 ? Math.round((pending / totalLeadsCount) * 100) : 0;
 
   const availableLeads = (stats?.quickSendLeads ?? []).filter((l) => {
     const isNotContacted = !contacted.has(l.email);
@@ -737,6 +741,13 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
               icon={growthMetrics && growthMetrics.roi > 0 ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownRight className="w-5 h-5" />} 
               glowColor={growthMetrics && growthMetrics.roi > 0 ? "emerald" : "rose"} 
               tooltip={"نسبة الربح الصافي إلى تكلفة الإنفاق الإعلاني."} 
+            />
+            <StatCard 
+              title={"مؤشر الفقد (VGI)"} 
+              value={vgiRate + "%"} 
+              icon={<Ghost className="w-5 h-5" />} 
+              glowColor={vgiRate > 30 ? "rose" : "amber"} 
+              tooltip={"نسبة الأرواح التي قدمت إيميلاتها وتعطل مسارها عند مرحلة تفعيل البريد (Waiting for Verification)."} 
             />
             <StatCard 
               title={"تكلفة الاستحواذ"} 
