@@ -19,7 +19,7 @@ export async function handleJourneyMap(req: AdminRequest, res: AdminResponse) {
   }
   const { data, error } = await client
     .from("journey_maps")
-    .select("session_id,nodes,updated_at,ai_interpretation")
+    .select("session_id,nodes,updated_at,ai_interpretation,transformation_diagnosis")
     .eq("session_id", sessionId)
     .maybeSingle();
   if (error || !data) {
@@ -27,7 +27,8 @@ export async function handleJourneyMap(req: AdminRequest, res: AdminResponse) {
       sessionId: sessionId,
       nodes: [],
       updatedAt: null,
-      aiInterpretation: null
+      aiInterpretation: null,
+      transformationDiagnosis: null
     });
     return;
   }
@@ -35,7 +36,8 @@ export async function handleJourneyMap(req: AdminRequest, res: AdminResponse) {
     sessionId: data.session_id,
     nodes: data.nodes ?? [],
     updatedAt: data.updated_at,
-    aiInterpretation: data.ai_interpretation
+    aiInterpretation: data.ai_interpretation,
+    transformationDiagnosis: data.transformation_diagnosis
   });
 }
 

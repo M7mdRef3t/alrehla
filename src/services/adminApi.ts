@@ -851,7 +851,8 @@ export interface JourneyMapSnapshot {
   sessionId: string;
   nodes: MapNode[];
   updatedAt: number | null;
-  aiInterpretation?: string | null;
+  aiInterpretation?: any | null;
+  transformationDiagnosis?: any | null;
 }
 
 export interface SessionEventRow {
@@ -873,6 +874,12 @@ export interface VisitorSessionSummary {
   lastFlowStep: string | null;
   linkedUserId?: string | null;
   linkedEmail?: string | null;
+  aiPattern?: string | null;
+  aiState?: string | null;
+  riskLevel?: string | null;
+  protocolKey?: string | null;
+  rootTension?: string | null;
+  commitmentPledge?: string | null;
 }
 
 export interface UserStateRow {
@@ -976,7 +983,7 @@ export async function updateUserRole(id: string, role: string): Promise<boolean>
 }
 
 export async function fetchJourneyMap(sessionId: string): Promise<JourneyMapSnapshot | null> {
-  const apiData = await callAdminApi<{ sessionId: string; nodes: MapNode[]; updatedAt?: string; aiInterpretation?: string | null }>(
+  const apiData = await callAdminApi<{ sessionId: string; nodes: MapNode[]; updatedAt?: string; aiInterpretation?: string | null; transformationDiagnosis?: any | null }>(
     `journey-map?sessionId=${encodeURIComponent(sessionId)}`
   );
   if (apiData) {
@@ -984,13 +991,14 @@ export async function fetchJourneyMap(sessionId: string): Promise<JourneyMapSnap
       sessionId: apiData.sessionId ?? sessionId,
       nodes: apiData.nodes ?? [],
       updatedAt: apiData.updatedAt ? new Date(String(apiData.updatedAt)).getTime() : null,
-      aiInterpretation: apiData.aiInterpretation
+      aiInterpretation: apiData.aiInterpretation,
+      transformationDiagnosis: apiData.transformationDiagnosis
     };
   }
   if (!isSupabaseReady || !supabase) return null;
   const { data, error } = await supabase
     .from("journey_maps")
-    .select("session_id,nodes,updated_at,ai_interpretation")
+    .select("session_id,nodes,updated_at,ai_interpretation,transformation_diagnosis")
     .eq("session_id", sessionId)
     .maybeSingle();
   if (error || !data) return null;
@@ -998,7 +1006,8 @@ export async function fetchJourneyMap(sessionId: string): Promise<JourneyMapSnap
     sessionId: String(data.session_id ?? sessionId),
     nodes: (data.nodes as MapNode[]) ?? [],
     updatedAt: data.updated_at ? new Date(String(data.updated_at)).getTime() : null,
-    aiInterpretation: data.ai_interpretation
+    aiInterpretation: data.ai_interpretation,
+    transformationDiagnosis: data.transformation_diagnosis
   };
 }
 

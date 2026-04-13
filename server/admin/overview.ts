@@ -1086,6 +1086,43 @@ async function handleVisitorSessions(client: SupabaseClient, req: RequestLike, r
         }
       }
     }
+
+    const { data: maps } = await client
+      .from("journey_maps")
+      .select("session_id, ai_interpretation, transformation_diagnosis")
+      .in("session_id", sessionIds);
+    
+    const sessionMapData = new Map<string, any>();
+    if (maps) {
+      for (const m of maps as any[]) {
+        sessionMapData.set(String(m.session_id), m);
+      }
+    }
+
+    for (const session of results) {
+      const data = sessionMapData.get(session.sessionId);
+      if (data) {
+        const interpretation = data.ai_interpretation;
+        const diagnosis = data.transformation_diagnosis;
+        
+        session.hasAiInterpretation = interpretation && Object.keys(interpretation).length > 0;
+        session.aiPattern = interpretation?.primary_pattern || null;
+        session.aiState = interpretation?.state || null;
+        
+        session.riskLevel = diagnosis?.riskLevel || null;
+        session.protocolKey = diagnosis?.protocolKey || null;
+        session.rootTension = diagnosis?.rootTension || null;
+        session.commitmentPledge = diagnosis?.commitment_pledge || null;
+      } else {
+        session.hasAiInterpretation = false;
+        session.aiPattern = null;
+        session.aiState = null;
+        session.riskLevel = null;
+        session.protocolKey = null;
+        session.rootTension = null;
+        session.commitmentPledge = null;
+      }
+    }
   }
 
   res.status(200).json(results);

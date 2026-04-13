@@ -1,4 +1,4 @@
-import React, { type FC, useEffect, useState, useCallback, useMemo, Fragment } from "react";
+import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowLeft, Zap, Shield, Heart } from "lucide-react";
 
@@ -38,6 +38,7 @@ const HERO_STYLES = `
     --crimson: #ff0055;
     --text-main: #ffffff;
     --text-muted: #8faab8;
+    --hero-copy-measure: 46ch;
     
     /* Glassmorphism 3.0 Tokens */
     --glass-bg: rgba(5, 8, 20, 0.75);
@@ -107,6 +108,8 @@ const HERO_STYLES = `
     height: auto;
     line-height: 1.2;
     overflow: visible;
+    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
+    max-width: 100%;
     margin-bottom: 0.1em;
     color: var(--amber-500);
     font-family: "Noto Kufi Arabic";
@@ -123,6 +126,8 @@ const HERO_STYLES = `
     height: auto;
     line-height: 1.2;
     overflow: visible;
+    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
+    max-width: 100%;
     color: var(--color-amber-50);
     font-size: 0.78em;
     font-weight: 600;
@@ -704,7 +709,7 @@ const HERO_STYLES = `
   .rotating-word-wrapper {
     position: relative;
     display: inline-block;
-    width: fit-content;
+    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
     max-width: 100%;
     min-height: 1.3em;
     padding: 0;
@@ -722,7 +727,8 @@ const HERO_STYLES = `
     font-size: 1rem;
     line-height: 1.9;
     color: var(--text-sub);
-    max-width: 46ch;
+    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
+    max-width: 100%;
   }
 
   /* ── Primary CTA ── */
@@ -961,7 +967,7 @@ const RotatingWord: FC = () => {
   }, []);
 
   return (
-    <span className="rotating-word-wrapper relative inline-block w-fit max-w-full">
+    <span className="rotating-word-wrapper relative inline-block w-full max-w-full">
       {/* ليه موجود؟ علشان wrapper ياخد عرض كتلة العنوان كامل ويتحاذى معاها بصريًا. Time Complexity: O(1) */}
       <span className="invisible select-none block whitespace-nowrap" aria-hidden>
         {ROTATING_WORDS[5]}
@@ -1260,6 +1266,8 @@ export const HeroSection: FC<HeroSectionProps> = ({
 }) => {
   const reduceMotion = useReducedMotion();
   const [isWarping, setIsWarping] = useState(false);
+  const headlineLineRef = useRef<HTMLSpanElement | null>(null);
+  const [headlineMeasuredWidth, setHeadlineMeasuredWidth] = useState<number>(0);
 
   // Global Mouse tracking for Parallax Base
   const globalMouseX = useMotionValue(0);
@@ -1298,6 +1306,27 @@ export const HeroSection: FC<HeroSectionProps> = ({
     setIsWarping(true);
     setTimeout(onStartJourney, 900);
   }, [onStartJourney]);
+
+  // ليه موجود؟ علشان نثبت عرض بقية عناصر النص على نفس عرض جملة "أنت لست مرهقاً" بالظبط. Time Complexity: O(1) لكل تحديث قياس.
+  useLayoutEffect(() => {
+    const node = headlineLineRef.current;
+    if (!node) return;
+
+    const updateMeasuredWidth = () => {
+      const nextWidth = Math.ceil(node.getBoundingClientRect().width);
+      setHeadlineMeasuredWidth(prev => (prev === nextWidth ? prev : nextWidth));
+    };
+
+    updateMeasuredWidth();
+    const observer = new ResizeObserver(updateMeasuredWidth);
+    observer.observe(node);
+    window.addEventListener("resize", updateMeasuredWidth);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateMeasuredWidth);
+    };
+  }, []);
 
   const warpLines = useMemo(() => (
     Array.from({ length: 40 }, (_, i) => ({
@@ -1368,7 +1397,13 @@ export const HeroSection: FC<HeroSectionProps> = ({
             initial="hidden"
             animate="visible"
             className="hero-copy-column"
-            style={{ rotateX: tiltX, rotateY: tiltY }}
+            style={{
+              rotateX: tiltX,
+              rotateY: tiltY,
+              // ليه موجود؟ علشان نخلي العناصر التانية تلتزم بنفس عرض العنوان الأول وقت الرندر. Time Complexity: O(1).
+              ["--headline-measured-width" as any]:
+                headlineMeasuredWidth > 0 ? `${headlineMeasuredWidth}px` : undefined,
+            }}
           >
             <motion.div variants={fadeUp} className="hero-eyebrow-row">
               <span className="hero-badge">
@@ -1379,7 +1414,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             </motion.div>
 
             <motion.h1 variants={fadeUp} className="headline-static hero-headline">
-              <span className="headline-line">أنت لست مرهقاً</span>
+              <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
               <span className="headline-subline">أنت فقط</span>
               <RotatingWord />
             </motion.h1>

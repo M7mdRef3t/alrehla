@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
-import { Users, Loader2, X, Eye, Network, History, Sparkles, BrainCircuit, ArrowRight, UserCircle, Activity } from "lucide-react";
+import { Users, Loader2, X, Eye, Network, History, Sparkles, BrainCircuit, ArrowRight, UserCircle, Activity, ShieldAlert, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { isSupabaseReady } from "@/services/supabaseClient";
@@ -135,7 +135,12 @@ export const UsersPanel: FC = () => {
                        <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-950 ${dotColor}`} />
                     </div>
                     <div>
-                       <p className="font-mono text-xs text-white truncate max-w-[120px]" title={s.sessionId}>{s.sessionId}</p>
+                       <div className="flex items-center gap-2">
+                         <p className="font-mono text-xs text-white truncate max-w-[120px]" title={s.sessionId}>{s.sessionId}</p>
+                         {s.hasAiInterpretation && (
+                           <Sparkles className="w-3.5 h-3.5 text-fuchsia-400 animate-pulse drop-shadow-[0_0_8px_rgba(232,121,249,0.8)]" />
+                         )}
+                       </div>
                        <p className="text-[10px] text-slate-400 font-bold mt-1">
                           {s.linkedEmail 
                             ? s.linkedEmail 
@@ -160,6 +165,34 @@ export const UsersPanel: FC = () => {
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-slate-500 font-bold uppercase tracking-widest">آخر محطة</span>
                     <span className="text-amber-400 font-black truncate max-w-[120px]" title={s.lastFlowStep}>{s.lastFlowStep}</span>
+                  </div>
+                )}
+                {s.hasAiInterpretation && (
+                  <div className="pt-2 mt-2 border-t border-fuchsia-500/10 flex flex-wrap gap-1">
+                    {s.aiPattern && (
+                      <span className="px-1.5 py-0.5 rounded bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-400 text-[8px] font-bold uppercase tracking-widest truncate max-w-full" title={s.aiPattern}>
+                        نمط: {s.aiPattern}
+                      </span>
+                    )}
+                    {s.aiState && (
+                      <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[8px] font-bold uppercase tracking-widest truncate max-w-full" title={s.aiState}>
+                        حالة: {s.aiState}
+                      </span>
+                    )}
+                    {s.riskLevel && (
+                      <span className={`px-1.5 py-0.5 rounded border text-[8px] font-bold uppercase tracking-widest ${
+                        s.riskLevel.toLowerCase() === 'emergency' ? 'bg-rose-500/20 border-rose-500/40 text-rose-400' :
+                        s.riskLevel.toLowerCase() === 'high' ? 'bg-orange-500/20 border-orange-500/40 text-orange-400' :
+                        'bg-slate-500/10 border-slate-500/20 text-slate-400'
+                      }`}>
+                        خطر: {s.riskLevel}
+                      </span>
+                    )}
+                    {s.protocolKey && (
+                      <span className="px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[8px] font-bold uppercase tracking-widest">
+                        مسار: {s.protocolKey}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -248,9 +281,9 @@ const GodViewModal: FC<GodViewModalProps> = ({ isOpen, onClose, loading, error, 
                 <p className="text-xs text-rose-400 font-bold bg-rose-500/10 py-2 px-4 rounded-lg border border-rose-500/20">{error}</p>
               </div>
             ) : snapshot?.nodes?.length ? (
-              <div className="flex flex-col items-center justify-center min-h-full">
+              <div className="flex flex-col lg:flex-row items-center justify-center min-h-full gap-12">
                  {/* Fake Network Graph View */}
-                 <div className="relative flex flex-col items-center gap-8 py-12">
+                 <div className="relative flex flex-col items-center gap-8 py-12 flex-1">
                     {snapshot.nodes.map((node, i) => (
                        <motion.div 
                          initial={{ opacity: 0, y: 20 }}
@@ -271,6 +304,90 @@ const GodViewModal: FC<GodViewModalProps> = ({ isOpen, onClose, loading, error, 
                        </motion.div>
                     ))}
                  </div>
+                 
+                 {/* AI Interpretation Panel */}
+                 {snapshot.aiInterpretation && Object.keys(snapshot.aiInterpretation).length > 0 && (
+                   <div className="w-full lg:w-1/3 flex flex-col gap-4 z-10 bg-slate-900/80 border border-fuchsia-500/30 p-6 rounded-2xl shadow-[0_0_30px_rgba(217,70,239,0.1)] backdrop-blur-md relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/10 blur-[40px] pointer-events-none rounded-full" />
+                     <h4 className="flex items-center gap-2 text-fuchsia-400 font-black tracking-widest uppercase mb-2">
+                       <Sparkles className="w-4 h-4" />
+                       رؤية المرايا
+                     </h4>
+                     {snapshot.aiInterpretation.primary_pattern && (
+                       <div>
+                         <p className="text-[10px] text-fuchsia-400/50 font-bold uppercase tracking-widest mb-1">النمط الأساسي (Primary Node)</p>
+                         <p className="text-sm text-fuchsia-100 font-mono bg-fuchsia-950/50 p-2 rounded-lg border border-fuchsia-500/20">{snapshot.aiInterpretation.primary_pattern}</p>
+                       </div>
+                     )}
+                     {snapshot.aiInterpretation.state && (
+                       <div>
+                         <p className="text-[10px] text-indigo-400/50 font-bold uppercase tracking-widest mb-1">الحالة الروحية (Resonance State)</p>
+                         <p className="text-sm text-indigo-100 font-mono bg-indigo-950/50 p-2 rounded-lg border border-indigo-500/20">{snapshot.aiInterpretation.state}</p>
+                       </div>
+                     )}
+                     {snapshot.aiInterpretation.focus_areas && snapshot.aiInterpretation.focus_areas.length > 0 && (
+                       <div>
+                         <p className="text-[10px] text-amber-400/50 font-bold uppercase tracking-widest mb-2">نقاط التركيز (Anomalies to watch)</p>
+                         <ul className="space-y-2">
+                           {snapshot.aiInterpretation.focus_areas.map((area: string, idx: number) => (
+                             <li key={idx} className="flex gap-2 text-xs text-amber-100/80 border-l border-amber-500/30 pl-2">
+                               <span className="text-amber-500 mt-1 uppercase text-[8px] font-mono leading-none">●</span>
+                               <span>{area}</span>
+                             </li>
+                           ))}
+                         </ul>
+                       </div>
+                     )}
+                   </div>
+                 )}
+                 
+                 {/* Strategic Diagnosis Panel - NEW */}
+                 {snapshot.transformationDiagnosis && (
+                   <div className="w-full lg:w-1/3 flex flex-col gap-4 z-10 bg-slate-900/60 border border-amber-500/20 p-6 rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.05)] backdrop-blur-md">
+                     <h4 className="flex items-center gap-2 text-amber-500 font-black tracking-widest uppercase mb-2">
+                       <ShieldAlert className="w-4 h-4" />
+                       التشخيص الاستراتيجي
+                     </h4>
+                     
+                     {snapshot.transformationDiagnosis.riskLevel && (
+                       <div className="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5">
+                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">مستوى الخطر</span>
+                         <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
+                           snapshot.transformationDiagnosis.riskLevel.toLowerCase() === 'emergency' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                           'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                         }`}>
+                           {snapshot.transformationDiagnosis.riskLevel.toUpperCase()}
+                         </span>
+                       </div>
+                     )}
+
+                     {snapshot.transformationDiagnosis.rootTension && (
+                       <div className="p-3 rounded-xl bg-orange-500/5 border border-orange-500/10">
+                         <p className="text-[10px] text-orange-500/50 font-bold uppercase tracking-widest mb-1">محرك التوتر (Root Tension)</p>
+                         <p className="text-xs text-orange-100 italic leading-relaxed">" {snapshot.transformationDiagnosis.rootTension} "</p>
+                       </div>
+                     )}
+
+                     {snapshot.transformationDiagnosis.protocolKey && (
+                       <div className="flex items-center justify-between p-3 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
+                          <span className="text-[10px] text-cyan-500/50 font-bold uppercase tracking-widest">البروتوكول المعين</span>
+                          <span className="text-xs font-mono text-cyan-200">{snapshot.transformationDiagnosis.protocolKey}</span>
+                       </div>
+                     )}
+
+                     {snapshot.transformationDiagnosis.commitment_pledge && (
+                       <div className="mt-2 border-t border-white/5 pt-4">
+                         <p className="text-[10px] text-emerald-500/50 font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                           <Trophy className="w-3 h-3" />
+                           ميثاق المسافر (The Pledge)
+                         </p>
+                         <p className="text-xs text-emerald-100/90 leading-relaxed bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/10 font-medium italic">
+                           {snapshot.transformationDiagnosis.commitment_pledge}
+                         </p>
+                       </div>
+                     )}
+                   </div>
+                 )}
               </div>
             ) : (
                 <div className="absolute inset-0 flex items-center justify-center">

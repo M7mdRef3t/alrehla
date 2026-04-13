@@ -23,7 +23,7 @@ import { marketingLeadService } from "@/services/marketingLeadService";
 import { StepPainDump } from "./StepPainDump";
 import { classifyState, safetyTriage, type TransformationDiagnosis, type PoeticState } from "../transformationEngine/interpretationEngine";
 import { generateSovereignInsight } from "@/services/interpretationAI";
-
+import { useRouter } from "next/navigation";
 
 const ONBOARDING_STYLES = `
 @keyframes ob-ring-pulse {
@@ -992,7 +992,12 @@ const StepResultsScreen: FC<{
 
       <div className="space-y-4">
         {/* Poetic State Card */}
-        <div className="p-5 rounded-3xl border border-teal-500/30 bg-teal-500/10 shadow-[0_0_30px_rgba(45,212,191,0.1)] relative overflow-hidden group">
+        <motion.div 
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.8, delay: 0.2 }}
+           className="p-5 rounded-3xl border border-teal-500/30 bg-teal-500/10 shadow-[0_0_30px_rgba(45,212,191,0.1)] relative overflow-hidden group"
+        >
            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-400 to-transparent opacity-50"></div>
            <div className="flex items-center justify-between mb-4">
               <span className="text-[10px] font-bold text-teal-400 uppercase tracking-[0.2em]">الحالة الروحية</span>
@@ -1006,23 +1011,28 @@ const StepResultsScreen: FC<{
             <p className="text-sm text-slate-300 leading-relaxed italic">
               "{bodyText}"
             </p>
-        </div>
+        </motion.div>
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 text-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="grid grid-cols-3 gap-3"
+        >
+          <div className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 text-center shadow-[0_0_15px_rgba(244,63,94,0.05)] hover:shadow-[0_0_20px_rgba(244,63,94,0.1)] transition-all">
             <div className="text-[9px] font-bold text-rose-500 mb-1 uppercase tracking-widest">نزيف</div>
-            <div className="text-xl font-black text-white">{redValue}</div>
+            <div className="text-xl font-black text-white drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]">{redValue}</div>
           </div>
-          <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-center">
+          <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-center shadow-[0_0_15px_rgba(245,158,11,0.05)] hover:shadow-[0_0_20px_rgba(245,158,11,0.1)] transition-all">
             <div className="text-[9px] font-bold text-amber-500 mb-1 uppercase tracking-widest">حذر</div>
-            <div className="text-xl font-black text-white">{yellowValue}</div>
+            <div className="text-xl font-black text-white drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">{yellowValue}</div>
           </div>
-          <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 text-center">
+          <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 text-center shadow-[0_0_15px_rgba(16,185,129,0.05)] hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] transition-all">
             <div className="text-[9px] font-bold text-emerald-500 mb-1 uppercase tracking-widest">نمو</div>
-            <div className="text-xl font-black text-white">{greenValue}</div>
+            <div className="text-xl font-black text-white drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]">{greenValue}</div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Sovereign Insight (AI) Card */}
         <AnimatePresence mode="wait">
@@ -1126,6 +1136,7 @@ const StepSafetyTriage = () => (
 );
 
 export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initialMirrorName, gateContext = null }) => {
+  const router = useRouter();
   const addNode = useMapState((s) => s.addNode);
   const clientEventIdRef = useRef<string | null>(null);
 
@@ -1426,10 +1437,14 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
 
     markJourneyOnboardingDone();
     onComplete(false);
+    
     if (getNotificationPermission() === "default") {
       setTimeout(() => { void enableNotificationsWithPrompt(); }, 1500);
     }
-  }, [collectedItems, diagnosis, onComplete]);
+    
+    // Redirect to Maraya to continue the journey
+    router.push("/maraya");
+  }, [collectedItems, diagnosis, onComplete, router]);
 
   const dots = [0, 1, 2, 3, 4, 5, 6];
 
