@@ -17,6 +17,8 @@ interface Session {
   id: string;
   client_name: string;
   client_phone?: string;
+  user_id?: string; // New: Sovereign link
+  is_sovereign_captured?: boolean; // New: Sync flag
   session_type: "assessment" | "followup" | "crisis" | "coaching";
   status: SessionStatus;
   scheduled_at: string | null;
@@ -65,6 +67,8 @@ export const SessionOSPanel: React.FC = () => {
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
   const [isMasaratRunning, setIsMasaratRunning] = useState(false);
+  const [sovereignProfile, setSovereignProfile] = useState<{ diagnosis?: string; interpretation?: string } | null>(null);
+  const [isFetchingSovereign, setIsFetchingSovereign] = useState(false);
 
   // ─── Load sessions ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -96,6 +100,53 @@ export const SessionOSPanel: React.FC = () => {
       const stored = window.localStorage.getItem("session-os-data");
       if (stored) setSessions(JSON.parse(stored));
     } catch { /* ignore */ }
+  };
+
+  // ─── Fetch Sovereign Data ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (selected) {
+      fetchSovereignData(selected);
+    } else {
+      setSovereignProfile(null);
+    }
+  }, [selected?.id]);
+
+  const fetchSovereignData = async (session: Session) => {
+    if (!isSupabaseReady || !supabase) return;
+    setIsFetchingSovereign(true);
+    
+    try {
+      let userId = session.user_id;
+      
+      // Fallback: look up by phone if user_id is missing
+      if (!userId && session.client_phone) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("user_id", session.client_phone)
+          .single();
+        if (profile) userId = profile.id;
+      }
+
+      if (userId) {
+        const { data: mapData } = await supabase
+          .from("journey_maps")
+          .select("transformation_diagnosis, ai_interpretation")
+          .eq("user_id", userId)
+          .single();
+
+        if (mapData) {
+          setSovereignProfile({
+            diagnosis: mapData.transformation_diagnosis,
+            interpretation: mapData.ai_interpretation
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch sovereign data:", e);
+    } finally {
+      setIsFetchingSovereign(false);
+    }
   };
 
   const saveToLocalStorage = (data: Session[]) => {
@@ -209,12 +260,27 @@ export const SessionOSPanel: React.FC = () => {
       if (!res.ok) throw new Error(data.error);
       
       const summary = data.ai_summary;
-      const updated = sessions.map(s => s.id === session.id ? { ...s, ai_summary: summary, status: "active" as SessionStatus } : s);
+      const isSynced = data.is_sovereign_synced;
+      
+      const updated = sessions.map(s => s.id === session.id ? { 
+        ...s, 
+        ai_summary: summary, 
+        status: "active" as SessionStatus,
+        is_sovereign_captured: isSynced 
+      } : s);
+      
       setSessions(updated);
       saveToLocalStorage(updated);
-      if (selected?.id === session.id) setSelected(prev => prev ? { ...prev, ai_summary: summary, status: "active" as SessionStatus } : null);
+      if (selected?.id === session.id) {
+        setSelected(prev => prev ? { 
+          ...prev, 
+          ai_summary: summary, 
+          status: "active" as SessionStatus,
+          is_sovereign_captured: isSynced 
+        } : null);
+      }
       
-      alert("✅ محرك مسارات خلص التحليل!");
+      alert(isSynced ? "✅ تم التحليل بنجاح مع دمج الملف السيادي للمسافر!" : "✅ محرك مسارات خلص التحليل (بدون ربط سيادي).");
     } catch (e: any) {
       alert("❌ حصل مشكلة في المحرك: " + e.message);
     } finally {
@@ -341,7 +407,15 @@ export const SessionOSPanel: React.FC = () => {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-black text-white text-sm truncate">{session.client_name}</p>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <p className="font-black text-white text-sm truncate">{session.client_name}</p>
+                          {session.is_sovereign_captured && (
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 group-hover:bg-cyan-500/20 transition-all shadow-[0_0_8px_rgba(6,182,212,0.15)]">
+                              <Sparkles className="w-2.5 h-2.5 animate-pulse" />
+                              <span className="text-[7px] font-black uppercase tracking-tighter">Sovereign Link</span>
+                            </div>
+                          )}
+                        </div>
                         <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase px-2 py-1 rounded-full border ${cfg.bg} ${cfg.color}`}>
                           {cfg.icon}
                           {cfg.label}
@@ -410,6 +484,53 @@ export const SessionOSPanel: React.FC = () => {
                   })}
                 </div>
               </div>
+
+              {/* Sovereign Insights (The Bridge) */}
+              <AnimatePresence>
+                {(sovereignProfile || isFetchingSovereign) && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-4 bg-cyan-500/5 border border-cyan-500/10 rounded-2xl space-y-3 relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Sparkles className="w-8 h-8 text-cyan-400" />
+                      </div>
+                      
+                      <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400 flex items-center gap-2">
+                        <Activity className="w-3.5 h-3.5" />
+                        الملف السيادي للمسافر (Sovereign Insight)
+                      </p>
+
+                      {isFetchingSovereign ? (
+                        <div className="space-y-2 py-2">
+                          <div className="h-3 bg-cyan-500/10 rounded animate-pulse w-3/4" />
+                          <div className="h-3 bg-cyan-500/10 rounded animate-pulse w-1/2" />
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {sovereignProfile?.diagnosis && (
+                            <div className="space-y-1">
+                              <p className="text-[9px] font-black text-slate-500 uppercase">التشخيص الحالي</p>
+                              <p className="text-xs text-slate-300 leading-relaxed">{sovereignProfile.diagnosis}</p>
+                            </div>
+                          )}
+                          {sovereignProfile?.interpretation && (
+                            <div className="space-y-1">
+                              <p className="text-[9px] font-black text-slate-500 uppercase">رؤى الأوراكل</p>
+                              <p className="text-xs text-slate-200 font-medium italic border-r-2 border-cyan-500/30 pr-3 leading-relaxed">
+                                {sovereignProfile.interpretation}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Goals */}
               <div className="space-y-2">

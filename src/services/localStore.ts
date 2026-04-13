@@ -81,6 +81,6 @@ export const saveStoredState = (state: StoredState) => {
 
   saveTimeout = setTimeout(() => {
     void setJSON(STORAGE_KEY, safeState);
-    queueMapSync(safeState.nodes);
+    queueMapSync(safeState);
   }, 100); // 100ms debounce
 };

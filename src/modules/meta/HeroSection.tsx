@@ -702,16 +702,14 @@ const HERO_STYLES = `
   /* ── Rotating word ── */
   /* ليه موجود؟ علشان كلمة الـ rotation تاخد ارتفاع ثابت كافي بدون قص أثناء الأنيميشن. Time Complexity: O(1) */
   .rotating-word-wrapper {
-    position: static;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    column-gap: 0;
-    grid-template-columns: repeat(2, 1fr);
-    width: 100%;
-    min-height: 70px;
+    position: relative;
+    display: inline-block;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 1.3em;
     padding: 0;
     overflow: visible;
+    white-space: nowrap;
     box-sizing: content-box;
     font-family: "Noto Kufi Arabic";
     line-height: 1.2;
@@ -963,9 +961,9 @@ const RotatingWord: FC = () => {
   }, []);
 
   return (
-    <span className="rotating-word-wrapper static block w-full">
+    <span className="rotating-word-wrapper relative inline-block w-fit max-w-full">
       {/* ليه موجود؟ علشان wrapper ياخد عرض كتلة العنوان كامل ويتحاذى معاها بصريًا. Time Complexity: O(1) */}
-      <span className="invisible select-none block" aria-hidden>
+      <span className="invisible select-none block whitespace-nowrap" aria-hidden>
         {ROTATING_WORDS[5]}
       </span>
       <AnimatePresence mode="wait">
@@ -976,8 +974,8 @@ const RotatingWord: FC = () => {
             animate={{ opacity: 1, y: 0, clipPath: "polygon(0 -50%, 100% -50%, 100% 150%, 0% 150%)" }}
             exit={{ opacity: 0, y: -12, clipPath: "polygon(0 -50%, 100% -50%, 100% -50%, 0% -50%)" }}
             transition={{ duration: 0.45, ease: techEase }}
-            /* ليه موجود؟ علشان الكلمة المتحركة تفضل سطر واحد وارتفاعها يبقى طبيعي بدون قص أو لف. Time Complexity: O(1) */
-            className="static flex items-center headline-accent w-fit h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal font-['Noto_Kufi_Arabic']"
+            /* ليه موجود؟ علشان الكلمة المتحركة تبقى متراكبة فوق placeholder بدون ما تزود ارتفاع الحاوية. Time Complexity: O(1) */
+            className="absolute right-0 top-0 flex items-center headline-accent w-fit h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal font-['Noto_Kufi_Arabic']"
           >
             {ROTATING_WORDS[index]}
           </motion.span>

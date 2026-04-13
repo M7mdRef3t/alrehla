@@ -10,6 +10,9 @@ import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "
 import { useSyncState } from "@/domains/journey/store/sync.store";
 import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { triggerMapCompletionCheck } from "../lib/gate/handoffCore";
+import type { StoredState } from "./localStore";
+import type { MapType, FeelingCheckResult } from "@/modules/map/mapTypes";
+import type { TransformationDiagnosis } from "@/modules/transformationEngine/interpretationEngine";
 
 const SUPABASE_MAPS_TABLE = "journey_maps";
 const SYNC_DEBOUNCE_MS = 1200;
@@ -19,6 +22,10 @@ const SYNC_BUFFER_KEY = "dawayir-map-sync-buffer";
 interface PendingSyncBuffer {
   sessionId: string;
   nodes: MapNode[];
+  mapType?: MapType;
+  feelingResults?: FeelingCheckResult | null;
+  transformationDiagnosis?: TransformationDiagnosis | null;
+  aiInterpretation?: string | null;
   updatedAt: string; // ISO
   needsSync: boolean;
   lastError?: string | null;
@@ -58,14 +65,18 @@ function scheduleFlush(delayMs: number): void {
   }, Math.max(0, delayMs));
 }
 
-export function queueMapSync(nodes: MapNode[]): void {
+export function queueMapSync(state: StoredState): void {
   const sessionId = getTrackingSessionId();
   if (!sessionId) return;
 
   const now = new Date().toISOString();
   pendingBuffer = {
     sessionId,
-    nodes,
+    nodes: state.nodes,
+    mapType: state.mapType,
+    feelingResults: state.feelingResults,
+    transformationDiagnosis: state.transformationDiagnosis,
+    aiInterpretation: state.aiInterpretation,
     updatedAt: now,
     needsSync: true,
     lastError: null
@@ -109,6 +120,10 @@ async function flushMapSync(): Promise<void> {
   const payload: any = {
     session_id: pendingBuffer.sessionId,
     nodes: pendingBuffer.nodes,
+    map_type: pendingBuffer.mapType,
+    feeling_results: pendingBuffer.feelingResults,
+    transformation_diagnosis: pendingBuffer.transformationDiagnosis,
+    ai_interpretation: pendingBuffer.aiInterpretation,
     updated_at: pendingBuffer.updatedAt,
     user_id: user.id,
     last_sync_at: new Date().toISOString(),
@@ -203,6 +218,39 @@ function initializeMapSync(): void {
       useSyncState.getState().markLocalSaved(new Date().toISOString());
     }
   });
+}
+
+/**
+ * Fetch the latest Map/State from the cloud.
+ * Useful for Hub-and-Spoke cross-device recovery.
+ */
+export async function fetchCloudMap(): Promise<StoredState | null> {
+  if (!isSupabaseReady || !supabase) return null;
+  const user = await safeGetUser();
+  if (!user) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from(SUPABASE_MAPS_TABLE)
+      .select("nodes, map_type, feeling_results, transformation_diagnosis, ai_interpretation")
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) return null;
+
+    return {
+      nodes: data.nodes,
+      mapType: data.map_type,
+      feelingResults: data.feeling_results,
+      transformationDiagnosis: data.transformation_diagnosis,
+      aiInterpretation: data.ai_interpretation
+    };
+  } catch (err) {
+    if (runtimeEnv.isDev) logger.error("[MapSync] Error fetching cloud map:", err);
+    return null;
+  }
 }
 
 if (typeof window !== "undefined") {

@@ -851,6 +851,7 @@ export interface JourneyMapSnapshot {
   sessionId: string;
   nodes: MapNode[];
   updatedAt: number | null;
+  aiInterpretation?: string | null;
 }
 
 export interface SessionEventRow {
@@ -975,27 +976,29 @@ export async function updateUserRole(id: string, role: string): Promise<boolean>
 }
 
 export async function fetchJourneyMap(sessionId: string): Promise<JourneyMapSnapshot | null> {
-  const apiData = await callAdminApi<{ sessionId: string; nodes: MapNode[]; updatedAt?: string }>(
+  const apiData = await callAdminApi<{ sessionId: string; nodes: MapNode[]; updatedAt?: string; aiInterpretation?: string | null }>(
     `journey-map?sessionId=${encodeURIComponent(sessionId)}`
   );
   if (apiData) {
     return {
       sessionId: apiData.sessionId ?? sessionId,
       nodes: apiData.nodes ?? [],
-      updatedAt: apiData.updatedAt ? new Date(String(apiData.updatedAt)).getTime() : null
+      updatedAt: apiData.updatedAt ? new Date(String(apiData.updatedAt)).getTime() : null,
+      aiInterpretation: apiData.aiInterpretation
     };
   }
   if (!isSupabaseReady || !supabase) return null;
   const { data, error } = await supabase
     .from("journey_maps")
-    .select("session_id,nodes,updated_at")
+    .select("session_id,nodes,updated_at,ai_interpretation")
     .eq("session_id", sessionId)
     .maybeSingle();
   if (error || !data) return null;
   return {
     sessionId: String(data.session_id ?? sessionId),
     nodes: (data.nodes as MapNode[]) ?? [],
-    updatedAt: data.updated_at ? new Date(String(data.updated_at)).getTime() : null
+    updatedAt: data.updated_at ? new Date(String(data.updated_at)).getTime() : null,
+    aiInterpretation: data.ai_interpretation
   };
 }
 
@@ -1509,7 +1512,9 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
         addPersonOpened: 0,
         addPersonDoneShowOnMap: 0
       },
-      verificationGapIndex: (marketingLeadsTotalCount ?? 0) > 0 ? Math.round(((marketingByStatus.get("pending") ?? 0) / (marketingLeadsTotalCount ?? 0)) * 100) : 0,
+      verificationGapIndex: (marketingLeadsTotalCount ?? 0) > 0 
+        ? Math.max(0, Math.round((( (marketingLeadsTotalCount ?? 0) - (usersCount ?? 0) ) / (marketingLeadsTotalCount ?? 0)) * 100)) 
+        : 0,
       marketingLeads: {
         total: marketingLeadsTotalCount ?? 0,
         last24h: marketingLeadsLast24hCount ?? 0,

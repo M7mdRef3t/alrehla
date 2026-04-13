@@ -11,6 +11,9 @@ import { useMapState } from '@/modules/map/store/map.store';
 import { queueMapSync } from "@/services/mapSync";
 import { eventBus } from "@/shared/events";
 import type { MapNode, Ring, HealthAnswers, TreeRelation, RealityAnswers, QuickAnswerValue } from "../dawayirIndex";
+import type { StoredState } from "@/services/localStore";
+
+
 
 export const nodeService = {
   /**
@@ -60,7 +63,7 @@ export const nodeService = {
     );
 
     // trigger map sync
-    queueMapSync(useMapState.getState().nodes);
+    useMapState.getState().syncMapStorage();
 
     // emit domain event
     eventBus.emit("dawayir:node_added", { nodeId, ring, label });
@@ -73,7 +76,7 @@ export const nodeService = {
    */
   updateNode(id: string, updates: Partial<MapNode>): void {
     useMapState.getState().updateNode(id, updates);
-    queueMapSync(useMapState.getState().nodes);
+    useMapState.getState().syncMapStorage();
   },
 
   /**
@@ -82,7 +85,7 @@ export const nodeService = {
   moveToRing(id: string, ring: Ring, realityAnswers?: RealityAnswers): void {
     const prev = useMapState.getState().nodes.find((n) => n.id === id);
     useMapState.getState().moveNodeToRing(id, ring, realityAnswers);
-    queueMapSync(useMapState.getState().nodes);
+    useMapState.getState().syncMapStorage();
 
     if (prev && prev.ring !== ring) {
       eventBus.emit("dawayir:ring_changed", { nodeId: id, from: prev.ring, to: ring });
@@ -94,7 +97,7 @@ export const nodeService = {
    */
   archiveNode(id: string): void {
     useMapState.getState().archiveNode(id);
-    queueMapSync(useMapState.getState().nodes);
+    useMapState.getState().syncMapStorage();
     eventBus.emit("dawayir:node_archived", { nodeId: id });
   },
 
@@ -103,7 +106,7 @@ export const nodeService = {
    */
   unarchiveNode(id: string): void {
     useMapState.getState().unarchiveNode(id);
-    queueMapSync(useMapState.getState().nodes);
+    useMapState.getState().syncMapStorage();
   },
 
   /**
@@ -111,7 +114,7 @@ export const nodeService = {
    */
   deleteNode(id: string): void {
     useMapState.getState().deleteNode(id);
-    queueMapSync(useMapState.getState().nodes);
+    useMapState.getState().syncMapStorage();
   },
 
   /**
@@ -119,14 +122,14 @@ export const nodeService = {
    */
   analyzeNode(id: string, result: { score: number; answers: HealthAnswers }): void {
     useMapState.getState().analyzeNode(id, result);
-    queueMapSync(useMapState.getState().nodes);
+    useMapState.getState().syncMapStorage();
   },
 
   /**
    * مزامنة الخريطة يدوياً
    */
   syncMapNow(): void {
-    queueMapSync(useMapState.getState().nodes);
+    useMapState.getState().syncMapStorage();
   },
 
   /**

@@ -139,9 +139,13 @@ export const UsersPanel: FC = () => {
                        <p className="text-[10px] text-slate-400 font-bold mt-1">
                           {s.linkedEmail 
                             ? s.linkedEmail 
-                            : (s.lastFlowStep?.toLowerCase().includes('login') || s.lastFlowStep?.toLowerCase().includes('captured'))
-                              ? <span className="text-amber-500 animate-pulse">تأكيد الهوية البيومترية...</span>
-                              : "مسافر مجهول"}
+                            : (s.lastFlowStep?.toLowerCase().includes('login') || 
+                               s.lastFlowStep?.toLowerCase().includes('captured') || 
+                               s.lastFlowStep?.toLowerCase().includes('auth') ||
+                               s.lastFlowStep?.toLowerCase().includes('registration') ||
+                               s.lastFlowStep?.toLowerCase().includes('email'))
+                              ? <span className="text-amber-500 animate-pulse">بانتظار تأكيد العبور (Waiting for Verification)...</span>
+                              : "مسافر مجهول (Anonymous Traveler)"}
                        </p>
                     </div>
                  </div>

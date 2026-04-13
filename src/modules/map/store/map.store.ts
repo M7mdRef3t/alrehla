@@ -17,6 +17,7 @@ import type {
 } from "@/modules/map/mapTypes";
 import type { TransformationDiagnosis } from "@/modules/transformationEngine/interpretationEngine";
 import { loadStoredState, saveStoredState } from "@/services/localStore";
+import { fetchCloudMap } from "@/services/mapSync";
 import { resolvePathId, symptomIdsToSymptomType } from "@/modules/pathEngine/pathResolver";
 import type { ContactLevel } from "@/modules/pathEngine/pathTypes";
 import { emitDawayirSignal } from "@/modules/recommendation/recommendationBus";
@@ -1054,19 +1055,39 @@ async function hydrateMapState() {
   try {
     const initial =
       typeof loadStoredState === "function" ? await loadStoredState() : null;
-    const initialNodes: MapNode[] = (initial?.nodes ?? []).map(normalizeNodeOrbitHistory);
+    
+    let nodes = initial?.nodes ?? [];
+    let mapType = initial?.mapType ?? "masafaty";
+    let feelingResults = initial?.feelingResults ?? null;
+    let transformationDiagnosis = initial?.transformationDiagnosis ?? null;
+    let aiInterpretation = initial?.aiInterpretation ?? null;
+
+    // Hub-and-Spoke Cloud Recovery:
+    // If local is empty but user might have data in the cloud (e.g. new device/product)
+    if (nodes.length === 0 && !transformationDiagnosis) {
+      const cloudState = await fetchCloudMap();
+      if (cloudState) {
+        nodes = cloudState.nodes || [];
+        mapType = cloudState.mapType || "masafaty";
+        feelingResults = cloudState.feelingResults || null;
+        transformationDiagnosis = cloudState.transformationDiagnosis || null;
+        aiInterpretation = cloudState.aiInterpretation || null;
+      }
+    }
+
+    const normalizedNodes = nodes.map(normalizeNodeOrbitHistory);
     
     useMapState.setState({ 
-      nodes: initialNodes,
-      mapType: initial?.mapType ?? "masafaty",
-      feelingResults: initial?.feelingResults ?? null,
-      transformationDiagnosis: initial?.transformationDiagnosis ?? null,
-      aiInterpretation: initial?.aiInterpretation ?? null,
+      nodes: normalizedNodes,
+      mapType,
+      feelingResults,
+      transformationDiagnosis,
+      aiInterpretation,
       isHydrated: true 
     });
 
-    if (initialNodes.length > 0) {
-      deriveNextId(initialNodes);
+    if (normalizedNodes.length > 0) {
+      deriveNextId(normalizedNodes);
     }
   } catch {
     useMapState.setState({ isHydrated: true });

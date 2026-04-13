@@ -1261,7 +1261,11 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
     const nextDiagnosis = classifyState(painDump, { red: redCount, yellow: yellowCount, green: greenCount });
     setDiagnosis(nextDiagnosis);
     setDerivedResult(deriveOnboardingResult(mapped, gateContext));
-    setCollectedItems(mapped.map((item) => ({ ...item, ring: item.ring ?? undefined })));
+    const verifiedItems = mapped.map((item) => ({ 
+      ...item, 
+      ring: item.ring ?? "red" // Hardened fallback per user strategy
+    }));
+    setCollectedItems(verifiedItems);
     
     trackingService.recordFlow("onboarding_phase_mapping_completed", {
       meta: {
@@ -1312,7 +1316,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
     }
 
     const finalName = providedName.trim() || seededMirrorName;
-    const nextResult = derivedResult ?? deriveOnboardingResult(collectedItems, gateContext);
+    const nextResult = derivedResult ?? deriveOnboardingResult(collectedItems.map(c => ({...c, ring: c.ring ?? "red"})), gateContext);
     setDerivedResult(nextResult);
     const currentDiagnosis = diagnosis || classifyState(painDump, {
       red: collectedItems.filter(c => c.ring === "red").length,
