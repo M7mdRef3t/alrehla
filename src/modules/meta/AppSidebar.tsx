@@ -220,10 +220,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   /**
    * Sidebar Sector UI Component
    */
-  const SidebarSector: FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; color: string }> = ({ title, children, icon: _icon, color: _color }) => (
-    <div className="space-y-1.5 mb-6">
-      <div className="flex items-center gap-2 px-2.5 mb-2 opacity-50">
-        <span className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">
+   const SidebarSector: FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; color: string }> = ({ title, children, icon: _icon, color = "teal" }) => (
+    <div className="space-y-1 my-5">
+      <div className="flex items-center gap-2 px-3 mb-1.5 group/header">
+        <div className={`w-1 h-1 rounded-full bg-${color}-500/40 group-hover/header:bg-${color}-400 transition-colors`} />
+        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500/60 dark:text-white/10 group-hover/header:text-slate-400 dark:group-hover/header:text-white/30 transition-colors">
           {title}
         </span>
       </div>
@@ -244,16 +245,16 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-3 w-full px-3 py-2 rounded-xl transition-all hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white relative"
+      className="ds-sidebar-item"
       data-active={active}
-      {...({ style: { "--ds-item-glow-color": color } } as any)}
+      style={{ "--ds-item-glow-color": color } as any}
     >
-      <div className="w-5 h-5 flex items-center justify-center">
+      <div className="ds-icon-box">
         {icon}
       </div>
-      <span className="truncate flex-1 text-right">{label}</span>
+      <span className="truncate flex-1">{label}</span>
       {badge && (
-        <span className="text-[10px] font-bold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full px-1.5 h-4 flex items-center justify-center opacity-60">
+        <span className="ds-badge !text-[10px] !px-1.5 !h-4 opacity-60">
           {badge}
         </span>
       )}
@@ -492,7 +493,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         className="fixed top-0 right-0 z-40 h-full hidden md:flex flex-row-reverse group/sidebar"
         aria-label="القائمة الرئيسية"
       >
-        <div className={`h-full w-56 shrink-0 overflow-hidden border-l border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40 transition-transform duration-300 ${isDesktopSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className={`h-full w-56 shrink-0 overflow-hidden border-l border-white/10 bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl transition-transform duration-300 ${isDesktopSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
           <aside className="h-full w-full flex flex-col gap-3 py-6 px-4">
             {viewingNode?.analysis && (
               <div className="shrink-0 space-y-1 mb-1">
@@ -543,11 +544,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
         {/* Desktop Handle */}
         <div
-          className="h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600/90 text-white border-l border-teal-700/50 cursor-pointer py-4"
+          className={`h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600/40 backdrop-blur-xl text-white border-l border-white/10 cursor-pointer py-4 hover:bg-teal-600/60 transition-colors`}
           onClick={() => setIsDesktopSidebarOpen((current) => !current)}
           title={isDesktopSidebarOpen ? "أغلق محطة الانطلاق" : "افتح محطة الانطلاق"}
         >
-          <PanelRightOpen className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0"}`} />
+          <PanelRightOpen className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0 text-teal-400"}`} />
         </div>
       </div>
 
@@ -590,7 +591,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-[min(86vw,24rem)] bg-[#0a0f18] z-50 md:hidden flex flex-col border-l border-white/10"
+              className="fixed top-0 right-0 h-full w-[min(86vw,24rem)] bg-[#0B0F19]/80 backdrop-blur-3xl z-50 md:hidden flex flex-col border-l border-white/10 shadow-2xl"
             >
               <div className="flex items-center justify-between p-5 border-b border-white/5">
                 <h2 className="text-lg font-bold text-white">محطة الانطلاق</h2>

@@ -110,6 +110,24 @@ export const freezeRewardsService = {
   },
 
   /**
+   * يُستدعى عند استخدام "ذكاء دواير" (Dawayir Intelligence)
+   * لتحليل العلاقات بعمق أو استشراف المستقبل
+   */
+  onIntelligenceDeepDive(): { fpEarned: number } {
+    const state = useGamificationState.getState();
+    const fpEarned = 50; // مكافأة عالية للوعي العميق
+    state.addFrostPoints(fpEarned, "استبصار علائقي عميق 👁️");
+    state.addXP(75, "سيادة معرفية");
+    
+    eventBus.emit("tajmeed:frost-earned", {
+      amount: fpEarned,
+      reason: "intelligence_deep_dive",
+    });
+
+    return { fpEarned };
+  },
+
+  /**
    * الحصول على إحصائيات التجميد الشاملة
    */
   getFreezeProfile() {

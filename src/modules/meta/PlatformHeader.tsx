@@ -348,7 +348,7 @@ export const PlatformHeader = memo(function PlatformHeader({
           </AnimatePresence>
         </button>
 
-        <div className="relative">
+          <div className="relative text-amber-500">
             <AnimatePresence>
               {isLoggedIn && (
                 notifOpen ? (
@@ -433,7 +433,7 @@ export const PlatformHeader = memo(function PlatformHeader({
                     {avatarInitial}
                   </span>
                 )}
-                <span className="hidden lg:inline max-w-[8rem] truncate font-bold">{firstName ?? "المسافر"}</span>
+                <span className="hidden lg:inline max-w-[8rem] truncate font-bold text-[var(--tw-ring-offset-color)]">{firstName ?? "المسافر"}</span>
                 <ChevronDown
                   className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 rotate-180"
                 />
@@ -460,7 +460,7 @@ export const PlatformHeader = memo(function PlatformHeader({
                     {avatarInitial}
                   </span>
                 )}
-                <span className="hidden lg:inline max-w-[8rem] truncate font-bold">{firstName ?? "المسافر"}</span>
+                <span className="hidden lg:inline max-w-[8rem] truncate font-bold text-[var(--tw-ring-offset-color)]">{firstName ?? "المسافر"}</span>
                 <ChevronDown
                   className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
                 />

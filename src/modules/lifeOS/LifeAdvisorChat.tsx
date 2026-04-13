@@ -482,7 +482,7 @@ export function LifeAdvisorChat({ isOpen, onClose }: LifeAdvisorChatProps) {
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="اسأل جارفيس..."
-                className="flex-1 rounded-2xl px-4 py-3 text-sm text-white bg-white/5 border border-white/8 placeholder:text-white/20 resize-none focus:outline-none focus:border-violet-500/30 transition-colors min-h-[44px] max-h-[120px]"
+                className="flex-1 rounded-2xl px-4 py-3 text-sm text-white bg-white/5 border border-white/8 placeholder:text-[#cbd5e1] placeholder:font-semibold resize-none focus:outline-none focus:border-violet-500/30 transition-colors min-h-[44px] max-h-[120px]"
                 rows={1}
                 style={{ caretColor: "#a78bfa" }}
               />

@@ -337,6 +337,8 @@ svg [role="button"]:focus-visible {
 .markdown-content p {
   margin-bottom: 0.75rem;
   line-height: 1.6;
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 .markdown-content strong {

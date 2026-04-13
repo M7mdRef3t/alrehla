@@ -350,7 +350,7 @@ function AddRitualSheet({
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   placeholder="اسم العادة..."
-                  className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white placeholder:text-white/20 outline-none"
+                  className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white placeholder:text-[#cbd5e1] placeholder:font-semibold outline-none"
                   style={{
                     background: "rgba(255,255,255,0.05)",
                     border: "1px solid rgba(255,255,255,0.1)",

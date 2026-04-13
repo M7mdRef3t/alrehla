@@ -26,7 +26,7 @@ const KNOWN_SCREENS = new Set<AppScreen>([
   "oracle-dashboard", "armory", "survey", "exit-scripts",
   "grounding", "stories", "about", "insights", "quizzes",
   "behavioral-analysis", "resources",
-  "profile", "sanctuary", "protocol"
+  "profile", "sanctuary", "protocol", "dawayir"
 ]);
 
 /** Type guard: narrows `string` â†’ `AppScreen` safely */
@@ -143,7 +143,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
 
   return (
     <>
-      {screen !== "map" && (
+      {screen !== "map" && screen !== "dawayir" && (
         <PlatformHeader
           activeScreen={screen}
           onNavigate={handleHeaderNavigate}
@@ -151,14 +151,14 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
           onLogout={handleLogout}
         />
       )}
-      {screen !== "map" && (
+      {screen !== "map" && screen !== "dawayir" && (
         <PlatformTabBar
           activeScreen={screen}
           onNavigate={handleHeaderNavigate}
           onLogin={handleHeaderLogin}
         />
       )}
-      {screen !== "map" && (
+      {screen !== "map" && screen !== "dawayir" && (
         <Suspense fallback={null}>
           <NotificationEnableButton />
         </Suspense>
@@ -275,7 +275,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
           onStartJourney={mainContentProps.onStartJourney}
           onOpenBaseline={() => mainContentProps.onNavigate?.("baseline")}
           onOpenGuidedJourney={() => mainContentProps.onNavigate?.("guided")}
-          onOpenDawayir={onNavigateToMap}
+          onOpenDawayir={() => mainContentProps.onNavigate?.("dawayir")}
           onOpenProtocol={() => mainContentProps.onNavigate?.("protocol")}
           onFeatureLocked={mainContentProps.onFeatureLocked}
           onOpenMission={mainContentProps.onOpenMission}

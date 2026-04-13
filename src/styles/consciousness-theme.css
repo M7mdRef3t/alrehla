@@ -28,7 +28,7 @@
   --consciousness-primary:     var(--teal-400);
   --consciousness-background:  var(--space-void);
   --consciousness-text:        #0f172a;          /* slate-900 */
-  --consciousness-text-muted:  #475569;          /* slate-600 */
+  --consciousness-text-muted:  #64748b;          /* slate-600 solid */
   --consciousness-accent:      var(--amber-500);
   --consciousness-warning:     #FFB000;
   --consciousness-critical:    #FF3333;
@@ -47,7 +47,7 @@
   --page-border:      rgba(0, 0, 0, 0.08);
   --page-border-soft: rgba(0, 0, 0, 0.05);
   --page-text:        #0f172a;
-  --page-text-muted:  #64748b;
+  --page-text-muted:        #94a3b8;          /* solid Slate 400 */
 
   /* 🪟 Glass — Light */
   --glass-bg:         rgba(255, 255, 255, 0.70);
@@ -70,7 +70,7 @@
   /* 🧠 Consciousness Mapping — Sovereign Dark */
   --consciousness-background:  var(--space-void);
   --consciousness-text:        #f0fdfa; /* Teal Tinted White */
-  --consciousness-text-muted:  rgba(148, 163, 184, 0.72);
+  --consciousness-text-muted:  #94a3b8; /* solid Slate 400 */
 
   /* 📄 Page semantic tokens — Sovereign Dark */
   --page-bg:          #02040a;
@@ -80,7 +80,7 @@
   --page-border:      rgba(45, 212, 191, 0.15); /* Soft Teal Border */
   --page-border-soft: rgba(45, 212, 191, 0.05);
   --page-text:        #ffffff;
-  --page-text-muted:  rgba(203, 213, 225, 0.85);
+  --page-text-muted:        #cbd5e1; /* solid Slate 300 */
 
   /* 🪟 Premium Glassmorphism — Dark */
   --glass-bg:         rgba(5, 8, 20, 0.6);

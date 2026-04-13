@@ -12,6 +12,7 @@ import { ResourcesCenter } from "../../growth/ResourcesCenter";
 import type { ResourceTab } from "../../growth/ResourcesCenter";
 import { UserProfile } from "../UserProfile";
 import { SanctuaryDashboard } from "../SanctuaryDashboard";
+import { DawayirPlayground } from "../../social/DawayirPlayground";
 
 const CommandCenter = lazy(() => import("../../lifeOS/CommandCenter"));
 
@@ -314,6 +315,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
             onOpenLibrary={onOpenLibrary}
           />
         </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "dawayir") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <DawayirPlayground
+          onBack={() => onNavigate?.("landing" as AppScreen)}
+        />
       </PageShell>
     );
   }

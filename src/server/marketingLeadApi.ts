@@ -172,7 +172,7 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     p_name: input.name || null,
     p_source: input.source || "landing",
     p_source_type: input.sourceType || "website",
-    p_utm: input.utm || {},
+    p_utm: (input.utm && typeof input.utm === 'object') ? input.utm : {},
     p_note: input.note || "",
     p_status: input.status || "new",
     p_intent: input.intent || null,
@@ -189,7 +189,8 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     throw new Error(`upsert_rpc_failed: ${error.message || String(error)}`);
   }
 
-  const result = Array.isArray(data) ? data[0] : (data as any);
+  // Handle table return from RPC
+  const result = Array.isArray(data) ? data[0] : (data as any) || {};
   const storedLeadId = result.lead_id;
   const isNew = result.is_new;
   const conflictDetected = result.conflict;
