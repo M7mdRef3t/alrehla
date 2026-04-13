@@ -31,8 +31,10 @@ export const AdminOmniSearch: FC = () => {
             break;
           case 'e':
             e.preventDefault();
-            const state = useAdminState.getState();
-            state.toggleContentEditing(!state.isContentEditingEnabled);
+            {
+              const state = useAdminState.getState();
+              state.toggleContentEditing(!state.isContentEditingEnabled);
+            }
             setIsOpen(false);
             break;
         }

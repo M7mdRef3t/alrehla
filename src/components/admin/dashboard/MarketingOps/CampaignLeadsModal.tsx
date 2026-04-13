@@ -108,8 +108,6 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     }
   }, [isOpen, expandedId, leads]);
 
-  if (!isOpen) return null;
-
   const showMsg = (id: string, msg: string, isError = false) => {
     setActionMessage({ id, msg, isError });
     setTimeout(() => {
@@ -532,6 +530,8 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     return { missingPhoneCount, filteredLeads, conversionRate, sortedFilteredLeads, expandedIndex, hasNextGlobal, hasPrevGlobal };
   }, [leads, localSearchQuery, onlyMissingPhone, expandedId]);
 
+  if (!isOpen) return null;
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
@@ -773,7 +773,9 @@ function LeadCommandCard({
       if (!res.ok || data?.ok === false) {
         throw new Error(data?.error || `request_failed_${res.status}`);
       }
-      onLeadUpdated && onLeadUpdated();
+      if (onLeadUpdated) {
+        onLeadUpdated();
+      }
     } catch {
       // بنسيب الحالة تتصحح مع أول refresh من السيرفر.
     } finally {
