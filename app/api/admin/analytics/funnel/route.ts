@@ -1,24 +1,29 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'dummy_key_for_build';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const adminSecret = process.env.SOVEREIGN_ADMIN_SECRET || '';
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-});
+const supabase =
+    supabaseUrl && supabaseServiceKey
+        ? createClient(supabaseUrl, supabaseServiceKey, {
+              auth: { autoRefreshToken: false, persistSession: false }
+          })
+        : null;
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
     try {
+        if (!supabase || !adminSecret) {
+            return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+        }
+
         const url = new URL(req.url);
         const code = url.searchParams.get("code") || req.headers.get("Authorization")?.replace("Bearer ", "");
-        const actualSecret = process.env.SOVEREIGN_ADMIN_SECRET || "alpha-numeric-test-code-999";
-        
-        // Use a generic bypass for owner access from trusted admin clients if they don't have the explicit secret handy but are authenticated.
-        // Actually, let's keep it simple. The AdminDashboard has authorization anyway, but we will protect the API.
-        if (code !== actualSecret && !req.headers.get("Authorization")) {
+
+        if (code !== adminSecret) {
              return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 

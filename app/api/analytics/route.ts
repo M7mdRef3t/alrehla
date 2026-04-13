@@ -32,7 +32,7 @@ const analyticsSchema = z.object({
     utm_source: z.string().optional().nullable(),
     utm_medium: z.string().optional().nullable(),
     utm_campaign: z.string().optional().nullable()
-}).strict();
+}).passthrough();
 
 export async function POST(req: Request) {
     try {
@@ -101,9 +101,6 @@ export async function POST(req: Request) {
             
             if (process.env.NODE_ENV === "development") {
                 console.error("[Analytics Ingestion] Database Error:", error);
-                try {
-                    require('fs').appendFileSync('analytics_err.log', new Date().toISOString() + ' DB Error: ' + JSON.stringify(error) + '\n');
-                } catch (fsErr) {}
             }
             
             return NextResponse.json({ error: "Ingestion failed", code: error.code }, { status: 500 });
@@ -114,10 +111,7 @@ export async function POST(req: Request) {
         return response;
     } catch (e) {
         console.error("[Analytics Ingestion] Server Error:", e);
-        try {
-            require('fs').appendFileSync('analytics_err.log', new Date().toISOString() + ' Server Error: ' + (e instanceof Error ? e.stack : JSON.stringify(e)) + '\n');
-        } catch (fsErr) {}
-        return NextResponse.json({ error: "Internal Server Error", detail: String(e) }, { status: 500 });
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
 

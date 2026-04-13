@@ -3,6 +3,7 @@
 import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 import {
   trackInitiateCheckout as trackActivationInitiated,
@@ -59,6 +60,7 @@ function getPreferredMethod(mode: PaymentMode): ManualProofMethod {
 }
 
 export default function ActivationPage() {
+  const router = useRouter();
   const [mode, setMode] = useState<PaymentMode>("local");
   const [email, setEmail] = useState("");
   const [seatsLeft, setSeatsLeft] = useState<number | null>(null);
@@ -388,7 +390,7 @@ export default function ActivationPage() {
   const goBack = () => {
     setWizardStep((s) => {
       if (s === 1) {
-        window.location.href = "/pricing";
+        router.push("/pricing");
         return s;
       }
       return Math.max(s - 1, 1);

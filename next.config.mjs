@@ -10,8 +10,11 @@ const nextConfig = {
   compiler: {
     removeConsole: isVercel ? { exclude: ["error", "warn"] } : false
   },
-  transpilePackages: ['@alrehla/atmosfera'],
-  poweredByHeader: false
+  transpilePackages: ["@alrehla/atmosfera", "@alrehla/dawayir", "@alrehla/masarat"],
+  poweredByHeader: false,
+  experimental: {
+    esmExternals: "loose"
+  }
 };
 
 export default nextConfig;

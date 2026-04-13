@@ -46,9 +46,6 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
   const historyTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const summaryCache = useRef(new Map<string, { summary: string; state: string; timestamp: number }>());
   const validationCache = useRef(new Map<string, { valid: boolean; reason?: string; timestamp: number }>());
-  const listViewportRef = useRef<HTMLDivElement | null>(null);
-  const [listScrollTop, setListScrollTop] = useState(0);
-  const [listViewportHeight, setListViewportHeight] = useState(0);
 
   // Clean state when modal opens
   useEffect(() => {
@@ -535,32 +532,6 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     return { missingPhoneCount, filteredLeads, conversionRate, sortedFilteredLeads, expandedIndex, hasNextGlobal, hasPrevGlobal };
   }, [leads, localSearchQuery, onlyMissingPhone, expandedId]);
 
-  useEffect(() => {
-    const el = listViewportRef.current;
-    if (!el) return;
-    const update = () => {
-      setListScrollTop(el.scrollTop);
-      setListViewportHeight(el.clientHeight);
-    };
-    update();
-    el.addEventListener("scroll", update, { passive: true });
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => {
-      el.removeEventListener("scroll", update);
-      ro.disconnect();
-    };
-  }, [isOpen]);
-
-  const VIRTUAL_ROW_HEIGHT = 290;
-  const overscan = 4;
-  const totalItems = sortedFilteredLeads.length;
-  const startIndex = Math.max(0, Math.floor(listScrollTop / VIRTUAL_ROW_HEIGHT) - overscan);
-  const endIndex = Math.min(totalItems, Math.ceil((listScrollTop + listViewportHeight) / VIRTUAL_ROW_HEIGHT) + overscan);
-  const visibleLeads = sortedFilteredLeads.slice(startIndex, endIndex);
-  const topSpacer = startIndex * VIRTUAL_ROW_HEIGHT;
-  const bottomSpacer = Math.max(0, (totalItems - endIndex) * VIRTUAL_ROW_HEIGHT);
-
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
@@ -665,18 +636,17 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
           </div>
 
           {/* Leads Grid */}
-          <div ref={listViewportRef} className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar bg-black/20">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar bg-black/20">
             {filteredLeads.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
                 <GhostIcon className="w-16 h-16 mb-4 text-slate-700" />
                 <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">لا توجد أرواح تطابق بحثك.</p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-4">
-                {topSpacer > 0 ? <div style={{ height: topSpacer }} aria-hidden="true" /> : null}
-                {visibleLeads.map((lead) => (
-                  <MemoLeadCommandCard 
-                    key={lead.id}
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                {sortedFilteredLeads.map((lead) => (
+                    <MemoLeadCommandCard 
+                      key={lead.id}
                     lead={lead}
                     isEditing={editingLeadId === lead.id}
                     isExpanded={expandedId === lead.id}
@@ -709,10 +679,9 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
                     validationState={validationStates[lead.id]}
                     onSyncMeta={() => handleSyncMeta(lead.id)}
                   />
-                ))}
-                {bottomSpacer > 0 ? <div style={{ height: bottomSpacer }} aria-hidden="true" /> : null}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
           </div>
         </motion.div>
 
