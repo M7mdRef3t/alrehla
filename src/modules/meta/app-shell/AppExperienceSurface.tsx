@@ -1,3 +1,5 @@
+"use client";
+
 import { lazy, Suspense, memo, useCallback, useMemo, useState, useEffect, type ComponentProps } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Cpu } from "lucide-react";

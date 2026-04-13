@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useState, lazy, Suspense, type ComponentProps } from "react";
 import { type AppScreen } from "@/navigation/navigationMachine";
 import { AppStartScreens } from "../AppStartScreens";

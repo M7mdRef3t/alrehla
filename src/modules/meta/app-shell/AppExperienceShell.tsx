@@ -1,3 +1,5 @@
+"use client";
+
 import { syncMemoryFromSupabase } from "@/services/userMemory";
 import { syncSubscription } from "@/services/subscriptionManager";
 import { syncLiveSessionsFromSupabase } from "@/modules/dawayir-live/utils/sessionHistory";
