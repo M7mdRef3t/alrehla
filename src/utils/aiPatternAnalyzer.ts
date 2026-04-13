@@ -1,6 +1,14 @@
 import { logger } from "@/services/logger";
 import { geminiClient } from "@/services/geminiClient";
-import type { PatternType, DetectedPattern, PatternAnalysisResult } from "./patternAnalyzer";
+import { 
+  type PatternType, 
+  type DetectedPattern, 
+  type PatternAnalysisResult,
+  analyzeSituations,
+  quickAnalyze,
+  buildPatternAnalysisPrompt,
+  buildQuickFeedbackPrompt
+} from "@alrehla/masarat";
 
 /**
  * AI-Powered Pattern Analyzer using Gemini
@@ -24,60 +32,17 @@ export async function analyzeWithAI(situations: string[]): Promise<PatternAnalys
   // Fallback to regex-based analysis if AI is not available
   if (!geminiClient.isAvailable()) {
     console.warn('AI not available, using fallback pattern detection');
-    const { analyzeSituations } = await import('./patternAnalyzer');
     return analyzeSituations(situations);
   }
 
   const allText = situations.join('\n---\n');
-
-  const prompt = `أنت متخصص في تحليل العلاقات النفسية والسلوكية.
-
-**المهمة:**
-حلل المواقف التالية واستخرج الأنماط السلوكية الضارة:
-
-**المواقف:**
-${allText}
-
-**الأنماط المحتملة:**
-1. **timing**: انتهاك الحدود الزمنية (اتصالات في أوقات غير مناسبة، طلبات في أوقات حرجة)
-2. **financial**: طلبات مالية متكررة، ضغط مالي، استغلال مادي
-3. **emotional**: استخدام الذنب كسلاح، إثارة المشاعر للتحكم، التلاعب العاطفي
-4. **behavioral**: سلوكيات متكررة ضاغطة، أنماط سامة، تصرفات استنزافية
-5. **boundary**: تجاهل الحدود الشخصية، عدم احترام المساحة، انتهاك الخصوصية
-
-**المطلوب (JSON فقط):**
-\`\`\`json
-{
-  "patterns": [
-    {
-      "type": "النوع من القائمة أعلاه",
-      "severity": "low | medium | high | critical",
-      "confidence": 0.95,
-      "description": "وصف دقيق للنمط بالعامية المصرية",
-      "examples": ["مثال 1 من المواقف", "مثال 2"],
-      "triggers": ["محفز 1", "محفز 2"]
-    }
-  ],
-  "emotionalState": "الحالة العاطفية للشخص (مثل: ضغط، استنزاف، ذنب)",
-  "insights": [
-    "رؤية 1: ملاحظة عميقة عن العلاقة",
-    "رؤية 2: نمط مخفي أو ربط بين المواقف"
-  ]
-}
-\`\`\`
-
-**ملاحظات:**
-- ركز على الأنماط الواضحة فقط (confidence > 0.7)
-- رتب الأنماط حسب الخطورة (critical أولاً)
-- استخدم لغة عامية مصرية بسيطة وواضحة
-- كن محدداً في الأمثلة والمحفزات`;
+  const prompt = buildPatternAnalysisPrompt(allText);
 
   try {
     const result = await geminiClient.generateJSON<AIPatternResponse>(prompt);
 
     if (!result || !result.patterns) {
       console.warn('AI returned invalid response, using fallback');
-      const { analyzeSituations } = await import('./patternAnalyzer');
       return analyzeSituations(situations);
     }
 
@@ -110,8 +75,6 @@ ${allText}
 
   } catch (error) {
     logger.error('Error in AI pattern analysis:', error);
-    // Fallback to regex-based analysis
-    const { analyzeSituations } = await import('./patternAnalyzer');
     return analyzeSituations(situations);
   }
 }
@@ -125,7 +88,6 @@ export async function quickAIFeedback(text: string): Promise<{
   feedback: string;
 } | null> {
   if (!geminiClient.isAvailable()) {
-    const { quickAnalyze } = await import('./patternAnalyzer');
     const result = quickAnalyze(text);
     return {
       type: result.hasPattern ? 'good' : 'needs-detail',
@@ -134,25 +96,7 @@ export async function quickAIFeedback(text: string): Promise<{
     };
   }
 
-  const prompt = `قيّم هذا الموقف المكتوب بسرعة:
-
-"${text}"
-
-**المطلوب (JSON فقط):**
-\`\`\`json
-{
-  "type": "good | needs-detail | warning",
-  "title": "عنوان قصير (3-5 كلمات)",
-  "feedback": "ملاحظة سريعة ومفيدة"
-}
-\`\`\`
-
-**معايير التقييم:**
-- "good": الموقف واضح، محدد، فيه تفاصيل (متى، إيه اللي حصل، الإحساس)
-- "needs-detail": الموقف عام أو ناقص تفاصيل
-- "warning": الموقف مبهم جداً أو غير مفهوم
-
-استخدم العامية المصرية.`;
+  const prompt = buildQuickFeedbackPrompt(text);
 
   try {
     const result = await geminiClient.generateJSON<{

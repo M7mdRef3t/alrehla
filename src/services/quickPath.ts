@@ -49,19 +49,10 @@ export async function generateQuickPath(
         return staticResult;
     }
 
-    const situationLabels: Record<QuickPathSituation, string> = {
-        pressure: "ضغط من شخص",
-        guilt: "إحساس بالذنب",
-        anger: "غضب",
-        overwhelmed: "إرهاق وضغط",
-        boundary: "محتاج أقول لأ",
-        escape: "محتاج أخرج من موقف",
-    };
-
     const prompt = `
 أنت جارفيس (Jarvis)، المستشار التكتيكي. المستخدم في موقف صعب الآن ويحتاج مساعدة فورية.
 
-الموقف: ${situationLabels[situation]}
+الموقف: ${SITUATION_LABELS[situation]}
 السياق: "${context}"
 
 اكتب جملة خروج واحدة فقط (بالعامية المصرية) تناسب هذا الموقف بالضبط.
