@@ -63,6 +63,7 @@ export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promis
 
   const bearer = getBearerToken(req);
   if (!bearer) {
+    console.error("[verifyAdmin] No bearer token provided:", req.headers);
     res.status(401).json({ error: "Unauthorized" });
     return false;
   }
@@ -73,6 +74,7 @@ export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promis
 
   const { data, error } = await client.auth.getUser(bearer);
   if (error || !data?.user?.id) {
+    console.error("[verifyAdmin] Failed to getUser from token:", error?.message || "Missing user ID", "Token start:", bearer.slice(0, 10));
     res.status(401).json({ error: "Unauthorized" });
     return false;
   }

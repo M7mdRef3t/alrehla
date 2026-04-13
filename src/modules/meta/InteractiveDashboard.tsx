@@ -10,7 +10,7 @@ import {
 import { useGamificationState } from "@/services/gamificationEngine";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useQuizHistory } from "@/hooks/useQuizHistory";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { UserProfile } from "./UserProfile";
 
 

@@ -16,10 +16,10 @@ import type {
   DomainAssessment,
   LifeEntry
 } from "@/types/lifeDomains";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { useRitualState } from "@/domains/journey/store/ritual.store";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 import { loadStreak } from "@/services/streakSystem";
 import { getTodayDate } from "@/types/dailyRituals";
 

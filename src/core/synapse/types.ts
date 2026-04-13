@@ -10,7 +10,8 @@ export type NeuralOrigin =
   | "MARAYA_SESSION"
   | "SYSTEM_OVERSEER"
   | "MARKETING_OPS"
-  | "EMERGENCY_BUTTON";
+  | "EMERGENCY_BUTTON"
+  | "SESSION_INTAKE";
 
 export type NeuralEventType =
   // Map Changes

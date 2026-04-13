@@ -11,9 +11,9 @@ import {
 import { useGamificationState } from "@/services/gamificationEngine";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useQuizHistory } from "@/hooks/useQuizHistory";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { ACHIEVEMENTS } from "@/data/achievements";
-import { DailyQuests } from "../growth/Gamification/DailyQuests";
+import { QuestBoard as DailyQuests } from "../gamification/QuestBoard";
 import { calculateEntropy } from "@/services/predictiveEngine";
 
 

@@ -82,7 +82,21 @@ export const TimelineOfSouls: FC = () => {
                         <Sparkles className="w-5 h-5 text-teal-400" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-black text-white uppercase tracking-wider">شريط الأرواح الموازي</h3>
+                        <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-3">
+                            شريط الأرواح الموازي
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    const url = new URL(window.location.href);
+                                    url.searchParams.set("tab", "flow-map");
+                                    window.history.pushState({}, "", url.toString());
+                                    window.dispatchEvent(new PopStateEvent("popstate"));
+                                }}
+                                className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-[10px] lowercase tracking-normal text-teal-300 transition-all font-bold group-hover:bg-white/20"
+                            >
+                                خريطة المسارات
+                            </button>
+                        </h3>
                         <p className="text-[10px] text-teal-400 font-bold tracking-widest mt-0.5 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
                             بث مباشر للإدراك

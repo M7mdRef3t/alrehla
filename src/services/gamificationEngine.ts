@@ -12,7 +12,12 @@ export const XP_ACTIONS = {
     DAILY_VISIT: 20,
     MAP_SHARED: 50,
     WISDOM_SHARED: 40,
-    PULSE_COMPLETED: 30
+    PULSE_COMPLETED: 30,
+    NODE_ADDED: 50,
+    NODE_ARCHIVED: 60,
+    NOTE_ADDED: 15,
+    ENERGY_TRANSACTION: 25,
+    JOURNEY_MILESTONE: 100
 } as const;
 
 /**
@@ -25,44 +30,45 @@ export interface DailyQuest {
     xpReward: number;
     isCompleted: boolean;
     actionKey: string;
+    category?: 'relational' | 'wisdom' | 'discipline' | 'growth';
 }
 
 export function getDailyQuests(nodes: any[] = [], completedKeys: string[] = []): DailyQuest[] {
     const quests: DailyQuest[] = [];
     
-    // 1. Mandatory Core Quest
+    // 1. Mandatory Core Quest: Check-in
     quests.push({
         id: "dq_checkin",
         title: "تسجيل حضور",
-        description: "ادخل للمنصة وسجل دخولك اليومي",
+        description: "ادخل للمنصة وسجل حضورك السِيادي اليومي",
         xpReward: 20,
         isCompleted: completedKeys.includes("dq_checkin"),
-        actionKey: "daily_visit"
+        actionKey: "daily_visit",
+        category: 'discipline'
     });
 
-    // 2. Dynamic Relational Quest
-    const redNodes = nodes.filter(n => !n.isNodeArchived && n.ring === 'red');
-    const yellowNodes = nodes.filter(n => !n.isNodeArchived && n.ring === 'yellow');
+    // 2. Pulse Check Quest
+    quests.push({
+        id: "dq_pulse",
+        title: "فحص النبض",
+        description: "قم بتسجيل حالتك الشعورية والطاقية الآن",
+        xpReward: 30,
+        isCompleted: completedKeys.includes("dq_pulse"),
+        actionKey: "pulse_completed",
+        category: 'discipline'
+    });
 
+    // 3. Dynamic Relational Quest
+    const redNodes = nodes.filter(n => !n.isNodeArchived && n.ring === 'red');
     if (redNodes.length > 0) {
-        const target = redNodes[0];
         quests.push({
-            id: "dq_neutralize",
-            title: "تكتيك التحييد",
-            description: `قم بكتم أو أرشفة "${target.label}" لتقليل الضغط الرقمي`,
-            xpReward: 60,
-            isCompleted: completedKeys.includes("dq_neutralize"),
-            actionKey: "node_muted_or_archived"
-        });
-    } else if (yellowNodes.length > 0) {
-        const target = yellowNodes[0];
-        quests.push({
-            id: "dq_inspect",
-            title: "جلسة تفتيش",
-            description: `افحص حالة "${target.label}" وتأكد من ثبات الحدود`,
+            id: "dq_relational",
+            title: "رعاية الروابط",
+            description: "قم بتحديث حالة أحد الأشخاص في الدائرة الحمراء",
             xpReward: 40,
-            isCompleted: completedKeys.includes("dq_inspect"),
-            actionKey: "node_inspected"
+            isCompleted: completedKeys.includes("dq_relational"),
+            actionKey: "node_updated",
+            category: 'relational'
         });
     } else if (nodes.length < 5) {
         quests.push({
@@ -71,21 +77,46 @@ export function getDailyQuests(nodes: any[] = [], completedKeys: string[] = []):
             description: "أضف شخصاً جديداً لخريطة السيادة الخاصة بك",
             xpReward: 50,
             isCompleted: completedKeys.includes("dq_expand"),
-            actionKey: "node_added"
+            actionKey: "node_added",
+            category: 'relational'
         });
     }
 
-    // 3. Social/Wisdom Quest (Static for now)
+    // 4. Wisdom/Knowledge Quest
     quests.push({
-        id: "dq_wisdom",
-        title: "نبع حكمة",
-        description: "شارك حكمة واحدة في مجتمع الدعم",
-        xpReward: 40,
-        isCompleted: completedKeys.includes("dq_wisdom"),
-        actionKey: "wisdom_shared"
+        id: "dq_wisdom_matrix",
+        title: "استكشاف مصفوفة الحكمة",
+        description: "افتح مورد معرفي واحد من مصفوفة الحكمة لتعزيز وعيك",
+        xpReward: 35,
+        isCompleted: completedKeys.includes("dq_wisdom_matrix"),
+        actionKey: "wisdom_resource_viewed",
+        category: 'wisdom'
     });
+
+    // 5. Growth Quest: Reflection
+    quests.push({
+        id: "dq_note_reflection",
+        title: "لحظة تأمل",
+        description: "أضف ملاحظة أو بصيرة جديدة لأحد الأشخاص في مدارك",
+        xpReward: 30,
+        isCompleted: completedKeys.includes("dq_note_reflection"),
+        actionKey: "note_added",
+        category: 'growth'
+    });
+
+    // 6. Weekly Sovereign Milestone (Bonus)
+    const dayOfWeek = new Date().getDay();
+    if (dayOfWeek === 5) { // Friday / Jalsa Day
+        quests.push({
+            id: "wq_weekly_review",
+            title: "جلسة المراجعة الأسبوعية",
+            description: "راجع خريطتك بالكامل وحدد الأولويات للأسبوع القادم",
+            xpReward: 100,
+            isCompleted: completedKeys.includes("wq_weekly_review"),
+            actionKey: "weekly_review_completed",
+            category: 'growth'
+        });
+    }
 
     return quests;
 }
-
-

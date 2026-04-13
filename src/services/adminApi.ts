@@ -1,6 +1,6 @@
 import { logger } from "@/services/logger";
-import { revenueEngine } from "./revenueEngine";
-import type { RevenueMetricSnapshot, TransactionSummary } from "./revenueEngine";
+import { revenueService } from "@/domains/billing";
+import type { RevenueMetricSnapshot, TransactionSummary } from "@/domains/billing";
 import { supabase, isSupabaseReady } from "./supabaseClient";
 import { getAuthToken } from "@/domains/auth/store/auth.store";
 import { useAdminState } from "@/domains/admin/store/admin.store";
@@ -41,7 +41,9 @@ type SystemSettingKey =
   | "theme_palette"
   | "pulse_copy_overrides"
   | "journey_paths"
-  | "marketing_spend";
+  | "journey_paths"
+  | "marketing_spend"
+  | "campaign_budgets";
 
 const SETTINGS_TABLE = "system_settings";
 const ADMIN_API_BASE = runtimeEnv.adminApiBase;
@@ -323,7 +325,7 @@ export async function auditJourneyPath(path: JourneyPath): Promise<any | null> {
 
 export async function getRevenueMetrics(): Promise<any | null> {
   if (runtimeEnv.isDev) {
-    const snapshot = await revenueEngine.getExecutiveRevenueSnapshot();
+    const snapshot = await revenueService.getExecutiveSnapshot();
     return {
       mrr: snapshot.mrr,
       arr: snapshot.arr,
@@ -344,7 +346,7 @@ export async function getRevenueMetrics(): Promise<any | null> {
     return apiData.metrics;
   }
 
-  const snapshot = await revenueEngine.getExecutiveRevenueSnapshot();
+  const snapshot = await revenueService.getExecutiveSnapshot();
   return {
     mrr: snapshot.mrr,
     arr: snapshot.arr,
@@ -413,6 +415,16 @@ export async function fetchMarketingSpend(): Promise<number> {
 
 export async function updateMarketingSpend(spend: number): Promise<boolean> {
   return saveSetting("marketing_spend", spend);
+}
+
+export async function fetchCampaignBudgets(): Promise<Record<string, number>> {
+  const data = await fetchSettings(["campaign_budgets"]);
+  return (data?.get("campaign_budgets") as Record<string, number>) ?? {};
+}
+
+export async function updateCampaignBudget(campaignId: string, budget: number): Promise<boolean> {
+  const currentBudgets = await fetchCampaignBudgets();
+  return saveSetting("campaign_budgets", { ...currentBudgets, [campaignId]: budget });
 }
 
 export interface AdminFeedbackEntry {
@@ -1805,7 +1817,7 @@ export async function saveDream(dream: any): Promise<boolean> {
 
 export async function fetchSovereignExecutiveReport(): Promise<any | null> {
   try {
-    const [revenue, recentTransactions] = await Promise.all([revenueEngine.getExecutiveRevenueSnapshot(), revenueEngine.getRecentTransactions(10)]);
+    const [revenue, recentTransactions] = await Promise.all([revenueService.getExecutiveSnapshot(), revenueService.getRecentTransactions(10)]);
     return { revenue, recentTransactions };
   } catch (e) {
     logger.error("fetchSovereignExecutiveReport error:", e);
@@ -1839,6 +1851,8 @@ export async function rejectActivationTicket(ticketId: string, reason?: string):
 export const adminApi = {
   fetchMarketingSpend,
   updateMarketingSpend,
+  fetchCampaignBudgets,
+  updateCampaignBudget,
   fetchOverviewStats,
   fetchOwnerAlerts,
   callAdminApi,

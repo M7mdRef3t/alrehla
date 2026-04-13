@@ -78,13 +78,13 @@ export function StepWelcome({
             {userName ? `Ø£Ù‡Ù„Ø§Ù‹ Ø¨Ùƒ ÙŠØ§ ${userName}ØŒ` : "Ø£Ù‡Ù„Ø§Ù‹ Ø¨Ùƒ ÙŠØ§ Ø±ÙÙŠÙ‚ØŒ"}
             <br />
             <span className="bg-gradient-to-l from-teal-300 to-emerald-300 bg-clip-text text-transparent">
-              Ø§Ù„Ù…Ù„Ø§Ø° Ø§Ù„Ø¢Ù…Ù† Ø¨Ø§Ù†ØªØ¸Ø§Ø±Ùƒ
+                Ø§Ù„Ù…ÙƒØ§Ù† Ø§Ù„Ø°ÙŠ ØªØ­Ø¬Ø²Ù‡ ÙÙŠ Ø§Ù„Ø±Ø­Ù„Ø© Ø¬Ø§Ù‡Ø²
             </span>
           </h1>
           <p className="mb-8 text-center text-sm leading-7 text-slate-300">
-            Ø®Ø·ÙˆØªØ§Ù† ÙÙ‚Ø· Ù„ØªÙˆØ«ÙŠÙ‚ Ø§Ù„ØªØ²Ø§Ù…Ùƒ Ø¨Ø§Ù„Ø±Ø­Ù„Ø© ÙˆÙØªØ­ Ø§Ù„Ø¨ÙˆØ§Ø¨Ø§Øª.
+            Ø§Ù„Ù…Ø³Ø§Ø± Ù‡Ù†Ø§ ÙˆØ§Ø¶Ø­ ÙˆØ¨Ø³ÙŠØ·: Ø§Ø®ØªØ± ÙˆØ³ÙŠÙ„Ø© Ø§Ù„Ø¯ÙØ¹ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©ØŒ Ø­ÙˆÙ‘Ù„ØŒ Ø«Ù… Ø§Ø±ÙØ¹ Ø±Ù‚Ù… Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ø£Ùˆ Ù„Ù‚Ø·Ø© Ø§Ù„Ø´Ø§Ø´Ø©.
             <br />
-            Ø§Ø®ØªØ§Ø± ÙˆØ³ÙŠÙ„Ø© Ø§Ù„ØªØ£ÙƒÙŠØ¯ØŒ ÙˆØ³ÙŠÙ‚ÙˆÙ… Ø§Ù„ÙØ±ÙŠÙ‚ Ø¨ØªÙ‡ÙŠØ¦Ø© Ù…Ø³Ø§Ø±Ùƒ Ø®Ù„Ø§Ù„ Ø³Ø§Ø¹Ø§Øª.
+            Ø¨Ø¹Ø¯ Ø§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ø¥Ø«Ø¨Ø§Øª Ù†Ø±Ø§Ø¬Ø¹ Ø§Ù„ØªØ­ÙˆÙŠÙ„ ÙˆÙ†ÙØ¹Ù‘Ù„ ÙˆØµÙˆÙ„Ùƒ ÙŠØ¯ÙˆÙŠÙ‹Ø§ Ø¨Ø¯ÙˆÙ† ØªØ³Ø¬ÙŠÙ„ Ø¥Ø¶Ø§ÙÙŠ.
           </p>
         </motion.div>
 
@@ -196,11 +196,11 @@ export function StepWelcome({
             onClick={onNext}
             className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-teal-500 px-8 py-4 text-base font-black text-slate-950 shadow-[0_0_32px_rgba(20,184,166,0.35)] transition-all hover:bg-teal-400 hover:shadow-[0_0_48px_rgba(20,184,166,0.45)]"
           >
-            Ø¨Ø¯Ø¡ ØªÙˆØ«ÙŠÙ‚ Ø§Ù„Ø¹Ù‡Ø¯
+              Ø§Ø®ØªØ§Ø± Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„Ø¯ÙØ¹
             <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
           </motion.button>
           <p className="mt-4 text-center text-xs text-slate-500">
-            Ø§Ù„Ø®Ø·ÙˆØ© Ø§Ù„ØªØ§Ù„ÙŠØ©: Ø§Ø®ØªØ§Ø± ÙˆØ³ÙŠÙ„Ø© Ø§Ù„ØªØ£ÙƒÙŠØ¯ Ù„Ø­Ø¬Ø² Ù…Ù‚Ø¹Ø¯Ùƒ
+              Ø§Ù„Ø®Ø·ÙˆØ© Ø§Ù„ØªØ§Ù„ÙŠØ©: Ù‡Ù†ÙˆØ±ÙŠÙƒ Ø§Ù„ÙˆØ³ÙŠÙ„Ø© Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø© ÙˆÙ†Ø¬Ù‡Ø²Ùƒ Ù„Ø±ÙØ¹ Ø§Ù„Ø¥Ø«Ø¨Ø§Øª
           </p>
         </motion.div>
       </div>

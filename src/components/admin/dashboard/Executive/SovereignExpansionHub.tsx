@@ -278,7 +278,7 @@ export const SovereignExpansionHub: React.FC = () => {
                     <p className="text-[10px] text-teal-400/80 font-bold tracking-widest">$9.99 • التحويل: 12%</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-black text-teal-400">{report ? Math.round(report.revenue.activeSubscriptions * 0.7).toLocaleString() : "4,200"} مشترك</p>
+                    <p className="text-xs font-black text-teal-400">{report ? Math.round(report.revenue.activeSubscriptions * 0.7).toLocaleString("en-US") : "4,200"} مشترك</p>
                   </div>
                 </div>
                 <div className="w-full h-3 bg-slate-800/80 rounded-full p-0.5 border border-white/5 overflow-hidden">
@@ -299,7 +299,7 @@ export const SovereignExpansionHub: React.FC = () => {
                     <p className="text-[10px] text-amber-400/80 font-bold tracking-widest">$24.99 • التحويل: 8%</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-black text-amber-400">{report ? Math.round(report.revenue.activeSubscriptions * 0.2).toLocaleString() : "1,150"} مشترك</p>
+                    <p className="text-xs font-black text-amber-400">{report ? Math.round(report.revenue.activeSubscriptions * 0.2).toLocaleString("en-US") : "1,150"} مشترك</p>
                   </div>
                 </div>
                 <div className="w-full h-3 bg-slate-800/80 rounded-full p-0.5 border border-white/5 overflow-hidden">
@@ -320,7 +320,7 @@ export const SovereignExpansionHub: React.FC = () => {
                     <p className="text-[10px] text-purple-400/80 font-bold tracking-widest">$89.99 • التحويل: 3%</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-black text-purple-400">{report ? Math.round(report.revenue.activeSubscriptions * 0.1).toLocaleString() : "230"} مشترك</p>
+                    <p className="text-xs font-black text-purple-400">{report ? Math.round(report.revenue.activeSubscriptions * 0.1).toLocaleString("en-US") : "230"} مشترك</p>
                   </div>
                 </div>
                 <div className="w-full h-3 bg-slate-800/80 rounded-full p-0.5 border border-white/5 overflow-hidden">

@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import type { MapNode, Ring } from "../map/mapTypes";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { mapCopy } from "@/copy/map";
 
 const RING_STYLES: Record<Ring, { dot: string; border: string; bg: string }> = {

@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ClipboardList } from "lucide-react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { RecoveryPlanView } from "./RecoveryPlanView";
 import { RecoveryAccordion } from "./RecoveryAccordion";
 

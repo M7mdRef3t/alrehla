@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, BrainCircuit, X } from "lucide-react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { TherapistChatModal } from "./TherapistChatModal";
 
 const BASE_ENERGY_CAPACITY = 1000;

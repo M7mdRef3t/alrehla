@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useJourneyProgress } from "@/domains/journey";
 import { useDailyJournalState } from "@/domains/journey/store/journal.store";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";

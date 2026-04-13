@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Download, Share2, X, Sparkles } from "lucide-react";
 import html2canvas from "html2canvas";
 import { calculateEntropy } from "@/services/predictiveEngine";
-import { useToastState } from "@/domains/dawayir/store/toast.store";
+import { useToastState } from '@/modules/map/dawayirIndex';
 
 interface HealingEchoModalProps {
   isOpen: boolean;

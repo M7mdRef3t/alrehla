@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Map } from "lucide-react";
 import { ACHIEVEMENTS } from "@/data/achievements";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 
 interface AchievementsProps {
   onClose: () => void;
@@ -138,7 +138,7 @@ export const Achievements: FC<AchievementsProps> = ({ onClose }) => {
                         : `${unlockedCount} من ${totalCount} إنجاز`}
                     </p>
                     <p className="text-xs font-black" style={{ color: "#fbbf24" }}>
-                      {totalPoints.toLocaleString("ar-EG")} نقطة
+                      {totalPoints.toLocaleString("en-US")} نقطة
                     </p>
                   </div>
                   <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>

@@ -7,7 +7,7 @@ import {
   Target, Plus, Sparkles, ArrowLeft, Clock, X
 } from "lucide-react";
 import { LIFE_DOMAINS, getDomainConfig, type LifeDomainId, type DecisionOption } from "@/types/lifeDomains";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 import {
   scoreDecisionOptions,
   identifyImpactedDomains,

@@ -27,7 +27,7 @@ import {
   backupToKeyValues,
   buildBackupFromLocal
 } from "@/services/dataExport";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { clearLocalData } from "@/services/secureStore";
 import { fetchRemoteState, pushRemoteState } from "@/services/cloudStore";
 import { soundManager } from "@/services/soundManager";

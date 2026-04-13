@@ -12,7 +12,7 @@ import {
   DragOverlay,
   defaultDropAnimationSideEffects
 } from "@dnd-kit/core";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { Ring, MapNode as MapNodeType } from "../map/mapTypes";
 import { User, Clock, Zap, Coins, Maximize, GripVertical, Plus, AlertCircle, Info, X } from "lucide-react";
 import { useMasafatyAnalysis, EntropyLevel } from "./hooks/useMasafatyAnalysis";

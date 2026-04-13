@@ -1,6 +1,7 @@
 import { logger } from "@/services/logger";
 import type { FC, ReactNode } from "react";
 import { useEffect, useState, lazy, Suspense } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
   Compass,
@@ -111,6 +112,8 @@ const JourneyPathsPanel = lazy(() => import("./dashboard/Paths/JourneyPathsPanel
 const OpsDocsPanel = lazy(() => import("./dashboard/OpsDocs/OpsDocsPanel"));
 const DesignLab = lazy(() => import("./dashboard/Sovereign/DesignLab"));
 const GovernanceHub = lazy(() => import("./dashboard/Sovereign/GovernanceHub").then(m => ({ default: m.GovernanceHub })));
+const SessionOSPanel = lazy(() => import("./dashboard/Sovereign/SessionOSPanel").then(m => ({ default: m.SessionOSPanel })));
+const SovereignFunnel = lazy(() => import("./dashboard/Analytics/SovereignFunnel").then(m => ({ default: m.SovereignFunnel })));
 
 const DataManagementModal = lazy(() => Promise.resolve({ default: DataManagement }));
 
@@ -290,7 +293,6 @@ const CollapsibleSidebarGroup: FC<{
   effectiveTab: AdminTab;
   handleTabChange: (next: AdminTab) => void;
 }> = ({ group, visibleItemsInGroup, effectiveTab, handleTabChange }) => {
-  // Auto-expand if the active tab is inside this group
   const isActiveGroup = visibleItemsInGroup.some(item => item.id === effectiveTab);
   const [expanded, setExpanded] = useState(isActiveGroup);
 
@@ -298,46 +300,64 @@ const CollapsibleSidebarGroup: FC<{
     <div className="space-y-1">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-2 hover:bg-slate-800/40 rounded-xl transition-colors focus:outline-none group cursor-pointer"
+        className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all duration-300 focus:outline-none group cursor-pointer hover:bg-white/5 border border-transparent hover:border-white/10"
       >
-        <span className="text-xs font-black text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 uppercase tracking-widest transition-colors">
+        <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 group-hover:text-teal-400 dark:group-hover:text-teal-300 uppercase tracking-[0.2em] transition-colors drop-shadow-sm">
           {group.title}
         </span>
-        <span className="text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400 transition-transform">
-          {expanded ? <X className="w-3 h-3 opacity-50" /> : <Menu className="w-3 h-3 opacity-50 scale-x-125" />}
+        <span className="text-slate-500 group-hover:text-teal-400 transition-transform duration-300">
+          <motion.div animate={{ rotate: expanded ? 90 : 0 }} className="flex items-center justify-center">
+            <Menu className="w-3.5 h-3.5 opacity-50" />
+          </motion.div>
         </span>
       </button>
       
-      {expanded && (
-        <div className="space-y-1.5 pt-1 animate-in slide-in-from-top-2 fade-in duration-200">
-          {visibleItemsInGroup.map((item) => {
-            const isActive = effectiveTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleTabChange(item.id)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group/item cursor-pointer ${
-                  isActive
-                    ? "bg-slate-800/80 border-l border-teal-500/50 text-white shadow-md shadow-slate-900/50"
-                    : "border-transparent text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-lg transition-colors shadow-sm ${isActive ? "text-teal-400 bg-teal-500/20 ring-1 ring-teal-500/30" : "text-slate-500 group-hover/item:text-slate-300 bg-slate-900/50 shadow-inner border border-white/5"}`}>
-                    {item.icon}
-                  </div>
-                  <span className={`text-sm font-black tracking-wide transition-all ${isActive ? "text-white" : "group-hover/item:-translate-x-0.5"}`}>
-                    {CLEAN_NAV_LABELS[item.id] ?? item.label}
-                  </span>
-                </div>
-                <div className={`mr-auto transition-opacity duration-300 flex items-center z-10 ${isActive ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'}`} onClick={(e) => e.stopPropagation()}>
-                  <AdminTooltip content={NAV_TOOLTIPS[item.id] || "القسم مخصص للإدارة المركزية"} position="bottom" />
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-1.5 pt-1.5 pb-2">
+              {visibleItemsInGroup.map((item) => {
+                const isActive = effectiveTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleTabChange(item.id)}
+                    className={`relative w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 group/item cursor-pointer overflow-hidden ${
+                      isActive
+                        ? "bg-white/10 border border-white/20 text-white shadow-[0_0_20px_rgba(20,184,166,0.15)]"
+                        : "border border-transparent text-slate-400 hover:text-slate-100 hover:bg-white/5 hover:border-white/10"
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.div 
+                        layoutId="activeTabIndicator"
+                        className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-400 to-indigo-500 rounded-r-full shadow-[0_0_10px_rgba(20,184,166,0.5)]"
+                      />
+                    )}
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className={`p-2 rounded-xl transition-all duration-300 ${isActive ? "text-teal-300 bg-teal-500/20 ring-1 ring-teal-500/50 shadow-[0_0_15px_rgba(20,184,166,0.3)]" : "text-slate-500 group-hover/item:text-slate-300 bg-black/20 shadow-inner border border-white/5 group-hover/item:border-white/10"}`}>
+                        {item.icon}
+                      </div>
+                      <span className={`text-sm font-black tracking-wide transition-all duration-300 ${isActive ? "text-white" : "group-hover/item:-translate-x-1"}`}>
+                        {CLEAN_NAV_LABELS[item.id] ?? item.label}
+                      </span>
+                    </div>
+                    <div className={`mr-auto transition-opacity duration-300 flex items-center z-20 ${isActive ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'}`} onClick={(e) => e.stopPropagation()}>
+                      <AdminTooltip content={NAV_TOOLTIPS[item.id] || "القسم مخصص للإدارة المركزية"} position="bottom" />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -528,19 +548,19 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
         <aside
           className={`
-            admin-sidebar fixed lg:sticky top-0 right-0 h-screen flex-shrink-0 border-l bg-white dark:bg-[#0B0F19]
-            flex flex-col z-50 overflow-hidden select-none shadow-[0_30px_80px_rgba(2,6,23,0.55)]
+            admin-sidebar fixed lg:sticky top-0 right-0 h-screen flex-shrink-0 border-l border-white/10 bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl
+            flex flex-col z-50 overflow-hidden select-none shadow-[0_0_60px_rgba(0,0,0,0.5)]
             transition-[transform,width,opacity,border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
             ${
               isSidebarOpen
-                ? "translate-x-0 w-72 border-slate-800/80 opacity-100 lg:translate-x-0"
+                ? "translate-x-0 w-72 border-r border-white/5 opacity-100 lg:translate-x-0"
                 : "translate-x-full w-72 border-transparent opacity-0 pointer-events-none lg:pointer-events-auto"
             }
-            ${isDesktopSidebarVisible ? "lg:w-72 lg:translate-x-0 lg:opacity-100 lg:border-slate-800/80" : "lg:w-0 lg:translate-x-full lg:opacity-0 lg:border-transparent"}
+            ${isDesktopSidebarVisible ? "lg:w-72 lg:translate-x-0 lg:opacity-100 lg:border-white/5" : "lg:w-0 lg:translate-x-full lg:opacity-0 lg:border-transparent"}
           `}
         >
           <div className="pointer-events-none absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-teal-400/20 to-transparent opacity-70" />
-          <div className="p-6 lg:p-8 border-b border-slate-200 dark:border-slate-800/80 relative group flex items-center justify-between bg-slate-50 dark:bg-[#080B14] transition-colors duration-500">
+          <div className="p-6 lg:p-8 border-b border-white/5 relative group flex items-center justify-between bg-transparent transition-colors duration-500">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-indigo-600 flex items-center justify-center shadow-[0_0_20px_rgba(20,184,166,0.3)] ring-1 ring-white/10">
                 <Workflow className="w-6 h-6 text-white" />
@@ -584,14 +604,14 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
             })}
           </nav>
 
-          <footer className="p-5 border-t border-slate-200 dark:border-slate-800/80 space-y-3 bg-slate-50 dark:bg-[#080B14] transition-colors duration-500">
-            <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-slate-800 shadow-inner">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/10 dark:from-indigo-500/20 to-purple-500/10 dark:to-purple-500/20 flex items-center justify-center border border-indigo-500/20 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400">
+          <footer className="p-5 border-t border-white/5 space-y-3 bg-transparent transition-colors duration-500 relative before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent">
+            <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 shadow-inner backdrop-blur-md">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/10 dark:from-indigo-500/20 to-purple-500/10 dark:to-purple-500/20 flex items-center justify-center border border-indigo-500/20 dark:border-indigo-500/30 text-indigo-400 drop-shadow-sm">
                 <User className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-black text-slate-900 dark:text-white truncate uppercase tracking-tight">{authUser?.email?.split('@')[0] || "مُشغِّل"}</p>
-                <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-widest">{authRole}</p>
+                <p className="text-xs font-black text-white truncate uppercase tracking-tight drop-shadow-sm">{authUser?.email?.split('@')[0] || "مُشغِّل"}</p>
+                <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest">{authRole}</p>
               </div>
             </div>
             <button
@@ -626,10 +646,10 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           }`}
         >
           <header
-            className={`h-20 lg:h-28 border-b bg-white dark:bg-[#0B0F19] flex items-center justify-between px-6 lg:px-12 flex-shrink-0 z-10 transition-[border-color,background-color,box-shadow] duration-500 shadow-md ${
+            className={`h-20 lg:h-28 border-b bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl flex items-center justify-between px-6 lg:px-12 flex-shrink-0 z-10 transition-[border-color,background-color,box-shadow] duration-500 shadow-sm ${
               isDesktopSidebarHidden
-                ? "border-slate-200 dark:border-slate-700/70 shadow-[0_10px_40px_rgba(15,23,42,0.18)]"
-                : "border-slate-200 dark:border-slate-800/80"
+                ? "border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.3)]"
+                : "border-white/5"
             }`}
           >
             <div className="flex items-center gap-4 lg:gap-8">
@@ -722,52 +742,91 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "sovereign" && <SovereignPanel />}
                 {effectiveTab === "entity" && <EntityDashboard />}
                 {effectiveTab === "exec-overview" && <ExecutiveDashboard />}
-                {effectiveTab === "growth-revenue" && <GrowthRevenueDashboard />}
-                {effectiveTab === "security-ops" && <SecurityOpsDashboard />}
-                {effectiveTab === "consciousness-atlas" && <ConsciousnessAtlasDashboard />}
-                {effectiveTab === "flow-dynamics" && <FlowDynamicsDashboard />}
+                {effectiveTab === "governance-ledger" && <GovernanceHub />}
                 {effectiveTab === "war-room" && <AlertsPanel />}
-                {effectiveTab === "flow-map" && <FlowMapPanel />}
-                {effectiveTab === "journey-paths" && <JourneyPathsPanel />}
-                {effectiveTab === "ops-docs" && <OpsDocsPanel />}
-                {effectiveTab === "map-registry" && <MapRegistryPanel />}
-                {effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
-                {effectiveTab === "ai-studio" && <AIStudioPanel />}
-                {effectiveTab === "ai-decisions" && <AIDecisionLogPanel maxDecisions={100} />}
-                {effectiveTab === "health-monitor" && <HealthMonitorPanel />}
+                {effectiveTab === "design-lab" && <DesignLab />}
                 {effectiveTab === "content" && <ContentPanel />}
-                {effectiveTab === "users-state" && (
-                  <div className="space-y-8">
-                    <UsersPanel />
-                    <UserStatePanel />
+                {effectiveTab === "ops-docs" && <OpsDocsPanel />}
+
+                {effectiveTab === "growth-revenue" && (
+                  <div className="space-y-12">
+                    <GrowthRevenueDashboard />
+                    <SalesEnablementPanel />
+                    <B2BAnalytics />
+                    <AdAnalyticsDashboard />
                   </div>
                 )}
-                {effectiveTab === "consciousness" && <ConsciousnessArchivePanel />}
-                {effectiveTab === "consciousness-map" && <ConsciousnessMap />}
-                {effectiveTab === "b2b-analytics" && <B2BAnalytics />}
-                {effectiveTab === "ai-simulator" && <AISimulatorPanel />}
-                {effectiveTab === "ai-marketing" && <CreativeDashboard />}
-                {effectiveTab === "sales-enablement" && <SalesEnablementPanel />}
-                {effectiveTab === "seo-geo" && <SeoGeoAuditorPanel />}
-                {effectiveTab === "crucible" && <TheCrucible />}
-                {effectiveTab === "dreams-matrix" && <DreamsMatrixPanel />}
-                {effectiveTab === "digital-twin" && <ConsciousnessGraph />}
-                {effectiveTab === "fleet" && <FleetCommander />}
-                {effectiveTab === "repo-intel" && <RepoIntelPanel />}
-                {effectiveTab === "dawayir-live" && <LiveAdminPanel />}
-                {effectiveTab === "ad-analytics" && <AdAnalyticsDashboard />}
+                
+                {effectiveTab === "sovereign-funnel" && <SovereignFunnel />}
+                
+                {effectiveTab === "security-ops" && <SecurityOpsDashboard />}
+                
+                {effectiveTab === "consciousness-atlas" && (
+                  <div className="space-y-12">
+                    <ConsciousnessAtlasDashboard />
+                    <ConsciousnessMap />
+                  </div>
+                )}
+                
+                {effectiveTab === "flow-map" && (
+                  <div className="space-y-12">
+                    <FlowMapPanel />
+                    <MapRegistryPanel />
+                    <JourneyPathsPanel />
+                  </div>
+                )}
+                
                 {effectiveTab === "feedback-survey" && (
-                  <div className="space-y-8">
+                  <div className="space-y-12">
                     <FeedbackPanel />
                     <SurveyResultsPanel />
                   </div>
                 )}
-                {effectiveTab === "support-tickets" && <SupportTicketsPanel />}
-                {effectiveTab === "marketing-ops" && <MarketingOpsPanel />}
+                
+                {effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
+                
+                {effectiveTab === "ai-studio" && (
+                  <div className="space-y-12">
+                    <AIStudioPanel />
+                    <AISimulatorPanel />
+                    <TheCrucible />
+                    <AIDecisionLogPanel maxDecisions={100} />
+                  </div>
+                )}
+                
+                {effectiveTab === "health-monitor" && (
+                  <div className="space-y-12">
+                    <HealthMonitorPanel />
+                    <FlowDynamicsDashboard />
+                  </div>
+                )}
+                
+                {effectiveTab === "users-state" && (
+                  <div className="space-y-12">
+                    <UsersPanel />
+                    <UserStatePanel />
+                    <ConsciousnessGraph />
+                  </div>
+                )}
+                
+                {effectiveTab === "consciousness" && <ConsciousnessArchivePanel />}
+                {effectiveTab === "dreams-matrix" && <DreamsMatrixPanel />}
+                {effectiveTab === "fleet" && <FleetCommander />}
+                {effectiveTab === "seo-geo" && <SeoGeoAuditorPanel />}
+                {effectiveTab === "repo-intel" && <RepoIntelPanel />}
+                {effectiveTab === "dawayir-live" && <LiveAdminPanel />}
+                
+                {effectiveTab === "marketing-ops" && (
+                  <div className="space-y-12">
+                    <MarketingOpsPanel />
+                    <MailCommandCenter />
+                    <CreativeDashboard />
+                  </div>
+                )}
+                
                 {effectiveTab === "expansion-hub" && <SovereignExpansionHub />}
-                {effectiveTab === "mail-command" && <MailCommandCenter />}
-                {effectiveTab === "design-lab" && <DesignLab />}
-                {effectiveTab === "governance-ledger" && <GovernanceHub />}
+                {effectiveTab === "session-os" && <SessionOSPanel />}
+                {effectiveTab === "support-tickets" && <SupportTicketsPanel />}
               </Suspense>
             </div>
           </div>

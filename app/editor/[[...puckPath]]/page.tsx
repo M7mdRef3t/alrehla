@@ -1,24 +1,25 @@
 import { EditorClient } from "./client";
 import { supabaseAdmin } from "../../../src/services/supabaseClient";
+import { getEditorTemplate } from "../../../src/editor/editorTemplates";
 
 export default async function EditorPage({ params }: { params: { puckPath: string[] } }) {
   const path = `/${params.puckPath?.join("/") || ""}`;
 
-  // Initial mockup data
-  let initialData = {
-    content: [],
-    root: {},
-  };
+  let initialData = getEditorTemplate(path);
 
   if (supabaseAdmin) {
-    const { data } = await supabaseAdmin
-      .from('dawayir_pages')
-      .select('data')
-      .eq('path', path)
-      .single();
-      
-    if (data && data.data) {
-      initialData = data.data;
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("dawayir_pages")
+        .select("data")
+        .eq("path", path)
+        .maybeSingle();
+
+      if (!error && data?.data) {
+        initialData = data.data;
+      }
+    } catch {
+      // Fall back to the local editor template if the database lookup fails.
     }
   }
 

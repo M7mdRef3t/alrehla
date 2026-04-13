@@ -38,6 +38,7 @@ export interface MarketingLeadPayload {
   qualifiedAt?: string;
   intent?: string | null;
   anonymousId?: string | null;
+  clientEventId?: string | null;
 }
 
 export interface NormalizedMarketingLeadInput {
@@ -61,6 +62,7 @@ export interface NormalizedMarketingLeadInput {
   mergeConflict?: boolean;
   intent: string | null;
   anonymousId: string | null;
+  clientEventId: string | null;
 }
 
 export interface MarketingLeadImportResult {

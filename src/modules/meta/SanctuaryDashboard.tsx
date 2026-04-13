@@ -14,7 +14,7 @@ import {
     Lock
 } from "lucide-react";
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import {

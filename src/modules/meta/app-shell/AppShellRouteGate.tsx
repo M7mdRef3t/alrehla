@@ -44,7 +44,7 @@ export function AppShellRouteGate({
 
   if (pathname === "/debug-logo-lab") {
     return (
-      <Suspense fallback={<div style={{ minHeight: "100vh", background: "#050A14" }} />}>
+      <Suspense fallback={<div className="min-h-screen min-h-[100vh] bg-[#050A14]" />}>
         <DebugLogoLab />
       </Suspense>
     );
@@ -68,12 +68,7 @@ export function AppShellRouteGate({
           <button
             type="button"
             onClick={goBackToFeatureFlags}
-            className="fixed z-50 top-4 left-4 rounded-full border px-4 py-2 text-xs font-semibold transition-colors"
-            style={{
-              borderColor: "var(--soft-teal)",
-              background: "rgba(255, 255, 255, 0.95)",
-              color: "var(--space-deep)"
-            }}
+            className="fixed z-50 top-4 left-4 rounded-full border px-4 py-2 text-xs font-semibold transition-colors border-[color:var(--soft-teal)] bg-[rgba(255,255,255,0.95)] text-[var(--space-deep)]"
             title={previewedFeature ? `الرجوع من معاينة: ${previewedFeature}` : "الرجوع إلى Feature Flags"}
           >
             الرجوع إلى Feature Flags

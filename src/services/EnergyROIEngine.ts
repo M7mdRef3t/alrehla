@@ -1,4 +1,4 @@
-import { useMapState } from '@/domains/dawayir/store/map.store';
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState, PulseEntry } from '@/domains/consciousness/store/pulse.store';
 import { useFirewallState } from '@/domains/admin/store/firewall.store';
 

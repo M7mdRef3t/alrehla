@@ -8,7 +8,7 @@ import type { QuickAnswer2 } from "@/utils/suggestInitialRing";
 import type { PersonGender } from "@/utils/resultScreenAI";
 import { buildResultTemplateFromAnswers } from "@/utils/resultScreenTemplates";
 import { realityScoreToRing } from "@/utils/realityScore";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { trackEvent, AnalyticsEvents } from "@/services/analytics";
 import type { AdviceCategory } from "@/data/adviceScripts";
 import type { AdviceZone } from "@/data/adviceScripts";

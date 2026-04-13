@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import type { MapNode } from "@/modules/map/mapTypes";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { useJourneyProgress } from "@/domains/journey";
-import { useAppShellNavigationState } from "@/domains/dawayir/store/navigation.store";
+import { useAppShellNavigationState } from '@/modules/map/dawayirIndex';
 import { getWeeklyPulseInsight } from "@/utils/pulseInsights";
 import { getIncompleteMissionSteps } from "@/utils/missionProgress";
 

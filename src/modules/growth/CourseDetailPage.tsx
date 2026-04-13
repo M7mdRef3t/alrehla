@@ -685,7 +685,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
             {/* Meta */}
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
               <span style={{ fontSize: 9, color: "#F59E0B", display: "flex", alignItems: "center", gap: 3, fontWeight: 800 }}>
-                <Star size={10} fill="#F59E0B" /> {course.rating} ({course.reviewCount.toLocaleString()} تقييم)
+                <Star size={10} fill="#F59E0B" /> {course.rating} ({course.reviewCount.toLocaleString("en-US")} تقييم)
               </span>
               <span style={{ fontSize: 9, color: "#475569", display: "flex", alignItems: "center", gap: 3 }}>
                 <Clock size={9} /> {course.duration}

@@ -19,6 +19,10 @@ import { useGestureSanctuary } from '@/hooks/useGestureSanctuary';
 import { GenesisOnboarding } from '@/modules/meta/GenesisOnboarding';
 import { signInWithGoogleAtPath } from '@/services/authService';
 
+import { PaywallModal } from './components/PaywallModal';
+import { OracleModal, type OraclePrediction } from './components/OracleModal';
+import { TacticalHUD } from './components/TacticalHUD';
+
 export default function DawayirApp() {
     useAIOrchestration();
     const { isSanctuary, exitSanctuary, gestureHandlers } = useGestureSanctuary();
@@ -453,37 +457,10 @@ export default function DawayirApp() {
                         </div>
 
                         {/* Tactical HUD Left — dark glass */}
-                        <div className="absolute z-20 left-4 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4">
-                            <div className="p-4 space-y-4 w-44 rounded-2xl" style={{ background:"rgba(6,10,22,0.82)", border:"1px solid rgba(255,255,255,0.07)", backdropFilter:"blur(20px)" }}>
-                                <div className="space-y-1">
-                                    <span className="text-[9px] font-black text-slate-500 tracking-wide">مستوى التشتت</span>
-                                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: "65%" }}
-                                            className="h-full bg-rose-500/50"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div className="bg-white/5 p-2 rounded-lg border border-white/5">
-                                        <span className="text-[9px] block text-slate-500">نقاط الرصد</span>
-                                        <span className="text-sm font-black text-white font-mono">{data.nodes.length}</span>
-                                    </div>
-                                    <div className="bg-white/5 p-2 rounded-lg border border-white/5">
-                                        <span className="text-[9px] block text-slate-500">الروابط الحية</span>
-                                        <span className="text-sm font-black text-white font-mono">{data.edges.length}</span>
-                                    </div>
-                                </div>
-                                <div className="pt-2 border-t border-white/5">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[9px] text-slate-500">حالة القراءة</span>
-                                        <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-                                    </div>
-                                    <span className="text-[10px] font-bold text-teal-400">مستقرة</span>
-                                </div>
-                            </div>
-                        </div>
+                        <TacticalHUD 
+                            nodesCount={data.nodes.length} 
+                            edgesCount={data.edges.length} 
+                        />
 
                         <div className="w-full h-full overflow-hidden relative">
                             <CanvasComponent
@@ -578,30 +555,10 @@ export default function DawayirApp() {
 
                 {/* Phase 3: The Paywall Modal (Minimalist) */}
                 {showPaywall && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
-                        <div className="p-8 max-w-md w-full relative text-center rounded-3xl" style={{ background:"rgba(6,10,22,0.92)", border:"1px solid rgba(20,184,166,0.2)", backdropFilter:"blur(32px)" }}>
-                            <button
-                                onClick={() => setShowPaywall(false)}
-                                className="absolute top-4 right-4 text-slate-400 hover:text-white"
-                            >
-                                <ArrowLeft className="w-5 h-5 rotate-180" />
-                            </button>
-                            <div className="w-16 h-16 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mx-auto mb-6">
-                                <Shield className="w-8 h-8 text-teal-400" />
-                            </div>
-                            <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">النظام هنا لخدمتك</h3>
-                            <p className="text-slate-400 mb-8 leading-relaxed text-sm font-medium">
-                                النسخة المجانية منحتك التشخيص. لكي تبدأ في بناء الحدود التلقائية، تتبع التطور، والحصول على أدوات الوعي الذكية.. ارفع مستوى اشتراكك الآن.
-                            </p>
-                            <div className="space-y-4">
-                                <button onClick={handleGoogleLogin} className="w-full py-4 bg-teal-500 text-slate-950 rounded-xl font-black shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-all flex items-center justify-center gap-3">
-                                    <Check className="w-5 h-5" />
-                                    سجل عبر Google مجاناً
-                                </button>
-                                <div className="text-[10px] text-slate-500 tracking-[0.08em]">خطة الوصول: ٩ دولار/شهريًا</div>
-                            </div>
-                        </div>
-                    </div>
+                    <PaywallModal 
+                        onClose={() => setShowPaywall(false)} 
+                        onGoogleLogin={handleGoogleLogin} 
+                    />
                 )}
 
             </div>
@@ -623,63 +580,14 @@ export default function DawayirApp() {
 
             {/* Predictive Oracle Modal (Smart Notifications) */}
             {showOracleModal && oraclePrediction && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 animate-in fade-in duration-200" dir="rtl">
-                    <div className="p-8 max-w-lg w-full relative overflow-hidden rounded-3xl" style={{ background:"rgba(6,10,22,0.92)", border:"1px solid rgba(20,184,166,0.2)", backdropFilter:"blur(32px)" }}>
-
-                        {/* Status Header based on Calibration */}
-                        {oraclePrediction.needsMoreData ? (
-                            <div className="mb-8 flex flex-col items-center text-center">
-                                <div className="w-20 h-20 bg-white/5 border border-white/10 text-slate-400 rounded-2xl flex items-center justify-center mb-6"><Clock className="w-10 h-10" /></div>
-                                <h2 className="text-2xl font-black text-white mb-3 tracking-tight">البيانات غير مكتملة</h2>
-                                <p className="text-slate-400 font-medium">{oraclePrediction.error}</p>
-                            </div>
-                        ) : oraclePrediction.burnout_probability > 60 ? (
-                            <div className="mb-8 flex flex-col items-center text-center">
-                                <div className="w-20 h-20 bg-rose-500/10 border border-rose-500/30 text-rose-500 rounded-2xl flex items-center justify-center mb-6 animate-pulse"><AlertCircle className="w-10 h-10" /></div>
-                                <h2 className="text-2xl font-black text-rose-400 mb-3 tracking-tight">احتمالية الإرهاق: {oraclePrediction.burnout_probability}%</h2>
-                                <div className="p-5 bg-rose-500/5 rounded-2xl border border-rose-500/20 mb-6 text-right w-full">
-                                    <p className="text-rose-200/80 text-sm leading-[1.8] font-bold">{oraclePrediction.trajectory_summary}</p>
-                                </div>
-                                <div className="w-full text-right p-6 rounded-2xl shadow-inner" style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)" }}>
-                                    <h4 className="font-black text-teal-400 mb-3 flex items-center gap-2 text-xs uppercase tracking-widest font-mono">
-                                        <Terminal className="w-4 h-4" /> خطوة وقائية:
-                                    </h4>
-                                    <p className="text-slate-200 text-sm leading-relaxed font-medium">{oraclePrediction.preventative_action}</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="mb-8 flex flex-col items-center text-center">
-                                <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 rounded-2xl flex items-center justify-center mb-6"><Heart className="w-10 h-10" /></div>
-                                <h2 className="text-2xl font-black text-emerald-400 mb-3 tracking-tight">الوضع مستقر: {oraclePrediction.burnout_probability}%</h2>
-                                <div className="p-5 bg-emerald-500/5 rounded-2xl border border-emerald-500/20 mb-6 text-right w-full">
-                                    <p className="text-emerald-200/80 text-sm leading-[1.8] font-bold">{oraclePrediction.trajectory_summary}</p>
-                                </div>
-                            </div>
-                        )
-                        }
-
-                        <div className="flex gap-4">
-                            <button
-                                onClick={() => setShowOracleModal(false)}
-                                className="flex-1 py-4 bg-white/5 border border-white/10 text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-white/10 transition-all font-mono"
-                            >
-                                إغلاق
-                            </button>
-                            {hasActiveCoach && oraclePrediction?.burnout_probability > 60 && (
-                                <button
-                                    onClick={handleNotifyCoach}
-                                    disabled={isSharing}
-                                    className="flex-1 py-4 bg-rose-500 text-slate-950 rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-rose-400 transition-all flex items-center justify-center gap-2"
-                                >
-                                    {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />}
-                                    إخطار الكوتش
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )
-            }
+                <OracleModal 
+                    prediction={oraclePrediction}
+                    hasActiveCoach={hasActiveCoach}
+                    isSharing={isSharing}
+                    onClose={() => setShowOracleModal(false)}
+                    onNotifyCoach={handleNotifyCoach}
+                />
+            )}
 
             {/* Tactical Training Simulation Overlay */}
             {

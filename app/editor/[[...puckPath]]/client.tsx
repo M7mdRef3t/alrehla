@@ -1,13 +1,53 @@
-﻿"use client";
+"use client";
 
+if (typeof window !== "undefined") {
+  const originalError = console.error;
+  console.error = (...args: any[]) => {
+    if (typeof args[0] === "string" && args[0].includes('unique "key" prop')) {
+      return; // Silence puck's list key warnings
+    }
+    originalError.apply(console, args);
+  };
+}
 import { Puck, Data } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { config } from "../../../src/puck.config";
 import { supabase } from "../../../src/services/supabaseClient";
-import { useState } from "react";
+import { editorTemplateOptions, EditorTemplatePath, getEditorTemplate } from "../../../src/editor/editorTemplates";
+import { useEffect, useMemo, useState } from "react";
 import { Sparkles, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+const normalizePuckData = (value: Data): Data => {
+  const normalizeItem = (item: any, index: number) => ({
+    ...item,
+    id: item?.id ?? item?.props?.id ?? `${item?.type ?? "item"}-${index + 1}`,
+    props: item?.props ?? {},
+  });
+
+  return {
+    ...value,
+    root: {
+      ...value.root,
+      props: value.root?.props ?? {},
+    },
+    content: Array.isArray(value.content) ? value.content.map((item, index) => normalizeItem(item, index)) : [],
+    zones: value.zones
+      ? Object.fromEntries(
+          Object.entries(value.zones).map(([zoneKey, zoneItems]) => [
+            zoneKey,
+            Array.isArray(zoneItems)
+              ? zoneItems.map((item, index) => normalizeItem(item, index))
+              : [],
+          ])
+        )
+      : undefined,
+  };
+};
 
 export function EditorClient({ path, initialData }: { path: string, initialData: Data }) {
+  const router = useRouter();
+  const [selectedPath, setSelectedPath] = useState(path);
   const [data, setData] = useState<Data>(initialData);
   const [key, setKey] = useState(0);
   
@@ -15,6 +55,28 @@ export function EditorClient({ path, initialData }: { path: string, initialData:
   const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  const currentTemplateLabel = useMemo(
+    () => editorTemplateOptions.find((option) => option.path === selectedPath)?.label ?? selectedPath,
+    [selectedPath]
+  );
+
+  useEffect(() => {
+    setSelectedPath(path);
+    if (typeof window !== "undefined") {
+      const storedPreset = window.localStorage.getItem(`dawayir-editor-preset:${path}`);
+      if (storedPreset) {
+        try {
+          setData(normalizePuckData(JSON.parse(storedPreset) as Data));
+          setKey((current) => current + 1);
+          return;
+        } catch {
+          window.localStorage.removeItem(`dawayir-editor-preset:${path}`);
+        }
+      }
+    }
+    setData(normalizePuckData(initialData));
+    setKey((current) => current + 1);
+  }, [path, initialData]);
 
   const save = async (dataToSave: Data) => {
     if (!supabase) {
@@ -33,6 +95,21 @@ export function EditorClient({ path, initialData }: { path: string, initialData:
       console.error(err);
       const message = err instanceof Error ? err.message : "Ø®Ø·Ø£ ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ"; alert("Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„Ø­ÙØ¸:\n" + message);
     }
+  };
+
+  const handleTemplateChange = (nextPath: string) => {
+    const safePath = nextPath as EditorTemplatePath;
+    setSelectedPath(safePath);
+    setData(normalizePuckData(getEditorTemplate(safePath)));
+    setKey((current) => current + 1);
+    router.push(safePath === "/" ? "/editor" : `/editor${safePath}`);
+  };
+
+  const handleSavePreset = () => {
+    if (typeof window === "undefined") return;
+    const storageKey = `dawayir-editor-preset:${selectedPath}`;
+    window.localStorage.setItem(storageKey, JSON.stringify(data));
+    window.alert(`تم حفظ الـ preset باسم ${currentTemplateLabel}`);
   };
 
   // AI Stage Messages
@@ -73,7 +150,7 @@ export function EditorClient({ path, initialData }: { path: string, initialData:
       }
       
       if (result.data) {
-        setData(result.data); // Update data
+        setData(normalizePuckData(result.data)); // Update data
         setKey(k => k + 1);   // Force Puck to re-mount with new data
         setIsModalOpen(false); // Close modal
       }
@@ -88,6 +165,33 @@ export function EditorClient({ path, initialData }: { path: string, initialData:
 
   return (
     <div className="w-full h-screen relative">
+      <div className="absolute top-4 left-1/2 z-50 -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 shadow-xl backdrop-blur-xl">
+        <div className="flex items-center gap-3 text-right" dir="rtl">
+          <span className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">Page Preset</span>
+          <select
+            value={selectedPath}
+            onChange={(event) => handleTemplateChange(event.target.value)}
+            className="min-w-[260px] rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-white outline-none"
+          >
+            {editorTemplateOptions.map((option) => (
+              <option key={option.path} value={option.path} className="text-slate-900">
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mt-2 text-xs text-white/45" dir="rtl">
+          {editorTemplateOptions.find((option) => option.path === selectedPath)?.note}
+        </div>
+        <button
+          type="button"
+          onClick={handleSavePreset}
+          className="mt-3 w-full rounded-xl border border-teal-400/20 bg-teal-400/10 px-3 py-2 text-sm font-bold text-teal-100 hover:bg-teal-400/20"
+        >
+          Save as preset
+        </button>
+      </div>
+
       <Puck
         key={key}
         config={config}

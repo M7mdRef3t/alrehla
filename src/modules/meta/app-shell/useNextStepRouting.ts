@@ -13,7 +13,7 @@ import {
   type RecentTelemetrySignalV1
 } from "@/modules/recommendation";
 import type { AppScreen } from "@/navigation/navigationMachine";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 
 
 export interface ActiveInterventionState {

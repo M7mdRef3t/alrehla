@@ -77,7 +77,7 @@ export const HealthMonitorPanel: FC = () => {
           <h2 className="text-2xl font-bold text-white">مراقب صحة النظام</h2>
         </div>
         <div className="text-sm text-gray-400">
-          آخر فحص: {stats.lastCheck ? new Date(stats.lastCheck.timestamp).toLocaleString("ar-EG") : "لا يوجد"}
+          آخر فحص: {stats.lastCheck ? new Date(stats.lastCheck.timestamp).toLocaleString("en-US") : "لا يوجد"}
         </div>
       </div>
 
@@ -123,7 +123,7 @@ export const HealthMonitorPanel: FC = () => {
             <div key={idx} onClick={() => setSelectedCheck(check)} className="p-4 hover:bg-gray-700/30 cursor-pointer transition">
               <div className="flex items-start justify-between mb-2">
                 <span className="text-sm font-medium text-white">التقييم: {check.score}%</span>
-                <div className="flex items-center gap-2 text-xs text-gray-400"><Clock className="w-3 h-3" />{new Date(check.timestamp).toLocaleString("ar-EG")}</div>
+                <div className="flex items-center gap-2 text-xs text-gray-400"><Clock className="w-3 h-3" />{new Date(check.timestamp).toLocaleString("en-US")}</div>
               </div>
               <div className="grid grid-cols-4 gap-2 text-xs text-gray-400">
                 <div>أخطاء: <span className="text-red-400">{countByCategory(check.issues, "error")}</span></div>

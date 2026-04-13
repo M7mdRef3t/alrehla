@@ -8,7 +8,7 @@ import {
 import { growthEngine, type DiffusionMetrics } from "@/services/growthEngine";
 import { getAuthToken } from "@/domains/auth/store/auth.store";
 import { useAdminState } from "@/domains/admin/store/admin.store";
-import { useToastState } from "@/domains/dawayir/store/toast.store";
+import { useToastState } from '@/modules/map/dawayirIndex';
 
 function getBearerToken(): string {
   return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
@@ -84,6 +84,8 @@ const LeadCard: FC<{ lead: any, onFilterSelect: any, onAward: (id: string) => vo
   const reasoning = l.metadata?.oracle_reasoning;
   const action = l.metadata?.oracle_recommended_action;
   const phone = l.phone_normalized || l.metadata?.phone || l.metadata?.fb_phone || "";
+  const campaign = l.metadata?.campaign || l.campaign;
+  const source = l.metadata?.source || l.source || l.source_type;
   
   const points = l.metadata?.boarding_gamification?.awareness_points || 0;
 
@@ -127,7 +129,7 @@ const LeadCard: FC<{ lead: any, onFilterSelect: any, onAward: (id: string) => vo
               </button>
             )}
             <button 
-                onClick={(e) => { e.stopPropagation(); onOpenWhatsapp(l.id, phone, l.name); }} 
+                onClick={(e) => { e.stopPropagation(); onOpenWhatsapp(l.id, phone, l.name, campaign, source); }} 
                 className={`p-2.5 rounded-xl transition-all border ${l.metadata?.whatsapp_sent ? 'text-emerald-300 bg-emerald-500/20 border-emerald-500/30' : 'text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/10'}`}
                 title={l.metadata?.whatsapp_sent ? "تم التواصل عبر واتساب" : "تواصل عبر واتساب"}
             >
@@ -164,7 +166,11 @@ const LeadCard: FC<{ lead: any, onFilterSelect: any, onAward: (id: string) => vo
   );
 };
 
-export const SovereignGatewayCommand: FC<{ onFilterSelect: (f: any) => void, onOpenWhatsapp: (id: string, phone: string, name: string) => void, stats?: any }> = ({ onFilterSelect, onOpenWhatsapp, stats }) => {
+export const SovereignGatewayCommand: FC<{ 
+  onFilterSelect: (f: any) => void, 
+  onOpenWhatsapp: (id: string, phone: string, name: string, campaign?: string, source?: string) => void, 
+  stats?: any 
+}> = ({ onFilterSelect, onOpenWhatsapp, stats }) => {
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
   const [oracleData, setOracleData] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -364,7 +370,7 @@ export const SovereignGatewayCommand: FC<{ onFilterSelect: (f: any) => void, onO
         </div>
         <div className="hud-glass p-8 rounded-[2.5rem] border-white/5 bg-white/[0.02]">
            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">الزوار (٢٤ ساعة)</p>
-           <h3 className="text-4xl font-black text-white">{(oracleData?.stats?.funnel?.visitors24h || 0).toLocaleString("ar-EG")}</h3>
+           <h3 className="text-4xl font-black text-white">{(oracleData?.stats?.funnel?.visitors24h || 0).toLocaleString("en-US")}</h3>
         </div>
         <div className="hud-glass p-8 rounded-[2.5rem] border-indigo-500/10 bg-indigo-500/5">
            <div className="flex items-center justify-between mb-2">

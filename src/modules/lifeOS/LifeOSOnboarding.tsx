@@ -11,7 +11,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Heart, ChevronLeft, Check, Flame, Zap } from "lucide-react";
 import { LIFE_DOMAINS, type LifeDomainId } from "@/types/lifeDomains";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { resolveDisplayName } from "@/services/userMemory";
 

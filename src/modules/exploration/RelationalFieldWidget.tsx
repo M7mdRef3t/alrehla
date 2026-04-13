@@ -6,7 +6,7 @@ import { getDawayirSignalHistory } from "../recommendation/recommendationBus";
 import { calculateEntropy } from "@/services/predictiveEngine";
 import { buildRelationalFieldSnapshot } from "@/services/relationalFieldEngine";
 import { getRecentJourneyEvents } from "@/services/journeyTracking";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { useShadowPulseState } from "@/domains/consciousness/store/shadowPulse.store";
 

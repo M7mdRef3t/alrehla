@@ -3,11 +3,14 @@
 import type { FC } from "react";
 import { useState, useCallback, useEffect, useRef, memo, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useJourneyProgress } from "@/domains/journey";
 import { setInLocalStorage } from "@/services/browserStorage";
 import { trackingService } from "@/domains/journey";
-import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
+import { type PulseEntry } from "@/domains/consciousness/store/pulse.store";
+import { useGamificationState } from "@/domains/gamification/store/gamification.store";
+import { soundManager } from "@/services/soundManager";
+import { analyticsService, AnalyticsEvents, generateUUID } from "@/domains/analytics";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
 import { AlertTriangle, Mail, ArrowRight, Sparkles, Zap, Smartphone, User, Lock } from "lucide-react";
 import { signInWithMagicLink } from "@/services/authService";
@@ -700,6 +703,11 @@ void onboardingRingPalette;
 /* ── Main OnboardingFlow Component ── */
 export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initialMirrorName }) => {
   const addNode = useMapState((s) => s.addNode);
+  const clientEventIdRef = useRef<string | null>(null);
+
+  if (!clientEventIdRef.current) {
+    clientEventIdRef.current = generateUUID();
+  }
   const setMirrorName = useJourneyProgress().setMirrorName;
   
   const [step, setStep] = useState(0);
@@ -707,6 +715,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   const [name, setName] = useState((initialMirrorName ?? "").trim());
   const [collectedItems, setCollectedItems] = useState<{ name: string; category: AdviceCategory }[]>([]);
   
+  const leadTrackedRef = useRef(false);
   const completionTrackedRef = useRef(false);
   const [, startTransition] = useTransition();
   const stepRef = useRef(0);
@@ -722,9 +731,28 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   useEffect(() => {
     trackingService.recordFlow("onboarding_opened");
     analyticsService.track(AnalyticsEvents.ONBOARDING_STARTED, { 
-      entry_point: seededMirrorName ? "landing_bridge" : "direct" 
+      entry_point: seededMirrorName ? "landing_bridge" : "direct",
+      client_event_id: clientEventIdRef.current!
     });
   }, [seededMirrorName]);
+
+  // 🟢 Funnel Traceability: Track step views for drop-off analysis
+  useEffect(() => {
+    const stepNames = [
+      "noise_check",
+      "inventory",
+      "mapping",
+      "insight",
+      "contact_capture",
+      "recovery_plan_preview"
+    ];
+    if (step < stepNames.length) {
+      analyticsService.track(`onboarding_step_${stepNames[step]}`, {
+        step_index: step,
+        client_event_id: clientEventIdRef.current!
+      });
+    }
+  }, [step]);
 
   const goTo = useCallback((next: number) => {
     startTransition(() => {
@@ -759,7 +787,18 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
 
   const handleContactCapture = useCallback(async (providedName: string, email: string, whatsapp: string) => {
     trackingService.recordFlow("lead_form_submitted", { meta: { name: providedName, email, whatsapp } });
-    analyticsService.trackLead({ method: "whatsapp", has_email: !!email, has_whatsapp: !!whatsapp });
+    
+    if (!leadTrackedRef.current) {
+      analyticsService.trackLead({ 
+        method: "whatsapp", 
+        has_email: !!email, 
+        has_whatsapp: !!whatsapp,
+        client_event_id: clientEventIdRef.current!
+      });
+      // Persist the ID for the next steps in the funnel (Payment)
+      analyticsService.setStoredClientEventId(clientEventIdRef.current!);
+      leadTrackedRef.current = true;
+    }
 
     const finalName = providedName.trim() || seededMirrorName;
     if (finalName) {
@@ -803,9 +842,24 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
 
   const handleComplete = useCallback(() => {
     if (!completionTrackedRef.current) {
-      analyticsService.trackCompleteRegistration({ flow: "onboarding" });
+      analyticsService.trackOnboardingCompleted({ 
+        flow: "onboarding",
+        client_event_id: clientEventIdRef.current!
+      });
       completionTrackedRef.current = true;
     }
+
+    // Gamification: Welcome Package
+    const { addXP, addCoins, awardBadge } = useGamificationState.getState();
+    addXP(100, "بداية الرحلة السِياديّة 🚀");
+    addCoins(200, "أول مورد سِيادي 🪙");
+    awardBadge(
+      "badge_sovereign_start", 
+      "المستكشف الأول", 
+      "وضع أول علامة على خريطة حياته بشجاعة.", 
+      "compass"
+    );
+
     markJourneyOnboardingDone();
     onComplete(false);
     if (getNotificationPermission() === "default") {

@@ -4,7 +4,7 @@ import { useState, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Zap, AlertTriangle, Brain, Lightbulb, Trophy, BookOpen, Target } from "lucide-react";
 import { LIFE_DOMAINS, type LifeDomainId, type LifeEntryType } from "@/types/lifeDomains";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 
 const ENTRY_TYPES: { id: LifeEntryType; label: string; icon: React.ReactNode; color: string; placeholder: string }[] = [
   {

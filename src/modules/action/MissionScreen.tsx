@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Info } from "lucide-react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { buildResultTemplateFromAnswers } from "@/utils/resultScreenTemplates";
 import type { FeelingAnswers } from "../exploration/FeelingCheck";
 import type { RealityAnswers } from "../exploration/RealityCheck";

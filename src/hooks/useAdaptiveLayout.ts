@@ -13,8 +13,8 @@
  */
 
 import { useEffect, useMemo } from "react";
-import { useLayoutState } from "@/domains/dawayir/store/layout.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useLayoutState } from '@/modules/map/dawayirIndex';
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useDailyQuestion } from "./useDailyQuestion";
 import { computeTEI } from "@/utils/traumaEntropyIndex";
 import { getShadowScore } from "@/domains/consciousness/store/shadowPulse.store";

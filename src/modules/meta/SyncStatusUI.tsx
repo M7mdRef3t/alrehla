@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSyncState } from "@/domains/journey/store/sync.store";
 import { Cloud, CloudOff, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
 import { queueMapSync } from "@/services/mapSync";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 
 export const SyncStatusUI: FC = () => {
     const { status, lastLocalSaveAt, lastSyncAt, error } = useSyncState();

@@ -75,21 +75,20 @@ export async function POST(req: Request) {
         const finalUserId = verifiedUserId || null;
 
         const mergedPayload = {
-            ...(data.payload || {}),
-            lead_id: data.lead_id || null,
-            lead_source: data.lead_source || null,
-            utm_source: data.utm_source || null,
-            utm_medium: data.utm_medium || null,
-            utm_campaign: data.utm_campaign || null,
+            ...(data.payload || {})
         };
 
         const { error } = await supabase.from("routing_events").insert({
             event_type: data.event_type,
             client_event_id: data.client_event_id || null,
-            // 5. Separate anonymous_id and session_id
             anonymous_id: data.anonymous_id || null,
             session_id: data.session_id || null,
             user_id: finalUserId,
+            lead_id: data.lead_id || null,
+            lead_source: data.lead_source || null,
+            utm_source: data.utm_source || null,
+            utm_medium: data.utm_medium || null,
+            utm_campaign: data.utm_campaign || null,
             payload: mergedPayload,
             // 3. Server-side timestamps only (No client spoofing)
             occurred_at: new Date().toISOString()
@@ -108,7 +107,7 @@ export async function POST(req: Request) {
         }
 
         const response = NextResponse.json({ status: "success" });
-        response.headers.set("X-Analytics-Version", "v2-hardened-zod");
+        response.headers.set("X-Analytics-Version", "v3-clean-strict");
         return response;
     } catch (e) {
         console.error("[Analytics Ingestion] Server Error:", e);

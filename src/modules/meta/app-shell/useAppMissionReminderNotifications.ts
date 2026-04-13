@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { MapNode } from "@/modules/map/mapTypes";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import {
   NOTIFICATION_TYPES,
   sendNotification,

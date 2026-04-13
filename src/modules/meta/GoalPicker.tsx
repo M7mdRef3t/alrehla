@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import {
   Briefcase, Home, Heart, Wallet, HelpCircle,
-  Users, UserCircle, Star, ArrowRight
+  Users, UserCircle, Star, ArrowRight, Activity, Users2, PauseCircle, Compass
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { resolveAdviceCategory, type AdviceCategory } from "@/data/adviceScripts";
@@ -19,26 +19,22 @@ import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 /* ─── Types ─────────────────────────────────────────────────────────────────── */
 
 const ICON_MAP: Record<string, LucideIcon> = {
-  work: Briefcase,
-  family: Home,
-  friends: Users,
-  love: Heart,
-  money: Wallet,
-  self: UserCircle,
+  overloaded: Activity,
+  relationship_drain: Users2,
+  stuck: PauseCircle,
+  self_discovery: Compass,
   unknown: HelpCircle
 };
 
 const GOAL_COLORS: Record<string, { color: string; bg: string; border: string; glow: string }> = {
-  work:    { color: "#60A5FA", bg: "rgba(96,165,250,0.10)",  border: "rgba(96,165,250,0.25)",  glow: "rgba(96,165,250,0.20)"  },
-  family:  { color: "#34D399", bg: "rgba(52,211,153,0.10)",  border: "rgba(52,211,153,0.25)",  glow: "rgba(52,211,153,0.20)"  },
-  friends: { color: "#A78BFA", bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.25)", glow: "rgba(167,139,250,0.20)" },
-  love:    { color: "#FB7185", bg: "rgba(251,113,133,0.10)", border: "rgba(251,113,133,0.25)", glow: "rgba(251,113,133,0.20)" },
-  money:   { color: "#FBBF24", bg: "rgba(251,191,36,0.10)",  border: "rgba(251,191,36,0.25)",  glow: "rgba(251,191,36,0.20)"  },
-  self:    { color: "#14B8A6", bg: "rgba(20,184,166,0.10)",  border: "rgba(20,184,166,0.25)",  glow: "rgba(20,184,166,0.20)"  },
-  unknown: { color: "#94A3B8", bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.18)", glow: "rgba(148,163,184,0.12)" },
+  overloaded:         { color: "#F87171", bg: "rgba(248,113,113,0.10)", border: "rgba(248,113,113,0.25)", glow: "rgba(248,113,113,0.20)" },
+  relationship_drain: { color: "#FB7185", bg: "rgba(251,113,133,0.10)", border: "rgba(251,113,133,0.25)", glow: "rgba(251,113,133,0.20)" },
+  stuck:              { color: "#FBBF24", bg: "rgba(251,191,36,0.10)",  border: "rgba(251,191,36,0.25)",  glow: "rgba(251,191,36,0.20)"  },
+  self_discovery:     { color: "#60A5FA", bg: "rgba(96,165,250,0.10)",  border: "rgba(96,165,250,0.25)",  glow: "rgba(96,165,250,0.20)"  },
+  unknown:            { color: "#94A3B8", bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.18)", glow: "rgba(148,163,184,0.12)" },
 };
 
-const ALL_GOAL_IDS = ["family", "friends", "work", "love", "money", "unknown"];
+const ALL_GOAL_IDS = ["overloaded", "relationship_drain", "stuck", "self_discovery"];
 const ENABLED_GOAL_IDS = ALL_GOAL_IDS;
 
 /* ─── Animations ─────────────────────────────────────────────────────────────── */
@@ -63,12 +59,11 @@ const tileVariants: Variants = {
 function getPulseRecommendations(pulse: { mood: PulseMood; focus: PulseFocus; energy: number }): string[] {
   const { mood, focus, energy } = pulse;
   const recs: string[] = [];
-  if (focus === "event" && (mood === "angry" || mood === "anxious" || mood === "tense")) recs.push("family", "work");
-  if (focus === "event" && mood === "sad") recs.push("family", "friends");
-  if (focus === "thought" && (mood === "anxious" || mood === "sad" || mood === "overwhelmed")) recs.push("unknown", "friends");
-  if (focus === "body" || energy <= 3) recs.push("money", "unknown");
-  if (focus === "none" && energy >= 6) recs.push("money", "work");
-  return recs.length > 0 ? [...new Set(recs)] : ["unknown"];
+  if (mood === "overwhelmed" || mood === "tense") recs.push("overloaded");
+  if (mood === "sad" || mood === "angry") recs.push("relationship_drain");
+  if (energy <= 3) recs.push("stuck");
+  if (focus === "thought" && energy >= 6) recs.push("self_discovery");
+  return recs.length > 0 ? [...new Set(recs)] : ["overloaded"];
 }
 
 function getSmartRecommendations(
@@ -76,18 +71,11 @@ function getSmartRecommendations(
   pulse?: { mood: PulseMood; focus: PulseFocus; energy: number } | null
 ): string[] {
   const pulseRecs = pulse ? getPulseRecommendations(pulse) : [];
-  if (!baselineAnswers) return pulseRecs.length > 0 ? pulseRecs : ["unknown"];
+  if (!baselineAnswers) return pulseRecs.length > 0 ? pulseRecs : ["overloaded"];
   const recommendations: string[] = [];
-  const q1 = typeof baselineAnswers.q1 === "number" ? baselineAnswers.q1 : null;
-  const q2 = typeof baselineAnswers.q2 === "number" ? baselineAnswers.q2 : null;
-  const q3 = typeof baselineAnswers.q3 === "string" ? baselineAnswers.q3 : null;
   const q4 = typeof baselineAnswers.q4 === "number" ? baselineAnswers.q4 : null;
-  if (q1 != null && q1 <= 2) recommendations.push("family", "friends");
-  if (q2 != null && q2 >= 4) recommendations.push("work", "money");
-  if (q3 === "no") recommendations.push("love");
   if (q4 != null && q4 >= 4) return ENABLED_GOAL_IDS;
-  const baseline = recommendations.length > 0 ? recommendations : ["family"];
-  return pulseRecs.length > 0 ? [...new Set([...pulseRecs, ...baseline])] : baseline;
+  return pulseRecs.length > 0 ? [...new Set([...pulseRecs, ...recommendations])] : ["overloaded"];
 }
 
 /* ─── Goal Card ──────────────────────────────────────────────────────────────── */

@@ -1,9 +1,9 @@
-﻿import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MessageCircle, RefreshCw, Send, AlertCircle, Bot, Check, CheckCheck, Clock, Brain } from "lucide-react";
+import { X, MessageCircle, RefreshCw, Send, AlertCircle, Bot, Check, CheckCheck, Clock, Brain, Sparkles } from "lucide-react";
 import { getAuthToken } from "@/domains/auth/store/auth.store";
 import { useAdminState } from "@/domains/admin/store/admin.store";
-import { useToastState } from "@/domains/dawayir/store/toast.store";
+import { useToastState } from '@/modules/map/dawayirIndex';
 
 interface WhatsAppEvent {
   id: string;
@@ -16,6 +16,13 @@ interface WhatsAppEvent {
   raw_payload: any;
   created_at: string;
   intent_detected?: string;
+  metadata?: {
+    oracle_strategy?: {
+      suggestion: string;
+      reasoning: string;
+    };
+    [key: string]: any;
+  };
 }
 
 interface WhatsAppThreadModalProps {
@@ -25,6 +32,8 @@ interface WhatsAppThreadModalProps {
   onClose: () => void;
   oracleAdvice?: string;
   leadGrade?: string;
+  campaign?: string;
+  adSource?: string;
 }
 
 function getBearerToken(): string {
@@ -32,13 +41,15 @@ function getBearerToken(): string {
 }
 
 const QUICK_REPLIES = [
-  "Ø£Ù‡Ù„Ø§Ù‹ Ø¨Ùƒ ÙÙŠ Ø±Ø­Ù„Ø© 'Ø¯ÙˆØ§Ø¦Ø±'! Ù…Ù…ÙƒÙ† Ø£Ø¹Ø±Ù Ù‡Ø¯ÙÙƒ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ Ù…Ù† Ø§Ù„Ø§Ù†Ø¶Ù…Ø§Ù… Ù„ÙŠÙ†Ø§ØŸ",
-  "Ø¨Ø®ØµÙˆØµ Ø§Ù„Ø§Ø³ØªÙØ³Ø§Ø± Ø¹Ù† Ø§Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯ØŒ Ù†Ù‚Ø¯Ø± Ù†Ù†Ø³Ù‚ Ù…ÙƒØ§Ù„Ù…Ø© ØªÙƒØªÙŠÙƒÙŠØ© Ø³Ø±ÙŠØ¹Ø© Ù„Ùˆ ØªØ­Ø¨.",
-  "Ø§Ù„Ø£ÙˆØ±Ø§ÙƒÙ„ Ø¨ÙŠÙ‚ØªØ±Ø­ Ø¥Ù†Ù†Ø§ Ù†Ø¨Ø¯Ø£ Ø¨Ø¬Ù„Ø³Ø© ØªØ¹Ø±ÙŠÙÙŠØ© Ø¹Ø´Ø§Ù† Ù†Ø­Ø¯Ø¯ Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø·Ø§Ù‚Ø© Ø§Ù„Ø­Ø§Ù„ÙŠ.",
-  "ØªÙ‚Ø¯Ø± ØªÙƒÙ…Ù„ Ø¹Ù…Ù„ÙŠØ© Ø§Ù„ØªÙØ¹ÙŠÙ„ Ù…Ù† Ø§Ù„Ø±Ø§Ø¨Ø· Ø¯Ù‡ Ù…Ø¨Ø§Ø´Ø±Ø©: https://alrehla.app/activation"
+  "يا هلا بيك في الرحلة.. قولي إيه اللي شاغل بالك دلوقتي ومحتاج تفهمه؟",
+  "الخطة بتقول إننا محتاجين مكالمة تكتيكية 5 دقائق نصفي فيها الأمور.. إيه رأيك؟",
+  "الأوركال شايف إن 'جلسة التقييم' هي الخطوة الجاية المناسبة ليك.. تحب نحجز؟",
+  "انطلق وفعل حسابك من هنا عشان تبدأ الرحلة بجد: https://alrehla.app/activation"
 ];
 
-export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice, leadGrade }: WhatsAppThreadModalProps) {
+export function WhatsAppThreadModal({ 
+  leadId, phone, name, onClose, oracleAdvice, leadGrade, campaign, adSource 
+}: WhatsAppThreadModalProps) {
   const [events, setEvents] = useState<WhatsAppEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,11 +65,11 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
       const res = await fetch(`/api/admin/marketing-ops/lead/${leadId}/whatsapp`, {
         headers: { authorization: `Bearer ${getBearerToken()}` },
       });
-      if (!res.ok) throw new Error("Failed to load timeline");
+      if (!res.ok) throw new Error("فشل في تحميل التايم لاين");
       const data = await res.json();
       setEvents(data.events || []);
     } catch (e: any) {
-      setError("ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø§Øª");
+      setError("مش عارفين نحمل المحادثات دلوقتي..");
     } finally {
       setLoading(false);
     }
@@ -100,12 +111,26 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
               </div>
               <div>
                 <h3 className="text-sm font-black text-white flex items-center gap-2">
-                  {name || "Ø²Ø§Ø¦Ø± Ù…Ø³ØªÙƒØ´Ù"}
+                  {name || "مسافر جديد"}
                   {leadGrade && (
                      <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 text-[8px] font-black border border-indigo-500/20">GRADE {leadGrade}</span>
                   )}
                 </h3>
-                <p className="text-[10px] uppercase font-bold tracking-widest text-emerald-400/80">{phone || "Ø±Ù‚Ù… Ù…Ø¬Ù‡ÙˆÙ„"} â€¢ WhatsApp Cloud</p>
+                <p className="text-[10px] uppercase font-bold tracking-widest text-emerald-400/80 flex items-center gap-2">
+                  <span>{phone || "رقم مجهول"}</span>
+                  <span className="opacity-40">•</span>
+                  <span>WhatsApp Cloud</span>
+                  {campaign && (
+                    <span className="px-1.5 py-0.5 rounded-md bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20 text-[8px]">
+                      {campaign.replace(/_/g, ' ')}
+                    </span>
+                  )}
+                  {adSource && (
+                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[8px]">
+                      {adSource}
+                    </span>
+                  )}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -122,14 +147,14 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
             </div>
           </div>
 
-          {/* Oracle Advice Overlay (Always visible at top of chat) */}
+          {/* Oracle Advice Overlay */}
           {oracleAdvice && (
             <div className="bg-indigo-500/10 border-b border-indigo-500/10 p-4 relative shrink-0">
                <div className="absolute top-2 left-4 opacity-5"><Brain className="w-8 h-8 text-indigo-400" /></div>
                <div className="flex items-start gap-3">
                   <Bot className="w-4 h-4 text-indigo-400 mt-1 shrink-0" />
                   <div className="space-y-1">
-                     <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest">ØªÙˆØ¬ÙŠÙ‡ Ø§Ù„Ø£ÙˆØ±ÙƒØ§Ù„ Ù„Ù„Ù…Ø­Ø§Ø¯Ø«Ø©</p>
+                     <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest">توجيه عين الصقر</p>
                      <p className="text-xs text-slate-300 leading-relaxed font-medium italic">"{oracleAdvice}"</p>
                   </div>
                </div>
@@ -147,7 +172,7 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
             ) : events.length === 0 && !loading ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-8 text-slate-500">
                 <MessageCircle className="w-8 h-8 mb-2 opacity-20" />
-                <p className="text-xs font-bold uppercase tracking-widest">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ø­Ø§Ø¯Ø«Ø§Øª Ù…Ø³Ø¬Ù„Ø©</p>
+                <p className="text-xs font-bold uppercase tracking-widest">مفيش محادثات مسجلة هنا</p>
               </div>
             ) : (
               events.map((ev) => {
@@ -155,32 +180,67 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
                 const time = new Date(ev.created_at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
 
                 return (
-                  <div key={ev.id} className={`flex ${isOutbound ? "justify-start" : "justify-end"}`}>
-                    <div className={`max-w-[75%] rounded-2xl p-3 relative ${
-                      isOutbound 
-                        ? "bg-slate-800 text-slate-200 rounded-tr-sm border border-white/5" 
-                        : "bg-emerald-600 text-white rounded-tl-sm shadow-[0_4px_15px_rgba(5,150,105,0.3)]"
-                    }`}>
-                      {ev.intent_detected && (
-                        <div className="absolute -top-3 right-2 px-2 py-0.5 rounded-full bg-indigo-500 text-white text-[8px] font-black tracking-wider flex items-center gap-1 shadow-md">
-                          <Bot className="w-2 h-2" />
-                          {ev.intent_detected}
-                        </div>
-                      )}
-                      
-                      {ev.message_type === "template" && (
-                        <span className="text-[9px] uppercase font-black tracking-widest text-[#2bd7af] mb-1 block">Template Message</span>
-                      )}
-                      
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{ev.message_body || "Ø±Ø³Ø§Ù„Ø© Ø¨Ø¯ÙˆÙ† Ù†Øµ (Ù…ÙŠØ¯ÙŠØ§ Ø£Ùˆ Ù‚Ø§Ù„Ø¨ Ù…Ø³Ø¬Ù„)"}</p>
-                      
-                      <div className="flex items-center justify-end gap-1 mt-1.5 opacity-60">
-                        <span className="text-[10px] font-bold">{time}</span>
-                        {isOutbound && (
-                          <CheckCheck className="w-3 h-3 text-[#2bd7af]" /> 
+                  <div key={ev.id} className="space-y-2">
+                    <div className={`flex ${isOutbound ? "justify-start" : "justify-end"}`}>
+                      <div className={`max-w-[75%] rounded-2xl p-3 relative ${
+                        isOutbound 
+                          ? "bg-slate-800 text-slate-200 rounded-tr-sm border border-white/5" 
+                          : "bg-emerald-600 text-white rounded-tl-sm shadow-[0_4px_15px_rgba(5,150,105,0.3)]"
+                      }`}>
+                        {ev.intent_detected && (
+                          <div className="absolute -top-3 right-2 px-2 py-0.5 rounded-full bg-indigo-500 text-white text-[8px] font-black tracking-wider flex items-center gap-1 shadow-md">
+                            <Bot className="w-2 h-2" />
+                            {ev.intent_detected}
+                          </div>
                         )}
+                        
+                        {ev.message_type === "template" && (
+                          <span className="text-[9px] uppercase font-black tracking-widest text-[#2bd7af] mb-1 block">Template Message</span>
+                        )}
+                        
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{ev.message_body || "رسالة ميديا أو قالب مسجل"}</p>
+                        
+                        <div className="flex items-center justify-end gap-1 mt-1.5 opacity-60">
+                          <span className="text-[10px] font-bold">{time}</span>
+                          {isOutbound && (
+                            <CheckCheck className="w-3 h-3 text-[#2bd7af]" /> 
+                          )}
+                        </div>
                       </div>
                     </div>
+
+                    {!isOutbound && ev.metadata?.oracle_strategy && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="mr-8 ml-auto max-w-[80%] p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 relative overflow-hidden group"
+                      >
+                        <div className="absolute top-0 right-0 p-2 opacity-5"><Brain className="w-12 h-12" /></div>
+                        <div className="flex items-start gap-3 relative z-10">
+                          <Bot className="w-4 h-4 text-indigo-400 mt-1 shrink-0" />
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9px] font-black text-indigo-300 uppercase tracking-widest">تحليل الأوركال للرسالة</span>
+                              <button 
+                                onClick={() => insertQuickReply(ev.metadata?.oracle_strategy?.suggestion || "")}
+                                className="flex items-center gap-1.5 px-2 py-1 rounded bg-indigo-500/20 hover:bg-indigo-500/40 text-[9px] font-black text-indigo-200 transition-all border border-indigo-500/30"
+                              >
+                                <Sparkles className="w-3 h-3" />
+                                استخدم الرد المقترح
+                              </button>
+                            </div>
+                            <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
+                              <span className="text-indigo-400/80">التحليل:</span> {ev.metadata.oracle_strategy.reasoning}
+                            </p>
+                            <div className="p-2 rounded-lg bg-black/40 border border-white/5">
+                               <p className="text-[11px] text-emerald-400 leading-relaxed font-bold italic">
+                                 "{ev.metadata.oracle_strategy.suggestion}"
+                               </p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                 );
               })
@@ -229,9 +289,9 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
                    
                    if (!res.ok) {
                      if (data.isWindowClosed) {
-                       showToast("لا يمكن الرد: نافذة الـ 24 ساعة مغلقة. لازم العميل هو اللي يبعت رسالة الأول.", "warning");
+                       showToast("النافذة مقفولة: لازم العميل يبعت رسالة الأول عشان تعرف ترد.", "warning");
                      } else {
-                       showToast(`فشل الإرسال: ${data.error || "خطأ غير معروف"}`, "error");
+                       showToast(`فشلت المهمة: ${data.error || "خطأ غير معروف"}`, "error");
                      }
                    } else {
                      input.value = "";
@@ -239,7 +299,7 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
                      showToast("تم إرسال الرسالة بنجاح", "success");
                    }
                  } catch (err) {
-                   showToast("خطأ في الاتصال بالسيرفر", "error");
+                   showToast("السيرفر مش مجمع.. جرب تاني", "error");
                  } finally {
                    setLoading(false);
                  }
@@ -250,7 +310,7 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
                  ref={inputRef}
                  name="message"
                  type="text" 
-                 placeholder="Ø§ÙƒØªØ¨ Ø±Ø¯Ùƒ Ù‡Ù†Ø§..." 
+                 placeholder="اكتب ردك هنا وتوكل على الله..." 
                  className="flex-1 bg-transparent text-sm text-slate-300 placeholder:text-slate-600 focus:outline-none"
                  autoComplete="off"
                />
@@ -268,5 +328,3 @@ export function WhatsAppThreadModal({ leadId, phone, name, onClose, oracleAdvice
     </AnimatePresence>
   );
 }
-
-

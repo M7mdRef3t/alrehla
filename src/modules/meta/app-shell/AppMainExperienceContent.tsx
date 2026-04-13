@@ -124,7 +124,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   // State for deep-linking from BehavioralHub to ResourcesCenter
   const [resourceDeepLink, setResourceDeepLink] = useState<{ tab: ResourceTab; search: string } | null>(null);
 
-  if (screen === "landing" || screen === "goal" || screen === "survey" || screen === "map") {
+  if (screen === "landing" || screen === "goal" || screen === "survey" || screen === "map" || screen === "protocol") {
     return (
       <AppStartScreens
         screen={screen}

@@ -195,7 +195,7 @@ export const LeaderboardWidget: FC<LeaderboardWidgetProps> = ({
                         </div>
 
                         <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-mono text-slate-300">{row.score.toLocaleString("ar-EG")}</span>
+                            <span className="text-xs font-mono text-slate-300">{row.score.toLocaleString("en-US")}</span>
                             <span className="text-[9px] text-slate-600">نقطة</span>
                         </div>
                     </div>

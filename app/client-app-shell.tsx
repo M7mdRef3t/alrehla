@@ -15,6 +15,8 @@ import { PlatformHeader } from "@/modules/meta/PlatformHeader";
 import type { PostAuthIntent } from "@/utils/postAuthIntent";
 import { hasRevenueAccess } from "@/services/revenueAccess";
 import type { Data } from "@measured/puck";
+import { useJourneyState } from "@/domains/journey/store/journey.store";
+import { useMapState } from "@/modules/map/store/map.store";
 
 const App = dynamic(() => import("@/App"), { ssr: false });
 const Landing = dynamic(() => import("@/modules/meta/Landing").then((m) => m.Landing), { ssr: false }) as typeof import("@/modules/meta/Landing").Landing;
@@ -31,12 +33,18 @@ const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
 function hasRenderablePuckData(data: Data | null | undefined): data is Data {
   if (!data || typeof data !== "object") return false;
 
-  // Puck data can exist as an object but still contain no blocks to render.
+  // Puck requires a `content` array with at least one block to render anything.
+  // Other shapes (e.g. {title, sections, is_active}) are CMS metadata, not Puck layouts.
   if ("content" in data && Array.isArray(data.content)) {
     return data.content.length > 0;
   }
 
-  return Object.keys(data).length > 0;
+  // Also accept if Puck root config exists with children
+  if ("root" in data && data.root && typeof data.root === "object") {
+    return true;
+  }
+
+  return false;
 }
 
 function shouldSilenceAiLog(args: unknown[]): boolean {
@@ -177,7 +185,13 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
 
   const startRecoveryFromLanding = useCallback(() => {
     if (!hasRevenueAccess()) {
-      window.location.href = "/activation?blocked=map&source=landing";
+      const onboarded = !!useJourneyState.getState().baselineCompletedAt;
+      const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
+      if (!onboarded || !hasPeopleOnMap) {
+        window.location.href = "/onboarding?source=landing";
+        return;
+      }
+      window.location.href = "/pricing?blocked=map&source=landing";
       return;
     }
 
@@ -194,7 +208,13 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
 
   const openAppScreenFromLanding = useCallback((screen: string) => {
     if (!hasRevenueAccess()) {
-      window.location.href = "/activation?blocked=screen&source=landing";
+      const onboarded = !!useJourneyState.getState().baselineCompletedAt;
+      const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
+      if (!onboarded || !hasPeopleOnMap) {
+        window.location.href = "/onboarding?source=landing";
+        return;
+      }
+      window.location.href = "/pricing?blocked=screen&source=landing";
       return;
     }
 
@@ -249,7 +269,13 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
       const bootActionParam = search.get("boot_action");
       if (bootActionParam === "start_recovery") {
         if (!hasRevenueAccess()) {
-          window.location.replace("/activation?blocked=boot_action&source=url");
+          const onboarded = !!useJourneyState.getState().baselineCompletedAt;
+          const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
+          if (!onboarded || !hasPeopleOnMap) {
+            window.location.replace("/onboarding?source=url");
+            return;
+          }
+          window.location.replace("/pricing?blocked=boot_action&source=url");
           return;
         }
 

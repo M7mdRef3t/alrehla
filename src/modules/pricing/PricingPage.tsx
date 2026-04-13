@@ -13,6 +13,7 @@ import {
   TIER_LABELS,
   PREMIUM_FEATURES_LIST,
 } from "@/config/pricing";
+import { markRevenueAccessUnlocked } from "@/services/revenueAccess";
 
 const FEATURES = PREMIUM_FEATURES_LIST;
 
@@ -24,6 +25,11 @@ export default function PricingPage() {
   const localPrice = "200 ج.م";
   const viewTrackedRef = useRef(false);
 
+  const [vipCode, setVipCode] = useState("");
+  const [vipError, setVipError] = useState("");
+  const [isVipLoading, setIsVipLoading] = useState(false);
+  const [showVipInput, setShowVipInput] = useState(false);
+
   useEffect(() => {
     setEmotionalOffer(getEmotionalOffer());
   }, []);
@@ -34,7 +40,46 @@ export default function PricingPage() {
     try {
       analyticsService.track(AnalyticsEvents.ACTIVATION_VIEWED, { page: "pricing" });
     } catch { /* never block render */ }
+
+    // Check for magic link promo
+    const params = new URLSearchParams(window.location.search);
+    const magicVip = params.get("vip");
+    if (magicVip && magicVip.trim().length > 0) {
+      // Small timeout to allow state to settle
+      setTimeout(() => {
+        setVipCode(magicVip.trim());
+        setShowVipInput(true);
+        void handleVipSubmit(magicVip.trim());
+      }, 500);
+    }
   }, []);
+
+  const handleVipSubmit = async (codeOverride?: string) => {
+    const code = (codeOverride || vipCode).trim();
+    if (!code) return;
+    setIsVipLoading(true);
+    setVipError("");
+    try {
+      const email = "anonymous@alrehla.app";
+      const phone = marketingLeadService.getStoredLeadPhone() || "";
+      const res = await fetch("/api/checkout/vip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, email, phone })
+      });
+      const data = await res.json();
+      if (data.success) {
+        markRevenueAccessUnlocked();
+        window.location.href = "/";
+      } else {
+        setVipError(data.message || "كود غير مفعّل");
+      }
+    } catch (e) {
+      setVipError("خطأ في الاتصال");
+    } finally {
+      setIsVipLoading(false);
+    }
+  };
 
   const handleSubscribe = async () => {
     setIsLoading(true);
@@ -226,15 +271,48 @@ export default function PricingPage() {
         </div>
 
         {/* Trust */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-center text-xs text-app-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Shield className="h-3.5 w-3.5" />
-            بياناتك مشفرة ومحمية
+        <div className="mt-10 flex flex-col items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-center text-xs text-app-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Shield className="h-3.5 w-3.5" />
+              بياناتك مشفرة ومحمية
+            </div>
+            <span className="h-1 w-1 rounded-full bg-app-border" />
+            <div>إلغاء في أي وقت بدون شروط</div>
+            <span className="h-1 w-1 rounded-full bg-app-border" />
+            <div>الفتح خلال ساعة من التواصل</div>
           </div>
-          <span className="h-1 w-1 rounded-full bg-app-border" />
-          <div>إلغاء في أي وقت بدون شروط</div>
-          <span className="h-1 w-1 rounded-full bg-app-border" />
-          <div>الفتح خلال ساعة من التواصل أو المسار الداخلي</div>
+
+          <div className="w-full max-w-sm">
+            {!showVipInput ? (
+              <button 
+                onClick={() => setShowVipInput(true)}
+                className="w-full text-xs font-bold text-teal-600/60 dark:text-teal-400/60 hover:text-teal-500 py-2 border border-transparent border-b-teal-500/20 transition-all cursor-pointer bg-transparent outline-none"
+              >
+                لديك كود مرور سري (VIP)؟
+              </button>
+            ) : (
+              <div className="w-full relative flex items-center transform transition-all animate-in fade-in slide-in-from-bottom-2">
+                <input 
+                  type="text" 
+                  autoFocus
+                  placeholder="أدخل الكود..." 
+                  value={vipCode}
+                  onChange={(e) => setVipCode(e.target.value)}
+                  dir="ltr"
+                  className="w-full bg-app-muted/50 border border-teal-500/30 rounded-2xl py-3 px-4 outline-none focus:border-teal-400 text-center font-black tracking-widest text-teal-400 uppercase"
+                />
+                <button
+                  onClick={() => handleVipSubmit()}
+                  disabled={isVipLoading || !vipCode.trim()}
+                  className="absolute right-2 px-4 py-1.5 rounded-xl bg-teal-500/20 text-teal-400 text-sm font-bold hover:bg-teal-500 hover:text-white transition-all disabled:opacity-50"
+                >
+                  {isVipLoading ? "..." : "تأكيد"}
+                </button>
+              </div>
+            )}
+            {vipError && <div className="text-center text-xs text-red-400 mt-2 font-bold">{vipError}</div>}
+          </div>
         </div>
       </div>
     </div>

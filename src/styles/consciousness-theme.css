@@ -328,3 +328,45 @@ button:not(.unstyled) {
               inset 0 0 20px rgba(0, 255, 255, calc(var(--atmosphere-aberration, 0) * 0.5));
   transition: box-shadow 0.2s ease-in-out;
 }
+
+/* ════════════════════════════════════════════════
+   SOVEREIGNTY STORE THEMES — ثيمات متجر السِيادة
+   ════════════════════════════════════════════════ */
+
+/* --- Nocturnal Sovereign (Dark/Glow) --- */
+[data-sovereign-theme="theme_nocturnal"] {
+  --space-void:    #030712;
+  --space-950:     #09090b;
+  --space-deep:    #111827;
+  --consciousness-primary: #818cf8;
+  --consciousness-accent:  #c084fc;
+  --atmosphere-vignette:   0.4;
+  --atmosphere-grain:      0.08;
+}
+
+/* --- Solar Awareness (Light/Clear) --- */
+[data-sovereign-theme="theme_solar"] {
+  --space-void:    #f8fafc;
+  --space-950:     #f1f5f9;
+  --space-deep:    #e2e8f0;
+  --consciousness-primary: #0d9488;
+  --consciousness-text:    #0f172a;
+  --consciousness-background: #ffffff;
+  --glass-bg:      rgba(255, 255, 255, 0.4);
+  --glass-border:  rgba(13, 148, 136, 0.1);
+  --atmosphere-vignette: 0.1;
+  --atmosphere-grain:    0.02;
+}
+
+/* --- Binary Void (Minimalist Matrix) --- */
+[data-sovereign-theme="theme_binary"] {
+  --space-void:    #000000;
+  --space-950:     #0a0a0a;
+  --space-deep:    #111111;
+  --consciousness-primary: #22c55e;
+  --consciousness-accent:  #16a34a;
+  --consciousness-text:    #4ade80;
+  --font-sans:     'JetBrains Mono', 'Courier New', monospace;
+  --atmosphere-grain:      0.15;
+  --atmosphere-aberration: 0.2;
+}

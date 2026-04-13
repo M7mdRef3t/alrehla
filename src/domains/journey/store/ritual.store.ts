@@ -57,6 +57,10 @@ interface RitualState {
   submitEveningReflection: (reflection: EveningReflection) => void;
   rateDayOverall: (rating: number) => void;
 
+  // Gamification & Streaks
+  perfectDayStreak: number;
+  lastPerfectDay: string | null;
+
   // Getters
   getTodayLogs: () => RitualLog[];
   getTodayPlan: () => DailyPlan | null;
@@ -72,6 +76,10 @@ export const useRitualState = create<RitualState>()(
       rituals: [],
       logs: [],
       plans: [],
+
+      // Perfect Day State
+      perfectDayStreak: 0,
+      lastPerfectDay: null,
 
       // ── Rituals ──
       addRitual: (ritualData) => {
@@ -154,15 +162,39 @@ export const useRitualState = create<RitualState>()(
           note,
           feelingAfter: feeling,
         };
-        set((s) => ({
-          logs: [log, ...s.logs].slice(0, 5000), // Keep last 5000 logs
+        
+        const newLogs = [log, ...get().logs].slice(0, 5000);
+        
+        set(() => ({
+          logs: newLogs,
         }));
 
-        // Reward user
+        // Gamification Reward
         const gamification = useGamificationState.getState();
         const ritual = get().rituals.find(r => r.id === ritualId);
         gamification.addXP(30, `إتمام عادة: ${ritual?.name || ""}`);
         gamification.addCoins(10, "مكافأة انضباط");
+
+        // Check for Perfect Day
+        const activeRituals = get().getActiveRituals();
+        const todayLogsCount = newLogs.filter((l) => l.logDate === today).length;
+        
+        if (activeRituals.length > 0 && todayLogsCount >= activeRituals.length) {
+           const { lastPerfectDay, perfectDayStreak } = get();
+           if (lastPerfectDay !== today) {
+              const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+              const isConsecutive = lastPerfectDay === yesterday;
+              const newStreak = isConsecutive ? perfectDayStreak + 1 : 1;
+              
+              set({
+                 lastPerfectDay: today,
+                 perfectDayStreak: newStreak
+              });
+
+              gamification.addXP(100 + (newStreak * 10), `اليوم المثالي! (${newStreak}x🔥)`);
+              gamification.addCoins(50, "مكافأة اليوم المثالي");
+           }
+        }
       },
 
 
@@ -290,6 +322,8 @@ export const useRitualState = create<RitualState>()(
         rituals: s.rituals,
         logs: s.logs.slice(0, 5000),
         plans: s.plans.slice(0, 90),
+        perfectDayStreak: s.perfectDayStreak,
+        lastPerfectDay: s.lastPerfectDay,
       }),
     }
   )

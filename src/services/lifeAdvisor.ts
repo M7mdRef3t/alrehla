@@ -25,10 +25,10 @@ import type {
   DomainAssessment
 } from "@/types/lifeDomains";
 import { getDomainConfig, LIFE_DOMAINS } from "@/types/lifeDomains";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
-import { loadStreak } from "@/services/streakSystem";
+import { useMapState } from '@/modules/map/dawayirIndex';
+import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { resolveDisplayName } from "@/services/userMemory";
 
 // ─── Life Context Builder ────────────────────────────────────────
@@ -56,10 +56,10 @@ export interface LifeContext {
  * Collect all available life data into a single context object
  */
 export function buildLifeContext(): LifeContext {
+  const gamification = useGamificationState.getState();
   const lifeState = useLifeState.getState();
   const pulseState = usePulseState.getState();
   const mapState = useMapState.getState();
-  const streak = loadStreak();
 
   // Pulse data
   const lastPulse = pulseState.lastPulse;
@@ -90,7 +90,7 @@ export function buildLifeContext(): LifeContext {
     activeProblems: lifeState.getActiveProblems(),
     pendingDecisions: lifeState.getPendingDecisions(),
     recentEntries: lifeState.entries.slice(0, 10),
-    streakDays: streak.currentStreak,
+    streakDays: gamification.streak,
     userName: resolveDisplayName(),
     currentMood: lastPulse?.mood ?? null,
     currentEnergy: lastPulse?.energy ?? null,
@@ -355,6 +355,8 @@ ${decisionsSummary}
 5. الرد أقصاه 3 فقرات — الثقافة الإسكندرانية بتملّش 😄
 6. انتهي دايماً بـ سؤال — عشان الحوار يكمل`;
 }
+
+export const buildLifeAdvisorPrompt = buildLifeAdvisorSystemPrompt;
 
 // ─── Pattern Detector ────────────────────────────────────────────
 

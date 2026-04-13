@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -190,33 +192,31 @@ export const PlatformHeader = memo(function PlatformHeader({
 
   const handleLandingCta = useCallback(() => {
     if (isLoggedIn) {
-      onNavigate?.("tools");
-    } else {
-      onLogin?.();
+      if (onNavigate) {
+        onNavigate("tools");
+      }
+      return;
+    }
+
+    if (onLogin) {
+      onLogin();
     }
   }, [isLoggedIn, onLogin, onNavigate]);
 
+  const headerClassName = `fixed top-0 right-0 left-0 z-50 flex items-center justify-between px-4 md:px-6 lg:px-12 h-16 md:h-20 transition-all duration-500 transform ${
+    hidden ? "-translate-y-full" : "translate-y-0"
+  } ${
+    scrolled
+      ? "backdrop-blur-2xl border-b border-[color:var(--glass-border)] shadow-sm h-16 bg-[var(--glass-bg)]"
+      : "border-b border-transparent h-20 bg-transparent"
+  }`;
+
   return (
-    <motion.header
+    <header
       role="banner"
       dir="rtl"
       aria-label="الشريط العلوي"
-      animate={{ 
-        y: hidden ? "-100%" : "0%",
-        backgroundColor: scrolled ? "var(--glass-bg)" : "rgba(0, 0, 0, 0)" 
-      }}
-      className={`
-        fixed top-0 right-0 left-0 z-50
-        flex items-center justify-between
-        px-4 md:px-6 lg:px-12 h-16 md:h-20
-        transition-all duration-500
-        ${
-          scrolled
-            ? "backdrop-blur-2xl border-b shadow-sm h-16"
-            : "border-b border-transparent h-20"
-        }
-      `}
-      style={{ borderColor: scrolled ? "var(--glass-border)" : "transparent" }}
+      className={headerClassName}
     >
       <button
         type="button"
@@ -237,7 +237,7 @@ export const PlatformHeader = memo(function PlatformHeader({
              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
            />
         </motion.div>
-        <span className="font-bold text-lg tracking-tight group-hover:text-teal-400 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+        <span className="font-bold text-lg tracking-tight group-hover:text-teal-400 transition-colors duration-300 text-[var(--text-primary)]">
           الرحلة
         </span>
       </button>
@@ -250,8 +250,7 @@ export const PlatformHeader = memo(function PlatformHeader({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
-            className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold pointer-events-none"
-            style={{ color: "var(--text-secondary)" }}
+            className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold pointer-events-none text-[var(--text-secondary)]"
           >
             {screenLabel}
           </motion.span>
@@ -352,34 +351,50 @@ export const PlatformHeader = memo(function PlatformHeader({
         <div className="relative">
             <AnimatePresence>
               {isLoggedIn && (
-                <motion.button
-                  key="bell"
-                  ref={bellRef}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  type="button"
-                  id="header-notifications"
-                  aria-label={hasUnread ? "لديك إشعارات جديدة" : "الإشعارات"}
-                  aria-expanded={notifOpen}
-                  onClick={handleBellClick}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-400/10 dark:hover:bg-white/10 transition-all relative ${
-                    notifOpen ? "bg-slate-400/10 dark:bg-white/10 text-slate-900 dark:text-white" : ""
-                  }`}
-                >
-                  <Bell className={`w-5 h-5 transition-colors ${hasUnread ? "text-teal-400" : ""}`} />
-                  <AnimatePresence>
-                    {hasUnread && (
-                      <motion.span
-                        key="badge"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-teal-400 ring-2 ring-slate-900 animate-pulse"
-                      />
-                    )}
-                  </AnimatePresence>
-                </motion.button>
+                notifOpen ? (
+                  <motion.button
+                    key="bell-open"
+                    ref={bellRef}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    type="button"
+                    id="header-notifications"
+                    aria-label={hasUnread ? "لديك إشعارات جديدة" : "الإشعارات"}
+                    aria-expanded="true"
+                    onClick={handleBellClick}
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-slate-900 dark:text-white bg-slate-400/10 dark:bg-white/10 hover:bg-slate-400/20 dark:hover:bg-white/20 transition-all relative"
+                  >
+                    <Bell className="w-5 h-5 transition-colors text-teal-400" />
+                    <AnimatePresence>
+                      {hasUnread && (
+                        <motion.span
+                          key="badge"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-teal-400 ring-2 ring-slate-900 animate-pulse"
+                        />
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    key="bell-closed"
+                    ref={bellRef}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    type="button"
+                    id="header-notifications"
+                    aria-label={hasUnread ? "لديك إشعارات جديدة" : "الإشعارات"}
+                    aria-expanded="false"
+                    onClick={handleBellClick}
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-400/10 dark:hover:bg-white/10 transition-all relative"
+                  >
+                    <Bell className={`w-5 h-5 transition-colors ${hasUnread ? "text-teal-400" : ""}`} />
+                  </motion.button>
+                )
               )}
             </AnimatePresence>
 
@@ -396,43 +411,67 @@ export const PlatformHeader = memo(function PlatformHeader({
           <div className="w-9 h-9 rounded-full bg-white/10 animate-pulse" />
         ) : isLoggedIn ? (
           <div ref={userMenuRef} className="relative" id="header-user-menu">
-            <button
-              type="button"
-              onClick={() => setUserMenuOpen((previous) => !previous)}
-              className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group"
-              aria-haspopup="true"
-              aria-expanded={userMenuOpen}
-            >
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={displayName ?? "المستخدم"}
-                  className="w-7 h-7 rounded-full object-cover"
-                />
-              ) : (
-                <span className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-xs font-bold text-slate-900">
-                  {avatarInitial}
-                </span>
+            {userMenuOpen ? (
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((previous) => !previous)}
+                className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group"
+                aria-haspopup="true"
+                aria-expanded="true"
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={displayName ?? "المستخدم"}
+                    className="w-7 h-7 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-xs font-bold text-slate-900">
+                    {avatarInitial}
+                  </span>
                 )}
-              <span className="hidden lg:inline max-w-[8rem] truncate">{firstName ?? "حسابي"}</span>
-              <ChevronDown
-                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
-                  userMenuOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
+                <span className="hidden lg:inline max-w-[8rem] truncate">{firstName ?? "حسابي"}</span>
+                <ChevronDown
+                  className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 rotate-180"
+                />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((previous) => !previous)}
+                className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={displayName ?? "المستخدم"}
+                    className="w-7 h-7 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-xs font-bold text-slate-900">
+                    {avatarInitial}
+                  </span>
+                )}
+                <span className="hidden lg:inline max-w-[8rem] truncate">{firstName ?? "حسابي"}</span>
+                <ChevronDown
+                  className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
+                />
+              </button>
+            )}
 
             <AnimatePresence>
               {userMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute left-0 top-12 w-52 rounded-2xl overflow-hidden backdrop-blur-xl border border-white/10 shadow-[0_16px_48px_rgba(0,0,0,0.4)]"
-                  style={{ background: "var(--glass-bg)", borderColor: "var(--glass-border)" }}
-                  role="menu"
-                >
+                <div role="menu" aria-label="قائمة المستخدم" className="absolute left-0 top-12">
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="w-52 rounded-2xl overflow-hidden backdrop-blur-xl border border-[color:var(--glass-border)] bg-[var(--glass-bg)] shadow-[0_16px_48px_rgba(0,0,0,0.4)]"
+                    role="presentation"
+                  >
                   <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10">
                     <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                       {displayName ?? firstName ?? "المستخدم"}
@@ -543,7 +582,8 @@ export const PlatformHeader = memo(function PlatformHeader({
                       </button>
                     </div>
                   </div>
-                </motion.div>
+                  </motion.div>
+                </div>
               )}
             </AnimatePresence>
           </div>
@@ -564,7 +604,7 @@ export const PlatformHeader = memo(function PlatformHeader({
           </motion.button>
         )}
       </div>
-    </motion.header>
+    </header>
   );
 });
 
@@ -600,8 +640,8 @@ export const MobileNavBar = memo(function MobileNavBar({
         backdrop-blur-2xl
         border-t
         pb-safe pt-2 px-4 h-20
-        shadow-lg"
-      style={{ background: "var(--glass-bg)", borderColor: "var(--glass-border)" }}
+        shadow-lg
+        bg-[var(--glass-bg)] border-[color:var(--glass-border)]"
     >
       {MOBILE_NAV.map(({ id, label, icon: Icon }) => {
         const isActive = activeNavId === id;

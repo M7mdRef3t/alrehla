@@ -49,11 +49,25 @@ export async function handleTicketsResolve(req: any, res: any) {
 
                 const { data: newUser, error: createError } = await admin.auth.admin.createUser(userParams);
                 if (createError) {
-                    // Try to list users if they already exist but just didn't supply id
-                    // Actually, if it fails because it exists, we can try to fetch them. For brevity, surface error.
-                    return res.status(500).json({ error: "Failed to auto-provision user", details: createError.message });
+                    // If creation fails (e.g. "User already registered"), try to fetch their ID from profiles
+                    let existingId = null;
+                    if (email) {
+                        const { data } = await admin.from("profiles").select("id").eq("email", email).limit(1).single();
+                        if (data?.id) existingId = data.id;
+                    }
+                    if (!existingId && phone) {
+                        const { data } = await admin.from("profiles").select("id").eq("phone", phone).limit(1).single();
+                        if (data?.id) existingId = data.id;
+                    }
+
+                    if (existingId) {
+                        activeUserId = existingId;
+                    } else {
+                        return res.status(500).json({ error: "Failed to auto-provision user, and could not find existing profile.", details: createError.message });
+                    }
+                } else {
+                    activeUserId = newUser?.user?.id;
                 }
-                activeUserId = newUser?.user?.id;
             }
 
             if (!activeUserId) {

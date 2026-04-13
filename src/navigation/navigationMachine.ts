@@ -22,7 +22,8 @@ export type AppScreen =
   | "resources"
   | "profile"
   | "sanctuary"
-  | "life-os";
+  | "life-os"
+  | "protocol";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

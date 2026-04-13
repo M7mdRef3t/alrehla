@@ -7,7 +7,7 @@ import { type LifeScore, type MorningPriority, getDomainConfig } from "@/types/l
 import { loadStreak } from "@/services/streakSystem";
 import { resolveDisplayName } from "@/services/userMemory";
 import { useRitualState } from "@/domains/journey/store/ritual.store";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 import { getTodayRituals, getDailyCompletionStats } from "@/services/ritualsEngine";
 
 

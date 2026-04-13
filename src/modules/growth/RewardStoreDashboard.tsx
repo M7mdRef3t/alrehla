@@ -120,7 +120,7 @@ export const RewardStoreModal: FC<RewardStoreModalProps> = ({ isOpen, onClose })
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">الرصيد الحالي</span>
                 <div className="flex items-center gap-2 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700/50">
                   <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                  <span className="text-lg font-black text-white">{coins.toLocaleString()}</span>
+                  <span className="text-lg font-black text-white">{coins.toLocaleString("en-US")}</span>
                 </div>
               </div>
               
@@ -243,7 +243,7 @@ export const RewardStoreModal: FC<RewardStoreModalProps> = ({ isOpen, onClose })
                                   <div className="flex items-center justify-between pt-4 border-t border-slate-700/50 mt-auto">
                                     <div className="flex items-center gap-1.5 font-black text-amber-500">
                                       <Star className="w-4 h-4 fill-amber-500" />
-                                      {item.cost.toLocaleString()}
+                                      {item.cost.toLocaleString("en-US")}
                                     </div>
                                     <span className="text-xs font-bold text-indigo-400 group-hover:text-indigo-300">
                                       استبدال

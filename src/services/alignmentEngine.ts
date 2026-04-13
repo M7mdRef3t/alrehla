@@ -1,6 +1,6 @@
 import { Dream, Knot } from '@/types/dreams';
 import { OverviewStats } from './adminApi';
-import { useMapState } from '@/domains/dawayir/store/map.store';
+import { useMapState } from '@/modules/map/dawayirIndex';
 
 /**
  * AlignmentEngine: The Logical Heart of Alrehla

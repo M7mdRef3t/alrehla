@@ -206,7 +206,16 @@ export const useGamificationState = create<GamificationState>()(
 
                     if (diffDays === 1) {
                         streakMaintained = true;
-                        return { lastActiveDate: todayStr, streak: state.streak + 1 };
+                        const newStreak = state.streak + 1;
+                        
+                        // Milestone Bonuses
+                        if (newStreak % 7 === 0) {
+                            get().addXP(100, `مكافأة استمرار 7 أيام! 🔥`);
+                        } else if (newStreak % 30 === 0) {
+                            get().addXP(500, `أسطورة الاستمرار 30 يوم! 👑`);
+                        }
+
+                        return { lastActiveDate: todayStr, streak: newStreak };
                     } else if (diffDays > 1) {
                         xpLost = (diffDays - 1) * 10;
                         const newXp = Math.max(0, state.xp - xpLost);

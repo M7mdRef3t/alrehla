@@ -12,7 +12,7 @@ import { logger } from "@/services/logger";
 import type { MapNode } from "@/modules/map/mapTypes";
 import type { DailyQuestion } from "@/data/dailyQuestions";
 import { useEmergencyState } from "@/domains/admin/store/emergency.store";
-import { useToastState } from "@/domains/dawayir/store/toast.store";
+import { useToastState } from '@/modules/map/dawayirIndex';
 import { supabase } from "@/services/supabaseClient";
 import { isAlignedWithPrinciples } from "./CORE_PRINCIPLES";
 

@@ -8,7 +8,7 @@ import {
   Sparkles, MessageCircle, ClipboardCheck
 } from "lucide-react";
 import { LIFE_DOMAINS, getDomainConfig, type LifeDomainId, type LifeEntryType } from "@/types/lifeDomains";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { LifeScoreRing } from "./LifeScoreRing";
 import { DomainRadar } from "./DomainRadar";

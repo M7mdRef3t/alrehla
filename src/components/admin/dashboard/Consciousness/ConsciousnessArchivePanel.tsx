@@ -236,7 +236,7 @@ export const ConsciousnessArchivePanel: FC = () => {
                                 </div>
                                 <h3 className="text-2xl font-black text-white mb-1">تفاصيل الذكرى</h3>
                                 <p className="text-xs text-purple-200 font-mono flex items-center gap-2">
-                                    ID: {selectedMemory.id} <span className="opacity-50">•</span> {new Date(selectedMemory.created_at || "").toLocaleString()}
+                                    ID: {selectedMemory.id} <span className="opacity-50">•</span> {new Date(selectedMemory.created_at || "").toLocaleString("en-US")}
                                 </p>
                             </div>
 

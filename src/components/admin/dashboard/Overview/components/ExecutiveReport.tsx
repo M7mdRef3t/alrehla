@@ -86,7 +86,7 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
                         </h3>
                         <div className="flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                            <span className="text-[10px] font-mono text-slate-500 tracking-wider">GENERATED: {new Date(data.generatedAt).toLocaleString()}</span>
+                            <span className="text-[10px] font-mono text-slate-500 tracking-wider">GENERATED: {new Date(data.generatedAt).toLocaleString("en-US")}</span>
                         </div>
                     </div>
                 </div>

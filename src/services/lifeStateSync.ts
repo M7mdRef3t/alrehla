@@ -14,7 +14,7 @@
 
 import { supabase } from "@/services/supabaseClient";
 import type { LifeEntry, DomainAssessment, LifeScore } from "@/types/lifeDomains";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 
 // ─── Upload Functions ─────────────────────────────────────────────
 
@@ -229,8 +229,10 @@ export async function syncLifeStateWithDB(userId: string): Promise<void> {
     }
 
     // 4. Sync rituals (fire-and-forget, non-blocking)
-    import("@/services/ritualsSync").then(({ syncRitualsWithDB }) => {
-      syncRitualsWithDB(userId).catch(() => {});
+    import("@/services/ritualsSync").then(({ syncRitualsWithDB, setupRitualsAutoSync }) => {
+      syncRitualsWithDB(userId).then(() => {
+        setupRitualsAutoSync(userId);
+      }).catch(() => {});
     });
 
   } catch (err) {

@@ -4,9 +4,10 @@ import { getNextNudge, dismissNudge } from "@/services/nudgeEngine";
 import { detectContradictions, dismissMirrorInsight, type MirrorInsight } from "@/services/mirrorLogic";
 import { calculateEntropy } from "@/services/predictiveEngine";
 import { runtimeEnv } from "@/config/runtimeEnv";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface UseAppMindSignalsParams {
   storedGoalId: string | null | undefined;
@@ -47,6 +48,7 @@ export function useAppMindSignals({
   const [activeNudge, setActiveNudge] = useState<Nudge | null>(null);
   const [activeMirrorInsight, setActiveMirrorInsight] = useState<MirrorInsight | null>(null);
   const sessionStartRef = useRef(Date.now());
+  const { sendNotification } = useNotifications();
 
   // Sovereign Chronicles Trigger
   useEffect(() => {
@@ -63,11 +65,14 @@ export function useAppMindSignals({
       if (nudge) {
         setActiveNudge(nudge);
         openOverlay("nudgeToast");
+        if (typeof document !== 'undefined' && document.hidden) {
+          sendNotification(nudge.title, { body: nudge.message, data: nudge.ctaAction });
+        }
       }
     }, 8000);
   
     return () => clearTimeout(timer);
-  }, [openOverlay, activeFlows, lastPulse]);
+  }, [openOverlay, activeFlows, lastPulse, sendNotification]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -93,19 +98,23 @@ export function useAppMindSignals({
     if (activeFlows) return;
     const insight = calculateEntropy();
     if (insight.state === "CHAOS" && !showBreathing && !showCocoon) {
-      setActiveNudge({
+      const nudge = {
         id: `chaos-containment-${Date.now()}`,
-        type: "streak_risk",
+        type: "streak_risk" as const,
         title: "محتاج تاخد نَفَس 🍃",
         message: "حاسين إنك مضغوط شوية دلوقتي.. خد دقيقة لنفسك.",
         cta: "افصل شوية",
         ctaAction: "dismiss_only" as const,
-        priority: 1,
+        priority: 1 as const,
         icon: "🍃"
-      });
+      };
+      setActiveNudge(nudge);
       openOverlay("nudgeToast");
+      if (typeof document !== 'undefined' && document.hidden) {
+        sendNotification(nudge.title, { body: nudge.message });
+      }
     }
-  }, [goalId, lastPulse, nodes, openOverlay, showBreathing, showCocoon, activeFlows]);
+  }, [goalId, lastPulse, nodes, openOverlay, showBreathing, showCocoon, activeFlows, sendNotification]);
 
   const handleNudgeDismiss = useCallback(() => {
     if (activeNudge) {

@@ -14,7 +14,7 @@ export interface IntakeFormData {
   phone: string;
   email: string;
   country: string;
-  ageRange: string;
+  birthDate: string;
   preferredContact: string;
 
   // Reason
@@ -97,7 +97,7 @@ export interface SessionClient {
   phone: string;
   email?: string;
   country?: string;
-  ageRange?: string;
+  birthDate?: string;
   preferredContact: string;
 }
 

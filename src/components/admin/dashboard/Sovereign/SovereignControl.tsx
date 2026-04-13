@@ -40,6 +40,7 @@ export const SovereignControl: FC = () => {
   const [broadcastAudienceType, setBroadcastAudienceType] = useState<"all" | "low_mood" | "scenario">("all");
   const [broadcastScenarioValue, setBroadcastScenarioValue] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isTakeoverModalOpen, setIsTakeoverModalOpen] = useState(false);
   const { isLockedDown, triggerLockdown } = useLockdownState();
   const { customTokens, updateTokens } = useThemeState();
   
@@ -204,7 +205,7 @@ export const SovereignControl: FC = () => {
     SovereignOrchestrator.executeIntervention("broadcast-all");
     
     // 3. UI Alert
-    alert("SOVEREIGN TAKEOVER ENGAGED. System locked and emergency pulse dispatched.");
+    setIsTakeoverModalOpen(true);
   };
 
   return (
@@ -376,7 +377,7 @@ export const SovereignControl: FC = () => {
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">أرواح متصلة</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-white tabular-nums drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                      {isLoadingPulse ? "..." : (liveStats?.activeNow ?? 0).toLocaleString("ar-EG")}
+                      {isLoadingPulse ? "..." : (liveStats?.activeNow ?? 0).toLocaleString("en-US")}
                     </span>
                     <span className="text-[10px] text-teal-500 font-black animate-pulse tracking-widest">LIVE</span>
                   </div>
@@ -635,7 +636,7 @@ export const SovereignControl: FC = () => {
                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                      <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest">{item.title || "Universal Outreach"}</span>
                   </div>
-                  <span className="text-[10px] text-slate-600 font-mono">{new Date(item.createdAt).toLocaleString("ar-EG")}</span>
+                  <span className="text-[10px] text-slate-600 font-mono">{new Date(item.createdAt).toLocaleString("en-US")}</span>
                 </div>
                 <p className="text-sm text-slate-400 leading-relaxed font-bold group-hover:text-slate-200 transition-colors pr-3">{item.body}</p>
               </div>
@@ -651,6 +652,38 @@ export const SovereignControl: FC = () => {
           "سلطة السيادة هي مسؤولية تجاه السكينة العامة. استخدم المِرآة لتكشف النور، لا لتعمق الظلال."
         </p>
       </footer>
+
+      <AnimatePresence>
+        {isTakeoverModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-2xl"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="max-w-xl w-full bg-[#0B0F19] border border-rose-500/30 rounded-[2.5rem] p-12 text-center shadow-[0_0_100px_rgba(244,63,94,0.2)]"
+            >
+              <div className="w-24 h-24 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-rose-500/20">
+                <ShieldAlert className="w-12 h-12 text-rose-500 animate-pulse" />
+              </div>
+              <h2 className="text-3xl font-black text-rose-500 uppercase tracking-tighter mb-4">SOVEREIGN TAKEOVER ENGAGED</h2>
+              <p className="text-slate-400 text-lg font-bold leading-relaxed mb-10">
+                الحماية الكاملة مفعلة الآن. تم قفل جميع المسارات وتوجيه نداء النبض الطارئ لجميع الترددات النشطة.
+              </p>
+              <button
+                onClick={() => setIsTakeoverModalOpen(false)}
+                className="w-full py-5 bg-rose-500 hover:bg-rose-400 text-slate-950 font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-rose-900/40"
+              >
+                تأكيد وبقاء الاتصال
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

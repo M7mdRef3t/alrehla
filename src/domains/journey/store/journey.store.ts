@@ -6,7 +6,9 @@ import { getJSON, setJSON } from "@/services/secureStore";
 export type JourneyStepId =
   | "baseline"
   | "goal"
+  | "intake"
   | "map"
+  | "protocol"
   | "measurement"
   | "celebration";
 export type LandingIntent = "clarity" | "boundaries" | "calm" | null;
@@ -14,7 +16,9 @@ export type LandingIntent = "clarity" | "boundaries" | "calm" | null;
 const JOURNEY_STEPS: JourneyStepId[] = [
   "baseline",
   "goal",
+  "intake",
   "map",
+  "protocol",
   "measurement",
   "celebration"
 ];
@@ -39,6 +43,8 @@ interface StoredJourney {
   isSensoryDepthEnabled?: boolean;
   gateSessionId?: string | null;
   isGateConverted?: boolean;
+  detectedState?: "overloaded" | "confused" | "triggered" | "stuck" | "avoiding" | "ready" | null;
+  activeProtocol?: "clarity" | "grounding" | "boundaries" | "momentum" | null;
 }
 
 async function loadJourney(): Promise<Partial<StoredJourney>> {
@@ -77,6 +83,9 @@ interface JourneyState extends StoredJourney {
   setSensoryDepthEnabled: (enabled: boolean) => void;
   setGateSessionId: (id: string | null) => void;
   setGateConverted: (converted: boolean) => void;
+  setDetectedState: (state: NonNullable<StoredJourney["detectedState"]>) => void;
+  setActiveProtocol: (protocol: NonNullable<StoredJourney["activeProtocol"]>) => void;
+  completeIntake: (state: NonNullable<StoredJourney["detectedState"]>) => void;
 }
 
 const defaultState: StoredJourney = {
@@ -96,7 +105,9 @@ const defaultState: StoredJourney = {
   isSoundEnabled: true,
   isSensoryDepthEnabled: true,
   gateSessionId: null,
-  isGateConverted: false
+  isGateConverted: false,
+  detectedState: null,
+  activeProtocol: null
 };
 
 export const useJourneyState = create<JourneyState>((set, get) => ({
@@ -272,6 +283,40 @@ export const useJourneyState = create<JourneyState>((set, get) => ({
   setGateConverted(converted: boolean) {
     set((s) => {
       const next: StoredJourney = { ...s, isGateConverted: converted };
+      saveJourney(next);
+      return next;
+    });
+  },
+  setDetectedState(state) {
+    set((s) => {
+      const next: StoredJourney = { ...s, detectedState: state };
+      saveJourney(next);
+      return next;
+    });
+  },
+  setActiveProtocol(protocol) {
+    set((s) => {
+      const next: StoredJourney = { ...s, activeProtocol: protocol };
+      saveJourney(next);
+      return next;
+    });
+  },
+  completeIntake(state) {
+    set((s) => {
+      // Map detected state to a protocol
+      let activeProtocol: StoredJourney["activeProtocol"] = "clarity";
+      if (state === "overloaded" || state === "triggered") activeProtocol = "grounding";
+      else if (state === "confused") activeProtocol = "clarity";
+      else if (state === "avoiding") activeProtocol = "boundaries";
+      else if (state === "stuck" || state === "ready") activeProtocol = "momentum";
+
+      const next: StoredJourney = {
+        ...s,
+        detectedState: state,
+        activeProtocol,
+        completedStepIds: [...new Set([...s.completedStepIds, "intake"])] as JourneyStepId[],
+        currentStepId: "map"
+      };
       saveJourney(next);
       return next;
     });

@@ -117,6 +117,28 @@ export const STORE_ITEMS: StoreItem[] = [
         category: "identity",
         icon: "☢️",
         color: "#22c55e",
+    },
+    {
+        id: "aura_jarvis_sky",
+        name: "هالة جارفيس (السماء)",
+        description: "تحويل صوت الذكاء الاصطناعي لنبرة 'جارفيس' مع تأثير بصري سماوي.",
+        price: 2500,
+        category: "identity",
+        icon: "💠",
+        color: "#38bdf8",
+        resonance: {
+            pulseDuration: "2s",
+            voiceTone: "neon"
+        }
+    },
+    {
+        id: "wisdom_key_void",
+        name: "مفتاح الفراغ",
+        description: "يفتح قفل الدروس السرية في مصفوفة الحكمة.",
+        price: 5000,
+        category: "evolutions",
+        icon: "🗝️",
+        color: "#6366f1",
     }
 ];
 

@@ -24,6 +24,7 @@ import {
   Route,
   Gavel,
   LibraryBig,
+  Filter,
 } from "lucide-react";
 
 export type AdminTab =
@@ -33,39 +34,28 @@ export type AdminTab =
   | "growth-revenue"
   | "security-ops"
   | "consciousness-atlas"
-  | "flow-dynamics"
   | "flow-map"
-  | "map-registry"
   | "feedback-survey"
   | "feature-flags"
   | "ai-studio"
-  | "ai-decisions"
   | "health-monitor"
   | "content"
   | "users-state"
   | "consciousness"
-  | "consciousness-map"
-  | "b2b-analytics"
-  | "ai-simulator"
-  | "ai-marketing"
-  | "sales-enablement"
   | "dreams-matrix"
-  | "crucible"
-  | "digital-twin"
   | "fleet"
   | "seo-geo"
   | "repo-intel"
   | "war-room"
   | "dawayir-live"
-  | "ad-analytics"
   | "expansion-hub"
   | "marketing-ops"
-  | "mail-command"
   | "design-lab"
   | "governance-ledger"
-  | "journey-paths"
   | "ops-docs"
-  | "support-tickets";
+  | "session-os"
+  | "support-tickets"
+  | "sovereign-funnel";
 
 export type NavGroup = {
   title: string;
@@ -74,72 +64,61 @@ export type NavGroup = {
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    title: "القيادة الإستراتيجية",
+    title: "القيادة السيادية",
     items: [
-      { id: "sovereign", label: "مركز السيادة الإدراكية", icon: <ShieldCheck className="h-4 w-4 text-amber-500" /> },
-      { id: "entity", label: "كيان الرحلة (DNA)", icon: <Brain className="h-4 w-4 text-teal-400" /> },
-      { id: "governance-ledger", label: "سجل الحوكمة", icon: <Gavel className="h-4 w-4 text-purple-400" /> },
-      { id: "design-lab", label: "مختبر التصميم الإدراكي", icon: <Palette className="h-4 w-4 text-pink-400" /> },
+      { id: "sovereign", label: "المركز السيادي", icon: <ShieldCheck className="h-4 w-4 text-amber-500" /> },
       { id: "exec-overview", label: "المركز التنفيذي", icon: <Activity className="h-4 w-4 text-emerald-400" /> },
-      { id: "growth-revenue", label: "محرك النمو والمبيعات", icon: <TrendingUpFallback /> },
+      { id: "governance-ledger", label: "سجل الحوكمة", icon: <Gavel className="h-4 w-4 text-purple-400" /> },
       { id: "war-room", label: "غرفة العمليات", icon: <ShieldCheck className="h-4 w-4 text-red-500" /> },
     ],
   },
   {
-    title: "أمن النظام وإدارته",
+    title: "بنية الرحلة ومساراتها",
     items: [
-      { id: "security-ops", label: "أمن النظام", icon: <ShieldCheck className="h-4 w-4 text-indigo-400" /> },
-      { id: "flow-dynamics", label: "ديناميكية المسار", icon: <Compass className="h-4 w-4 text-cyan-400" /> },
-      { id: "health-monitor", label: "مراقب النبض", icon: <Activity className="h-4 w-4 text-cyan-400" /> },
-      { id: "feature-flags", label: "مفاتيح النظام", icon: <Flag className="h-4 w-4" /> },
-      { id: "fleet", label: "الأسطول", icon: <Rocket className="h-4 w-4 text-indigo-500" /> },
+      { id: "entity", label: "كيان الرحلة (DNA)", icon: <Brain className="h-4 w-4 text-teal-400" /> },
+      { id: "design-lab", label: "مختبر التصميم", icon: <Palette className="h-4 w-4 text-pink-400" /> },
+      { id: "session-os", label: "غرفة الجلسات", icon: <MessageSquare className="h-4 w-4 text-teal-300" /> },
+      { id: "flow-map", label: "الخرائط والمسارات", icon: <MapPin className="h-4 w-4 text-cyan-300" /> },
+      { id: "content", label: "مخزن المحتوى", icon: <Database className="h-4 w-4 text-amber-300" /> },
+      { id: "ops-docs", label: "مكتبة التشغيل", icon: <LibraryBig className="h-4 w-4 text-slate-300" /> },
     ],
   },
   {
-    title: "الذكاء الاصطناعي والوعي",
+    title: "الذكاء و الوعي",
     items: [
-      { id: "consciousness-atlas", label: "رادار الوعي", icon: <Workflow className="h-4 w-4 text-teal-400" /> },
-      { id: "consciousness-map", label: "خريطة الإدراك", icon: <Workflow className="h-4 w-4" /> },
-      { id: "ai-studio", label: "مختبر الذكاء", icon: <Brain className="h-4 w-4" /> },
-      { id: "ai-decisions", label: "قرارات الوعي", icon: <Sparkles className="h-4 w-4 text-purple-400" /> },
-      { id: "ai-simulator", label: "محاكي الذكاء", icon: <Terminal className="h-4 w-4 text-rose-400" /> },
-      { id: "consciousness", label: "أرشيف الوعي", icon: <History className="h-4 w-4" /> },
-    ],
-  },
-  {
-    title: "المحتوى والمسارات",
-    items: [
-      { id: "flow-map", label: "خريطة الدواير", icon: <MapPin className="h-4 w-4" /> },
-      { id: "journey-paths", label: "مسارات المستخدم", icon: <Route className="h-4 w-4 text-cyan-300" /> },
-      { id: "ops-docs", label: "مكتبة التشغيل", icon: <LibraryBig className="h-4 w-4 text-amber-300" /> },
-      { id: "map-registry", label: "دليل الخرائط", icon: <Compass className="h-4 w-4 text-emerald-400" /> },
-      { id: "content", label: "مخزن المحتوى", icon: <Database className="h-4 w-4" /> },
-      { id: "dreams-matrix", label: "مصفوفة الأهداف", icon: <Target className="h-4 w-4 text-teal-400" /> },
-      { id: "crucible", label: "المختبر", icon: <Flame className="h-4 w-4 text-rose-500" /> },
+      { id: "consciousness-atlas", label: "رادار الإدراك", icon: <Workflow className="h-4 w-4 text-teal-400" /> },
+      { id: "ai-studio", label: "مختبر الذكاء (AI Lab)", icon: <Brain className="h-4 w-4 text-purple-400" /> },
+      { id: "consciousness", label: "أرشيف الوعي", icon: <History className="h-4 w-4 text-slate-400" /> },
+      { id: "dreams-matrix", label: "مصفوفة الأحلام", icon: <Target className="h-4 w-4 text-teal-400" /> },
     ],
   },
   {
     title: "مجتمع المسافرين",
     items: [
-      { id: "users-state", label: "سجلات وبيانات الأعضاء", icon: <Users className="h-4 w-4" /> },
-      { id: "support-tickets", label: "تفعيل المشتركين والدعم", icon: <MessageSquare className="h-4 w-4 text-rose-400" /> },
-      { id: "digital-twin", label: "التوأم الرقمي", icon: <User className="h-4 w-4 text-indigo-400" /> },
-      { id: "feedback-survey", label: "أصوات ونتائج الأعضاء", icon: <MessageSquare className="h-4 w-4 text-teal-400" /> },
+      { id: "users-state", label: "التوائم الرقمية (الأعضاء)", icon: <Users className="h-4 w-4 text-indigo-400" /> },
+      { id: "support-tickets", label: "بوابات العبور (الدعم)", icon: <MessageSquare className="h-4 w-4 text-rose-400" /> },
+      { id: "feedback-survey", label: "أصوات المسافرين", icon: <MessageSquare className="h-4 w-4 text-teal-400" /> },
       { id: "dawayir-live", label: "دواير لايف", icon: <Sparkles className="h-4 w-4 text-teal-300" /> },
     ],
   },
   {
-    title: "التوسع التجاري",
+    title: "محركات التوسع",
     items: [
-      { id: "expansion-hub", label: "إستراتيجية التوسع", icon: <Rocket className="h-4 w-4 text-rose-400" /> },
-      { id: "b2b-analytics", label: "تحليلات B2B", icon: <ShieldCheck className="h-4 w-4 text-indigo-400" /> },
-      { id: "sales-enablement", label: "تمكين النمو", icon: <Briefcase className="h-4 w-4 text-emerald-400" /> },
+      { id: "growth-revenue", label: "ديناميكية التوسع المالي", icon: <TrendingUpFallback /> },
       { id: "marketing-ops", label: "رحلة الانتشار", icon: <Rocket className="h-4 w-4 text-rose-400" /> },
-      { id: "mail-command", label: "قيادة البريد", icon: <Mail className="h-4 w-4 text-indigo-400" /> },
-      { id: "ai-marketing", label: "تسويق الوعي", icon: <Sparkles className="h-4 w-4 text-amber-400" /> },
-      { id: "ad-analytics", label: "تحليلات الإعلانات", icon: <BarChart3 className="h-4 w-4 text-cyan-400" /> },
-      { id: "seo-geo", label: "SEO / GEO", icon: <Target className="h-4 w-4 text-emerald-400" /> },
-      { id: "repo-intel", label: "ذكاء المستودع", icon: <Terminal className="h-4 w-4 text-teal-300" /> },
+      { id: "sovereign-funnel", label: "مسار التحويل (Funnel)", icon: <Filter className="h-4 w-4 text-emerald-400" /> },
+      { id: "seo-geo", label: "رادار الوصول العالمي", icon: <Target className="h-4 w-4 text-emerald-400" /> },
+      { id: "expansion-hub", label: "إستراتيجية الأسواق", icon: <Rocket className="h-4 w-4 text-amber-400" /> },
+    ],
+  },
+  {
+    title: "حيوية النظام",
+    items: [
+      { id: "health-monitor", label: "مراقب النبض", icon: <Activity className="h-4 w-4 text-cyan-400" /> },
+      { id: "security-ops", label: "درع النظام", icon: <ShieldCheck className="h-4 w-4 text-indigo-400" /> },
+      { id: "feature-flags", label: "مفاتيح المسار", icon: <Flag className="h-4 w-4 text-amber-500" /> },
+      { id: "fleet", label: "أسطول الخوادم", icon: <Rocket className="h-4 w-4 text-indigo-500" /> },
+      { id: "repo-intel", label: "جينات المستودع (Repo)", icon: <Terminal className="h-4 w-4 text-teal-300" /> },
     ],
   },
 ];
@@ -151,45 +130,34 @@ function TrendingUpFallback() {
 export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
 
 export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
-  sovereign: "مركز السيادة الإدراكية",
+  sovereign: "المركز السيادي",
   entity: "كيان الرحلة (DNA)",
-  "governance-ledger": "سجل الحوكمة السيادي",
-  "design-lab": "مختبر التصميم الإدراكي",
+  "governance-ledger": "سجل الحوكمة",
+  "design-lab": "مختبر التصميم",
   "exec-overview": "المركز التنفيذي",
-  "growth-revenue": "محرك النمو والمبيعات",
-  "security-ops": "أمن النظام",
-  "consciousness-atlas": "رادار الوعي",
-  "flow-dynamics": "ديناميكية المسار",
+  "growth-revenue": "ديناميكية التوسع المالي",
+  "security-ops": "درع النظام",
+  "consciousness-atlas": "رادار الإدراك",
   "war-room": "غرفة العمليات",
-  "flow-map": "خريطة التدفق",
-  "journey-paths": "مسارات المستخدم",
+  "flow-map": "الخرائط والمسارات",
   "ops-docs": "مكتبة التشغيل",
-  "map-registry": "دليل الخرائط",
-  "feedback-survey": "أصوات ونتائج الأعضاء",
-  "feature-flags": "مفاتيح النظام",
-  "ai-studio": "مختبر الذكاء",
-  "ai-decisions": "قرارات الوعي",
+  "feedback-survey": "أصوات المسافرين",
+  "feature-flags": "مفاتيح المسار",
+  "ai-studio": "مختبر الذكاء (AI Lab)",
   "health-monitor": "مراقب النبض",
   content: "مخزن المحتوى",
-  "users-state": "سجلات وبيانات الأعضاء",
+  "users-state": "التوائم الرقمية (الأعضاء)",
   consciousness: "أرشيف الوعي",
-  "consciousness-map": "خريطة الإدراك",
-  "b2b-analytics": "تحليلات B2B",
-  "ai-simulator": "محاكي الذكاء",
-  "ai-marketing": "تسويق الوعي",
-  "sales-enablement": "تمكين النمو",
-  "dreams-matrix": "مصفوفة الأهداف",
-  crucible: "المختبر (Testing)",
-  "digital-twin": "التوأم الرقمي",
-  fleet: "الأسطول",
-  "seo-geo": "SEO / GEO",
-  "repo-intel": "ذكاء المستودع",
+  "dreams-matrix": "مصفوفة الأحلام",
+  fleet: "أسطول الخوادم",
+  "seo-geo": "رادار الوصول العالمي",
+  "repo-intel": "جينات المستودع (Repo)",
   "dawayir-live": "دواير لايف",
-  "ad-analytics": "تحليلات الإعلانات",
   "marketing-ops": "رحلة الانتشار",
-  "mail-command": "قيادة البريد",
-  "expansion-hub": "إستراتيجية التوسع",
-  "support-tickets": "تفعيل المشتركين والدعم",
+  "expansion-hub": "إستراتيجية الأسواق",
+  "session-os": "غرفة الجلسات",
+  "support-tickets": "بوابات العبور (الدعم)",
+  "sovereign-funnel": "مسار التحويل السيادي (Funnel)",
 };
 
 export const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "users-state"];
@@ -200,38 +168,27 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "governance-ledger": "سجل الحوكمة: مراقبة العقل الاصطناعي والمصادقة على التحركات الاستراتيجية.",
   "design-lab": "مختبر التصميم الإدراكي: مساحة لإدارة الهوية البصرية والاتجاهات التصميمية وتجارب الواجهات.",
   "exec-overview": "المركز التنفيذي: نبض المنصة ومتابعة سريعة لأهم أرقام تفاعل المستخدمين.",
-  "growth-revenue": "محرك النمو: دورة المبيعات والارتقاء بالعملاء وتتبع العوائد المالية.",
+  "growth-revenue": "ديناميكية التوسع: دورة المبيعات والارتقاء بالعملاء وتتبع العوائد المالية والإعلانية ومبيعات الشركات.",
   "security-ops": "أمن النظام: حائط الصد وتتبع الهجمات وتأمين البيانات ضد السلبيات.",
-  "consciousness-atlas": "رادار الوعي: خريطة شاملة لمسارات وعي المستخدمين وتوزيعهم النفسي.",
-  "flow-dynamics": "ديناميكية المسار: تتبع تدفق الزيارات والاحتكاك في خطوات التسجيل والدفع.",
+  "consciousness-atlas": "رادار الإدراك: خريطة شاملة لمسارات وعي المستخدمين وتوزيعهم النفسي مع التوائم الرقمية.",
   "war-room": "غرفة العمليات: الإنذارات الحرجة والمشاكل التي تتطلب تدخلاً طارئاً.",
-  "flow-map": "خريطة التدفق: الرؤية البصرية لشجرة المنصة ومسارات الذكاء الاصطناعي بالكامل.",
-  "journey-paths": "مسارات المستخدم: لوحة تحكم لبناء وتعديل وإعادة ترتيب المسارات الكاملة مثل مسار الملاذ خطوة بخطوة.",
-  "ops-docs": "مكتبة التشغيل: مرجع حي يضم الخرائط الوظيفية، المصفوفات التشغيلية، قوائم التحقق، ودليل تشغيل الأونر من داخل لوحة التحكم.",
-  "map-registry": "دليل الخرائط: شاشة تعرض المعمارية التقنية والتخطيطية لجميع الخرائط داخل المنصة بمساراتها الكلية.",
-  "feedback-survey": "أصوات ونتائج الأعضاء: دمج لرسائل الزوار والاستبيانات المتقدمة.",
-  "feature-flags": "مفاتيح النظام: التحكم اللحظي في تفعيل وإغلاق ميزات المنصة.",
-  "ai-studio": "مختبر الذكاء: تلقين وتوجيه عقل الذكاء الاصطناعي وتعديل البرومبتات.",
-  "ai-decisions": "قرارات الوعي: مراقبة وتحليل القرارات الخوارزمية مع المستخدمين.",
-  "health-monitor": "مراقب النبض: متابعة أداء السيرفرات وسرعة استجابة المنصة فنياً.",
+  "flow-map": "الخرائط والمسارات: الرؤية البصرية لشجرة المنصة ومسارات الذكاء الاصطناعي والملاذ خطوة بخطوة.",
+  "ops-docs": "مكتبة التشغيل: مرجع حي يضم الخرائط الوظيفية، المصفوفات التشغيلية، ومستندات الأونر.",
+  "feedback-survey": "أصوات المسافرين: دمج لرسائل الزوار والاستبيانات المتقدمة.",
+  "feature-flags": "مفاتيح المسار: التحكم اللحظي في تفعيل وإغلاق ميزات المنصة.",
+  "ai-studio": "مختبر الذكاء: تلقين وتوجيه عقل الذكاء الاصطناعي وتعديل البرومبتات، ومحاكاة التجارب وقرارات الوعي.",
+  "health-monitor": "مراقب النبض: متابعة أداء السيرفرات وسرعة استجابة المنصة فنياً مع رصد الاحتكاك والديناميكية.",
   content: "مخزن المحتوى: إدارة نصوص ومحتوى التطبيق التوضيحي بشكل مركزي.",
-  "users-state": "سجلات الأعضاء: بيانات وتواريخ دخول وحالة المتغيرات المباشرة.",
+  "users-state": "التوائم الرقمية: سجلات الأعضاء، بياناتهم وحالة المتغيرات المباشرة والتوقع السلوكي.",
   consciousness: "أرشيف الوعي: سجل تاريخي لكل محادثات الذكاء الاصطناعي والمواقف.",
-  "consciousness-map": "خريطة الإدراك: الرؤية الهندسية لترابط المفاهيم المتقدمة داخل النظام.",
-  "b2b-analytics": "تحليلات B2B: تحليل أداء الشركات والمؤسسات المشتركة كباقات.",
-  "ai-simulator": "محاكي الذكاء: اختبار البرومبتات في بيئة معزولة لتجربة ردود الأفعال.",
-  "ai-marketing": "تسويق الوعي: صناعة محتوى تسويقي وإعلانات باستخدام الذكاء التوليدي.",
-  "sales-enablement": "تمكين النمو: أدوات ومقترحات استخراج مبيعات من قواعد البيانات الحالية.",
-  "dreams-matrix": "مصفوفة الأهداف: بنك الأحلام والطموحات التي يسعى المستخدمون للوصول إليها.",
-  crucible: "المختبر: بيئة تجارب واختبار للمحتوى الجديد والتقييم الداخلي.",
-  "digital-twin": "التوأم الرقمي: خلق نسخة رقمية تحليلية من المستخدم وتوقع خطواته القادمة.",
-  fleet: "الأسطول: إدارة حاويات السيرفرات والبنية التحتية البرمجية.",
+  "dreams-matrix": "مصفوفة الأحلام: بنك الأحلام والطموحات التي يسعى المستخدمون للوصول إليها.",
+  fleet: "أسطول الخوادم: إدارة حاويات السيرفرات والبنية التحتية البرمجية.",
   "seo-geo": "الوصول العالمي: تتبع الحضور العضوي في محركات البحث والمناطق الجغرافية.",
-  "repo-intel": "ذكاء المستودع: نظرة مكشوفة لكود المنصة والتغييرات البرمجية من داخل اللوحة مباشرة.",
+  "repo-intel": "جينات المستودع: نظرة مكشوفة لكود المنصة والتغييرات البرمجية من داخل اللوحة مباشرة.",
   "dawayir-live": "دواير لايف: مراقبة النشاط المباشر والتفاعل اللحظي واللقاءات الحية للزوار.",
-  "ad-analytics": "تحليلات الإعلانات: حساب العائد من الإنفاق المباشر ونسب التحويل المؤكدة.",
-  "marketing-ops": "رحلة الانتشار: حملات البريد الإلكتروني وإدارة الإشعارات والرسائل الترويجية.",
-  "mail-command": "قيادة البريد: نظام بريد إلكتروني متكامل للإرسال والقوالب وتتبع الأداء.",
-  "expansion-hub": "إستراتيجية التوسع: تحليل القوة الشرائية العالمية مقابل نقاط الألم النفسية لتحديد الأسواق المحتملة.",
-  "support-tickets": "التفعيل والدعم: مركز مراجعة تحويلات الدفع اليدوية وتفعيل الاشتراكات للمستخدمين فوراً.",
+  "marketing-ops": "رحلة الانتشار: حملات البريد الإلكتروني وصناعة المحتوى الإعلاني بالذكاء التوليدي.",
+  "expansion-hub": "إستراتيجية الأسواق: تحليل القوة الشرائية العالمية مقابل نقاط الألم النفسية لتحديد الأسواق المحتملة.",
+  "session-os": "غرفة الجلسات النفسية وجلسات الكوتشينج: تتبع كل جلسة من الطلب للتوثيق مع ملخصات AI.",
+  "support-tickets": "بوابات العبور: مركز مراجعة تحويلات الدفع اليدوية وتفعيل المشتركين ووسائل الدعم.",
+  "sovereign-funnel": "قمع التحويل السيادي: تحليلات داخلية لحساب معدلات السقوط في مسار المستخدم انطلاقاً من قاعدة بيانات المنصة.",
 };

@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Target, Battery, Calendar, Shield } from "lucide-react";
 import { getTimelineEvents, type JourneyEventPayload } from "@/services/journeyTracking";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useJourneyProgress } from "@/domains/journey";
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { PATH_NAMES } from "../pathEngine/pathResolver";

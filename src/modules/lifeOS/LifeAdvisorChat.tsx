@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Loader2, Sparkles, Brain, RefreshCw, MessageSquare } from "lucide-react";
 import { buildLifeContext } from "@/services/lifeAdvisor";
 import { useAuthState } from "@/domains/auth/store/auth.store";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { getDomainConfig } from "@/types/lifeDomains";
 

@@ -6,7 +6,7 @@ import { fetchOverviewStats, fetchDreams, saveDream, type OverviewStats } from "
 import { OracleService } from "@/services/oracleService";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { type Dream } from "@/types/dreams";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { type MapNode } from "@/modules/map/mapTypes";
 import { Loader2, Sparkles, Brain, Target, ShieldAlert, Activity, Zap, Radio, AlertCircle } from "lucide-react";
 import { DreamsMatrix } from "@/modules/map/DreamsMatrix";
@@ -227,7 +227,7 @@ export const DreamsMatrixPanel: FC = () => {
                                 value={newDream}
                                 onChange={(e) => setNewDream(e.target.value)}
                                 placeholder="إيه هدفك الجاي؟ (مثلاً: إطلاق منصة الرحلة)"
-                                className="flex-1 bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-teal-500/50"
+                                className="flex-1 bg-black/20 backdrop-blur-md border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-teal-500/50 transition-all placeholder:text-slate-500"
                                 disabled={proposing}
                             />
                             <button
@@ -380,7 +380,7 @@ export const DreamsMatrixPanel: FC = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Probabilty Gauge */}
-                    <div className="flex flex-col items-center justify-center p-4 bg-slate-900/40 rounded-3xl border border-slate-800/50">
+                    <div className="flex flex-col items-center justify-center p-4 bg-[#0B0F19]/40 backdrop-blur-2xl rounded-3xl border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.05)] hover:border-indigo-500/40 transition-all duration-500">
                         <div className="relative w-32 h-32 flex items-center justify-center">
                             <svg className="w-full h-full -rotate-90">
                                 <circle cx="64" cy="64" r="58" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-slate-800" />
@@ -396,7 +396,7 @@ export const DreamsMatrixPanel: FC = () => {
 
                     {/* Flow Controller Stats */}
                     <div className="flex flex-col gap-4">
-                        <div className="p-4 bg-slate-900/40 rounded-2xl border border-slate-800/50 flex items-center gap-4">
+                        <div className="p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:bg-white/10 hover:border-teal-500/30 transition-all duration-300 flex items-center gap-4">
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${focusScore > 0.8 ? 'bg-teal-500/10 text-teal-400' : 'bg-orange-500/10 text-orange-400'}`}>
                                 <Wind className={`w-5 h-5 ${focusScore > 0.8 ? 'animate-bounce' : ''}`} />
                             </div>
@@ -407,7 +407,7 @@ export const DreamsMatrixPanel: FC = () => {
                                 </p>
                             </div>
                         </div>
-                        <div className="p-4 bg-slate-900/40 rounded-2xl border border-slate-800/50 flex items-center gap-4">
+                        <div className="p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:bg-white/10 hover:border-indigo-500/30 transition-all duration-300 flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-slate-800/50 text-slate-400 flex items-center justify-center">
                                 <TrendingUp className="w-5 h-5" />
                             </div>
@@ -416,7 +416,7 @@ export const DreamsMatrixPanel: FC = () => {
                                 <p className="text-lg font-black text-white text-right">{interactionRate} <span className="text-[8px] text-slate-500 font-normal text-right">e/m</span></p>
                             </div>
                         </div>
-                        <div className="p-4 bg-slate-900/40 rounded-2xl border border-slate-800/50 flex flex-col gap-2">
+                        <div className="p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:bg-white/10 hover:border-amber-500/30 transition-all duration-300 flex flex-col gap-2">
                             <div className="flex justify-between items-center">
                                 <p className="text-[10px] text-slate-500 uppercase font-bold">Momentum Pool</p>
                                 <Zap className={`w-3 h-3 ${momentumPool > 70 ? 'text-teal-400 animate-pulse' : 'text-slate-600'}`} />
@@ -468,14 +468,14 @@ export const DreamsMatrixPanel: FC = () => {
 
                     {/* Forecast Summary */}
                     <div className="lg:col-span-2 space-y-4">
-                        <div className="p-4 bg-slate-900/60 rounded-2xl border-r-4 border-indigo-500">
+                        <div className="p-4 bg-indigo-500/5 backdrop-blur-xl rounded-2xl border border-indigo-500/20 border-r-4 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
                             <h4 className="text-[10px] text-indigo-400 font-bold uppercase mb-2">النشرة الجوية للوعي:</h4>
                             <p className="text-sm text-slate-200 leading-relaxed italic">"{forecast}"</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             {recommendations.slice(0, 3).map((rec, i) => (
-                                <div key={i} className="p-3 bg-slate-900/30 rounded-xl border border-slate-800 flex flex-col justify-between">
+                                <div key={i} className="p-3 bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 hover:border-indigo-500/30 hover:bg-indigo-500/10 transition-all flex flex-col justify-between shadow-[0_4px_10px_rgba(0,0,0,0.2)]">
                                     <p className="text-xs text-slate-300 mb-2 leading-tight">{rec}</p>
                                     <div className="flex justify-end">
                                         <div className="w-6 h-6 rounded-lg bg-indigo-500/10 flex items-center justify-center">
@@ -656,7 +656,7 @@ export const DreamsMatrixPanel: FC = () => {
                     <div className="space-y-3">
                         {dreams.filter(d => d.momentumTasks && d.momentumTasks.length > 0).length > 0 ? (
                             dreams.filter(d => d.momentumTasks && d.momentumTasks.length > 0).flatMap(d => (d.momentumTasks || []).map(task => ({ ...task, dreamTitle: d.title, dreamId: d.id }))).map(task => (
-                                <div key={task.id} className="p-3 bg-slate-900/60 rounded-xl border border-teal-500/10 flex justify-between items-center group hover:border-teal-500/30 transition-all">
+                                <div key={task.id} className="p-3 bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 flex justify-between items-center group hover:bg-teal-500/5 hover:border-teal-500/30 transition-all shadow-[0_4px_10px_rgba(0,0,0,0.1)]">
                                     <div className="flex items-center gap-3">
                                         <button
                                             onClick={() => {
@@ -707,7 +707,7 @@ export const DreamsMatrixPanel: FC = () => {
                     <div className="space-y-3">
                         {dreams.filter(d => d.relatedNodeIds && d.relatedNodeIds.length > 0).length > 0 ? (
                             dreams.filter(d => d.relatedNodeIds && d.relatedNodeIds.length > 0).map(dream => (
-                                <div key={dream.id} className="p-3 bg-slate-900/40 rounded-xl border border-slate-800/50 flex justify-between items-center">
+                                <div key={dream.id} className="p-3 bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 hover:bg-amber-500/5 hover:border-amber-500/30 transition-all flex justify-between items-center shadow-[0_4px_10px_rgba(0,0,0,0.1)]">
                                     <div>
                                         <p className="text-xs font-bold text-slate-200">{dream.title}</p>
                                         <div className="flex gap-1 mt-1">
@@ -745,7 +745,7 @@ export const DreamsMatrixPanel: FC = () => {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {dreams.slice(0, 6).map(dream => (
-                        <div key={dream.id} className="p-4 bg-slate-900/40 rounded-2xl border border-slate-800/50 hover:bg-indigo-500/5 transition-all group">
+                        <div key={dream.id} className="p-4 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300 group shadow-[0_8px_20px_rgba(0,0,0,0.2)]">
                             <p className="text-[10px] text-slate-500 gap-2 uppercase tracking-tighter mb-2 font-bold flex items-center">
                                 <Target className="w-3 h-3 text-indigo-500" />
                                 {dream.title}

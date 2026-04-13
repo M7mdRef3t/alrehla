@@ -23,6 +23,7 @@ export { AnalyticsEvents } from "./types";
 
 // ─── Services ──────────────────────────────────────────
 export { analyticsService } from "./services/analytics.service";
+export { generateUUID } from "@/services/analytics";
 
 // ─── Hook ──────────────────────────────────────────────
 export { useAnalytics } from "./hooks/useAnalytics";

@@ -358,7 +358,7 @@ export const AIChatbot: FC<AIChatbotProps> = ({
           );
           const lines = top.map((m, idx) => {
             const dateLabel = m.created_at
-              ? new Date(m.created_at).toLocaleString("ar-EG")
+              ? new Date(m.created_at).toLocaleString("en-US")
               : "تاريخ غير معروف";
             const sourceLabel =
               m.source === "chat" ? "من الشات" : m.source === "pulse" ? "من البوصلة" : "ملاحظة";
@@ -682,7 +682,7 @@ ${conversationHistory ? `**سجل العمليات السابق:**\n${conversati
                     >
                       <p className="text-[10px] text-slate-500 mb-1">
                         {m.created_at
-                          ? new Date(m.created_at).toLocaleDateString("ar-EG")
+                          ? new Date(m.created_at).toLocaleDateString("en-US")
                           : "تاريخ غير معروف"}
                       </p>
                       <p className="text-[11px] text-slate-900 leading-relaxed">

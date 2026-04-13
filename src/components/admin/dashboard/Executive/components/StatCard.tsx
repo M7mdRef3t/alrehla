@@ -2,7 +2,7 @@
 import type { FC, ReactNode } from "react";
 import { AdminTooltip } from "../../Overview/components/AdminTooltip";
 
-export const StatCard: FC<{ title: string; value: string | number; hint?: string; glowColor?: string; tooltip?: string; icon?: ReactNode }> = ({ title, value, hint, glowColor = "teal", tooltip, icon }) => {
+export const StatCard: FC<{ title: string; value: string | number; hint?: string; glowColor?: string; tooltip?: string; icon?: ReactNode; onClick?: () => void }> = ({ title, value, hint, glowColor = "teal", tooltip, icon, onClick }) => {
   const glowVariants = {
     teal: "from-teal-500/5 via-teal-500/10 to-teal-500/5 hover:bg-teal-900/40 border-teal-500/20 hover:border-teal-400/50 shadow-[0_0_15px_rgba(20,184,166,0.05)] hover:shadow-[0_0_25px_rgba(20,184,166,0.2)] text-teal-400",
     indigo: "from-indigo-500/5 via-indigo-500/10 to-indigo-500/5 hover:bg-indigo-900/40 border-indigo-500/20 hover:border-indigo-400/50 shadow-[0_0_15px_rgba(99,102,241,0.05)] hover:shadow-[0_0_25px_rgba(99,102,241,0.2)] text-indigo-400",
@@ -14,10 +14,15 @@ export const StatCard: FC<{ title: string; value: string | number; hint?: string
   const blurColor = glowColor === "teal" ? "bg-teal-400" : glowColor === "indigo" ? "bg-indigo-400" : glowColor === "amber" ? "bg-amber-400" : "bg-rose-400";
 
   return (
-    <div className="relative group perspective-1000 h-full">
+    <div 
+      className={`relative group perspective-1000 h-full ${onClick ? "cursor-pointer" : ""}`} 
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
       <div className="absolute inset-0 bg-slate-950/60 rounded-3xl shadow-inner border border-white/5 opacity-80" />
       
-      <div className={`relative h-full flex flex-col justify-between p-6 rounded-3xl border transition-all duration-500 ease-out bg-gradient-to-br backdrop-blur-xl overflow-hidden ${selectedGlow}`}>
+      <div className={`relative h-full flex flex-col justify-between p-6 rounded-3xl border transition-all duration-500 ease-out bg-gradient-to-br backdrop-blur-xl overflow-hidden ${selectedGlow} ${onClick ? "group-active:scale-95" : ""}`}>
         
         {/* Dynamic Background Mesh Effect */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(255,255,255,0.03),transparent_50%)] pointer-events-none" />
@@ -55,4 +60,4 @@ export const StatCard: FC<{ title: string; value: string | number; hint?: string
 };
 
 export const formatNumber = (value: number | null | undefined, fallback = "—") =>
-  value == null || Number.isNaN(value) ? fallback : value.toLocaleString("ar-EG");
+  value == null || Number.isNaN(value) ? fallback : value.toLocaleString("en-US");

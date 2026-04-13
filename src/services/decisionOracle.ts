@@ -14,7 +14,7 @@ import type {
   DecisionOption,
   LifeScore
 } from "@/types/lifeDomains";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 import { getDomainConfig } from "@/types/lifeDomains";
 
 // ─── Decision Analysis Types ─────────────────────────────────────

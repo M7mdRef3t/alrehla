@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { hasCompletedJourneyOnboarding, markJourneyOnboardingDone } from "../OnboardingFlow";
 import { initThemePalette } from "@/services/themePalette";
 import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "@/domains/gamification/store/achievement.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { useJourneyState } from "@/domains/journey/store/journey.store";
 import {
   fetchPublicBroadcasts,
@@ -20,7 +20,7 @@ import { startAutonomousStartupJobs } from '@/orchestration/startupJobs';
 import type * as AgentModule from '@/agent';
 import type { AgentActions, AgentContext } from '@/agent/types';
 import { isUserMode } from "@/config/appEnv";
-import { initAppContentRealtime } from "@/domains/dawayir/store/content.store";
+import { initAppContentRealtime } from '@/modules/map/dawayirIndex';
 import { fetchAdminConfig, fetchOwnerAlerts } from "@/services/adminApi";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
@@ -28,9 +28,9 @@ import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store"
 import { syncGamificationOnLoad } from "@/services/gamificationSync";
 import { syncSubscription } from "@/services/subscriptionManager";
 import { useGamification } from "@/domains/gamification";
-import { useToastState } from "@/domains/dawayir/store/toast.store";
+import { useToastState } from '@/modules/map/dawayirIndex';
 import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "@/services/marketingAttribution";
-import type { AppShellScreen } from "@/domains/dawayir/store/navigation.store";
+import type { AppShellScreen } from '@/modules/map/dawayirIndex';
 import { useTheme } from "next-themes";
 import { consciousnessTheme } from "@/ai/consciousnessThemeEngine";
 
@@ -139,43 +139,7 @@ export function AppRuntimeControllers({
     };
   }, [setTheme]);
 
-  // Wire up Sensory Input for Consciousness Theme Engine
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          consciousnessTheme.handleSensoryInput("scroll", window.scrollY);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    const handleMotion = (event: DeviceMotionEvent) => {
-      if (event.acceleration) {
-        const ax = event.acceleration.x || 0;
-        const ay = event.acceleration.y || 0;
-        const az = event.acceleration.z || 0;
-        // Calculate rough motion magnitude
-        const magnitude = Math.sqrt(ax * ax + ay * ay + az * az);
-        // Normalize to roughly 0-1 range (adjusting typical motion 0-10m/s^2)
-        const normalized = Math.min(1, magnitude / 10);
-        consciousnessTheme.handleSensoryInput("motion", normalized);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("devicemotion", handleMotion, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("devicemotion", handleMotion);
-    };
-  }, []);
-
+  // Removed sensory input integration temporarily as Atmosfera SDK handles it internally now.
   useEffect(() => {
     void initThemePalette();
     if (isUserMode || typeof window === "undefined") return;

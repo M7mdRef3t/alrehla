@@ -98,7 +98,7 @@ export function AnalyticsOverlay({ id, children }: AnalyticsOverlayProps) {
       {/* The Analytics Overlay (Visible only in editor, shows lightly on hover of the wrapper bounds) */}
       <div className="absolute top-2 left-2 z-50 flex gap-2 opacity-0 group-hover/analytics:opacity-100 transition-opacity duration-300 pointer-events-none">
         <div className={`px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1 backdrop-blur-md ${colorClass}`}>
-          {loading ? <span>👁️ ...</span> : <span>👁️ {views.toLocaleString()} views</span>}
+          {loading ? <span>👁️ ...</span> : <span>👁️ {views.toLocaleString("en-US")} views</span>}
         </div>
         <div className="px-3 py-1 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold shadow-lg flex items-center gap-1 backdrop-blur-md border border-on-surface/10">
           {loading ? <span>🔥 ...</span> : <span>🔥 {ctr}% CTR</span>}

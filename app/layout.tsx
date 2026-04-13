@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ConsciousnessSensoryProvider } from "@/components/providers/ConsciousnessSensoryProvider";
 import { WhisperOverlay } from "@/components/ui/WhisperOverlay";
 import { SovereignReceiver } from "@/components/providers/SovereignReceiver";
+import { SovereignThemeSync } from "@/components/providers/SovereignThemeSync";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.alrehla.app"),
@@ -42,6 +43,14 @@ export const metadata: Metadata = {
     title: "الرحلة — بوصلة الوعي الذاتي وخريطة العلاقات",
     description: "ابدأ رحلتك — اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
     images: ["/og-home-optimized.jpg"]
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true }
+  },
+  alternates: {
+    canonical: "https://www.alrehla.app"
   }
 };
 
@@ -89,12 +98,49 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Almarai:wght@300;400;700;800&family=Cairo:wght@200..1000&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Noto+Kufi+Arabic:wght@300;400;500;600;700;800;900&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&family=Zain:wght@200;300;400;700;800;900&display=swap"
         />
+        <Script
+          id="jsonld-website"
+          type="application/ld+json"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "@id": "https://www.alrehla.app/#website",
+                  "url": "https://www.alrehla.app",
+                  "name": "الرحلة",
+                  "description": "منصة الوعي الذاتي وخريطة العلاقات",
+                  "inLanguage": "ar",
+                  "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": "https://www.alrehla.app/?q={search_term_string}",
+                    "query-input": "required name=search_term_string"
+                  }
+                },
+                {
+                  "@type": "WebApplication",
+                  "@id": "https://www.alrehla.app/#webapp",
+                  "name": "الرحلة — بوصلة الوعي الذاتي",
+                  "url": "https://www.alrehla.app",
+                  "applicationCategory": "HealthApplication",
+                  "operatingSystem": "All",
+                  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EGP" },
+                  "inLanguage": "ar",
+                  "description": "أداة مجانية لاكتشاف علاقاتك وتحليل ديناميكياتها بالذكاء الاصطناعي"
+                }
+              ]
+            })
+          }}
+        />
       </head>
       <body>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <ConsciousnessSensoryProvider>
             <WhisperOverlay />
             <SovereignReceiver />
+            <SovereignThemeSync />
             {children}
           </ConsciousnessSensoryProvider>
         </ThemeProvider>

@@ -69,11 +69,12 @@ export function usePulseCheckLogic(
     return () => window.clearTimeout(t);
   }, [lastPulse, pulseCheckMode, canUsePulseCheck, currentScreen, shouldGateStartWithAuth, setPulseCheck, lastPulseCheckScreen, setLastPulseCheckScreen]);
 
-  // Hide pulse check if feature becomes unavailable
+  // Hide pulse check if feature becomes unavailable or on landing screen
   useEffect(() => {
-    if (canUsePulseCheck) return;
-    if (pulseCheck.isOpen) setPulseCheck(false, "regular");
-  }, [canUsePulseCheck, pulseCheck.isOpen, setPulseCheck]);
+    if (!canUsePulseCheck || currentScreen === "landing") {
+      if (pulseCheck.isOpen) setPulseCheck(false, "regular");
+    }
+  }, [canUsePulseCheck, currentScreen, pulseCheck.isOpen, setPulseCheck]);
 
   const skipNextCheck = useCallback(() => {
     // skipNextCheck is now handled by the lastPulseCheckScreen state logic

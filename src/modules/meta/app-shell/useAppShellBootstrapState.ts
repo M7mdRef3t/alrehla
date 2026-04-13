@@ -7,8 +7,9 @@ import { useThemeState } from "@/domains/consciousness/store/theme.store";
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import type { FeatureFlagKey } from "@/config/features";
 import { runtimeEnv } from "@/config/runtimeEnv";
-import { useAppShellNavigationState } from "@/domains/dawayir/store/navigation.store";
+import { useAppShellNavigationState } from '@/modules/map/dawayirIndex';
 import { useAppOverlayState, useOverlayFlag } from "@/domains/consciousness/store/overlay.store";
+import { useGamification } from "@/domains/gamification";
 
 type AgentModule = typeof import('@/agent');
 const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
@@ -80,6 +81,8 @@ export function useAppShellBootstrapState() {
   const snoozedUntil = usePulseState((s) => s.snoozedUntil);
   const logPulse = usePulseState((s) => s.logPulse);
   const snoozeNotifications = usePulseState((s) => s.snoozeNotifications);
+  
+  const { recordActivity, completeDailyQuest } = useGamification();
 
   return {
     screen,
@@ -128,6 +131,8 @@ export function useAppShellBootstrapState() {
     snoozedUntil,
     logPulse,
     snoozeNotifications,
-    setAuthIntent: useAppOverlayState((s) => s.setAuthIntent)
+    setAuthIntent: useAppOverlayState((s) => s.setAuthIntent),
+    recordActivity,
+    completeDailyQuest
   };
 }

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, ChevronUp } from "lucide-react";
 import { useGamification } from "@/domains/gamification";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 
 const XP_PER_LEVEL = 1000;
 

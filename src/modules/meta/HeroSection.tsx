@@ -46,9 +46,9 @@ const HERO_STYLES = `
   .hero-canvas {
     position: absolute;
     inset: 0;
-    overflow: hidden;
+    overflow: visible;
     pointer-events: none;
-    background: radial-gradient(circle at 50% 50%, #060a16 0%, #010204 100%);
+    background: transparent;
   }
 
   .ambient-orb {
@@ -375,12 +375,46 @@ const HERO_STYLES = `
   @media (max-width: 1023px) {
     .hero-content-wrapper {
       flex-direction: column;
-      gap: 3rem;
-      padding: 6rem 1.5rem 4rem;
+      gap: 2rem;
+      padding: 5rem 1.25rem 3rem;
     }
     
+    .headline-static, 
+    .rotating-word-wrapper, 
+    .hero-body {
+      text-align: center !important;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .rotating-word-wrapper {
+        justify-content: center;
+    }
+
+    .cta-group {
+      justify-content: center;
+      width: 100%;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .cta-primary {
+      width: 100%;
+      justify-content: center;
+      padding: 22px 24px;
+      font-size: 1.2rem;
+      background: rgba(20,184,166,0.2);
+      border: 1px solid rgba(20,184,166,0.8);
+      box-shadow: 0 0 40px rgba(20,184,166,0.2), inset 0 1px rgba(255,255,255,0.1);
+    }
+
+    .cta-secondary {
+      width: 100%;
+      justify-content: center;
+    }
+
     .map-area {
-      width: min(90vw, 400px);
+      width: min(95vw, 400px);
       margin: 0 auto;
       padding-bottom: 24px;
     }
@@ -742,7 +776,7 @@ const PulseBadge: FC<{ count: number }> = ({ count }) => (
       transition={{ duration: 1.6, repeat: Infinity }}
     />
     <span style={{ fontSize: 11, fontWeight: 800, color: "#a8bfcc", letterSpacing: "0.18em", textTransform: "uppercase" }}>
-      {count.toLocaleString("ar-EG")} يستعيدون نبضهم الآن
+      {count.toLocaleString("en-US")} يستعيدون نبضهم الآن
     </span>
   </motion.div>
 );
@@ -876,7 +910,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
               style={{
                 fontSize: "clamp(2.4rem, 5.5vw, 4.4rem)",
                 display: "block",
-                textAlign: "right",
                 fontFamily: "var(--font-display)",
                 lineHeight: "1.4",
                 paddingTop: "0.2em",
@@ -901,10 +934,10 @@ export const HeroSection: FC<HeroSectionProps> = ({
             />
 
             {/* Body text */}
-            <motion.p variants={fadeUp} className="hero-body" style={{ textAlign: "justify", textJustify: "inter-word" }}>
-              بدون جدار تسجيل مُرهق ولا استبيانات معقدة.
-              مساحتك الخاصة للوضوح الفوري.. نترجم فوضى أفكارك
-              لإحداثيات بصرية تساعدك على رصد استنزافك وتحديد خطوتك القادمة.
+            <motion.p variants={fadeUp} className="hero-body" style={{ fontWeight: 500, fontSize: "1.1rem" }}>
+              قف. خذ نفساً عميقاً.
+              أنت لست بحاجة إلى المزيد من المهام. أنت بحاجة إلى <strong>خريطة تصبح فيها مرئياً لنفسك</strong>.
+              نترجم فوضى أفكارك فوراً لإحداثيات بصرية ترصد نزيف طاقتك.
             </motion.p>
 
             {/* Name input (optional personalization) */}
@@ -959,7 +992,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             </motion.div>
 
             {/* CTAs */}
-            <motion.div variants={fadeUp} style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+            <motion.div variants={fadeUp} className="cta-group" style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
               <motion.button
                 type="button"
                 className="cta-primary"
@@ -1015,7 +1048,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0,
           height: 160,
-          background: "linear-gradient(to bottom, transparent, var(--void))",
+          background: "transparent",
           pointerEvents: "none", zIndex: 3,
         }} />
       </section>

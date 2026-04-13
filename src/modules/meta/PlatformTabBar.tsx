@@ -94,8 +94,7 @@ export const PlatformTabBar = memo(function PlatformTabBar({
       initial={{ y: "100%", opacity: 0 }}
       animate={{ y: "0%", opacity: entryDone ? 1 : 0 }}
       transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-      className="fixed bottom-0 right-0 left-0 z-50 md:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className="fixed bottom-0 right-0 left-0 z-50 md:hidden pb-[env(safe-area-inset-bottom)]"
     >
       {/* Glass container */}
       <div
@@ -103,8 +102,8 @@ export const PlatformTabBar = memo(function PlatformTabBar({
                    backdrop-blur-xl bg-white/80 dark:bg-slate-900/90
                    border-t border-slate-200 dark:border-white/10
                    shadow-lg
-                   px-2 pt-2 pb-1"
-        style={{ background: "var(--glass-bg)", borderColor: "var(--glass-border)" }}
+                   px-2 pt-2 pb-1
+                   bg-[var(--glass-bg)] border-[var(--glass-border)]"
       >
         {TAB_ITEMS.map(({ id, label, icon: Icon }) => {
           const isActive = activeTabId === id;

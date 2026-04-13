@@ -4,7 +4,7 @@ import { memo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, ChevronLeft, Sparkles, Check } from "lucide-react";
 import { LIFE_DOMAINS, getDomainConfig, type LifeDomainId } from "@/types/lifeDomains";
-import { useLifeState } from "@/domains/dawayir/store/life.store";
+import { useLifeState } from '@/modules/map/dawayirIndex';
 
 interface DomainAssessmentModalProps {
   isOpen: boolean;

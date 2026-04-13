@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Globe2, ShieldCheck, Zap, Heart, Share2, Sparkles, TrendingUp, Users } from "lucide-react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 
 interface FeedItem {
     id: string;

@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useMemo, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, TrendingUp, Ghost, ShieldAlert, Loader2 } from "lucide-react";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { soundManager } from "@/services/soundManager";
 import { geminiClient } from "@/services/geminiClient";
 import ReactMarkdown from "react-markdown";

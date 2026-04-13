@@ -330,23 +330,24 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
     { data: marketingLeadsRows }
   ] = await Promise.all([
     client.from("profiles").select("id", { count: "exact", head: true }),
-    client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", fiveMinAgo),
+    client.from("routing_events").select("id", { count: "exact", head: true }).gte("occurred_at", fiveMinAgo),
     client
-      .from("journey_events")
-      .select("session_id,type,payload,created_at")
-      .gte("created_at", thirtyDaysAgo)
-      .order("created_at", { ascending: true })
-      .limit(1000),
+      .from("routing_events")
+      .select("session_id,event_type,payload,occurred_at")
+      .in("event_type", ["path_started", "task_completed", "mood_logged", "node_added", "flow_event"])
+      .gte("occurred_at", thirtyDaysAgo)
+      .order("occurred_at", { ascending: true })
+      .limit(5000),
     client.from("admin_ai_logs").select("id", { count: "exact", head: true }),
     client.from("journey_maps").select("session_id,nodes").limit(1000),
     client.from("daily_pulse_logs").select("energy,created_at").gte("created_at", thirtyDaysAgo).limit(2000),
-    client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added"),
+    client.from("routing_events").select("id", { count: "exact", head: true }).eq("event_type", "node_added"),
     client.from("journey_maps").select("session_id", { count: "exact", head: true }),
-    client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "path_started").gte("created_at", twentyFourHoursAgo),
+    client.from("routing_events").select("id", { count: "exact", head: true }).eq("event_type", "path_started").gte("occurred_at", twentyFourHoursAgo),
     client
-      .from("journey_events")
+      .from("routing_events")
       .select("session_id")
-      .eq("type", "flow_event")
+      .eq("event_type", "flow_event")
       .contains("payload", { step: "install_clicked" })
       .not("session_id", "is", null)
       .limit(5000),
@@ -788,11 +789,11 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
   let moodCount = 0;
 
   for (const row of events as Array<Record<string, unknown>>) {
-    const createdAt = String(row.created_at ?? "");
+    const createdAt = String(row.occurred_at ?? row.created_at ?? "");
     const date = createdAt ? createdAt.slice(5, 10) : "--";
     if (!growthMap.has(date)) growthMap.set(date, { paths: 0, nodes: 0 });
     const bucket = growthMap.get(date)!;
-    const type = String(row.type ?? "");
+    const type = String(row.event_type ?? row.type ?? "");
     const payload = row.payload as Record<string, unknown> | null;
     if (type === "path_started") bucket.paths += 1;
     if (type === "node_added") bucket.nodes += 1;
@@ -823,7 +824,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
   };
   for (const row of events as Array<Record<string, unknown>>) {
     const sid = String(row.session_id ?? "anonymous");
-    const type = String(row.type ?? "");
+    const type = String(row.event_type ?? row.type ?? "");
     if (type === "node_added") sessionsByType.node_added.add(sid);
     if (type === "path_started") sessionsByType.path_started.add(sid);
     if (type === "task_completed") sessionsByType.task_completed.add(sid);
@@ -848,7 +849,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
 
   const taskByLabel = new Map<string, { started: number; completed: number }>();
   for (const row of events as Array<Record<string, unknown>>) {
-    const type = String(row.type ?? "");
+    const type = String(row.event_type ?? row.type ?? "");
     const p = row.payload as Record<string, unknown> | null;
     const label = String(p?.taskLabel ?? (p?.taskId ?? ""));
     if (!label) continue;
@@ -873,7 +874,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
   let flowTimeToActionSum = 0;
   let flowTimeToActionCount = 0;
   for (const row of events as Array<Record<string, unknown>>) {
-    if (String(row.type ?? "") !== "flow_event") continue;
+    if (String(row.event_type ?? row.type ?? "") !== "flow_event") continue;
     const p = row.payload as Record<string, unknown> | null;
     const step = String(p?.step ?? "");
     if (!step) continue;

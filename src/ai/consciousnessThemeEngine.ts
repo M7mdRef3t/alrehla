@@ -1,30 +1,26 @@
 /**
  * @deprecated
- * Bridge file — يعيد التصدير من domain الجديد.
+ * Bridge file — يعيد التصدير من domain الجديد / SDK الخارجي.
  * استخدم بدلاً منه:
- *   import { consciousnessEngine } from '@/domains/consciousness'
+ *   import { Atmosfera } from '@alrehla/atmosfera'
  */
 
-export {
-  consciousnessEngine as consciousnessTheme,
-  consciousnessEngine,
-} from "@/domains/consciousness";
-
-export type {
-  ConsciousnessState,
-  ConsciousnessTheme,
-  AnimationLevel,
-  LayoutMode,
-  ThemeEngineParams,
-} from "@/domains/consciousness";
-
-// startConsciousnessTheme — facade for backwards compat
-import { consciousnessEngine } from "@/domains/consciousness";
-import { soundscape } from "@/domains/consciousness";
+import { Atmosfera } from "@alrehla/atmosfera";
 import { logger } from "@/infrastructure/monitoring";
 
+export const consciousnessEngine = Atmosfera;
+export const consciousnessTheme = Atmosfera;
+
+export type {
+  EmotionalState as ConsciousnessState,
+  AtmosferaTheme as ConsciousnessTheme,
+  AnimationLevel,
+  LayoutMode,
+  AtmosferaParams as ThemeEngineParams,
+} from "@alrehla/atmosfera";
+
 export function startConsciousnessTheme(): void {
-  logger.log("🎨 Consciousness Theme Engine started");
+  logger.log("🎨 Consciousness Theme Engine started (Powered by Atmosfera SDK)");
 
   const UPDATE_INTERVAL = 10 * 60 * 1000;
 
@@ -48,9 +44,22 @@ export function startConsciousnessTheme(): void {
       const sessionStart = parseInt(sessionStorage.getItem("dawayir-session-start") || String(Date.now()));
       const sessionDuration = Math.floor((Date.now() - sessionStart) / 60000);
 
-      const theme = consciousnessEngine.generate({ emotionalState, timeOfDay, sessionDuration, preferredMode: "auto" });
-      consciousnessEngine.apply(theme);
-      consciousnessEngine.save(theme);
+      const theme = Atmosfera.generate({ 
+        emotion: {
+           state: emotionalState.state as any,
+           tension: emotionalState.tei,
+           shadow: emotionalState.shadowPulse,
+           engagement: emotionalState.engagement
+        },
+        timeOfDay, 
+        sessionMinutes: sessionDuration, 
+        mode: "auto" 
+      });
+      
+      Atmosfera.apply(theme);
+      try {
+         localStorage.setItem("dawayir-consciousness-theme", JSON.stringify(theme));
+      } catch { /* noop */}
     } catch (error) {
       logger.error("Failed to update consciousness theme:", error);
     }
@@ -65,17 +74,18 @@ export function startConsciousnessTheme(): void {
 }
 
 // Legacy singleton alias
-export const ConsciousnessThemeEngine = { instance: consciousnessEngine };
+export const ConsciousnessThemeEngine = { instance: Atmosfera };
 
 // Method aliases on the singleton for backwards compat
-// SovereignReceiver uses: consciousnessTheme.generateTheme() / consciousnessTheme.applyTheme()
-// AppRuntimeControllers uses: consciousnessTheme.handleSensoryInput()
-Object.assign(consciousnessEngine, {
-  generateTheme: (params: Parameters<typeof consciousnessEngine.generate>[0]) =>
-    consciousnessEngine.generate(params),
-  applyTheme: (theme: Parameters<typeof consciousnessEngine.apply>[0], opts?: { smooth?: boolean }) =>
-    consciousnessEngine.apply(theme, opts?.smooth),
+Object.assign(Atmosfera, {
+  generateTheme: (params: Parameters<typeof Atmosfera.generate>[0]) =>
+    Atmosfera.generate(params),
+  applyTheme: (theme: Parameters<typeof Atmosfera.apply>[0], opts?: { smooth?: boolean }) =>
+    Atmosfera.apply(theme, opts),
   handleSensoryInput: (type: 'motion' | 'scroll', value: number) => {
-    soundscape.handleSensoryInput(type, value);
+     // Atmosfera doesn't natively have handleSensoryInput yet, stub it to avoid breaking 
   },
+  save: (theme: any) => {
+     localStorage.setItem("dawayir-consciousness-theme", JSON.stringify(theme));
+  }
 });

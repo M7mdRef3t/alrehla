@@ -14,6 +14,7 @@ import { PlatformTabBar } from "../PlatformTabBar";
 import { PlatformBreadcrumb, buildBreadcrumb } from "../PlatformBreadcrumb";
 import { signOut } from "@/services/authService";
 import { type AppScreen } from "@/navigation/navigationMachine";
+import { AppSidebar } from "../AppSidebar";
 
 
 // â”€â”€ Module-level constants (created once, never re-allocated on render) â”€â”€
@@ -25,7 +26,7 @@ const KNOWN_SCREENS = new Set<AppScreen>([
   "oracle-dashboard", "armory", "survey", "exit-scripts",
   "grounding", "stories", "about", "insights", "quizzes",
   "behavioral-analysis", "resources",
-  "profile", "sanctuary"
+  "profile", "sanctuary", "protocol"
 ]);
 
 /** Type guard: narrows `string` â†’ `AppScreen` safely */
@@ -100,7 +101,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   onOpenLogin
 }: AppExperienceSurfaceProps) {
   const isLivePage = typeof window !== "undefined" && window.location.pathname.includes("dawayir-live");
-  const actuallyShowingPulse = showPulseCheck && !isLivePage;
+  const actuallyShowingPulse = showPulseCheck && !isLivePage && !isLandingScreen;
   const breadcrumbItems = useMemo(() => buildBreadcrumb(screen), [screen]);
 
   // â”€â”€ Scroll state for header-breadcrumb sync â”€â”€
@@ -165,8 +166,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
       {screen !== "landing" && (
         <>
           <div
-            className="fixed right-0 left-0 z-40 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500"
-            style={{ top: scrolled ? "64px" : "80px" }}
+            className={`fixed right-0 left-0 z-40 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500 ${scrolled ? "top-16" : "top-20"}`}
           >
             <PlatformBreadcrumb items={breadcrumbItems} onNavigate={handleHeaderNavigate} />
           </div>
@@ -176,9 +176,8 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         </>
       )}
       <div
-        className={`min-h-screen flex flex-col transition-colors relative isolate ${screen !== "landing" ? "overflow-visible" : ""}`}
+        className={`min-h-screen flex flex-col transition-colors relative isolate ${screen !== "landing" ? "overflow-visible" : ""} bg-[var(--page-bg)]`}
         dir="rtl"
-        style={{ background: "var(--page-bg)" }}
       >
         {isFeaturePreviewSession && (
           <button
@@ -200,7 +199,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
             className={`flex-1 min-w-0 flex flex-col ${
               actuallyShowingPulse ? "opacity-0 pointer-events-none select-none" : ""
             } overflow-visible`}
-            aria-hidden={actuallyShowingPulse}
+            {...(actuallyShowingPulse ? { "aria-hidden": true } : {})}
           >
 
             <InstallHintBanner />
@@ -216,7 +215,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                 </div>
               </div>
             )}
-            <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...جاري التحميل</div>}>
+            <Suspense fallback={<div className="text-sm text-[var(--text-muted)]">...جاري التحميل</div>}>
               <ErrorBoundary
                 fallback={
                   <div className="min-h-[260px] w-full flex items-center justify-center p-6">
@@ -264,13 +263,23 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                       </motion.button>
                     </div>
                   )}
-                  <AppMainExperienceContent {...mainContentProps} />
+      <AppMainExperienceContent {...mainContentProps} />
                 </div>
               </ErrorBoundary>
             </Suspense>
           </main>
           <AppOverlayHost {...overlayHostProps} />
         </AppChromeShell>
+        <AppSidebar
+          onOpenGym={() => mainContentProps.onNavigate?.("tools")}
+          onStartJourney={mainContentProps.onStartJourney}
+          onOpenBaseline={() => mainContentProps.onNavigate?.("baseline")}
+          onOpenGuidedJourney={() => mainContentProps.onNavigate?.("guided")}
+          onOpenDawayir={onNavigateToMap}
+          onOpenProtocol={() => mainContentProps.onNavigate?.("protocol")}
+          onFeatureLocked={mainContentProps.onFeatureLocked}
+          onOpenMission={mainContentProps.onOpenMission}
+        />
         <AscensionRitual />
       </div>
       <GlobalToast />

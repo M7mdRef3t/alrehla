@@ -14,7 +14,7 @@ import {
   LineChart,
   Line
 } from "recharts";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import { useMapState } from '@/modules/map/dawayirIndex';
 import { getSymptomLabel } from "@/data/symptoms";
 import {
   getPainHeatmapData,

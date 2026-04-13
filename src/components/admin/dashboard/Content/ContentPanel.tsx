@@ -15,7 +15,7 @@ import {
     Filter
 } from "lucide-react";
 import { useAdminState, getScoringWeights, getScoringThresholds } from "@/domains/admin/store/admin.store";
-import { useAppContentState } from "@/domains/dawayir/store/content.store";
+import { useAppContentState } from '@/modules/map/dawayirIndex';
 import { useFleetState } from "@/domains/admin/store/fleet.store";
 import { isSupabaseReady } from "@/services/supabaseClient";
 import {
@@ -64,6 +64,7 @@ export const ContentPanel: FC = () => {
     const [contentPageFilter, setContentPageFilter] = useState("");
     const [, setContentStatus] = useState("");
     const [savingContentKey, setSavingContentKey] = useState<string | null>(null);
+    const [deletingContentKey, setDeletingContentKey] = useState<string | null>(null);
     const [newContentKey, setNewContentKey] = useState("");
     const [newContentPage, setNewContentPage] = useState("");
     const [newContentValue, setNewContentValue] = useState("");
@@ -195,7 +196,11 @@ export const ContentPanel: FC = () => {
     };
 
     const handleDeleteContent = async (key: string) => {
-        if (!confirm("هل أنت متأكد من حذف هذا النص؟")) return;
+        if (deletingContentKey !== key) {
+            setDeletingContentKey(key);
+            return;
+        }
+        setDeletingContentKey(null);
         setSavingContentKey(key);
         const ok = await deleteAppContentEntry(key);
         if (ok) {
@@ -402,13 +407,21 @@ export const ContentPanel: FC = () => {
                                                         {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                                     </button>
                                                 )}
-                                                <button
-                                                    onClick={() => handleDeleteContent(entry.key)}
-                                                    className="p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 transition-colors"
-                                                    title="حذف"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
+                                                {deletingContentKey === entry.key ? (
+                                                    <span className="flex items-center gap-1 text-[10px] font-black text-rose-400">
+                                                        <button onClick={() => handleDeleteContent(entry.key)} className="hover:text-rose-300 transition-colors">تأكيد</button>
+                                                        <span className="text-slate-700 mx-0.5">|</span>
+                                                        <button onClick={() => setDeletingContentKey(null)} className="text-slate-500 hover:text-slate-300 font-bold transition-colors">إلغاء</button>
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleDeleteContent(entry.key)}
+                                                        className="p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 transition-colors"
+                                                        title="حذف"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                         <textarea
@@ -589,7 +602,7 @@ export const ContentPanel: FC = () => {
                                     <div className="flex-1">
                                         <h4 className="text-sm font-bold text-white">{b.title}</h4>
                                         <p className="text-xs text-slate-400">{b.body}</p>
-                                        <span className="text-[10px] text-slate-600 mt-1 block">{b.createdAt ? new Date(b.createdAt).toLocaleString() : "—"}</span>
+                                        <span className="text-[10px] text-slate-600 mt-1 block">{b.createdAt ? new Date(b.createdAt).toLocaleString("en-US") : "—"}</span>
                                     </div>
                                     <button onClick={() => { removeBroadcast(b.id); if (isSupabaseReady) deleteBroadcast(b.id); }} className="p-2 hover:bg-rose-500/10 rounded-lg text-rose-500 transition-colors">
                                         <Trash2 className="w-4 h-4" />

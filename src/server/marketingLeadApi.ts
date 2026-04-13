@@ -135,7 +135,7 @@ async function enqueueOutreach(
 
   if (rows.length === 0) return;
 
-  const { error } = await supabaseAdmin.from("marketing_outreach_queue").insert(rows);
+  const { error } = await supabaseAdmin.from("marketing_lead_outreach_queue").insert(rows);
   if (error) throw error;
 }
 
@@ -311,7 +311,7 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
       // Fire and forget Meta CAPI Event
       void sendMetaCapiEvent({
         eventName: "Lead",
-        eventId: result.lead_id,
+        eventId: input.clientEventId || result.lead_id, // Hardened Deduplication: Unified ID with Browser
         sourceUrl: refUrl,
         userData: {
           email: input.email,

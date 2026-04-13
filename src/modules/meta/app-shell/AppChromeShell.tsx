@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { MessageCircle, User } from "lucide-react";
 import type { LandingChromeVisibility } from '@/orchestration/chromeVisibility';
-import type { AppShellScreen } from "@/domains/dawayir/store/navigation.store";
-import { useMapState } from "@/domains/dawayir/store/map.store";
+import type { AppShellScreen } from '@/modules/map/dawayirIndex';
+import { useMapState } from '@/modules/map/dawayirIndex';
 
 interface AppChromeShellProps {
   chromeVisibility: LandingChromeVisibility;
