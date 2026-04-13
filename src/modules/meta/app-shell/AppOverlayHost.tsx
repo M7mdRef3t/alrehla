@@ -114,7 +114,7 @@ const JourneyToast = lazy(() => import('@/modules/action/JourneyToast').then((m)
 const BlindCapsuleOpener = lazy(() => import('@/modules/action/BlindCapsuleOpener').then((m) => ({ default: m.BlindCapsuleOpener })));
 const WisdomMatrixHub = lazy(() => import('@/modules/growth/WisdomMatrixHub').then(m => ({ default: m.WisdomMatrixHub })));
 const ImmersionPathDetails = lazy(() => import('@/modules/growth/ImmersionPathDetails').then(m => ({ default: m.ImmersionPathDetails })));
-const EvolutionHub = lazy(() => import('@/modules/gamification/EvolutionHub').then(m => ({ default: m.EvolutionHub })));
+const TajmeedHub = lazy(() => import('@/modules/gamification/EvolutionHub').then(m => ({ default: m.TajmeedHub })));
 const VanguardCollective = lazy(() => import('@/modules/growth/VanguardCollective').then(m => ({ default: m.VanguardCollective })));
 const ChronicleOverlay = lazy(() => import('@/modules/gamification/ChronicleOverlay').then(m => ({ default: m.ChronicleOverlay })));
 
@@ -649,7 +649,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
         )}
 
         {showEvolutionHub && isVisible("evolutionHub") && (
-          <EvolutionHub 
+          <TajmeedHub 
             onClose={() => closeOverlay("evolutionHub")}
           />
         )}

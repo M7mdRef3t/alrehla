@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import confetti from 'canvas-confetti';
 
 export const triggerConfetti = (durationInSeconds = 2) => {

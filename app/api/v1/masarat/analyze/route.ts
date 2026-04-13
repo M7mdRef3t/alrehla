@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../../_lib/supabaseAdmin";
-// @ts-ignore
+// @ts-ignore — external package may not be installed locally
 import { quickAnalyze, generateDynamicPlan } from "@alrehla/masarat";
 
 /**

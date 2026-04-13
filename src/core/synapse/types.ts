@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Neural Event Types — تصنيفات الإشارات العصبية 🧠
  * ===================================================

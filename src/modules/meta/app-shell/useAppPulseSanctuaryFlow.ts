@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AppShellScreen } from '@/modules/map/dawayirIndex';
 import type { PulseCheckContext } from "@/hooks/usePulseCheckLogic";

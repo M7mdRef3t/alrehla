@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Shield, Lock, Heart, Loader, Sparkles } from "lucide-react";
+import { X, Shield, Lock, Heart, Loader, Check, Fingerprint } from "lucide-react";
 import { signInWithGoogle, signInWithPhone, verifyOtp } from "@/services/authService";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { isSupabaseReady } from "@/services/supabaseClient";
@@ -238,8 +238,9 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
               <div className="relative flex items-start justify-between gap-3">
                 <div className="text-right flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-4 h-4" style={{ color: "#2dd4bf" }} />
-                    <h2 className="text-lg font-bold text-white">
+                    {/* ليه موجود؟ أيقونة البصمة بتوصل معنى "تحقّق الهوية" بشكل أوضح في تسجيل الدخول. Time Complexity: O(1) */}
+                    <Fingerprint className="w-4 h-4" style={{ color: "#2dd4bf" }} />
+                    <h2 className="text-lg font-bold text-white" style={{ fontFamily: '"Noto Kufi Arabic"' }}>
                       {getAuthTitle(resolvedIntent)}
                     </h2>
                   </div>
@@ -251,17 +252,30 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                         : "سجل دخول بحساب جوجل عشان نحفظ تقدمك"}
                   </p>
                 </div>
+                {/* ليه موجود؟ ضمان ظهور زر الإغلاق حتى لو SVG فشل في الرندر. Time Complexity: O(1) */}
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+                  className="relative w-9 h-9 rounded-full flex items-center justify-center transition-colors"
                   style={{
                     background: "rgba(255, 255, 255, 0.06)",
                     border: "1px solid rgba(255, 255, 255, 0.08)",
                   }}
                   aria-label="إغلاق"
                 >
-                  <X className="w-4 h-4" style={{ color: "rgba(203, 213, 225, 0.7)" }} />
+                  <X
+                    className="w-4 h-4"
+                    strokeWidth={2.25}
+                    style={{ color: "rgba(203, 213, 225, 0.9)" }}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className="absolute text-lg leading-none font-semibold pointer-events-none"
+                    style={{ color: "rgba(203, 213, 225, 0.9)" }}
+                    aria-hidden="true"
+                  >
+                    ×
+                  </span>
                 </button>
               </div>
             </div>
@@ -350,7 +364,8 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                     ? "bg-teal-500 border-teal-500"
                     : "border-slate-500 bg-slate-800/50"
                     }`}>
-                    {isAgeVerified && <Sparkles className="w-3 h-3 text-white" />}
+                    {/* ليه موجود؟ علامة صح أوضح لتأكيد الاختيار بدل أيقونة النجوم. Time Complexity: O(1) */}
+                    {isAgeVerified && <Check className="w-3 h-3 text-white" />}
                   </div>
                   <p className="text-[13px] text-slate-300 leading-snug select-none">
                     أقر بأن عمري <span className="text-teal-400 font-bold">18 عاماً أو أكثر</span>

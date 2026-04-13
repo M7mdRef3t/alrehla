@@ -17,8 +17,12 @@ export type {
   ChronicleEntry,
 } from "./types";
 
+// ─── Freeze Types ────────────────────────────────────────
+export type { FreezeStats } from "./store/gamification.store";
+
 // ─── Services ──────────────────────────────────────────
 export { gamificationService } from "./services/gamification.service";
+export { freezeRewardsService } from "./services/freezeRewards";
 
 // ─── Hooks ────────────────────────────────────────────
 export { useGamification } from "./hooks/useGamification";

@@ -28,11 +28,11 @@ export default function RadarLoading() {
       </div>
       
       <div className="space-y-3 text-center">
-        <h2 className="text-2xl font-bold tracking-widest text-primary uppercase font-inter">
+        <h2 className="text-2xl font-bold tracking-widest text-primary uppercase">
           System Radar Active
         </h2>
         <div className="flex flex-col items-center gap-1">
-          <p className="text-sm font-ibm-arabic text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             جاري مسح البيانات وتحليل المؤشرات..
           </p>
           <div className="flex gap-1">

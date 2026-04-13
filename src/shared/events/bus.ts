@@ -52,6 +52,11 @@ export interface DomainEvents {
   "gamification:achievement-unlocked": { userId: string; achievementId: string };
   "gamification:streak-updated": { userId: string; streak: number };
 
+  // ❄️ Tajmeed (Freeze Gamification)
+  "tajmeed:achievement-unlocked": { achievements: string[]; trigger: string };
+  "tajmeed:frost-earned": { amount: number; reason: string; nodeId?: string };
+  "tajmeed:combo-activated": { comboCount: number; multiplier: number };
+
   // Analytics
   "analytics:event": { name: string; properties?: Record<string, unknown> };
 

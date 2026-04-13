@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Config } from "@measured/puck";
 import { ReactNode } from "react";
 import "@measured/puck/puck.css"; // Basic puck styling

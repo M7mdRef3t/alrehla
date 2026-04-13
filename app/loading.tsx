@@ -39,10 +39,10 @@ export default function Loading() {
 
         {/* Egyptian Slang Loading Text */}
         <div className="space-y-2 text-center">
-          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl font-ibm-arabic">
+          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
             استنى ثواني..
           </h2>
-          <p className="text-sm text-muted-foreground font-ibm-arabic opacity-80">
+          <p className="text-sm text-muted-foreground opacity-80">
             بنرتبلك الرحلة عشان تبدأ صح
           </p>
         </div>

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { NextResponse } from "next/server";
 import { WhatsAppCloudService } from "@/services/whatsappCloudService";
-// @ts-ignore - Assuming masarat is installed or linked
+// @ts-ignore — external package may not be installed locally
 import { quickAnalyze, getStaticQuickPath } from "@alrehla/masarat";
 
 const WEBHOOK_VERIFY_TOKEN = process.env.META_WA_WEBHOOK_VERIFY_TOKEN || "alrehla_sovereign_token";

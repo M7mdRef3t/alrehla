@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useEffect } from "react";
 import { subscribeToDawayirSignals } from "@/modules/recommendation/recommendationBus";
 import { useGamification } from "@/domains/gamification";

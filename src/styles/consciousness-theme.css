@@ -279,7 +279,7 @@ button:not(.unstyled) {
 }
 
 .terminal-text {
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: monospace;
   letter-spacing: -0.02em;
 }
 
@@ -366,7 +366,7 @@ button:not(.unstyled) {
   --consciousness-primary: #22c55e;
   --consciousness-accent:  #16a34a;
   --consciousness-text:    #4ade80;
-  --font-sans:     'JetBrains Mono', 'Courier New', monospace;
+  --font-sans:     monospace;
   --atmosphere-grain:      0.15;
   --atmosphere-aberration: 0.2;
 }

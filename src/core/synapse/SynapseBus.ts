@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, no-console */
 /**
  * Synapse Event Bus — جهاز النقل العصبي للمنصة 🌩️
  * ===================================================

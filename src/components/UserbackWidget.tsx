@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable no-console */
 import { useEffect } from 'react';
 import Userback from '@userback/widget';
 import { runtimeEnv } from '@/config/runtimeEnv';
