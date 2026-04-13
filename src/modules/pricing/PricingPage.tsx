@@ -227,7 +227,7 @@ export default function PricingPage() {
               </div>
               <div>
                 <h2 className="text-xl font-black text-app-foreground">{TIER_LABELS.premium}</h2>
-                <p className="text-xs text-teal-600 dark:text-teal-400/80">التعافي العميق بأدوات سيادية</p>
+                <p className="text-xs text-teal-600 dark:text-teal-400/80">التعافي العميق بأدوات خاصة</p>
               </div>
             </div>
 

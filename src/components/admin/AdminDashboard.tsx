@@ -1,4 +1,4 @@
-﻿import { logger } from "@/services/logger";
+import { logger } from "@/services/logger";
 import type { FC, ReactNode } from "react";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -240,7 +240,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
             <ShieldCheck className="w-8 h-8 text-teal-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white tracking-widest uppercase font-sans">الوصول السيادي</h1>
+            <h1 className="text-2xl font-black text-white tracking-widest uppercase font-sans">الوصول الرئيسي</h1>
             <p className="text-sm text-teal-400/80 tracking-wider font-bold mt-1">مركز القيادة المتقدم</p>
           </div>
         </div>
@@ -677,7 +677,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 </h2>
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-teal-500 animate-[pulse-ring_2s_infinite]" />
-                  <span className="text-xs font-bold text-teal-600 dark:text-teal-400/80 uppercase tracking-widest hidden sm:inline-block">تم تأسيس الاتصال السيادي</span>
+                  <span className="text-xs font-bold text-teal-600 dark:text-teal-400/80 uppercase tracking-widest hidden sm:inline-block">تم تأسيس الاتصال الرئيسي</span>
                 </div>
               </div>
             </div>

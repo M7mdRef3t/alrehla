@@ -280,7 +280,7 @@ export const SessionOSPanel: React.FC = () => {
         } : null);
       }
       
-      alert(isSynced ? "✅ تم التحليل بنجاح مع دمج الملف السيادي للمسافر!" : "✅ محرك مسارات خلص التحليل (بدون ربط سيادي).");
+      alert(isSynced ? "✅ تم التحليل بنجاح مع دمج الملف الخاص للمسافر!" : "✅ محرك مسارات خلص التحليل (بدون ربط متقدم).");
     } catch (e: any) {
       alert("❌ حصل مشكلة في المحرك: " + e.message);
     } finally {
@@ -501,7 +501,7 @@ export const SessionOSPanel: React.FC = () => {
                       
                       <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400 flex items-center gap-2">
                         <Activity className="w-3.5 h-3.5" />
-                        الملف السيادي للمسافر (Sovereign Insight)
+                        الملف الخاص للمسافر (Private Insight)
                       </p>
 
                       {isFetchingSovereign ? (
@@ -595,7 +595,7 @@ export const SessionOSPanel: React.FC = () => {
               <div className="pt-4 border-t border-white/5 space-y-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
                   <Activity className="w-3.5 h-3.5" />
-                  أدوات القيادة السيادية
+                  أدوات القيادة المتقدمة
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <button 

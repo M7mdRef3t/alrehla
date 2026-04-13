@@ -879,7 +879,7 @@ const StepRecoveryPlanPreview: FC<{
       <div className="space-y-2 text-center">
         <ShieldCheck className="w-10 h-10 text-teal-400 mx-auto" />
         <h2 className="text-xl font-bold text-white">خطتك {displayName} جاهزة!</h2>
-        <p className="text-xs text-slate-400">تم تحليل خريطتك بواسطة المحرك السيادي لتحديد أسرع مسار للهدوء.</p>
+        <p className="text-xs text-slate-400">تم تحليل خريطتك بواسطة المحرك الذكي لتحديد أسرع مسار للهدوء.</p>
       </div>
 
       <div className="space-y-4">
@@ -969,12 +969,12 @@ const StepResultsScreen: FC<{
 
   const displayName = userName ? `يا ${userName}` : "";
   const protocolLabel = result?.protocolLabel || diagnosis?.protocolKey || (plan?.ring === "red" ? PATH_NAMES["path_protection"] : plan?.ring === "yellow" ? PATH_NAMES["path_negotiation"] : PATH_NAMES["path_deepening"]);
-  const headline = result ? `دي أول نتيجة واضحة ${displayName}` : "رؤيتك السيادية جاهزة!";
+  const headline = result ? `دي أول نتيجة واضحة ${displayName}` : "رؤيتك الخاصة جاهزة!";
   const subheadline = result?.routeReason || "تم تحليل مسارك وفك شفرات الطاقة في رحلتك.";
   const bodyTitle = result?.dominantPattern || diagnosis?.state || "نتيجة أولية";
   const bodyText = result?.contextNote || result?.insightLine || diagnosis?.rootTension || "دي أول قراءة تشغيلية للخريطة.";
 
-  const safeDiagnosis = diagnosis || ({ state: "مستقر نسبياً", rootTension: "قيد المراجعة السيادية", protocolKey: "clarity", firstStep: "المراقبة الذاتية", commitmentPledge: "ألتزم بمراقبة مشاعري بصدق", riskLevel: "low" } as TransformationDiagnosis);
+  const safeDiagnosis = diagnosis || ({ state: "مستقر نسبياً", rootTension: "قيد المراجعة الخاصة", protocolKey: "clarity", firstStep: "المراقبة الذاتية", commitmentPledge: "ألتزم بمراقبة مشاعري بصدق", riskLevel: "low" } as TransformationDiagnosis);
   const redValue = result?.redCount ?? (safeDiagnosis.riskLevel === "emergency" || safeDiagnosis.riskLevel === "high" ? 1 : 0);
   const yellowValue = result?.yellowCount ?? (safeDiagnosis.riskLevel === "medium" ? 1 : 0);
   const greenValue = result?.greenCount ?? (safeDiagnosis.riskLevel === "low" ? 1 : 0);
@@ -986,7 +986,7 @@ const StepResultsScreen: FC<{
         <div className="w-16 h-16 bg-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-2 border border-teal-500/30">
            <ShieldCheck className="w-8 h-8 text-teal-400" />
         </div>
-        <h2 className="text-2xl font-black text-white tracking-tight">رؤيتك السيادية جاهزة!</h2>
+        <h2 className="text-2xl font-black text-white tracking-tight">رؤيتك الخاصة جاهزة!</h2>
         <p className="text-xs text-slate-400">تم تحليل مسارك وفك شفرات الطاقة في رحلتك.</p>
       </div>
 
@@ -1100,7 +1100,7 @@ const StepResultsScreen: FC<{
           onClick={onComplete}
           className="w-full rounded-2xl py-4.5 bg-gradient-to-r from-teal-500 to-teal-400 text-zinc-950 font-black ob-btn-tap shadow-[0_10px_30px_rgba(45,212,191,0.3)] hover:shadow-[0_15px_40px_rgba(45,212,191,0.4)] transition-all flex items-center justify-center gap-2 group"
         >
-          دخول الملاذ السيادي
+          دخول المساحة الخاصة
           <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform rotate-180" />
         </button>
       </div>

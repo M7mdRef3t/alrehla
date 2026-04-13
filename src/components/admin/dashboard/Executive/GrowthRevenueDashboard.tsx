@@ -75,7 +75,7 @@ export const GrowthRevenueDashboard: FC = () => {
                         <Zap className="w-6 h-6 text-emerald-400" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-white tracking-tight">الخزانة السيادية (Revenue Nexus)</h2>
+                        <h2 className="text-2xl font-black text-white tracking-tight">خزانة الرحلة (Revenue Nexus)</h2>
                         <div className="flex items-center gap-2 mt-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
                             <p className="text-sm font-medium text-emerald-400">رصد حي لتدفقات الطاقة وعوائد الاستحواذ</p>
@@ -143,7 +143,7 @@ export const GrowthRevenueDashboard: FC = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <MarketingLeadsPanel data={remoteStats.marketingLeads} loading={initialLoading} />
+                <MarketingLeadsPanel data={remoteStats.potentialTravelers} loading={initialLoading} />
                 <FunnelAndEmergency 
                   funnelData={remoteStats.funnel} 
                   emergencyData={remoteStats.emergencyLogs ?? []} 

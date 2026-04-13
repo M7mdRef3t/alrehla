@@ -44,7 +44,7 @@ export const SovereignFunnel: React.FC = () => {
             <div className="flex flex-col items-center justify-center min-h-[400px] border border-teal-500/20 rounded-3xl bg-[#0B0F19] shadow-2xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 to-indigo-500/5 animate-pulse" />
                 <Activity className="w-12 h-12 text-teal-400 animate-spin" />
-                <p className="mt-4 text-teal-300 font-bold tracking-widest text-sm uppercase">جاري استدعاء البيانات السيادية...</p>
+                <p className="mt-4 text-teal-300 font-bold tracking-widest text-sm uppercase">جاري استدعاء بيانات الرحلة...</p>
             </div>
         );
     }
@@ -75,7 +75,7 @@ export const SovereignFunnel: React.FC = () => {
             <header className="flex flex-col gap-2">
                 <h2 className="text-3xl font-black text-white tracking-widest uppercase flex items-center gap-3">
                     <Activity className="w-8 h-8 text-teal-400" />
-                    قمع التحويل السيادي (Sovereign Funnel)
+                    قمع مسار الرحلة (Journey Funnel)
                 </h2>
                 <p className="text-slate-400 font-medium">تحليل مسار الزوار وحساب نسب السقوط بدقة من قاعدة بيانات المنصة (آخر 30 يوم).</p>
             </header>

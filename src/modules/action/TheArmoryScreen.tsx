@@ -50,7 +50,7 @@ export const TheArmoryScreen: FC<TheArmoryScreenProps> = ({
         {
             id: "mute",
             name: "بروتوكول العزل (Mute Protocol)",
-            description: "تصفية الضوضاء السمعية والبصرية المحيطة لتقليل الحمل المعرفي واستعادة التركيز السيادي.",
+            description: "تصفية الضوضاء السمعية والبصرية المحيطة لتقليل الحمل المعرفي واستعادة التركيز العميق.",
             status: "standby",
             icon: EarOff,
             colorClass: "text-emerald-400",
@@ -86,7 +86,7 @@ export const TheArmoryScreen: FC<TheArmoryScreenProps> = ({
         {
             id: "guilt",
             name: "محكمة الذنب (Guilt Court)",
-            description: "تفكيك مشاعر الذنب المبرمجة مجتمعياً ومقارنتها بالأدلة المنطقية والسيادية.",
+            description: "تفكيك مشاعر الذنب المبرمجة مجتمعياً ومقارنتها بالأدلة المنطقية والخاصة.",
             status: "standby",
             icon: Scale,
             colorClass: "text-orange-400",

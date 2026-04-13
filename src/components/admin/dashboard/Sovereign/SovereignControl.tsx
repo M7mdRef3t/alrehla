@@ -377,7 +377,7 @@ export const SovereignControl: FC = () => {
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">أرواح متصلة</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-white tabular-nums drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                      {isLoadingPulse ? "..." : (liveStats?.activeNow ?? 0).toLocaleString("en-US")}
+                      {isLoadingPulse ? "..." : (liveStats?.activeConsciousnessNow ?? 0).toLocaleString("en-US")}
                     </span>
                     <span className="text-[10px] text-teal-500 font-black animate-pulse tracking-widest">LIVE</span>
                   </div>

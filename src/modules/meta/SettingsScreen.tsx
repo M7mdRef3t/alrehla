@@ -101,7 +101,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
             id: "appearance" as SettingsSection,
             icon: Palette,
             label: "الهوية والمظهر",
-            value: "تخصيص الواجهة والملف السيادي",
+            value: "تخصيص الواجهة والملف الخاص",
             color: "#e879f9",
         },
         {

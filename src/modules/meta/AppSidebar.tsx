@@ -72,7 +72,7 @@ import { runtimeEnv } from "@/config/runtimeEnv";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { assignUrl, getHref, pushUrl } from "@/services/navigation";
 import { openInNewTab } from "@/services/clientDom";
-import { HealthBar as SidebarHealthBar } from '@/modules/meta/HealthBar';
+import { SovereignActionBar } from '@/modules/action/SovereignActionBar';
 import { getJourneyPathBySlug } from "@/utils/journeyPaths";
 import { PROTOCOLS } from "./ProtocolEngine";
 
@@ -480,6 +480,13 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
   return (
     <>
+      {/* ───── FLOATING P&L / ACTION BAR (MOBILE) ───── */}
+      <SovereignActionBar 
+        isFloatingMobile 
+        viewingNodeId={viewingNode?.id}
+        onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })}
+      />
+
       {/* ───── DESKTOP SIDEBAR ───── */}
       <div
         className="fixed top-0 right-0 z-40 h-full hidden md:flex flex-row-reverse group/sidebar"
@@ -496,7 +503,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               </div>
             )}
             
-            <HealthBar />
+            <SovereignActionBar viewingNodeId={viewingNode?.id} onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })} className="mb-4" />
             <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
             
             <div className="flex-1 overflow-y-auto no-scrollbar py-2">

@@ -61,7 +61,7 @@ export type DecisionType =
   | "subscription_activated"
   | "subscription_cancelled"
 
-  // ── تدخلات سيادية (Sovereign Interventions) ──
+  // ── تدخلات حاسمة (Direct Interventions) ──
   | "sovereign_intervention_deployed"
   | "tactical_preset_deployed"
   | "market_ignition_campaign"
@@ -134,7 +134,7 @@ export const DECISION_RULES: Record<DecisionType, AutonomyLevel> = {
   subscription_activated: "AUTONOMOUS_WITH_LOG",
   subscription_cancelled: "AUTONOMOUS_WITH_LOG",
 
-  // ── تدخلات سيادية ── (تحتاج تصديق إلا الأوامر السريعة)
+  // ── تدخلات حاسمة ── (تحتاج تصديق إلا الأوامر السريعة)
   sovereign_intervention_deployed: "REQUIRES_APPROVAL", // الافتراضي للتدخلات عالية التأثير
   tactical_preset_deployed: "AUTONOMOUS_WITH_LOG",     // الأوامر النصية المجهزة مسبقا يتم تسجيلها
   market_ignition_campaign: "REQUIRES_APPROVAL",       // الحملات الإعلانية الجديدة تحتاج موافقة
@@ -324,7 +324,7 @@ export class DecisionEngine {
     decision.id = actId;
     this.logDecision({ ...decision, outcome: "pending_approval" });
 
-    const title = `طلب موافقة سيادية: ${decision.type}`;
+    const title = `طلب موافقة حاسمة: ${decision.type}`;
     const body = decision.reasoning;
 
     try {

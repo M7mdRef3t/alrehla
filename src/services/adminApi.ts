@@ -441,7 +441,7 @@ export interface UtmBreakdownEntry {
   count: number;
 }
 
-export interface MarketingLeadsStats {
+export interface PotentialTravelersStats {
   total: number;
   last24h: number;
   bySource: UtmBreakdownEntry[];
@@ -449,8 +449,8 @@ export interface MarketingLeadsStats {
   byStatus: UtmBreakdownEntry[];
   byCampaign: UtmBreakdownEntry[];
   dailyTrend: Array<{ date: string; count: number }>;
-  conversion: {
-    leads: number;
+  sovereignPassage: {
+    potential: number;
     startClicks: number;
     pulseCompleted: number;
     journeyMaps: number;
@@ -504,16 +504,16 @@ export type TopScenario = {
 export type PhaseOneGoalProgress = OverviewStats["phaseOneGoal"];
 
 export interface OverviewStats {
-  totalUsers: number | null;
-  activeNow: number | null;
+  totalTravelers: number | null;
+  activeConsciousnessNow: number | null;
   avgMood: number | null;
   aiTokensUsed: number | null;
   growthData: Array<{ date: string; paths: number; nodes: number }>;
   zones: Array<{ label: string; count: number }>;
   phaseOneGoal: {
-    registeredUsers: number;
-    installedUsers: number;
-    addedPeople: number;
+    registeredTravelers: number;
+    installedTravelers: number;
+    addedPeers: number;
   };
   pulseEnergyWeekly: {
     points: Array<{ date: string; changed: number; unstable: number; completed: number; recommended: number; undo: number }>;
@@ -547,7 +547,7 @@ export interface OverviewStats {
     mediums: UtmBreakdownEntry[];
     campaigns: UtmBreakdownEntry[];
   } | null;
-  marketingLeads?: MarketingLeadsStats;
+  potentialTravelers?: PotentialTravelersStats;
   topScenarios?: TopScenario[] | null;
   verificationGapIndex?: number | null;
   awarenessGap?: {
@@ -823,9 +823,9 @@ export interface OwnerAlertsResponse {
     sessionIds: string[];
   };
   phaseOne: {
-    registeredUsers: number;
-    installedUsers: number;
-    addedPeople: number;
+    registeredTravelers: number;
+    installedTravelers: number;
+    addedPeers: number;
     target: number;
     registeredReached: boolean;
     installedReached: boolean;
@@ -847,12 +847,28 @@ export interface OwnerOpsReport {
   ownerAlerts: OwnerAlertsResponse | null;
 }
 
+export interface AIInterpretation {
+  primary_pattern?: string;
+  state?: string;
+  focus_areas?: string[];
+  anomalies?: string[];
+  [key: string]: any;
+}
+
+export interface TransformationDiagnosis {
+  riskLevel?: string;
+  rootTension?: string;
+  protocolKey?: string;
+  commitmentPledge?: string;
+  [key: string]: any;
+}
+
 export interface JourneyMapSnapshot {
   sessionId: string;
   nodes: MapNode[];
   updatedAt: number | null;
-  aiInterpretation?: any | null;
-  transformationDiagnosis?: any | null;
+  aiInterpretation?: AIInterpretation | null;
+  transformationDiagnosis?: TransformationDiagnosis | null;
 }
 
 export interface SessionEventRow {
@@ -874,6 +890,7 @@ export interface VisitorSessionSummary {
   lastFlowStep: string | null;
   linkedUserId?: string | null;
   linkedEmail?: string | null;
+  hasAiInterpretation?: boolean;
   aiPattern?: string | null;
   aiState?: string | null;
   riskLevel?: string | null;
@@ -991,7 +1008,7 @@ export async function fetchJourneyMap(sessionId: string): Promise<JourneyMapSnap
       sessionId: apiData.sessionId ?? sessionId,
       nodes: apiData.nodes ?? [],
       updatedAt: apiData.updatedAt ? new Date(String(apiData.updatedAt)).getTime() : null,
-      aiInterpretation: apiData.aiInterpretation,
+      aiInterpretation: apiData.aiInterpretation as any,
       transformationDiagnosis: apiData.transformationDiagnosis
     };
   }
@@ -1006,8 +1023,8 @@ export async function fetchJourneyMap(sessionId: string): Promise<JourneyMapSnap
     sessionId: String(data.session_id ?? sessionId),
     nodes: (data.nodes as MapNode[]) ?? [],
     updatedAt: data.updated_at ? new Date(String(data.updated_at)).getTime() : null,
-    aiInterpretation: data.ai_interpretation,
-    transformationDiagnosis: data.transformation_diagnosis
+    aiInterpretation: (typeof data.ai_interpretation === 'string' ? JSON.parse(data.ai_interpretation) : data.ai_interpretation) as unknown as AIInterpretation,
+    transformationDiagnosis: (typeof data.transformation_diagnosis === 'string' ? JSON.parse(data.transformation_diagnosis) : data.transformation_diagnosis) as unknown as TransformationDiagnosis
   };
 }
 
@@ -1134,17 +1151,17 @@ export async function fetchUsers(limit = 100): Promise<AdminUserRow[] | null> {
 
 export async function fetchFunnelAnalytics(): Promise<FunnelStats | null> {
   const overview = await fetchOverviewStats();
-  const totalUsers = overview?.totalUsers ?? 0;
-  const activeNow = overview?.activeNow ?? 0;
-  const phaseRegistered = overview?.phaseOneGoal?.registeredUsers ?? 0;
+  const totalTravelers = overview?.totalTravelers ?? 0;
+  const activeConsciousnessNow = overview?.activeConsciousnessNow ?? 0;
+  const phaseRegistered = overview?.phaseOneGoal?.registeredTravelers ?? 0;
 
   const base: FunnelStats = {
-    landing: totalUsers,
-    entry: activeNow,
+    landing: totalTravelers,
+    entry: activeConsciousnessNow,
     activation: phaseRegistered,
-    engagement_d2: Math.round(activeNow * 0.6),
-    engagement_d7: Math.round(activeNow * 0.35),
-    conversion: Math.round(activeNow * 0.2),
+    engagement_d2: Math.round(activeConsciousnessNow * 0.6),
+    engagement_d7: Math.round(activeConsciousnessNow * 0.35),
+    conversion: Math.round(activeConsciousnessNow * 0.2),
     healthScore: {
       activation: 68,
       engagement: 75,
@@ -1460,16 +1477,16 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
 
   if (!events) {
     return {
-      totalUsers: usersCount ?? null,
-      activeNow: activeCount ?? null,
+      totalTravelers: usersCount ?? null,
+      activeConsciousnessNow: activeCount ?? null,
       avgMood: null,
       aiTokensUsed: aiLogsCount ?? null,
       growthData: [],
       zones: [],
       phaseOneGoal: {
-        registeredUsers: usersCount ?? 0,
-        installedUsers,
-        addedPeople: addedPeopleCount ?? 0
+        registeredTravelers: usersCount ?? 0,
+        installedTravelers: installedUsers,
+        addedPeers: addedPeopleCount ?? 0
       },
       pulseEnergyWeekly: {
         points: last7Dates.map((date) => ({
@@ -1524,7 +1541,7 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       verificationGapIndex: (marketingLeadsTotalCount ?? 0) > 0 
         ? Math.max(0, Math.round((( (marketingLeadsTotalCount ?? 0) - (usersCount ?? 0) ) / (marketingLeadsTotalCount ?? 0)) * 100)) 
         : 0,
-      marketingLeads: {
+      potentialTravelers: {
         total: marketingLeadsTotalCount ?? 0,
         last24h: marketingLeadsLast24hCount ?? 0,
         bySource: toTopEntries(marketingBySource),
@@ -1532,8 +1549,8 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
         byStatus: toTopEntries(marketingByStatus),
         byCampaign: toTopEntries(marketingByCampaign),
         dailyTrend: last14Dates.map((date) => ({ date, count: marketingByDate.get(date) ?? 0 })),
-        conversion: {
-          leads: marketingLeadsTotalCount ?? 0,
+        sovereignPassage: {
+          potential: marketingLeadsTotalCount ?? 0,
           startClicks: 0,
           pulseCompleted: 0,
           journeyMaps: journeyMapsTotal ?? 0,
@@ -1747,13 +1764,13 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
   const journeyMapsTotalVal = journeyMapsTotal ?? 0;
 
   return {
-    totalUsers: usersCount ?? null,
-    activeNow: activeCount ?? null,
+    totalTravelers: usersCount ?? null,
+    activeConsciousnessNow: activeCount ?? null,
     avgMood: moodCount ? Math.round((moodSum / moodCount) * 10) / 10 : null,
     aiTokensUsed: aiLogsCount ?? null,
     growthData,
     zones,
-    phaseOneGoal: { registeredUsers: usersCount ?? 0, installedUsers, addedPeople: addedPeopleCount ?? 0 },
+    phaseOneGoal: { registeredTravelers: usersCount ?? 0, installedTravelers: installedUsers, addedPeers: addedPeopleCount ?? 0 },
     pulseEnergyWeekly: { points: pulseEnergyWeeklyPoints, unstableToCompletedPct },
     moodWeekly: { points: moodWeeklyPoints, unstableToCompletedPct: moodUnstableToCompletedPct },
     pulseCopyVariants: { assigned: { energy: { a: 0, b: 0 }, mood: { a: 0, b: 0 }, focus: { a: 0, b: 0 } }, completed: { energy: { a: 0, b: 0 }, mood: { a: 0, b: 0 }, focus: { a: 0, b: 0 } } },
@@ -1761,7 +1778,10 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     funnel,
     flowStats: { byStep: flowCounts, avgTimeToActionMs: flowTimeToActionCount > 0 ? Math.round(flowTimeToActionSum / flowTimeToActionCount) : null, addPersonCompletionRate, pulseAbandonedByReason },
     conversionHealth: { pathStarted24h: pathStarted24h ?? 0, journeyMapsTotal: journeyMapsTotalVal, addPersonOpened, addPersonDoneShowOnMap },
-    marketingLeads: {
+    verificationGapIndex: marketingLeadsTotal > 0 
+      ? Math.max(0, Math.round(((marketingLeadsTotal - (usersCount ?? 0)) / marketingLeadsTotal) * 100)) 
+      : 0,
+    potentialTravelers: {
       total: marketingLeadsTotal,
       last24h: marketingLeadsLast24hCount ?? 0,
       bySource: toTopEntries(marketingBySource),
@@ -1769,8 +1789,8 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       byStatus: toTopEntries(marketingByStatus),
       byCampaign: toTopEntries(marketingByCampaign),
       dailyTrend: last14Dates.map((date) => ({ date, count: marketingByDate.get(date) ?? 0 })),
-      conversion: {
-        leads: marketingLeadsTotal,
+      sovereignPassage: {
+        potential: marketingLeadsTotal,
         startClicks,
         pulseCompleted,
         journeyMaps: journeyMapsTotalVal,

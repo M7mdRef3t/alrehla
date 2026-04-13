@@ -17,7 +17,7 @@ export const AIGuardrailCard: FC = () => {
       ? { label: "خطر اقتصادي", className: "text-rose-100 bg-rose-500/20 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.3)]", Icon: Siren, ambient: "bg-rose-500/10", accent: "text-rose-400" }
       : snap.status === "warning"
         ? { label: "تحذير استنزاف", className: "text-amber-100 bg-amber-500/20 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.3)]", Icon: AlertTriangle, ambient: "bg-amber-500/10", accent: "text-amber-400" }
-        : { label: "استهلاك سيادي", className: "text-teal-100 bg-teal-500/20 border-teal-500/40 shadow-[0_0_15px_rgba(20,184,166,0.3)]", Icon: ShieldCheck, ambient: "bg-teal-500/5", accent: "text-teal-400" };
+        : { label: "استهلاك آمن", className: "text-teal-100 bg-teal-500/20 border-teal-500/40 shadow-[0_0_15px_rgba(20,184,166,0.3)]", Icon: ShieldCheck, ambient: "bg-teal-500/5", accent: "text-teal-400" };
 
   return (
     <div className={`admin-glass-card rounded-3xl border border-white/5 p-6 shadow-2xl relative overflow-hidden group transition-all duration-700 ${ui.ambient}`} dir="rtl">

@@ -1024,7 +1024,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
   const nodes = [
     { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "علاقة بميزانها",  w: 1.2 },
-    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم سيادي",    w: 0.8 },
+    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم خاص",    w: 0.8 },
     { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "نبض متذبذب",  w: 1.5 },
     { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "تشويش روح",   w: 0.9 },
     { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "احتواء حقيقي",w: 1.1 },
@@ -1408,7 +1408,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             <motion.div variants={fadeUp} className="hero-eyebrow-row">
               <span className="hero-badge">
                 <span className="hero-badge__dot" />
-                DAWAYIR — الرحلة
+                الرحلة
               </span>
               <PulseBadge count={pulseCount} />
             </motion.div>
@@ -1463,20 +1463,10 @@ export const HeroSection: FC<HeroSectionProps> = ({
                 id="hero-cta-start"
               >
                 <Zap className="hero-cta-icon" />
-                <span>{ctaJourney}</span>
+                <span>ابدأ رحلة علاقتك</span>
                 <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
               </motion.button>
 
-              <motion.button
-                type="button"
-                className="cta-secondary"
-                onClick={() => document.getElementById("simulation")?.scrollIntoView({ behavior: "smooth" })}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                id="hero-cta-explore"
-              >
-                {secondaryCta}
-              </motion.button>
             </motion.div>
 
             <motion.div variants={fadeUp} className="hero-trust-row">

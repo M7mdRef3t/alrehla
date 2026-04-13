@@ -22,7 +22,7 @@ import { decisionEngine } from "@/ai/decision-framework";
 import type { AIDecision, DecisionType } from "@/ai/decision-framework";
 
 /**
- * GovernanceHub — "مركز إدارة العقل السيادي"
+ * GovernanceHub — "مركز التحكم الرئيسي"
  * ==========================================
  * واجهة متقدمة للتحكم في استقلالية الذكاء الاصطناعي ومراقبة جودة قراراته.
  */

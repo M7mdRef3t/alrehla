@@ -246,13 +246,17 @@ export const Landing: FC<LandingPropsExtended> = ({
     let timeoutId: number | null = null;
 
     const scheduleNextUpdate = () => {
-      const now = new Date();
-      const msUntilNextMinute = Math.max(1000, (60 - now.getSeconds()) * 1000 - now.getMilliseconds());
+      // Fluctuates every 3-6 seconds
+      const nextDelay = 3000 + Math.random() * 3000;
 
       timeoutId = window.setTimeout(() => {
-        setPulseCount(getLivePulseCount());
+        // Base count from logic + minor fluctuation (-2 to +2)
+        const base = getLivePulseCount();
+        const fluctuation = Math.floor(Math.random() * 5) - 2; 
+        setPulseCount(Math.max(5, base + fluctuation));
+        
         scheduleNextUpdate();
-      }, msUntilNextMinute);
+      }, nextDelay);
     };
 
     scheduleNextUpdate();
@@ -336,7 +340,7 @@ export const Landing: FC<LandingPropsExtended> = ({
               إحنا مش بنخمّن.<br />إحنا بنحلل الـ Logic.
             </h2>
             <p className="text-base sm:text-lg max-w-[50ch] mx-auto landing-principles-copy">
-              الرحلة بتستخدم "نظام تشغيل سيادي" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات (Logic) بتساعدك تاخد قراراتك من مركز قوتك.
+              الرحلة بتستخدم "نظام تشغيل خاص" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات (Logic) بتساعدك تاخد قراراتك من مركز قوتك.
             </p>
           </div>
 

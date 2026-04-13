@@ -200,7 +200,7 @@ export const SovereignGatewayCommand: FC<{
         body: JSON.stringify({ id, ...updates })
       });
       await fetchOracle();
-      useToastState.getState().showToast("تم تحديث إعدادات المسار سيادياً", "success");
+      useToastState.getState().showToast("تم تحديث إعدادات المسار بنجاح", "success");
     } catch (err) {
       console.error(err);
     } finally {
@@ -391,7 +391,7 @@ export const SovereignGatewayCommand: FC<{
         {/* Gateway Selection Area */}
         <div className="xl:col-span-8 hud-glass p-10 rounded-[3.5rem] bg-slate-900/40 border-white/10">
           <div className="flex items-center justify-between mb-10">
-             <h3 className="text-xl font-black text-white flex items-center gap-4"><Orbit className="w-6 h-6 text-indigo-400" /> مسارات الرحلات السيادية</h3>
+             <h3 className="text-xl font-black text-white flex items-center gap-4"><Orbit className="w-6 h-6 text-indigo-400" /> إدارة البوابات والمسارات</h3>
              <button 
                 onClick={syncPlatforms}
                 disabled={updating}
@@ -461,7 +461,7 @@ export const SovereignGatewayCommand: FC<{
                 <div className="p-6 rounded-3xl bg-slate-900/50 border border-white/5 space-y-6">
                     <div className="flex items-center justify-between">
                         <div className="flex flex-col">
-                           <span className="text-[10px] font-black text-slate-500 uppercase">حالة البوابة سيادياً</span>
+                           <span className="text-[10px] font-black text-slate-500 uppercase">حالة البوابة والمتابعة</span>
                            <button 
                              onClick={() => toggleAutoIgnition(activeGateway, !activeHealth?.auto_ignition_enabled)}
                              className={`text-[9px] font-black uppercase tracking-widest mt-1 text-right ${activeHealth?.auto_ignition_enabled ? 'text-orange-400' : 'text-slate-600'}`}

@@ -265,7 +265,7 @@ export function SessionOSConsole() {
       <aside className="w-64 border-l border-neutral-800 bg-[#0F0F0F] flex flex-col p-4 z-10">
         <div className="mb-8 px-2">
           <h2 className="text-xl font-black text-indigo-400 font-sans tracking-tight uppercase">بوصلة السيادة</h2>
-          <p className="text-[10px] text-neutral-500 mt-1 font-bold uppercase tracking-widest">محرك الوعي السيادي</p>
+          <p className="text-[10px] text-neutral-500 mt-1 font-bold uppercase tracking-widest">محرك الوعي الخاص</p>
         </div>
 
         <nav className="space-y-1.5 flex-grow">
@@ -301,7 +301,7 @@ export function SessionOSConsole() {
           {/* Top Intelligence Bar */}
           <div className="flex justify-between items-center mb-12">
             <div>
-              <h1 className="text-3xl font-black tracking-tight">لوحة التحكم السيادية</h1>
+              <h1 className="text-3xl font-black tracking-tight">لوحة التحكم الخاصة</h1>
               <p className="text-neutral-500 text-sm mt-1">إدارة وتحليل رحلات الوعي</p>
             </div>
             
@@ -475,7 +475,7 @@ export function SessionOSConsole() {
                     </div>
                     <div className="space-y-6">
                        <InputField label="التدخل المعرفي" value={mainIntervention} onChange={setMainIntervention} textarea />
-                       <InputField label="التكليف السيادي (Assignment)" value={assignment} onChange={setAssignment} textarea />
+                       <InputField label="المهمة الخاصة (Assignment)" value={assignment} onChange={setAssignment} textarea />
                     </div>
                  </div>
               </motion.div>

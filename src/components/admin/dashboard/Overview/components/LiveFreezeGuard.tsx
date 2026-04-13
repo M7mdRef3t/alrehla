@@ -27,7 +27,7 @@ export const LiveFreezeGuard: FC = () => {
       ? { label: "حرج جداً (خطر الإغلاق)", className: "text-rose-100 bg-rose-500/20 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.3)]", Icon: Siren, ambient: "bg-rose-500/10" }
       : snap.status === "warning"
         ? { label: "تحذير (محاولات تجميد)", className: "text-amber-100 bg-amber-500/20 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.3)]", Icon: AlertTriangle, ambient: "bg-amber-500/5" }
-        : { label: "مستقر استقرار سيادي", className: "text-emerald-100 bg-emerald-500/20 border-emerald-500/40 shadow-[0_0_15px_rgba(52,211,153,0.3)]", Icon: ShieldCheck, ambient: "bg-emerald-500/5" };
+        : { label: "مستقر تماماً", className: "text-emerald-100 bg-emerald-500/20 border-emerald-500/40 shadow-[0_0_15px_rgba(52,211,153,0.3)]", Icon: ShieldCheck, ambient: "bg-emerald-500/5" };
 
   return (
     <div className={`admin-glass-card rounded-3xl border border-white/5 p-6 shadow-2xl relative overflow-hidden group transition-all duration-700 ${statusUi.ambient}`}>

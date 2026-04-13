@@ -211,7 +211,7 @@ export const SovereignSpreadCommand: FC = () => {
                     </div>
                     <div className="flex justify-between text-[9px] text-slate-600 font-black uppercase tracking-widest">
                        <span>صمت إدراكي (Silent)</span>
-                       <span>نداء سيادي (Amplified)</span>
+                       <span>نداء مباشر (Amplified)</span>
                     </div>
                  </div>
 

@@ -1199,7 +1199,7 @@ function LeadCommandCard({
                    </div>
 
                    <div className="space-y-2 text-right">
-                     <label className="text-[10px] font-black text-slate-500 uppercase">ملاحظات سيادية</label>
+                     <label className="text-[10px] font-black text-slate-500 uppercase">ملاحظات خاصة</label>
                      <textarea 
                        value={localNote}
                        onChange={(e) => setLocalNote(e.target.value)}

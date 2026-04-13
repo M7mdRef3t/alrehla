@@ -86,7 +86,7 @@ export const PressureSentenceCard: FC<PressureSentenceCardProps> = ({ snapshot }
 
           {/* Title Right */}
           <div className="text-right">
-            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] block mb-1">ترياق سيادي: {snapshot.sourceLabel}</span>
+            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] block mb-1">ترياق خاص: {snapshot.sourceLabel}</span>
             <h3 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-tight">
               {snapshot.title}
             </h3>
@@ -99,7 +99,7 @@ export const PressureSentenceCard: FC<PressureSentenceCardProps> = ({ snapshot }
             <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500/40" />
             <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-              المنطق السيادي
+              المنطق الخاص
             </h4>
             <p className="text-base text-slate-300 leading-relaxed font-bold">
               {snapshot.reasoning}

@@ -94,7 +94,7 @@ export const SocialFirewall: FC<{ loading: boolean }> = ({ loading }) => {
                         </div>
                         <div className="flex items-baseline gap-2 relative z-10">
                             <span className="text-3xl font-black text-amber-400 tabular-nums drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">{blockedNodeIds.length}</span>
-                            <span className="text-[10px] text-slate-500 mb-1 font-bold">تجاهل سيادي نشط</span>
+                            <span className="text-[10px] text-slate-500 mb-1 font-bold">تجاهل دائم نشط</span>
                         </div>
                     </div>
                 </div>
@@ -175,7 +175,7 @@ export const SocialFirewall: FC<{ loading: boolean }> = ({ loading }) => {
                                         title={isBlocked ? 'إلغاء الحظر' : 'حظر التنبيهات'}
                                     >
                                         <UserX className="w-3.5 h-3.5" />
-                                        {isBlocked ? 'فك العزل' : 'عزل سيادي'}
+                                        {isBlocked ? 'فك العزل' : 'عزل كامل'}
                                     </button>
                                 </div>
                             </motion.div>

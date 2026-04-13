@@ -350,7 +350,7 @@ export const SovereignExpansionHub: React.FC = () => {
 
           {/* Recent Sovereign Breath (Live Transactions) */}
           <div className="hud-glass p-8 rounded-[2.5rem] border-white/5">
-            <h4 className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mb-6">الأنفاس السيادية الأخيرة (Live)</h4>
+            <h4 className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mb-6">نبض الرحلة المباشر (Live)</h4>
             <div className="space-y-4">
               {report?.recentTransactions.slice(0, 4).map((tx: any, i: number) => (
                 <div key={tx.id} className="flex items-center justify-between text-xs py-2 border-b border-white/5 last:border-0">

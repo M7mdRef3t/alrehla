@@ -52,6 +52,13 @@ export function PhoneCaptureView({
   useEffect(() => {
     const errMsg = validateEgyptianPhone(phone);
     setError(errMsg);
+    
+    // Auto-save phone to bridge the Hub-and-Spoke gap (Sovereign Sync)
+    if (!errMsg && phone.replace(/\D/g, "").length === 11) {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("dawayir-client-phone", phone);
+      }
+    }
   }, [phone]);
 
   const isValid = phone.replace(/\D/g, "").length === 11 && !error;
