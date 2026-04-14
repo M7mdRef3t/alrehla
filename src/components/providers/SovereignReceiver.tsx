@@ -1,9 +1,6 @@
 'use client';
 
-<<<<<<< HEAD
-=======
 /* eslint-disable @typescript-eslint/no-explicit-any */
->>>>>>> feat/sovereign-final-stabilization
 import { useEffect } from 'react';
 import { supabase } from '@/services/supabaseClient';
 import { consciousnessTheme } from '@/ai/consciousnessThemeEngine';
@@ -52,13 +49,8 @@ export function SovereignReceiver() {
 
     return () => {
       // Cleanup on unmount, but only if we actually joined to prevent WS warnings
-<<<<<<< HEAD
-      if (isSubscribed) {
-        supabase?.removeChannel(channel);
-=======
       if (isSubscribed && supabase) {
         supabase.removeChannel(channel);
->>>>>>> feat/sovereign-final-stabilization
       }
     };
   }, []);

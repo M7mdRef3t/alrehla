@@ -568,14 +568,11 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
     showToast("تم نسخ الـ Prompt بنجاح لـ Gemini 🧠✨", true);
   };
 
-<<<<<<< HEAD
-=======
   const handleVgiSafeguard = () => {
     showToast("جاري إعادة معايرة بوابات العبور وتنشيط نداء المسافرين... 🧭", true);
     setTimeout(() => load(true), 1500);
   };
 
->>>>>>> feat/sovereign-final-stabilization
   return (
     <div className="space-y-6 text-slate-200 max-w-5xl mx-auto" dir="rtl">
       {/* Toast */}
@@ -590,8 +587,6 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
       )}
       </AnimatePresence>
 
-<<<<<<< HEAD
-=======
       {/* VGI Breach Safeguard */}
       {vgiRate > 25 && (
         <motion.div 
@@ -619,7 +614,6 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         </motion.div>
       )}
 
->>>>>>> feat/sovereign-final-stabilization
       {/* Header */}
       <header className="flex flex-col md:flex-row items-center justify-between mb-8 bg-slate-900/30 p-6 rounded-3xl border border-indigo-500/10 shadow-[0_0_40px_rgba(99,102,241,0.05)] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full pointer-events-none" />
@@ -631,11 +625,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
           </div>
           <div>
             <h2 className="text-3xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-l from-indigo-400 to-purple-400 flex items-center gap-2">
-<<<<<<< HEAD
-              {"مصفوفة الامتداد والنداء"}
-=======
               {"بوابات الرحلة (النداء السِيادي)"}
->>>>>>> feat/sovereign-final-stabilization
               <AdminTooltip content={"مركز القيادة الفوقي لإطلاق نداء الملاذ للأرواح المدعوة خارج النظام. يمكنك بث الترددات الحيوية من هنا، ومراقبة الـ Resonance."} position="bottom" />
             </h2>
             <div className="flex items-center gap-2 mt-1">
@@ -730,11 +720,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
             className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] font-black uppercase tracking-widest hover:bg-purple-500/20 transition-all active:scale-95"
           >
             <Repeat className="w-3.5 h-3.5" />
-<<<<<<< HEAD
-            {"محاكاة Lead"}
-=======
             {"محاكاة مسافر جديد"}
->>>>>>> feat/sovereign-final-stabilization
           </button>
 
           <button 
@@ -750,11 +736,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
           <button onClick={() => load(true)} disabled={loading}
             className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-black uppercase tracking-widest hover:bg-indigo-500/20 hover:text-indigo-200 transition-all active:scale-95 disabled:opacity-50 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-<<<<<<< HEAD
-            {"تحديث الرادار"}
-=======
             {"تنشيط نبض الرحلة"}
->>>>>>> feat/sovereign-final-stabilization
           </button>
         </div>
       </div>
@@ -777,15 +759,9 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
 
       {/* Financial ROI Dashboard (New) */}
       <CollapsibleSection
-<<<<<<< HEAD
-        title={"التحليل المالي والعائد"}
-        icon={<DollarSign className="w-5 h-5 text-indigo-400" />}
-        subtitle={"الذكاء المالي الفوقي لمراقبة كفاءة الإنفاق والتحويل النقدي."}
-=======
         title={"اقتصاديات الرحلة والعبور"}
         icon={<DollarSign className="w-5 h-5 text-indigo-400" />}
         subtitle={"الذكاء المالي الفوقي لمراقبة كفاءة النداء وتحويل الطاقة (ROI)."}
->>>>>>> feat/sovereign-final-stabilization
         defaultExpanded={false}
         headerColors="border-indigo-500/20 bg-indigo-500/5 text-indigo-300"
       >
@@ -835,15 +811,11 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
                <div className="absolute top-0 right-0 p-8 opacity-10">
                  <PieChart className="w-24 h-24 text-indigo-400" />
                </div>
-<<<<<<< HEAD
-               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">إجمالي الإيرادات المرصودة</p>
-=======
                <h4 className="text-[10px] font-black text-indigo-400/60 uppercase tracking-[0.2em] mb-1">كفاءة النداء (ROI)</h4>
                <p className="text-2xl font-black text-emerald-400 font-mono tracking-tighter">
                  {(growthMetrics?.roi ?? 0).toFixed(1)}%
                </p>
                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mt-4 mb-2">إجمالي الإيرادات المرصودة</p>
->>>>>>> feat/sovereign-final-stabilization
                <h3 className="text-4xl font-black text-white tabular-nums tracking-tighter">
                  {(stats?.totalRevenue ?? 0).toLocaleString("en-US")} ج.م
                </h3>

@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 /* eslint-disable @typescript-eslint/no-unused-vars */
->>>>>>> feat/sovereign-final-stabilization
 /**
  * Domain: Notifications — Service
  *

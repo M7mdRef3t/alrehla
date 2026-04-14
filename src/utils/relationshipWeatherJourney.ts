@@ -131,14 +131,6 @@ export function getRelationshipWeatherNextStage(
 
 export function launchRelationshipWeatherFlow(
   path: JourneyPath | null,
-<<<<<<< HEAD
-  weatherContext: unknown,
-  source = "weather_v3"
-) {
-  if (typeof window === "undefined") return;
-
-  window.sessionStorage.setItem("weather_context", JSON.stringify(weatherContext));
-=======
   weatherContext: any,
   source = "weather_v3",
   clientEventId?: string
@@ -152,7 +144,6 @@ export function launchRelationshipWeatherFlow(
   };
 
   window.sessionStorage.setItem("weather_context", JSON.stringify(enhancedContext));
->>>>>>> feat/sovereign-final-stabilization
 
   const appTarget = getRelationshipWeatherAppTarget(path);
   if (appTarget) {

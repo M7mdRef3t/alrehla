@@ -52,11 +52,6 @@ export interface DomainEvents {
   "gamification:achievement-unlocked": { userId: string; achievementId: string };
   "gamification:streak-updated": { userId: string; streak: number };
 
-<<<<<<< HEAD
-  // Analytics
-  "analytics:event": { name: string; properties?: Record<string, unknown> };
-
-=======
   // ❄️ Tajmeed (Freeze Gamification)
   "tajmeed:achievement-unlocked": { achievements: string[]; trigger: string };
   "tajmeed:frost-earned": { amount: number; reason: string; nodeId?: string };
@@ -83,8 +78,6 @@ export interface DomainEvents {
   "masarat:quick_path_used": { situation: string };
   "masarat:path_resolved": { pathId: string };
   "masarat:path_activated": { pathId: string };
-
->>>>>>> feat/sovereign-final-stabilization
   // Generic
   [key: `custom:${string}`]: unknown;
 }

@@ -1,9 +1,6 @@
 'use client';
 
-<<<<<<< HEAD
-=======
 /* eslint-disable react-refresh/only-export-components */
->>>>>>> feat/sovereign-final-stabilization
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 

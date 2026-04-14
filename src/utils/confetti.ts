@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 /* eslint-disable @typescript-eslint/no-explicit-any */
->>>>>>> feat/sovereign-final-stabilization
 import confetti from 'canvas-confetti';
 
 export const triggerConfetti = (durationInSeconds = 2) => {

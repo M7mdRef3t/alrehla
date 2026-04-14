@@ -1,11 +1,7 @@
 export const landingCopy = {
   hook: "ابدأ من مساحة أوضح.. بدون ضجيج أو تعقيد.",
   titleLine1: "ارسم خريطتك",
-<<<<<<< HEAD
-  titleLine2: "بوضوح سيادي",
-=======
   titleLine2: "بوضوح تام",
->>>>>>> feat/sovereign-final-stabilization
   subtitle:
     "خذ خطوة واضحة اليوم. خلال دقائق قليلة، تتحول فوضى الأفكار إلى خريطة (Neural Map) بسيطة تساعدك ترى إحداثيات استنزافك وما يسندك.",
   secondaryCta: "استكشف الأفق",
@@ -13,21 +9,13 @@ export const landingCopy = {
     "خريطتك بوضوح",
     "نبضك اللحظي",
     "مساحة بدون أحكام",
-<<<<<<< HEAD
-    "سيادة على طاقتك",
-=======
     "إدارة حقيقية لطاقتك",
->>>>>>> feat/sovereign-final-stabilization
     "مرآة لحقيقتك"
   ],
   trustPoints: [
     "رصد راداري لطقس علاقاتك",
     "لا يوجد جدار تسجيل فوري",
-<<<<<<< HEAD
-    "بياناتك سيادية ومشفرة"
-=======
     "بياناتك خاصة تماماً ومشفرة"
->>>>>>> feat/sovereign-final-stabilization
   ],
   problemSection: {
     title: "بتحس إن الصورة مش كاملة؟",
@@ -40,11 +28,7 @@ export const landingCopy = {
   },
   howItWorks: {
     title: "إزاي بنتحرك؟",
-<<<<<<< HEAD
-    subtitle: "٣ محطات للوصول للسيادة",
-=======
     subtitle: "٣ محطات لاستعادة اتزانك",
->>>>>>> feat/sovereign-final-stabilization
     steps: [
       {
         title: "١. الرصد الأولي",
@@ -52,19 +36,11 @@ export const landingCopy = {
       },
       {
         title: "٢. تحليل الخريطة",
-<<<<<<< HEAD
-        body: "تصور بصري (Sovereign Map) يساعدك تشوف العلاقات بوضوح وتحدد أين تحتاج حدوداً أو حضوراً."
-      },
-      {
-        title: "٣. تفعيل الإحداثية",
-        body: "بياناتك تتحول لخطوة عملية واحدة، ترجع لك سيادتك على يومك وطاقتك بالتدريج."
-=======
         body: "تصور بصري (خريطة خاصة) يساعدك تشوف العلاقات بوضوح وتحدد أين تحتاج حدوداً أو حضوراً."
       },
       {
         title: "٣. تفعيل الإحداثية",
         body: "بياناتك تتحول لخطوة عملية واحدة، ترجع لك اتزانك على يومك وطاقتك بالتدريج."
->>>>>>> feat/sovereign-final-stabilization
       }
     ]
   },
@@ -73,11 +49,7 @@ export const landingCopy = {
   whatIsTitle: "عدساتك في الرحلة",
   whatIsPoints: [
     "الخريطة: شوف جغرافيا علاقاتك في نظرة واحدة",
-<<<<<<< HEAD
-    "الحدود: اعرف فين ترفع جدرانك بوضوح سيادي",
-=======
     "الحدود: اعرف فين ترفع جدرانك بوضوح تام",
->>>>>>> feat/sovereign-final-stabilization
     "الرفيق: بروتوكولات عملية بتساعدك تستعيد نبضك"
   ],
   toolsTitle: "طريقك للوضوح",
@@ -98,28 +70,16 @@ export const landingCopy = {
     magicFailed: "مقدرناش نبعت الرابط دلوقتي.",
     securedTitle: "أهلاً بك أيها المسافر",
     devBypassTitle: "بروتوكول الإدارة",
-<<<<<<< HEAD
-    devBypassHint: "صلاحيات الـ Sovereign مفعّلة."
-  },
-  trustTitle: "رفاق الرحلة",
-  trustCount: "١٠",
-  trustSuffix: "مسافر استعادوا سيادتهم",
-=======
     devBypassHint: "صلاحيات خاصة مفعّلة."
   },
   trustTitle: "رفاق الرحلة",
   trustCount: "١٠",
   trustSuffix: "مسافر استعادوا اتزانهم",
->>>>>>> feat/sovereign-final-stabilization
   testimonials: [
     {
       quote:
         "لأول مرة أشوف بوضوح إيه اللي بيسحب طاقتي. تجربة جراحية ومريحة جداً.",
-<<<<<<< HEAD
-      author: "مسافر — استعاد سيادته"
-=======
       author: "مسافر — استعاد اتزانه"
->>>>>>> feat/sovereign-final-stabilization
     },
     {
       quote:
@@ -129,10 +89,6 @@ export const landingCopy = {
   ],
   cta: "اسمح للرحلة بالبدء",
   ctaJourney: "شغّل مرآة الوعي",
-<<<<<<< HEAD
-  description: "Dawayir — نظام تشغيل لوعيك، فهم طقسك الداخلي واستعادة سيادتك"
-=======
   description: "Dawayir — نظام تشغيل لوعيك، فهم طقسك الداخلي واستعادة خصوصيتك"
->>>>>>> feat/sovereign-final-stabilization
 };
 

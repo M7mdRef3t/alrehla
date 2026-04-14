@@ -23,9 +23,6 @@ export type AppScreen =
   | "profile"
   | "sanctuary"
   | "life-os"
-<<<<<<< HEAD
-  | "protocol";
-=======
   | "dawayir"
   | "maraya"
   | "session-intake"
@@ -34,7 +31,6 @@ export type AppScreen =
   | "masarat"
   | "protocol"
   | "diagnosis";
->>>>>>> feat/sovereign-final-stabilization
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

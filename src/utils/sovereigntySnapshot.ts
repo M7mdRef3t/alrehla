@@ -53,11 +53,7 @@ export function deriveSovereigntySnapshot(input: SovereigntySnapshotInput): Sove
       headline: `قرارك الآن: اترك ${displayName} خارج المدار`,
       body: "العلاقة متوقفة الآن، والأولوية ليست إعادة فتحها بل تثبيت المسافة حتى يظهر سبب واضح وآمن.",
       ctaLabel: "أبقها في الأرشيف",
-<<<<<<< HEAD
-      sourceLabel: "قالب سيادي",
-=======
       sourceLabel: "نمط خاص",
->>>>>>> feat/sovereign-final-stabilization
       reasons: ["العلاقة مؤرشفة", "المساحة محمية"]
     };
   }
@@ -70,11 +66,7 @@ export function deriveSovereigntySnapshot(input: SovereigntySnapshotInput): Sove
         ? "لا تدخل نقاشًا جديدًا قبل إكمال خطوة الحماية المفتوحة. المطلوب الآن تقليل القرب لا تفسيره."
         : "ابدأ أول خطوة حماية قبل أي تواصل جديد. المطلوب الآن تقليل القرب لا تفسيره.",
       ctaLabel: missionStarted ? "كمّل خطوة الحماية" : "ابدأ خطوة الحماية",
-<<<<<<< HEAD
-      sourceLabel: "قالب سيادي",
-=======
       sourceLabel: "نمط خاص",
->>>>>>> feat/sovereign-final-stabilization
       reasons: [
         isEmotionalPrisoner ? "تعلق عاطفي قائم" : "المدار أحمر",
         ...(energyReason ? [energyReason] : []),
@@ -91,11 +83,7 @@ export function deriveSovereigntySnapshot(input: SovereigntySnapshotInput): Sove
         ? "كمّل الحد الناعم المفتوح الآن. الهدف هو تقليل الاحتكاك قبل أن يتحول الضغط إلى استنزاف."
         : "ابدأ بحد ناعم واحد فقط. الهدف هو تقليل الاحتكاك قبل أن يتحول الضغط إلى استنزاف.",
       ctaLabel: missionStarted ? "كمّل الحد الناعم" : "ابدأ حدًا ناعمًا",
-<<<<<<< HEAD
-      sourceLabel: "قالب سيادي",
-=======
       sourceLabel: "نمط خاص",
->>>>>>> feat/sovereign-final-stabilization
       reasons: [
         "المدار أصفر",
         ...(energyReason ? [energyReason] : []),
@@ -110,11 +98,7 @@ export function deriveSovereigntySnapshot(input: SovereigntySnapshotInput): Sove
       headline: `قرارك الآن: استخدم ${displayName} كمرسى آمن`,
       body: "العلاقة مشحونة بأمان حقيقي. اسمح لها أن تدعمك بدل ما تفتح مدارًا أكثر ضغطًا.",
       ctaLabel: "حافظ على القرب الآمن",
-<<<<<<< HEAD
-      sourceLabel: "قالب سيادي",
-=======
       sourceLabel: "نمط خاص",
->>>>>>> feat/sovereign-final-stabilization
       reasons: ["المدار أخضر", "بطارية طوارئ بشرية", ...(energyReason ? [energyReason] : [])].slice(0, 3)
     };
   }
@@ -126,11 +110,7 @@ export function deriveSovereigntySnapshot(input: SovereigntySnapshotInput): Sove
       ? "العلاقة مستقرة. كمّل ما بدأته بدون مبالغة في الفتح أو الانسحاب."
       : "العلاقة مستقرة. المطلوب فقط الحفاظ على المسافة الصحية كما هي.",
     ctaLabel: missionStarted ? "كمّل التثبيت" : "ثبّت هذا المدار",
-<<<<<<< HEAD
-    sourceLabel: "قالب سيادي",
-=======
     sourceLabel: "قالب خاص",
->>>>>>> feat/sovereign-final-stabilization
     reasons: ["المدار أخضر", ...(energyReason ? [energyReason] : ["الطاقة مستقرة"])].slice(0, 3)
   };
 }

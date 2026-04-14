@@ -110,22 +110,14 @@ async function enqueueOutreach(
         step: s.step,
         status: "pending",
         scheduled_at: new Date(now + s.delay).toISOString(),
-<<<<<<< HEAD
-        payload: { step: s.step, subject: s.subject, source, utm } // Simplified for code brevity here, but usually carries HTML
-=======
         payload: { step: s.step, subject: s.subject, source, utm }
->>>>>>> feat/sovereign-final-stabilization
       });
     });
   }
 
   if (phone) {
     rows.push({
-<<<<<<< HEAD
-      lead_email: email || `phone_${phone}`,
-=======
       lead_email: email || null,
->>>>>>> feat/sovereign-final-stabilization
       lead_id: leadId,
       channel: "whatsapp",
       step: 4,
@@ -172,8 +164,6 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
   }
   const supabaseAdmin = getRequiredSupabaseAdminClient();
 
-<<<<<<< HEAD
-=======
   // P0-2: Check if profile already exists by email to link it
   let existingProfileId = null;
   if (input.email) {
@@ -185,7 +175,6 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     if (profile) existingProfileId = profile.id;
   }
 
->>>>>>> feat/sovereign-final-stabilization
   // ATOMIC UPSERT VIA RPC (Hardening V2)
   const { data, error } = await supabaseAdmin.rpc("upsert_marketing_lead_v2", {
     p_email: input.email || null,
@@ -194,11 +183,7 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     p_name: input.name || null,
     p_source: input.source || "landing",
     p_source_type: input.sourceType || "website",
-<<<<<<< HEAD
-    p_utm: input.utm || {},
-=======
     p_utm: (input.utm && typeof input.utm === 'object') ? input.utm : {},
->>>>>>> feat/sovereign-final-stabilization
     p_note: input.note || "",
     p_status: input.status || "new",
     p_intent: input.intent || null,
@@ -215,19 +200,6 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     throw new Error(`upsert_rpc_failed: ${error.message || String(error)}`);
   }
 
-<<<<<<< HEAD
-  const result = Array.isArray(data) ? data[0] : (data as any);
-  const storedLeadId = result.lead_id;
-  const isNew = result.is_new;
-  const conflictDetected = result.conflict;
-
-  if (storedLeadId) {
-    enqueueOutreachAsync(input.email || null, input.source, input.utm, storedLeadId, input.phoneNormalized);
-
-    // Validate WhatsApp if phone is present and it's a NEW lead
-    if (input.phoneNormalized && isNew) {
-      void WhatsAppCloudService.validateNumber(input.phoneNormalized, storedLeadId).catch((err) => {
-=======
   // Handle table return from RPC
   const result = Array.isArray(data) ? data[0] : (data as any) || {};
   const internalId = result.internal_id;
@@ -251,18 +223,13 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     // WhatsApp events use INTERNAL id for FK constraints
     if (input.phoneNormalized && isNew) {
       void WhatsAppCloudService.validateNumber(input.phoneNormalized, internalId).catch((err) => {
->>>>>>> feat/sovereign-final-stabilization
         console.error("[marketing/lead] whatsapp_validation_trigger_failed:", err);
       });
     }
   }
 
   return {
-<<<<<<< HEAD
-    lead_id: storedLeadId!,
-=======
     lead_id: publicLeadId!,
->>>>>>> feat/sovereign-final-stabilization
     email: input.email || null,
     phone_normalized: input.phoneNormalized || null,
     is_new: isNew,
@@ -379,10 +346,6 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
         }
       });
 
-<<<<<<< HEAD
-      return NextResponse.json({
-        ok: true,
-=======
       // Determine the friendly message based on result
       let message = "تم تسجيل البيانات بنجاح ✅";
       if (result.is_new) {
@@ -396,18 +359,13 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
       return NextResponse.json({
         ok: true,
         message,
->>>>>>> feat/sovereign-final-stabilization
         lead: { 
           email: result.email, 
           phone: result.phone_normalized, 
           source: input.source, 
           lead_id: result.lead_id, 
-<<<<<<< HEAD
-          conflict: result.conflict 
-=======
           conflict: result.conflict,
           is_new: result.is_new
->>>>>>> feat/sovereign-final-stabilization
         }
       });
     }

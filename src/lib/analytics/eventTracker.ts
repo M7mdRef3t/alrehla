@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 /* eslint-disable @typescript-eslint/no-explicit-any */
->>>>>>> feat/sovereign-final-stabilization
 import { logger } from "@/services/logger";
 import { v4 as uuidv4 } from 'uuid';
 import * as pixel from './metaPixel';

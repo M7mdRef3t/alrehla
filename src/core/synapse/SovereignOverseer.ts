@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 /* eslint-disable no-console */
->>>>>>> feat/sovereign-final-stabilization
 /**
  * Sovereign Overseer — الحاكم الذكي / الناصية 👁️
  * ===================================================

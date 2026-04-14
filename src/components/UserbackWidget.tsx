@@ -1,9 +1,6 @@
 'use client';
 
-<<<<<<< HEAD
-=======
 /* eslint-disable no-console */
->>>>>>> feat/sovereign-final-stabilization
 import { useEffect } from 'react';
 import Userback from '@userback/widget';
 import { runtimeEnv } from '@/config/runtimeEnv';

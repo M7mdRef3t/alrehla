@@ -131,11 +131,7 @@ export const RecoveryWidget: FC = () => {
                                                 task.type === 'mirror_flash' ? 'text-rose-300 bg-rose-500/10 border-rose-500/20' : 'text-amber-300 bg-amber-500/10 border-amber-500/20'
                                                 }`}>
                                                 {task.type === 'pressure_release' ? 'فك ضغط نفسي' :
-<<<<<<< HEAD
-                                                    task.type === 'mirror_flash' ? 'مواجهة واقع' : 'قرار سيادي'}
-=======
                                                     task.type === 'mirror_flash' ? 'مواجهة واقع' : 'قرار نهائي'}
->>>>>>> feat/sovereign-final-stabilization
                                             </span>
                                             {isCompleted && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
                                         </div>
@@ -170,11 +166,7 @@ export const RecoveryWidget: FC = () => {
                                 onClick={handleDismiss}
                                 className="w-full py-4 rounded-2xl border border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 font-black uppercase tracking-widest text-sm transition-all shadow-inner"
                             >
-<<<<<<< HEAD
-                                إغلاق المسار (تم التعافي السيادي)
-=======
                                 إغلاق المسار (تم التعافي الكامل)
->>>>>>> feat/sovereign-final-stabilization
                             </button>
                         )}
                     </motion.div>

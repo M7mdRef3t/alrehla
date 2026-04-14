@@ -7,11 +7,7 @@ import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Send, Copy, Info, Search, CheckCircle2, ArrowLeft } from "lucide-react";
 import { getCablesByCategory, type CableCategory } from "@/services/diplomacyService";
-<<<<<<< HEAD
-import { trackEvent } from "@/services/analytics";
-=======
 import { analyticsService } from "@/domains/analytics";
->>>>>>> feat/sovereign-final-stabilization
 
 interface DiplomaticCablesProps {
   onBack?: () => void;
@@ -43,11 +39,7 @@ export const DiplomaticCables: React.FC<DiplomaticCablesProps> = ({ onBack }) =>
   const handleCopy = (id: string, content: string) => {
     navigator.clipboard.writeText(content);
     setCopiedId(id);
-<<<<<<< HEAD
-    trackEvent("cable_copied", { cableId: id });
-=======
     analyticsService.cable({ cableId: id });
->>>>>>> feat/sovereign-final-stabilization
     setTimeout(() => setCopiedId(null), 2000);
   };
 

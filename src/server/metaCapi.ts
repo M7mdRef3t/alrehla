@@ -2,11 +2,7 @@ import { logger } from "@/services/logger";
 import crypto from "crypto";
 
 export interface MetaCapiEventData {
-<<<<<<< HEAD
-  eventName: "Lead" | "ViewContent" | "Contact" | "CompleteRegistration";
-=======
   eventName: "Lead" | "ViewContent" | "Contact" | "CompleteRegistration" | "GateQualified";
->>>>>>> feat/sovereign-final-stabilization
   eventId: string; // lead_id for deduplication
   sourceUrl: string;
   userData: {
@@ -27,13 +23,8 @@ type MetaPayload = {
     event_source_url: string;
     action_source: "website";
     user_data: Record<string, string | undefined>;
-<<<<<<< HEAD
-    test_event_code?: string;
-  }>;
-=======
   }>;
   test_event_code?: string;
->>>>>>> feat/sovereign-final-stabilization
 };
 
 function hashData(value: string | null | undefined): string | undefined {
@@ -96,11 +87,7 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
 
   // Add Test Event Code if defined in environment variables
   if (process.env.META_TEST_EVENT_CODE) {
-<<<<<<< HEAD
-    payload.data[0].test_event_code = process.env.META_TEST_EVENT_CODE;
-=======
     payload.test_event_code = process.env.META_TEST_EVENT_CODE;
->>>>>>> feat/sovereign-final-stabilization
   }
 
   try {

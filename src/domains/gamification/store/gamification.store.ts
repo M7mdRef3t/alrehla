@@ -47,8 +47,6 @@ export interface PurchaseFeedback {
     itemId: string;
 }
 
-<<<<<<< HEAD
-=======
 // ─── Freeze Stats ─────────────────────────────────────
 export interface FreezeStats {
     totalFreezes: number;
@@ -70,7 +68,6 @@ const DEFAULT_FREEZE_STATS: FreezeStats = {
     activeComboCount: 0,
 };
 
->>>>>>> feat/sovereign-final-stabilization
 interface GamificationState {
     xp: number;
     level: number;
@@ -96,12 +93,6 @@ interface GamificationState {
 
     // Soft currency
     coins: number;
-<<<<<<< HEAD
-    addCoins: (amount: number, reason: string) => void;
-    spendCoins: (amount: number) => boolean;
-
-=======
-
     // ❄️ Tajmeed: Frost Points — العملة السيادية للتجميد
     frostPoints: number;
     freezeStats: FreezeStats;
@@ -119,8 +110,6 @@ interface GamificationState {
     recordUnfreeze: (nodeId: string) => number;
     recordBoundarySet: () => number;
     recordPatternDetected: () => number;
-
->>>>>>> feat/sovereign-final-stabilization
     addXP: (amount: number, reason: string) => void;
     awardBadge: (badgeId: string, name: string, description: string, icon: string) => void;
     recordActivity: () => { streakMaintained: boolean; xpLost: number };
@@ -163,15 +152,11 @@ export const useGamificationState = create<GamificationState>()(
             chronicles: [],
             lastNewChronicle: null,
 
-<<<<<<< HEAD
-=======
             // ❄️ Tajmeed defaults
             frostPoints: 0,
             freezeStats: { ...DEFAULT_FREEZE_STATS },
             seasonId: 'season_1',
             seasonXP: 0,
-
->>>>>>> feat/sovereign-final-stabilization
             addCoins: (amount, _reason) => {
                 set((state) => ({ coins: state.coins + amount }));
             },
@@ -188,8 +173,6 @@ export const useGamificationState = create<GamificationState>()(
                 return success;
             },
 
-<<<<<<< HEAD
-=======
             // ❄️ Frost Points Methods
             addFrostPoints: (amount, _reason) => {
                 set((state) => ({
@@ -298,8 +281,6 @@ export const useGamificationState = create<GamificationState>()(
                 get().addXP(20, 'رصد نمط مكرر 👁️');
                 return fpEarned;
             },
-
->>>>>>> feat/sovereign-final-stabilization
             addXP: (amount, _reason) => {
                 set((state) => {
                     const newXP = Math.max(0, state.xp + amount);
@@ -501,15 +482,11 @@ export const useGamificationState = create<GamificationState>()(
                 activeVoiceId: null,
                 lastPurchaseFeedback: null,
                 chronicles: [],
-<<<<<<< HEAD
-                lastNewChronicle: null
-=======
                 lastNewChronicle: null,
                 frostPoints: 0,
                 freezeStats: { ...DEFAULT_FREEZE_STATS },
                 seasonId: 'season_1',
                 seasonXP: 0,
->>>>>>> feat/sovereign-final-stabilization
             }),
 
         }),

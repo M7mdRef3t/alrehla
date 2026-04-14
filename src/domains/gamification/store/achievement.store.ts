@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 /* eslint-disable @typescript-eslint/no-unused-vars */
->>>>>>> feat/sovereign-final-stabilization
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { MapNode } from "@/modules/map/mapTypes";

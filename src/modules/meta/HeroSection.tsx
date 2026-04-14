@@ -945,7 +945,7 @@ const techEase = [0, 0.7, 0.1, 1] as [number, number, number, number];
 
 const fadeUp = {
   hidden: { opacity: 0, clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", y: 15 },
-  visible: { opacity: 1, clipPath: "polygon(-100% -100%, 200% -100%, 200% 200%, -100% 200%)", y: 0, transition: { duration: 0.8, ease: techEase } },
+  visible: { opacity: 1, clipPath: "polygon(0 0%, 100% 0%, 100% 100%, 0% 100%)", y: 0, transition: { duration: 0.65, ease: techEase } },
 };
 
 const stagger = {
@@ -1001,9 +1001,17 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   const springX = useSpring(mouseX, { stiffness: 120, damping: 50, mass: 1.5 });
   const springY = useSpring(mouseY, { stiffness: 120, damping: 50, mass: 1.5 });
 
-  const handleMouseMove = useCallback((_e: MouseEvent) => {
-    // Animation disabled to prevent device lag
-  }, []);
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (reduceMotion) return;
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    // Discretize mapping for robotic snap feeling
+    const rawX = (e.clientX - cx) / 90;
+    const rawY = (e.clientY - cy) / 90;
+    const step = 0.5;
+    mouseX.set(Math.round(rawX / step) * step);
+    mouseY.set(Math.round(rawY / step) * step);
+  }, [reduceMotion, mouseX, mouseY]);
 
   useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove);
@@ -1268,9 +1276,14 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const globalMouseX = useMotionValue(0);
   const globalMouseY = useMotionValue(0);
 
-  const handleGlobalMouseMove = useCallback((_e: React.MouseEvent) => {
-    // Animation disabled to prevent device lag
-  }, []);
+  const handleGlobalMouseMove = useCallback((e: React.MouseEvent) => {
+    if (reduceMotion) return;
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    // 5x more sensitive for dramatic architectural tracking
+    globalMouseX.set((e.clientX - cx) / 20);
+    globalMouseY.set((e.clientY - cy) / 20);
+  }, [reduceMotion, globalMouseX, globalMouseY]);
 
   // Layer 1: Foreground Grid (Fastest response, moves opposite to mouse context)
   const gridX = useSpring(useTransform(globalMouseX, x => -x * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
@@ -1319,9 +1332,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
   }, []);
 
   const warpLines = useMemo(() => (
-    Array.from({ length: 20 }, (_, i) => ({
+    Array.from({ length: 40 }, (_, i) => ({
       id: `warp-line-${i}`,
-      top: `${(i / 20) * 110 - 5}%`,
+      top: `${(i / 40) * 110 - 5}%`,
       width: `${15 + Math.random() * 45}%`,
       opacity: 0.15 + Math.random() * 0.55,
       delay: Math.random() * 0.4,

@@ -74,8 +74,6 @@ export interface TrackedEvent {
   params?: AnalyticsOptionalParams;
   clientEventId?: string;
 }
-<<<<<<< HEAD
-=======
 
 export interface InternalTelemetryContext {
   pathname?: string | null;
@@ -129,4 +127,3 @@ export interface WhatsappTelemetryPayload {
 export interface CableTelemetryPayload {
   cableId?: string;
 }
->>>>>>> feat/sovereign-final-stabilization

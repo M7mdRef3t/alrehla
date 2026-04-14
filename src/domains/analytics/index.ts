@@ -17,11 +17,6 @@ export type {
   AnalyticsConsent,
   AnalyticsDiagnostics,
   TrackedEvent,
-<<<<<<< HEAD
-} from "./types";
-
-export { AnalyticsEvents } from "./types";
-=======
   InternalTelemetryContext,
   PageViewTelemetryPayload,
   JourneyFlowTelemetryPayload,
@@ -46,7 +41,6 @@ export {
   buildWhatsappEnvelope,
   buildCableEnvelope,
 } from "./contracts";
->>>>>>> feat/sovereign-final-stabilization
 
 // ─── Services ──────────────────────────────────────────
 export { analyticsService } from "./services/analytics.service";

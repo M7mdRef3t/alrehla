@@ -16,20 +16,12 @@ const DICTIONARY_TERMS = [
   },
   {
     id: "sovereign",
-<<<<<<< HEAD
-    title: "Sovereign (السيادة / التحكم السيادي)",
-=======
     title: "Private (التحكم الخاص)",
->>>>>>> feat/sovereign-final-stabilization
     icon: <Shield className="w-6 h-6 text-amber-400" />,
     description: "مؤشر ونظام يتحكم في استقلالية المستخدم والنظام.",
     points: [
       "مؤشر السيادة الشخصية (Sovereignty Score): يقيس نضج وعي المستخدم وتحرره من الضغوط.",
-<<<<<<< HEAD
-      "نظام التحكم السيادي (Sovereign Control): واجهة تحكم متقدمة تمنح المالك استقلالية كاملة في اتخاذ القرارات من خلال Sovereign Orchestrator."
-=======
       "نظام التحكم الخاص (Private Control): واجهة تحكم متقدمة تمنح المالك استقلالية كاملة في اتخاذ القرارات من خلال رحلته."
->>>>>>> feat/sovereign-final-stabilization
     ]
   },
   {
@@ -63,11 +55,7 @@ export const DictionaryPanel: FC = () => {
         </div>
         <div>
           <h1 className="text-2xl font-black text-white">قاموس الرحلة</h1>
-<<<<<<< HEAD
-          <p className="text-sm text-slate-400 font-bold mt-1">توضيح المصطلحات والمفاهيم السيادية المركزية للمنصة</p>
-=======
           <p className="text-sm text-slate-400 font-bold mt-1">توضيح المصطلحات والمفاهيم الخاصة المركزية للمنصة</p>
->>>>>>> feat/sovereign-final-stabilization
         </div>
       </div>
 

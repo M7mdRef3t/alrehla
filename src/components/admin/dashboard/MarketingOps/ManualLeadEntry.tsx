@@ -20,20 +20,6 @@ interface ManualLeadEntryProps {
 }
 
 const BOOKMARKLET_CODE = `javascript:(function(){
-<<<<<<< HEAD
-  try {
-    var rawText = document.querySelector('#main header') ? document.querySelector('#main header').innerText : '';
-    var match = rawText.replace(/[\\s-]/g,'').match(/\\+?\\d{10,15}/);
-    var defaultPhone = match ? match[0] : '';
-    var url = 'https://www.alrehla.app/admin?tab=marketing-ops&add_lead_flag=1&phone=' + encodeURIComponent(defaultPhone);
-    window.open(url, 'DawayirLead', 'width=500,height=700,left='+(screen.width-500)/2+',top='+(screen.height-700)/2);
-  } catch(e) {
-    var url = 'https://www.alrehla.app/admin?tab=marketing-ops&add_lead_flag=1';
-    window.open(url, 'DawayirLead', 'width=500,height=700');
-  }
-})();`.trim();
-
-=======
   const API_URL = 'https://www.alrehla.app/api/marketing/lead';
   const showToast = (msg, type = 'loading') => {
     let toast = document.getElementById('dawayir-hunter-toast');
@@ -88,7 +74,6 @@ const BOOKMARKLET_CODE = `javascript:(function(){
 })();`.trim();
 
 
->>>>>>> feat/sovereign-final-stabilization
 export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
   const [loading, setLoading] = useState(false);
   const [phone, setPhone] = useState("");

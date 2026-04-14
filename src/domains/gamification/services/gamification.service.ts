@@ -7,10 +7,7 @@
 
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { eventBus } from "@/shared/events";
-<<<<<<< HEAD
-=======
 import { freezeRewardsService } from "./freezeRewards";
->>>>>>> feat/sovereign-final-stabilization
 import type { GamificationProfile, LevelProgress } from "../types";
 
 export const gamificationService = {
@@ -56,8 +53,6 @@ export const gamificationService = {
     return useGamificationState.getState().spendCoins(amount);
   },
 
-<<<<<<< HEAD
-=======
   // ─── Frost Points ───────────────────────────────
 
   addFrostPoints(amount: number, reason: string): void {
@@ -94,7 +89,6 @@ export const gamificationService = {
     return freezeRewardsService.getFreezeProfile();
   },
 
->>>>>>> feat/sovereign-final-stabilization
   // ─── Badges ─────────────────────────────────────
 
   awardBadge(
@@ -149,9 +143,6 @@ export const gamificationService = {
     useGamificationState.getState().checkAndResetQuests();
   },
 
-<<<<<<< HEAD
-  // ─── Reset ──────────────────────────────────────
-=======
   // ─── Season ──────────────────────────────────
 
   getSeasonProgress() {
@@ -160,7 +151,6 @@ export const gamificationService = {
   },
 
   // ─── Reset ──────────────────────────────────
->>>>>>> feat/sovereign-final-stabilization
 
   resetAll(): void {
     useGamificationState.getState().resetAll();

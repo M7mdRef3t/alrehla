@@ -1,9 +1,6 @@
 "use client";
 
-<<<<<<< HEAD
-=======
 /* eslint-disable no-console */
->>>>>>> feat/sovereign-final-stabilization
 import { useEffect } from "react";
 import { useGamification } from "@/domains/gamification";
 

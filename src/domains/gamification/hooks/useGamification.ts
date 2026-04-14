@@ -22,15 +22,12 @@ export function useGamification() {
   const purchasedItemIds = useGamificationState((s) => s.purchasedItemIds);
   const activeThemeId = useGamificationState((s) => s.activeThemeId);
   const activeVoiceId = useGamificationState((s) => s.activeVoiceId);
-<<<<<<< HEAD
-=======
 
   // ❄️ Tajmeed
   const frostPoints = useGamificationState((s) => s.frostPoints);
   const freezeStats = useGamificationState((s) => s.freezeStats);
   const seasonXP = useGamificationState((s) => s.seasonXP);
   const seasonId = useGamificationState((s) => s.seasonId);
->>>>>>> feat/sovereign-final-stabilization
   const dailyCompletedKeys = useGamificationState((s) => s.dailyCompletedKeys);
 
   // Computed
@@ -53,15 +50,12 @@ export function useGamification() {
     dailyCompletedKeys,
     levelProgress,
 
-<<<<<<< HEAD
-=======
     // ❄️ Tajmeed
     frostPoints,
     freezeStats,
     seasonXP,
     seasonId,
 
->>>>>>> feat/sovereign-final-stabilization
     // Actions via service
     addXP: gamificationService.addXP.bind(gamificationService),
     addCoins: gamificationService.addCoins.bind(gamificationService),
@@ -74,8 +68,6 @@ export function useGamification() {
     completeDailyQuest: gamificationService.completeDailyQuest.bind(gamificationService),
     checkAndResetQuests: gamificationService.checkAndResetQuests.bind(gamificationService),
 
-<<<<<<< HEAD
-=======
     // ❄️ Freeze Rewards
     rewardFreeze: gamificationService.rewardFreeze.bind(gamificationService),
     rewardUnfreeze: gamificationService.rewardUnfreeze.bind(gamificationService),
@@ -85,7 +77,6 @@ export function useGamification() {
     addFrostPoints: gamificationService.addFrostPoints.bind(gamificationService),
     spendFrostPoints: gamificationService.spendFrostPoints.bind(gamificationService),
 
->>>>>>> feat/sovereign-final-stabilization
     // State passthrough (less common)
     clearLevelUpState: useGamificationState.getState().clearLevelUpState,
     clearChronicleState: useGamificationState.getState().clearChronicleState,

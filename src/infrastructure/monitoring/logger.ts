@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 /* eslint-disable no-console */
->>>>>>> feat/sovereign-final-stabilization
 /**
  * Infrastructure — Monitoring (Logger)
  * 

@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 /* eslint-disable @typescript-eslint/no-unused-vars */
->>>>>>> feat/sovereign-final-stabilization
 /**
  * Domain: Analytics — Core Tracking Service
  *
@@ -31,12 +28,6 @@ import {
   trackOnboardingCompleted,
   trackAddPaymentInfo,
   AnalyticsEvents,
-<<<<<<< HEAD
-} from "@/services/analytics";
-import type { AnalyticsOptionalParams, AnalyticsDiagnostics } from "../types";
-
-export const analyticsService = {
-=======
   generateUUID,
 } from "@/services/analytics";
 import type {
@@ -141,7 +132,6 @@ export interface AnalyticsService {
 }
 
 export const analyticsService: AnalyticsService = {
->>>>>>> feat/sovereign-final-stabilization
   // ─── Initialization ────────────────────────────────
 
   /**
@@ -178,8 +168,6 @@ export const analyticsService: AnalyticsService = {
     return trackIdentityLinked(userId);
   },
 
-<<<<<<< HEAD
-=======
   cta(params?: CtaTelemetryPayload): void {
     const envelope = buildCtaEnvelope({
       client_event_id: generateUUID(),
@@ -254,8 +242,6 @@ export const analyticsService: AnalyticsService = {
       trackEvent("cable_copied", envelope.payload as AnalyticsOptionalParams);
     }
   },
-
->>>>>>> feat/sovereign-final-stabilization
   // ─── Page Tracking ────────────────────────────────
 
   trackPage(name: string): void {
@@ -271,10 +257,7 @@ export const analyticsService: AnalyticsService = {
   /**
    * تسجيل حدث عام — مع GA4 + Internal Telemetry
    */
-<<<<<<< HEAD
-=======
   // @ts-expect-error - Overload assignment compatibility with union types is complex
->>>>>>> feat/sovereign-final-stabilization
   track(
     eventName: string,
     params?: AnalyticsOptionalParams

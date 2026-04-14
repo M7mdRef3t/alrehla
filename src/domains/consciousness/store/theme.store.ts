@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
->>>>>>> feat/sovereign-final-stabilization
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { getDocumentOrNull, getWindowOrNull } from "@/services/clientRuntime";

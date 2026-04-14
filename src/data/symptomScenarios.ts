@@ -820,11 +820,7 @@ export const symptomScenariosDatabase: TrainingScenario[] = [
     symptomId: "lose_identity",
     title: "استعادة البوصلة الشخصية",
     context: "تكتشف أن نظامك التشغيلي بالكامل أصبح يدور حول 'احتياجات الآخرين' لدرجة أنك نسيت هوايتك القديمة أو ما يحبذه عقلك المنفرد.",
-<<<<<<< HEAD
-    situation: "ما هي الحركة 'السيادية' لاستعادة هويتك؟",
-=======
     situation: "ما هي 'الحركة الخاصة' لاستعادة هويتك؟",
->>>>>>> feat/sovereign-final-stabilization
     targetRoles: ["all"],
     targetZones: ["red", "yellow"],
     options: [
@@ -833,11 +829,7 @@ export const symptomScenariosDatabase: TrainingScenario[] = [
         text: "تخصيص ساعة واحدة يومياً لأنشطة 'فردية بحتة' دون استئذان أحد",
         isCorrect: true,
         feedback: "✅ استعادة السيادة",
-<<<<<<< HEAD
-        explanation: "الهوية تُبنى في العزلة والأنشطة الفردية. حماية وقتك الخاص هو حق سيادي غير قابل للتفاوض."
-=======
         explanation: "الهوية تُبنى في العزلة والأنشطة الفردية. حماية وقتك الخاص هو حق أصيل غير قابل للتفاوض."
->>>>>>> feat/sovereign-final-stabilization
       },
       {
         id: "id-1-b",
@@ -906,11 +898,7 @@ export const symptomScenariosDatabase: TrainingScenario[] = [
     symptomId: "interference",
     title: "التطهير الاستراتيجي للدائرة الخضراء",
     context: "استشعر جارفيس تداخلاً كهرومغناطيسياً حاداً: اثنان من المقربين في مدارك الأخضر يستنزفان طاقتك في نفس الوقت بصراعاتهما المتداخلة.",
-<<<<<<< HEAD
-    situation: "ما هي المناورة 'السيادية' الأنسب هنا؟",
-=======
     situation: "ما هي 'المناورة الحاسمة' الأنسب هنا؟",
->>>>>>> feat/sovereign-final-stabilization
     targetRoles: ["all"],
     targetZones: ["green"],
     options: [
@@ -925,11 +913,7 @@ export const symptomScenariosDatabase: TrainingScenario[] = [
         id: "elite-1-b",
         text: "إعلان 'بروتوكول الصمت' ونقل أحدهما مؤقتاً للمدار الأصفر حتى يستقر جهازهما عصبي",
         isCorrect: true,
-<<<<<<< HEAD
-        feedback: "✅ مناورة سيادية",
-=======
         feedback: "✅ مناورة حاسمة",
->>>>>>> feat/sovereign-final-stabilization
         explanation: "حماية النواة (الدائرة الخضراء) تتطلب جراحاً ماهراً. تقليل الكثافة في منطقة الخطر هو القرار الاستراتيجي الأعلى."
       }
     ]
@@ -948,11 +932,7 @@ export const symptomScenariosDatabase: TrainingScenario[] = [
         text: "تفعيل 'البرقية الدبلوماسية' للصد البارد دون فتح جبهات نقاش",
         isCorrect: true,
         feedback: "✅ دفاع محكم",
-<<<<<<< HEAD
-        explanation: "الثبات على الحدود أمام الاستعطاف هو أصعب اختبار للقوة السيادية. الرد المبرمج يمنع تسرب الطاقة."
-=======
         explanation: "الثبات على الحدود أمام الاستعطاف هو أصعب اختبار للقوة الذاتية. الرد المبرمج يمنع تسرب الطاقة."
->>>>>>> feat/sovereign-final-stabilization
       },
       {
         id: "elite-2-b",

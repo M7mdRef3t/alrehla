@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-export type StoreItemType = "theme" | "voice" | "badge" | "feature";
-=======
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type StoreItemType = "theme" | "voice" | "badge" | "feature" | "frost_token" | "border";
->>>>>>> feat/sovereign-final-stabilization
 
 export interface StoreItem {
   id: string;
@@ -90,8 +86,6 @@ export const STORE_ITEMS: StoreItem[] = [
        tone: "military",
        speed: 1.1
     }
-<<<<<<< HEAD
-=======
   },
 
   // --- ❄️ Tajmeed: Frost Tokens ---
@@ -168,6 +162,5 @@ export const STORE_ITEMS: StoreItem[] = [
       tone: "strategic",
       speed: 0.95
     }
->>>>>>> feat/sovereign-final-stabilization
   }
 ];
