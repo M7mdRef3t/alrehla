@@ -26,6 +26,7 @@ export type AppScreen =
   | "dawayir"
   | "maraya"
   | "session-intake"
+  | "session-console"
   | "atmosfera"
   | "masarat"
   | "protocol";

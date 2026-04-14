@@ -550,6 +550,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   color="#60a5fa"
                 />
                 <SidebarItem
+                  label="لوحة الكوتش"
+                  icon={<MessageCircle className="w-4 h-4" />}
+                  onClick={() => pushUrl("/#session-console", { screen: "session-console" })}
+                  color="#14b8a6"
+                />
+                <SidebarItem
                   label="أجواء الرحلة"
                   icon={<Wind className="w-4 h-4" />}
                   onClick={() => pushUrl("/#atmosfera", { screen: "atmosfera" })}
@@ -671,6 +677,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     icon={<CalendarDays className="w-5 h-5" />}
                     onClick={() => { pushUrl("/#session-intake", { screen: "session-intake" }); handleClose(); }}
                     color="#60a5fa"
+                  />
+                  <SidebarItem
+                    label="لوحة الكوتش"
+                    icon={<MessageCircle className="w-5 h-5" />}
+                    onClick={() => { pushUrl("/#session-console", { screen: "session-console" }); handleClose(); }}
+                    color="#14b8a6"
                   />
                   <SidebarItem
                     label="أجواء الرحلة"

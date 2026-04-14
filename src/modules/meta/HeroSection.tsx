@@ -761,7 +761,6 @@ const HERO_STYLES = `
     box-shadow: 0 0 50px rgba(0,240,255,0.3), inset 0 2px 6px rgba(255,255,255,0.2);
     border-color: rgba(0,240,255,0.8);
     background: rgba(0,240,255,0.15);
-    transform: translateY(-4px) scale(1.02);
   }
 
   /* ── Secondary CTA ── */
@@ -946,7 +945,7 @@ const techEase = [0, 0.7, 0.1, 1] as [number, number, number, number];
 
 const fadeUp = {
   hidden: { opacity: 0, clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", y: 15 },
-  visible: { opacity: 1, clipPath: "polygon(-20% -20%, 120% -20%, 120% 120%, -20% 120%)", y: 0, transition: { duration: 0.65, ease: techEase } },
+  visible: { opacity: 1, clipPath: "polygon(-100% -100%, 200% -100%, 200% 200%, -100% 200%)", y: 0, transition: { duration: 0.8, ease: techEase } },
 };
 
 const stagger = {

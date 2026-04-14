@@ -110,14 +110,14 @@ async function enqueueOutreach(
         step: s.step,
         status: "pending",
         scheduled_at: new Date(now + s.delay).toISOString(),
-        payload: { step: s.step, subject: s.subject, source, utm } // Simplified for code brevity here, but usually carries HTML
+        payload: { step: s.step, subject: s.subject, source, utm }
       });
     });
   }
 
   if (phone) {
     rows.push({
-      lead_email: email || `phone_${phone}`,
+      lead_email: email || null,
       lead_id: leadId,
       channel: "whatsapp",
       step: 4,

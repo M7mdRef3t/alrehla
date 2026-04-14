@@ -148,8 +148,7 @@ export const MapInsightPanel: FC = () => {
     return (
         <div className="w-full max-w-[38rem] mx-auto mt-6 mb-8 px-4">
             <div
-                className="relative overflow-hidden rounded-2xl border border-white/10 backdrop-blur-xl"
-                style={{ background: "rgba(15,23,42,0.4)" }}
+                className="relative overflow-hidden rounded-2xl glass-dark border border-white/10 backdrop-blur-3xl shadow-2xl"
             >
                 {/* Header & Tabs */}
                 <div className="flex items-center justify-between p-5 border-b border-white/5">
