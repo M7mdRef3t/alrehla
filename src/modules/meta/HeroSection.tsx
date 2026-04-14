@@ -956,7 +956,7 @@ const fadeUp = {
   hidden: { opacity: 0, clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", y: 15 },
   visible: { 
     opacity: 1, 
-    clipPath: "polygon(0 -100%, 100% -100%, 100% 200%, 0% 200%)", 
+    clipPath: "polygon(-100% -100%, 200% -100%, 200% 200%, -100% 200%)", 
     y: 0, 
     transition: { duration: 0.65, ease: techEase } 
   },

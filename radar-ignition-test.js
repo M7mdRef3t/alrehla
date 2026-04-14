@@ -50,9 +50,15 @@ async function radarTest() {
   });
 
   const oracleResult = await resOracle.json();
-  console.log(`✅ Oracle Analysis Complete. Analyzed: ${oracleResult.analyzedCount}`);
-  if (oracleResult.results) {
-      console.log("Insights:", JSON.stringify(oracleResult.results, null, 2));
+  if (!oracleResult.ok) {
+    console.error(`❌ Oracle Analysis Failed: ${oracleResult.error || oracleResult.message}`);
+  } else {
+    console.log(`✅ Oracle Analysis Complete. Analyzed: ${oracleResult.analyzedCount || 0}`);
+    if (oracleResult.results && Object.keys(oracleResult.results).length > 0) {
+        console.log("Insights (First 2):", JSON.stringify(Object.values(oracleResult.results).slice(0, 2), null, 2));
+    } else {
+        console.log("ℹ️ No specific insights returned (likely already analyzed or empty batch).");
+    }
   }
 
   // 3. ACTION — Trigger Auto-Ignition Loop
@@ -66,15 +72,20 @@ async function radarTest() {
   });
 
   const ignitionResult = await resIgnition.json();
-  console.log(`✅ Auto-Ignition Cycle Complete. Actions Taken: ${ignitionResult.actionsCount}`);
-  if (ignitionResult.actions) {
-      ignitionResult.actions.forEach(a => console.log(` - Action: ${a.type} -> ${a.reason}`));
+  if (!ignitionResult.ok) {
+    console.error(`❌ Auto-Ignition Failed: ${ignitionResult.error}`);
+  } else {
+    console.log(`✅ Auto-Ignition Cycle Complete. Actions Taken: ${ignitionResult.actionsCount ?? 0}`);
+    if (ignitionResult.actions && ignitionResult.actions.length > 0) {
+        ignitionResult.actions.forEach(a => console.log(` - Action: ${a.type} -> ${a.reason}`));
+    } else {
+        console.log("ℹ️ No autonomous actions triggered in this loop.");
+    }
   }
 
   // 4. VERIFICATION
   console.log("\n[Stage 4/4] Radar Trace Verification...");
-  // We'll leave this to the agent to check the DB directly via MCP
-  console.log("🏁 Radar Cycle Finished. Agent will now perform a deep audit of the Sovereign Layer.");
+  console.log("🏁 Radar Cycle Finished. Agent will now perform a deep audit of the Sovereign Layer via SQL.");
 }
 
 radarTest().catch(err => {

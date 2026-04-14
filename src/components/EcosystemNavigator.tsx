@@ -131,6 +131,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#06b6d4",
     url: "/#taqrir"
+  },
+  {
+    id: "bawsala",
+    name: "بوصلة",
+    description: "كل قرار صعب — عنده بوصلة",
+    icon: <Compass className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#bawsala"
   }
 ];
 
