@@ -11,7 +11,8 @@ import {
   ArrowLeft,
   Sparkles,
   Eye,
-  BookOpen
+  BookOpen,
+  Scale
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -91,6 +92,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#fb923c",
     url: "/#watheeqa"
+  },
+  {
+    id: "mizan",
+    name: "ميزان",
+    description: "قياس التقدم الحقيقي",
+    icon: <Scale className="w-5 h-5" />,
+    status: "active",
+    color: "#10b981",
+    url: "/#mizan"
   }
 ];
 

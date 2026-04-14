@@ -996,27 +996,7 @@ const RotatingWord: FC = () => {
 
 /* ─── Sovereign Map (Right Panel) ───────────────────────────────────────────── */
 const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 120, damping: 50, mass: 1.5 });
-  const springY = useSpring(mouseY, { stiffness: 120, damping: 50, mass: 1.5 });
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (reduceMotion) return;
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    // Discretize mapping for robotic snap feeling
-    const rawX = (e.clientX - cx) / 90;
-    const rawY = (e.clientY - cy) / 90;
-    const step = 0.5;
-    mouseX.set(Math.round(rawX / step) * step);
-    mouseY.set(Math.round(rawY / step) * step);
-  }, [reduceMotion, mouseX, mouseY]);
-
-  useEffect(() => {
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [handleMouseMove]);
+  // Mouse follow animation removed as per user request
 
   const rings = [
     { r: 68,  stroke: "rgba(0, 240, 255, 0.35)", dash: "none", dur: 22 },
@@ -1042,7 +1022,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   return (
     <motion.div
       className="sovereign-map"
-      style={{ rotateX: springY, rotateY: springX }}
+      style={{ rotateX: 0, rotateY: 0 }}
     >
       <div className="sovereign-map__atmosphere" aria-hidden />
       <div className="hero-scan-line" aria-hidden />
