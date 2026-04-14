@@ -33,6 +33,7 @@ export type AppScreen =
   | "watheeqa"
   | "mizan"
   | "rifaq"
+  | "murshid"
   | "protocol"
   | "diagnosis";
 

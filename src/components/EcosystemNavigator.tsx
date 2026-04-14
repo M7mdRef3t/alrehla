@@ -13,7 +13,8 @@ import {
   Eye,
   BookOpen,
   Scale,
-  Users
+  Users,
+  Brain
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -111,6 +112,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#ec4899",
     url: "/#rifaq"
+  },
+  {
+    id: "murshid",
+    name: "مرشد",
+    description: "ذكاء يقرأ رحلتك ويوجّهك",
+    icon: <Brain className="w-5 h-5" />,
+    status: "active",
+    color: "#8b5cf6",
+    url: "/#murshid"
   }
 ];
 

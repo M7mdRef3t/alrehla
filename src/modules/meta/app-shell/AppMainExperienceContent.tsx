@@ -27,6 +27,7 @@ const BaseeraScreen = lazy(() => import("../../baseera/BaseeraScreen"));
 const WatheeqaScreen = lazy(() => import("../../watheeqa/WatheeqaScreen"));
 const MizanScreen = lazy(() => import("../../mizan/MizanScreen"));
 const RifaqScreen = lazy(() => import("../../rifaq/RifaqScreen"));
+const MurshidScreen = lazy(() => import("../../murshid/MurshidScreen"));
 
 
 
@@ -428,6 +429,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a1a" }}><div className="w-8 h-8 border-2 border-pink-500/30 border-t-pink-500 rounded-full animate-spin" /></div>}>
           <RifaqScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "murshid") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#070b1a" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
+          <MurshidScreen />
         </Suspense>
       </PageShell>
     );
