@@ -32,6 +32,7 @@ export type AppScreen =
   | "baseera"
   | "watheeqa"
   | "mizan"
+  | "rifaq"
   | "protocol"
   | "diagnosis";
 

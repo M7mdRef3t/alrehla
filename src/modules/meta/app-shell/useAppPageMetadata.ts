@@ -39,6 +39,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   baseera: "Baseera Dashboard",
   watheeqa: "Watheeqa Journal",
   mizan: "Mizan Progress",
+  rifaq: "Rifaq Buddies",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -77,6 +78,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   baseera: { title: "بصيرة — الوعي الذاتي | Alrehla", description: "لوحة بصيرة — اعرف نفسك من خلال بياناتك الحقيقية." },
   watheeqa: { title: "وثيقة — سجّل رحلتك | Alrehla", description: "وثّق رحلتك يومياً — كلمة كلمة — واكتشف أنماطك." },
   mizan: { title: "ميزان — قياس التقدم | Alrehla", description: "شوف تقدمك الحقيقي — طاقة، علاقات، واستمرارية في رحلة واحدة." },
+  rifaq: { title: "رفاق — رفاق الطريق | Alrehla", description: "لست وحدك في الرحلة — اكتشف رفاق بنفس الهدف وتحدّوا معاً." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

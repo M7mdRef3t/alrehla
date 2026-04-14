@@ -12,7 +12,8 @@ import {
   Sparkles,
   Eye,
   BookOpen,
-  Scale
+  Scale,
+  Users
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -101,6 +102,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#10b981",
     url: "/#mizan"
+  },
+  {
+    id: "rifaq",
+    name: "رفاق",
+    description: "رفاق الطريق — لست وحدك",
+    icon: <Users className="w-5 h-5" />,
+    status: "active",
+    color: "#ec4899",
+    url: "/#rifaq"
   }
 ];
 

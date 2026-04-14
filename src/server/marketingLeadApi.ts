@@ -313,6 +313,14 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
     if (hasSupabaseConfig()) {
       const result = await upsertMarketingLead(input);
 
+      logger.info("[Intelligence Radar] Lead Ingested", { 
+        leadId: result.lead_id, 
+        source: input.source, 
+        isNew: result.is_new,
+        hasPhone: !!input.phoneNormalized,
+        hasEmail: !!input.email
+      });
+
       // --- META CAPI Tracking Data Extraction ---
       const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || null;
       const clientUserAgent = req.headers.get("user-agent") || null;

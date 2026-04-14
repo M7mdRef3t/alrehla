@@ -1107,8 +1107,6 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
                 animate={reduceMotion ? {} : {
-                  x: springX.get() * node.w,
-                  y: springY.get() * node.w,
                   opacity: hovered === i ? 1 : [0.7, 1, 0.7],
                 }}
                 transition={{
@@ -1281,10 +1279,8 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const dustX = useSpring(useTransform(globalMouseX, x => -x * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
   const dustY = useSpring(useTransform(globalMouseY, y => -y * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
 
-  // Tilt transforms for content
-  const tiltX = useSpring(useTransform(globalMouseY, y => y * 0.4), { stiffness: 45, damping: 25 });
-  const tiltY = useSpring(useTransform(globalMouseX, x => -x * 0.4), { stiffness: 45, damping: 25 });
-
+  // Tilt transforms for content removed as per user request
+  
   const handleStart = useCallback(() => {
     setIsWarping(true);
     setTimeout(onStartJourney, 900);
@@ -1381,8 +1377,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
             animate="visible"
             className="hero-copy-column"
             style={{
-              rotateX: tiltX,
-              rotateY: tiltY,
               // ليه موجود؟ علشان نخلي العناصر التانية تلتزم بنفس عرض العنوان الأول وقت الرندر. Time Complexity: O(1).
               ["--headline-measured-width" as any]:
                 headlineMeasuredWidth > 0 ? `${headlineMeasuredWidth}px` : undefined,

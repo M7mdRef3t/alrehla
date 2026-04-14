@@ -296,7 +296,7 @@ export default function DawayirLiveApp() {
               </button>
               <button
                 type="button"
-                onClick={() => assignUrl("/onboarding")}
+                onClick={() => assignUrl("/activation")}
                 className="rounded-2xl bg-teal-500 px-5 py-3 text-sm font-bold text-white dark:text-slate-950"
               >
                 الذهاب للحساب
