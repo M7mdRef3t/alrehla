@@ -74,6 +74,11 @@ export interface DomainEvents {
   "atmosfera:state_changed": { from?: string; to?: string };
   "atmosfera:soundscape_toggled": { enabled: boolean };
 
+  // 🧭 Masarat (Guided Path Engine)
+  "masarat:quick_path_used": { situation: string };
+  "masarat:path_resolved": { pathId: string };
+  "masarat:path_activated": { pathId: string };
+
   // Generic
   [key: `custom:${string}`]: unknown;
 }

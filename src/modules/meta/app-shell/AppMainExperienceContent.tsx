@@ -20,6 +20,7 @@ const CommandCenter = lazy(() => import("../../lifeOS/CommandCenter"));
 const MarayaApp = lazy(() => import("../../maraya/MarayaApp"));
 const SessionIntakeScreen = lazy(() => import("../../sessions/SessionIntakeScreen").then(m => ({ default: m.SessionIntakeScreen })));
 const AtmosferaExperience = lazy(() => import("../../atmosfera/AtmosferaExperience"));
+const MasaratScreen = lazy(() => import("../../masarat/MasaratScreen"));
 
 
 
@@ -360,6 +361,15 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0e1f" }}><div className="w-8 h-8 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" /></div>}>
           <AtmosferaExperience />
+        </Suspense>
+      </PageShell>
+    );
+  }
+  if (screen === "masarat") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0e1f" }}><div className="w-8 h-8 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" /></div>}>
+          <MasaratScreen />
         </Suspense>
       </PageShell>
     );

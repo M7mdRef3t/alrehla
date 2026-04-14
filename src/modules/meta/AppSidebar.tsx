@@ -555,6 +555,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => pushUrl("/#atmosfera", { screen: "atmosfera" })}
                   color="#2dd4bf"
                 />
+                <SidebarItem
+                  label="مسارات"
+                  icon={<Compass className="w-4 h-4" />}
+                  onClick={() => pushUrl("/#masarat", { screen: "masarat" })}
+                  color="#f59e0b"
+                />
               </SidebarSector>
             </div>
           </aside>
@@ -671,6 +677,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     icon={<Wind className="w-5 h-5" />}
                     onClick={() => { pushUrl("/#atmosfera", { screen: "atmosfera" }); handleClose(); }}
                     color="#2dd4bf"
+                  />
+                  <SidebarItem
+                    label="مسارات"
+                    icon={<Compass className="w-5 h-5" />}
+                    onClick={() => { pushUrl("/#masarat", { screen: "masarat" }); handleClose(); }}
+                    color="#f59e0b"
                   />
                 </SidebarSector>
 
