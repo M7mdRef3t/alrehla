@@ -29,6 +29,8 @@ export type AppScreen =
   | "session-console"
   | "atmosfera"
   | "masarat"
+  | "baseera"
+  | "watheeqa"
   | "protocol"
   | "diagnosis";
 

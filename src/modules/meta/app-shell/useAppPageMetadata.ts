@@ -36,6 +36,8 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   "session-console": "SessionOS Console",
   atmosfera: "Atmosfera Experience",
   masarat: "Masarat Paths",
+  baseera: "Baseera Dashboard",
+  watheeqa: "Watheeqa Journal",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -71,6 +73,8 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   "session-console": { title: "لوحة تحكم الكوتش | Alrehla", description: "SessionOS Coach Console — manage intake, AI Pre-Brief, and sessions." },
   atmosfera: { title: "أجواء الرحلة | Alrehla", description: "Experience your emotional atmosphere — live, reactive, and personal." },
   masarat: { title: "مسارات | Alrehla", description: "اكتشف مسارك في علاقاتك — حدود، تعافٍ، ونمو." },
+  baseera: { title: "بصيرة — الوعي الذاتي | Alrehla", description: "لوحة بصيرة — اعرف نفسك من خلال بياناتك الحقيقية." },
+  watheeqa: { title: "وثيقة — سجّل رحلتك | Alrehla", description: "وثّق رحلتك يومياً — كلمة كلمة — واكتشف أنماطك." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

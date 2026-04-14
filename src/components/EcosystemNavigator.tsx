@@ -9,7 +9,9 @@ import {
   CheckCircle2,
   LockKeyhole,
   ArrowLeft,
-  Sparkles
+  Sparkles,
+  Eye,
+  BookOpen
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -50,7 +52,7 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     name: "مسارات",
     description: "أداة التنفيذ والتحرك",
     icon: <Compass className="w-5 h-5" />,
-    status: "coming_soon",
+    status: "active",
     color: "#10b981",
     url: "/#masarat"
   },
@@ -59,7 +61,7 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     name: "جلسات",
     description: "تدخلات عميقة وتوجيه",
     icon: <CalendarDays className="w-5 h-5" />,
-    status: "active", // assuming active based on sidebar items
+    status: "active",
     color: "#3b82f6",
     url: "/#session-intake"
   },
@@ -71,6 +73,24 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#8b5cf6",
     url: "/#atmosfera"
+  },
+  {
+    id: "baseera",
+    name: "بصيرة",
+    description: "لوحة الوعي الذاتي",
+    icon: <Eye className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#baseera"
+  },
+  {
+    id: "watheeqa",
+    name: "وثيقة",
+    description: "سجّل رحلتك يومياً",
+    icon: <BookOpen className="w-5 h-5" />,
+    status: "active",
+    color: "#fb923c",
+    url: "/#watheeqa"
   }
 ];
 

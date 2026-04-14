@@ -23,6 +23,8 @@ const SessionIntakeScreen = lazy(() => import("../../sessions/SessionIntakeScree
 const AtmosferaExperience = lazy(() => import("../../atmosfera/AtmosferaExperience"));
 const MasaratScreen = lazy(() => import("../../masarat/MasaratScreen"));
 const SessionOSConsole = lazy(() => import("../../sessions/SessionOSConsole"));
+const BaseeraScreen = lazy(() => import("../../baseera/BaseeraScreen"));
+const WatheeqaScreen = lazy(() => import("../../watheeqa/WatheeqaScreen"));
 
 
 
@@ -386,6 +388,24 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0e1f" }}><div className="w-8 h-8 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" /></div>}>
           <SessionOSConsole />
+        </Suspense>
+      </PageShell>
+    );
+  }
+  if (screen === "baseera") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a1a" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
+          <BaseeraScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+  if (screen === "watheeqa") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a1a" }}><div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" /></div>}>
+          <WatheeqaScreen />
         </Suspense>
       </PageShell>
     );
