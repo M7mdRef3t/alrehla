@@ -24,6 +24,8 @@ export type AppScreen =
   | "sanctuary"
   | "life-os"
   | "dawayir"
+  | "maraya"
+  | "session-intake"
   | "protocol";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";

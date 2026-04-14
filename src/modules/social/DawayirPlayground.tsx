@@ -10,6 +10,7 @@ import { useDawayirStore } from "@/domains/social/store/dawayir.store";
 import { interpretPainLevel } from "@/domains/social/services/analytics";
 import { Ring, DawayirNode } from "@/domains/social/types";
 import { freezeRewardsService } from "@/domains/gamification/services/freezeRewards";
+import { initDawayirRewardsBridge } from "@/domains/social/services/dawayirRewardsBridge";
 import { useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 
@@ -20,7 +21,10 @@ export function DawayirPlayground({ onBack }: { onBack?: () => void }) {
   } = useDawayirStore();
 
   useEffect(() => {
-    // Reward for opening the deep awareness platform
+    // 1. Initialize logic bridges
+    initDawayirRewardsBridge();
+    
+    // 2. Reward for opening the deep awareness platform
     freezeRewardsService.onIntelligenceDeepDive();
   }, []);
 

@@ -60,6 +60,15 @@ export interface DomainEvents {
   // Analytics
   "analytics:event": { name: string; properties?: Record<string, unknown> };
 
+  // 🪞 Maraya (Digital Twin)
+  "maraya:story_completed": { userId?: string };
+  "maraya:pattern_discovered": { patternId?: string };
+  "maraya:judge_finale": { userId?: string };
+
+  // 🎯 Session Intake
+  "session:intake_completed": { userId?: string };
+  "session:session_completed": { sessionId?: string };
+
   // Generic
   [key: `custom:${string}`]: unknown;
 }

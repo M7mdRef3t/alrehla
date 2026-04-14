@@ -17,6 +17,8 @@ import { SanctuaryDashboard } from "../SanctuaryDashboard";
 import { DawayirPlayground } from "../../social/DawayirPlayground";
 
 const CommandCenter = lazy(() => import("../../lifeOS/CommandCenter"));
+const MarayaApp = lazy(() => import("../../maraya/MarayaApp"));
+const SessionIntakeScreen = lazy(() => import("../../sessions/SessionIntakeScreen").then(m => ({ default: m.SessionIntakeScreen })));
 
 
 
@@ -327,6 +329,28 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
         <DawayirPlayground
           onBack={() => onNavigate?.("landing" as AppScreen)}
         />
+      </PageShell>
+    );
+  }
+
+  if (screen === "maraya") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
+          <MarayaApp />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "session-intake") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#030308" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
+          <SessionIntakeScreen
+            onBack={() => onNavigate?.("landing" as AppScreen)}
+          />
+        </Suspense>
       </PageShell>
     );
   }

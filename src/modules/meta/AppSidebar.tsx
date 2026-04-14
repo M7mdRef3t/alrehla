@@ -537,6 +537,18 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={openEmergency}
                   color="#f43f5e"
                 />
+                <SidebarItem
+                  label="مرايا (التوأم الرقمي)"
+                  icon={<Sparkles className="w-4 h-4" />}
+                  onClick={() => pushUrl("/#maraya", { screen: "maraya" })}
+                  color="#a78bfa"
+                />
+                <SidebarItem
+                  label="جلسة خاصة"
+                  icon={<CalendarDays className="w-4 h-4" />}
+                  onClick={() => pushUrl("/#session-intake", { screen: "session-intake" })}
+                  color="#60a5fa"
+                />
               </SidebarSector>
             </div>
           </aside>
@@ -636,6 +648,18 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                       color={goalColor}
                     />
                   )}
+                  <SidebarItem
+                    label="مرايا"
+                    icon={<Sparkles className="w-5 h-5" />}
+                    onClick={() => { pushUrl("/#maraya", { screen: "maraya" }); handleClose(); }}
+                    color="#a78bfa"
+                  />
+                  <SidebarItem
+                    label="جلسة خاصة"
+                    icon={<CalendarDays className="w-5 h-5" />}
+                    onClick={() => { pushUrl("/#session-intake", { screen: "session-intake" }); handleClose(); }}
+                    color="#60a5fa"
+                  />
                 </SidebarSector>
 
                 <SidebarSector title="العمل والممارسة" icon={<Target className="w-4 h-4" />} color="indigo">
