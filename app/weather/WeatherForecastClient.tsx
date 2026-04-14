@@ -8,6 +8,7 @@ import { trackEvent, trackPageView, generateUUID } from "../../src/services/anal
 import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "../../src/services/marketingAttribution";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { fetchJourneyPaths } from "../../src/services/adminApi";
+import { normalizePhoneForFunnel, type FunnelIdentifiers } from "@/domains/funnel/contracts";
 import {
   getRelationshipWeatherInitialStage,
   getRelationshipWeatherNextStage,
@@ -252,6 +253,81 @@ const STYLES = `
     padding: 1rem 1.25rem;
     border-radius: 0 8px 8px 0;
   }
+
+  .weather-card {
+    border-width: 1px;
+  }
+
+  .weather-card.weather-level-hurricane {
+    border-color: rgba(244,63,94,0.3);
+    background: rgba(244,63,94,0.08);
+    --weather-color: #f43f5e;
+    --weather-bg: rgba(244,63,94,0.08);
+    --weather-border: rgba(244,63,94,0.25);
+  }
+
+  .weather-card.weather-level-storm {
+    border-color: rgba(251,146,60,0.3);
+    background: rgba(251,146,60,0.07);
+    --weather-color: #fb923c;
+    --weather-bg: rgba(251,146,60,0.07);
+    --weather-border: rgba(251,146,60,0.25);
+  }
+
+  .weather-card.weather-level-wind {
+    border-color: rgba(250,204,21,0.3);
+    background: rgba(250,204,21,0.06);
+    --weather-color: #facc15;
+    --weather-bg: rgba(250,204,21,0.06);
+    --weather-border: rgba(250,204,21,0.25);
+  }
+
+  .weather-card.weather-level-sun {
+    border-color: rgba(16,185,129,0.3);
+    background: rgba(16,185,129,0.05);
+    --weather-color: #10b981;
+    --weather-bg: rgba(16,185,129,0.05);
+    --weather-border: rgba(16,185,129,0.25);
+  }
+
+  .weather-card .level-accent {
+    color: var(--weather-color);
+  }
+
+  .weather-card .result-score {
+    color: var(--weather-color);
+  }
+
+  .weather-card .level-progress-fill {
+    background: var(--weather-color);
+  }
+
+  .weather-card .insight-box {
+    border-color: var(--weather-color);
+    background: var(--weather-bg);
+  }
+
+  .weather-card .quick-win-badge {
+    background: var(--weather-bg);
+    color: var(--weather-color);
+    border: 1px solid var(--weather-border);
+  }
+
+  .weather-cta.weather-level-hurricane {
+    background: linear-gradient(135deg, #f43f5e, #2dd4bf);
+  }
+
+  .weather-cta.weather-level-storm {
+    background: linear-gradient(135deg, #fb923c, #2dd4bf);
+  }
+
+  .weather-cta.weather-level-wind {
+    background: linear-gradient(135deg, #facc15, #2dd4bf);
+  }
+
+  .weather-cta.weather-level-sun {
+    background: linear-gradient(135deg, #10b981, #2dd4bf);
+  }
 `;
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -267,6 +343,7 @@ export default function WeatherForecastClient() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const clientEventIdRef = useRef<string | null>(null);
+  const leadAttributionRef = useRef<FunnelIdentifiers>({});
   if (!clientEventIdRef.current) {
     if (typeof window !== 'undefined') {
       const persistentId = window.localStorage.getItem('persistent_weather_id');
@@ -292,7 +369,7 @@ export default function WeatherForecastClient() {
 
   useEffect(() => {
     captureUtmFromCurrentUrl();
-    captureLeadAttributionFromCurrentUrl();
+    leadAttributionRef.current = captureLeadAttributionFromCurrentUrl() ?? {};
     trackPageView("weather_diagnostic_v3");
   }, []);
 
@@ -302,7 +379,10 @@ export default function WeatherForecastClient() {
         level: result.weatherLevel, 
         pattern: result.pattern, 
         zone: result.drainZone,
-        client_event_id: clientEventIdRef.current!
+        client_event_id: clientEventIdRef.current!,
+        lead_id: leadAttributionRef.current.lead_id ?? null,
+        lead_source: leadAttributionRef.current.lead_source ?? null,
+        gateSessionId: leadAttributionRef.current.gateSessionId ?? null
       });
     }
   }, [step, result]);
@@ -310,7 +390,9 @@ export default function WeatherForecastClient() {
   useEffect(() => {
     if (step === "questions") {
       trackEvent(`weather_q${qIdx + 1}_view`, { 
-        client_event_id: clientEventIdRef.current! 
+        client_event_id: clientEventIdRef.current!,
+        lead_id: leadAttributionRef.current.lead_id ?? null,
+        lead_source: leadAttributionRef.current.lead_source ?? null
       });
     }
   }, [step, qIdx]);
@@ -333,6 +415,7 @@ export default function WeatherForecastClient() {
   const finalizeDiagnostic = useCallback((finalAnswers: Record<string, string>) => {
     const diagnostic = runDiagnostic(finalAnswers);
     const nextStage = getRelationshipWeatherNextStage(weatherPath, "analyzing");
+    const normalizedPhone = normalizePhoneForFunnel(window.localStorage.getItem("dawayir_phone"));
 
     if (nextStage === "result") {
       setResult(diagnostic);
@@ -358,6 +441,12 @@ export default function WeatherForecastClient() {
     if (nextStage === "complete") {
       setResult(diagnostic);
       launchRelationshipWeatherFlow(weatherPath, diagnostic, "weather_v3", clientEventIdRef.current!);
+      trackEvent("weather_diagnostic_completed", {
+        client_event_id: clientEventIdRef.current!,
+        lead_id: leadAttributionRef.current.lead_id ?? null,
+        lead_source: leadAttributionRef.current.lead_source ?? null,
+        phone_normalized: normalizedPhone
+      });
       return;
     }
 
@@ -562,11 +651,7 @@ export default function WeatherForecastClient() {
                     disabled={selectedOption !== null}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
-                    className="w-full text-right p-5 rounded-2xl border transition-all flex items-center gap-4"
-                    style={{
-                      borderColor: selectedOption === opt.id ? "rgba(45,212,191,0.6)" : "rgba(255,255,255,0.08)",
-                      background: selectedOption === opt.id ? "rgba(45,212,191,0.1)" : "rgba(255,255,255,0.02)",
-                    }}
+                    className={`w-full text-right p-5 rounded-2xl border transition-all flex items-center gap-4 ${selectedOption === opt.id ? "border-teal-400/60 bg-teal-500/10" : "border-white/10 bg-white/5"}`}
                   >
                     <span className="text-2xl shrink-0">{opt.emoji}</span>
                     <span className="text-slate-200 font-semibold text-[15px] leading-snug">{opt.text}</span>
@@ -599,13 +684,12 @@ export default function WeatherForecastClient() {
 
                 {/* === PATTERN CARD === */}
                 <div
-                  className="rounded-2xl border p-6 mb-5"
-                  style={{ borderColor: LEVEL_CONFIG[result.weatherLevel].color + "30", background: LEVEL_CONFIG[result.weatherLevel].bg }}
+                  className={`rounded-2xl border p-6 mb-5 weather-card weather-level-${result.weatherLevel}`}
                 >
                   <div className="flex items-start gap-4 mb-5">
                     <div className="text-5xl shrink-0">{PATTERNS[result.pattern].icon}</div>
                     <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: LEVEL_CONFIG[result.weatherLevel].color }}>
+                      <div className="text-[10px] font-black uppercase tracking-widest mb-1 level-accent">
                         النمط السلوكي المكتشف
                       </div>
                       <h2 className="text-2xl font-black text-white">{result.patternName}</h2>
@@ -620,15 +704,14 @@ export default function WeatherForecastClient() {
                     <Clock className="w-3.5 h-3.5" /> الثمن الخفي كل أسبوع
                   </div>
                   <div className="flex items-end gap-3 mb-4">
-                    <div className="text-6xl font-black" style={{ color: LEVEL_CONFIG[result.weatherLevel].color }}>
+                    <div className="text-6xl font-black result-score">
                       ~{result.weeklyHoursCost}
                     </div>
                     <div className="text-gray-400 text-lg mb-2">ساعة طاقة ذهنية وعاطفية</div>
                   </div>
                   <div className="h-2 rounded-full bg-white/5 overflow-hidden">
                     <motion.div
-                      className="h-full rounded-full"
-                      style={{ background: LEVEL_CONFIG[result.weatherLevel].color }}
+                      className="h-full rounded-full level-progress-fill"
                       initial={{ width: 0 }}
                       animate={{ width: `${(result.weeklyHoursCost / 25) * 100}%` }}
                       transition={{ duration: 1.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -642,10 +725,7 @@ export default function WeatherForecastClient() {
                   <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2">
                     <AlertTriangle className="w-3.5 h-3.5 text-amber-400" /> الجذر الحقيقي
                   </div>
-                  <div
-                    className="insight-box"
-                    style={{ borderColor: LEVEL_CONFIG[result.weatherLevel].color, background: LEVEL_CONFIG[result.weatherLevel].bg }}
-                  >
+                  <div className="insight-box">
                     <p className="text-slate-200 leading-relaxed text-[15px]">{result.coreInsight}</p>
                   </div>
                 </div>
@@ -659,8 +739,7 @@ export default function WeatherForecastClient() {
                     {result.quickActions.map((action, i) => (
                       <div key={i} className="flex items-start gap-3">
                         <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-black"
-                          style={{ background: LEVEL_CONFIG[result.weatherLevel].bg, color: LEVEL_CONFIG[result.weatherLevel].color, border: `1px solid ${LEVEL_CONFIG[result.weatherLevel].color}40` }}
+                          className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-black quick-win-badge"
                         >
                           {i + 1}
                         </div>
@@ -684,8 +763,7 @@ export default function WeatherForecastClient() {
 
                 <motion.button
                   onClick={handleCTA} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                  className="w-full py-5 rounded-2xl font-black text-lg text-black"
-                  style={{ background: `linear-gradient(135deg, ${LEVEL_CONFIG[result.weatherLevel].color}, #2dd4bf)` }}
+                  className={`w-full py-5 rounded-2xl font-black text-lg text-black weather-cta weather-level-${result.weatherLevel}`}
                 >
                   {primaryActionLabel} 🗺️
                 </motion.button>

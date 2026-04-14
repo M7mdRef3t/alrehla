@@ -135,7 +135,7 @@ export const EcosystemNavigator: React.FC<{
             }}
             className={`flex items-center justify-between p-2.5 rounded-xl transition-all duration-300 relative overflow-hidden border border-transparent ${
               prod.status === "active" 
-                ? "hover:bg-white/10 hover:border-white/5 cursor-pointer" 
+                ? "hover:bg-white/10 hover:border-white/5" 
                 : "opacity-60 cursor-not-allowed grayscale-[30%]"
             }`}
           >

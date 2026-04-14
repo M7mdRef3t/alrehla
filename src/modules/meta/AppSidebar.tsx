@@ -235,6 +235,34 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     </div>
   );
 
+  const getSidebarItemColorClass = (color?: string) => {
+    switch (color?.toString().toLowerCase().trim()) {
+      case "#10b981":
+        return "sidebar-color-emerald";
+      case "#f43f5e":
+      case "#fb7185":
+        return "sidebar-color-rose";
+      case "#a78bfa":
+        return "sidebar-color-violet";
+      case "#60a5fa":
+        return "sidebar-color-sky";
+      case "#14b8a6":
+        return "sidebar-color-teal";
+      case "#2dd4bf":
+        return "sidebar-color-cyan";
+      case "#f59e0b":
+      case "#f5a623":
+        return "sidebar-color-amber";
+      case "#64748b":
+      case "#94a3b8":
+        return "sidebar-color-slate";
+      case "var(--ds-color-brand-teal-400)":
+        return "sidebar-color-brand-teal";
+      default:
+        return "";
+    }
+  };
+
   const SidebarItem: FC<{
     label: string;
     icon: React.ReactNode;
@@ -242,17 +270,18 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     active?: boolean;
     color?: string;
     badge?: string | number;
-  }> = ({ label, icon, onClick, active, color, badge }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className="ds-sidebar-item"
-      data-active={active}
-      style={{ "--ds-item-glow-color": color } as any}
-    >
-      <div className="ds-icon-box">
-        {icon}
-      </div>
+  }> = ({ label, icon, onClick, active, color, badge }) => {
+    const colorClass = getSidebarItemColorClass(color);
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`ds-sidebar-item ${colorClass}`}
+        data-active={active}
+      >
+        <div className="ds-icon-box">
+          {icon}
+        </div>
       <span className="truncate flex-1">{label}</span>
       {badge && (
         <span className="ds-badge !text-[10px] !px-1.5 !h-4 opacity-60">
@@ -262,12 +291,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       {active && (
         <motion.div 
           layoutId="sidebar-active-indicator"
-          className="absolute left-0 w-1 h-5 rounded-r-full"
-          style={{ background: color || "var(--ds-color-primary)" }}
+          className="absolute left-0 w-1 h-5 rounded-r-full sidebar-active-indicator"
         />
       )}
     </button>
   );
+};
 
   const setOverlay = useAppOverlayState((state) => state.setOverlay);
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
@@ -304,7 +333,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showManualPlacement, setShowManualPlacement] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const activeProtocolId = useJourneyStore((s) => s.activeProtocol);
-  const activeProtocol = activeProtocolId ? PROTOCOLS[activeProtocolId as keyof typeof PROTOCOLS] : null;
+  const activeProtocolInfo: { label: string; color: string } | null = (() => {
+    if (!activeProtocolId) return null;
+    const protocol = PROTOCOLS[activeProtocolId as keyof typeof PROTOCOLS];
+    if (!protocol) return null;
+    return { label: `بروتوكول: ${protocol.title}`, color: "#10b981" };
+  })();
 
   const [initialRecoveryOptions, setInitialRecoveryOptions] = useState<RecoveryPlanOpenWith | null>(null);
   
@@ -392,7 +426,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const isOwner = isPrivilegedRole(rawRole) || isPrivilegedRole(role);
   const canShowJourneyToolsEntry = Boolean(onOpenJourneyTools) && isOwner;
   const sanctuaryPath = getJourneyPathBySlug(journeyPaths, "sanctuary");
-  const sanctuaryPathTarget = sanctuaryPath?.isActive ? sanctuaryPath.targetScreen : "sanctuary";
+  const sanctuaryPathTarget = sanctuaryPath?.isActive ? sanctuaryPath?.targetScreen : "sanctuary";
   const sanctuaryPathUrl = sanctuaryPathTarget === "sanctuary" ? "/#sanctuary" : "/";
 
   const availableFeatures = useMemo(
@@ -426,7 +460,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
   const openWhatsAppChat = (placement: "desktop_sidebar" | "mobile_sidebar" | "floating_fab") => {
     if (!whatsAppLink) return;
-    analyticsService.track("whatsapp_contact_clicked", { placement });
+    analyticsService.whatsapp({ placement });
     openInNewTab(whatsAppLink);
   };
 
@@ -498,9 +532,9 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           <aside className="h-full w-full flex flex-col gap-3 py-6 px-4">
             {viewingNode?.analysis && (
               <div className="shrink-0 space-y-1 mb-1">
-                <RecoveryProgressBar node={viewingNode} />
-                <p className="text-xs font-semibold text-slate-900 dark:text-white text-center truncate px-1" title={viewingNode.label}>
-                  {viewingNode.label}
+                <RecoveryProgressBar node={viewingNode!} />
+                <p className="text-xs font-semibold text-slate-900 dark:text-white text-center truncate px-1" title={viewingNode?.label}>
+                  {viewingNode?.label}
                 </p>
               </div>
             )}
@@ -519,15 +553,20 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => onOpenDawayir?.()}
                   color={goalColor}
                 />
-                {activeProtocol && (
-                  <SidebarItem
-                    label={`بروتوكول: ${activeProtocol.title}`}
-                    icon={<Activity className="w-4 h-4" />}
-                    onClick={() => onOpenProtocol?.()}
-                    color="#10b981"
-                    badge="جاري"
-                  />
-                )}
+                {((): React.ReactElement | null => {
+                  if (!activeProtocolInfo) return null;
+                  const label = activeProtocolInfo!.label;
+                  const color = activeProtocolInfo!.color;
+                  return (
+                    <SidebarItem
+                      label={label}
+                      icon={<Activity className="w-4 h-4" />}
+                      onClick={() => onOpenProtocol?.()}
+                      color={color}
+                      badge="جاري"
+                    />
+                  );
+                })()}
                 <SidebarItem
                   label="الملاذ الآمن"
                   icon={<ShieldCheck className="w-4 h-4" />}
@@ -591,7 +630,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           type="button"
           title="تواصل عبر واتساب"
           onClick={() => openWhatsAppChat("floating_fab")}
-          className="fixed z-30 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+1rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
+          className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md hover:bg-emerald-500 transition-colors duration-200"
         >
           <MessageCircle className="w-5 h-5 shrink-0" />
         </button>
@@ -648,12 +687,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     onClick={() => { onOpenDawayir?.(); handleClose(); }}
                     color={goalColor}
                   />
-                  {activeProtocol && (
+                {activeProtocolInfo && (
                     <SidebarItem
-                      label={`بروتوكول: ${activeProtocol.title}`}
+                      label={activeProtocolInfo!.label}
                       icon={<Activity className="w-5 h-5" />}
                       onClick={() => { onOpenProtocol?.(); handleClose(); }}
-                      color="#10b981"
+                      color={activeProtocolInfo!.color}
                       badge="جاري"
                     />
                   )}
@@ -742,7 +781,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <div className="pt-4 space-y-2">
                   <button
                     onClick={() => { onStartJourney(); handleClose(); }}
-                    className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-teal-900/20"
+className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-center justify-center gap-2 shadow-md shadow-teal-900/10"
+
                   >
                     <ArrowLeft className="w-5 h-5" />
                     انطلاق للمهمة

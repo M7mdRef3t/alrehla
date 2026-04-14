@@ -3,8 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShieldAlert, Wind } from "lucide-react";
 import { useLockdownState } from "@/domains/admin/store/lockdown.store";
 import { isDevMode } from "@/config/appEnv";
+import { Z_LAYERS } from "@/config/zIndices";
 
-export const SanctuaryLockdownExperience: FC = () => {
+interface SanctuaryProps {
+   onExit?: () => void;
+}
+
+export const SanctuaryLockdownExperience: FC<SanctuaryProps> = ({ onExit }) => {
    const isLockedDown = useLockdownState((s) => s.checkLockdownStatus());
    const liftLockdown = useLockdownState((s) => s.liftLockdown);
    const [phase, setPhase] = useState<"breatheIn" | "hold" | "breatheOut">("breatheIn");
@@ -34,7 +39,8 @@ export const SanctuaryLockdownExperience: FC = () => {
          <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 z-[99999] bg-black text-white flex flex-col items-center justify-center p-6 selection:bg-transparent"
+            className="fixed inset-0 bg-black text-white flex flex-col items-center justify-center p-6 selection:bg-transparent"
+            style={{ zIndex: Z_LAYERS.SYSTEM_EMERGENCY }}
          >
             {/* Minimalist Breathing Circle */}
             <motion.div 

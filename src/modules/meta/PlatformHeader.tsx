@@ -415,7 +415,7 @@ export const PlatformHeader = memo(function PlatformHeader({
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((previous) => !previous)}
-                className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group cursor-pointer"
+                className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group"
                 aria-haspopup="true"
                 aria-expanded="true"
               >
@@ -441,7 +441,7 @@ export const PlatformHeader = memo(function PlatformHeader({
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((previous) => !previous)}
-                className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group cursor-pointer"
+                className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group"
                 aria-haspopup="true"
                 aria-expanded="false"
               >
@@ -598,7 +598,7 @@ export const PlatformHeader = memo(function PlatformHeader({
             type="button"
             id="header-landing-cta"
             onClick={handleLandingCta}
-            className="group relative flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold overflow-hidden cursor-pointer"
+            className="group relative flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-500 transition-transform group-hover:scale-110" />
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -653,7 +653,7 @@ export const MobileNavBar = memo(function MobileNavBar({
             key={id}
             type="button"
             onClick={() => handleNav(id)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-3 group relative cursor-pointer"
+            className="flex-1 flex flex-col items-center justify-center gap-1 py-3 group relative"
           >
             <Icon
               className={`w-6 h-6 transition-transform group-active:scale-90 ${isActive ? "text-[var(--teal)]" : "text-slate-500 dark:text-slate-400"}`}

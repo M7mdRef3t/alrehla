@@ -205,7 +205,7 @@ const PathProgressPanel: FC<{
               }
               className={`inline-flex w-7 h-7 rounded-lg items-center justify-center text-[10px] font-bold transition-all ${
                 done
-                  ? "bg-teal-500/80 text-white shadow-lg shadow-teal-500/20"
+                  ? "bg-teal-500 text-white"
                   : isToday
                     ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 ring-1 ring-amber-500/20"
                     : "bg-white/5 text-slate-500 border border-white/5 opacity-40"

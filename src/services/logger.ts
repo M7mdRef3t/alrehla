@@ -5,10 +5,21 @@ const LOCAL_STORAGE_KEY = "dawayir-error-log";
 const MAX_LOCAL_ERRORS = 50;
 
 /**
+ * Centralized logger interface for strict typing.
+ */
+export interface Logger {
+  error(messageOrError: string | unknown, error?: any, ...args: any[]): void;
+  warn(message: string | unknown, ...args: any[]): void;
+  log(message: string | unknown, ...args: any[]): void;
+  info(message: string | unknown, ...args: any[]): void;
+  debug?(message: string | unknown, ...args: any[]): void;
+}
+
+/**
  * A centralized logger that integrates with Sentry for production
  * and localStorage for local debugging and health checks.
  */
-export const logger = {
+export const logger: Logger = {
   error: (messageOrError: string | unknown, error?: any, ...args: any[]) => {
     let message = "";
     let actualError = error;
@@ -82,4 +93,11 @@ export const logger = {
   info: (message: string | unknown, ...args: any[]) => {
     console.info(message, ...args);
   },
+
+  debug: (message: string | unknown, ...args: any[]) => {
+    if (!runtimeEnv.isProd) {
+      console.debug(message, ...args);
+    }
+  },
 };
+

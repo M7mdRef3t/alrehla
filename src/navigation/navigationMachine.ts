@@ -29,7 +29,8 @@ export type AppScreen =
   | "session-console"
   | "atmosfera"
   | "masarat"
-  | "protocol";
+  | "protocol"
+  | "diagnosis";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

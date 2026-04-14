@@ -17,6 +17,9 @@ import { useGamificationState, XP_ACTIONS } from "@/services/gamificationEngine"
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { setDocumentBodyOverflow, getAudioContextConstructor } from "@/services/clientDom";
 import { usePulseManagement } from "@/hooks/usePulseManagement";
+import { Z_LAYERS } from "@/config/zIndices";
+import { useScrollLock } from "@/hooks/useScrollLock";
+import { isDevMode } from "@/config/appEnv";
 import { TOPIC_OPTIONS, MOODS, MOOD_COSMIC, FOCUS_OPTIONS, FOCUS_LABELS, FOCUS_COSMIC } from '@/modules/action/PulseCheckModalParts/constants';
 import { energyGradient, getEnergyStateLabel, getEnergyQuickHint, getMoodQuickHint, getFocusQuickHint, generateTacticalAdvice, getPostSaveAction } from '@/modules/action/PulseCheckModalParts/helpers';
 import type { TacticalAdvice } from '@/modules/action/PulseCheckModalParts/helpers';
@@ -259,6 +262,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const moodUnstableEventTrackedRef = useRef(false);
   const isMoodSelectionUnstableRef = useRef(false);
   const [, setNeedsMoodConfirmation] = useState(false);
+  const isDev = isDevMode;
+  useScrollLock(isOpen);
+
   const isInitializedRef = useRef(false);
   const energyAdjustmentsRef = useRef<number[]>([]);
   const lastTrackedEnergyRef = useRef<number | null>(null);
@@ -461,14 +467,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     };
   }, []);
 
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const restoreOverflow = setDocumentBodyOverflow("hidden");
-    return () => {
-      restoreOverflow?.();
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -829,7 +827,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       {isOpen && (
         <motion.div
           className="fixed inset-0 flex items-center justify-center"
-          style={{ zIndex: 100 }}
+          style={{ zIndex: Z_LAYERS.TACTICAL_CONTENT }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -907,7 +905,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 <button
                   type="button"
                   onClick={requestSkipClose}
-                  className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
+                  className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
                   style={{ color: "var(--text-muted)", background: "var(--app-muted)", border: "1px solid var(--app-border)" }}
                   aria-label={"تجاوز فحص النهاردة"}
                 >

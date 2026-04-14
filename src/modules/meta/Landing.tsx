@@ -281,10 +281,10 @@ export const Landing: FC<LandingPropsExtended> = ({
     startTrackedRef.current = true;
 
     void trackingService.recordFlow("landing_clicked_start");
-    analyticsService.track(AnalyticsEvents.CTA_CLICK, {
+    analyticsService.cta({
       source: "landing",
       cta_name: "start_journey",
-      intent: mirrorName ? "mirror_named" : "default"
+      placement: mirrorName ? "mirror_named" : "default"
     });
     
     soundManager.playEffect("cosmic_pulse");

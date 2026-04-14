@@ -17,6 +17,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Payload too large" }, { status: 413 });
     }
 
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: "Supabase Admin Client not initialized (check env vars)" }, { status: 500 });
+    }
+
     const payload = await req.json();
     
     // Basic validation

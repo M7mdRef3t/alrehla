@@ -96,7 +96,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
     setPhone("");
     setOtp("");
     setName("");
-    analyticsService.track(AnalyticsEvents.AUTH_MODAL_SHOWN, { trigger: resolvedIntent.kind });
+    analyticsService.auth(AnalyticsEvents.AUTH_MODAL_SHOWN, { trigger: resolvedIntent.kind });
   }, [isOpen, resolvedIntent.kind]);
 
   const handleGoogle = async () => {
@@ -113,7 +113,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
     setLoading(true);
     setMessage(null);
     setError(null);
-    analyticsService.track(AnalyticsEvents.AUTH_GOOGLE_CLICKED, {
+    analyticsService.auth(AnalyticsEvents.AUTH_GOOGLE_CLICKED, {
       source: resolvedIntent.kind === "start_recovery" ? "micro_commitment" : "login_icon",
     });
     setPostAuthIntent(resolvedIntent);
@@ -143,7 +143,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
 
     setLoading(true);
     setError(null);
-    analyticsService.track(AnalyticsEvents.AUTH_PHONE_CLICKED);
+    analyticsService.auth(AnalyticsEvents.AUTH_PHONE_CLICKED);
 
     const { error: signInError } = await signInWithPhone(phone);
     if (signInError) {
@@ -152,7 +152,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
       return;
     }
 
-    analyticsService.track(AnalyticsEvents.AUTH_PHONE_OTP_SENT);
+    analyticsService.auth(AnalyticsEvents.AUTH_PHONE_OTP_SENT);
     setPhoneStep("otp");
     setLoading(false);
   };
@@ -171,8 +171,8 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
       return;
     }
 
-    analyticsService.track(AnalyticsEvents.AUTH_PHONE_OTP_VERIFIED);
-    analyticsService.track(AnalyticsEvents.AUTH_COMPLETED, { method: "phone" });
+    analyticsService.auth(AnalyticsEvents.AUTH_PHONE_OTP_VERIFIED);
+    analyticsService.auth(AnalyticsEvents.AUTH_COMPLETED, { method: "phone" });
     setMessage("تم الدخول بنجاح!");
     onClose();
   };

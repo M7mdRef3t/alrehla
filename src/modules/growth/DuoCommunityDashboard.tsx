@@ -141,7 +141,7 @@ export const DuoCommunityDashboard: FC<DuoCommunityDashboardProps> = ({ isOpen, 
                           مواضيع ساخنة
                         </h4>
                         {FEED_POSTS.map(post => (
-                          <div key={post.id} className="p-5 rounded-2xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition cursor-pointer">
+                          <div key={post.id} className="p-5 rounded-2xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-3 relative">
                                 <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center shrink-0 border border-slate-600 font-bold text-slate-300">

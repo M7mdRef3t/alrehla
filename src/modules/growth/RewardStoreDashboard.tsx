@@ -228,7 +228,7 @@ export const RewardStoreModal: FC<RewardStoreModalProps> = ({ isOpen, onClose })
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.05 }}
-                                className="bg-slate-800/40 border border-slate-700/50 rounded-2xl overflow-hidden hover:border-indigo-500/40 hover:bg-slate-800/60 transition-all flex flex-col group cursor-pointer"
+                                className="bg-slate-800/40 border border-slate-700/50 rounded-2xl overflow-hidden hover:border-indigo-500/40 hover:bg-slate-800/60 transition-all flex flex-col group"
                                 onClick={() => handlePurchaseClick(item)}
                               >
                                 <div className="h-32 bg-slate-900/50 flex items-center justify-center border-b border-slate-800 relative overflow-hidden">

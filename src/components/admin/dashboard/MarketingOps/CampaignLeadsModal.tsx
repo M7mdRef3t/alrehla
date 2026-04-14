@@ -950,7 +950,7 @@ function LeadCommandCard({
                       <a
                         href={defaultWaLink}
                         target="_blank" rel="noopener noreferrer"
-                        className={`p-2.5 rounded-xl transition-all flex items-center justify-center active:scale-90 ${isWhatsAppMarked ? 'text-emerald-400 bg-emerald-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}
+                        className={`p-2.5 rounded-xl transition-all flex items-center justify-center active:scale-90 ${isWhatsAppMarked ?'text-emerald-400 bg-emerald-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}
                         onClick={() => onMarkWhatsApp()}
                         title="مراسلة واتساب"
                       >

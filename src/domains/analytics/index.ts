@@ -24,6 +24,8 @@ export type {
   GoalTelemetryPayload,
   AuthTelemetryPayload,
   OnboardingTelemetryPayload,
+  WhatsappTelemetryPayload,
+  CableTelemetryPayload,
 } from "./types";
 
 export { AnalyticsEvents } from "./types";
@@ -36,6 +38,8 @@ export {
   buildGoalEnvelope,
   buildAuthEnvelope,
   buildOnboardingEnvelope,
+  buildWhatsappEnvelope,
+  buildCableEnvelope,
 } from "./contracts";
 
 // ─── Services ──────────────────────────────────────────

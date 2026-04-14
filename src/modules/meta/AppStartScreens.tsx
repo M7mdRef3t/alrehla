@@ -20,8 +20,10 @@ import { ReflectionOutput } from "./ReflectionOutput";
 import { ProtocolEngine } from "./ProtocolEngine";
 import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { useState } from "react";
+import { DiagnosisScreen } from "@/modules/diagnosis";
+import type { UserStateObject, RecommendedProduct } from "@/modules/diagnosis";
 
-type StartScreen = "landing" | "goal" | "survey" | "map" | "protocol";
+type StartScreen = "landing" | "goal" | "survey" | "map" | "protocol" | "diagnosis";
 
 type WelcomeState = {
   message: string;
@@ -63,6 +65,8 @@ interface AppStartScreensProps {
   onOpenLibrary: () => void;
   onOpenProfile: () => void;
   onNavigate?: (screen: string) => void;
+  // Conversion Engine
+  onDiagnosisComplete?: (state: UserStateObject) => void;
 }
 
 export function AppStartScreens({
@@ -99,11 +103,48 @@ export function AppStartScreens({
   onOpenPulse,
   onOpenLibrary,
   onOpenProfile,
-  onNavigate: _onNavigate
+  onNavigate: _onNavigate,
+  onDiagnosisComplete,
 }: AppStartScreensProps) {
   const journey = useJourneyProgress();
   const [showReflection, setShowReflection] = useState(true);
   const detectedState = useJourneyState((s) => s.detectedState);
+
+  // ── Diagnosis Screen (Conversion Engine Entry Point) ──
+  if (screen === "diagnosis") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={false} disableAnimation maxWidth="max-w-none px-0 sm:px-0 lg:px-0">
+        <DiagnosisScreen
+          onComplete={(state: UserStateObject, product?: RecommendedProduct) => {
+            trackingService.recordFlow("diagnosis_completed", {
+              meta: {
+                type: state.type,
+                mainPain: state.mainPain,
+                readiness: state.readiness,
+                recommendedProduct: state.recommendedProduct,
+                score: state.diagnosisScore,
+                overrideProduct: product,
+              }
+            });
+            if (onDiagnosisComplete) {
+              onDiagnosisComplete(state);
+            } else {
+              const productScreenMap: Record<RecommendedProduct, string> = {
+                dawayir: "map",
+                masarat: "masarat",
+                session: "session-intake",
+                atmosfera: "atmosfera",
+              };
+              const finalProduct = product || state.recommendedProduct;
+              _onNavigate?.(productScreenMap[finalProduct] ?? "map");
+            }
+          }}
+          onSkip={() => _onNavigate?.("landing")}
+        />
+      </PageShell>
+    );
+  }
+
   if (screen === "landing") {
     return (
       <PageShell headerMode="none" tabBarVisible={false} disableAnimation maxWidth="max-w-none px-0 sm:px-0 lg:px-0">
@@ -133,7 +174,7 @@ export function AppStartScreens({
             trackingService.recordFlow("goal_selected", {
               meta: { goalId: nextGoalId, category: nextCategory }
             });
-            analyticsService.track(AnalyticsEvents.GOAL_SELECTED, {
+            analyticsService.goal({
               goal_id: nextGoalId,
               category: nextCategory
             });
@@ -199,4 +240,3 @@ export function AppStartScreens({
     </div>
   );
 }
-

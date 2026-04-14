@@ -119,3 +119,11 @@ export interface OnboardingTelemetryPayload {
   source?: string;
   mode?: string;
 }
+
+export interface WhatsappTelemetryPayload {
+  placement?: string;
+}
+
+export interface CableTelemetryPayload {
+  cableId?: string;
+}

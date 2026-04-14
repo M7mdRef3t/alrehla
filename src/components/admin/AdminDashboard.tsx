@@ -348,7 +348,7 @@ const CollapsibleSidebarGroup: FC<{
                         {CLEAN_NAV_LABELS[item.id] ?? item.label}
                       </span>
                     </div>
-                    <div className={`mr-auto transition-opacity duration-300 flex items-center z-20 ${isActive ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'}`} onClick={(e) => e.stopPropagation()}>
+                    <div className={`mr-auto transition-opacity duration-300 flex items-center z-20 ${isActive ?'opacity-100' : 'opacity-0 group-hover/item:opacity-100'}`} onClick={(e) => e.stopPropagation()}>
                       <AdminTooltip content={NAV_TOOLTIPS[item.id] || "القسم مخصص للإدارة المركزية"} position="bottom" />
                     </div>
                   </button>
@@ -540,7 +540,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
         {/* Mobile Sidebar Overlay */}
         <div
           className={`fixed inset-0 z-40 bg-[#030712]/80 backdrop-blur-sm lg:hidden transition-opacity duration-300 ${
-            isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+            isSidebarOpen ?"opacity-100" : "opacity-0 pointer-events-none"
           }`}
           onClick={() => setIsSidebarOpen(false)}
           aria-hidden="true"

@@ -222,7 +222,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
       >
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-teal-500/20">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center mx-auto mb-3 shadow-md shadow-teal-500/10">
             <ShieldCheck className="w-7 h-7 text-slate-950" />
           </div>
           <h3 className="text-lg font-black text-white mb-1">اختر طريقة الدفع</h3>

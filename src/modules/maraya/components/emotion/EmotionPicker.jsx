@@ -104,7 +104,7 @@ export default function EmotionPicker({
             <span className="emotion-picker__voice-label">{uiText.musicLabel}</span>
             <button
               type="button"
-              className={`emotion-picker__voice-toggle ${musicEnabled ? 'emotion-picker__voice-toggle--on' : ''
+              className={`emotion-picker__voice-toggle cursor-pointer ${musicEnabled ? 'emotion-picker__voice-toggle--on' : ''
                 }`}
               onClick={onToggleMusic}
             >
@@ -116,7 +116,7 @@ export default function EmotionPicker({
             <span className="emotion-picker__voice-label">{uiText.voiceLabel}</span>
             <button
               type="button"
-              className={`emotion-picker__voice-toggle ${voiceEnabled ? 'emotion-picker__voice-toggle--on' : ''
+              className={`emotion-picker__voice-toggle cursor-pointer ${voiceEnabled ? 'emotion-picker__voice-toggle--on' : ''
                 }`}
               onClick={onToggleVoice}
               disabled={!voiceSupported}

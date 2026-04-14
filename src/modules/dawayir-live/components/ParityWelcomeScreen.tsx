@@ -148,10 +148,10 @@ export default function ParityWelcomeScreen({
       </div>
 
       <div className="lang-toggle-container ds-slide-up-fade-delay-more">
-        <button type="button" className={`icon-btn ${language === "ar" ? "active" : ""}`} onClick={() => onSetLanguage("ar")}>
+        <button type="button" className={`icon-btn cursor-pointer ${language === "ar" ? "active" : ""}`} onClick={() => onSetLanguage("ar")}>
           عربي
         </button>
-        <button type="button" className={`icon-btn ${language === "en" ? "active" : ""}`} onClick={() => onSetLanguage("en")}>
+        <button type="button" className={`icon-btn cursor-pointer ${language === "en" ? "active" : ""}`} onClick={() => onSetLanguage("en")}>
           English
         </button>
       </div>

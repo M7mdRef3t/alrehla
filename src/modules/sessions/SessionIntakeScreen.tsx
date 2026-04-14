@@ -202,6 +202,7 @@ export const SessionIntakeScreen = memo(function SessionIntakeScreen({
     canProceedFromReason,
     canProceedFromContext,
     canSubmitSafety,
+    isDiagnosisSynced,
   } = useSessionIntake();
 
   // Initialize rewards bridge
@@ -392,9 +393,20 @@ export const SessionIntakeScreen = memo(function SessionIntakeScreen({
           {/* ─── Reason ─── */}
           {step === "reason" && (
             <motion.div key="reason" {...fadeSlide} className="space-y-6">
-              <div className="text-center mb-8">
+              <div className="text-center mb-8 relative">
                 <h2 className="text-2xl font-black text-white">سبب الطلب</h2>
                 <p className="text-white/30 text-xs mt-1">ساعدنا نفهم اللي بتمر بيه</p>
+                
+                {isDiagnosisSynced && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4 flex items-center justify-center gap-2 px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full mx-auto w-fit"
+                  >
+                    <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" />
+                    <span className="text-[10px] font-black text-cyan-300 uppercase tracking-tighter">Sovereign Intel Synced</span>
+                  </motion.div>
+                )}
               </div>
 
               <FormField label="ليه بتطلب جلسة دلوقتي؟" icon={<Heart className="w-4 h-4 text-rose-400" />}>

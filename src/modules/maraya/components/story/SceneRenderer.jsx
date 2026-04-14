@@ -287,7 +287,7 @@ export default function SceneRenderer({
               <button
                 key={cmd.id}
                 type="button"
-                className={`live-redirect-btn ${judgeMode ? 'live-redirect-btn--judge' : ''} ${directorMove?.command === cmd.label.en ? 'live-redirect-btn--active' : ''}`}
+                className={`live-redirect-btn ${judgeMode ?'live-redirect-btn--judge' : ''} ${directorMove?.command === cmd.label.en ? 'live-redirect-btn--active' : ''}`}
                 onClick={() => onRedirect(cmd.label.en, cmd.intensity)}
                 title={cmd.label[uiLanguage]}
                 aria-label={cmd.label[uiLanguage]}

@@ -1,8 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../../_lib/supabaseAdmin";
+import { sanitizePhone } from "../../../../../src/server/marketingLeadUtils";
 // @ts-ignore — external package may not be installed locally
 import { quickAnalyze } from "@alrehla/masarat";
+
+const isUUID = (id: string | null | undefined) =>
+  typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 
 export async function POST(req: Request) {
   try {
@@ -29,20 +33,22 @@ export async function POST(req: Request) {
 
     // 2. Fetch Sovereign Context (Hub-and-Spoke data)
     let sovereignContext = "";
-    let linkedUserId = session.user_id;
-
-    const isUUID = (id: string | null) => 
-      id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) : false;
+    let linkedUserId = isUUID(session.user_id) ? session.user_id : null;
 
     // If session isn't explicitly linked to a valid user_id, try to find one by phone
-    if ((!linkedUserId || !isUUID(linkedUserId)) && session.client_phone) {
-      const { data: lead } = await supabaseAdmin
-        .from("marketing_leads")
-        .select("profile_id")
-        .eq("phone_normalized", session.client_phone)
-        .maybeSingle();
-      
-      if (lead?.profile_id) linkedUserId = lead.profile_id;
+    if (!linkedUserId && session.client_phone) {
+      const phoneParsed = sanitizePhone(session.client_phone);
+      if (phoneParsed?.normalized) {
+        const { data: lead } = await supabaseAdmin
+          .from("marketing_leads")
+          .select("profile_id")
+          .eq("phone_normalized", phoneParsed.normalized)
+          .maybeSingle();
+
+        if (lead?.profile_id && isUUID(lead.profile_id)) {
+          linkedUserId = lead.profile_id;
+        }
+      }
     }
 
     // If we have a valid user identity, pull the Sovereign Journey Map
@@ -92,7 +98,6 @@ export async function POST(req: Request) {
 
     const aiSummary = `📝 تقرير مسارات لـ ${session.client_name}:\n\nالتشخيص الشامل: ${diagnosticText}\n${patternsText}\n\nالإجراء المقترح: مراجعة خطة العمل بناءً على محددات الجلسة والملف السيادي للمسافر.`;
 
-    // 4. Save Summary and update sync flag
     // 4. Save Summary and update sync flag
     const updatePayload: any = { 
       ai_summary: aiSummary,

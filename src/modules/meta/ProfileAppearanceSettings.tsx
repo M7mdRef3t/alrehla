@@ -110,7 +110,7 @@ export const ProfileAppearanceSettings: React.FC = () => {
                                 key={theme.id}
                                 onClick={() => isUnlocked && setActiveTheme(theme.id)}
                                 className={`relative rounded-xl overflow-hidden shadow-lg transition-all border-2 
-                                ${isUnlocked ? 'cursor-pointer' : 'cursor-not-allowed grayscale'} 
+                                ${isUnlocked ? '' : 'cursor-not-allowed grayscale'} 
                                 ${activeTheme === theme.id ? "border-teal-400 shadow-[0_0_15px_rgba(45,212,191,0.2)]" : "border-white/10 opacity-70 hover:opacity-100"}`}
                             >
                                 <div className={`h-20 bg-gradient-to-br ${theme.bg} flex items-center justify-center relative`}>
@@ -166,7 +166,7 @@ export const ProfileAppearanceSettings: React.FC = () => {
                                     isSelected 
                                         ? "bg-slate-800 border-2 border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]" 
                                         : isUnlocked 
-                                            ? "bg-slate-900 border border-white/10 hover:border-white/30 cursor-pointer" 
+                                            ? "bg-slate-900 border border-white/10 hover:border-white/30" 
                                             : "bg-slate-950/50 border border-white/5 opacity-40 grayscale"
                                 }`}
                             >

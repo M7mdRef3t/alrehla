@@ -251,3 +251,29 @@ export function buildOnboardingEnvelope(
 ): AnalyticsEnvelope | null {
   return buildAnalyticsEnvelope(input);
 }
+
+export function buildWhatsappEnvelope(
+  input: Omit<AnalyticsEnvelopeInput, "event_type"> & {
+    payload: {
+      placement?: string;
+    };
+  }
+): AnalyticsEnvelope | null {
+  return buildAnalyticsEnvelope({
+    ...input,
+    event_type: "whatsapp_contact_clicked",
+  });
+}
+
+export function buildCableEnvelope(
+  input: Omit<AnalyticsEnvelopeInput, "event_type"> & {
+    payload: {
+      cableId?: string;
+    };
+  }
+): AnalyticsEnvelope | null {
+  return buildAnalyticsEnvelope({
+    ...input,
+    event_type: "cable_copied",
+  });
+}

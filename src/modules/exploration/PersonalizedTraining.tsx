@@ -360,7 +360,7 @@ export const PersonalizedTraining: React.FC<PersonalizedTrainingProps> = ({
                               ? "bg-green-50 border-green-400"
                               : "bg-red-50 border-red-400"
                             : "bg-gray-50 border-gray-200 opacity-60"
-                          : "bg-white border-slate-200 hover:border-teal-400 hover:bg-teal-50 cursor-pointer"
+                          : "bg-white border-slate-200 hover:border-teal-400 hover:bg-teal-50"
                       }`}
                     >
                       <div className="flex items-start gap-3">

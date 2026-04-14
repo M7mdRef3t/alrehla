@@ -25,6 +25,9 @@ import { StepPainDump } from "./StepPainDump";
 import { classifyState, safetyTriage, type TransformationDiagnosis, type PoeticState } from "../transformationEngine/interpretationEngine";
 import { generateSovereignInsight } from "@/services/interpretationAI";
 import { useRouter } from "next/navigation";
+import { createCurrentUrl } from "@/services/navigation";
+import type { RecommendedProduct, UserStateObject } from "@/modules/diagnosis/types";
+import { saveDiagnosisState } from "@/modules/diagnosis/types";
 
 const ONBOARDING_STYLES = `
 @keyframes ob-ring-pulse {
@@ -1169,8 +1172,21 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   const completionTrackedRef = useRef(false);
   const [, startTransition] = useTransition();
   const stepRef = useRef(0);
-  
+
   const seededMirrorName = (initialMirrorName ?? "").trim();
+
+  // 🎯 Product param from Landing Mini-Diagnosis (simulation source)
+  const [recommendedProduct, setRecommendedProduct] = useState<RecommendedProduct | null>(null);
+
+  useEffect(() => {
+    const url = createCurrentUrl();
+    if (url) {
+      const productParam = url.searchParams.get("product") as RecommendedProduct | null;
+      if (productParam && ["dawayir", "masarat", "session", "atmosfera"].includes(productParam)) {
+        setRecommendedProduct(productParam);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (seededMirrorName) {
@@ -1179,12 +1195,18 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   }, [seededMirrorName]);
 
   useEffect(() => {
-    trackingService.recordFlow("onboarding_opened");
-    analyticsService.track(AnalyticsEvents.ONBOARDING_STARTED, { 
-      entry_point: seededMirrorName ? "landing_bridge" : "direct",
-      client_event_id: clientEventIdRef.current!
+    const source = createCurrentUrl()?.searchParams.get("source") ?? (seededMirrorName ? "landing_bridge" : "direct");
+    trackingService.recordFlow("onboarding_opened", {
+      meta: {
+        source,
+        recommendedProduct: recommendedProduct ?? null
+      }
     });
-  }, [seededMirrorName]);
+    analyticsService.onboarding(AnalyticsEvents.ONBOARDING_STARTED, {
+      source,
+      step: "onboarding_opened"
+    });
+  }, [seededMirrorName, recommendedProduct]);
 
   // 🟢 Funnel Traceability: Track step views for drop-off analysis
   useEffect(() => {
@@ -1228,15 +1250,15 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
     setPainDump(text);
     if (safetyTriage(text)) {
       setIsSafetyTriggered(true);
-      goTo(7); // Go to Safety Step
+      goTo(8); // Go to Safety Step (shifted)
     } else {
-      goTo(1);
+      goTo(2);
     }
   }, [goTo]);
 
   const handleNoiseNext = useCallback(() => {
     trackingService.recordFlow("onboarding_phase_noise_completed");
-    goTo(2);
+    goTo(1);
   }, [goTo]);
 
   const handleInventoryNext = useCallback((items: { name: string; category: AdviceCategory }[]) => {
@@ -1311,15 +1333,15 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
         );
       }
     }
-    goTo(3);
+    goTo(4);
   }, [addNode, gateContext, goTo, collectedItems, painDump]);
 
   const handleContactCapture = useCallback(async (providedName: string, email: string, whatsapp: string) => {
-    if (!leadTrackedRef.current) {
-      trackingService.recordFlow("lead_form_submitted", { meta: { name: providedName, email, whatsapp } });
-      analyticsService.setStoredClientEventId(clientEventIdRef.current!);
-      leadTrackedRef.current = true;
-    }
+    if (leadTrackedRef.current) return;
+    
+    trackingService.recordFlow("lead_form_submitted", { meta: { name: providedName, email, whatsapp } });
+    analyticsService.setStoredClientEventId(clientEventIdRef.current!);
+    leadTrackedRef.current = true;
 
     const finalName = providedName.trim() || seededMirrorName;
     const nextResult = derivedResult ?? deriveOnboardingResult(collectedItems.map(c => ({...c, ring: c.ring ?? "red"})), gateContext);
@@ -1350,7 +1372,8 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
           greenCount: collectedItems.filter(c => c.ring === "green").length,
           protocol: currentDiagnosis.protocolKey,
           dominantPattern: currentDiagnosis.rootTension,
-          poeticState: currentDiagnosis.state
+          poeticState: currentDiagnosis.state,
+          recommendedProduct: recommendedProduct ?? null
         }
       }).catch(err => console.warn("[CRM] Onboarding sync failed:", err));
     }
@@ -1394,7 +1417,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
       window.sessionStorage.setItem("dawayir-lead-email", email);
       window.sessionStorage.setItem("dawayir-lead-whatsapp", whatsapp);
     }
-    goTo(5);
+    goTo(6);
   }, [collectedItems, derivedResult, diagnosis, gateContext, painDump, seededMirrorName, goTo, setMirrorName]);
 
   const handleComplete = useCallback(() => {
@@ -1404,12 +1427,14 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
           redCount: collectedItems.filter(c => c.ring === "red").length,
           yellowCount: collectedItems.filter(c => c.ring === "yellow").length,
           greenCount: collectedItems.filter(c => c.ring === "green").length,
-          protocol: diagnosis?.protocolKey
+          protocol: diagnosis?.protocolKey,
+          recommendedProduct: recommendedProduct ?? null
         }
       });
-      analyticsService.trackOnboardingCompleted({ 
+      analyticsService.trackOnboardingCompleted({
         flow: "onboarding",
-        client_event_id: clientEventIdRef.current!
+        client_event_id: clientEventIdRef.current!,
+        recommendedProduct: recommendedProduct ?? undefined
       });
       completionTrackedRef.current = true;
     }
@@ -1432,15 +1457,37 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
     );
 
     markJourneyOnboardingDone();
+
+    // Sync with the main diagnosis engine to avoid being gated by AppExperienceShell
+    if (diagnosis) {
+      const typeMap: Record<string, import("@/modules/diagnosis/types").UserStateType> = {
+        "توهة المدارات": "lost",
+        "نبض مشحون": "anxious",
+        "نزيف طاقة": "overwhelmed",
+        "محطة انتظار": "stuck",
+        "مستقر نسبياً": "ready"
+      };
+
+      saveDiagnosisState({
+        type: typeMap[diagnosis.state] || "stuck",
+        mainPain: (painDump?.toLowerCase().includes("علاقة") || painDump?.toLowerCase().includes("زوج") || painDump?.toLowerCase().includes("حبيب")) ? "relationship" : "self",
+        readiness: "high",
+        journeyPhase: "discovery",
+        recommendedProduct: recommendedProduct ?? "dawayir",
+        diagnosisScore: collectedItems.length * 10,
+        completedAt: Date.now()
+      });
+    }
+
     onComplete(false);
     
     if (getNotificationPermission() === "default") {
       setTimeout(() => { void enableNotificationsWithPrompt(); }, 1500);
     }
     
-    // Redirect to Maraya to continue the journey
-    router.push("/maraya");
-  }, [collectedItems, diagnosis, onComplete, router]);
+    // REDACTION: Conflicting navigation moved to parent OnboardingRouteClient
+    // router.push("/maraya");
+  }, [collectedItems, diagnosis, onComplete, recommendedProduct, painDump]);
 
   const dots = [0, 1, 2, 3, 4, 5, 6];
 
@@ -1484,8 +1531,9 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
 
         <div className="px-8 py-6 pb-10 overflow-y-auto custom-scrollbar relative">
           {step === 0 && <FirstSparkOnboarding onComplete={handleNoiseNext} gateContext={gateContext} />}
-          {step === 1 && <StepInventory onNext={handleInventoryNext} onSkip={handleSkip} mirrorName={seededMirrorName} />}
-          {step === 2 && (
+          {step === 1 && <StepPainDump onNext={handlePainDumpNext} onSkip={() => goTo(2)} />}
+          {step === 2 && <StepInventory onNext={handleInventoryNext} onSkip={handleSkip} mirrorName={seededMirrorName} />}
+          {step === 3 && (
             <StepMapping 
               items={collectedItems as any} 
               onNext={handleMappingNext} 
@@ -1493,8 +1541,8 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
               onSkip={handleSkip} 
             />
           )}
-          {step === 3 && <StepInsight items={collectedItems as any} onComplete={() => goTo(4)} onSkip={() => goTo(4)} />}
-          {step === 4 && (
+          {step === 4 && <StepInsight items={collectedItems as any} onComplete={() => goTo(5)} onSkip={() => goTo(5)} />}
+          {step === 5 && (
             <StepContactCapture
               initialName={name}
               onComplete={handleContactCapture}
@@ -1506,11 +1554,11 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
                     greenCount: derivedResult?.greenCount ?? 0
                   }
                 });
-                goTo(5);
+                goTo(6);
               }}
             />
           )}
-          {step === 5 && (
+          {step === 6 && (
             <StepResultsScreen 
               userName={name} 
               diagnosis={diagnosis} 
@@ -1520,6 +1568,8 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
               onComplete={handleComplete} 
             />
           )}
+
+          {step === 8 && <StepSafetyTriage />}
           
           <AnimatePresence>
             {diagnosticModal && (

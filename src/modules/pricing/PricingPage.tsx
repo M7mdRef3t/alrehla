@@ -84,7 +84,7 @@ export default function PricingPage() {
 
   const handleSubscribe = async () => {
     setIsLoading(true);
-    try { analyticsService.track(AnalyticsEvents.CTA_CLICK, { source: "pricing", plan: "premium" }); } catch { /* */ }
+    try { analyticsService.cta({ source: "pricing", plan: "premium" }); } catch { /* */ }
 
     if (!supabase) {
       alert("خدمة التسجيل غير متاحة حاليًا.");

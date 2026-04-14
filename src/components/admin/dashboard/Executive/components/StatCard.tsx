@@ -23,7 +23,7 @@ export const StatCard: FC<{
 
     return (
         <div
-            className={`relative group perspective-1000 h-full ${onClick ? "cursor-pointer" : ""}`}
+            className={`relative group perspective-1000 h-full ${onClick ?"" : ""}`}
             onClick={onClick}
             role={onClick ? "button" : undefined}
             tabIndex={onClick ? 0 : undefined}

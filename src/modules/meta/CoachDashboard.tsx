@@ -153,13 +153,13 @@ export const CoachDashboard: React.FC<{ isOpen: boolean; onClose: () => void }> 
 
                 <div className="flex border-b border-slate-700 bg-slate-800/30">
                     <button
-                        className={`flex-1 p-4 font-bold text-sm transition-colors border-b-2 ${activeTab === "patients" ? "border-indigo-500 text-indigo-400 bg-indigo-500/5" : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"}`}
+                        className={`flex-1 p-4 font-bold text-sm transition-colors border-b-2 cursor-pointer ${activeTab === "patients" ? "border-indigo-500 text-indigo-400 bg-indigo-500/5" : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"}`}
                         onClick={() => setActiveTab("patients")}
                     >
                         المرضى الحاليين ({patients.length})
                     </button>
                     <button
-                        className={`flex-1 p-4 font-bold text-sm transition-colors border-b-2 ${activeTab === "invites" ? "border-indigo-500 text-indigo-400 bg-indigo-500/5" : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"}`}
+                        className={`flex-1 p-4 font-bold text-sm transition-colors border-b-2 cursor-pointer ${activeTab === "invites" ? "border-indigo-500 text-indigo-400 bg-indigo-500/5" : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"}`}
                         onClick={() => setActiveTab("invites")}
                     >
                         أكواد الدعوة

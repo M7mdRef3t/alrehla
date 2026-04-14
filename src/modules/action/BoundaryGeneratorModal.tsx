@@ -2,6 +2,8 @@ import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Sparkles, Copy, X, Loader2, MessageSquareText } from "lucide-react";
+import { Z_LAYERS } from "@/config/zIndices";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { geminiClient } from "@/services/geminiClient";
 
@@ -23,6 +25,8 @@ export const BoundaryGeneratorModal: FC<BoundaryGeneratorModalProps> = ({ isOpen
             setIsGenerating(false);
         }
     }, [isOpen]);
+
+    useScrollLock(isOpen);
 
     const generateScript = async () => {
         if (!node) return;
@@ -67,7 +71,8 @@ ${isArchived ? "وقد قمت بوضعه في دائرة الأرشيف (الم�
     return (
         <AnimatePresence>
             <motion.div
-                className="fixed inset-0 z-50 flex items-center justify-center px-4"
+                className="fixed inset-0 flex items-center justify-center px-4"
+                style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

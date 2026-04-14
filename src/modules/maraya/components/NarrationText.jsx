@@ -1,1 +1,1 @@
-﻿export { default } from './story/NarrationText.jsx';
+export { default } from './story/NarrationText.jsx';

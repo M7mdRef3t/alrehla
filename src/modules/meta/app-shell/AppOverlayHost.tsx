@@ -1,4 +1,4 @@
-import { lazy, memo, Suspense, useCallback, useMemo } from "react";
+import { lazy, memo, Suspense, useCallback, useMemo, useState, useEffect } from "react";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "@/utils/featureFlags";
@@ -24,6 +24,8 @@ import { SafePulseCheckModal, SafeAIChatbot } from "../WrappedComponents";
 import { OVERLAY_SEVERITY, CRITICAL_SEVERITY_THRESHOLD } from "@/utils/overlayPriorities";
 import type { AppOverlayFlag } from "@/domains/consciousness/store/overlay.store";
 import type { PostAuthIntent } from "@/utils/postAuthIntent";
+import { Z_LAYERS } from "@/config/zIndices";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 const GoogleAuthModal = lazy(() => import('@/modules/exploration/GoogleAuthModal').then((m) => ({ default: m.GoogleAuthModal })));
 const AnalyticsConsentBanner = lazy(() =>
@@ -117,6 +119,7 @@ const ImmersionPathDetails = lazy(() => import('@/modules/growth/ImmersionPathDe
 const TajmeedHub = lazy(() => import('@/modules/gamification/EvolutionHub').then(m => ({ default: m.TajmeedHub })));
 const VanguardCollective = lazy(() => import('@/modules/growth/VanguardCollective').then(m => ({ default: m.VanguardCollective })));
 const ChronicleOverlay = lazy(() => import('@/modules/gamification/ChronicleOverlay').then(m => ({ default: m.ChronicleOverlay })));
+const SanctuaryLockdownExperience = lazy(() => import('@/modules/action/SanctuaryLockdownExperience').then(m => ({ default: m.SanctuaryLockdownExperience })));
 
 interface AppOverlayHostProps {
   canShowAIChatbot: boolean;
@@ -138,6 +141,12 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   onFeedbackSubmit,
   onOnboardingComplete: externalOnboardingComplete
 }: AppOverlayHostProps) {
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
+
   const flags = useAppOverlayState((state) => state.flags);
   const circleGrowthOpen = useAppOverlayState((state) => state.flags.circleGrowth);
   const lockedFeature = useAppOverlayState((state) => state.lockedFeature);
@@ -265,7 +274,10 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   const topOverlayId = activeOverlayItems[0]?.id;
   const isLockedByCritical = (activeOverlayItems[0]?.severity ?? 0) >= CRITICAL_SEVERITY_THRESHOLD;
 
-  const isLivePage = typeof window !== "undefined" && window.location.pathname.includes("dawayir-live");
+  const isLivePage = useMemo(() => {
+    if (!hasHydrated) return false;
+    return typeof window !== "undefined" && window.location.pathname.includes("dawayir-live");
+  }, [hasHydrated]);
 
   const setThemePreference = useCallback((nextTheme: ThemePreference) => {
     setTheme(nextTheme);
@@ -300,6 +312,9 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     const loginIntent: PostAuthIntent = { kind: "login", createdAt: Date.now() };
     setAuthIntent(loginIntent);
   }, [setAuthIntent]);
+
+  // Unified Scroll Lock Strategy
+  useScrollLock(!!topOverlayId);
 
   // Helper to determine if an overlay is allowed to render
   const isVisible = (id: AppOverlayFlag | "emergency" | "pulseCheck") => {
@@ -409,8 +424,23 @@ export const AppOverlayHost = memo(function AppOverlayHost({
 
   const showConsentBanner = !isUserMode && !runtimeEnv.isDemoMode;
 
+  if (!hasHydrated) {
+    return null;
+  }
+
   return (
     <>
+      {flags.sanctuary && isVisible("sanctuary") && (
+        <div 
+          className="fixed inset-0 pointer-events-none" 
+          style={{ zIndex: Z_LAYERS.TACTICAL_BACKDROP }}
+        >
+          <SanctuaryLockdownExperience 
+            onExit={() => setOverlay("sanctuary", false)} 
+          />
+        </div>
+      )}
+
       {screen === "map" ? (
         <JourneyTimeline
           isOpen={showJourneyTimeline}
@@ -444,10 +474,12 @@ export const AppOverlayHost = memo(function AppOverlayHost({
           />
         )}
 
-        <ConsciousnessArchiveModal
-          isOpen={showConsciousnessArchive && isVisible("consciousnessArchive")}
-          onClose={() => setOverlay("consciousnessArchive", false)}
-        />
+        {showConsciousnessArchive && isVisible("consciousnessArchive") && (
+          <ConsciousnessArchiveModal
+            isOpen={true}
+            onClose={() => setOverlay("consciousnessArchive", false)}
+          />
+        )}
 
         {achievementToastVisible && isVisible("achievements") && <AchievementToast />}
 
@@ -500,7 +532,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
         )}
 
         {flags.blindCapsuleOpener && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <BlindCapsuleOpener />
           </Suspense>
         )}
@@ -665,8 +697,11 @@ export const AppOverlayHost = memo(function AppOverlayHost({
           />
         )}
         
-        {/* Global Gamification Nudges Overlay */}
-        <GamificationNudgeToast />
+        {showNudgeToast && activeNudge && isVisible("nudgeToast") && (
+          <Suspense fallback={null}>
+            <GamificationNudgeToast />
+          </Suspense>
+        )}
 
         {showRecoveryPlan && isVisible("recoveryPlan") && (
           <RecoveryPlanModal

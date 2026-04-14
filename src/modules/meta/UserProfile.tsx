@@ -229,7 +229,7 @@ function EditableBio() {
           <button onClick={cancel} className="px-4 py-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors">
             إلغاء
           </button>
-          <button onClick={save} className="flex items-center gap-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 px-5 py-1.5 rounded-full text-xs font-bold text-slate-950 shadow-[0_0_15px_rgba(45,212,191,0.4)] hover:shadow-[0_0_20px_rgba(45,212,191,0.6)] transition-all">
+          <button onClick={save} className="flex items-center gap-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 px-5 py-1.5 rounded-full text-xs font-bold text-slate-950 shadow-sm shadow-teal-500/10 hover:shadow-[0_0_20px_rgba(45,212,191,0.6)] transition-all">
             <Check size={14} /> حفظ المذكرة
           </button>
         </div>
@@ -238,7 +238,7 @@ function EditableBio() {
   }
 
   return (
-    <div className="mt-4 px-4 flex justify-center group relative cursor-pointer" onClick={() => setEditing(true)}>
+    <div className="mt-4 px-4 flex justify-center group relative" onClick={() => setEditing(true)}>
       <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed text-center italic opacity-80 group-hover:opacity-100 transition-opacity max-w-[280px]">
         "{bio || "لم يتم تدوين شيء هنا بعد. اضغط للتدوين في رحلتك المدارية."}"
       </p>

@@ -254,11 +254,14 @@ export function trackPageView(pageName: string): void {
 
   if (pageViewPayload) {
     void sendAnalyticsEnvelope(pageViewPayload);
+    sendMetaEvent("PageView", {}, { bypassConsent: true, client_event_id: pageViewPayload.client_event_id ?? undefined });
   } else {
     void sendInternalAnalytics("page_view", {
     page_title: pageName,
     page_location: getHref()
     });
+    const fallback_event_id = generateUUID();
+    sendMetaEvent("PageView", {}, { bypassConsent: true, client_event_id: fallback_event_id });
   }
 
   if (isAnalyticsEnabled()) {

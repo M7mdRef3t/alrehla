@@ -68,7 +68,8 @@ export const OVERLAY_SEVERITY: Record<AppOverlayFlag | "emergency" | "pulseCheck
   egoDeath: 5,
   wisdomMatrix: 5,
   immersionPath: 5,
-  vanguardCollective: 5
+  vanguardCollective: 5,
+  sanctuary: 9
 };
 
 export const CRITICAL_SEVERITY_THRESHOLD = 9;

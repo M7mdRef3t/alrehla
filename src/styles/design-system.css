@@ -43,7 +43,8 @@
   --ds-color-border-hover:   rgba(45, 212, 191, 0.35);
   --ds-color-glass-default:  rgba(255, 255, 255, 0.70);
   --ds-color-glass-hover:    rgba(255, 255, 255, 0.85);
-  --ds-shadow-base:          0 2px 16px rgba(0, 0, 0, 0.06);
+  --ds-shadow-base:          0 1px 6px rgba(0, 0, 0, 0.03);
+  --app-shadow:             0 4px 24px -1px rgba(0, 0, 0, 0.05), 0 2px 8px -1px rgba(0, 0, 0, 0.03);
 
   /* Soft teal alias */
   --soft-teal: #2dd4bf;
@@ -95,7 +96,8 @@
   --ds-color-border-hover:   rgba(45, 212, 191, 0.45);
   --ds-color-glass-default:  rgba(5, 8, 20, 0.6);
   --ds-color-glass-hover:    rgba(5, 8, 20, 0.8);
-  --ds-shadow-base:          0 12px 40px -10px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+--ds-shadow-base:          0 4px 15px -8px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  --app-shadow:             0 12px 40px -8px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.06);
 
   /* Page shorthand */
   --ds-color-text-primary:   var(--ds-theme-text-primary);
@@ -129,8 +131,8 @@ svg [role="button"]:focus-visible {
   border-radius: var(--ds-radius-lg);
   border: 1px solid var(--ds-color-border-default);
   background: var(--ds-color-glass-default);
-  backdrop-filter: blur(24px) saturate(120%);
   -webkit-backdrop-filter: blur(24px) saturate(120%);
+  backdrop-filter: blur(24px) saturate(120%);
   box-shadow: var(--ds-shadow-base);
   transition:
     border-color var(--ds-motion-base) var(--ds-motion-ease),
@@ -146,16 +148,16 @@ svg [role="button"]:focus-visible {
 
 .glass-heavy {
   background: rgba(5, 8, 20, 0.65);
-  backdrop-filter: blur(32px) saturate(150%);
   -webkit-backdrop-filter: blur(32px) saturate(150%);
+  backdrop-filter: blur(32px) saturate(150%);
   border: 1px solid rgba(45, 212, 191, 0.2);
   box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
 .glass-dark {
   background: rgba(2, 4, 10, 0.7);
-  backdrop-filter: blur(24px) saturate(120%);
   -webkit-backdrop-filter: blur(24px) saturate(120%);
+  backdrop-filter: blur(24px) saturate(120%);
   border: 1px solid rgba(45, 212, 191, 0.1);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
 }
@@ -166,7 +168,7 @@ svg [role="button"]:focus-visible {
   justify-content: center;
   border-radius: var(--ds-radius-full);
   padding: 0.25rem 0.625rem;
-  border: 1px solid color-mix(in srgb, var(--soft-teal) 45%, transparent);
+  border: 1px solid rgba(45, 212, 191, 0.45);
   background: color-mix(in srgb, var(--soft-teal) 16%, transparent);
   color: var(--ds-theme-text-primary);
   font-size: var(--ds-text-caption-size);
@@ -254,7 +256,7 @@ svg [role="button"]:focus-visible {
 
 .ds-button[data-variant="secondary"] {
   color: var(--ds-theme-text-primary);
-  border-color: color-mix(in srgb, var(--soft-teal) 45%, transparent);
+  border-color: rgba(45, 212, 191, 0.45);
   background: color-mix(in srgb, var(--soft-teal) 14%, transparent);
 }
 
@@ -287,14 +289,14 @@ svg [role="button"]:focus-visible {
 .ds-sidebar-item:hover {
   color: var(--ds-theme-text-primary);
   background: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 8%, transparent);
-  border-color: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 25%, transparent);
+  border-color: rgba(45, 212, 191, 0.25);
   box-shadow: 0 4px 20px -5px color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 20%, transparent);
 }
 
 .ds-sidebar-item[data-active="true"] {
   color: var(--ds-theme-text-primary);
   background: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 12%, transparent);
-  border-color: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 40%, transparent);
+  border-color: rgba(45, 212, 191, 0.4);
   box-shadow: 0 0 15px -2px color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 30%, transparent);
 }
 
@@ -315,6 +317,46 @@ svg [role="button"]:focus-visible {
   background: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 15%, transparent);
   color: var(--ds-item-glow-color, var(--ds-color-primary));
   box-shadow: 0 0 10px color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 30%, transparent);
+}
+
+.ds-sidebar-item.sidebar-color-emerald {
+  --ds-item-glow-color: #10b981;
+}
+
+.ds-sidebar-item.sidebar-color-rose {
+  --ds-item-glow-color: #f43f5e;
+}
+
+.ds-sidebar-item.sidebar-color-violet {
+  --ds-item-glow-color: #a78bfa;
+}
+
+.ds-sidebar-item.sidebar-color-sky {
+  --ds-item-glow-color: #60a5fa;
+}
+
+.ds-sidebar-item.sidebar-color-teal {
+  --ds-item-glow-color: #14b8a6;
+}
+
+.ds-sidebar-item.sidebar-color-cyan {
+  --ds-item-glow-color: #2dd4bf;
+}
+
+.ds-sidebar-item.sidebar-color-amber {
+  --ds-item-glow-color: #f59e0b;
+}
+
+.ds-sidebar-item.sidebar-color-slate {
+  --ds-item-glow-color: #64748b;
+}
+
+.ds-sidebar-item.sidebar-color-brand-teal {
+  --ds-item-glow-color: var(--ds-color-brand-teal-400);
+}
+
+.sidebar-active-indicator {
+  background: var(--ds-item-glow-color, var(--ds-color-primary));
 }
 
 /* 📝 Markdown Content Typography */
@@ -339,7 +381,6 @@ svg [role="button"]:focus-visible {
   margin-bottom: 0.75rem;
   line-height: 1.6;
   text-align: justify;
-  text-justify: inter-word;
 }
 
 .markdown-content strong {
@@ -364,8 +405,8 @@ svg [role="button"]:focus-visible {
 .admin-glass-card {
   border-radius: var(--ds-radius-xl) !important;
   background: radial-gradient(circle at top left, rgba(0, 240, 255, 0.05), transparent), rgba(2, 4, 10, 0.65) !important;
-  backdrop-filter: blur(32px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
+  backdrop-filter: blur(32px) saturate(180%) !important;
   border: 1px solid rgba(0, 240, 255, 0.15) !important;
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.05) !important;
   position: relative;

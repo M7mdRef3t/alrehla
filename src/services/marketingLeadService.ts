@@ -1,5 +1,6 @@
 import { logger } from "@/services/logger";
 import type { MarketingLeadPayload } from "@/types/marketingLead";
+import type { FunnelIdentifiers } from "@/domains/funnel/contracts";
 import { trackLead, getOrCreateAnonymousId, getStoredClientEventId } from "./analytics";
 import { recordFlowEvent } from "./journeyTracking";
 import { getStoredUtmParams } from "./marketingAttribution";
@@ -26,9 +27,11 @@ export type CaptureMarketingLeadInput = {
   metadata?: Record<string, any>;
   anonymousId?: string;
   clientEventId?: string;
+  attribution?: FunnelIdentifiers;
 };
 
 function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayload {
+  const { attribution, ...payloadInput } = input;
   const utm = getStoredUtmParams();
   const utmSource = (utm?.utm_source || "").toLowerCase();
   const utmMedium = (utm?.utm_medium || "").toLowerCase();
@@ -42,7 +45,8 @@ function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayloa
   }
   
   return {
-    ...input,
+    ...payloadInput,
+    ...(attribution ?? {}),
     email: input.email || undefined,
     phone: input.phone || undefined,
     note: input.note?.trim() || undefined,
@@ -67,7 +71,7 @@ function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayloa
  * Capture or update a marketing lead.
  * This is the primary entry point for Lead CRM sync.
  */
-export async function captureMarketingLead(
+if (typeof window !== "undefined") { (window as any).marketingLeadService = { captureMarketingLead, syncLead: captureMarketingLead }; } export async function captureMarketingLead(
   input: CaptureMarketingLeadInput
 ): Promise<CaptureLeadResponse> {
   const payload = buildLeadPayload(input);

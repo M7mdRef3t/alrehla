@@ -15,6 +15,7 @@ import { useEmergencyState } from "@/domains/admin/store/emergency.store";
 import { useToastState } from '@/modules/map/dawayirIndex';
 import { supabase } from "@/services/supabaseClient";
 import { isAlignedWithPrinciples } from "./CORE_PRINCIPLES";
+import { telegramBot } from "@/services/telegramBot";
 
 
 
@@ -79,7 +80,8 @@ export type DecisionType =
   | "change_core_principles"
   | "pivot_business_model"
   | "remove_major_feature"
-  | "legal_decision";
+  | "legal_decision"
+  | "notify_admin";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🚦 مستويات الحكم الذاتي (Autonomy Levels)
@@ -153,6 +155,7 @@ export const DECISION_RULES: Record<DecisionType, AutonomyLevel> = {
   pivot_business_model: "FORBIDDEN",
   remove_major_feature: "FORBIDDEN",
   legal_decision: "FORBIDDEN",
+  notify_admin: "AUTONOMOUS_WITH_LOG",
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -309,6 +312,12 @@ export class DecisionEngine {
           if (p?.message) {
             useToastState.getState().showToast(p.message, "info");
           }
+        } catch (e) { logger.error(e); }
+        break;
+      case "notify_admin":
+        try {
+          await telegramBot.notifyAdminDecision(decision);
+          useToastState.getState().showToast("تم إرسال إشعار سيادي للأدمن", "info");
         } catch (e) { logger.error(e); }
         break;
 

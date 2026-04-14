@@ -15,6 +15,7 @@ import type { ResourceTab } from "../../growth/ResourcesCenter";
 import { UserProfile } from "../UserProfile";
 import { SanctuaryDashboard } from "../SanctuaryDashboard";
 import { DawayirPlayground } from "../../social/DawayirPlayground";
+import { AwarenessSkeleton } from "../AwarenessSkeleton";
 
 const CommandCenter = lazy(() => import("../../lifeOS/CommandCenter"));
 const MarayaApp = lazy(() => import("../../maraya/MarayaApp"));
@@ -79,6 +80,7 @@ interface AppMainExperienceContentProps {
   onOpenMirror: MetaScreensProps["onOpenMirror"];
   onOpenConsciousnessArchive: MetaScreensProps["onOpenConsciousnessArchive"];
   onOpenTimeCapsule: MetaScreensProps["onOpenTimeCapsule"];
+  onDiagnosisComplete?: StartScreensProps["onDiagnosisComplete"];
 }
 
 export const AppMainExperienceContent = memo(function AppMainExperienceContent({
@@ -127,12 +129,13 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   onOpenMuteProtocol,
   onOpenMirror,
   onOpenConsciousnessArchive,
-  onOpenTimeCapsule
+  onOpenTimeCapsule,
+  onDiagnosisComplete,
 }: AppMainExperienceContentProps) {
   // State for deep-linking from BehavioralHub to ResourcesCenter
   const [resourceDeepLink, setResourceDeepLink] = useState<{ tab: ResourceTab; search: string } | null>(null);
 
-  if (screen === "landing" || screen === "goal" || screen === "survey" || screen === "map" || screen === "protocol") {
+  if (screen === "landing" || screen === "goal" || screen === "survey" || screen === "map" || screen === "protocol" || screen === "diagnosis") {
     return (
       <AppStartScreens
         screen={screen}
@@ -169,6 +172,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
         onOpenLibrary={onOpenLibrary}
         onOpenProfile={onOpenProfile}
         onNavigate={(s) => onNavigate?.(s as Parameters<typeof onNavigate>[0])}
+        onDiagnosisComplete={onDiagnosisComplete}
       />
     );
   }
@@ -182,21 +186,23 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
     screen === "grounding"
   ) {
     return (
-      <AppJourneyScreens
-        screen={screen}
-        toolsBackScreen={toolsBackScreen}
-        missionNodeId={missionNodeId}
-        canUseMap={canUseMap}
-        availableFeatures={availableFeatures}
-        nextStepDecision={nextStepDecision}
-        onNavigate={onNavigate}
-        onOpenDawayir={onOpenDawayir}
-        onOpenDawayirSetup={onOpenDawayirSetup}
-        onFeatureLocked={onFeatureLocked}
-        onOpenGoal={onOpenGoal}
-        onTakeNextStep={onTakeNextStep}
-        onRefreshNextStep={onRefreshNextStep}
-      />
+      <Suspense fallback={<AwarenessSkeleton />}>
+        <AppJourneyScreens
+          screen={screen}
+          toolsBackScreen={toolsBackScreen}
+          missionNodeId={missionNodeId}
+          canUseMap={canUseMap}
+          availableFeatures={availableFeatures}
+          nextStepDecision={nextStepDecision}
+          onNavigate={onNavigate}
+          onOpenDawayir={onOpenDawayir}
+          onOpenDawayirSetup={onOpenDawayirSetup}
+          onFeatureLocked={onFeatureLocked}
+          onOpenGoal={onOpenGoal}
+          onTakeNextStep={onTakeNextStep}
+          onRefreshNextStep={onRefreshNextStep}
+        />
+      </Suspense>
     );
   }
 

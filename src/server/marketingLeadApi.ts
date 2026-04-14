@@ -202,31 +202,34 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
 
   // Handle table return from RPC
   const result = Array.isArray(data) ? data[0] : (data as any) || {};
-  const storedLeadId = result.lead_id;
+  const internalId = result.internal_id;
+  const publicLeadId = result.public_lead_id;
   const isNew = result.is_new;
   const conflictDetected = result.conflict;
 
-  if (storedLeadId) {
+  if (internalId && publicLeadId) {
     // P0-2: Explicitly link profile_id if we found one
     if (existingProfileId) {
       await supabaseAdmin
         .from("marketing_leads")
         .update({ profile_id: existingProfileId })
-        .eq("id", storedLeadId);
+        .eq("id", internalId);
     }
 
-    enqueueOutreachAsync(input.email || null, input.source, input.utm, storedLeadId, input.phoneNormalized);
+    // Outreach Queue uses PUBLIC lead_id for FK constraints
+    enqueueOutreachAsync(input.email || null, input.source, input.utm, publicLeadId, input.phoneNormalized);
 
     // Validate WhatsApp if phone is present and it's a NEW lead
+    // WhatsApp events use INTERNAL id for FK constraints
     if (input.phoneNormalized && isNew) {
-      void WhatsAppCloudService.validateNumber(input.phoneNormalized, storedLeadId).catch((err) => {
+      void WhatsAppCloudService.validateNumber(input.phoneNormalized, internalId).catch((err) => {
         console.error("[marketing/lead] whatsapp_validation_trigger_failed:", err);
       });
     }
   }
 
   return {
-    lead_id: storedLeadId!,
+    lead_id: publicLeadId!,
     email: input.email || null,
     phone_normalized: input.phoneNormalized || null,
     is_new: isNew,
@@ -343,14 +346,26 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
         }
       });
 
+      // Determine the friendly message based on result
+      let message = "تم تسجيل البيانات بنجاح ✅";
+      if (result.is_new) {
+        message = `لُقطة! ${input.name || 'العميل'} بقى معانا في الرحلة 🎯`;
+      } else if (result.conflict) {
+        message = "العميل ده موجود عندنا أصلاً، ورقم تليفونه اتحدّث ✅";
+      } else {
+        message = "تم تحديث بيانات العميل بنجاح ✅";
+      }
+
       return NextResponse.json({
         ok: true,
+        message,
         lead: { 
           email: result.email, 
           phone: result.phone_normalized, 
           source: input.source, 
           lead_id: result.lead_id, 
-          conflict: result.conflict 
+          conflict: result.conflict,
+          is_new: result.is_new
         }
       });
     }

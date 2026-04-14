@@ -8,7 +8,7 @@ export const Card: FC<CardProps> = ({ className, onClick, ...props }) => {
     <div
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
-      className={cn("ds-card", onClick && "cursor-pointer", className)}
+      className={cn("ds-card", onClick && "", className)}
       onClick={onClick}
       {...props}
     />

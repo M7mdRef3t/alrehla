@@ -131,7 +131,7 @@ export function WisdomMatrixHub() {
                     className={`relative p-6 rounded-2xl border backdrop-blur-md transition-all duration-300 group ${
                       resource.isLocked 
                         ? "bg-slate-900/40 border-slate-800/50 opacity-75 grayscale-[30%]" 
-                        : "bg-slate-800/40 hover:bg-slate-800/60 border-slate-700 hover:border-blue-500/30 cursor-pointer"
+                        : "bg-slate-800/40 hover:bg-slate-800/60 border-slate-700 hover:border-blue-500/30"
                     }`}
                   >
                     <div className="flex justify-between items-start mb-4">

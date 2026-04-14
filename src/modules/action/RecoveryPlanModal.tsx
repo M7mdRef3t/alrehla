@@ -1,12 +1,13 @@
 import type { FC } from "react";
 import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Target } from "lucide-react";
-import { useMapState } from '@/modules/map/dawayirIndex';
+import { X, Target, ShieldAlert } from "lucide-react";
+import { Z_LAYERS } from "@/config/zIndices";
+import { useScrollLock } from "@/hooks/useScrollLock";
+import { resolveAdviceCategory } from "@/data/adviceScripts";
+import { useMapState } from "@/modules/map/dawayirIndex";
 import { DynamicRecoveryPlan } from "./DynamicRecoveryPlan";
 import { RelapsePrevention } from "./RelapsePrevention";
-import { ShieldAlert } from "lucide-react";
-import { resolveAdviceCategory } from "@/data/adviceScripts";
 import type { PathId } from "../pathEngine/pathTypes";
 
 interface RecoveryPlanModalProps {
@@ -22,6 +23,7 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
   initialPreselectedNodeId,
   focusTraumaInheritance
 }) => {
+  useScrollLock(isOpen);
   const nodes = useMapState((s) => s.nodes);
   const toggleStepCompletion = useMapState((s) => s.toggleStepCompletion);
   const updateDynamicStepInput = useMapState((s) => s.updateDynamicStepInput);
@@ -72,7 +74,8 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/40 z-50"
+            className="fixed inset-0 bg-black/40"
+            style={{ zIndex: Z_LAYERS.MODAL_BACKDROP }}
           />
 
           {/* Modal */}
@@ -80,7 +83,8 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-3xl mx-auto"
+            className="fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-3xl mx-auto"
+            style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
           >
             <div className="bg-white rounded-2xl overflow-hidden max-h-[90vh] flex flex-col">
               {/* Header */}

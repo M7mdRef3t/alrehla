@@ -430,7 +430,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
               : 1;
             return (
               <li key={`${step}-${index}`} className="rounded-lg bg-white/70 px-3 py-2 border border-emerald-200">
-                <label className="flex items-start gap-2 cursor-pointer">
+                <label className="flex items-start gap-2">
                       <input
                           id={`mission-step-${index}`}
                           name={`missionStep${index}`}

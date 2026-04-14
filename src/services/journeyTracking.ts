@@ -411,7 +411,8 @@ export type FlowStep =
   | "routing_intervention_triggered"
   | "safety_triage_triggered"
   | "quiz_completed"
-  | "quiz_hub_opened";
+  | "quiz_hub_opened"
+  | "diagnosis_completed";
 
 export function recordFlowEvent(
   step: FlowStep,

@@ -1,1 +1,1 @@
-﻿export { default } from './story/ChoiceButtons.jsx';
+export { default } from './story/ChoiceButtons.jsx';

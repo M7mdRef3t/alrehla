@@ -5,7 +5,8 @@ import { safeGetSession, supabase } from "@/services/supabaseClient";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { replaceUrl, createCurrentUrl } from "@/services/navigation";
 import { runtimeEnv } from "@/config/runtimeEnv";
-import { trackEvent, AnalyticsEvents, trackIdentityLinked } from "@/services/analytics";
+import { AnalyticsEvents, trackIdentityLinked } from "@/services/analytics";
+import { analyticsService } from "@/domains/analytics";
 import { markRevenueAccessUnlocked } from "@/services/revenueAccess";
 import { EcosystemData } from "@/types/ecosystem";
 
@@ -306,7 +307,7 @@ async function initSupabaseAuth(): Promise<void> {
         void syncAuthRole(currentSession);
 
         if (event === "SIGNED_IN" && currentSession?.user?.id) {
-          trackEvent(AnalyticsEvents.AUTH_COMPLETED);
+          analyticsService.auth(AnalyticsEvents.AUTH_COMPLETED);
           void trackIdentityLinked(currentSession.user.id);
         }
       });

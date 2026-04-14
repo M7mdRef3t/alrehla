@@ -134,7 +134,7 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
                     }
                   }}
                   className={`group relative p-4 mb-2 rounded-2xl border transition-all duration-300 hover:bg-white/[0.02] ${
-                    event.lead_id ? 'cursor-pointer' : ''
+                    event.lead_id ? '' : ''
                   } ${
                     event.direction === 'inbound' ? 'border-white/5 bg-slate-900/40' : 'border-indigo-500/10 bg-indigo-500/5'
                   }`}

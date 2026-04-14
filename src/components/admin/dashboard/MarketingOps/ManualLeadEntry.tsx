@@ -20,17 +20,59 @@ interface ManualLeadEntryProps {
 }
 
 const BOOKMARKLET_CODE = `javascript:(function(){
+  const API_URL = 'https://www.alrehla.app/api/marketing/lead';
+  const showToast = (msg, type = 'loading') => {
+    let toast = document.getElementById('dawayir-hunter-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'dawayir-hunter-toast';
+      Object.assign(toast.style, {
+        position: 'fixed', top: '24px', right: '24px', zIndex: '999999',
+        padding: '16px 24px', borderRadius: '20px', background: 'rgba(15, 23, 42, 0.85)',
+        backdropFilter: 'blur(16px)', border: '1px solid rgba(99, 102, 241, 0.4)',
+        color: 'white', fontFamily: 'system-ui, -apple-system, sans-serif',
+        boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.5)', transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        display: 'flex', alignItems: 'center', gap: '16px', direction: 'rtl'
+      });
+      document.body.appendChild(toast);
+    }
+    toast.style.transform = 'translateX(0) scale(1)';
+    toast.style.opacity = '1';
+    toast.innerHTML = '<div style="font-size:28px">' + (type === 'loading' ? '⏳' : type === 'success' ? '🎯' : '⚠️') + '</div>' +
+      '<div><div style="font-weight:900;font-size:15px;color:white">' + msg + '</div>' +
+      '<div style="font-size:10px;opacity:0.6;margin-top:2px;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.7)">DAWAYIR SOVEREIGN HUNTER</div></div>';
+    if (type !== 'loading') {
+      setTimeout(() => {
+        toast.style.transform = 'translateX(20px) scale(0.9)';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 400);
+      }, 4000);
+    }
+  };
   try {
-    var rawText = document.querySelector('#main header') ? document.querySelector('#main header').innerText : '';
-    var match = rawText.replace(/[\\s-]/g,'').match(/\\+?\\d{10,15}/);
-    var defaultPhone = match ? match[0] : '';
-    var url = 'https://www.alrehla.app/admin?tab=marketing-ops&add_lead_flag=1&phone=' + encodeURIComponent(defaultPhone);
-    window.open(url, 'DawayirLead', 'width=500,height=700,left='+(screen.width-500)/2+',top='+(screen.height-700)/2);
-  } catch(e) {
-    var url = 'https://www.alrehla.app/admin?tab=marketing-ops&add_lead_flag=1';
-    window.open(url, 'DawayirLead', 'width=500,height=700');
-  }
+    const header = document.querySelector('#main header');
+    if (!header) { alert('🎯 افتح شات الأول يا بطل!'); return; }
+    const nameEl = header.querySelector('span[title], div[title]');
+    const name = nameEl ? (nameEl.getAttribute('title') || nameEl.innerText) : 'عميل غير معروف';
+    const rawText = header.innerText.replace(/[\\s-]/g,'');
+    const phoneMatch = rawText.match(/\\d{10,15}/);
+    const phone = phoneMatch ? phoneMatch[0] : (name.replace(/[\\s-]/g,'').match(/\\d{10,15}/) ? name.replace(/[\\s-]/g,'').match(/\\d{10,15}/)[0] : '');
+    if (!phone) { alert('❌ مش قادر أوصل لرقم التليفون، اتأكد إن الرقم ظاهر في الهيدر'); return; }
+    showToast('جارٍ الصيد... 🎣');
+    fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phone, name: name, source: 'whatsapp_hunter_v2', status: 'new' })
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.ok) showToast(res.message || 'تم الصيد بنجاح! 🎯', 'success');
+      else showToast('فشل الصيد: ' + (res.error || 'خطأ غير معروف'), 'error');
+    })
+    .catch(err => showToast('خطأ في الاتصال بالسيرفر ⚠️', 'error'));
+  } catch(e) { alert('⚠️ حصلت مشكلة في الكود: ' + e.message); }
 })();`.trim();
+
 
 export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
   const [loading, setLoading] = useState(false);

@@ -295,7 +295,7 @@ export const FeatureFlagsPanel: FC = () => {
                                                     setSaving(false);
                                                 }}
                                                 className={`flex-1 py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all ${active
-                                                    ? opt === "on" ? "bg-teal-500 text-slate-950 shadow-lg shadow-teal-500/20" : opt === "beta" ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20" : "bg-white/10 text-white shadow-lg"
+                                                    ? opt === "on" ? "bg-teal-500 text-slate-950 shadow-md shadow-teal-500/10" : opt === "beta" ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20" : "bg-white/10 text-white shadow-lg"
                                                     : "text-slate-600 hover:text-slate-400 hover:bg-white/5"
                                                     }`}
                                             >

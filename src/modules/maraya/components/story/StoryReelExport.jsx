@@ -1037,7 +1037,7 @@ export default function StoryReelExport({
           <button
             ref={buttonRef}
             type="button"
-            className={`story-reel-export__button story-reel-export__button--primary ${isHighlighted ? 'story-reel-export__button--pulse' : ''}`}
+            className={`story-reel-export__button story-reel-export__button--primary cursor-pointer ${isHighlighted ? 'story-reel-export__button--pulse' : ''}`}
             onClick={handleShare}
             disabled={!isSupported || isExporting}
           >

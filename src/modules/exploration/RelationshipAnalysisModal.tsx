@@ -1,4 +1,6 @@
 import { useState, type FC } from "react";
+import { Z_LAYERS } from "@/config/zIndices";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -23,12 +25,14 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
   onClose,
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>("test");
+  useScrollLock(isOpen);
 
   return (
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+          className="fixed inset-0 flex items-center justify-center p-4 sm:p-6"
+          style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
           role="dialog"
           aria-modal="true"
         >

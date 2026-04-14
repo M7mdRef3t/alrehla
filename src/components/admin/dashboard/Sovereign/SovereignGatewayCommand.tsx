@@ -99,7 +99,7 @@ const LeadCard: FC<{ lead: any, onFilterSelect: any, onAward: (id: string) => vo
     }`}>
       <div className="flex flex-col gap-4">
         <div className="flex justify-between items-start">
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => onFilterSelect({ type: "source", value: l.source_type || l.source || "meta", expandedId: l.id })}>
+          <div className="flex items-center gap-4" onClick={() => onFilterSelect({ type: "source", value: l.source_type || l.source || "meta", expandedId: l.id })}>
              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isSpam ? 'bg-rose-500/10 text-rose-400' : grade === 'S' || grade === 'A' ? 'bg-indigo-400/20 text-indigo-400' : 'bg-white/5 text-slate-400'}`}>
                 {isSpam ? <ShieldAlert className="w-5 h-5" /> : <Orbit className="w-5 h-5" />}
              </div>
@@ -500,7 +500,7 @@ export const SovereignGatewayCommand: FC<{
                             disabled={updating}
                             value={activeHealth?.energyLevel || 50}
                             onChange={(e) => updateGatewayConfig(activeGateway, { energy_level: parseInt(e.target.value) })}
-                            className="w-full accent-indigo-500 h-1 bg-white/5 rounded-full appearance-none cursor-pointer"
+                            className="w-full accent-indigo-500 h-1 bg-white/5 rounded-full appearance-none"
                         />
                     </div>
 

@@ -293,13 +293,13 @@ export default function LiveHUD({
       </aside>
 
       <div className="breathing-hud">
-        <button type="button" className={`secondary ds-btn hud-btn ${isTranscriptVisible ? "active" : ""}`} onClick={onToggleTranscript}>
+        <button type="button" className={`secondary ds-btn hud-btn ${isTranscriptVisible ?"active" : ""}`} onClick={onToggleTranscript}>
           <MessageSquareText className="h-4 w-4" />
           {copy.transcript}
         </button>
         <button
           type="button"
-          className={`secondary ds-btn hud-btn ${isMicActive ? "active" : ""}`}
+          className={`secondary ds-btn hud-btn ${isMicActive ?"active" : ""}`}
           onClick={onToggleMic}
           disabled={!canToggleMic}
         >
@@ -308,7 +308,7 @@ export default function LiveHUD({
         </button>
         <button
           type="button"
-          className={`secondary ds-btn hud-btn ${isSilentMirrorMode ? "active silent-mirror" : ""}`}
+          className={`secondary ds-btn hud-btn ${isSilentMirrorMode ?"active silent-mirror" : ""}`}
           onClick={onToggleSilentMirror}
           aria-pressed={isSilentMirrorMode}
         >

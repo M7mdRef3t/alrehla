@@ -4,6 +4,13 @@ import { CheckCircle2, Ticket, XCircle, ArrowRight, Loader2, Image as ImageIcon,
 import { fetchOpenSupportTickets, resolveActivationTicket, rejectActivationTicket, type SupportTicketEntry } from "@/services/adminApi";
 import { supabase } from "@/services/supabaseClient";
 
+function getSupportTicketLabel(ticket: SupportTicketEntry): string {
+    if (ticket.source === "activation_manual_proof" || ticket.category === "payment_activation") {
+        return "Revenue access unlock";
+    }
+    return "Support ticket";
+}
+
 export const SupportTicketsPanel: FC = () => {
     const [tickets, setTickets] = useState<SupportTicketEntry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -205,6 +212,9 @@ export const SupportTicketsPanel: FC = () => {
                                                 <span className="text-sm font-black text-white">{ticket.title}</span>
                                                 <span className="text-[10px] text-slate-500 font-mono tracking-widest uppercase mt-1" dir="ltr">{ticket.id}</span>
                                             </div>
+                                            <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-100">
+                                                {getSupportTicketLabel(ticket)}
+                                            </span>
                                         </div>
                                         <div className="text-xs text-slate-400 bg-slate-900/50 p-3 rounded-xl border border-slate-800 font-mono" dir="ltr">
                                             {ticket.message.split('\n').map((line, i) => (

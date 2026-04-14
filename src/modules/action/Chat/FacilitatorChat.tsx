@@ -400,7 +400,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         </div>
                     </div>
                 </div>
-                <label className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight mr-auto ml-2 cursor-pointer">
+                <label className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight mr-auto ml-2">
                     <input
                         type="checkbox"
                         checked={showAlgorithmicVulnerability}
@@ -461,7 +461,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                                 {!msg.actionTaken ? (
                                     <button
                                         onClick={() => handleApproveAction(i, msg.proposedAction!)}
-                                        className="text-xs px-4 py-2 bg-teal-500 text-slate-950 hover:bg-teal-400 rounded-xl font-black transition flex items-center gap-2 shadow-lg shadow-teal-500/20 uppercase tracking-tighter"
+                                        className="text-xs px-4 py-2 bg-teal-500 text-slate-950 hover:bg-teal-400 rounded-xl font-black transition flex items-center gap-2 shadow-md shadow-teal-500/10 uppercase tracking-tighter"
                                     >
                                         <Sparkles className="w-3.5 h-3.5" />
                                         تطبيق التعديلات المقترحة

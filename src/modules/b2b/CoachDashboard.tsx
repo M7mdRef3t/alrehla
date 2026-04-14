@@ -403,7 +403,7 @@ export default function CoachDashboard() {
                                             key={client.id}
                                             whileHover={{ backgroundColor: "rgba(248, 250, 252, 1)" }}
                                             onClick={() => client.status === 'active' && setSelectedClient(client)}
-                                            className={`px-8 py-5 flex items-center gap-6 transition-colors ${client.status === 'active' ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
+                                            className={`px-8 py-5 flex items-center gap-6 transition-colors ${client.status === 'active' ? '' : 'opacity-50 cursor-not-allowed'}`}
                                         >
                                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl shrink-0 shadow-sm border ${client.burnoutProbability >= 70
                                                 ? 'bg-rose-50 text-rose-600 border-rose-200'

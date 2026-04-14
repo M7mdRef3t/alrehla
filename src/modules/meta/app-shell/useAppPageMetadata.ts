@@ -37,6 +37,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   atmosfera: "Atmosfera Experience",
   masarat: "Masarat Paths",
   protocol: "Action Protocol",
+  diagnosis: "Diagnosis OS",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -71,6 +72,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   atmosfera: { title: "أجواء الرحلة | Alrehla", description: "Experience your emotional atmosphere — live, reactive, and personal." },
   masarat: { title: "مسارات | Alrehla", description: "اكتشف مسارك في علاقاتك — حدود، تعافٍ، ونمو." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
+  diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {

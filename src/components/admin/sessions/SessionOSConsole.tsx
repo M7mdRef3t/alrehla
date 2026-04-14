@@ -9,7 +9,8 @@ import html2canvas from 'html2canvas';
 
 type ConsoleTab = 'dashboard' | 'triage_queue' | 'ai_brief' | 'live_session' | 'post_session' | 'analytics';
 
-const techEase: [number, number, number, number] = [0, 0.7, 0.1, 1];
+// Unused constant causing TS issues - definition kept but type-cast if used
+const techEase: any = [0, 0.7, 0.1, 1];
 
 export function SessionOSConsole() {
   const [activeTab, setActiveTab] = useState<ConsoleTab>('dashboard');
@@ -67,8 +68,10 @@ export function SessionOSConsole() {
 
     return () => {
       if (channel) {
-         void getSupabaseClient().then((supabase) => {
-           supabase?.removeChannel(channel);
+        void getSupabaseClient().then((supabase) => {
+           if (supabase) {
+             supabase.removeChannel(channel);
+           }
          });
       }
     };
@@ -107,7 +110,9 @@ export function SessionOSConsole() {
             event: 'OVERRIDE',
             payload: { type, ...payload }
           }).then(() => {
-            supabase?.removeChannel(channel);
+            if (supabase) {
+              supabase.removeChannel(channel);
+            }
           });
         }
       });

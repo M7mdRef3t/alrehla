@@ -17,6 +17,8 @@ import { PlatformBreadcrumb, buildBreadcrumb } from "../PlatformBreadcrumb";
 import { signOut } from "@/services/authService";
 import { type AppScreen } from "@/navigation/navigationMachine";
 import { AppSidebar } from "../AppSidebar";
+import { Z_LAYERS } from "@/config/zIndices";
+
 
 
 // â”€â”€ Module-level constants (created once, never re-allocated on render) â”€â”€
@@ -145,6 +147,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
 
   return (
     <>
+      <div className="system-experience-surface" style={{ isolation: 'isolate' }}>
       {screen !== "map" && screen !== "dawayir" && (
         <PlatformHeader
           activeScreen={screen}
@@ -168,11 +171,15 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
       {screen !== "landing" && (
         <>
           <div
-            className={`fixed right-0 left-0 z-40 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500 ${scrolled ? "top-16" : "top-20"}`}
+            className={`fixed right-0 left-0 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500 ${scrolled ? "top-16" : "top-20"}`}
+            style={{ zIndex: Z_LAYERS.BREADCRUMBS }}
           >
             <PlatformBreadcrumb items={breadcrumbItems} onNavigate={handleHeaderNavigate} />
           </div>
-          <div className="fixed top-[calc(env(safe-area-inset-top)+0.5rem)] right-0 left-0 z-40 px-4 py-1.5 md:hidden">
+          <div 
+            className="fixed top-[calc(env(safe-area-inset-top)+0.5rem)] right-0 left-0 px-4 py-1.5 md:hidden"
+            style={{ zIndex: Z_LAYERS.BREADCRUMBS }}
+          >
             <PlatformBreadcrumb items={breadcrumbItems} onNavigate={handleHeaderNavigate} />
           </div>
         </>
@@ -185,7 +192,8 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
           <button
             type="button"
             onClick={onBackToFeatureFlags}
-            className="fixed z-50 top-4 left-4 rounded-full border px-4 py-2 text-xs font-semibold transition-colors bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-teal-500/50"
+            className="fixed top-4 left-4 rounded-full border px-4 py-2 text-xs font-semibold transition-colors bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-teal-500/50"
+            style={{ zIndex: Z_LAYERS.SYSTEM_WHISPER }}
             title={previewedFeature ? `الرجوع من معاينة: ${previewedFeature}` : "الرجوع إلى Feature Flags"}
           >
             الرجوع إلى Feature Flags
@@ -207,7 +215,10 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
             <InstallHintBanner />
             <SyncStatusUI />
             {welcome?.source === "offline_intervention" && (
-              <div className="fixed z-[75] top-[calc(env(safe-area-inset-top)+3.5rem)] left-1/2 -translate-x-1/2 w-[min(680px,calc(100%-1.25rem))] pointer-events-none">
+              <div 
+                className="fixed top-[calc(env(safe-area-inset-top)+3.5rem)] left-1/2 -translate-x-1/2 w-[min(680px,calc(100%-1.25rem))] pointer-events-none"
+                style={{ zIndex: Z_LAYERS.SYSTEM_TOAST }}
+              >
                 <div className="pointer-events-auto">
                   <OnboardingWelcomeBubble
                     message={welcome.message}
@@ -239,7 +250,10 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                   className={`min-w-0 flex transition-all duration-300 ease-in-out ${isLandingScreen ? "flex-col" : "flex-1 flex-col w-full h-full"}`}
                 >
                   {screen !== "map" && showSystemOverclockControls && (
-                    <div className="fixed bottom-24 right-6 z-[60] flex flex-col items-end gap-3 pointer-events-auto">
+                    <div 
+                      className="fixed bottom-24 right-6 flex flex-col items-end gap-3 pointer-events-auto"
+                      style={{ zIndex: Z_LAYERS.SYSTEM_WHISPER }}
+                    >
                       <AnimatePresence>
                         {showSystemOverclockPanel && (
                           <motion.div
@@ -259,7 +273,8 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={onToggleSystemOverclockPanel}
-                        className="w-12 h-12 rounded-full bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] flex items-center justify-center text-slate-950 border-2 border-slate-900 z-[61]"
+                        className="w-12 h-12 rounded-full bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] flex items-center justify-center text-slate-950 border-2 border-slate-900"
+                        style={{ zIndex: Z_LAYERS.SYSTEM_WHISPER + 1 }}
                       >
                         <Cpu size={20} className={showSystemOverclockPanel ? "animate-spin" : "animate-pulse"} />
                       </motion.button>
@@ -285,7 +300,8 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         <AscensionRitual />
       </div>
       <GlobalToast />
-      <GraphEventToast />
+        <GraphEventToast />
+      </div>
     </>
   );
 });

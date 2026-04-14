@@ -231,7 +231,7 @@ export const MapInsightPanel: FC = () => {
                                                     <div
                                                         key={item.id}
                                                         onClick={() => { setInsight(item); setActiveTab('current'); }}
-                                                        className="group flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-indigo-500/30 transition-all cursor-pointer"
+                                                        className="group flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-indigo-500/30 transition-all"
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">

@@ -66,7 +66,7 @@ export const AchievementToast: FC = () => {
           </motion.div>
 
           <motion.div
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm cursor-pointer"
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm"
             style={{
               background: "linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.88))",
               backdropFilter: "blur(20px)",

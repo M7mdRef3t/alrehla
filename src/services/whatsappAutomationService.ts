@@ -7,7 +7,18 @@ export interface WhatsAppMessagePayload {
   text: string;
   timestamp: string;
   messageId: string;
-  metadata?: any;
+  metadata?: {
+    raw?: {
+      referral?: {
+        source_id?: string;
+        source_url?: string;
+        ctwa_clid?: string;
+        headline?: string;
+        body?: string;
+        source_type?: string;
+      };
+    };
+  } | null;
   gateway?: 'meta' | 'ultramsg' | 'other';
 }
 
@@ -84,7 +95,7 @@ class WhatsAppAutomationService {
          attributionData.campaign = referral.headline || referral.body?.substring(0, 50); 
          attributionData.source_type = 'whatsapp';
          
-         attributionData.utm = {
+          attributionData.utm = {
           ad_id: referral.source_id,
           source_url: referral.source_url,
           ctwa_clid: referral.ctwa_clid,

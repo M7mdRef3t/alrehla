@@ -38,13 +38,17 @@ import type {
   CtaTelemetryPayload,
   GoalTelemetryPayload,
   AuthTelemetryPayload,
-  OnboardingTelemetryPayload
+  OnboardingTelemetryPayload,
+  WhatsappTelemetryPayload,
+  CableTelemetryPayload
 } from "../types";
 import {
   buildAuthEnvelope,
+  buildCableEnvelope,
   buildCtaEnvelope,
   buildGoalEnvelope,
-  buildOnboardingEnvelope
+  buildOnboardingEnvelope,
+  buildWhatsappEnvelope
 } from "../contracts";
 
 type KnownTrackEvent =
@@ -92,6 +96,8 @@ export interface AnalyticsService {
     | typeof AnalyticsEvents.ONBOARDING_STARTED
     | typeof AnalyticsEvents.ONBOARDING_COMPLETED,
     params?: OnboardingTelemetryPayload): void;
+  whatsapp(params?: WhatsappTelemetryPayload): void;
+  cable(params?: CableTelemetryPayload): void;
   track(eventName: typeof AnalyticsEvents.PAGE_VIEW, params?: PageViewTelemetryPayload): void;
   track(eventName: typeof AnalyticsEvents.JOURNEY_STARTED, params?: JourneyFlowTelemetryPayload): void;
   track(eventName: typeof AnalyticsEvents.CTA_CLICK, params?: CtaTelemetryPayload): void;
@@ -110,6 +116,8 @@ export interface AnalyticsService {
     params?: OnboardingTelemetryPayload): void;
   track(eventName: KnownTrackEvent, params?: AnalyticsOptionalParams): void;
   track(eventName: string, params?: AnalyticsOptionalParams): void;
+  trackPage(name: string): void;
+  trackLanding(params?: AnalyticsOptionalParams): void;
   trackLead(params?: AnalyticsOptionalParams): void;
   trackCompleteRegistration(params?: AnalyticsOptionalParams): void;
   trackCheckoutViewed(params?: AnalyticsOptionalParams): void;
@@ -215,6 +223,26 @@ export const analyticsService: AnalyticsService = {
     }
   },
 
+  whatsapp(params?: WhatsappTelemetryPayload): void {
+    const envelope = buildWhatsappEnvelope({
+      client_event_id: generateUUID(),
+      payload: params ?? {}
+    });
+    if (envelope) {
+      trackEvent("whatsapp_contact_clicked", envelope.payload as AnalyticsOptionalParams);
+    }
+  },
+
+  cable(params?: CableTelemetryPayload): void {
+    const envelope = buildCableEnvelope({
+      client_event_id: generateUUID(),
+      payload: params ?? {}
+    });
+    if (envelope) {
+      trackEvent("cable_copied", envelope.payload as AnalyticsOptionalParams);
+    }
+  },
+
   // ─── Page Tracking ────────────────────────────────
 
   trackPage(name: string): void {
@@ -230,6 +258,7 @@ export const analyticsService: AnalyticsService = {
   /**
    * تسجيل حدث عام — مع GA4 + Internal Telemetry
    */
+  // @ts-expect-error - Overload assignment compatibility with union types is complex
   track(
     eventName: string,
     params?: AnalyticsOptionalParams
