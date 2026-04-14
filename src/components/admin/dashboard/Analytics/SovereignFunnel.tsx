@@ -67,7 +67,7 @@ export const SovereignFunnel: React.FC = () => {
         { label: 'الزوار الجدد (الرئيسية)', value: data.landing_views, icon: Users, color: 'from-blue-500 to-cyan-400', border: 'border-blue-500/30' },
         { label: 'بدء الرحلة (Onboarding)', value: data.onboarding_starts, icon: Target, color: 'from-indigo-500 to-purple-400', border: 'border-indigo-500/30' },
         { label: 'الوصول للالتزام (Activation)', value: data.activation_views, icon: Filter, color: 'from-amber-500 to-orange-400', border: 'border-amber-500/30' },
-        { label: 'التحويل الناجح (Success)', value: data.successful_payments, icon: CheckCircle2, color: 'from-teal-500 to-emerald-400', border: 'border-teal-500/30' },
+        { label: 'تأكيد الالتزام (Proof Submitted)', value: data.successful_payments, icon: CheckCircle2, color: 'from-teal-500 to-emerald-400', border: 'border-teal-500/30' },
     ];
 
     return (

@@ -77,6 +77,11 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
 
   useEffect(() => {
     // Fired when the payment selector is shown
+    analyticsService.trackCheckoutViewed({
+      course: TIER_LABELS.premium,
+      price: price.monthly
+    });
+    
     analyticsService.trackAddPaymentInfo({ 
       course: TIER_LABELS.premium,
       price: price.monthly 
@@ -102,8 +107,15 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
   const notifyOwner = useCallback(async (method: PaymentMethod) => {
     setIsSending(true);
 
-    // Perfect place for CompleteRegistration - User committed to paying
-    // Move to the top so it fires even if the following async tasks fail
+    // P0: Critical funnel event - User committed to paying/sent proof
+    analyticsService.trackPaymentProofSubmitted({
+      method,
+      value: price.monthly,
+      currency: "USD",
+      content_name: TIER_LABELS.premium
+    });
+
+    // Keep standard registration tracking for third-party sync
     analyticsService.trackCompleteRegistration({
       method,
       value: price.monthly,

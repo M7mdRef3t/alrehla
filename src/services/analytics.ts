@@ -6,6 +6,11 @@ import { getDocumentOrNull, getWindowOrNull, isClientRuntime } from "./clientRun
 import { supabase } from "./supabaseClient";
 import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribution";
 import { EcosystemSyncService } from "./ecosystem";
+import {
+  buildAnalyticsEnvelope,
+  buildIdentityLinkedEnvelope,
+  buildPageViewEnvelope
+} from "@/domains/analytics/contracts";
 
 type AnalyticsValue = string | number | boolean;
 type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -223,10 +228,38 @@ export function initAnalytics(): void {
 export function trackPageView(pageName: string): void {
   if (!isClientRuntime()) return;
 
-  void sendInternalAnalytics("page_view", {
+  const windowRef = getWindowOrNull();
+  const documentRef = getDocumentOrNull();
+  const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
+
+  const pageViewPayload = buildPageViewEnvelope({
+    client_event_id: generateUUID(),
+    anonymous_id: getOrCreateAnonymousId(),
+    session_id: getOrCreateSessionId(),
+    lead_id: getStoredLeadAttribution()?.lead_id || null,
+    lead_source: getStoredLeadAttribution()?.lead_source || null,
+    utm_source: getStoredUtmParams()?.utm_source || null,
+    utm_medium: getStoredUtmParams()?.utm_medium || null,
+    utm_campaign: getStoredUtmParams()?.utm_campaign || null,
+    payload: {
+      page_title: pageName,
+      pathname: windowRef?.location?.pathname || null,
+      page_location: getHref(),
+      referrer: documentRef?.referrer || null,
+      device_type: isMobile ? "mobile" : "desktop",
+      screen_width: windowRef?.innerWidth,
+      viewport_height: windowRef?.innerHeight
+    }
+  });
+
+  if (pageViewPayload) {
+    void sendAnalyticsEnvelope(pageViewPayload);
+  } else {
+    void sendInternalAnalytics("page_view", {
     page_title: pageName,
     page_location: getHref()
-  });
+    });
+  }
 
   if (isAnalyticsEnabled()) {
     sendGtagEvent("page_view", {
@@ -308,7 +341,7 @@ async function sendInternalAnalytics(
   const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
   const safeParams = sanitizeAnalyticsParams(params);
 
-  const telemetryPayload = {
+  const telemetryPayload = buildAnalyticsEnvelope({
     event_type: eventName,
     client_event_id,
     anonymous_id,
@@ -327,23 +360,34 @@ async function sendInternalAnalytics(
       screen_width: windowRef?.innerWidth,
       viewport_height: windowRef?.innerHeight
     }
-  };
+  });
+
+  if (!telemetryPayload) {
+    if (runtimeEnv.isDev) {
+      console.warn(`[Analytics] Invalid internal payload blocked: ${eventName}`, params);
+    }
+    return;
+  }
 
   const body = JSON.stringify(telemetryPayload);
 
   try {
-    await fetch("/api/analytics", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-      keepalive: true,
-      credentials: "same-origin"
-    });
+    await sendAnalyticsEnvelope(telemetryPayload);
   } catch (error) {
     if (runtimeEnv.isDev) {
       console.warn(`[Analytics] Internal send failed: ${eventName}`, error);
     }
   }
+}
+
+async function sendAnalyticsEnvelope(envelope: ReturnType<typeof buildAnalyticsEnvelope> extends infer T ? Exclude<T, null> : never): Promise<void> {
+  await fetch("/api/analytics", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(envelope),
+    keepalive: true,
+    credentials: "same-origin"
+  });
 }
 
 export function trackEvent(
@@ -391,18 +435,50 @@ export function trackEvent(
 
 export async function trackIdentityLinked(userId: string): Promise<void> {
   const anonymous_id = getOrCreateAnonymousId();
+  const session_id = getOrCreateSessionId();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  let authenticatedUserId: string | null = null;
+
+  if (supabase) {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      authenticatedUserId = sessionData?.session?.user?.id ?? null;
+
+      if (sessionData?.session?.access_token) {
+        headers.Authorization = `Bearer ${sessionData.session.access_token}`;
+      }
+    } catch (error) {
+      if (runtimeEnv.isDev) {
+        console.warn("[Analytics] Failed to read auth session for identity link", error);
+      }
+    }
+  }
+
+  if (runtimeEnv.isDev && authenticatedUserId && authenticatedUserId !== userId) {
+    console.warn("[Analytics] trackIdentityLinked called with mismatched user id", {
+      expected: authenticatedUserId,
+      received: userId
+    });
+  }
   
   // 1) Internal Telemetry Link (API)
+  const identityPayload = buildIdentityLinkedEnvelope({
+    client_event_id: generateUUID(),
+    anonymous_id,
+    session_id
+  });
+
+  if (!identityPayload) {
+    if (runtimeEnv.isDev) {
+      console.warn("[Analytics] Invalid identity_linked payload blocked");
+    }
+    return;
+  }
+
   void fetch("/api/analytics", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      event_type: "identity_linked",
-      client_event_id: generateUUID(),
-      anonymous_id,
-      session_id: getOrCreateSessionId(),
-      payload: {}
-    }),
+    headers,
+    body: JSON.stringify(identityPayload),
     keepalive: true,
     credentials: "same-origin"
   }).catch((err) => {
@@ -414,10 +490,7 @@ export async function trackIdentityLinked(userId: string): Promise<void> {
   // 2) Database Bridge Link (Supabase RPC) — only call if session is confirmed active
   if (supabase) {
     try {
-      // Verify we have an active session before calling SECURITY DEFINER function
-      // to prevent 400 errors when auth.uid() is null due to timing
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (sessionData?.session?.user?.id) {
+      if (authenticatedUserId) {
         const { data: rpcRes, error } = await supabase.rpc("link_anonymous_to_user", {
           p_anonymous_id: anonymous_id
         });
@@ -576,7 +649,9 @@ export function trackCompleteRegistration(
   const safeParams = sanitizeAnalyticsParams(params);
   const client_event_id = resolveEventId(params);
   
-  // trackEvent("registration_finalized", { ...safeParams, client_event_id });
+  // P0: Restore internal parity so this shows up in Sovereign Funnel
+  trackEvent(AnalyticsEvents.ONBOARDING_COMPLETED, { ...safeParams, client_event_id });
+  
   sendGtagEvent("sign_up", safeParams);
 
   // Meta standard CompleteRegistration (Revenue-generating according to business logic)
@@ -584,6 +659,26 @@ export function trackCompleteRegistration(
     bypassConsent: true, 
     client_event_id 
   });
+}
+
+export function trackPaymentProofSubmitted(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams(params);
+  const client_event_id = resolveEventId(params);
+
+  // P0: This is the critical commitment event for the admin dashboard
+  trackEvent(AnalyticsEvents.PAYMENT_PROOF_SUBMITTED, { ...safeParams, client_event_id });
+
+  sendGtagEvent("payment_proof_submitted", safeParams);
+
+  // For Meta, we treat this as a solid commitment (Purchase intent)
+  sendMetaEvent("Purchase", {
+    ...safeParams,
+    currency: safeParams?.currency || "USD",
+    value: safeParams?.value || 0,
+    content_name: safeParams?.content_name || "Dawayir Premium"
+  }, { bypassConsent: true, client_event_id });
 }
 
 export function trackCheckoutViewed(

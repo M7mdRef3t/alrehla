@@ -173,7 +173,7 @@ export class WhatsAppCloudService {
     const { data: lead } = await supabaseAdmin
       .from("marketing_leads")
       .select("metadata")
-      .eq("lead_id", leadId)
+      .eq("id", leadId)
       .single();
 
     const existingMetadata = lead?.metadata || {};
@@ -186,7 +186,7 @@ export class WhatsAppCloudService {
     await supabaseAdmin
       .from("marketing_leads")
       .update({ metadata: updatedMetadata })
-      .eq("lead_id", leadId);
+      .eq("id", leadId);
       
     console.log(`[WhatsAppCloud] Lead ${leadId} status updated to: ${status}`);
   }

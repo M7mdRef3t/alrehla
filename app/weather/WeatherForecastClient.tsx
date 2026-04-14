@@ -268,7 +268,18 @@ export default function WeatherForecastClient() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const clientEventIdRef = useRef<string | null>(null);
   if (!clientEventIdRef.current) {
-    clientEventIdRef.current = generateUUID();
+    if (typeof window !== 'undefined') {
+      const persistentId = window.localStorage.getItem('persistent_weather_id');
+      if (persistentId) {
+        clientEventIdRef.current = persistentId;
+      } else {
+        const newId = generateUUID();
+        clientEventIdRef.current = newId;
+        window.localStorage.setItem('persistent_weather_id', newId);
+      }
+    } else {
+      clientEventIdRef.current = generateUUID();
+    }
   }
   const setJourneyPaths = useAdminState((state) => state.setJourneyPaths);
   const weatherPath = useAdminState((state) => {
@@ -295,6 +306,14 @@ export default function WeatherForecastClient() {
       });
     }
   }, [step, result]);
+
+  useEffect(() => {
+    if (step === "questions") {
+      trackEvent(`weather_q${qIdx + 1}_view`, { 
+        client_event_id: clientEventIdRef.current! 
+      });
+    }
+  }, [step, qIdx]);
 
   useEffect(() => {
     let cancelled = false;
@@ -338,7 +357,7 @@ export default function WeatherForecastClient() {
 
     if (nextStage === "complete") {
       setResult(diagnostic);
-      launchRelationshipWeatherFlow(weatherPath, diagnostic, "weather_v3");
+      launchRelationshipWeatherFlow(weatherPath, diagnostic, "weather_v3", clientEventIdRef.current!);
       return;
     }
 
@@ -374,6 +393,10 @@ export default function WeatherForecastClient() {
   }, [finalizeDiagnostic, weatherPath]);
 
   const handleAnswer = useCallback((optionId: string) => {
+    trackEvent(`weather_q${qIdx + 1}_answered`, { 
+      option: optionId,
+      client_event_id: clientEventIdRef.current! 
+    });
     setSelectedOption(optionId);
     
     setTimeout(() => {
@@ -409,22 +432,38 @@ export default function WeatherForecastClient() {
   const handleShare = useCallback(async () => {
     if (!result || !resultRef.current || isCapturing) return;
     setIsCapturing(true);
+    trackEvent("weather_share_clicked", { client_event_id: clientEventIdRef.current! });
     try {
       const canvas = await html2canvas(resultRef.current, { backgroundColor: "#030711", scale: 2, useCORS: true });
       canvas.toBlob(async (blob) => {
         setIsCapturing(false);
-        if (!blob) return;
+        if (!blob) {
+          trackEvent("weather_share_failed", { error: "blob_null", client_event_id: clientEventIdRef.current! });
+          return;
+        }
         const file = new File([blob], "weather-report.png", { type: "image/png" });
         if (navigator.share && navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], text: result.shareText });
+          try {
+            await navigator.share({ files: [file], text: result.shareText });
+            trackEvent("weather_share_completed", { type: "native", client_event_id: clientEventIdRef.current! });
+          } catch (shareErr) {
+            trackEvent("weather_share_failed", { type: "native", error: String(shareErr), client_event_id: clientEventIdRef.current! });
+          }
         } else {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url; a.download = "weather-report.png"; a.click();
-          trackEvent("weather_share_completed", { client_event_id: clientEventIdRef.current! });
+          try {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = "weather-report.png"; a.click();
+            trackEvent("weather_share_completed", { type: "download", client_event_id: clientEventIdRef.current! });
+          } catch (dlErr) {
+            trackEvent("weather_share_failed", { type: "download", error: String(dlErr), client_event_id: clientEventIdRef.current! });
+          }
         }
       });
-    } catch { setIsCapturing(false); }
+    } catch (err) { 
+      setIsCapturing(false); 
+      trackEvent("weather_share_failed", { type: "capture", error: String(err), client_event_id: clientEventIdRef.current! });
+    }
   }, [result, isCapturing]);
 
   const handleCTA = useCallback(() => {
@@ -434,7 +473,7 @@ export default function WeatherForecastClient() {
       level: result.weatherLevel,
       client_event_id: clientEventIdRef.current!
     });
-    launchRelationshipWeatherFlow(weatherPath, result, "weather_v3");
+    launchRelationshipWeatherFlow(weatherPath, result, "weather_v3", clientEventIdRef.current!);
   }, [result, weatherPath]);
 
   const ease = [0.22, 1, 0.36, 1] as const;

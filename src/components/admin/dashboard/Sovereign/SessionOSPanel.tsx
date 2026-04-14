@@ -116,24 +116,28 @@ export const SessionOSPanel: React.FC = () => {
     setIsFetchingSovereign(true);
     
     try {
-      let userId = session.user_id;
+      let resolvedUserId = session.user_id;
       
-      // Fallback: look up by phone if user_id is missing -- Query marketing_leads (Source of Truth for phone identity)
-      if (!userId && session.client_phone) {
+      const isUUID = (id: string | null) => 
+        id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) : false;
+
+      // 1. Fallback: look up by phone if user_id is missing or NOT a valid UUID (might be a phone number string)
+      if ((!resolvedUserId || !isUUID(resolvedUserId)) && session.client_phone) {
         const { data: lead } = await supabase
           .from("marketing_leads")
           .select("profile_id")
           .eq("phone_normalized", session.client_phone)
           .maybeSingle();
-        if (lead?.profile_id) userId = lead.profile_id;
+        if (lead?.profile_id) resolvedUserId = lead.profile_id;
       }
 
-      if (userId) {
+      // 2. Query Journey Map with verified UUID
+      if (resolvedUserId && isUUID(resolvedUserId)) {
         const { data: mapData } = await supabase
           .from("journey_maps")
           .select("transformation_diagnosis, ai_interpretation")
-          .eq("user_id", userId)
-          .single();
+          .eq("user_id", resolvedUserId)
+          .maybeSingle();
 
         if (mapData) {
           setSovereignProfile({

@@ -28,10 +28,102 @@ import {
   trackOnboardingCompleted,
   trackAddPaymentInfo,
   AnalyticsEvents,
+  generateUUID,
 } from "@/services/analytics";
-import type { AnalyticsOptionalParams, AnalyticsDiagnostics } from "../types";
+import type {
+  AnalyticsOptionalParams,
+  AnalyticsDiagnostics,
+  PageViewTelemetryPayload,
+  JourneyFlowTelemetryPayload,
+  CtaTelemetryPayload,
+  GoalTelemetryPayload,
+  AuthTelemetryPayload,
+  OnboardingTelemetryPayload
+} from "../types";
+import {
+  buildAuthEnvelope,
+  buildCtaEnvelope,
+  buildGoalEnvelope,
+  buildOnboardingEnvelope
+} from "../contracts";
 
-export const analyticsService = {
+type KnownTrackEvent =
+  | typeof AnalyticsEvents.PAGE_VIEW
+  | typeof AnalyticsEvents.LANDING_VIEW
+  | typeof AnalyticsEvents.CTA_CLICK
+  | typeof AnalyticsEvents.SANCTUARY_LOADED
+  | typeof AnalyticsEvents.FIRST_PULSE_SUBMITTED
+  | typeof AnalyticsEvents.JOURNEY_STARTED
+  | typeof AnalyticsEvents.GOAL_SELECTED
+  | typeof AnalyticsEvents.PERSON_ADDED
+  | typeof AnalyticsEvents.BASELINE_COMPLETED
+  | typeof AnalyticsEvents.NODE_ADDED
+  | typeof AnalyticsEvents.AI_CHAT_USED
+  | typeof AnalyticsEvents.BREATHING_OPENED
+  | typeof AnalyticsEvents.EMERGENCY_OPENED
+  | typeof AnalyticsEvents.CONSENT_GIVEN
+  | typeof AnalyticsEvents.CONSENT_DENIED
+  | typeof AnalyticsEvents.AUTH_COMPLETED
+  | typeof AnalyticsEvents.ONBOARDING_STARTED
+  | typeof AnalyticsEvents.ONBOARDING_COMPLETED
+  | typeof AnalyticsEvents.PAYMENT_PROOF_SUBMITTED
+  | typeof AnalyticsEvents.ACTIVATION_VIEWED
+  | typeof AnalyticsEvents.ACTIVATION_UNLOCKED
+  | typeof AnalyticsEvents.PAYMENT_INTENT_SUBMITTED;
+
+export interface AnalyticsService {
+  init(): void;
+  setConsent(consent: boolean): void;
+  hasConsent(): boolean;
+  getAnonymousId(): string;
+  getSessionId(): string;
+  linkIdentity(userId: string): Promise<void>;
+  cta(params?: CtaTelemetryPayload): void;
+  goal(params?: GoalTelemetryPayload): void;
+  auth(eventName:
+    | typeof AnalyticsEvents.AUTH_MODAL_SHOWN
+    | typeof AnalyticsEvents.AUTH_GOOGLE_CLICKED
+    | typeof AnalyticsEvents.AUTH_PHONE_CLICKED
+    | typeof AnalyticsEvents.AUTH_PHONE_OTP_SENT
+    | typeof AnalyticsEvents.AUTH_PHONE_OTP_VERIFIED
+    | typeof AnalyticsEvents.AUTH_COMPLETED,
+    params?: AuthTelemetryPayload): void;
+  onboarding(eventName:
+    | typeof AnalyticsEvents.ONBOARDING_STARTED
+    | typeof AnalyticsEvents.ONBOARDING_COMPLETED,
+    params?: OnboardingTelemetryPayload): void;
+  track(eventName: typeof AnalyticsEvents.PAGE_VIEW, params?: PageViewTelemetryPayload): void;
+  track(eventName: typeof AnalyticsEvents.JOURNEY_STARTED, params?: JourneyFlowTelemetryPayload): void;
+  track(eventName: typeof AnalyticsEvents.CTA_CLICK, params?: CtaTelemetryPayload): void;
+  track(eventName: typeof AnalyticsEvents.GOAL_SELECTED, params?: GoalTelemetryPayload): void;
+  track(eventName:
+    | typeof AnalyticsEvents.AUTH_MODAL_SHOWN
+    | typeof AnalyticsEvents.AUTH_GOOGLE_CLICKED
+    | typeof AnalyticsEvents.AUTH_PHONE_CLICKED
+    | typeof AnalyticsEvents.AUTH_PHONE_OTP_SENT
+    | typeof AnalyticsEvents.AUTH_PHONE_OTP_VERIFIED
+    | typeof AnalyticsEvents.AUTH_COMPLETED,
+    params?: AuthTelemetryPayload): void;
+  track(eventName:
+    | typeof AnalyticsEvents.ONBOARDING_STARTED
+    | typeof AnalyticsEvents.ONBOARDING_COMPLETED,
+    params?: OnboardingTelemetryPayload): void;
+  track(eventName: KnownTrackEvent, params?: AnalyticsOptionalParams): void;
+  track(eventName: string, params?: AnalyticsOptionalParams): void;
+  trackLead(params?: AnalyticsOptionalParams): void;
+  trackCompleteRegistration(params?: AnalyticsOptionalParams): void;
+  trackCheckoutViewed(params?: AnalyticsOptionalParams): void;
+  trackInitiateCheckout(params?: AnalyticsOptionalParams): void;
+  getDiagnostics(context?: string): AnalyticsDiagnostics;
+  logDiagnostics(context?: string): void;
+  setStoredClientEventId(id: string): void;
+  getStoredClientEventId(): string | null;
+  trackOnboardingCompleted(params?: AnalyticsOptionalParams): void;
+  trackAddPaymentInfo(params?: AnalyticsOptionalParams): void;
+  Events: typeof AnalyticsEvents;
+}
+
+export const analyticsService: AnalyticsService = {
   // ─── Initialization ────────────────────────────────
 
   /**
@@ -66,6 +158,61 @@ export const analyticsService = {
    */
   async linkIdentity(userId: string): Promise<void> {
     return trackIdentityLinked(userId);
+  },
+
+  cta(params?: CtaTelemetryPayload): void {
+    const envelope = buildCtaEnvelope({
+      client_event_id: generateUUID(),
+      payload: params ?? {}
+    });
+    if (envelope) {
+      trackEvent(AnalyticsEvents.CTA_CLICK, envelope.payload as AnalyticsOptionalParams);
+    }
+  },
+
+  goal(params?: GoalTelemetryPayload): void {
+    const envelope = buildGoalEnvelope({
+      client_event_id: generateUUID(),
+      payload: params ?? {}
+    });
+    if (envelope) {
+      trackEvent(AnalyticsEvents.GOAL_SELECTED, envelope.payload as AnalyticsOptionalParams);
+    }
+  },
+
+  auth(
+    eventName:
+      | typeof AnalyticsEvents.AUTH_MODAL_SHOWN
+      | typeof AnalyticsEvents.AUTH_GOOGLE_CLICKED
+      | typeof AnalyticsEvents.AUTH_PHONE_CLICKED
+      | typeof AnalyticsEvents.AUTH_PHONE_OTP_SENT
+      | typeof AnalyticsEvents.AUTH_PHONE_OTP_VERIFIED
+      | typeof AnalyticsEvents.AUTH_COMPLETED,
+    params?: AuthTelemetryPayload
+  ): void {
+    const envelope = buildAuthEnvelope({
+      client_event_id: generateUUID(),
+      payload: params ?? {}
+    });
+    if (envelope) {
+      trackEvent(eventName, envelope.payload as AnalyticsOptionalParams);
+    }
+  },
+
+  onboarding(
+    eventName:
+      | typeof AnalyticsEvents.ONBOARDING_STARTED
+      | typeof AnalyticsEvents.ONBOARDING_COMPLETED,
+    params?: OnboardingTelemetryPayload
+  ): void {
+    const envelope = buildOnboardingEnvelope({
+      client_event_id: generateUUID(),
+      event_type: eventName,
+      payload: params ?? {}
+    });
+    if (envelope) {
+      trackEvent(eventName, envelope.payload as AnalyticsOptionalParams);
+    }
   },
 
   // ─── Page Tracking ────────────────────────────────

@@ -60,12 +60,12 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
 
   const getIntentColor = (intent: string) => {
     switch (intent) {
-      case 'payment_requested': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-      case 'info_requested': return 'text-sky-400 bg-sky-500/10 border-sky-500/20';
-      case 'support_needed': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-      case 'generic': return 'text-slate-400 bg-slate-500/10 border-slate-500/20';
-      case 'spam': return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
-      default: return 'text-slate-500 bg-slate-500/5 border-white/5';
+      case 'payment_requested': return 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30 backdrop-blur-md shadow-[0_0_10px_rgba(16,185,129,0.2)]';
+      case 'info_requested': return 'text-sky-300 bg-sky-500/10 border-sky-500/30 backdrop-blur-md shadow-[0_0_10px_rgba(14,165,233,0.2)]';
+      case 'support_needed': return 'text-amber-300 bg-amber-500/10 border-amber-500/30 backdrop-blur-md shadow-[0_0_10px_rgba(245,158,11,0.2)]';
+      case 'generic': return 'text-slate-300 bg-slate-500/10 border-slate-500/30 backdrop-blur-md';
+      case 'spam': return 'text-rose-300 bg-rose-500/10 border-rose-500/30 backdrop-blur-md shadow-[0_0_10px_rgba(244,63,94,0.2)]';
+      default: return 'text-slate-400 bg-white/5 border-white/10 backdrop-blur-md';
     }
   };
 
@@ -190,23 +190,17 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
                         )}
                       </div>
 
-                      {/* Oracle Strategy Relay (New) */}
+                      {/* Oracle Strategy Relay (Compact) */}
                       {event.direction === 'inbound' && event.raw_payload?.oracle_strategy && (
-                        <div className="mt-3 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 relative overflow-hidden group/oracle">
-                          <div className="absolute top-0 right-0 p-2 opacity-10 group-hover/oracle:scale-110 transition-transform">
-                            <Brain className="w-8 h-8 text-indigo-400" />
-                          </div>
-                          <div className="flex items-start gap-2 relative z-10">
-                            <Bot className="w-4 h-4 text-indigo-400 mt-0.5" />
-                            <div className="space-y-1">
-                              <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest">تحليل الاستراتيجية (عين الصقر)</p>
-                              <p className="text-[11px] text-slate-300 leading-relaxed italic">
-                                "{event.raw_payload.oracle_strategy.suggestion}"
-                              </p>
-                              <p className="text-[8px] text-indigo-400/70 font-bold uppercase">
-                                السبب: {event.raw_payload.oracle_strategy.reasoning}
-                              </p>
-                            </div>
+                        <div className="mt-2 p-2 rounded-lg bg-indigo-500/5 border border-indigo-500/10 hover:bg-indigo-500/10 transition-colors relative overflow-hidden group/oracle flex gap-2 items-start">
+                          <Brain className="w-3.5 h-3.5 text-indigo-400 mt-1 shrink-0 opacity-70 group-hover/oracle:opacity-100 transition-opacity" />
+                          <div className="space-y-0.5">
+                            <p className="text-[11px] text-slate-300 font-medium">
+                              "{event.raw_payload.oracle_strategy.suggestion}"
+                            </p>
+                            <p className="text-[9px] text-indigo-400/80">
+                              <span className="font-bold opacity-70">التحليل:</span> {event.raw_payload.oracle_strategy.reasoning}
+                            </p>
                           </div>
                         </div>
                       )}

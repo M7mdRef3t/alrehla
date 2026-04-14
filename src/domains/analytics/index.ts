@@ -17,9 +17,26 @@ export type {
   AnalyticsConsent,
   AnalyticsDiagnostics,
   TrackedEvent,
+  InternalTelemetryContext,
+  PageViewTelemetryPayload,
+  JourneyFlowTelemetryPayload,
+  CtaTelemetryPayload,
+  GoalTelemetryPayload,
+  AuthTelemetryPayload,
+  OnboardingTelemetryPayload,
 } from "./types";
 
 export { AnalyticsEvents } from "./types";
+export {
+  buildAnalyticsEnvelope,
+  buildPageViewEnvelope,
+  buildIdentityLinkedEnvelope,
+  buildJourneyFlowEnvelope,
+  buildCtaEnvelope,
+  buildGoalEnvelope,
+  buildAuthEnvelope,
+  buildOnboardingEnvelope,
+} from "./contracts";
 
 // ─── Services ──────────────────────────────────────────
 export { analyticsService } from "./services/analytics.service";

@@ -31,9 +31,11 @@ export async function POST(req: Request) {
     let sovereignContext = "";
     let linkedUserId = session.user_id;
 
-    // If session isn't explicitly linked to a user_id, try to find one by phone
-    // If session isn't explicitly linked to a user_id, try to find one by phone in marketing_leads
-    if (!linkedUserId && session.client_phone) {
+    const isUUID = (id: string | null) => 
+      id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) : false;
+
+    // If session isn't explicitly linked to a valid user_id, try to find one by phone
+    if ((!linkedUserId || !isUUID(linkedUserId)) && session.client_phone) {
       const { data: lead } = await supabaseAdmin
         .from("marketing_leads")
         .select("profile_id")
@@ -43,13 +45,13 @@ export async function POST(req: Request) {
       if (lead?.profile_id) linkedUserId = lead.profile_id;
     }
 
-    // If we have a user identity, pull the Sovereign Journey Map
-    if (linkedUserId) {
+    // If we have a valid user identity, pull the Sovereign Journey Map
+    if (linkedUserId && isUUID(linkedUserId)) {
       const { data: mapData } = await supabaseAdmin
         .from("journey_maps")
         .select("transformation_diagnosis, ai_interpretation")
         .eq("user_id", linkedUserId)
-        .single();
+        .maybeSingle();
 
       if (mapData) {
         sovereignContext = `

@@ -1,6 +1,7 @@
 'use client';
 
 import { logger } from "@/services/logger";
+import { trackEvent } from '@/services/analytics';
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -100,9 +101,22 @@ export default function DawayirApp() {
                         ].filter(Boolean);
                         
                         analyzeAnswers(aiAnswers, subInfo?.features.maxMapNodes || 7);
+
+                        // Bridge Analytics: Track successful landing and context transfer
+                        trackEvent('weather_bridge_landed', {
+                            status: 'success',
+                            level: weatherCtx.weatherLevel,
+                            pattern: weatherCtx.patternName,
+                            zone: weatherCtx.drainZoneName || weatherCtx.dominantSource,
+                            client_event_id: weatherCtx.client_event_id
+                        });
                     }
                 } catch (e) {
                     logger.error("Failed to parse weather context", e);
+                    trackEvent('weather_bridge_failed', {
+                        reason: e instanceof Error ? e.message : 'parse_error',
+                        surface: 'weather-funnel'
+                    });
                 }
             }
         }

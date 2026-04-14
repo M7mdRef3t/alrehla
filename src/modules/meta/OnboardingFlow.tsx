@@ -1317,12 +1317,6 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   const handleContactCapture = useCallback(async (providedName: string, email: string, whatsapp: string) => {
     if (!leadTrackedRef.current) {
       trackingService.recordFlow("lead_form_submitted", { meta: { name: providedName, email, whatsapp } });
-      analyticsService.trackLead({ 
-        method: "whatsapp", 
-        has_email: !!email, 
-        has_whatsapp: !!whatsapp,
-        client_event_id: clientEventIdRef.current!
-      });
       analyticsService.setStoredClientEventId(clientEventIdRef.current!);
       leadTrackedRef.current = true;
     }
@@ -1341,14 +1335,15 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
     }
 
     // CRM synchronization
-    if (whatsapp.trim()) {
+    if (whatsapp.trim() || email.trim()) {
       await marketingLeadService.syncLead({
-        phone: whatsapp.trim(),
+        phone: whatsapp.trim() || undefined,
+        email: email.trim() || undefined,
         status: "engaged",
         source: "onboarding",
         sourceType: "website",
+        clientEventId: clientEventIdRef.current!,
         metadata: {
-          hasEmail: !!email.trim(),
           name: finalName,
           redCount: collectedItems.filter(c => c.ring === "red").length,
           yellowCount: collectedItems.filter(c => c.ring === "yellow").length,

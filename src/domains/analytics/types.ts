@@ -74,3 +74,48 @@ export interface TrackedEvent {
   params?: AnalyticsOptionalParams;
   clientEventId?: string;
 }
+
+export interface InternalTelemetryContext {
+  pathname?: string | null;
+  page_location?: string | null;
+  referrer?: string | null;
+  device_type?: "mobile" | "desktop";
+  screen_width?: number | null;
+  viewport_height?: number | null;
+}
+
+export interface PageViewTelemetryPayload extends InternalTelemetryContext {
+  page_title?: string | null;
+}
+
+export interface JourneyFlowTelemetryPayload {
+  mode: "anonymous" | "identified";
+  step: string;
+  timeToAction?: number;
+  extra?: Record<string, unknown>;
+}
+
+export interface CtaTelemetryPayload {
+  source?: string;
+  plan?: string;
+  cta_name?: string;
+  placement?: string;
+  page?: string;
+}
+
+export interface GoalTelemetryPayload {
+  goal_id?: string;
+  category?: string;
+}
+
+export interface AuthTelemetryPayload {
+  trigger?: string;
+  method?: string;
+  source?: string;
+}
+
+export interface OnboardingTelemetryPayload {
+  step?: string;
+  source?: string;
+  mode?: string;
+}

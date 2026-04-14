@@ -16,7 +16,7 @@ export type CaptureLeadResponse = {
   error?: string;
 };
 
-type CaptureMarketingLeadInput = {
+export type CaptureMarketingLeadInput = {
   email?: string;
   phone?: string;
   note?: string;
@@ -25,6 +25,7 @@ type CaptureMarketingLeadInput = {
   sourceType?: MarketingLeadPayload["sourceType"];
   metadata?: Record<string, any>;
   anonymousId?: string;
+  clientEventId?: string;
 };
 
 function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayload {
@@ -72,6 +73,30 @@ export async function captureMarketingLead(
   const payload = buildLeadPayload(input);
 
   try {
+    // Analytics & Event Tracking - Fire immediately upon user intent
+    // We do NOT wait for API response here to ensure marketing attribution persists even on network failure
+    try {
+      const campaign = payload.campaign || "unknown";
+      const source = payload.source || "landing";
+      
+      recordFlowEvent("lead_captured", {
+        meta: {
+          status: payload.status,
+          hasPhone: !!payload.phone,
+          sourceType: payload.sourceType
+        }
+      });
+
+      trackLead({
+        source,
+        source_type: payload.sourceType || "website",
+        campaign,
+        client_event_id: payload.clientEventId
+      });
+    } catch (e) {
+      console.warn("Analytics tracking failed:", e);
+    }
+
     const response = await fetch("/api/marketing/lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -97,29 +122,6 @@ export async function captureMarketingLead(
     }
     if (resolvedPhone) {
       setInLocalStorage(STORAGE_KEY_LEAD_PHONE, resolvedPhone);
-    }
-
-    // Analytics & Event Tracking
-    try {
-      const campaign = payload.campaign || "unknown";
-      const source = payload.source || "landing";
-      
-      recordFlowEvent("lead_captured", {
-        meta: {
-          leadId: resolvedLeadId,
-          status: payload.status,
-          hasPhone: !!payload.phone,
-          mergeConflict: resolvedConflict
-        }
-      });
-
-      trackLead({
-        source,
-        source_type: payload.sourceType || "website",
-        campaign
-      });
-    } catch (e) {
-      console.warn("Analytics failed, but lead captured:", e);
     }
 
     return {

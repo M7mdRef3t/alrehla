@@ -100,6 +100,10 @@ class WhatsAppAutomationService {
         .eq('phone_normalized', phoneNormalized)
         .maybeSingle();
 
+      if (leadSearchError) {
+        console.error('[WhatsAppAutomation] Error searching for lead:', leadSearchError);
+      }
+
       let leadId = leadData?.id;
 
       if (leadId && leadData) {
@@ -137,7 +141,9 @@ class WhatsAppAutomationService {
           .select()
           .single();
         
-        if (!createError && newLead) {
+        if (createError) {
+          console.error('[WhatsAppAutomation] Error creating new lead:', createError);
+        } else if (newLead) {
           leadId = newLead.id;
         }
       }
