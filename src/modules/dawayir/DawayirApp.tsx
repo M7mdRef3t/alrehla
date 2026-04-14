@@ -1,6 +1,7 @@
 'use client';
 
 import { logger } from "@/services/logger";
+import { analyticsService } from '@/domains/analytics';
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -100,9 +101,22 @@ export default function DawayirApp() {
                         ].filter(Boolean);
                         
                         analyzeAnswers(aiAnswers, subInfo?.features.maxMapNodes || 7);
+
+                        // Bridge Analytics: Track successful landing and context transfer
+                        analyticsService.track('weather_bridge_landed', {
+                            status: 'success',
+                            level: weatherCtx.weatherLevel,
+                            pattern: weatherCtx.patternName,
+                            zone: weatherCtx.drainZoneName || weatherCtx.dominantSource,
+                            client_event_id: weatherCtx.client_event_id
+                        });
                     }
                 } catch (e) {
                     logger.error("Failed to parse weather context", e);
+                    analyticsService.track('weather_bridge_failed', {
+                        reason: e instanceof Error ? e.message : 'parse_error',
+                        surface: 'weather-funnel'
+                    });
                 }
             }
         }
@@ -497,7 +511,7 @@ export default function DawayirApp() {
                                         <button
                                             onClick={handleSave}
                                             disabled={isSaving}
-                                            className="px-6 py-3 bg-teal-500 text-slate-950 rounded-xl shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest"
+                                            className="px-6 py-3 bg-teal-500 text-slate-950 rounded-xl shadow-md shadow-teal-500/10 hover:bg-teal-400 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest"
                                         >
                                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                             {isSaving ? 'جاري حفظ الخريطة...' : 'حفظ الخريطة'}

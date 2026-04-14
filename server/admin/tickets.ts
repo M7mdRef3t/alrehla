@@ -111,7 +111,7 @@ export async function handleTicketsResolve(req: any, res: any) {
                     const clientUserAgent = headersList.get("user-agent") || "";
                     
                     await sendMetaCapiEvent({
-                        eventName: "CompleteRegistration",
+                        eventName: "GateQualified",
                         eventId: ticketId || `admin-${userId}-${Date.now()}`,
                         sourceUrl: "https://alrehla.app/admin/tickets",
                         userData: {
@@ -126,7 +126,12 @@ export async function handleTicketsResolve(req: any, res: any) {
                 }
             }
 
-            await recordAdminAudit(req, "ticket_activated", { ticketId, userId });
+            await recordAdminAudit(req, "revenue_access_unlocked", {
+                ticketId,
+                userId,
+                activationUnlocked: true,
+                subscriptionStatus: "active"
+            });
             return res.status(200).json({ ok: true });
         }
 

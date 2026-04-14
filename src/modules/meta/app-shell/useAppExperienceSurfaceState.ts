@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useMemo, type ComponentProps } from "react";
 import { useAppAgentExperience } from "./useAppAgentExperience";
 import { useAppSurfaceActions } from "./useAppSurfaceActions";

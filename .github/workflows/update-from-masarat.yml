@@ -1,0 +1,32 @@
+name: Sync Masarat Engine Update
+
+on:
+  repository_dispatch:
+    types: [masarat-engine-updated]
+
+jobs:
+  sync_and_trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Bust NPM Cache for Masarat
+        run: |
+          npm uninstall @alrehla/masarat
+          npm install @alrehla/masarat@github:M7mdRef3t/masarat
+
+      - name: Commit Engine Update
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "chore(engine): 🌀 Auto-sync latest @alrehla/masarat update"
+          branch: main
+
+      # Optional: Trigger Vercel Deploy Webhook if you use one
+      # - name: Trigger Vercel Deployment
+      #   run: curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}

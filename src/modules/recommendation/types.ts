@@ -1,4 +1,5 @@
 export type JourneyPhaseV1 =
+  | "discovery"
   | "lost"
   | "mapping"
   | "awareness"

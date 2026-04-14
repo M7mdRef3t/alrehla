@@ -58,7 +58,7 @@ export const SovereigntySnapshotCard: FC<SovereigntySnapshotCardProps> = ({ snap
         <div className="flex items-center gap-4 mb-2">
           <div className="w-1.5 h-10 rounded-full" style={{ backgroundColor: theme.primary, boxShadow: `0 0 20px ${theme.primary}` }} />
           <div>
-             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] block mb-1">الرؤية السيادية</span>
+             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] block mb-1">الرؤية الخاصة</span>
              <h3 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-tight">
                 {snapshot.headline}
              </h3>

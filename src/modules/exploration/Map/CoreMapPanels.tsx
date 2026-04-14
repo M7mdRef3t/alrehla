@@ -97,7 +97,7 @@ export function MapOperationalStrip({
       animate={{ opacity: 1, y: 0 }} 
       className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4 pointer-events-auto"
     >
-      <div className="relative overflow-hidden rounded-2xl border border-teal-500/30 bg-black/40 backdrop-blur-3xl shadow-[0_0_40px_rgba(0,0,0,0.6)] ring-1 ring-white/10 flex items-center p-1.5 h-16">
+      <div className="relative overflow-hidden rounded-2xl glass-dark border border-white/10 backdrop-blur-3xl shadow-2xl flex items-center p-1.5 h-16 ring-1 ring-white/5">
         {/* Glow Background */}
         <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 via-transparent to-rose-500/5 pointer-events-none" />
         
@@ -169,7 +169,7 @@ export function MapAnalyticalPanel({ segmentedView, onSegmentChange }: MapAnalyt
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full pointer-events-auto space-y-5 pt-8">
-      <div className="rounded-[2rem] border border-white/10 bg-black/25 p-3 backdrop-blur-2xl">
+      <div className="rounded-[2rem] border border-white/10 glass-dark p-3 backdrop-blur-3xl">
         <div className="grid gap-2 md:grid-cols-3">
           {analyticalTabs.map((tab) => {
             const isActive = segmentedView === tab.id;
@@ -192,7 +192,7 @@ export function MapAnalyticalPanel({ segmentedView, onSegmentChange }: MapAnalyt
         </div>
       </div>
 
-      <div className="rounded-[2.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.55),rgba(2,6,23,0.35))] p-5 backdrop-blur-2xl shadow-2xl">
+      <div className="rounded-[2.2rem] border border-white/10 glass-dark p-5 backdrop-blur-3xl shadow-2xl">
         <div className="mb-5 flex items-start justify-between gap-3 text-right">
           <div>
             <p className="text-[10px] font-black tracking-[0.24em] text-teal-200/70">عدسة تحليل</p>
@@ -246,7 +246,7 @@ export function MapSupportPanel({
 
   return (
     <motion.div className={containerClass} initial={{ opacity: 0, y: 50, scale: 0.95 }} animate={{ opacity: show ? 1 : 0, y: show ? 0 : 50, scale: show ? 1 : 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }}>
-       <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-black/60 shadow-[0_32px_80px_rgba(0,0,0,0.8)] backdrop-blur-3xl p-6 ring-1 ring-white/5">
+       <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 glass-dark shadow-[0_32px_80px_rgba(0,0,0,0.8)] backdrop-blur-3xl p-6 ring-1 ring-white/5">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
              <button onClick={onToggle} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 transition-colors">

@@ -712,7 +712,7 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
             </div>
 
             <button
-              className={`primary-btn complete-action-btn complete-action-secondary ${isWaitingForRelease ? "listening-for-release" : ""}`}
+              className={`primary-btn complete-action-btn complete-action-secondary ${isWaitingForRelease ?"listening-for-release" : ""}`}
               onClick={handleRelease}
             >
               <Wind className="inline-block h-4 w-4" />{" "}

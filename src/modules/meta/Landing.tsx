@@ -51,6 +51,109 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } }
 };
 
+const LANDING_STYLES = `
+  .landing-root {
+    font-family: var(--font-sans);
+    background: transparent;
+  }
+
+  .landing-principles-label {
+    font-family: var(--ds-font-prestige);
+    color: var(--ds-color-primary);
+  }
+
+  .landing-principles-title,
+  .landing-simulation-title {
+    font-family: var(--ds-font-display);
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  .landing-simulation-label {
+    font-family: var(--ds-font-prestige);
+    color: var(--ds-color-accent-indigo);
+  }
+
+  .landing-principles-copy,
+  .landing-simulation-copy {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    text-align: justify;
+    text-justify: inter-word;
+  }
+
+  .landing-feature-title {
+    font-family: var(--ds-font-display);
+    color: var(--ds-color-primary);
+  }
+
+  .landing-feature-desc,
+  .landing-simulation-copy {
+    text-align: justify;
+    text-justify: inter-word;
+  }
+
+  .landing-weather-entry {
+    border: 1px solid rgba(20,184,166,0.25);
+    background: rgba(20,184,166,0.06);
+    color: #2dd4bf;
+    backdrop-filter: blur(12px);
+  }
+
+  .landing-weather-entry:hover {
+    background: rgba(20,184,166,0.12);
+    border-color: rgba(20,184,166,0.45);
+  }
+
+  .landing-weather-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #14b8a6;
+    box-shadow: 0 0 8px #14b8a6;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  .landing-card-panel {
+    border: 1px solid rgba(20,184,166,0.18);
+    background: radial-gradient(ellipse at 50% 0%, rgba(20,184,166,0.07) 0%, transparent 65%);
+  }
+
+  .landing-card-heading {
+    font-family: var(--font-display);
+  }
+
+  .landing-card-accent-pill {
+    border: 1px solid rgba(20,184,166,0.2);
+    background: rgba(20,184,166,0.05);
+    color: #5EEAD4;
+  }
+
+  .landing-final-cta {
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(20,184,166,0.2);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.1);
+  }
+
+  .landing-final-cta:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(20,184,166,0.4);
+  }
+
+  .landing-final-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--teal);
+  }
+
+  .landing-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.2), transparent);
+  }
+`;
+
 
 /* ─── Main Component ─────────────────────────────────────────────────────────── */
 
@@ -143,13 +246,17 @@ export const Landing: FC<LandingPropsExtended> = ({
     let timeoutId: number | null = null;
 
     const scheduleNextUpdate = () => {
-      const now = new Date();
-      const msUntilNextMinute = Math.max(1000, (60 - now.getSeconds()) * 1000 - now.getMilliseconds());
+      // Fluctuates every 3-6 seconds
+      const nextDelay = 3000 + Math.random() * 3000;
 
       timeoutId = window.setTimeout(() => {
-        setPulseCount(getLivePulseCount());
+        // Base count from logic + minor fluctuation (-2 to +2)
+        const base = getLivePulseCount();
+        const fluctuation = Math.floor(Math.random() * 5) - 2; 
+        setPulseCount(Math.max(5, base + fluctuation));
+        
         scheduleNextUpdate();
-      }, msUntilNextMinute);
+      }, nextDelay);
     };
 
     scheduleNextUpdate();
@@ -174,10 +281,10 @@ export const Landing: FC<LandingPropsExtended> = ({
     startTrackedRef.current = true;
 
     void trackingService.recordFlow("landing_clicked_start");
-    analyticsService.track(AnalyticsEvents.CTA_CLICK, {
+    analyticsService.cta({
       source: "landing",
       cta_name: "start_journey",
-      intent: mirrorName ? "mirror_named" : "default"
+      placement: mirrorName ? "mirror_named" : "default"
     });
     
     soundManager.playEffect("cosmic_pulse");
@@ -195,10 +302,10 @@ export const Landing: FC<LandingPropsExtended> = ({
 
   return (
     <div
-      className="relative min-h-screen w-full overflow-x-hidden"
-      style={{ fontFamily: "var(--font-sans)", background: "transparent" }}
+      className="landing-root relative min-h-screen w-full overflow-x-hidden"
       dir="rtl"
     >
+      <style>{LANDING_STYLES}</style>
       <AmbientBackground 
         ambientBackground="var(--ds-color-space-void)" 
         showHeavyAmbientLayers={true} 
@@ -215,7 +322,7 @@ export const Landing: FC<LandingPropsExtended> = ({
         secondaryCta={landingCopy.secondaryCta}
       />
 
-      <div style={{ contentVisibility: "auto", containIntrinsicSize: "1px 2600px" }} />
+      <div className="landing-intrinsic-sentinel" />
 
       <section className="relative py-28 px-4 max-w-5xl mx-auto">
         <motion.div
@@ -226,18 +333,18 @@ export const Landing: FC<LandingPropsExtended> = ({
           className="glass-premium rounded-[32px] overflow-hidden p-10 sm:p-20 text-center"
         >
           <div className="mb-12">
-            <p className="text-xs font-black tracking-[0.4em] uppercase mb-4" style={{ fontFamily: "var(--ds-font-prestige)", color: "var(--ds-color-primary)" }}>
+            <p className="text-xs font-black tracking-[0.4em] uppercase mb-4 landing-principles-label">
               المبادئ الأولى — First Principles
             </p>
-            <h2 className="text-3xl sm:text-5xl font-black mb-6" style={{ fontFamily: "var(--ds-font-display)", color: "var(--text-primary)", lineHeight: 1.1 }}>
+            <h2 className="text-3xl sm:text-5xl font-black mb-6 landing-principles-title">
               إحنا مش بنخمّن.<br />إحنا بنحلل الـ Logic.
             </h2>
-            <p className="text-base sm:text-lg max-w-[50ch] mx-auto" style={{ color: "var(--text-secondary)", lineHeight: 1.8, textAlign: "justify", textJustify: "inter-word" }}>
-              الرحلة بتستخدم "نظام تشغيل سيادي" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.
+            <p className="text-base sm:text-lg max-w-[50ch] mx-auto landing-principles-copy">
+              الرحلة بتستخدم "نظام تشغيل خاص" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات (Logic) بتساعدك تاخد قراراتك من مركز قوتك.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-right" dir="rtl">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-right" dir="rtl" id="landing-principles-grid">
             {[
               { title: "رصد الاستنزاف", desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية.", icon: "⚡" },
               { title: "خرائط النبض", desc: "رسم بياني حقيقي لمين بيزودك ومين بيسحب منك.", icon: "📈" },
@@ -251,8 +358,8 @@ export const Landing: FC<LandingPropsExtended> = ({
                 className="p-8 rounded-2xl border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)]"
               >
                 <div className="text-3xl mb-4">{f.icon}</div>
-                <h3 className="text-xl font-black mb-2" style={{ fontFamily: "var(--ds-font-display)", color: "var(--ds-color-primary)" }}>{f.title}</h3>
-                <p className="text-sm opacity-70 leading-relaxed" style={{ textAlign: "justify", textJustify: "inter-word" }}>{f.desc}</p>
+                <h3 className="text-xl font-black mb-2 landing-feature-title">{f.title}</h3>
+                <p className="text-sm opacity-70 leading-relaxed landing-feature-desc">{f.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -267,13 +374,13 @@ export const Landing: FC<LandingPropsExtended> = ({
           transition={{ duration: 0.7, ease }}
         >
           <div className="text-center mb-8">
-            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ fontFamily: "var(--ds-font-prestige)", color: "var(--ds-color-accent-indigo)" }}>
+            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3 landing-simulation-label">
               المُحاكي — Simulation
             </p>
-            <h2 className="text-2xl sm:text-4xl font-black mb-3" style={{ fontFamily: "var(--ds-font-display)", color: "var(--text-primary)" }}>
+            <h2 className="text-2xl sm:text-4xl font-black mb-3 landing-simulation-title">
               صمم مسارك الداخلي
             </h2>
-            <p className="text-sm sm:text-base max-w-[38ch] mx-auto" style={{ color: "var(--text-secondary)", textAlign: "justify", textJustify: "inter-word", textAlignLast: "center" }}>
+            <p className="text-sm sm:text-base max-w-[38ch] mx-auto landing-simulation-copy">
               ٣ أسئلة بسيطة — بدون تفكير — وهتكشف النمط اللي ماسك دماغك دلوقتي.
             </p>
           </div>
@@ -281,24 +388,10 @@ export const Landing: FC<LandingPropsExtended> = ({
           <motion.div variants={fadeUp} className="mt-10 flex justify-center">
             <a
               href={weatherEntryHref}
-              className="group inline-flex items-center gap-3 px-6 py-3 rounded-full text-sm font-bold transition-all duration-300"
-              style={{
-                border: "1px solid rgba(20,184,166,0.25)",
-                background: "rgba(20,184,166,0.06)",
-                color: "#2dd4bf",
-                backdropFilter: "blur(12px)",
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.background = "rgba(20,184,166,0.12)";
-                (e.currentTarget as HTMLElement).style.borderColor = "rgba(20,184,166,0.45)";
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.background = "rgba(20,184,166,0.06)";
-                (e.currentTarget as HTMLElement).style.borderColor = "rgba(20,184,166,0.25)";
-              }}
+              className="landing-weather-entry group inline-flex items-center gap-3 px-6 py-3 rounded-full text-sm font-bold transition-all duration-300"
             >
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#14b8a6", boxShadow: "0 0 8px #14b8a6", display: "inline-block", flexShrink: 0 }} />
-              قيّم طقس علاقاتك
+              <span className="landing-weather-dot" />
+              قيّم طقس علاقاتك (Weather Check)
               <span className="transition-transform duration-300 group-hover:translate-x-[-4px]">←</span>
             </a>
           </motion.div>
@@ -311,24 +404,18 @@ export const Landing: FC<LandingPropsExtended> = ({
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-60px" }}
-          className="rounded-3xl p-10 sm:p-14"
-          style={{
-            border: "1px solid rgba(20,184,166,0.18)",
-            background: "radial-gradient(ellipse at 50% 0%, rgba(20,184,166,0.07) 0%, transparent 65%)"
-          }}
+          className="landing-card-panel rounded-3xl p-10 sm:p-14"
         >
           <motion.div variants={fadeUp} className="text-4xl mb-5">🌟</motion.div>
           <motion.h2
             variants={fadeUp}
-            className="text-2xl sm:text-3xl font-black  mb-4"
-             style={{ fontFamily: "var(--font-display)" }}
+            className="text-2xl sm:text-3xl font-black mb-4 landing-card-heading"
           >
             الوضوح موجود — هو بس محتاج خريطة.
           </motion.h2>
           <motion.p
             variants={fadeUp}
             className="text-sm leading-loose max-w-[40ch] mx-auto mb-8"
-            style={{ color: "var(--text-secondary)" }}
           >
             بدون تسجيل. بدون حكم. بدون ضغط.
             بس خطوة واحدة تقول فيها: "جاهز أشوف الحقيقة."
@@ -339,8 +426,7 @@ export const Landing: FC<LandingPropsExtended> = ({
               <motion.span
                 key={t}
                 variants={fadeIn}
-                className="text-xs font-semibold px-3 py-1.5 rounded-full"
-                style={{ border: "1px solid rgba(20,184,166,0.2)", background: "rgba(20,184,166,0.05)", color: "#5EEAD4" }}
+                className="text-xs font-semibold px-3 py-1.5 rounded-full landing-card-accent-pill"
               >
                 ✓ {t}
               </motion.span>
@@ -352,19 +438,18 @@ export const Landing: FC<LandingPropsExtended> = ({
             type="button"
             id="landing-final-cta"
             onClick={handleStart}
-            className="group inline-flex items-center gap-3 rounded-2xl px-8 py-4 text-base font-black text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
-            style={{ background: "rgba(255,255,255,0.03)", backdropFilter: "blur(12px)", border: "1px solid rgba(20,184,166,0.2)", boxShadow: "0 10px 40px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.1)" }}
-            whileHover={{ scale: 1.02, background: "rgba(255,255,255,0.06)", borderColor: "rgba(20,184,166,0.4)" }}
+            className="landing-final-cta group inline-flex items-center gap-3 rounded-2xl px-8 py-4 text-base font-black text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             اسمح للرحلة بالبدء
-            <ArrowLeft style={{ width: 18, height: 18, color: "#14B8A6" }} className="transition-transform group-hover:-translate-x-1" />
+            <ArrowLeft className="landing-final-icon transition-transform group-hover:-translate-x-1" />
           </motion.button>
         </motion.div>
       </section>
 
       <div className="max-w-5xl mx-auto px-8 mt-8" aria-hidden="true">
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, var(--page-border), transparent)" }} />
+        <div className="landing-divider" />
       </div>
 
       <LandingFooter

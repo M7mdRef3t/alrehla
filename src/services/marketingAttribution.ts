@@ -1,5 +1,6 @@
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { getSearch } from "./navigation";
+import { FUNNEL_IDENTIFIER_KEYS, FunnelIdentifierCaptureKey } from "@/domains/funnel/contracts";
 
 const KEY_UTM = "dawayir-utm-params";
 const KEY_UTM_CAPTURED_AT = "dawayir-utm-captured-at";
@@ -15,10 +16,10 @@ const UTM_KEYS = [
   "fbclid"
 ] as const;
 
-const LEAD_ATTRIBUTION_KEYS = ["lead_id", "lead_source"] as const;
+const LEAD_ATTRIBUTION_KEYS = [...FUNNEL_IDENTIFIER_KEYS, "gate_session_id"] as const;
 
 export type CapturedUtmParams = Partial<Record<(typeof UTM_KEYS)[number], string>>;
-export type CapturedLeadAttribution = Partial<Record<(typeof LEAD_ATTRIBUTION_KEYS)[number], string>>;
+export type CapturedLeadAttribution = Partial<Record<FunnelIdentifierCaptureKey, string>>;
 
 function sanitizeValue(value: string | null): string | null {
   if (!value) return null;
@@ -83,6 +84,11 @@ export function captureLeadAttributionFromCurrentUrl(): CapturedLeadAttribution 
     const value = sanitizeValue(params.get(key));
     if (value) captured[key] = value;
   });
+
+  if (captured.gate_session_id && !captured.gateSessionId) {
+    captured.gateSessionId = captured.gate_session_id;
+    delete captured.gate_session_id;
+  }
 
   if (Object.keys(captured).length === 0) return null;
 

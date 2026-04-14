@@ -1,1 +1,1 @@
-﻿export { default } from './story/SceneImage.jsx';
+export { default } from './story/SceneImage.jsx';

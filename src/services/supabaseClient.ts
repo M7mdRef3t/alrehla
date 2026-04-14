@@ -6,6 +6,59 @@ import type { User } from "@supabase/supabase-js";
 const supabaseUrl = runtimeEnv.supabaseUrl;
 const supabaseAnonKey = runtimeEnv.supabaseAnonKey;
 
+// Create a custom cross-domain storage adapter for Unified SSO (Hub + Satellites)
+const createCrossDomainStorage = () => {
+  if (typeof window === "undefined") return undefined;
+
+  return {
+    getItem: (key: string): string | null => {
+      const name = encodeURIComponent(key) + "=";
+      const decodedCookie = decodeURIComponent(document.cookie);
+      const cookies = decodedCookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const c = cookies[i].trim();
+        if (c.indexOf(name) === 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return null;
+    },
+    setItem: (key: string, value: string): void => {
+      const hostname = window.location.hostname;
+      let domainString = "";
+      
+      // Share cookies across subdomains (e.g. .alrehla.io covers dawayir.alrehla.io and alrehla.io)
+      if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+        const parts = hostname.split(".");
+        if (parts.length >= 2) {
+          const tld = parts.slice(-2).join(".");
+          domainString = `; domain=.${tld}`;
+        }
+      }
+      
+      const expireDate = new Date();
+      expireDate.setFullYear(expireDate.getFullYear() + 1); // 1 year expiration
+      
+      // Secure required for cross-domain Lax in modern browsers
+      const isSecure = window.location.protocol === "https:" ? "; Secure" : "";
+      
+      document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(value)}; expires=${expireDate.toUTCString()}; path=/${domainString}; SameSite=Lax${isSecure}`;
+    },
+    removeItem: (key: string): void => {
+      const hostname = window.location.hostname;
+      let domainString = "";
+      if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+        const parts = hostname.split(".");
+        if (parts.length >= 2) {
+          const tld = parts.slice(-2).join(".");
+          domainString = `; domain=.${tld}`;
+        }
+      }
+      document.cookie = `${encodeURIComponent(key)}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/${domainString}; SameSite=Lax`;
+    }
+  };
+};
+
 declare global {
   // Keep a single Supabase client across Fast Refresh / repeated module evaluation.
   // This avoids duplicate auth-lock traffic and session churn in dev.
@@ -21,7 +74,12 @@ export const supabase: SupabaseClient | null = (() => {
   }
 
   const client = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: true, autoRefreshToken: true }
+    auth: { 
+      persistSession: true, 
+      autoRefreshToken: true,
+      storageKey: "alrehla-ecosystem-auth", // Semantic key for Unified Identity SSO
+      storage: createCrossDomainStorage()
+    }
   });
 
   if (typeof window !== "undefined") {

@@ -950,7 +950,7 @@ function LeadCommandCard({
                       <a
                         href={defaultWaLink}
                         target="_blank" rel="noopener noreferrer"
-                        className={`p-2.5 rounded-xl transition-all flex items-center justify-center active:scale-90 ${isWhatsAppMarked ? 'text-emerald-400 bg-emerald-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}
+                        className={`p-2.5 rounded-xl transition-all flex items-center justify-center active:scale-90 ${isWhatsAppMarked ?'text-emerald-400 bg-emerald-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}
                         onClick={() => onMarkWhatsApp()}
                         title="مراسلة واتساب"
                       >
@@ -1199,7 +1199,7 @@ function LeadCommandCard({
                    </div>
 
                    <div className="space-y-2 text-right">
-                     <label className="text-[10px] font-black text-slate-500 uppercase">ملاحظات سيادية</label>
+                     <label className="text-[10px] font-black text-slate-500 uppercase">ملاحظات خاصة</label>
                      <textarea 
                        value={localNote}
                        onChange={(e) => setLocalNote(e.target.value)}

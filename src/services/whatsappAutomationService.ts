@@ -7,7 +7,18 @@ export interface WhatsAppMessagePayload {
   text: string;
   timestamp: string;
   messageId: string;
-  metadata?: any;
+  metadata?: {
+    raw?: {
+      referral?: {
+        source_id?: string;
+        source_url?: string;
+        ctwa_clid?: string;
+        headline?: string;
+        body?: string;
+        source_type?: string;
+      };
+    };
+  } | null;
   gateway?: 'meta' | 'ultramsg' | 'other';
 }
 
@@ -84,7 +95,7 @@ class WhatsAppAutomationService {
          attributionData.campaign = referral.headline || referral.body?.substring(0, 50); 
          attributionData.source_type = 'whatsapp';
          
-         attributionData.utm = {
+          attributionData.utm = {
           ad_id: referral.source_id,
           source_url: referral.source_url,
           ctwa_clid: referral.ctwa_clid,
@@ -99,6 +110,10 @@ class WhatsAppAutomationService {
         .select('id, status, intent, utm')
         .eq('phone_normalized', phoneNormalized)
         .maybeSingle();
+
+      if (leadSearchError) {
+        console.error('[WhatsAppAutomation] Error searching for lead:', leadSearchError);
+      }
 
       let leadId = leadData?.id;
 
@@ -137,7 +152,9 @@ class WhatsAppAutomationService {
           .select()
           .single();
         
-        if (!createError && newLead) {
+        if (createError) {
+          console.error('[WhatsAppAutomation] Error creating new lead:', createError);
+        } else if (newLead) {
           leadId = newLead.id;
         }
       }
@@ -146,18 +163,20 @@ class WhatsAppAutomationService {
       const { error: eventError } = await supabase
         .from('whatsapp_message_events')
         .insert({
-          phone: phone,
-          phone_normalized: phoneNormalized,
-          message_text: payload.text,
+          from_phone: phoneNormalized,
+          to_phone: 'system',
+          message_body: payload.text,
+          message_type: 'text',
           direction: 'inbound',
           lead_id: leadId,
-          intent: intent,
-          raw_payload: payload.metadata?.raw || payload,
-          metadata: {
+          intent_detected: intent,
+          whatsapp_message_id: payload.messageId,
+          processed_at: new Date().toISOString(),
+          raw_payload: {
+            original_payload: payload.metadata?.raw || payload,
             sender_name: payload.name,
             gateway: payload.gateway,
             timestamp_raw: payload.timestamp,
-            message_id: payload.messageId,
             referral: referral || null,
             oracle_strategy: oracleStrategy
           }

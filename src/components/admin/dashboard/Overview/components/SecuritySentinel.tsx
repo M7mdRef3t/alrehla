@@ -180,7 +180,7 @@ export const SecuritySentinel: FC<SecuritySentinelProps> = ({ data, loading }) =
           <div className="rounded-2xl bg-black/30 border border-white/5 p-4 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
                  <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-1.5 hover:text-white transition-colors">
-                     حالة الإعدادات السيادية <AdminTooltip content="المركز بيفحص إعدادات السيرفر نفسه (Tokens & Secrets) للتأكد إنها مش مكشوفة." position="top" />
+                     حالة إعدادات النظام <AdminTooltip content="المركز بيفحص إعدادات السيرفر نفسه (Tokens & Secrets) للتأكد إنها مش مكشوفة." position="top" />
                  </span>
             </div>
             <div className="space-y-2 text-[11px] font-mono">

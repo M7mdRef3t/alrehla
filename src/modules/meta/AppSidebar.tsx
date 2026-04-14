@@ -72,9 +72,10 @@ import { runtimeEnv } from "@/config/runtimeEnv";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { assignUrl, getHref, pushUrl } from "@/services/navigation";
 import { openInNewTab } from "@/services/clientDom";
-import { HealthBar as SidebarHealthBar } from '@/modules/meta/HealthBar';
+import { SovereignActionBar } from '@/modules/action/SovereignActionBar';
 import { getJourneyPathBySlug } from "@/utils/journeyPaths";
 import { PROTOCOLS } from "./ProtocolEngine";
+import { EcosystemNavigator } from "@/components/EcosystemNavigator";
 
 
 const NotificationSettings = lazy(() =>
@@ -220,10 +221,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   /**
    * Sidebar Sector UI Component
    */
-  const SidebarSector: FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; color: string }> = ({ title, children, icon: _icon, color: _color }) => (
-    <div className="space-y-1.5 mb-6">
-      <div className="flex items-center gap-2 px-2.5 mb-2 opacity-50">
-        <span className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">
+   const SidebarSector: FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; color: string }> = ({ title, children, icon: _icon, color = "teal" }) => (
+    <div className="space-y-1 my-5">
+      <div className="flex items-center gap-2 px-3 mb-1.5 group/header">
+        <div className={`w-1 h-1 rounded-full bg-${color}-500/40 group-hover/header:bg-${color}-400 transition-colors`} />
+        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500/60 dark:text-white/10 group-hover/header:text-slate-400 dark:group-hover/header:text-white/30 transition-colors">
           {title}
         </span>
       </div>
@@ -233,6 +235,34 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     </div>
   );
 
+  const getSidebarItemColorClass = (color?: string) => {
+    switch (color?.toString().toLowerCase().trim()) {
+      case "#10b981":
+        return "sidebar-color-emerald";
+      case "#f43f5e":
+      case "#fb7185":
+        return "sidebar-color-rose";
+      case "#a78bfa":
+        return "sidebar-color-violet";
+      case "#60a5fa":
+        return "sidebar-color-sky";
+      case "#14b8a6":
+        return "sidebar-color-teal";
+      case "#2dd4bf":
+        return "sidebar-color-cyan";
+      case "#f59e0b":
+      case "#f5a623":
+        return "sidebar-color-amber";
+      case "#64748b":
+      case "#94a3b8":
+        return "sidebar-color-slate";
+      case "var(--ds-color-brand-teal-400)":
+        return "sidebar-color-brand-teal";
+      default:
+        return "";
+    }
+  };
+
   const SidebarItem: FC<{
     label: string;
     icon: React.ReactNode;
@@ -240,32 +270,33 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     active?: boolean;
     color?: string;
     badge?: string | number;
-  }> = ({ label, icon, onClick, active, color, badge }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center gap-3 w-full px-3 py-2 rounded-xl transition-all hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white relative"
-      data-active={active}
-      {...({ style: { "--ds-item-glow-color": color } } as any)}
-    >
-      <div className="w-5 h-5 flex items-center justify-center">
-        {icon}
-      </div>
-      <span className="truncate flex-1 text-right">{label}</span>
+  }> = ({ label, icon, onClick, active, color, badge }) => {
+    const colorClass = getSidebarItemColorClass(color);
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`ds-sidebar-item ${colorClass}`}
+        data-active={active}
+      >
+        <div className="ds-icon-box">
+          {icon}
+        </div>
+      <span className="truncate flex-1">{label}</span>
       {badge && (
-        <span className="text-[10px] font-bold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full px-1.5 h-4 flex items-center justify-center opacity-60">
+        <span className="ds-badge !text-[10px] !px-1.5 !h-4 opacity-60">
           {badge}
         </span>
       )}
       {active && (
         <motion.div 
           layoutId="sidebar-active-indicator"
-          className="absolute left-0 w-1 h-5 rounded-r-full"
-          style={{ background: color || "var(--ds-color-primary)" }}
+          className="absolute left-0 w-1 h-5 rounded-r-full sidebar-active-indicator"
         />
       )}
     </button>
   );
+};
 
   const setOverlay = useAppOverlayState((state) => state.setOverlay);
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
@@ -302,7 +333,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showManualPlacement, setShowManualPlacement] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const activeProtocolId = useJourneyStore((s) => s.activeProtocol);
-  const activeProtocol = activeProtocolId ? PROTOCOLS[activeProtocolId as keyof typeof PROTOCOLS] : null;
+  const activeProtocolInfo: { label: string; color: string } | null = (() => {
+    if (!activeProtocolId) return null;
+    const protocol = PROTOCOLS[activeProtocolId as keyof typeof PROTOCOLS];
+    if (!protocol) return null;
+    return { label: `بروتوكول: ${protocol.title}`, color: "#10b981" };
+  })();
 
   const [initialRecoveryOptions, setInitialRecoveryOptions] = useState<RecoveryPlanOpenWith | null>(null);
   
@@ -390,7 +426,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const isOwner = isPrivilegedRole(rawRole) || isPrivilegedRole(role);
   const canShowJourneyToolsEntry = Boolean(onOpenJourneyTools) && isOwner;
   const sanctuaryPath = getJourneyPathBySlug(journeyPaths, "sanctuary");
-  const sanctuaryPathTarget = sanctuaryPath?.isActive ? sanctuaryPath.targetScreen : "sanctuary";
+  const sanctuaryPathTarget = sanctuaryPath?.isActive ? sanctuaryPath?.targetScreen : "sanctuary";
   const sanctuaryPathUrl = sanctuaryPathTarget === "sanctuary" ? "/#sanctuary" : "/";
 
   const availableFeatures = useMemo(
@@ -424,7 +460,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
   const openWhatsAppChat = (placement: "desktop_sidebar" | "mobile_sidebar" | "floating_fab") => {
     if (!whatsAppLink) return;
-    analyticsService.track("whatsapp_contact_clicked", { placement });
+    analyticsService.whatsapp({ placement });
     openInNewTab(whatsAppLink);
   };
 
@@ -480,26 +516,35 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
   return (
     <>
+      {/* ───── FLOATING P&L / ACTION BAR (MOBILE) ───── */}
+      <SovereignActionBar 
+        isFloatingMobile 
+        viewingNodeId={viewingNode?.id}
+        onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })}
+      />
+
       {/* ───── DESKTOP SIDEBAR ───── */}
       <div
         className="fixed top-0 right-0 z-40 h-full hidden md:flex flex-row-reverse group/sidebar"
         aria-label="القائمة الرئيسية"
       >
-        <div className={`h-full w-56 shrink-0 overflow-hidden border-l border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40 transition-transform duration-300 ${isDesktopSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className={`h-full w-56 shrink-0 overflow-hidden border-l border-white/10 bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl transition-transform duration-300 ${isDesktopSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
           <aside className="h-full w-full flex flex-col gap-3 py-6 px-4">
             {viewingNode?.analysis && (
               <div className="shrink-0 space-y-1 mb-1">
-                <RecoveryProgressBar node={viewingNode} />
-                <p className="text-xs font-semibold text-slate-900 dark:text-white text-center truncate px-1" title={viewingNode.label}>
-                  {viewingNode.label}
+                <RecoveryProgressBar node={viewingNode!} />
+                <p className="text-xs font-semibold text-slate-900 dark:text-white text-center truncate px-1" title={viewingNode?.label}>
+                  {viewingNode?.label}
                 </p>
               </div>
             )}
             
-            <HealthBar />
+            <SovereignActionBar viewingNodeId={viewingNode?.id} onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })} className="mb-4" />
             <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
             
-            <div className="flex-1 overflow-y-auto no-scrollbar py-2">
+            <div className="flex-1 overflow-y-auto no-scrollbar py-2 px-2 flex flex-col gap-4">
+              <EcosystemNavigator onNavigate={pushUrl} />
+              
               {/* 1. SECTOR: EXPLORATION (الاستكشاف) */}
               <SidebarSector title="الاستكشاف" icon={<Compass className="w-3.5 h-3.5" />} color="teal">
                 <SidebarItem
@@ -508,15 +553,20 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => onOpenDawayir?.()}
                   color={goalColor}
                 />
-                {activeProtocol && (
-                  <SidebarItem
-                    label={`بروتوكول: ${activeProtocol.title}`}
-                    icon={<Activity className="w-4 h-4" />}
-                    onClick={() => onOpenProtocol?.()}
-                    color="#10b981"
-                    badge="جاري"
-                  />
-                )}
+                {((): React.ReactElement | null => {
+                  if (!activeProtocolInfo) return null;
+                  const label = activeProtocolInfo!.label;
+                  const color = activeProtocolInfo!.color;
+                  return (
+                    <SidebarItem
+                      label={label}
+                      icon={<Activity className="w-4 h-4" />}
+                      onClick={() => onOpenProtocol?.()}
+                      color={color}
+                      badge="جاري"
+                    />
+                  );
+                })()}
                 <SidebarItem
                   label="الملاذ الآمن"
                   icon={<ShieldCheck className="w-4 h-4" />}
@@ -529,6 +579,36 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={openEmergency}
                   color="#f43f5e"
                 />
+                <SidebarItem
+                  label="مرايا (التوأم الرقمي)"
+                  icon={<Sparkles className="w-4 h-4" />}
+                  onClick={() => pushUrl("/#maraya", { screen: "maraya" })}
+                  color="#a78bfa"
+                />
+                <SidebarItem
+                  label="جلسة خاصة"
+                  icon={<CalendarDays className="w-4 h-4" />}
+                  onClick={() => pushUrl("/#session-intake", { screen: "session-intake" })}
+                  color="#60a5fa"
+                />
+                <SidebarItem
+                  label="لوحة الكوتش"
+                  icon={<MessageCircle className="w-4 h-4" />}
+                  onClick={() => pushUrl("/#session-console", { screen: "session-console" })}
+                  color="#14b8a6"
+                />
+                <SidebarItem
+                  label="أجواء الرحلة"
+                  icon={<Wind className="w-4 h-4" />}
+                  onClick={() => pushUrl("/#atmosfera", { screen: "atmosfera" })}
+                  color="#2dd4bf"
+                />
+                <SidebarItem
+                  label="مسارات"
+                  icon={<Compass className="w-4 h-4" />}
+                  onClick={() => pushUrl("/#masarat", { screen: "masarat" })}
+                  color="#f59e0b"
+                />
               </SidebarSector>
             </div>
           </aside>
@@ -536,11 +616,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
         {/* Desktop Handle */}
         <div
-          className="h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600/90 text-white border-l border-teal-700/50 cursor-pointer py-4"
+          className={`h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600/40 backdrop-blur-xl text-white border-l border-white/10 cursor-pointer py-4 hover:bg-teal-600/60 transition-colors`}
           onClick={() => setIsDesktopSidebarOpen((current) => !current)}
           title={isDesktopSidebarOpen ? "أغلق محطة الانطلاق" : "افتح محطة الانطلاق"}
         >
-          <PanelRightOpen className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0"}`} />
+          <PanelRightOpen className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0 text-teal-400"}`} />
         </div>
       </div>
 
@@ -550,7 +630,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           type="button"
           title="تواصل عبر واتساب"
           onClick={() => openWhatsAppChat("floating_fab")}
-          className="fixed z-30 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+1rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
+          className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md hover:bg-emerald-500 transition-colors duration-200"
         >
           <MessageCircle className="w-5 h-5 shrink-0" />
         </button>
@@ -583,7 +663,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-[min(86vw,24rem)] bg-[#0a0f18] z-50 md:hidden flex flex-col border-l border-white/10"
+              className="fixed top-0 right-0 h-full w-[min(86vw,24rem)] bg-[#0B0F19]/80 backdrop-blur-3xl z-50 md:hidden flex flex-col border-l border-white/10 shadow-2xl"
             >
               <div className="flex items-center justify-between p-5 border-b border-white/5">
                 <h2 className="text-lg font-bold text-white">محطة الانطلاق</h2>
@@ -598,6 +678,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               </div>
 
               <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                <EcosystemNavigator onNavigate={(url) => { pushUrl(url); handleClose(); }} />
+                
                 <SidebarSector title="الاستكشاف" icon={<Compass className="w-4 h-4" />} color="teal">
                   <SidebarItem
                     label="الخريطة"
@@ -605,12 +687,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     onClick={() => { onOpenDawayir?.(); handleClose(); }}
                     color={goalColor}
                   />
-                  {activeProtocol && (
+                {activeProtocolInfo && (
                     <SidebarItem
-                      label={`بروتوكول: ${activeProtocol.title}`}
+                      label={activeProtocolInfo!.label}
                       icon={<Activity className="w-5 h-5" />}
                       onClick={() => { onOpenProtocol?.(); handleClose(); }}
-                      color="#10b981"
+                      color={activeProtocolInfo!.color}
                       badge="جاري"
                     />
                   )}
@@ -628,6 +710,36 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                       color={goalColor}
                     />
                   )}
+                  <SidebarItem
+                    label="مرايا"
+                    icon={<Sparkles className="w-5 h-5" />}
+                    onClick={() => { pushUrl("/#maraya", { screen: "maraya" }); handleClose(); }}
+                    color="#a78bfa"
+                  />
+                  <SidebarItem
+                    label="جلسة خاصة"
+                    icon={<CalendarDays className="w-5 h-5" />}
+                    onClick={() => { pushUrl("/#session-intake", { screen: "session-intake" }); handleClose(); }}
+                    color="#60a5fa"
+                  />
+                  <SidebarItem
+                    label="لوحة الكوتش"
+                    icon={<MessageCircle className="w-5 h-5" />}
+                    onClick={() => { pushUrl("/#session-console", { screen: "session-console" }); handleClose(); }}
+                    color="#14b8a6"
+                  />
+                  <SidebarItem
+                    label="أجواء الرحلة"
+                    icon={<Wind className="w-5 h-5" />}
+                    onClick={() => { pushUrl("/#atmosfera", { screen: "atmosfera" }); handleClose(); }}
+                    color="#2dd4bf"
+                  />
+                  <SidebarItem
+                    label="مسارات"
+                    icon={<Compass className="w-5 h-5" />}
+                    onClick={() => { pushUrl("/#masarat", { screen: "masarat" }); handleClose(); }}
+                    color="#f59e0b"
+                  />
                 </SidebarSector>
 
                 <SidebarSector title="العمل والممارسة" icon={<Target className="w-4 h-4" />} color="indigo">
@@ -669,7 +781,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <div className="pt-4 space-y-2">
                   <button
                     onClick={() => { onStartJourney(); handleClose(); }}
-                    className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-teal-900/20"
+className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-center justify-center gap-2 shadow-md shadow-teal-900/10"
+
                   >
                     <ArrowLeft className="w-5 h-5" />
                     انطلاق للمهمة

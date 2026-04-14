@@ -110,14 +110,14 @@ async function enqueueOutreach(
         step: s.step,
         status: "pending",
         scheduled_at: new Date(now + s.delay).toISOString(),
-        payload: { step: s.step, subject: s.subject, source, utm } // Simplified for code brevity here, but usually carries HTML
+        payload: { step: s.step, subject: s.subject, source, utm }
       });
     });
   }
 
   if (phone) {
     rows.push({
-      lead_email: email || `phone_${phone}`,
+      lead_email: email || null,
       lead_id: leadId,
       channel: "whatsapp",
       step: 4,
@@ -164,6 +164,17 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
   }
   const supabaseAdmin = getRequiredSupabaseAdminClient();
 
+  // P0-2: Check if profile already exists by email to link it
+  let existingProfileId = null;
+  if (input.email) {
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("email", input.email)
+      .maybeSingle();
+    if (profile) existingProfileId = profile.id;
+  }
+
   // ATOMIC UPSERT VIA RPC (Hardening V2)
   const { data, error } = await supabaseAdmin.rpc("upsert_marketing_lead_v2", {
     p_email: input.email || null,
@@ -172,7 +183,7 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     p_name: input.name || null,
     p_source: input.source || "landing",
     p_source_type: input.sourceType || "website",
-    p_utm: input.utm || {},
+    p_utm: (input.utm && typeof input.utm === 'object') ? input.utm : {},
     p_note: input.note || "",
     p_status: input.status || "new",
     p_intent: input.intent || null,
@@ -189,24 +200,36 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     throw new Error(`upsert_rpc_failed: ${error.message || String(error)}`);
   }
 
-  const result = Array.isArray(data) ? data[0] : (data as any);
-  const storedLeadId = result.lead_id;
+  // Handle table return from RPC
+  const result = Array.isArray(data) ? data[0] : (data as any) || {};
+  const internalId = result.internal_id;
+  const publicLeadId = result.public_lead_id;
   const isNew = result.is_new;
   const conflictDetected = result.conflict;
 
-  if (storedLeadId) {
-    enqueueOutreachAsync(input.email || null, input.source, input.utm, storedLeadId, input.phoneNormalized);
+  if (internalId && publicLeadId) {
+    // P0-2: Explicitly link profile_id if we found one
+    if (existingProfileId) {
+      await supabaseAdmin
+        .from("marketing_leads")
+        .update({ profile_id: existingProfileId })
+        .eq("id", internalId);
+    }
+
+    // Outreach Queue uses PUBLIC lead_id for FK constraints
+    enqueueOutreachAsync(input.email || null, input.source, input.utm, publicLeadId, input.phoneNormalized);
 
     // Validate WhatsApp if phone is present and it's a NEW lead
+    // WhatsApp events use INTERNAL id for FK constraints
     if (input.phoneNormalized && isNew) {
-      void WhatsAppCloudService.validateNumber(input.phoneNormalized, storedLeadId).catch((err) => {
+      void WhatsAppCloudService.validateNumber(input.phoneNormalized, internalId).catch((err) => {
         console.error("[marketing/lead] whatsapp_validation_trigger_failed:", err);
       });
     }
   }
 
   return {
-    lead_id: storedLeadId!,
+    lead_id: publicLeadId!,
     email: input.email || null,
     phone_normalized: input.phoneNormalized || null,
     is_new: isNew,
@@ -323,14 +346,26 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
         }
       });
 
+      // Determine the friendly message based on result
+      let message = "تم تسجيل البيانات بنجاح ✅";
+      if (result.is_new) {
+        message = `لُقطة! ${input.name || 'العميل'} بقى معانا في الرحلة 🎯`;
+      } else if (result.conflict) {
+        message = "العميل ده موجود عندنا أصلاً، ورقم تليفونه اتحدّث ✅";
+      } else {
+        message = "تم تحديث بيانات العميل بنجاح ✅";
+      }
+
       return NextResponse.json({
         ok: true,
+        message,
         lead: { 
           email: result.email, 
           phone: result.phone_normalized, 
           source: input.source, 
           lead_id: result.lead_id, 
-          conflict: result.conflict 
+          conflict: result.conflict,
+          is_new: result.is_new
         }
       });
     }

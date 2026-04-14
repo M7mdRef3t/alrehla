@@ -207,7 +207,7 @@ export const QuickCapture = memo(function QuickCapture({ isOpen, onClose }: Quic
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder={activeConfig.placeholder}
-                className="w-full min-h-[100px] rounded-2xl p-4 text-sm text-white font-medium placeholder:text-white/20 resize-none focus:outline-none transition-all"
+                className="w-full min-h-[100px] rounded-2xl p-4 text-sm text-white font-medium placeholder:text-[#cbd5e1] placeholder:font-semibold resize-none focus:outline-none transition-all"
                 style={{
                   background: "rgba(255,255,255,0.03)",
                   border: `1px solid ${content.trim() ? `${activeConfig.color}30` : "rgba(255,255,255,0.06)"}`,

@@ -3,10 +3,10 @@ import { BarChart3, Target, Users } from "lucide-react";
 import type { OverviewStats } from "@/services/adminApi";
 import { AdminTooltip } from "./AdminTooltip";
 
-type MarketingLeadsStats = NonNullable<OverviewStats["marketingLeads"]>;
+type PotentialTravelersStats = NonNullable<OverviewStats["potentialTravelers"]>;
 
 interface MarketingLeadsPanelProps {
-  data: MarketingLeadsStats | null | undefined;
+  data: PotentialTravelersStats | null | undefined;
   loading: boolean;
 }
 
@@ -63,7 +63,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
     return (
       <div className="admin-glass-card mb-6 rounded-3xl border-slate-800 bg-slate-950/40 p-10 flex flex-col items-center justify-center text-center">
         <Users className="w-8 h-8 text-slate-600 mb-2 opacity-50" />
-        <p className="text-xs font-bold uppercase tracking-widest text-slate-500">لا توجد داتا (Leads) متاحة للمزامنة.</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-500">لا توجد بيانات (Travelers) متاحة للمزامنة.</p>
       </div>
     );
   }
@@ -88,10 +88,10 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
             </div>
             <div>
                  <h3 className="text-sm font-black text-white uppercase tracking-widest leading-none mb-1 flex items-center gap-2">
-                     محرك العملاء (Leads Engine)
-                     <AdminTooltip content="محرك العملاء: يحلل من أين يأتي الزوار الجدد (Social, Direct, Organic) والشرائح الخاصة بهم." position="right" />
+                     محرك العبور السِيادي (Travelers Engine)
+                     <AdminTooltip content="محرك العبور: يحلل من أين تأتي الأرواح الجديدة (Social, Direct, Organic) وكيف تبدأ رحلتها." position="right" />
                  </h3>
-                 <span className="text-[10px] text-slate-500 font-mono tracking-wider">مسار الاستحواذ (ACQUISITION FUNNEL)</span>
+                 <span className="text-[10px] text-slate-500 font-mono tracking-wider">مسار الجذب الروحي (ACQUISITION FLOW)</span>
             </div>
           </div>
         </div>
@@ -143,10 +143,10 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
             </div>
             <div>
                  <h3 className="text-sm font-black text-white uppercase tracking-widest leading-none mb-1 flex items-center gap-2">
-                     شبكة التحويل (Conversion Nexus)
-                     <AdminTooltip content="جودة التحويل: هل الزوار الجداد بيخشوا الرحلة بجد، ولا مجرد كليك وبيمشوا؟" position="left" />
+                     شبكة العبور (Passage Nexus)
+                     <AdminTooltip content="جودة العبور: هل الأرواح الجديدة تنغمس في الرحلة، أم مجرد رؤية عابرة؟" position="left" />
                  </h3>
-                 <span className="text-[10px] text-slate-500 font-mono tracking-wider">مسار العميل (LEAD TRAJECTORY)</span>
+                 <span className="text-[10px] text-slate-500 font-mono tracking-wider">مسار التحول (TRAVELER TRAJECTORY)</span>
             </div>
           </div>
         </div>
@@ -158,7 +158,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
                 معدل البدء
                 <AdminTooltip content="نسبة الزوار اللي ضغطوا (انطلق) من إجمالي الزيارات." position="bottom" />
             </p>
-            <p className="text-xl sm:text-2xl font-black text-white tabular-nums">{fmtPct(data.conversion?.startClickRatePct)}</p>
+            <p className="text-xl sm:text-2xl font-black text-white tabular-nums">{fmtPct(data.sovereignPassage?.startClickRatePct)}</p>
           </div>
           <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-3 flex flex-col items-center justify-center relative overflow-hidden group/box">
             <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50" />
@@ -166,7 +166,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
                 معدل النبض
                 <AdminTooltip content="نسبة الزوار اللي خلصوا (فحص النبض) بنجاح والمزاج بتاعهم اتحدد." position="bottom" />
             </p>
-            <p className="text-xl sm:text-2xl font-black text-cyan-400 tabular-nums drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">{fmtPct(data.conversion?.pulseCompletedRatePct)}</p>
+            <p className="text-xl sm:text-2xl font-black text-cyan-400 tabular-nums drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">{fmtPct(data.sovereignPassage?.pulseCompletedRatePct)}</p>
           </div>
           <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-3 flex flex-col items-center justify-center relative overflow-hidden group/box">
             <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-50" />
@@ -174,7 +174,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
                 معدل خريطة الرحلة
                 <AdminTooltip content="نسبة اللي قدروا يوصلوا لمراحل متقدمة ويكوّنوا عيلتهم او يضيفوا شخص." position="bottom" />
             </p>
-            <p className="text-xl sm:text-2xl font-black text-emerald-400 tabular-nums drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{fmtPct(data.conversion?.mapCreatedRatePct)}</p>
+            <p className="text-xl sm:text-2xl font-black text-emerald-400 tabular-nums drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{fmtPct(data.sovereignPassage?.mapCreatedRatePct)}</p>
           </div>
         </div>
 
@@ -182,9 +182,9 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
           <div className="flex items-center justify-between mb-4">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
-                  مؤشر التفاعل اليومي (14 يوم)
+                  مؤشر الإقبال اليومي (14 يوم)
               </p>
-              <AdminTooltip content="مؤشر لتذبذب دخول الـ Leads اليومي لآخر أسبوعين. العمود الأعلى يعني يوم حققنا فيه Viral Peak." position="left" />
+              <AdminTooltip content="مؤشر لتذبذب دخول المسافرين اليومي لآخر أسبوعين. العمود الأعلى يعني يوم حققنا فيه Viral Peak." position="left" />
           </div>
           <div className="flex h-16 items-end gap-1.5 w-full">
             {(data.dailyTrend || []).map((point) => {
@@ -213,8 +213,8 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
 
             <div className="mt-2 grid grid-cols-1 gap-2">
               <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-600" /> حالة الزوار (Lead Status)</p>
-                  <AdminTooltip content="تصنيف الـ CRM الداخلي لمراحل الشراء (سخن، متردد، جديد)." position="left" />
+                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-600" /> رُتبة المسافر (Traveler Rank)</p>
+                  <AdminTooltip content="تصنيف الأرواح حسب عمق التفاعل في الرحلة (مستعد، متردد، جديد)." position="left" />
               </div>
               <BreakdownList items={topStatuses} emptyLabel="لا يوجد حالات" valueClassName="text-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.3)]" fallbackKey="new" />
             </div>

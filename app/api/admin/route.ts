@@ -12,6 +12,7 @@ import { handleRadar } from "../../../server/admin/radar";
 import { handleRadarContent } from "../../../server/admin/radar-content";
 import { handleRadarGrants } from "../../../server/admin/radar-grants";
 import { handleAlerts } from "../../../server/admin/alerts";
+import { handleSessionEvents } from "../../../server/admin/session-events";
 import { handleCopilot } from "../../../server/admin/copilot";
 import { handleOraclePulse } from "../../../server/admin/intelligence";
 import { handleTicketsResolve } from "../../../server/admin/tickets";
@@ -48,6 +49,7 @@ const ROUTES: Record<string, AdminHandler> = {
     "radar-content": handleRadarContent,
     "radar-grants": handleRadarGrants,
     alerts: handleAlerts,
+    "session-events": handleSessionEvents,
     copilot: handleCopilot,
     "oracle-pulse": handleOraclePulse,
     "tickets/resolve": handleTicketsResolve

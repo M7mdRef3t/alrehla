@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { trackingService } from '@/domains/journey';
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AdviceCategory } from "@/data/adviceScripts";

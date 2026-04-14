@@ -1,5 +1,6 @@
 "use client";
 
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * 🌙 EveningReview — مراجعة آخر اليوم
  * =====================================

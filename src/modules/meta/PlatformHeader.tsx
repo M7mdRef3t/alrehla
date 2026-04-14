@@ -35,9 +35,9 @@ import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store"
 import { BookOpen, Info } from "lucide-react";
 
 const NAV_LINKS_RESOLVED = [
-  { id: "home", label: "الرئيسية", icon: Home },
-  { id: "tools", label: "الأدوات", icon: Wrench },
-  { id: "insights", label: "تحليلات", icon: BarChart2 },
+  { id: "home", label: "الأفق", icon: Home },
+  { id: "tools", label: "البوصلة", icon: Wrench },
+  { id: "insights", label: "الرادار", icon: BarChart2 },
   { id: "stories", label: "قصص", icon: BookOpen },
   { id: "about", label: "لماذا الرحلة؟", icon: Info },
 ] as const;
@@ -207,7 +207,7 @@ export const PlatformHeader = memo(function PlatformHeader({
     hidden ? "-translate-y-full" : "translate-y-0"
   } ${
     scrolled
-      ? "backdrop-blur-2xl border-b border-[color:var(--glass-border)] shadow-sm h-16 bg-[var(--glass-bg)]"
+      ? "backdrop-blur-3xl border-b border-[color:var(--glass-border)] h-16 bg-[rgba(2,4,10,0.65)]"
       : "border-b border-transparent h-20 bg-transparent"
   }`;
 
@@ -237,7 +237,7 @@ export const PlatformHeader = memo(function PlatformHeader({
              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
            />
         </motion.div>
-        <span className="font-bold text-lg tracking-tight group-hover:text-teal-400 transition-colors duration-300 text-[var(--text-primary)]">
+        <span className="font-black text-xl tracking-tight text-white group-hover:text-[#00F0FF] transition-colors duration-300" style={{ fontFamily: "var(--font-display)" }}>
           الرحلة
         </span>
       </button>
@@ -273,10 +273,10 @@ export const PlatformHeader = memo(function PlatformHeader({
                 handleNav(id);
               }}
               className={`
-                relative px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200 flex items-center gap-2 cursor-pointer
+                group relative px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200 flex items-center gap-2 cursor-pointer
                 ${isActive 
-                  ? "text-slate-900 dark:text-white" 
-                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  ? "text-zinc-950 dark:text-white" 
+                  : "text-zinc-100 hover:text-white dark:text-zinc-100 dark:hover:text-white"
                 }
               `}
               aria-current={isActive ? "page" : undefined}
@@ -284,18 +284,18 @@ export const PlatformHeader = memo(function PlatformHeader({
               {isActive && (
                 <motion.div
                   layoutId="header-nav-indicator"
-                  className="absolute inset-0 rounded-full bg-slate-400/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 shadow-sm"
+                  className="absolute inset-0 rounded-full bg-slate-400/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/10"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
               {isActive && (
-                <Icon className="w-4 h-4 text-teal-400 relative z-10" />
+                <Icon className="w-4 h-4 text-[var(--teal)] relative z-10" />
               )}
-              <span className="relative z-10">{label}</span>
+              <span className="relative z-10 text-white group-hover:text-[#00F0FF] transition-colors duration-200">{label}</span>
               {isActive && (
                 <motion.div
                   layoutId="active-dot"
-                  className="w-1 h-1 rounded-full bg-teal-400 absolute -bottom-1 left-1/2 -translate-x-1/2"
+                  className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] absolute -bottom-1.5 left-1/2 -translate-x-1/2"
                 />
               )}
             </button>
@@ -321,7 +321,7 @@ export const PlatformHeader = memo(function PlatformHeader({
           id="header-theme-toggle"
           aria-label={isDark ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
           onClick={handleThemeToggle}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-400/10 dark:hover:bg-white/10 transition-all"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-white dark:text-zinc-300 dark:hover:text-white hover:bg-zinc-400/10 dark:hover:bg-white/10 transition-all"
         >
           <AnimatePresence mode="wait" initial={false}>
             {isDark ? (
@@ -348,7 +348,7 @@ export const PlatformHeader = memo(function PlatformHeader({
           </AnimatePresence>
         </button>
 
-        <div className="relative">
+          <div className="relative text-amber-500">
             <AnimatePresence>
               {isLoggedIn && (
                 notifOpen ? (
@@ -390,7 +390,7 @@ export const PlatformHeader = memo(function PlatformHeader({
                     aria-label={hasUnread ? "لديك إشعارات جديدة" : "الإشعارات"}
                     aria-expanded="false"
                     onClick={handleBellClick}
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-400/10 dark:hover:bg-white/10 transition-all relative"
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-white dark:text-zinc-300 dark:hover:text-white hover:bg-zinc-400/10 dark:hover:bg-white/10 transition-all relative"
                   >
                     <Bell className={`w-5 h-5 transition-colors ${hasUnread ? "text-teal-400" : ""}`} />
                   </motion.button>
@@ -420,17 +420,19 @@ export const PlatformHeader = memo(function PlatformHeader({
                 aria-expanded="true"
               >
                 {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt={displayName ?? "المستخدم"}
-                    className="w-7 h-7 rounded-full object-cover"
-                  />
+                  <div className="relative">
+                    <img
+                      src={avatarUrl}
+                      alt={displayName ?? "المسافر"}
+                      className="w-7 h-7 rounded-full object-cover border border-white/10"
+                    />
+                  </div>
                 ) : (
-                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-xs font-bold text-slate-900">
+                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--teal)] to-emerald-600 flex items-center justify-center text-xs font-black text-slate-900 border border-white/20">
                     {avatarInitial}
                   </span>
                 )}
-                <span className="hidden lg:inline max-w-[8rem] truncate">{firstName ?? "حسابي"}</span>
+                <span className="hidden lg:inline max-w-[8rem] truncate font-bold text-[var(--tw-ring-offset-color)]">{firstName ?? "المسافر"}</span>
                 <ChevronDown
                   className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 rotate-180"
                 />
@@ -444,17 +446,19 @@ export const PlatformHeader = memo(function PlatformHeader({
                 aria-expanded="false"
               >
                 {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt={displayName ?? "المستخدم"}
-                    className="w-7 h-7 rounded-full object-cover"
-                  />
+                  <div className="relative">
+                    <img
+                      src={avatarUrl}
+                      alt={displayName ?? "المسافر"}
+                      className="w-7 h-7 rounded-full object-cover border border-white/10"
+                    />
+                  </div>
                 ) : (
-                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-xs font-bold text-slate-900">
+                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--teal)] to-emerald-600 flex items-center justify-center text-xs font-black text-slate-900 border border-white/20">
                     {avatarInitial}
                   </span>
                 )}
-                <span className="hidden lg:inline max-w-[8rem] truncate">{firstName ?? "حسابي"}</span>
+                <span className="hidden lg:inline max-w-[8rem] truncate font-bold text-[var(--tw-ring-offset-color)]">{firstName ?? "المسافر"}</span>
                 <ChevronDown
                   className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
                 />
@@ -469,7 +473,7 @@ export const PlatformHeader = memo(function PlatformHeader({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="w-52 rounded-2xl overflow-hidden backdrop-blur-xl border border-[color:var(--glass-border)] bg-[var(--glass-bg)] shadow-[0_16px_48px_rgba(0,0,0,0.4)]"
+                    className="w-52 rounded-2xl overflow-hidden backdrop-blur-xl border border-[color:var(--glass-border)] bg-[var(--glass-bg)]"
                     role="presentation"
                   >
                   <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10">
@@ -485,19 +489,19 @@ export const PlatformHeader = memo(function PlatformHeader({
                     <button
                       type="button"
                       onClick={() => handleNav("profile")}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-teal-300 hover:bg-teal-500/10 hover:text-teal-200"
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-[var(--teal)] hover:bg-[var(--cyan-glow)] hover:text-white"
                       role="menuitem"
                     >
-                      <User className="w-4 h-4 text-teal-300" />
-                      الملف الشخصي
+                      <User className="w-4 h-4" />
+                      الملف
                     </button>
                     <button
                       type="button"
                       onClick={() => handleNav("settings")}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-slate-900 dark:text-white hover:bg-slate-400/10 dark:hover:bg-white/[0.08]"
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-[var(--text-secondary)] hover:bg-white/[0.08] hover:text-white"
                       role="menuitem"
                     >
-                      <Settings className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                      <Settings className="w-4 h-4 text-slate-500" />
                       الإعدادات
                     </button>
 
@@ -505,7 +509,7 @@ export const PlatformHeader = memo(function PlatformHeader({
                       <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">التحكم</p>
                       <div className="flex flex-col gap-1">
                         {[
-                          { id: "insights", label: "تحليل العلاقات", Icon: BarChart2 },
+                          { id: "insights", label: "الرادار", Icon: BarChart2 },
                           { id: "quizzes", label: "اختبارات الشخصية", Icon: Sparkles },
                           { id: "behavioral-analysis", label: "تحليل الأنماط", Icon: Brain },
                           { id: "resources", label: "مركز الموارد", Icon: BookOpen },
@@ -514,10 +518,10 @@ export const PlatformHeader = memo(function PlatformHeader({
                             key={id}
                             type="button"
                             onClick={() => handleNav(id)}
-                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-900 dark:text-white hover:bg-slate-400/10 dark:hover:bg-white/[0.08] transition-colors text-right w-full"
+                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-[var(--text-secondary)] hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
                             role="menuitem"
                           >
-                            <Icon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                            <Icon className="w-4 h-4 text-slate-500" />
                             {label}
                           </button>
                         ))}
@@ -554,18 +558,18 @@ export const PlatformHeader = memo(function PlatformHeader({
                           }}
                           className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full ${
                             isViewingAsUser
-                              ? "text-amber-400 hover:bg-amber-500/10"
-                              : "text-teal-400 hover:bg-teal-500/10"
+                              ? "text-[var(--gold)] hover:bg-[var(--gold-glow)]"
+                              : "text-[var(--teal)] hover:bg-[var(--cyan-glow)]"
                           }`}
                           role="menuitem"
-                          aria-label={isViewingAsUser ? "العودة للوحة الأونر" : "معاينة المستخدم"}
+                          aria-label={isViewingAsUser ? "العودة للوحة الأونر" : "معاينة المسافر"}
                         >
                           {isViewingAsUser ? (
                             <ShieldCheck className="w-4 h-4" />
                           ) : (
                             <Eye className="w-4 h-4" />
                           )}
-                          {isViewingAsUser ? "العودة للوحة الأونر" : "معاينة المستخدم"}
+                          {isViewingAsUser ? "العودة للوحة الأونر" : "معاينة المسافر"}
                         </button>
                       </div>
                     )}
@@ -624,9 +628,9 @@ export const MobileNavBar = memo(function MobileNavBar({
   );
 
   const MOBILE_NAV = [
-    { id: "home", label: "الرئيسية", icon: Home },
-    { id: "tools", label: "الأدوات", icon: Wrench },
-    { id: "insights", label: "تحليلات", icon: BarChart2 },
+    { id: "home", label: "الأفق", icon: Home },
+    { id: "tools", label: "البوصلة", icon: Wrench },
+    { id: "insights", label: "الرادار", icon: BarChart2 },
     { id: "stories", label: "قصص", icon: BookOpen },
     { id: "profile", label: "الملف", icon: User },
   ] as const;
@@ -640,7 +644,6 @@ export const MobileNavBar = memo(function MobileNavBar({
         backdrop-blur-2xl
         border-t
         pb-safe pt-2 px-4 h-20
-        shadow-lg
         bg-[var(--glass-bg)] border-[color:var(--glass-border)]"
     >
       {MOBILE_NAV.map(({ id, label, icon: Icon }) => {
@@ -653,10 +656,10 @@ export const MobileNavBar = memo(function MobileNavBar({
             className="flex-1 flex flex-col items-center justify-center gap-1 py-3 group relative"
           >
             <Icon
-              className={`w-6 h-6 transition-transform group-active:scale-90 ${isActive ? "text-teal-500" : "text-slate-500 dark:text-slate-400"}`}
+              className={`w-6 h-6 transition-transform group-active:scale-90 ${isActive ? "text-[var(--teal)]" : "text-slate-500 dark:text-slate-400"}`}
             />
             <span
-              className={`text-[10px] font-bold ${isActive ? "text-teal-500" : "text-slate-500 dark:text-slate-400"}`}
+              className={`text-[10px] font-bold ${isActive ? "text-[var(--teal)]" : "text-slate-500 dark:text-slate-400"}`}
             >
               {label}
             </span>

@@ -48,6 +48,12 @@ const slideVariants = {
   exit: (dir: number) => ({ x: dir < 0 ? 50 : -50, opacity: 0, filter: "blur(10px)", transition: { duration: 0.3 } })
 };
 
+const ADAPTIVE_INTAKE_STYLES = `
+  .adaptive-intake-heading {
+    font-family: var(--font-display);
+  }
+`;
+
 /* ─── Component ─────────────────────────────────────────────────────────────── */
 
 export const AdaptiveIntake: FC<{ onComplete: () => void }> = ({ onComplete }) => {
@@ -81,9 +87,10 @@ export const AdaptiveIntake: FC<{ onComplete: () => void }> = ({ onComplete }) =
 
   return (
     <div className="w-full max-w-xl mx-auto px-4 py-8 flex flex-col min-h-[500px]" dir="rtl">
+      <style>{ADAPTIVE_INTAKE_STYLES}</style>
       {/* Header */}
       <div className="text-center mb-10">
-        <h2 className="text-2xl font-black text-white mb-2" style={{ fontFamily: "var(--font-display)" }}>
+        <h2 className="text-2xl font-black text-white mb-2 adaptive-intake-heading">
             تحليل اللحظة الحالية
         </h2>
         <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mt-4">

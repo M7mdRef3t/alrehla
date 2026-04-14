@@ -3,6 +3,14 @@ import { cn } from "./utils";
 
 type CardProps = HTMLAttributes<HTMLDivElement>;
 
-export const Card: FC<CardProps> = ({ className, ...props }) => {
-  return <div className={cn("ds-card", className)} {...props} />;
+export const Card: FC<CardProps> = ({ className, onClick, ...props }) => {
+  return (
+    <div
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      className={cn("ds-card", onClick && "", className)}
+      onClick={onClick}
+      {...props}
+    />
+  );
 };

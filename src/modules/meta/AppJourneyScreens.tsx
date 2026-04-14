@@ -52,19 +52,21 @@ export function AppJourneyScreens({
   if (screen === "tools") {
     return (
       <PageShell headerMode="standard" tabBarVisible={true} breadcrumbVisible={true}>
-        <JourneyToolsScreen
-          onBack={() => onNavigate(toolsBackScreen)}
-          onOpenDawayir={onOpenDawayir}
-          onOpenDawayirSetup={onOpenDawayirSetup}
-          onFeatureLocked={onFeatureLocked}
-          availableFeatures={availableFeatures}
-          onOpenGoal={onOpenGoal}
-          nextStepDecision={nextStepDecision}
-          onTakeNextStep={onTakeNextStep}
-          onRefreshNextStep={onRefreshNextStep}
-          onOpenExitScripts={() => onNavigate("exit-scripts")}
-          onOpenGrounding={() => onNavigate("grounding")}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <JourneyToolsScreen
+            onBack={() => onNavigate(toolsBackScreen)}
+            onOpenDawayir={onOpenDawayir}
+            onOpenDawayirSetup={onOpenDawayirSetup}
+            onFeatureLocked={onFeatureLocked}
+            availableFeatures={availableFeatures}
+            onOpenGoal={onOpenGoal}
+            nextStepDecision={nextStepDecision}
+            onTakeNextStep={onTakeNextStep}
+            onRefreshNextStep={onRefreshNextStep}
+            onOpenExitScripts={() => onNavigate("exit-scripts")}
+            onOpenGrounding={() => onNavigate("grounding")}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -72,15 +74,17 @@ export function AppJourneyScreens({
   if (screen === "settings") {
     return (
       <PageShell headerMode="standard" tabBarVisible={false} breadcrumbVisible={true}>
-        <SettingsScreen
-          onClose={() => {
-            if (canUseMap) {
-              onNavigate("map");
-              return;
-            }
-            onNavigate("landing");
-          }}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <SettingsScreen
+            onClose={() => {
+              if (canUseMap) {
+                onNavigate("map");
+                return;
+              }
+              onNavigate("landing");
+            }}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -88,10 +92,12 @@ export function AppJourneyScreens({
   if (screen === "guided") {
     return (
       <PageShell headerMode="none" tabBarVisible={false}>
-        <GuidedJourneyFlow
-          onBackToLanding={() => onNavigate("landing")}
-          onFinishJourney={() => onNavigate("map")}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <GuidedJourneyFlow
+            onBackToLanding={() => onNavigate("landing")}
+            onFinishJourney={() => onNavigate("map")}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -99,7 +105,9 @@ export function AppJourneyScreens({
   if (screen === "mission" && missionNodeId) {
     return (
       <PageShell headerMode="none" tabBarVisible={false} maxWidth="max-w-none px-0">
-        <MissionScreen nodeId={missionNodeId} onBack={() => onNavigate("map")} />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <MissionScreen nodeId={missionNodeId} onBack={() => onNavigate("map")} />
+        </Suspense>
       </PageShell>
     );
   }

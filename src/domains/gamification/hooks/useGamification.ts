@@ -22,6 +22,12 @@ export function useGamification() {
   const purchasedItemIds = useGamificationState((s) => s.purchasedItemIds);
   const activeThemeId = useGamificationState((s) => s.activeThemeId);
   const activeVoiceId = useGamificationState((s) => s.activeVoiceId);
+
+  // ❄️ Tajmeed
+  const frostPoints = useGamificationState((s) => s.frostPoints);
+  const freezeStats = useGamificationState((s) => s.freezeStats);
+  const seasonXP = useGamificationState((s) => s.seasonXP);
+  const seasonId = useGamificationState((s) => s.seasonId);
   const dailyCompletedKeys = useGamificationState((s) => s.dailyCompletedKeys);
 
   // Computed
@@ -44,6 +50,12 @@ export function useGamification() {
     dailyCompletedKeys,
     levelProgress,
 
+    // ❄️ Tajmeed
+    frostPoints,
+    freezeStats,
+    seasonXP,
+    seasonId,
+
     // Actions via service
     addXP: gamificationService.addXP.bind(gamificationService),
     addCoins: gamificationService.addCoins.bind(gamificationService),
@@ -55,6 +67,15 @@ export function useGamification() {
     hasItem: gamificationService.hasItem.bind(gamificationService),
     completeDailyQuest: gamificationService.completeDailyQuest.bind(gamificationService),
     checkAndResetQuests: gamificationService.checkAndResetQuests.bind(gamificationService),
+
+    // ❄️ Freeze Rewards
+    rewardFreeze: gamificationService.rewardFreeze.bind(gamificationService),
+    rewardUnfreeze: gamificationService.rewardUnfreeze.bind(gamificationService),
+    rewardBoundary: gamificationService.rewardBoundary.bind(gamificationService),
+    rewardPatternDetected: gamificationService.rewardPatternDetected.bind(gamificationService),
+    getFreezeProfile: gamificationService.getFreezeProfile.bind(gamificationService),
+    addFrostPoints: gamificationService.addFrostPoints.bind(gamificationService),
+    spendFrostPoints: gamificationService.spendFrostPoints.bind(gamificationService),
 
     // State passthrough (less common)
     clearLevelUpState: useGamificationState.getState().clearLevelUpState,

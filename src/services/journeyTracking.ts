@@ -12,6 +12,7 @@ import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { sendJsonWithResilience } from "../architecture/resilientHttp";
 import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribution";
 import { ANALYTICS_SESSION_KEY, getOrCreateSessionId as getUnifiedSessionId, getOrCreateAnonymousId } from "./analytics";
+import { buildAnalyticsEnvelope } from "@/domains/analytics/contracts";
 
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
@@ -168,21 +169,31 @@ async function flushSupabaseSync(): Promise<void> {
   const leadAttr = getStoredLeadAttribution();
   const utm = getStoredUtmParams();
 
-  const rows = batch.map(({ mode, event }) => ({
-    event_type: event.type,
-    session_id: event.sessionId ?? null,
-    anonymous_id: anonymousId,
-    client_event_id: crypto.randomUUID(), // Ensure idempotency at the source
-    lead_id: leadAttr?.lead_id || null,
-    lead_source: leadAttr?.lead_source || null,
-    utm_source: utm?.utm_source || null,
-    utm_medium: utm?.utm_medium || null,
-    utm_campaign: utm?.utm_campaign || null,
-    payload: {
-      ...(event.payload ?? {}),
-      mode
-    }
-  }));
+  const rows = batch
+    .map(({ mode, event }) =>
+      buildAnalyticsEnvelope({
+        event_type: event.type,
+        session_id: event.sessionId ?? null,
+        anonymous_id: anonymousId,
+        client_event_id: crypto.randomUUID(),
+        lead_id: leadAttr?.lead_id || null,
+        lead_source: leadAttr?.lead_source || null,
+        utm_source: utm?.utm_source || null,
+        utm_medium: utm?.utm_medium || null,
+        utm_campaign: utm?.utm_campaign || null,
+        payload: {
+          ...(event.payload ?? {}),
+          mode
+        }
+      })
+    )
+    .filter((row): row is NonNullable<typeof row> => {
+      if (row) return true;
+      if (runtimeEnv.isDev) {
+        console.warn("[JourneyTracking] Invalid analytics envelope blocked before sync");
+      }
+      return false;
+    });
 
   // Redirect to unified analytics API instead of direct Supabase insertion
   for (const row of rows) {
@@ -359,6 +370,8 @@ export type FlowStep =
   | "screen_armory_viewed"
   | "screen_exit_scripts_viewed"
   | "screen_grounding_viewed"
+  | "mirror_journey_started"
+  | "mirror_journey_completed"
   | "install_clicked"
   | "profile_clicked"
   | "pulse_opened"
@@ -396,8 +409,10 @@ export type FlowStep =
   | "next_step_action_taken"
   | "next_step_dismissed"
   | "routing_intervention_triggered"
+  | "safety_triage_triggered"
   | "quiz_completed"
-  | "quiz_hub_opened";
+  | "quiz_hub_opened"
+  | "diagnosis_completed";
 
 export function recordFlowEvent(
   step: FlowStep,

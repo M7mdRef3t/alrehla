@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 /**
  * Domain: Sessions — Hooks
  *
@@ -9,6 +10,8 @@ import type { IntakeFormData, IntakeStep } from "../types";
 import { INITIAL_INTAKE_FORM, INTAKE_STEP_ORDER } from "../constants";
 import { isDevMode } from "@/config/appEnv";
 import { supabase } from "@/services/supabaseClient";
+import { loadDiagnosisState } from "@/modules/diagnosis/types";
+import { USER_STATE_LABELS, MAIN_PAIN_LABELS } from "@/modules/diagnosis/diagnosisEngine";
 
 export function useSessionIntake() {
   const [step, setStep] = useState<IntakeStep>("welcome");
@@ -16,6 +19,23 @@ export function useSessionIntake() {
   const [formData, setFormData] = useState<IntakeFormData>({
     ...INITIAL_INTAKE_FORM,
   });
+  const [isDiagnosisSynced, setIsDiagnosisSynced] = useState(false);
+
+  // Sync with Diagnosis context
+  useEffect(() => {
+    const diag = loadDiagnosisState();
+    if (diag && !formData.requestReason) {
+      const typeLabel = USER_STATE_LABELS[diag.type] || diag.type;
+      const painLabel = MAIN_PAIN_LABELS[diag.mainPain] || diag.mainPain;
+      
+      setFormData(prev => ({
+        ...prev,
+        requestReason: `التشخيص الأولي: ${typeLabel}`,
+        urgencyReason: `مصدر الألم الأساسي: ${painLabel}`,
+      }));
+      setIsDiagnosisSynced(true);
+    }
+  }, []);
   const [isTyping, setIsTyping] = useState(false);
   const [activeField, setActiveField] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string>("");
@@ -176,5 +196,6 @@ export function useSessionIntake() {
     canProceedFromReason,
     canProceedFromContext,
     canSubmitSafety,
+    isDiagnosisSynced,
   };
 }

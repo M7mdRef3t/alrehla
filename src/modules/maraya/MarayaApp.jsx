@@ -20,6 +20,7 @@ import useMarayaRuntime from './hooks/useMarayaRuntime.js';
 import { APP_STATES, JUDGE_MODE_QUERY_PARAM } from './utils/constants.js';
 import { buildTransformationSummary, toDisplayEmotionLabel } from './utils/transformation.js';
 import { useAdminState } from '@/domains/admin/store/admin.store';
+import { trackingService } from '@/domains/journey';
 import {
   getMarayaStoryPath,
   getMarayaStoryRestartLabel,
@@ -315,6 +316,14 @@ export default function App() {
   const judgeFinaleVoiceLine = uiLanguage === 'en'
     ? `Transformation complete. ${judgeEndingLine}.`
     : `اكتمل التحول. ${judgeEndingLine}.`;
+
+  useEffect(() => {
+    if (appState === APP_STATES.ENDING) {
+      trackingService.recordFlow('mirror_journey_completed', {
+        meta: { surface: 'maraya' },
+      });
+    }
+  }, [appState]);
 
   useEffect(() => {
     if (!biometricsEnabled || appState !== APP_STATES.STORY || judgeMode) {
@@ -780,7 +789,7 @@ export default function App() {
             </button>
             <button
               type="button"
-              className={`audio-hud__btn ${musicEnabled ? 'audio-hud__btn--on' : ''}`}
+              className={`audio-hud__btn cursor-pointer ${musicEnabled ? 'audio-hud__btn--on' : ''}`}
               onClick={handleToggleMusic}
               aria-label={`${uiText.musicLabel}: ${musicEnabled ? uiText.musicOn : uiText.musicOff}`}
             >
@@ -788,7 +797,7 @@ export default function App() {
             </button>
             <button
               type="button"
-              className={`audio-hud__btn ${voiceEnabled ? 'audio-hud__btn--on' : ''}`}
+              className={`audio-hud__btn cursor-pointer ${voiceEnabled ? 'audio-hud__btn--on' : ''}`}
               onClick={handleToggleVoice}
               disabled={!voiceSupported}
               title={!voiceSupported ? uiText.voiceUnavailable : ''}

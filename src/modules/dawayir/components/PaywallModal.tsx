@@ -24,7 +24,7 @@ export function PaywallModal({ onClose, onGoogleLogin }: PaywallModalProps) {
               النسخة المجانية منحتك التشخيص. لكي تبدأ في بناء الحدود التلقائية، تتبع التطور، والحصول على أدوات الوعي الذكية.. ارفع مستوى اشتراكك الآن.
           </p>
           <div className="space-y-4">
-              <button onClick={onGoogleLogin} className="w-full py-4 bg-teal-500 text-slate-950 rounded-xl font-black shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-all flex items-center justify-center gap-3">
+              <button onClick={onGoogleLogin} className="w-full py-4 bg-teal-500 text-slate-950 rounded-xl font-black shadow-md shadow-teal-500/10 hover:bg-teal-400 transition-all flex items-center justify-center gap-3">
                   <Check className="w-5 h-5" />
                   سجل عبر Google مجاناً
               </button>

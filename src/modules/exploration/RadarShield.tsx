@@ -168,7 +168,7 @@ export const RadarShield: FC<RadarShieldProps> = ({ isOpen, onClose }) => {
                                                 step="1"
                                                 value={getContactHours(selectedNode.id, selectedNode.ring)}
                                                 onChange={(e) => handleUpdateDuration(parseInt(e.target.value))}
-                                                className="w-full accent-teal-500 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                                                className="w-full accent-teal-500 h-2 bg-slate-700 rounded-lg appearance-none"
                                             />
                                             <div className="flex justify-between text-[10px] text-slate-500 mt-1 font-mono">
                                                 <span>Safe (0h)</span>

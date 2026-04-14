@@ -15,6 +15,7 @@ import { useEmergencyState } from "@/domains/admin/store/emergency.store";
 import { useToastState } from '@/modules/map/dawayirIndex';
 import { supabase } from "@/services/supabaseClient";
 import { isAlignedWithPrinciples } from "./CORE_PRINCIPLES";
+import { telegramBot } from "@/services/telegramBot";
 
 
 
@@ -61,7 +62,7 @@ export type DecisionType =
   | "subscription_activated"
   | "subscription_cancelled"
 
-  // ── تدخلات سيادية (Sovereign Interventions) ──
+  // ── تدخلات حاسمة (Direct Interventions) ──
   | "sovereign_intervention_deployed"
   | "tactical_preset_deployed"
   | "market_ignition_campaign"
@@ -79,7 +80,8 @@ export type DecisionType =
   | "change_core_principles"
   | "pivot_business_model"
   | "remove_major_feature"
-  | "legal_decision";
+  | "legal_decision"
+  | "notify_admin";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🚦 مستويات الحكم الذاتي (Autonomy Levels)
@@ -134,7 +136,7 @@ export const DECISION_RULES: Record<DecisionType, AutonomyLevel> = {
   subscription_activated: "AUTONOMOUS_WITH_LOG",
   subscription_cancelled: "AUTONOMOUS_WITH_LOG",
 
-  // ── تدخلات سيادية ── (تحتاج تصديق إلا الأوامر السريعة)
+  // ── تدخلات حاسمة ── (تحتاج تصديق إلا الأوامر السريعة)
   sovereign_intervention_deployed: "REQUIRES_APPROVAL", // الافتراضي للتدخلات عالية التأثير
   tactical_preset_deployed: "AUTONOMOUS_WITH_LOG",     // الأوامر النصية المجهزة مسبقا يتم تسجيلها
   market_ignition_campaign: "REQUIRES_APPROVAL",       // الحملات الإعلانية الجديدة تحتاج موافقة
@@ -153,6 +155,7 @@ export const DECISION_RULES: Record<DecisionType, AutonomyLevel> = {
   pivot_business_model: "FORBIDDEN",
   remove_major_feature: "FORBIDDEN",
   legal_decision: "FORBIDDEN",
+  notify_admin: "AUTONOMOUS_WITH_LOG",
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -311,6 +314,12 @@ export class DecisionEngine {
           }
         } catch (e) { logger.error(e); }
         break;
+      case "notify_admin":
+        try {
+          await telegramBot.notifyAdminDecision(decision);
+          useToastState.getState().showToast("تم إرسال إشعار سيادي للأدمن", "info");
+        } catch (e) { logger.error(e); }
+        break;
 
     }
 
@@ -324,7 +333,7 @@ export class DecisionEngine {
     decision.id = actId;
     this.logDecision({ ...decision, outcome: "pending_approval" });
 
-    const title = `طلب موافقة سيادية: ${decision.type}`;
+    const title = `طلب موافقة حاسمة: ${decision.type}`;
     const body = decision.reasoning;
 
     try {

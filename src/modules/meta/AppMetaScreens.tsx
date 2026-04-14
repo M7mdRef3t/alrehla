@@ -1,4 +1,5 @@
-import { lazy } from "react";
+import { lazy, Suspense } from "react";
+import { AwarenessSkeleton } from "./AwarenessSkeleton";
 import { type MirrorInsight } from "@/services/mirrorLogic";
 
 
@@ -35,41 +36,59 @@ export function AppMetaScreens({
   onOpenTimeCapsule
 }: AppMetaScreensProps) {
   if (screen === "enterprise") {
-    return <EnterprisePortal onBack={() => onNavigate("map")} />;
+    return (
+      <Suspense fallback={<AwarenessSkeleton />}>
+        <EnterprisePortal onBack={() => onNavigate("map")} />
+      </Suspense>
+    );
   }
 
   if (screen === "guilt-court") {
-    return <GuiltCourt onBack={() => onNavigate("map")} />;
+    return (
+      <Suspense fallback={<AwarenessSkeleton />}>
+        <GuiltCourt onBack={() => onNavigate("map")} />
+      </Suspense>
+    );
   }
 
   if (screen === "diplomacy") {
-    return <DiplomaticCables onBack={() => onNavigate("map")} />;
+    return (
+      <Suspense fallback={<AwarenessSkeleton />}>
+        <DiplomaticCables onBack={() => onNavigate("map")} />
+      </Suspense>
+    );
   }
 
   if (screen === "oracle-dashboard" && authUserId) {
-    return <OracleCouncilDashboard oracleId={authUserId} />;
+    return (
+      <Suspense fallback={<AwarenessSkeleton />}>
+        <OracleCouncilDashboard oracleId={authUserId} />
+      </Suspense>
+    );
   }
 
   if (screen === "armory") {
     return (
-      <TheArmoryScreen
-        onBack={() => onNavigate("landing")}
-        onOpenMuteProtocol={onOpenMuteProtocol}
-        onOpenCocoon={onOpenCocoon}
-        onOpenMirror={() =>
-          onOpenMirror({
-            id: "manual-confront",
-            type: "emotional_denial",
-            title: "المواجهة الاختيارية",
-            message: "أنت اخترت تفتح المراية الآن. هذه فرصة للصدق مع نفسك بدل الهروب.",
-            question: "ما أكثر شيء تهرب منه الآن؟",
-            severity: "firm"
-          })
-        }
-        onOpenGuiltCourt={() => onNavigate("guilt-court")}
-        onOpenConsciousnessArchive={onOpenConsciousnessArchive}
-        onOpenTimeCapsule={onOpenTimeCapsule}
-      />
+      <Suspense fallback={<AwarenessSkeleton />}>
+        <TheArmoryScreen
+          onBack={() => onNavigate("landing")}
+          onOpenMuteProtocol={onOpenMuteProtocol}
+          onOpenCocoon={onOpenCocoon}
+          onOpenMirror={() =>
+            onOpenMirror({
+              id: "manual-confront",
+              type: "emotional_denial",
+              title: "المواجهة الاختيارية",
+              message: "أنت اخترت تفتح المراية الآن. هذه فرصة للصدق مع نفسك بدل الهروب.",
+              question: "ما أكثر شيء تهرب منه الآن؟",
+              severity: "firm"
+            })
+          }
+          onOpenGuiltCourt={() => onNavigate("guilt-court")}
+          onOpenConsciousnessArchive={onOpenConsciousnessArchive}
+          onOpenTimeCapsule={onOpenTimeCapsule}
+        />
+      </Suspense>
     );
   }
 

@@ -39,12 +39,13 @@ export async function GET(req: Request) {
       .select(`
         id,
         created_at,
-        phone,
-        message_text,
+        from_phone,
+        to_phone,
+        message_body,
         direction,
-        intent,
-        status_assigned,
-        metadata,
+        intent_detected,
+        processed_at,
+        raw_payload,
         lead_id,
         marketing_leads(name, status, campaign, source, ad)
       `)

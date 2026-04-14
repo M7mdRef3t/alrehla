@@ -126,7 +126,7 @@ export function QuestBoard() {
                 className={`group relative p-4 rounded-[2rem] border transition-all overflow-hidden ${
                   quest.isCompleted 
                   ? "bg-emerald-500/[0.02] border-emerald-500/20 opacity-80" 
-                  : "bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.04] cursor-pointer"
+                  : "bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.04]"
                 }`}
               >
                 <div className="flex items-center gap-4 relative z-10">

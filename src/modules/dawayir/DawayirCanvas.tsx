@@ -320,7 +320,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       {/* Delete Button */}
       <motion.g
         onTap={handleDeleteClick}
-        className="cursor-pointer"
+        className=""
         initial={{ opacity: 0, scale: 0 }}
         whileHover={{ scale: 1.2 }}
         animate={{ opacity: 1, scale: 1 }}

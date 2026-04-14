@@ -1,5 +1,6 @@
 import { logger } from "@/services/logger";
 import type { MapNode, MapType, FeelingCheckResult } from "@/modules/map/mapTypes";
+import type { TransformationDiagnosis } from "@/modules/transformationEngine/interpretationEngine";
 import { getJSON, setJSON } from "./secureStore";
 import { queueMapSync } from "./mapSync";
 import { sanitizeMapNodes } from "@/utils/mapNodeSchema";
@@ -11,6 +12,8 @@ export interface StoredState {
   nodes: MapNode[];
   mapType?: MapType;
   feelingResults?: FeelingCheckResult | null;
+  transformationDiagnosis?: TransformationDiagnosis | null;
+  aiInterpretation?: string | null;
 }
 
 const isBrowser = typeof window !== "undefined";
@@ -51,7 +54,9 @@ export const loadStoredState = async (): Promise<StoredState | null> => {
     return { 
       nodes: migratedNodes,
       mapType: parsed.mapType,
-      feelingResults: parsed.feelingResults
+      feelingResults: parsed.feelingResults,
+      transformationDiagnosis: parsed.transformationDiagnosis,
+      aiInterpretation: parsed.aiInterpretation
     };
   } catch (error) {
     if (runtimeEnv.isDev) logger.error("Error loading from localStorage:", error);
@@ -64,7 +69,9 @@ export const saveStoredState = (state: StoredState) => {
   const safeState: StoredState = { 
     nodes: sanitizeMapNodes(state.nodes),
     mapType: state.mapType,
-    feelingResults: state.feelingResults
+    feelingResults: state.feelingResults,
+    transformationDiagnosis: state.transformationDiagnosis,
+    aiInterpretation: state.aiInterpretation
   };
 
   // Debounce saves to prevent race conditions
@@ -74,6 +81,6 @@ export const saveStoredState = (state: StoredState) => {
 
   saveTimeout = setTimeout(() => {
     void setJSON(STORAGE_KEY, safeState);
-    queueMapSync(safeState.nodes);
+    queueMapSync(safeState);
   }, 100); // 100ms debounce
 };

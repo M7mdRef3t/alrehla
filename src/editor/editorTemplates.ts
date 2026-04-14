@@ -59,12 +59,12 @@ const templates: Record<EditorTemplatePath, Data> = {
       }),
       block("HeadingBlock", "home-principles-heading", {
         title: "إحنا مش بنخمّن. إحنا بنحلل الـ Logic.",
-        subtitle: "الرحلة بتستخدم \"نظام تشغيل سيادي\" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.",
+        subtitle: "الرحلة بتستخدم \"نظام تشغيل خاص\" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.",
         align: "center",
         padding: "lg",
         visibility: "all",
       }),
-      block("FeatureListBlock", "home-features", {
+      block("MahatatBlock", "home-features", {
         features: [
           { title: "رصد الاستنزاف", description: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية.", icon: "⚡" },
           { title: "خرائط النبض", description: "رسم بياني حقيقي لمين بيزودك ومين بيسحب منك.", icon: "📈" },
@@ -85,7 +85,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "md",
         visibility: "all",
       }),
-      block("FeatureListBlock", "home-steps", {
+      block("MahatatBlock", "home-steps", {
         features: [
           { title: "١. حدّد الصورة", description: "3 أسئلة بسيطة توضح لك أين الضغط الحقيقي ومن يؤثر على اتزانك.", icon: "🎯" },
           { title: "٢. خريطة العلاقات", description: "تصور بصري يساعدك تشوف العلاقات بوضوح وتحدد أين تحتاج حدودًا أو حضورًا أكبر.", icon: "🗺️" },
@@ -94,7 +94,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "lg",
         visibility: "all",
       }),
-      block("TestimonialBlock", "home-testimonial-1", {
+      block("HekayatBlock", "home-testimonial-1", {
         quote: "لأول مرة أشوف بوضوح إيه اللي بيسحب طاقتي. تجربة بسيطة ومريحة جداً.",
         author: "مستخدم",
         role: "استعاد هدوءه",
@@ -103,7 +103,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "md",
         visibility: "all",
       }),
-      block("TestimonialBlock", "home-testimonial-2", {
+      block("HekayatBlock", "home-testimonial-2", {
         quote: "بطلت أسأل نفسي أسئلة كتير محيرة. الرحلة دي ادتني خطوة واحدة بدأت بيها أرتاح.",
         author: "مستخدمة",
         role: "استعادت راحتها",
@@ -151,7 +151,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         visibility: "all",
       }),
       block("TextBlock", "about-intro", {
-        content: "الرحلة بتستخدم نظام تشغيل سيادي بيشوف علاقاتك كدوائر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.",
+        content: "الرحلة بتستخدم نظام تشغيل خاص بيشوف علاقاتك كدوائر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.",
         align: "center",
         size: "lg",
         padding: "md",
@@ -169,7 +169,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "md",
         visibility: "all",
       }),
-      block("FeatureListBlock", "about-problems", {
+      block("MahatatBlock", "about-problems", {
         features: [
           { title: "استنزاف خفي", description: "علاقات ظاهرها هدوء لكن جواها استنزاف", icon: "😶" },
           { title: "عطاء زايد", description: "بتعطي أكتر من اللازم وبعدها تحس بتعب وذنب", icon: "💔" },
@@ -192,7 +192,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "md",
         visibility: "all",
       }),
-      block("FeatureListBlock", "about-what", {
+      block("MahatatBlock", "about-what", {
         features: [
           { title: "الخريطة", description: "شوف كل علاقاتك في نظرة واحدة", icon: "🗺️" },
           { title: "المسافات", description: "اعرف فين تحط حدودك بوضوح", icon: "📐" },
@@ -237,7 +237,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "xl",
         visibility: "all",
       }),
-      block("PricingTableBlock", "pricing-card", {
+      block("ZadElTariqBlock", "pricing-card", {
         planName: "العضوية التأسيسية",
         price: "٢٩٩",
         currency: "ج.م",
@@ -260,7 +260,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "lg",
         visibility: "all",
       }),
-      block("FAQBlock", "pricing-faq", {
+      block("AselatElMosaferBlock", "pricing-faq", {
         title: "أسئلة عن الاشتراك",
         subtitle: "كل اللي محتاج تعرفه قبل ما تبدأ",
         items: [
@@ -299,7 +299,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "xl",
         visibility: "all",
       }),
-      block("FeatureListBlock", "onboarding-steps", {
+      block("MahatatBlock", "onboarding-steps", {
         features: [
           { title: "١. حدّد الصورة", description: "3 أسئلة بسيطة توضح لك أين الضغط الحقيقي.", icon: "🎯" },
           { title: "٢. ارسم خريطتك", description: "حط كل شخص في مكانه الصح على الخريطة.", icon: "🗺️" },
@@ -335,7 +335,7 @@ const templates: Record<EditorTemplatePath, Data> = {
     content: [
       block("HeadingBlock", "dawayir-heading", {
         title: "دواير — خريطة علاقاتك الحية",
-        subtitle: "نظام تشغيل سيادي بيشوف علاقاتك كدوائر طاقة ومسارات تدفق.",
+        subtitle: "نظام تشغيل خاص بيشوف علاقاتك كدوائر طاقة ومسارات تدفق.",
         align: "center",
         padding: "lg",
         visibility: "all",
@@ -349,7 +349,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "md",
         visibility: "all",
       }),
-      block("FeatureListBlock", "dawayir-features", {
+      block("MahatatBlock", "dawayir-features", {
         features: [
           { title: "رصد الاستنزاف", description: "تحديد النقط اللي طاقتك بتتسرب منها.", icon: "⚡" },
           { title: "خرائط النبض", description: "رسم بياني حقيقي لمين بيزودك ومين بيسحب منك.", icon: "📈" },
@@ -383,7 +383,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "xl",
         visibility: "all",
       }),
-      block("FeatureListBlock", "coach-features", {
+      block("MahatatBlock", "coach-features", {
         features: [
           { title: "إدارة العملاء", description: "لوحة موحدة لمتابعة كل عميل ومسار تقدمه.", icon: "👥" },
           { title: "AI Triage", description: "ترتيب ذكي حسب الأولوية — أي عميل يحتاج تدخل أسرع.", icon: "🧠" },
@@ -393,7 +393,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "lg",
         visibility: "all",
       }),
-      block("PricingTableBlock", "coach-pricing", {
+      block("ZadElTariqBlock", "coach-pricing", {
         planName: "Coach License",
         price: "$49",
         currency: "USD",
@@ -426,7 +426,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "xl",
         visibility: "all",
       }),
-      block("FeatureListBlock", "coach-landing-features", {
+      block("MahatatBlock", "coach-landing-features", {
         features: [
           { title: "إدارة العملاء من مكان واحد", description: "تجميع الرؤية داخل لوحة موحدة.", icon: "👥" },
           { title: "AI Triage", description: "ترتيب ذكي حسب الأولوية.", icon: "🧠" },
@@ -436,7 +436,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "lg",
         visibility: "all",
       }),
-      block("PricingTableBlock", "coach-landing-pricing", {
+      block("ZadElTariqBlock", "coach-landing-pricing", {
         planName: "Coach License",
         price: "$49",
         currency: "USD",
@@ -480,7 +480,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "xl",
         visibility: "all",
       }),
-      block("PricingTableBlock", "activation-pricing", {
+      block("ZadElTariqBlock", "activation-pricing", {
         planName: "العضوية التأسيسية",
         price: "٢٩٩",
         currency: "ج.م",
@@ -497,7 +497,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "lg",
         visibility: "all",
       }),
-      block("FeatureListBlock", "activation-security", {
+      block("MahatatBlock", "activation-security", {
         features: [
           { title: "أمان", description: "الرحلة محمية ومقفولة على السياق الصحيح — بياناتك مشفرة.", icon: "🔒" },
           { title: "دعم مباشر", description: "تواصل معنا عبر واتساب في أي وقت.", icon: "💬" },
@@ -614,7 +614,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "md",
         visibility: "all",
       }),
-      block("TestimonialBlock", "stories-t1", {
+      block("HekayatBlock", "stories-t1", {
         quote: "لأول مرة أشوف بوضوح إيه اللي بيسحب طاقتي. تجربة بسيطة ومريحة جداً.",
         author: "مستخدم",
         role: "استعاد هدوءه",
@@ -623,7 +623,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "md",
         visibility: "all",
       }),
-      block("TestimonialBlock", "stories-t2", {
+      block("HekayatBlock", "stories-t2", {
         quote: "بطلت أسأل نفسي أسئلة كتير محيرة. الرحلة دي ادتني خطوة واحدة بدأت بيها أرتاح.",
         author: "مستخدمة",
         role: "استعادت راحتها",
@@ -671,7 +671,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "xl",
         visibility: "all",
       }),
-      block("FeatureListBlock", "sessions-intake-steps", {
+      block("MahatatBlock", "sessions-intake-steps", {
         features: [
           { title: "الحالة الحالية", description: "كيف حاسس دلوقتي؟ — تقييم سريع لمزاجك وطاقتك.", icon: "🌡️" },
           { title: "الهدف", description: "إيه اللي عايز تشتغل عليه النهارده؟", icon: "🎯" },
@@ -712,7 +712,7 @@ const templates: Record<EditorTemplatePath, Data> = {
         padding: "md",
         visibility: "all",
       }),
-      block("FeatureListBlock", "weather-indicators", {
+      block("MahatatBlock", "weather-indicators", {
         features: [
           { title: "صحو ☀️", description: "علاقة متوازنة ومستقرة — طاقة إيجابية.", icon: "☀️" },
           { title: "غائم جزئياً 🌤️", description: "فيه حاجات محتاجة انتباه بس الأساس سليم.", icon: "🌤️" },

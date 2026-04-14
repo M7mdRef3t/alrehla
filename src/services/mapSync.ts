@@ -10,6 +10,9 @@ import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "
 import { useSyncState } from "@/domains/journey/store/sync.store";
 import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { triggerMapCompletionCheck } from "../lib/gate/handoffCore";
+import type { StoredState } from "./localStore";
+import type { MapType, FeelingCheckResult } from "@/modules/map/mapTypes";
+import type { TransformationDiagnosis } from "@/modules/transformationEngine/interpretationEngine";
 
 const SUPABASE_MAPS_TABLE = "journey_maps";
 const SYNC_DEBOUNCE_MS = 1200;
@@ -19,6 +22,10 @@ const SYNC_BUFFER_KEY = "dawayir-map-sync-buffer";
 interface PendingSyncBuffer {
   sessionId: string;
   nodes: MapNode[];
+  mapType?: MapType;
+  feelingResults?: FeelingCheckResult | null;
+  transformationDiagnosis?: TransformationDiagnosis | null;
+  aiInterpretation?: string | null;
   updatedAt: string; // ISO
   needsSync: boolean;
   lastError?: string | null;
@@ -58,14 +65,18 @@ function scheduleFlush(delayMs: number): void {
   }, Math.max(0, delayMs));
 }
 
-export function queueMapSync(nodes: MapNode[]): void {
+export function queueMapSync(state: StoredState): void {
   const sessionId = getTrackingSessionId();
   if (!sessionId) return;
 
   const now = new Date().toISOString();
   pendingBuffer = {
     sessionId,
-    nodes,
+    nodes: state.nodes,
+    mapType: state.mapType,
+    feelingResults: state.feelingResults,
+    transformationDiagnosis: state.transformationDiagnosis,
+    aiInterpretation: state.aiInterpretation,
     updatedAt: now,
     needsSync: true,
     lastError: null
@@ -80,13 +91,8 @@ export function queueMapSync(nodes: MapNode[]): void {
 }
 
 async function tryCloudSync() {
-  if (!isSupabaseReady || !supabase) return;
   if (!navigator.onLine) {
     useSyncState.getState().setOffline(true);
-    return;
-  }
-  const user = await safeGetUser();
-  if (!user) {
     return;
   }
   scheduleFlush(SYNC_DEBOUNCE_MS);
@@ -95,30 +101,50 @@ async function tryCloudSync() {
 async function flushMapSync(): Promise<void> {
   if (isFlushing || !pendingBuffer) return;
 
-  if (!isSupabaseReady || !supabase) {
-    useSyncState.getState().setError("supabase_unavailable");
-    return;
-  }
-
   const user = await safeGetUser();
-  if (!user) return; // Guard against mid-sync sign out
 
   isFlushing = true;
   useSyncState.getState().setSyncing();
 
+  // Pick up any locally stored phone (if user provided it during session checkout earlier)
+  const clientPhone = getFromLocalStorage("dawayir-client-phone") || undefined;
+
   const payload: any = {
     session_id: pendingBuffer.sessionId,
     nodes: pendingBuffer.nodes,
+    map_type: pendingBuffer.mapType || "dawayir",
+    feeling_results: pendingBuffer.feelingResults,
+    transformation_diagnosis: pendingBuffer.transformationDiagnosis,
+    ai_interpretation: pendingBuffer.aiInterpretation,
     updated_at: pendingBuffer.updatedAt,
-    user_id: user.id,
+    user_id: user ? user.id : undefined,
+    client_phone: clientPhone,
+    origin_product: "alrehla",
     last_sync_at: new Date().toISOString(),
     last_local_save_at: pendingBuffer.updatedAt
   };
 
   try {
-    const { error } = await supabase.from(SUPABASE_MAPS_TABLE).upsert(payload, {
-      onConflict: "session_id"
-    });
+    let error;
+    
+    if (user && isSupabaseReady && supabase) {
+      const res = await supabase.from(SUPABASE_MAPS_TABLE).upsert(payload, {
+        onConflict: "session_id"
+      });
+      error = res.error;
+    } else {
+      // Anonymous Sync via Gateway
+      const res = await fetch("/api/sync/map", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        error = new Error(errData.error || `HTTP ${res.status}`);
+      }
+    }
 
     if (!error) {
       useSyncState.getState().setSynced(new Date().toISOString());
@@ -203,6 +229,39 @@ function initializeMapSync(): void {
       useSyncState.getState().markLocalSaved(new Date().toISOString());
     }
   });
+}
+
+/**
+ * Fetch the latest Map/State from the cloud.
+ * Useful for Hub-and-Spoke cross-device recovery.
+ */
+export async function fetchCloudMap(): Promise<StoredState | null> {
+  if (!isSupabaseReady || !supabase) return null;
+  const user = await safeGetUser();
+  if (!user) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from(SUPABASE_MAPS_TABLE)
+      .select("nodes, map_type, feeling_results, transformation_diagnosis, ai_interpretation")
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) return null;
+
+    return {
+      nodes: data.nodes,
+      mapType: data.map_type,
+      feelingResults: data.feeling_results,
+      transformationDiagnosis: data.transformation_diagnosis,
+      aiInterpretation: data.ai_interpretation
+    };
+  } catch (err) {
+    if (runtimeEnv.isDev) logger.error("[MapSync] Error fetching cloud map:", err);
+    return null;
+  }
 }
 
 if (typeof window !== "undefined") {

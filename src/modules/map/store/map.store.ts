@@ -15,8 +15,10 @@ import type {
   MapType,
   FeelingCheckResult
 } from "@/modules/map/mapTypes";
+import type { TransformationDiagnosis } from "@/modules/transformationEngine/interpretationEngine";
 import { loadStoredState, saveStoredState } from "@/services/localStore";
-import { resolvePathId } from "@/modules/pathEngine/pathResolver";
+import { fetchCloudMap } from "@/services/mapSync";
+import { resolvePathId, symptomIdsToSymptomType } from "@/modules/pathEngine/pathResolver";
 import type { ContactLevel } from "@/modules/pathEngine/pathTypes";
 import { emitDawayirSignal } from "@/modules/recommendation/recommendationBus";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
@@ -31,8 +33,12 @@ interface MapState {
   isHydrated: boolean;
   mapType: MapType;
   feelingResults: FeelingCheckResult | null;
+  transformationDiagnosis: TransformationDiagnosis | null;
+  aiInterpretation: string | null;
   setMapType: (type: MapType) => void;
   updateFeelingResults: (results: Partial<FeelingCheckResult>) => void;
+  setTransformationDiagnosis: (diagnosis: TransformationDiagnosis) => void;
+  setAiInterpretation: (interpretation: string | null) => void;
   showPlacementTooltip: boolean;
   lastAddedNodeId: string | null;
   recoveryPlanOpenWith: RecoveryPlanOpenWith | null;
@@ -49,7 +55,8 @@ interface MapState {
     realityAnswers?: RealityAnswers,
     safetyAnswer?: QuickAnswerValue,
     isAnalyzing?: boolean,
-    isMirrorNode?: boolean
+    isMirrorNode?: boolean,
+    symptomIds?: string[]
   ) => string;
   updateDetachmentReasons: (nodeId: string, reasons: string[]) => void;
   incrementRuminationLog: (nodeId: string) => void;
@@ -98,12 +105,14 @@ interface MapState {
   resetMission: (nodeId: string) => void;
   /** أرشفة المهمة */
   archiveMission: (nodeId: string) => void;
-  /** إلغاء أرشفة المهمة */
+  /** استعادة المهمة */
   unarchiveMission: (nodeId: string) => void;
   /** إضافة شحن أو استنزاف لطاقة هذه العلاقة (Energy P&L) */
   addEnergyTransaction: (nodeId: string, amount: number, note?: string) => void;
   /** تحويل العلاقة إلى بطارية بشرية للطوارئ */
   togglePowerBank: (nodeId: string) => void;
+  /** مزامنة الحالة الكاملة للتخزين المحلي */
+  syncMapStorage: () => void;
 }
 
 let nextId = 1;
@@ -200,14 +209,24 @@ export const useMapState = create<MapState>((set, get) => ({
   isHydrated: false,
   mapType: "masafaty",
   feelingResults: null,
+  transformationDiagnosis: null,
+  aiInterpretation: null,
   setMapType: (mapType) => {
-    saveStoredState({ nodes: get().nodes, mapType });
     set({ mapType });
+    get().syncMapStorage();
   },
   updateFeelingResults: (results) => {
     const next = { ...(get().feelingResults || { body: 50, time: 50, energy: 50, money: 50, space: 50 }), ...results };
-    saveStoredState({ nodes: get().nodes, mapType: get().mapType, feelingResults: next });
     set({ feelingResults: next });
+    get().syncMapStorage();
+  },
+  setTransformationDiagnosis: (transformationDiagnosis) => {
+    set({ transformationDiagnosis, aiInterpretation: null });
+    get().syncMapStorage();
+  },
+  setAiInterpretation: (aiInterpretation) => {
+    set({ aiInterpretation });
+    get().syncMapStorage();
   },
   showPlacementTooltip: false,
   lastAddedNodeId: null,
@@ -226,32 +245,39 @@ export const useMapState = create<MapState>((set, get) => ({
     realityAnswers?,
     safetyAnswer?,
     isAnalyzing = false,
-    isMirrorNode = false
+    isMirrorNode = false,
+    symptomIds = []
   ) => {
     let processedAnalysis;
-    if (analysis) {
+    if (analysis || symptomIds.length > 0) {
       // Score 0–6 (غالبًا=2، أحيانًا=1، نادراً=0). عالي = تأثير سلبي
       let recommendedRing: Ring;
-      if (analysis.score >= 5) {
+      const score = analysis?.score ?? 0;
+      if (score >= 5) {
         recommendedRing = "red";
-      } else if (analysis.score >= 2) {
+      } else if (score >= 2) {
         recommendedRing = "yellow";
       } else {
         recommendedRing = "green";
       }
 
       processedAnalysis = {
-        ...analysis,
+        score,
+        answers: analysis?.answers ?? { q1: "never", q2: "never", q3: "never" } as HealthAnswers,
         timestamp: Date.now(),
-        recommendedRing
+        recommendedRing,
+        selectedSymptoms: symptomIds
       };
     }
+
+    const symptomType = symptomIdsToSymptomType(symptomIds);
 
     const pathIdFromResolver = resolvePathId({
       zone: ring,
       isGreyPath: detachmentMode === true,
       contact: contact ?? "medium",
-      isSOS: isSOS === true
+      isSOS: isSOS === true,
+      symptomType
     });
 
     const nodeId = String(nextId++);
@@ -293,8 +319,8 @@ export const useMapState = create<MapState>((set, get) => ({
       isMirrorNode
     };
     const nextNodes = [...get().nodes, newNode];
-    saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes, showPlacementTooltip: true, lastAddedNodeId: nodeId });
+    get().syncMapStorage();
     emitDawayirSignal({
       type: "node_added",
       nodeId,
@@ -336,8 +362,8 @@ export const useMapState = create<MapState>((set, get) => ({
           return withOrbitEvent(updatedNode, "ring_changed", ring, changedAt, node.ring);
         })()
     );
-    saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    get().syncMapStorage();
     useGamificationState.getState().addXP(20, "تعديل مدار شخص");
     const next = nextNodes.find((node) => node.id === id);
     if (previous && next && previous.ring !== next.ring) {
@@ -415,8 +441,8 @@ export const useMapState = create<MapState>((set, get) => ({
       }
       return withOrbitEvent({ ...node, ring: newRing }, "ring_changed", newRing, changedAt, node.ring);
     });
-    saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    get().syncMapStorage();
   },
   setDetached: (nodeId, value) => {
     const previous = get().nodes.find((node) => node.id === nodeId);
@@ -539,8 +565,8 @@ export const useMapState = create<MapState>((set, get) => ({
         }
         : node
     );
-    saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    get().syncMapStorage();
   },
   toggleStepCompletion: (nodeId, stepId) => {
     const previousNodes = get().nodes;
@@ -807,8 +833,8 @@ export const useMapState = create<MapState>((set, get) => ({
         recoveryProgress: { ...progress, detachmentReasons: reasons }
       };
     });
-    saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    get().syncMapStorage();
   },
   incrementRuminationLog: (nodeId) => {
     const nextNodes = get().nodes.map((node) => {
@@ -853,7 +879,7 @@ export const useMapState = create<MapState>((set, get) => ({
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
   },
-  startMission: (nodeId) => {
+  startMission: (nodeId: string) => {
     const now = Date.now();
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
@@ -871,7 +897,7 @@ export const useMapState = create<MapState>((set, get) => ({
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
   },
-  toggleMissionStep: (nodeId, stepIndex) => {
+  toggleMissionStep: (nodeId: string, stepIndex: number) => {
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
       const progress = node.missionProgress ?? { checkedSteps: [] };
@@ -890,7 +916,7 @@ export const useMapState = create<MapState>((set, get) => ({
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
   },
-  completeMission: (nodeId) => {
+  completeMission: (nodeId: string) => {
     const now = Date.now();
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
@@ -908,7 +934,7 @@ export const useMapState = create<MapState>((set, get) => ({
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
   },
-  resetMission: (nodeId) => {
+  resetMission: (nodeId: string) => {
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
       return {
@@ -926,7 +952,7 @@ export const useMapState = create<MapState>((set, get) => ({
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
   },
-  archiveMission: (nodeId) => {
+  archiveMission: (nodeId: string) => {
     const now = Date.now();
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
@@ -943,7 +969,7 @@ export const useMapState = create<MapState>((set, get) => ({
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
   },
-  unarchiveMission: (nodeId) => {
+  unarchiveMission: (nodeId: string) => {
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
       const progress = node.missionProgress ?? { checkedSteps: [] };
@@ -959,7 +985,7 @@ export const useMapState = create<MapState>((set, get) => ({
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
   },
-  addEnergyTransaction: (nodeId, amount, note) => {
+  addEnergyTransaction: (nodeId: string, amount: number, note?: string) => {
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
 
@@ -1012,6 +1038,16 @@ export const useMapState = create<MapState>((set, get) => ({
     if (isNowPowerBank) {
       useGamificationState.getState().addXP(15, "تفعيل بطارية الطوارئ");
     }
+  },
+  syncMapStorage: () => {
+    const s = get();
+    saveStoredState({
+      nodes: s.nodes,
+      mapType: s.mapType,
+      feelingResults: s.feelingResults,
+      transformationDiagnosis: s.transformationDiagnosis,
+      aiInterpretation: s.aiInterpretation
+    });
   }
 }));
 
@@ -1019,12 +1055,39 @@ async function hydrateMapState() {
   try {
     const initial =
       typeof loadStoredState === "function" ? await loadStoredState() : null;
-    const initialNodes: MapNode[] = (initial?.nodes ?? []).map(normalizeNodeOrbitHistory);
-    if (initialNodes.length > 0) {
-      deriveNextId(initialNodes);
-      useMapState.setState({ nodes: initialNodes, isHydrated: true });
-    } else {
-      useMapState.setState({ isHydrated: true });
+    
+    let nodes = initial?.nodes ?? [];
+    let mapType = initial?.mapType ?? "masafaty";
+    let feelingResults = initial?.feelingResults ?? null;
+    let transformationDiagnosis = initial?.transformationDiagnosis ?? null;
+    let aiInterpretation = initial?.aiInterpretation ?? null;
+
+    // Hub-and-Spoke Cloud Recovery:
+    // If local is empty but user might have data in the cloud (e.g. new device/product)
+    if (nodes.length === 0 && !transformationDiagnosis) {
+      const cloudState = await fetchCloudMap();
+      if (cloudState) {
+        nodes = cloudState.nodes || [];
+        mapType = cloudState.mapType || "masafaty";
+        feelingResults = cloudState.feelingResults || null;
+        transformationDiagnosis = cloudState.transformationDiagnosis || null;
+        aiInterpretation = cloudState.aiInterpretation || null;
+      }
+    }
+
+    const normalizedNodes = nodes.map(normalizeNodeOrbitHistory);
+    
+    useMapState.setState({ 
+      nodes: normalizedNodes,
+      mapType,
+      feelingResults,
+      transformationDiagnosis,
+      aiInterpretation,
+      isHydrated: true 
+    });
+
+    if (normalizedNodes.length > 0) {
+      deriveNextId(normalizedNodes);
     }
   } catch {
     useMapState.setState({ isHydrated: true });

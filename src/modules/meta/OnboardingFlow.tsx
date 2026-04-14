@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable react-hooks/exhaustive-deps */
 import type { FC } from "react";
 import { useState, useCallback, useEffect, useRef, memo, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,12 +13,21 @@ import { useGamificationState } from "@/domains/gamification/store/gamification.
 import { soundManager } from "@/services/soundManager";
 import { analyticsService, AnalyticsEvents, generateUUID } from "@/domains/analytics";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
-import { AlertTriangle, Mail, ArrowRight, Sparkles, Zap, Smartphone, User, Lock } from "lucide-react";
+import { AlertTriangle, Mail, ArrowRight, Sparkles, Zap, Smartphone, User, Lock, ShieldCheck, Target, Activity } from "lucide-react";
+import { PATH_NAMES, generateDynamicPlan, SYMPTOM_TYPE_LABELS, PATTERN_TYPE_LABELS } from "@/modules/pathEngine/pathResolver";
+import type { DynamicRecoveryPlan, SymptomType, ContactLevel } from "@/modules/pathEngine/pathTypes";
 import { signInWithMagicLink } from "@/services/authService";
 import { sendRecoveryPlanEmail } from "@/services/emailService";
 import type { AdviceCategory } from "@/data/adviceScripts";
 import { enableNotificationsWithPrompt, getNotificationPermission } from "@/services/pushNotifications";
 import { marketingLeadService } from "@/services/marketingLeadService";
+import { StepPainDump } from "./StepPainDump";
+import { classifyState, safetyTriage, type TransformationDiagnosis, type PoeticState } from "../transformationEngine/interpretationEngine";
+import { generateSovereignInsight } from "@/services/interpretationAI";
+import { useRouter } from "next/navigation";
+import { createCurrentUrl } from "@/services/navigation";
+import type { RecommendedProduct, UserStateObject } from "@/modules/diagnosis/types";
+import { saveDiagnosisState } from "@/modules/diagnosis/types";
 
 const ONBOARDING_STYLES = `
 @keyframes ob-ring-pulse {
@@ -45,18 +55,18 @@ const ONBOARDING_STYLES = `
 
 /* Force premium variables */
 .ob-dark-force {
-  --color-primary-soft: rgba(8, 12, 28, 0.98);
-  --glass-bg: rgba(10, 15, 35, 0.75);
-  --glass-bg-hover: rgba(14, 20, 48, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(255, 255, 255, 0.15);
+  --color-primary-soft: rgba(5, 8, 20, 0.98);
+  --glass-bg: rgba(5, 8, 20, 0.85);
+  --glass-bg-hover: rgba(10, 15, 35, 0.9);
+  --glass-border: rgba(0, 240, 255, 0.25);
+  --glass-border-hover: rgba(0, 240, 255, 0.5);
   --text-primary: #ffffff;
-  --text-secondary: rgba(214, 224, 235, 0.9);
-  --text-muted: rgba(148, 163, 184, 0.65);
-  --text-accent: #2dd4bf;
-  --soft-teal: #2dd4bf;
-  --soft-teal-dim: rgba(45, 212, 191, 0.1);
-  --soft-teal-glow: rgba(45, 212, 191, 0.3);
+  --text-secondary: #e0f2fe;
+  --text-muted: rgba(148, 163, 184, 0.8);
+  --text-accent: #00f0ff;
+  --soft-teal: #00f0ff;
+  --soft-teal-dim: rgba(0, 240, 255, 0.15);
+  --soft-teal-glow: rgba(0, 240, 255, 0.4);
 }
 
 /* ── Cinematic background ── */
@@ -72,13 +82,13 @@ const ONBOARDING_STYLES = `
 }
 .ob-orb-1 {
   width: 750px; height: 750px;
-  background: radial-gradient(circle, rgba(20,184,166,0.15) 0%, transparent 75%);
+  background: radial-gradient(circle, rgba(0,240,255,0.18) 0%, transparent 75%);
   top: -20%; right: -12%;
   animation: ob-orb-drift1 45s ease-in-out infinite alternate;
 }
 .ob-orb-2 {
   width: 620px; height: 620px;
-  background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 75%);
+  background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 75%);
   bottom: -25%; left: -15%;
   animation: ob-orb-drift2 60s ease-in-out infinite alternate;
 }
@@ -142,14 +152,205 @@ export function hasCompletedJourneyOnboarding(): boolean {
 interface OnboardingFlowProps {
   onComplete: (skipped?: boolean) => void;
   initialMirrorName?: string | null;
+  gateContext?: {
+    message: string;
+    painPoint?: string | null;
+    intent?: string | null;
+  } | null;
 }
 
 type Ring = "green" | "yellow" | "red";
 
-const RING_COLORS: Record<Ring, { bg: string; border: string; label: string; labelAr: string }> = {
-  green: { bg: "rgba(52,211,153,0.15)", border: "rgba(52,211,153,0.5)", label: "green", labelAr: "قريب" },
-  yellow: { bg: "rgba(251,191,36,0.15)", border: "rgba(251,191,36,0.5)", label: "yellow", labelAr: "متذبذب" },
-  red: { bg: "rgba(248,113,113,0.15)", border: "rgba(248,113,113,0.5)", label: "red", labelAr: "بعيد" },
+interface NameCard { name: string; category: AdviceCategory; ring: Ring | null; placed: boolean; symptomIds?: string[] }
+
+interface DerivedOnboardingResult {
+  relationshipCount: number;
+  redCount: number;
+  yellowCount: number;
+  greenCount: number;
+  dominantPattern: string;
+  primarySymptom: string;
+  protocolKey: "boundary" | "clarity" | "stabilization" | "support";
+  protocolLabel: string;
+  pathName: string;
+  routeReason: string;
+  firstStepTitle: string;
+  firstStepBody: string;
+  insightLine: string;
+  contextLabel?: string;
+  contextNote?: string;
+}
+
+const RING_COLORS = {
+  green: { bg: "rgba(45,212,191,0.15)", border: "rgba(45,212,191,0.5)", label: "green", labelAr: "مطمن" },
+  yellow: { bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.5)", label: "yellow", labelAr: "متقلب" },
+  red: { bg: "rgba(248,113,113,0.15)", border: "rgba(248,113,113,0.5)", label: "red", labelAr: "مستنزف" },
+};
+
+/* ── Poetic State UI Config ── */
+const POETIC_STATE_CONFIG: Record<PoeticState, { icon: any; color: string }> = {
+  "توهة المدارات": { icon: Sparkles, color: "text-amber-400" },
+  "نبض مشحون": { icon: Zap, color: "text-rose-400" },
+  "نزيف طاقة": { icon: AlertTriangle, color: "text-rose-500" },
+  "محطة انتظار": { icon: Activity, color: "text-teal-400" },
+  "مستقر نسبياً": { icon: ShieldCheck, color: "text-teal-500" },
+};
+
+function deriveOnboardingResult(
+  items: Array<{ ring?: Ring | null; symptomIds?: string[] }>,
+  gateContext?: OnboardingFlowProps["gateContext"]
+): DerivedOnboardingResult {
+  const redCount = items.filter((item) => item.ring === "red").length;
+  const yellowCount = items.filter((item) => item.ring === "yellow").length;
+  const greenCount = items.filter((item) => item.ring === "green").length;
+  const symptomCounts = new Map<string, number>();
+
+  for (const item of items) {
+    for (const symptomId of item.symptomIds ?? []) {
+      symptomCounts.set(symptomId, (symptomCounts.get(symptomId) ?? 0) + 1);
+    }
+  }
+
+  const dominantSymptom =
+    [...symptomCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ??
+    (redCount > 0 ? "drain" : yellowCount > 0 ? "fear" : "default");
+  const dominantPattern = PATTERN_TYPE_LABELS[dominantSymptom] || PATTERN_TYPE_LABELS.default;
+
+  if (redCount >= 2 || (redCount >= 1 && greenCount === 0)) {
+    const result: DerivedOnboardingResult = {
+      relationshipCount: items.length,
+      redCount,
+      yellowCount,
+      greenCount,
+      dominantPattern,
+      primarySymptom: dominantSymptom,
+      protocolKey: "boundary",
+      protocolLabel: "Boundary Protocol",
+      pathName: PATH_NAMES["path_protection"],
+      routeReason: "الخريطة فيها نزيف واضح، فالأولوية دلوقتي وقف الاحتكاك قبل أي إصلاح أعمق.",
+      firstStepTitle: "قلل نقطة النزيف الأكبر",
+      firstStepBody: "اختار أول علاقة في الدائرة الحمراء وقلل الاحتكاك المباشر معاها لمدة 7 أيام أو حط لها حد زمني واضح.",
+      insightLine: "أول مكسب حقيقي هنا إنك توقف النزيف، مش إنك تشرح نفسك أكتر."
+    };
+    if (gateContext?.painPoint || gateContext?.intent) {
+      result.contextLabel = "بداية الرحلة";
+      result.contextNote = gateContext.message;
+    }
+    return result;
+  }
+
+  if (yellowCount >= Math.max(redCount, greenCount) && yellowCount > 0) {
+    const result: DerivedOnboardingResult = {
+      relationshipCount: items.length,
+      redCount,
+      yellowCount,
+      greenCount,
+      dominantPattern,
+      primarySymptom: dominantSymptom,
+      protocolKey: "clarity",
+      protocolLabel: "Clarity Protocol",
+      pathName: PATH_NAMES["path_negotiation"],
+      routeReason: "المشهد عندك ضبابي أكتر من كونه خطر مباشر، فالمطلوب وضوح وحدود خفيفة قبل أي قرار نهائي.",
+      firstStepTitle: "سمّي العلاقة الرمادية",
+      firstStepBody: "اختار شخص واحد من الدائرة الصفراء واكتب في جملة واحدة: هو بيديك إيه وبيسحب منك إيه.",
+      insightLine: "الوضوح هنا أهم من الحسم السريع، لأن الضباب هو اللي بيطول اللخبطة."
+    };
+    if (gateContext?.painPoint || gateContext?.intent) {
+      result.contextLabel = "إشارة البداية";
+      result.contextNote = `${gateContext.message} والنتيجة الحالية بتقول إن الوضوح أهم من الاندفاع.`;
+    }
+    return result;
+  }
+
+  if (greenCount === 0 && redCount > 0) {
+    const result: DerivedOnboardingResult = {
+      relationshipCount: items.length,
+      redCount,
+      yellowCount,
+      greenCount,
+      dominantPattern,
+      primarySymptom: dominantSymptom,
+      protocolKey: "stabilization",
+      protocolLabel: "Stabilization Protocol",
+      pathName: PATH_NAMES["path_protection"],
+      routeReason: "عندك ضغط من غير سند كفاية، فالمسار الأول لازم يثبتك قبل ما يطلب منك مواجهة أكبر.",
+      firstStepTitle: "ابنِ نقطة أمان واحدة",
+      firstStepBody: "اختار شخص آمن واحد أو مساحة هدوء ثابتة ترجع لها قبل أي قرار يخص العلاقات المستنزفة.",
+      insightLine: "من غير أرض ثابتة، أي خطوة شجاعة هتتحول لاستنزاف جديد."
+    };
+    if (gateContext?.painPoint || gateContext?.intent) {
+      result.contextLabel = "إشارة البداية";
+      result.contextNote = `${gateContext.message} وده متسق مع احتياجك لتثبيت الأرض قبل أي مواجهة.`;
+    }
+    return result;
+  }
+
+  const result: DerivedOnboardingResult = {
+    relationshipCount: items.length,
+    redCount,
+    yellowCount,
+    greenCount,
+    dominantPattern,
+    primarySymptom: dominantSymptom,
+    protocolKey: "support",
+    protocolLabel: "Support Protocol",
+    pathName: PATH_NAMES["path_deepening"],
+    routeReason: "فيه دعم موجود في الخريطة، فالمكسب الأسرع هو تقوية النواة بدل مطاردة كل علاقة مرة واحدة.",
+    firstStepTitle: "قوّي الدائرة الخضرا",
+    firstStepBody: "خذ خطوة تواصل مقصودة مع أقرب شخص داعم واطلب منه دور واضح يساعدك الأسبوع ده.",
+    insightLine: "لما السند يبقى واضح، قرارك مع العلاقات المرهقة بيبقى أسهل وأهدى."
+  };
+  if (gateContext?.painPoint || gateContext?.intent) {
+    result.contextLabel = "إشارة البداية";
+    result.contextNote = `${gateContext.message} والخريطة بتقول إن عندك نواة ينفع تبني عليها.`;
+  }
+  return result;
+}
+
+/* ── Symptom Trigger Modal ── */
+const SymptomTriggerModal: FC<{ 
+  name: string; 
+  onSelect: (symptom: string) => void;
+  onClose: () => void;
+}> = ({ name, onSelect, onClose }) => {
+  const options = [
+    { id: "drain", label: "استنزاف و إرهاق", desc: "بياخد من طاقتك أكتر ما بيدي." },
+    { id: "guilt", label: "ذنب و تبرير", desc: "دايماً حاسس إنك مقصر معاه." },
+    { id: "fear", label: "قلق و تجنب", desc: "بتفكر مرتين قبل ما تتعامل معاه." },
+    { id: "anger", label: "غضب مكبوت", desc: "فيه كلام كتير جواك مش عارف تقوله." }
+  ];
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="absolute inset-0 z-[100] flex items-center justify-center bg-[#020408]/90 backdrop-blur-xl p-6"
+    >
+      <div className="w-full max-w-xs space-y-6 text-center">
+        <div className="space-y-2">
+          <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6 text-rose-400" />
+          </div>
+          <h3 className="text-lg font-bold text-white">إيه أكتر حاجة بتوجعك مع {name}؟</h3>
+          <p className="text-[11px] text-slate-400">التشخيص الدقيق هو أول خطوة لدرع الحماية.</p>
+        </div>
+
+        <div className="grid gap-3">
+          {options.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => onSelect(opt.id)}
+              className="group flex flex-col items-center p-3 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-rose-500/40 hover:bg-rose-500/5 transition-all ob-btn-tap"
+            >
+              <span className="text-sm font-bold text-slate-200 group-hover:text-rose-400">{opt.label}</span>
+              <span className="text-[9px] text-slate-500">{opt.desc}</span>
+            </button>
+          ))}
+        </div>
+
+        <button onClick={onClose} className="text-[10px] text-slate-600 font-bold uppercase tracking-widest pt-2">تخطي التشخيص</button>
+      </div>
+    </motion.div>
+  );
 };
 
 /* ── Step 1: Inventory ── */
@@ -294,14 +495,20 @@ const StepInventory: FC<{
 });
 
 /* ── Step 2: Mapping ── */
-const StepMapping: FC<{
-  items: { name: string; category: AdviceCategory }[];
-  onNext: (mapped: NameCard[]) => void;
+const StepMapping: FC<{ 
+  items: NameCard[]; 
+  onNext: (items: NameCard[]) => void;
+  onRingSelected: (cardIdx: number, ring: Ring) => void;
   onSkip: () => void;
-}> = ({ items, onNext, onSkip }) => {
+}> = ({ items, onNext, onRingSelected, onSkip }) => {
   const [cards, setCards] = useState<NameCard[]>(
     items.map((item) => ({ ...item, ring: null, placed: false }))
   );
+  
+  // Update local cards when parent state changes (if needed) but here cards are derived from items
+  useEffect(() => {
+    setCards(items.map((item) => ({ ...item, ring: item.ring ?? null, placed: item.placed ?? false })));
+  }, [items]);
 
   const [insightMessage, setInsightMessage] = useState<string | null>(null);
 
@@ -325,9 +532,7 @@ const StepMapping: FC<{
       setInsightMessage("مش كل العلاقات واضحة على طول، وده طبيعي.");
     }
 
-    setCards((prev) =>
-      prev.map((c, i) => i === cardIdx ? { ...c, ring, placed: true } : c)
-    );
+    onRingSelected(cardIdx, ring);
   };
 
   const allPlaced = cards.every((c) => c.placed);
@@ -663,45 +868,279 @@ const StepContactCapture: FC<{
 /* ── Step 5: Recovery Plan Preview ── */
 const StepRecoveryPlanPreview: FC<{ 
   userName?: string;
-  collectedItems: { name: string; category: AdviceCategory }[]; 
+  plan?: DynamicRecoveryPlan | null;
   onComplete: () => void; 
-}> = ({ userName, collectedItems: _collectedItems, onComplete }) => {
+}> = ({ userName, plan, onComplete }) => {
   const displayName = userName ? `يا ${userName}` : "";
+  
+  // Extract primary pattern label
+  const patternLabel = plan?.primaryPattern ? (PATTERN_TYPE_LABELS[plan.primaryPattern] || "نمط سلوكي") : "نمط استنزاف عام";
+  const pathLabel = plan?.ring === "red" ? PATH_NAMES["path_protection"] : plan?.ring === "yellow" ? PATH_NAMES["path_negotiation"] : PATH_NAMES["path_deepening"];
+  const week1 = plan?.steps.find(s => s.week === 1);
+
   return (
-    <div className="flex flex-col gap-6 w-full py-2 text-center">
-      <div className="space-y-2">
-        <Sparkles className="w-8 h-8 text-teal-400 mx-auto" />
+    <div className="flex flex-col gap-6 w-full py-2 text-right">
+      <div className="space-y-2 text-center">
+        <ShieldCheck className="w-10 h-10 text-teal-400 mx-auto" />
         <h2 className="text-xl font-bold text-white">خطتك {displayName} جاهزة!</h2>
-        <p className="text-sm text-slate-400">تم تحليل خريطتك وبناء "روشتة الدواير" الخاصة بك كأول خطوة في رحلة تعافيك.</p>
+        <p className="text-xs text-slate-400">تم تحليل خريطتك بواسطة المحرك الذكي لتحديد أسرع مسار للهدوء.</p>
       </div>
 
-      <div className="p-4 rounded-2xl bg-teal-500/5 border border-teal-500/20 text-right">
-        <div className="flex items-center gap-2 text-teal-400 text-[10px] font-bold mb-2 uppercase tracking-wide">
-          <Zap className="w-3 h-3" /> الخطوة الأولى المقترحة
+      <div className="space-y-4">
+        {/* Pattern Card */}
+        <div className="p-4 rounded-2xl bg-teal-500/5 border border-teal-500/20 shadow-[0_0_15px_rgba(45,212,191,0.05)]">
+           <div className="flex items-center justify-between mb-3">
+             <div className="flex items-center gap-2">
+               <Activity className="w-4 h-4 text-teal-400" />
+               <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">النمط المرصود</span>
+             </div>
+             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-400/10 text-teal-300 border border-teal-400/20">{pathLabel}</span>
+           </div>
+           <p className="text-lg font-bold text-white mb-1">{patternLabel}</p>
+           <p className="text-[11px] text-slate-400 leading-relaxed italic">"هذا النمط يسحب ٤٥٪ من طاقتك الذهنية يومياً."</p>
         </div>
-        <p className="text-sm text-slate-200 leading-relaxed">
-          ابدأ بتفعيل "درع الدواير" للأشخاص في الدائرة الحمراء لتقليل الضجيج العاطفي اللي بيسحب طاقتك.
-        </p>
+
+        {/* Action Card */}
+        <div className="p-5 rounded-3xl bg-white/[0.03] border border-white/10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-3">
+            <Target className="w-5 h-5 text-teal-500/40" />
+          </div>
+          <div className="space-y-3">
+            <div>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">تحدي الأسبوع الأول</span>
+              <h4 className="text-md font-bold text-white mt-1">{week1?.title || "فهم المسافة"}</h4>
+            </div>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              {week1?.goal || "ابدأ بوضع حدود زمنية واضحة لتقليل الضغط."}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <button
-        onClick={onComplete}
-        className="w-full rounded-2xl py-4 bg-teal-400 text-zinc-900 font-bold ob-btn-tap shadow-[0_0_20px_rgba(45,212,191,0.3)] transition-all"
-      >
-        دخول الملاذ الآمن ←
-      </button>
-
-      <p className="text-[10px] text-slate-500">نسخة مفصلة اتبعتت على وسيلة التواصل اللي سبتها (تأكد من الـ Spam).</p>
+      <div className="pt-2">
+        <button
+          onClick={onComplete}
+          className="w-full rounded-2xl py-4 bg-teal-400 text-zinc-900 font-extrabold ob-btn-tap shadow-[0_4px_25px_rgba(45,212,191,0.3)] hover:scale-[1.02] transition-all"
+        >
+          تفعيل الدرع والدخول للملاذ ←
+        </button>
+        <p className="text-[10px] text-slate-500 text-center mt-4">تم تشفير وتحميل الخطة الكاملة (٤ أسابيع) في حسابك.</p>
+      </div>
     </div>
   );
 };
 
-interface NameCard { name: string; category: AdviceCategory; ring: Ring | null; placed: boolean }
+const StepResultsScreen: FC<{
+  diagnosis?: TransformationDiagnosis | null;
+  userName?: string;
+  result?: DerivedOnboardingResult | null;
+  plan?: DynamicRecoveryPlan | null;
+  painDump?: string;
+  onComplete: () => void;
+}> = ({ diagnosis, userName, result, plan, painDump, onComplete }) => {
+  const { aiInterpretation, setAiInterpretation } = useMapState();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Generate AI insight if we have a diagnosis and no saved interpretation
+    if (diagnosis && !aiInterpretation && !isGenerating && !error) {
+      const triggerGeneration = async () => {
+        setIsGenerating(true);
+        try {
+          const insight = await generateSovereignInsight({
+            diagnosis,
+            painDump,
+            userName,
+            metrics: {
+              totalRelationships: (result?.redCount ?? 0) + (result?.yellowCount ?? 0) + (result?.greenCount ?? 0),
+              redOrbits: result?.redCount ?? 0,
+              yellowOrbits: result?.yellowCount ?? 0,
+              greenOrbits: result?.greenCount ?? 0
+            }
+          });
+          setAiInterpretation(insight);
+        } catch (err) {
+          console.error("Failed to generate insight:", err);
+          setError("لم نتمكن من الوصول للرؤية حالياً، لكن رحلتك مستمرة.");
+        } finally {
+          setIsGenerating(false);
+        }
+      };
+      void triggerGeneration();
+    }
+  }, [diagnosis, aiInterpretation, isGenerating, error, painDump, userName, result, setAiInterpretation]);
+
+  const displayName = userName ? `يا ${userName}` : "";
+  const protocolLabel = result?.protocolLabel || diagnosis?.protocolKey || (plan?.ring === "red" ? PATH_NAMES["path_protection"] : plan?.ring === "yellow" ? PATH_NAMES["path_negotiation"] : PATH_NAMES["path_deepening"]);
+  const headline = result ? `دي أول نتيجة واضحة ${displayName}` : "رؤيتك الخاصة جاهزة!";
+  const subheadline = result?.routeReason || "تم تحليل مسارك وفك شفرات الطاقة في رحلتك.";
+  const bodyTitle = result?.dominantPattern || diagnosis?.state || "نتيجة أولية";
+  const bodyText = result?.contextNote || result?.insightLine || diagnosis?.rootTension || "دي أول قراءة تشغيلية للخريطة.";
+
+  const safeDiagnosis = diagnosis || ({ state: "مستقر نسبياً", rootTension: "قيد المراجعة الخاصة", protocolKey: "clarity", firstStep: "المراقبة الذاتية", commitmentPledge: "ألتزم بمراقبة مشاعري بصدق", riskLevel: "low" } as TransformationDiagnosis);
+  const redValue = result?.redCount ?? (safeDiagnosis.riskLevel === "emergency" || safeDiagnosis.riskLevel === "high" ? 1 : 0);
+  const yellowValue = result?.yellowCount ?? (safeDiagnosis.riskLevel === "medium" ? 1 : 0);
+  const greenValue = result?.greenCount ?? (safeDiagnosis.riskLevel === "low" ? 1 : 0);
+  const pledgeLabel = result ? "أول خطوة واضحة" : "عهد المسافر";
+  const pledgeText = result?.firstStepBody || safeDiagnosis.commitmentPledge || plan?.steps.find((s) => s.week === 1)?.goal || "ابدأ بأول خطوة عملية من النتيجة الحالية.";
+  return (
+    <div className="flex flex-col gap-6 w-full py-2 text-right">
+      <div className="space-y-2 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="w-16 h-16 bg-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-2 border border-teal-500/30">
+           <ShieldCheck className="w-8 h-8 text-teal-400" />
+        </div>
+        <h2 className="text-2xl font-black text-white tracking-tight">رؤيتك الخاصة جاهزة!</h2>
+        <p className="text-xs text-slate-400">تم تحليل مسارك وفك شفرات الطاقة في رحلتك.</p>
+      </div>
+
+      <div className="space-y-4">
+        {/* Poetic State Card */}
+        <motion.div 
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.8, delay: 0.2 }}
+           className="p-5 rounded-3xl border border-teal-500/30 bg-teal-500/10 shadow-[0_0_30px_rgba(45,212,191,0.1)] relative overflow-hidden group"
+        >
+           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-400 to-transparent opacity-50"></div>
+           <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] font-bold text-teal-400 uppercase tracking-[0.2em]">الحالة الروحية</span>
+              <div className="px-2 py-1 rounded-md bg-teal-400/20 text-[10px] font-bold text-teal-200 border border-teal-400/20">
+                {protocolLabel}
+              </div>
+           </div>
+           <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-teal-300 transition-colors">
+             {bodyTitle}
+           </h3>
+            <p className="text-sm text-slate-300 leading-relaxed italic">
+              "{bodyText}"
+            </p>
+        </motion.div>
+
+        {/* Metrics Grid */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="grid grid-cols-3 gap-3"
+        >
+          <div className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 text-center shadow-[0_0_15px_rgba(244,63,94,0.05)] hover:shadow-[0_0_20px_rgba(244,63,94,0.1)] transition-all">
+            <div className="text-[9px] font-bold text-rose-500 mb-1 uppercase tracking-widest">نزيف</div>
+            <div className="text-xl font-black text-white drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]">{redValue}</div>
+          </div>
+          <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-center shadow-[0_0_15px_rgba(245,158,11,0.05)] hover:shadow-[0_0_20px_rgba(245,158,11,0.1)] transition-all">
+            <div className="text-[9px] font-bold text-amber-500 mb-1 uppercase tracking-widest">حذر</div>
+            <div className="text-xl font-black text-white drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">{yellowValue}</div>
+          </div>
+          <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 text-center shadow-[0_0_15px_rgba(16,185,129,0.05)] hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] transition-all">
+            <div className="text-[9px] font-bold text-emerald-500 mb-1 uppercase tracking-widest">نمو</div>
+            <div className="text-xl font-black text-white drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]">{greenValue}</div>
+          </div>
+        </motion.div>
+
+        {/* Sovereign Insight (AI) Card */}
+        <AnimatePresence mode="wait">
+          {isGenerating ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="p-8 rounded-[2.5rem] bg-teal-500/5 border border-teal-500/20 flex flex-col items-center justify-center gap-4 text-center min-h-[200px]"
+            >
+              <div className="relative">
+                <div className="w-12 h-12 rounded-full border-2 border-teal-500/20 border-t-teal-400 animate-spin" />
+                <Sparkles className="w-5 h-5 text-teal-300 absolute inset-0 m-auto animate-pulse" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-teal-100 tracking-wide">جاري استحضار الرؤية السِياديّة...</p>
+                <p className="text-[10px] text-teal-500/60 font-medium">نحلل أنماط الطاقة في دوائرك الآن</p>
+              </div>
+            </motion.div>
+          ) : aiInterpretation ? (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-6 rounded-[2.5rem] bg-gradient-to-br from-teal-500/15 to-blue-500/5 border border-teal-400/30 shadow-[0_20px_50px_rgba(45,212,191,0.15)] relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition-opacity">
+                <Sparkles className="w-6 h-6 text-teal-300" />
+              </div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-2 h-2 rounded-full bg-teal-400 shadow-[0_0_10px_#2dd4bf]"></div>
+                <span className="text-[10px] font-black text-teal-400 uppercase tracking-[0.2em]">الرؤية السِياديّة</span>
+              </div>
+              <div className="text-slate-100 leading-relaxed space-y-4">
+                {aiInterpretation.split('\n').map((line, i) => (
+                  <p key={i} className={i === 0 ? "text-lg font-bold leading-snug text-white" : "text-sm opacity-90"}>
+                    {line}
+                  </p>
+                ))}
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+
+        {/* Pledge Card (Commitment Loop) */}
+        {!isGenerating && (
+          <div className="p-6 rounded-3xl bg-white/[0.04] border border-white/10 relative group">
+             <div className="absolute -top-3 -right-3 w-12 h-12 bg-teal-500/20 rounded-full blur-xl group-hover:bg-teal-500/40 transition-all opacity-50"></div>
+             <div className="flex items-center gap-2 mb-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">عهد المسافر</span>
+             </div>
+             <p className="text-md font-bold text-slate-100 leading-relaxed mb-4">
+               {pledgeText}
+             </p>
+             <div className="flex items-center gap-2 text-[10px] text-teal-400 font-bold border-t border-white/5 pt-4">
+                <Zap className="w-3 h-3" />
+                <span>أنت الآن في منطقة السيادة الذاتية</span>
+             </div>
+          </div>
+        )}
+      </div>
+
+      <div className="pt-4">
+        <button
+          onClick={onComplete}
+          className="w-full rounded-2xl py-4.5 bg-gradient-to-r from-teal-500 to-teal-400 text-zinc-950 font-black ob-btn-tap shadow-[0_10px_30px_rgba(45,212,191,0.3)] hover:shadow-[0_15px_40px_rgba(45,212,191,0.4)] transition-all flex items-center justify-center gap-2 group"
+        >
+          دخول المساحة الخاصة
+          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform rotate-180" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const onboardingRingPalette = RING_COLORS;
 void onboardingRingPalette;
 
 /* ── Main OnboardingFlow Component ── */
-export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initialMirrorName }) => {
+
+const StepSafetyTriage = () => (
+  <div className="text-center py-8 space-y-6">
+    <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/50">
+      <AlertTriangle className="w-10 h-10 text-red-500" />
+    </div>
+    <h2 className="text-2xl font-bold text-white mb-2">أمانك هو الأولوية القصوى</h2>
+    <p className="text-slate-300 leading-relaxed">
+      من خلال كلماتك، يبدو أنك تمر بلحظة صعبة جداً وتتطلب دعماً فورياً متخصصاً.
+    </p>
+    <div className="bg-white/5 border border-white/10 p-6 rounded-2xl text-right">
+      <p className="text-sm text-slate-400 mb-4">برجاء التواصل مع المتخصصين فوراً:</p>
+      <ul className="space-y-3 text-white">
+        <li>• الخط الساخن للأمان النفسي: 16328</li>
+        <li>• أو التوجه لأقرب مستشفى للطوارئ.</li>
+      </ul>
+    </div>
+    <p className="text-xs text-slate-500 italic">
+      "رحلتك" منصة توعوية وليست بديلاً عن العلاج الطبي أو التدخل في الأزمات.
+    </p>
+  </div>
+);
+
+export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initialMirrorName, gateContext = null }) => {
+  const router = useRouter();
   const addNode = useMapState((s) => s.addNode);
   const clientEventIdRef = useRef<string | null>(null);
 
@@ -713,14 +1152,41 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   const [step, setStep] = useState(0);
   const [, setPrevStep] = useState(-1);
   const [name, setName] = useState((initialMirrorName ?? "").trim());
-  const [collectedItems, setCollectedItems] = useState<{ name: string; category: AdviceCategory }[]>([]);
+  const [painDump, setPainDump] = useState("");
+  const [diagnosis, setDiagnosis] = useState<TransformationDiagnosis | null>(null);
+  const [isSafetyTriggered, setIsSafetyTriggered] = useState(false);
+  const [derivedResult, setDerivedResult] = useState<DerivedOnboardingResult | null>(null);
+  const [collectedItems, setCollectedItems] = useState<{ 
+    name: string; 
+    category: AdviceCategory; 
+    ring?: Ring; 
+    placed?: boolean; 
+    symptomIds?: string[] 
+  }[]>([]);
+  
+  const [primaryPlan, setPrimaryPlan] = useState<DynamicRecoveryPlan | null>(null);
+  
+  const [diagnosticModal, setDiagnosticModal] = useState<{ cardIdx: number; name: string } | null>(null);
   
   const leadTrackedRef = useRef(false);
   const completionTrackedRef = useRef(false);
   const [, startTransition] = useTransition();
   const stepRef = useRef(0);
-  
+
   const seededMirrorName = (initialMirrorName ?? "").trim();
+
+  // 🎯 Product param from Landing Mini-Diagnosis (simulation source)
+  const [recommendedProduct, setRecommendedProduct] = useState<RecommendedProduct | null>(null);
+
+  useEffect(() => {
+    const url = createCurrentUrl();
+    if (url) {
+      const productParam = url.searchParams.get("product") as RecommendedProduct | null;
+      if (productParam && ["dawayir", "masarat", "session", "atmosfera"].includes(productParam)) {
+        setRecommendedProduct(productParam);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (seededMirrorName) {
@@ -729,22 +1195,30 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   }, [seededMirrorName]);
 
   useEffect(() => {
-    trackingService.recordFlow("onboarding_opened");
-    analyticsService.track(AnalyticsEvents.ONBOARDING_STARTED, { 
-      entry_point: seededMirrorName ? "landing_bridge" : "direct",
-      client_event_id: clientEventIdRef.current!
+    const source = createCurrentUrl()?.searchParams.get("source") ?? (seededMirrorName ? "landing_bridge" : "direct");
+    trackingService.recordFlow("onboarding_opened", {
+      meta: {
+        source,
+        recommendedProduct: recommendedProduct ?? null
+      }
     });
-  }, [seededMirrorName]);
+    analyticsService.onboarding(AnalyticsEvents.ONBOARDING_STARTED, {
+      source,
+      step: "onboarding_opened"
+    });
+  }, [seededMirrorName, recommendedProduct]);
 
   // 🟢 Funnel Traceability: Track step views for drop-off analysis
   useEffect(() => {
     const stepNames = [
-      "noise_check",
-      "inventory",
-      "mapping",
-      "insight",
-      "contact_capture",
-      "recovery_plan_preview"
+      "pain_dump",
+      "noise_check", 
+      "inventory", 
+      "mapping", 
+      "insight", 
+      "contact_capture", 
+      "recovery_plan_preview",
+      "safety_route"
     ];
     if (step < stepNames.length) {
       analyticsService.track(`onboarding_step_${stepNames[step]}`, {
@@ -765,56 +1239,162 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   }, [startTransition]);
 
   const handleSkip = useCallback(() => {
+    trackingService.recordFlow("onboarding_skipped", {
+      atStep: `step_${stepRef.current}`,
+    });
     markJourneyOnboardingDone();
     onComplete(true);
   }, [onComplete]);
 
-  const handleInventoryNext = useCallback((items: { name: string; category: AdviceCategory }[]) => {
-    setCollectedItems(items);
-    goTo(2);
+  const handlePainDumpNext = useCallback((text: string) => {
+    setPainDump(text);
+    if (safetyTriage(text)) {
+      setIsSafetyTriggered(true);
+      goTo(8); // Go to Safety Step (shifted)
+    } else {
+      goTo(2);
+    }
   }, [goTo]);
 
-  const handleNoiseNext = useCallback(() => goTo(1), [goTo]);
+  const handleNoiseNext = useCallback(() => {
+    trackingService.recordFlow("onboarding_phase_noise_completed");
+    goTo(1);
+  }, [goTo]);
+
+  const handleInventoryNext = useCallback((items: { name: string; category: AdviceCategory }[]) => {
+    setCollectedItems(items);
+    trackingService.recordFlow("onboarding_phase_inventory_completed", {
+      meta: { relationshipCount: items.length }
+    });
+    goTo(3);
+  }, [goTo]);
+
+  const handleRingSelected = useCallback((cardIdx: number, ring: Ring) => {
+    if (ring === "red") {
+      setDiagnosticModal({ cardIdx, name: collectedItems[cardIdx].name });
+    } else {
+      setCollectedItems((prev) =>
+        prev.map((c, i) => i === cardIdx ? { ...c, ring, placed: true, symptomIds: [] } : c)
+      );
+    }
+  }, [collectedItems]);
+
+  const handleSymptomSelect = (symptomId: string) => {
+    if (!diagnosticModal) return;
+    const { cardIdx } = diagnosticModal;
+    setCollectedItems((prev) =>
+      prev.map((c, i) => i === cardIdx ? { ...c, ring: "red", placed: true, symptomIds: [symptomId] } : c)
+    );
+    setDiagnosticModal(null);
+  };
 
   const handleMappingNext = useCallback((mapped: NameCard[]) => {
-    for (const item of mapped) {
+    const redCount = mapped.filter(m => m.ring === "red").length;
+    const yellowCount = mapped.filter(m => m.ring === "yellow").length;
+    const greenCount = mapped.filter(m => m.ring === "green").length;
+    const nextDiagnosis = classifyState(painDump, { red: redCount, yellow: yellowCount, green: greenCount });
+    setDiagnosis(nextDiagnosis);
+    setDerivedResult(deriveOnboardingResult(mapped, gateContext));
+    const verifiedItems = mapped.map((item) => ({ 
+      ...item, 
+      ring: item.ring ?? "red" // Hardened fallback per user strategy
+    }));
+    setCollectedItems(verifiedItems);
+    
+    trackingService.recordFlow("onboarding_phase_mapping_completed", {
+      meta: {
+        relationshipCount: mapped.length,
+        redCount,
+        yellowCount,
+        greenCount,
+        protocol: nextDiagnosis.protocolKey,
+        dominantPattern: nextDiagnosis.rootTension,
+        poeticState: nextDiagnosis.state
+      }
+    });
+
+    for (let i = 0; i < mapped.length; i++) {
+      const item = mapped[i];
       if (item.name.trim()) {
-        addNode(item.name.trim(), (item.ring ?? "yellow") as Ring, undefined, item.category);
+        addNode(
+          item.name.trim(), 
+          (item.ring ?? "yellow") as Ring, 
+          undefined, 
+          item.category,
+          undefined, // treeRelation
+          undefined, // detachmentMode
+          undefined, // contact
+          undefined, // isSOS
+          undefined, // realityAnswers
+          undefined, // safetyAnswer
+          false,     // isAnalyzing
+          false,     // isMirrorNode
+          item.symptomIds ?? []
+        );
       }
     }
-    goTo(3);
-  }, [addNode, goTo]);
+    goTo(4);
+  }, [addNode, gateContext, goTo, collectedItems, painDump]);
 
   const handleContactCapture = useCallback(async (providedName: string, email: string, whatsapp: string) => {
-    trackingService.recordFlow("lead_form_submitted", { meta: { name: providedName, email, whatsapp } });
+    if (leadTrackedRef.current) return;
     
-    if (!leadTrackedRef.current) {
-      analyticsService.trackLead({ 
-        method: "whatsapp", 
-        has_email: !!email, 
-        has_whatsapp: !!whatsapp,
-        client_event_id: clientEventIdRef.current!
-      });
-      // Persist the ID for the next steps in the funnel (Payment)
-      analyticsService.setStoredClientEventId(clientEventIdRef.current!);
-      leadTrackedRef.current = true;
-    }
+    trackingService.recordFlow("lead_form_submitted", { meta: { name: providedName, email, whatsapp } });
+    analyticsService.setStoredClientEventId(clientEventIdRef.current!);
+    leadTrackedRef.current = true;
 
     const finalName = providedName.trim() || seededMirrorName;
+    const nextResult = derivedResult ?? deriveOnboardingResult(collectedItems.map(c => ({...c, ring: c.ring ?? "red"})), gateContext);
+    setDerivedResult(nextResult);
+    const currentDiagnosis = diagnosis || classifyState(painDump, {
+      red: collectedItems.filter(c => c.ring === "red").length,
+      yellow: collectedItems.filter(c => c.ring === "yellow").length,
+      green: collectedItems.filter(c => c.ring === "green").length,
+    });
     if (finalName) {
       setName(finalName);
       setMirrorName(finalName);
     }
 
     // CRM synchronization
-    if (whatsapp.trim()) {
-      marketingLeadService.syncLead({
-        phone: whatsapp.trim(),
+    if (whatsapp.trim() || email.trim()) {
+      await marketingLeadService.syncLead({
+        phone: whatsapp.trim() || undefined,
+        email: email.trim() || undefined,
         status: "engaged",
         source: "onboarding",
         sourceType: "website",
-        metadata: { hasEmail: !!email.trim(), name: finalName }
+        clientEventId: clientEventIdRef.current!,
+        metadata: {
+          name: finalName,
+          redCount: collectedItems.filter(c => c.ring === "red").length,
+          yellowCount: collectedItems.filter(c => c.ring === "yellow").length,
+          greenCount: collectedItems.filter(c => c.ring === "green").length,
+          protocol: currentDiagnosis.protocolKey,
+          dominantPattern: currentDiagnosis.rootTension,
+          poeticState: currentDiagnosis.state,
+          recommendedProduct: recommendedProduct ?? null
+        }
       }).catch(err => console.warn("[CRM] Onboarding sync failed:", err));
+    }
+
+    // 🎯 Sovereign Engine Ignition
+    // Generate a plan for the first red-ring person found
+    const primaryPerson = collectedItems.find(c => c.ring === "red") || collectedItems[0];
+    if (primaryPerson) {
+      const mockPattern = {
+        type: (nextResult.primarySymptom as any) || (primaryPerson.symptomIds?.[0] as any) || "emotional",
+        examples: ["مواقف متكررة من الاستنزاف"],
+        frequency: 3
+      };
+      
+      const plan = generateDynamicPlan(
+        primaryPerson.name,
+        (primaryPerson.ring || "yellow") as any,
+        [mockPattern as any],
+        ["أنت بحاجة لحماية طاقتك العاطفية أولاً."]
+      );
+      setPrimaryPlan(plan);
     }
 
     if (email.trim()) {
@@ -822,9 +1402,9 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
         await signInWithMagicLink(email.trim());
         await sendRecoveryPlanEmail(email.trim(), {
           relationshipCount: collectedItems.length,
-          redCount: 0,
-          yellowCount: 0,
-          greenCount: 0,
+          redCount: nextResult.redCount,
+          yellowCount: nextResult.yellowCount,
+          greenCount: nextResult.greenCount,
           userName: finalName || undefined,
           magicLink: window.location.origin
         });
@@ -837,20 +1417,36 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
       window.sessionStorage.setItem("dawayir-lead-email", email);
       window.sessionStorage.setItem("dawayir-lead-whatsapp", whatsapp);
     }
-    goTo(5);
-  }, [collectedItems.length, seededMirrorName, goTo, setMirrorName]);
+    goTo(6);
+  }, [collectedItems, derivedResult, diagnosis, gateContext, painDump, seededMirrorName, goTo, setMirrorName]);
 
   const handleComplete = useCallback(() => {
     if (!completionTrackedRef.current) {
-      analyticsService.trackOnboardingCompleted({ 
+      trackingService.recordFlow("onboarding_completed", {
+        meta: {
+          redCount: collectedItems.filter(c => c.ring === "red").length,
+          yellowCount: collectedItems.filter(c => c.ring === "yellow").length,
+          greenCount: collectedItems.filter(c => c.ring === "green").length,
+          protocol: diagnosis?.protocolKey,
+          recommendedProduct: recommendedProduct ?? null
+        }
+      });
+      analyticsService.trackOnboardingCompleted({
         flow: "onboarding",
-        client_event_id: clientEventIdRef.current!
+        client_event_id: clientEventIdRef.current!,
+        recommendedProduct: recommendedProduct ?? undefined
       });
       completionTrackedRef.current = true;
     }
 
-    // Gamification: Welcome Package
+    // Gamification & Persistence
     const { addXP, addCoins, awardBadge } = useGamificationState.getState();
+    const { setTransformationDiagnosis } = useMapState.getState();
+
+    if (diagnosis) {
+      setTransformationDiagnosis(diagnosis);
+    }
+
     addXP(100, "بداية الرحلة السِياديّة 🚀");
     addCoins(200, "أول مورد سِيادي 🪙");
     awardBadge(
@@ -861,13 +1457,39 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
     );
 
     markJourneyOnboardingDone();
+
+    // Sync with the main diagnosis engine to avoid being gated by AppExperienceShell
+    if (diagnosis) {
+      const typeMap: Record<string, import("@/modules/diagnosis/types").UserStateType> = {
+        "توهة المدارات": "lost",
+        "نبض مشحون": "anxious",
+        "نزيف طاقة": "overwhelmed",
+        "محطة انتظار": "stuck",
+        "مستقر نسبياً": "ready"
+      };
+
+      saveDiagnosisState({
+        type: typeMap[diagnosis.state] || "stuck",
+        mainPain: (painDump?.toLowerCase().includes("علاقة") || painDump?.toLowerCase().includes("زوج") || painDump?.toLowerCase().includes("حبيب")) ? "relationship" : "self",
+        readiness: "high",
+        journeyPhase: "discovery",
+        recommendedProduct: recommendedProduct ?? "dawayir",
+        diagnosisScore: collectedItems.length * 10,
+        completedAt: Date.now()
+      });
+    }
+
     onComplete(false);
+    
     if (getNotificationPermission() === "default") {
       setTimeout(() => { void enableNotificationsWithPrompt(); }, 1500);
     }
-  }, [onComplete]);
+    
+    // REDACTION: Conflicting navigation moved to parent OnboardingRouteClient
+    // router.push("/maraya");
+  }, [collectedItems, diagnosis, onComplete, recommendedProduct, painDump]);
 
-  const dots = [0, 1, 2, 3, 4];
+  const dots = [0, 1, 2, 3, 4, 5, 6];
 
   return (
     <div 
@@ -900,20 +1522,70 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
               className="rounded-full transition-all duration-300" 
               style={{
                 height: 5,
-                width: d === Math.min(step, 4) ? 24 : 5,
-                background: d === Math.min(step, 4) ? "#2dd4bf" : d < Math.min(step, 4) ? "rgba(45,212,191,0.4)" : "rgba(255,255,255,0.1)"
+                width: d === step ? 24 : 5,
+                background: d === step ? "#2dd4bf" : d < step ? "rgba(45,212,191,0.4)" : "rgba(255,255,255,0.1)"
               }}
             />
           ))}
         </div>
 
         <div className="px-8 py-6 pb-10 overflow-y-auto custom-scrollbar relative">
-          {step === 0 && <FirstSparkOnboarding onComplete={handleNoiseNext} />}
-          {step === 1 && <StepInventory onNext={handleInventoryNext} onSkip={handleSkip} mirrorName={seededMirrorName} />}
-          {step === 2 && <StepMapping items={collectedItems} onNext={handleMappingNext} onSkip={handleSkip} />}
-          {step === 3 && <StepInsight items={collectedItems} onComplete={() => goTo(4)} onSkip={() => goTo(4)} />}
-          {step === 4 && <StepContactCapture initialName={name} onComplete={handleContactCapture} onSkip={() => goTo(5)} />}
-          {step === 5 && <StepRecoveryPlanPreview userName={name} collectedItems={collectedItems} onComplete={handleComplete} />}
+          {step === 0 && <FirstSparkOnboarding onComplete={handleNoiseNext} gateContext={gateContext} />}
+          {step === 1 && <StepPainDump onNext={handlePainDumpNext} onSkip={() => goTo(2)} />}
+          {step === 2 && <StepInventory onNext={handleInventoryNext} onSkip={handleSkip} mirrorName={seededMirrorName} />}
+          {step === 3 && (
+            <StepMapping 
+              items={collectedItems as any} 
+              onNext={handleMappingNext} 
+              onRingSelected={handleRingSelected}
+              onSkip={handleSkip} 
+            />
+          )}
+          {step === 4 && <StepInsight items={collectedItems as any} onComplete={() => goTo(5)} onSkip={() => goTo(5)} />}
+          {step === 5 && (
+            <StepContactCapture
+              initialName={name}
+              onComplete={handleContactCapture}
+              onSkip={() => {
+                trackingService.recordFlow("onboarding_contact_skipped", {
+                  meta: {
+                    redCount: derivedResult?.redCount ?? 0,
+                    yellowCount: derivedResult?.yellowCount ?? 0,
+                    greenCount: derivedResult?.greenCount ?? 0
+                  }
+                });
+                goTo(6);
+              }}
+            />
+          )}
+          {step === 6 && (
+            <StepResultsScreen 
+              userName={name} 
+              diagnosis={diagnosis} 
+              result={derivedResult} 
+              plan={primaryPlan} 
+              painDump={painDump}
+              onComplete={handleComplete} 
+            />
+          )}
+
+          {step === 8 && <StepSafetyTriage />}
+          
+          <AnimatePresence>
+            {diagnosticModal && (
+              <SymptomTriggerModal 
+                name={diagnosticModal.name}
+                onSelect={handleSymptomSelect}
+                onClose={() => {
+                   const { cardIdx } = diagnosticModal;
+                   setCollectedItems((prev) =>
+                     prev.map((c, i) => i === cardIdx ? { ...c, ring: "red", placed: true, symptomIds: [] } : c)
+                   );
+                   setDiagnosticModal(null);
+                }}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

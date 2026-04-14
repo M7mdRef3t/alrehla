@@ -101,7 +101,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
             id: "appearance" as SettingsSection,
             icon: Palette,
             label: "الهوية والمظهر",
-            value: "تخصيص الواجهة والملف السيادي",
+            value: "تخصيص الواجهة والملف الخاص",
             color: "#e879f9",
         },
         {
@@ -300,7 +300,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                         </div>
                                         {item.isToggle ? (
                                             <div 
-                                                className={`w-10 h-6 rounded-full p-1 transition-all ${
+                                                className={`w-10 h-6 rounded-full p-1 transition-all cursor-pointer ${
                                                     item.id === 'sound' 
                                                         ? (isSoundEnabled ? 'bg-amber-500/40' : 'bg-slate-700')
                                                         : (isSensoryDepthEnabled ? 'bg-indigo-500/40' : 'bg-slate-700')

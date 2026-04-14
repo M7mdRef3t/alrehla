@@ -11,6 +11,15 @@
     },
     "figma": {
       "enabled": true
+    },
+    "meta-quest-agentic-tools": {
+      "enabled": true
+    },
+    "cli-for-agent": {
+      "enabled": true
+    },
+    "browse": {
+      "enabled": true
     }
   }
 }

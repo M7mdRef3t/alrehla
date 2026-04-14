@@ -119,7 +119,7 @@ export const ProblemTracker = memo(function ProblemTracker({ onBack }: ProblemTr
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
               placeholder="إيه اللي مضايقك أو واقفك؟"
-              className="w-full rounded-xl p-3 text-sm text-white bg-white/5 border border-white/8 placeholder:text-white/15 resize-none focus:outline-none focus:border-red-500/30"
+              className="w-full rounded-xl p-3 text-sm text-white bg-white/5 border border-white/8 placeholder:text-[#cbd5e1] placeholder:font-semibold resize-none focus:outline-none focus:border-red-500/30"
               rows={2}
               autoFocus
             />

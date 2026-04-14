@@ -27,6 +27,7 @@ export type TelegramMessageType =
   | "decision_approval_request"
   | "emotional_pricing_notification"
   | "critical_error_alert"
+  | "admin_notification"
   | "system_startup";
 
 export interface TelegramMessage {
@@ -208,6 +209,31 @@ ${recommendation.reasoning}
           ],
         ],
       },
+    });
+  }
+
+  /**
+   * ─────────────────────────────────────────────────────────────────
+   * إخطار سيادي (Admin Notification)
+   * ─────────────────────────────────────────────────────────────────
+   */
+  async notifyAdminDecision(decision: any): Promise<void> {
+    const p = decision.payload as any;
+    const text = `
+🤖 **إخطار سيادي (Sovereign Alert)**
+
+🧠 **النوع:** \`${decision.type}\`
+🎯 **التحليل:** ${decision.reasoning}
+
+${p ? `📦 **البيانات:**\n\`\`\`json\n${JSON.stringify(p, null, 2)}\n\`\`\`` : ""}
+
+📅 ${new Date(decision.timestamp || Date.now()).toLocaleString("en-GB")}
+    `.trim();
+
+    await this.sendMessage({
+      type: "admin_notification",
+      text,
+      parseMode: "Markdown",
     });
   }
 

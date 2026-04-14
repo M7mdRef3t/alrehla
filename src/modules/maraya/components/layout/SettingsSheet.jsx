@@ -150,9 +150,9 @@ export default function SettingsSheet({
         />
 
         <div className="settings-sheet__detent-buttons" role="group" aria-label={isEn ? 'Panel size' : 'حجم اللوحة'}>
-          <button type="button" className={`settings-sheet__detent-btn ${detent === 'peek' ? 'is-active' : ''}`} onClick={() => setDetent('peek')}>{t.peek}</button>
-          <button type="button" className={`settings-sheet__detent-btn ${detent === 'medium' ? 'is-active' : ''}`} onClick={() => setDetent('medium')}>{t.medium}</button>
-          <button type="button" className={`settings-sheet__detent-btn ${detent === 'full' ? 'is-active' : ''}`} onClick={() => setDetent('full')}>{t.full}</button>
+          <button type="button" className={`settings-sheet__detent-btn ${detent ==='peek' ? 'is-active' : ''}`} onClick={() => setDetent('peek')}>{t.peek}</button>
+          <button type="button" className={`settings-sheet__detent-btn ${detent ==='medium' ? 'is-active' : ''}`} onClick={() => setDetent('medium')}>{t.medium}</button>
+          <button type="button" className={`settings-sheet__detent-btn ${detent ==='full' ? 'is-active' : ''}`} onClick={() => setDetent('full')}>{t.full}</button>
         </div>
 
         <header className="settings-sheet__header">
@@ -168,7 +168,7 @@ export default function SettingsSheet({
             type="button"
             role="switch"
             aria-checked={musicEnabled}
-            className={`settings-sheet__switch ${musicEnabled ? 'settings-sheet__switch--on' : ''}`}
+            className={`settings-sheet__switch ${musicEnabled ?'settings-sheet__switch--on' : ''}`}
             onClick={onToggleMusic}
           >
             {musicEnabled ? t.on : t.off}
@@ -181,7 +181,7 @@ export default function SettingsSheet({
             type="button"
             role="switch"
             aria-checked={voiceEnabled}
-            className={`settings-sheet__switch ${voiceEnabled ? 'settings-sheet__switch--on' : ''}`}
+            className={`settings-sheet__switch ${voiceEnabled ?'settings-sheet__switch--on' : ''}`}
             onClick={onToggleVoice}
           >
             {voiceEnabled ? t.on : t.off}
@@ -194,7 +194,7 @@ export default function SettingsSheet({
             type="button"
             role="switch"
             aria-checked={biometricsEnabled}
-            className={`settings-sheet__switch ${biometricsEnabled ? 'settings-sheet__switch--on' : ''}`}
+            className={`settings-sheet__switch ${biometricsEnabled ?'settings-sheet__switch--on' : ''}`}
             onClick={onToggleBiometrics}
           >
             {biometricsEnabled ? t.on : t.off}
@@ -207,7 +207,7 @@ export default function SettingsSheet({
             type="button"
             role="switch"
             aria-checked={spatialModeEnabled}
-            className={`settings-sheet__switch ${spatialModeEnabled ? 'settings-sheet__switch--on' : ''}`}
+            className={`settings-sheet__switch ${spatialModeEnabled ?'settings-sheet__switch--on' : ''}`}
             onClick={onToggleSpatialMode}
           >
             {spatialModeEnabled ? t.on : t.off}

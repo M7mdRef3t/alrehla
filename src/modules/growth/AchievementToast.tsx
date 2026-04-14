@@ -5,7 +5,7 @@ import { getAchievementById } from "@/data/achievements";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { soundManager } from "@/services/soundManager";
 
-/** تهنئة سيادية تظهر عند فتح إنجاز جديد — احتفال كوني كامل */
+/** تهنئة خاصة تظهر عند فتح إنجاز جديد — احتفال كوني كامل */
 export const AchievementToast: FC = () => {
   const lastNewAchievementId = useAchievementState((s) => s.lastNewAchievementId);
   const clearLastNew = useAchievementState((s) => s.clearLastNew);
@@ -66,7 +66,7 @@ export const AchievementToast: FC = () => {
           </motion.div>
 
           <motion.div
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm cursor-pointer"
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm"
             style={{
               background: "linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.88))",
               backdropFilter: "blur(20px)",
@@ -96,7 +96,7 @@ export const AchievementToast: FC = () => {
                 className="text-xs font-black uppercase tracking-widest mb-1"
                 style={{ color: "rgba(255,215,0,1)", letterSpacing: "0.2em" }}
               >
-                إنجاز سيادي جديد!
+                إنجاز خاص جديد!
               </p>
               <h3 className="font-black text-white text-xl">{achievement.title}</h3>
               <p className="text-xs mt-2 leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>

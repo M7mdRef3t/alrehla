@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Config } from "@measured/puck";
 import { ReactNode } from "react";
 import "@measured/puck/puck.css"; // Basic puck styling
@@ -14,12 +15,12 @@ type Props = {
   HeroBlock: { headline: string; description?: string; ctaText: string; ctaLink?: string; imageUrl?: string; padding: SpacingMode; visibility: VisibilityMode };
   CardBlock: { title: string; description: string; icon?: string; glowColor: "primary" | "tertiary" | "error"; align: "left" | "center" | "right"; variant: "glass" | "solid" | "outline"; padding: SpacingMode; visibility: VisibilityMode };
   MapBlock: { mapId: string; showLegend: boolean; particles: boolean; height: "compact" | "normal" | "tall"; bgTheme: "primary" | "tertiary" | "dark"; padding: SpacingMode; visibility: VisibilityMode };
-  FeatureListBlock: { features: { title: string; description: string; icon?: string }[]; padding: SpacingMode; visibility: VisibilityMode };
+  MahatatBlock: { features: { title: string; description: string; icon?: string }[]; padding: SpacingMode; visibility: VisibilityMode };
   ButtonBlock: { text: string; url: string; variant: "default" | "outline" | "ghost"; size: "sm" | "default" | "lg"; align: "right" | "center" | "left"; padding: SpacingMode; visibility: VisibilityMode };
   SpacerBlock: { size: SpacingMode; visibility: VisibilityMode };
-  TestimonialBlock: { quote: string; author: string; role?: string; avatarEmoji?: string; accentColor: "teal" | "amber" | "rose" | "indigo"; padding: SpacingMode; visibility: VisibilityMode };
-  PricingTableBlock: { planName: string; price: string; currency: string; period: string; features: { text: string; included: boolean }[]; ctaText: string; ctaLink: string; highlighted: boolean; padding: SpacingMode; visibility: VisibilityMode };
-  FAQBlock: { title: string; subtitle?: string; items: { question: string; answer: string; tag?: string }[]; padding: SpacingMode; visibility: VisibilityMode };
+  HekayatBlock: { quote: string; author: string; role?: string; avatarEmoji?: string; accentColor: "teal" | "amber" | "rose" | "indigo"; padding: SpacingMode; visibility: VisibilityMode };
+  ZadElTariqBlock: { planName: string; price: string; currency: string; period: string; features: { text: string; included: boolean }[]; ctaText: string; ctaLink: string; highlighted: boolean; padding: SpacingMode; visibility: VisibilityMode };
+  AselatElMosaferBlock: { title: string; subtitle?: string; items: { question: string; answer: string; tag?: string }[]; padding: SpacingMode; visibility: VisibilityMode };
   CTABannerBlock: { headline: string; description?: string; ctaText: string; ctaLink: string; variant: "glow" | "glass" | "solid"; padding: SpacingMode; visibility: VisibilityMode };
   FooterBlock: { brandName: string; tagline?: string; links: { label: string; url: string }[]; trustBadges: string[]; padding: SpacingMode; visibility: VisibilityMode };
   SocialProofBlock: { stats: { value: string; label: string; icon?: string }[]; padding: SpacingMode; visibility: VisibilityMode };
@@ -264,7 +265,7 @@ export const config: Config<Props> = {
         );
       }
     },
-    FeatureListBlock: {
+    MahatatBlock: {
       fields: {
         features: {
           type: "array",
@@ -479,7 +480,7 @@ export const config: Config<Props> = {
     // ═══════════════════════════════════════════════════
     // New Components — Platform Pages Integration
     // ═══════════════════════════════════════════════════
-    TestimonialBlock: {
+    HekayatBlock: {
       fields: {
         quote: { type: "textarea" },
         author: { type: "text" },
@@ -533,7 +534,7 @@ export const config: Config<Props> = {
         );
       },
     },
-    PricingTableBlock: {
+    ZadElTariqBlock: {
       fields: {
         planName: { type: "text" },
         price: { type: "text" },
@@ -591,7 +592,7 @@ export const config: Config<Props> = {
         </AuthVisibilityWrapper>
       ),
     },
-    FAQBlock: {
+    AselatElMosaferBlock: {
       fields: {
         title: { type: "text" },
         subtitle: { type: "text" },

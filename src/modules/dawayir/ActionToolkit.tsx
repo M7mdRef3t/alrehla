@@ -93,7 +93,7 @@ export function ActionToolkit() {
                     transition={{ delay: idx * 0.1 }}
                     className="group"
                   >
-                    <div className="p-4 rounded-3xl bg-white/5 border border-white/5 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all cursor-pointer">
+                    <div className="p-4 rounded-3xl bg-white/5 border border-white/5 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all">
                       <div className="flex items-start justify-between mb-2">
                         <span className="text-[10px] bg-teal-500/20 text-teal-400 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">{m.type}</span>
                       </div>

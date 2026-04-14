@@ -143,7 +143,7 @@ export const InfluenceNetwork: FC = () => {
                                         strokeDashoffset: { repeat: Infinity, duration: 1.5, ease: "linear" },
                                         opacity: { duration: 0.3 }
                                     }}
-                                    className="cursor-pointer"
+                                    className=""
                                 />
                                 {isDriftMode && Math.abs(edge.drift ?? 0) > 0.05 && (
                                     <motion.text
@@ -175,7 +175,7 @@ export const InfluenceNetwork: FC = () => {
                                 soundManager.playHover();
                             }}
                             onHoverEnd={() => setHoveredNode(null)}
-                            className="cursor-pointer"
+                            className=""
                         >
                             <motion.g
                                 animate={{ rotate: 360 }}

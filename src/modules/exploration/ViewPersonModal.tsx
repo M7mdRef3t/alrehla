@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type FC, type MouseEvent as ReactMouseEvent } from "react";
 import { motion } from "framer-motion";
 import { X, Share2, Target, ClipboardList } from "lucide-react";
+import { Z_LAYERS } from "@/config/zIndices";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import type { AdviceCategory } from "@/data/adviceScripts";
 import { ResultScreen } from "./AddPersonModal/ResultScreen";
@@ -57,6 +59,8 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
     [node]
   );
 
+  useScrollLock(!!node);
+
   useEffect(() => {
     recordOpen(nodeId);
     openedAtRef.current = Date.now();
@@ -70,7 +74,10 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
 
   if (!node || !node.analysis) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-3xl bg-slate-950/60">
+      <div
+        className="fixed inset-0 flex items-center justify-center p-4 backdrop-blur-3xl bg-slate-950/60"
+        style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -85,7 +92,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
             <p className="mb-6 text-slate-400">لا توجد قراءة كاملة محفوظة لهذا الشخص حاليًا.</p>
             <button
                onClick={onClose}
-               className="w-full rounded-2xl py-4 bg-teal-500 text-white font-black shadow-lg shadow-teal-500/20 active:scale-95 transition-all"
+               className="w-full rounded-2xl py-4 bg-teal-500 text-white font-black shadow-md shadow-teal-500/10 active:scale-95 transition-all"
             >
               إغلاق
             </button>
@@ -122,7 +129,11 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 backdrop-blur-3xl bg-slate-950/60" onClick={onClose}>
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 backdrop-blur-3xl bg-slate-950/60"
+      style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
+      onClick={onClose}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 40 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}

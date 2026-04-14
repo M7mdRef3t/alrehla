@@ -11,11 +11,11 @@ import { SuccessIndexCard } from "../Overview/components/SuccessIndexCard";
 import { ExecutiveReport } from "../Overview/components/ExecutiveReport";
 
 import {
-  fetchOverviewStats,
-  type OverviewStats,
-  fetchExecutiveReport,
-  fetchSovereignExecutiveReport,
-  type SovereignExecutiveReport
+    fetchOverviewStats,
+    type OverviewStats,
+    fetchExecutiveReport,
+    fetchSovereignExecutiveReport,
+    type SovereignExecutiveReport
 } from "@/services/adminApi";
 import { fetchFlowAuditLogs, type FlowAuditLogEntry } from "@/services/flowAudit";
 import type { ExecutiveReport as ExecutiveReportType } from "@/types/admin.types";
@@ -29,46 +29,49 @@ export const ExecutiveDashboard: FC = () => {
     const [weeklyDecisionLogs, setWeeklyDecisionLogs] = useState<FlowAuditLogEntry[]>([]);
     const [weeklyDecisionLoading, setWeeklyDecisionLoading] = useState(true);
 
-    const [decisionSaving, setDecisionSaving] = useState(false);
-    const [decisionMessage, setDecisionMessage] = useState<string | null>(null);
+    const [decisionSaving] = useState(false);
+    const [decisionMessage] = useState<string | null>(null);
+
     useEffect(() => {
         let mounted = true;
-        
+
         const fetchDecisions = async () => {
-          setWeeklyDecisionLoading(true);
-          try {
-            const logs = await fetchFlowAuditLogs(20);
-            if (mounted) setWeeklyDecisionLogs(logs?.filter(l => l.action === 'weekly_success_decision') ?? []);
-          } finally {
-            if (mounted) setWeeklyDecisionLoading(false);
-          }
+            setWeeklyDecisionLoading(true);
+            try {
+                const logs = await fetchFlowAuditLogs(20);
+                if (mounted) {
+                    setWeeklyDecisionLogs(logs?.filter((l) => l.action === "weekly_success_decision") ?? []);
+                }
+            } finally {
+                if (mounted) setWeeklyDecisionLoading(false);
+            }
         };
 
         const refresh = () => {
-          Promise.all([
-            fetchOverviewStats(), 
-            fetchExecutiveReport(),
-            fetchSovereignExecutiveReport()
-          ])
-            .then(([overviewData, execData, sovData]) => {
-              if (!mounted) return;
-              setRemoteStats(overviewData ?? null);
-              setExecutiveReport(execData ?? null);
-              setSovereignReport(sovData ?? null);
-              setInitialLoading(false);
-            })
-            .catch(() => {
-              if (mounted) setInitialLoading(false);
-            });
+            Promise.all([
+                fetchOverviewStats(),
+                fetchExecutiveReport(),
+                fetchSovereignExecutiveReport()
+            ])
+                .then(([overviewData, execData, sovData]) => {
+                    if (!mounted) return;
+                    setRemoteStats(overviewData ?? null);
+                    setExecutiveReport(execData ?? null);
+                    setSovereignReport(sovData ?? null);
+                    setInitialLoading(false);
+                })
+                .catch(() => {
+                    if (mounted) setInitialLoading(false);
+                });
         };
 
         fetchDecisions();
         refresh();
-        
+
         const timer = window.setInterval(refresh, 60_000);
         return () => {
-          mounted = false;
-          window.clearInterval(timer);
+            mounted = false;
+            window.clearInterval(timer);
         };
     }, []);
 
@@ -77,29 +80,31 @@ export const ExecutiveDashboard: FC = () => {
             <div className="flex items-center justify-center p-12">
                 <div className="flex flex-col items-center gap-4">
                     <Activity className="w-8 h-8 text-slate-500 animate-pulse" />
-                    <p className="text-slate-500 text-sm font-bold">جاري تشفير المركز التنفيذي...</p>
+                    <p className="text-slate-500 text-sm font-bold">جاري تحميل المركز التنفيذي...</p>
                 </div>
             </div>
         );
     }
 
-    const totalUsers = remoteStats?.totalUsers ?? 0;
-    const marketingLeadsTotal = remoteStats?.marketingLeads?.total ?? 0;
-    const activeNowValue = remoteStats?.activeNow ?? 0;
+    const totalUsers = remoteStats?.totalTravelers ?? 0;
+    const marketingLeadsTotal = remoteStats?.potentialTravelers?.total ?? 0;
+    const activeNowValue = remoteStats?.activeConsciousnessNow ?? 0;
     const avgMoodValue = remoteStats?.avgMood ?? null;
     const aiTokensUsed = remoteStats?.aiTokensUsed ?? 0;
+    const verificationGapIndex = remoteStats?.verificationGapIndex ?? 0;
     const flowStats = remoteStats?.flowStats;
-    
-    // Derived Flow Stats
+
     const pulseCompletedCount = flowStats?.byStep?.pulse_completed ?? 0;
     const landingViewedCount = flowStats?.byStep?.landing_viewed ?? 0;
     const startClickedCount = flowStats?.byStep?.landing_clicked_start ?? 0;
-    
-    const authSuccessRateFromPulse = flowStats?.byStep?.auth_login_success && pulseCompletedCount > 0
-      ? Math.round((flowStats.byStep.auth_login_success / pulseCompletedCount) * 100) : 0;
+
+    const authSuccessRateFromPulse =
+        flowStats?.byStep?.auth_login_success && pulseCompletedCount > 0
+            ? Math.round((flowStats.byStep.auth_login_success / pulseCompletedCount) * 100)
+            : 0;
     const startClickRate = landingViewedCount > 0 ? Math.round((startClickedCount / landingViewedCount) * 100) : 0;
     const pulseCompletionRate = startClickedCount > 0 ? Math.round((pulseCompletedCount / startClickedCount) * 100) : 0;
-    const retention7d = 15; // Example Placeholder
+    const retention7d = 15;
 
     const normalizedMetric = (val: number | null, target: number) => {
         if (val == null) return 0;
@@ -107,21 +112,38 @@ export const ExecutiveDashboard: FC = () => {
     };
 
     const successIndex = Math.round(
-        (normalizedMetric(startClickRate, 35) * 0.2 +
-        normalizedMetric(pulseCompletionRate, 60) * 0.3 +
-        normalizedMetric(authSuccessRateFromPulse, 40) * 0.3 +
-        normalizedMetric(50, 45) * 0.1 +
-        normalizedMetric(retention7d, 15) * 0.1) *
-        100
+        (
+            normalizedMetric(startClickRate, 35) * 0.2 +
+            normalizedMetric(pulseCompletionRate, 60) * 0.3 +
+            normalizedMetric(authSuccessRateFromPulse, 40) * 0.3 +
+            normalizedMetric(50, 45) * 0.1 +
+            normalizedMetric(retention7d, 15) * 0.1
+        ) * 100
     );
 
     const successSampleSize = Math.max(landingViewedCount, startClickedCount, pulseCompletedCount);
     const hasReliableSample = successSampleSize >= 30;
-    const successDecision = !hasReliableSample ? "insufficient" : successIndex >= 75 ? "scale" : successIndex >= 50 ? "optimize" : "pivot";
-    const successDecisionLabel = successDecision === "scale" ? "المهمة واضحة: نشر التوسع" : successDecision === "optimize" ? "تحسين المسار: مطلوب تحسين" : successDecision === "pivot" ? "فشل الفرضية: محوري حرج" : "قياس غير كافٍ";
-    const successDecisionClass = successDecision === "scale" ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : successDecision === "optimize" ? "text-amber-400 border-amber-500/30 bg-amber-500/10" : successDecision === "pivot" ? "text-rose-400 border-rose-500/30 bg-rose-500/10" : "text-slate-500 border-white/5 bg-slate-900/50";
+    const successDecision =
+        !hasReliableSample ? "insufficient" : successIndex >= 75 ? "scale" : successIndex >= 50 ? "optimize" : "pivot";
+    const successDecisionLabel =
+        successDecision === "scale"
+            ? "الإشارة واضحة: وسّع بثقة"
+            : successDecision === "optimize"
+              ? "المسار واعد: يحتاج تحسين"
+              : successDecision === "pivot"
+                ? "الفرضية ضعيفة: محتاجين تغيير اتجاه"
+                : "القياس غير كافٍ";
+    const successDecisionClass =
+        successDecision === "scale"
+            ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
+            : successDecision === "optimize"
+              ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
+              : successDecision === "pivot"
+                ? "text-rose-400 border-rose-500/30 bg-rose-500/10"
+                : "text-slate-500 border-white/5 bg-slate-900/50";
 
     const handleCommitDecision = async () => {};
+
     const navigateToTab = (tab: string) => {
         const url = new URL(window.location.href);
         url.searchParams.set("tab", tab);
@@ -131,7 +153,10 @@ export const ExecutiveDashboard: FC = () => {
 
     const renderSectionLink = (tab: string, label: string) => (
         <button
-            onClick={(e) => { e.preventDefault(); navigateToTab(tab); }}
+            onClick={(e) => {
+                e.preventDefault();
+                navigateToTab(tab);
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold transition-all shadow-sm"
         >
             {label}
@@ -141,7 +166,6 @@ export const ExecutiveDashboard: FC = () => {
 
     return (
         <div className="space-y-6" dir="rtl">
-            {/* Header */}
             <header className="bg-white dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-200 dark:border-white/5 flex flex-col md:flex-row items-center justify-between relative overflow-hidden mb-8 transition-colors duration-500">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 blur-[80px] rounded-full pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 blur-[80px] rounded-full pointer-events-none" />
@@ -152,13 +176,16 @@ export const ExecutiveDashboard: FC = () => {
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">المركز التنفيذي</h2>
-                            <AdminTooltip content="شاشة القيادة الرئيسية. بتعرض ملخص سريع لكل أرقام المنصة وصحة النظام، وتقارير تخص نجاح مرحلة الإطلاق (Phase One)." position="bottom" />
+                            <AdminTooltip
+                                content="شاشة القيادة الرئيسية: ملخص سريع لأرقام المنصة، صحة النظام، ومؤشرات نجاح مرحلة الإطلاق الأولى."
+                                position="bottom"
+                            />
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
                             <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">متصل مباشر</p>
                             <span className="text-slate-400 dark:text-slate-600 mx-1">•</span>
-                            <p className="text-xs text-slate-500">نظرة عامة سيادية</p>
+                            <p className="text-xs text-slate-500">ملخص الرحلات</p>
                         </div>
                     </div>
                 </div>
@@ -166,25 +193,63 @@ export const ExecutiveDashboard: FC = () => {
 
             <div className="flex flex-col xl:flex-row gap-6">
                 <div className="flex-1 space-y-6 min-w-0">
-                    {/* Quick Stats Grid */}
                     <CollapsibleSection
                         title="نظرة عامة سريعة"
                         icon={<LayoutDashboard className="w-4 h-4" />}
                         subtitle="إحصائيات شاملة في الوقت الفعلي"
                         defaultExpanded={true}
                         headerColors="border-indigo-500/20 bg-indigo-500/5 text-indigo-400"
-                        headerAction={renderSectionLink("users-state", "تفاصيل الأعضاء")}
+                        headerAction={renderSectionLink("users-state", "رادار الأرواح")}
                     >
                         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-2">
-                            <StatCard title="إجمالي المسافرين" value={formatNumber(totalUsers)} hint="مزامنة موثقة" tooltip="إجمالي عدد المستخدمين المسجلين في المنصة من البداية وحتى اللحظة." onClick={() => navigateToTab("users-state")} />
-                            <StatCard title="العملاء المحتملين" value={formatNumber(marketingLeadsTotal)} hint="فرص نمو" tooltip="إجمالي عدد الزوار الذين قاموا بإدخال بياناتهم أو بريدهم الإلكتروني كعملاء محتملين." onClick={() => navigateToTab("marketing-ops")} />
-                            <StatCard title="نشط الآن" value={formatNumber(activeNowValue)} hint="حضور مداري" tooltip="عدد الأعضاء الموجودين أونلاين وبيستخدموا المنصة حالياً." onClick={() => navigateToTab("flow-map")} />
-                            <StatCard title="متوسط الطاقة" value={avgMoodValue !== null ? avgMoodValue.toFixed(1) : "—"} hint="تدفق المزاج" glowColor="indigo" tooltip="متوسط الحالة المزاجية أو الصفاء لكل الزوار النشطين." onClick={() => navigateToTab("consciousness-atlas")} />
-                            <StatCard title="عمليات الذكاء" value={formatNumber(aiTokensUsed)} hint="احتمال التفكير الاصطناعي" glowColor="indigo" tooltip="حجم الأوامر أو الكلمات (Tokens) اللي جارفيس استهلكها في مساعدة المستخدمين النهارده." onClick={() => navigateToTab("ai-studio")} />
+                            <StatCard
+                                title="إجمالي المسافرين"
+                                value={formatNumber(totalUsers)}
+                                hint="مزامنة موثقة"
+                                tooltip="إجمالي عدد المسافرين السِياديين في المنصة حتى هذه اللحظة."
+                                onClick={() => navigateToTab("users-state")}
+                            />
+                            <StatCard
+                                title="المسافرين المحتملين"
+                                value={formatNumber(marketingLeadsTotal)}
+                                hint="فرص نمو"
+                                tooltip="إجمالي الأرواح التي بدأت التواصل ولم تدخل الرحلة بالكامل بعد."
+                                onClick={() => navigateToTab("marketing-ops")}
+                            />
+                            <StatCard
+                                title="وعي نشط الآن"
+                                value={formatNumber(activeNowValue)}
+                                hint="حضور مداري"
+                                tooltip="عدد الأرواح الحاضرة الآن في المدار وتتفاعل مع التجربة."
+                                onClick={() => navigateToTab("flow-map")}
+                            />
+                            <StatCard
+                                title="متوسط طاقة الروح"
+                                value={avgMoodValue !== null ? avgMoodValue.toFixed(1) : "—"}
+                                hint="تدفق المزاج"
+                                glowColor="indigo"
+                                tooltip="متوسط تردد الصفاء أو الاضطراب للأرواح النشطة حالياً."
+                                onClick={() => navigateToTab("consciousness-atlas")}
+                            />
+                            <StatCard
+                                title="مؤشر الفقد (VGI)"
+                                value={verificationGapIndex + "%"}
+                                hint="أرواح في الانتظار"
+                                glowColor={verificationGapIndex > 30 ? "rose" : "amber"}
+                                tooltip="نسبة الأشخاص الذين سجلوا بياناتهم لكن لم يقوموا بتفعيل حساباتهم بعد."
+                                onClick={() => navigateToTab("marketing-ops")}
+                            />
+                            <StatCard
+                                title="العمليات السِيادية"
+                                value={formatNumber(aiTokensUsed)}
+                                hint="استهلاك التفكير الاصطناعي"
+                                glowColor="indigo"
+                                tooltip="حجم الطاقة الحسابية المستهلكة في تشغيل البصيرة الذكية."
+                                onClick={() => navigateToTab("ai-studio")}
+                            />
                         </div>
                     </CollapsibleSection>
 
-                    {/* Executive Success */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <CollapsibleSection
                             title="مؤشر نجاح المرحلة (Phase One)"
@@ -217,13 +282,13 @@ export const ExecutiveDashboard: FC = () => {
                                             successDecisionLabel?: string;
                                             sampleSize?: number;
                                         };
-                                        return ({
+                                        return {
                                             id: l.id,
                                             createdAt: l.createdAt,
                                             score: payload.successIndex ?? null,
                                             decisionLabel: payload.successDecisionLabel || "سجل قرار",
                                             sampleSize: payload.sampleSize ?? null
-                                        });
+                                        };
                                     })}
                                 />
                             </div>
@@ -238,14 +303,11 @@ export const ExecutiveDashboard: FC = () => {
                             headerAction={renderSectionLink("flow-map", "تحليل المسارات")}
                         >
                             <div className="pt-2">
-                                <PhaseOneGoal
-                                    data={remoteStats?.phaseOneGoal ?? null} loading={initialLoading}
-                                />
+                                <PhaseOneGoal data={remoteStats?.phaseOneGoal ?? null} loading={initialLoading} />
                             </div>
                         </CollapsibleSection>
                     </div>
 
-                    {/* AI Executive Report */}
                     {executiveReport && (
                         <CollapsibleSection
                             title="التقييم التنفيذي للذكاء الاصطناعي"
@@ -253,7 +315,7 @@ export const ExecutiveDashboard: FC = () => {
                             subtitle="تقرير آلي لتحليل حالة المنصة"
                             defaultExpanded={false}
                             headerColors="border-purple-500/20 bg-purple-500/5 text-purple-400"
-                            headerAction={renderSectionLink("ai-studio", "إستوديو الذكاء")}
+                            headerAction={renderSectionLink("ai-studio", "استوديو الذكاء")}
                         >
                             <div className="pt-2">
                                 <ExecutiveReport data={executiveReport} loading={initialLoading} />
@@ -261,9 +323,8 @@ export const ExecutiveDashboard: FC = () => {
                         </CollapsibleSection>
                     )}
 
-                    {/* Commercial Expansion Summary */}
                     <CollapsibleSection
-                        title="جائزية التوسع التجاري"
+                        title="جاهزية التوسع التجاري"
                         icon={<Rocket className="w-4 h-4" />}
                         subtitle="تحليل فرصة النمو العالمي"
                         defaultExpanded={successDecision === "scale"}
@@ -278,13 +339,13 @@ export const ExecutiveDashboard: FC = () => {
                                         {sovereignReport ? Math.round(sovereignReport.revenue.regionalResonance["Riyadh"] * 100) : "92"}%
                                     </div>
                                     <p className="text-xs text-slate-400 font-bold">
-                                        رنين مرتفع في <span className="text-rose-300">الرياض</span>. 
-                                        {sovereignReport && `معدل العائد (ARPU) يقترب من $${sovereignReport.revenue.arpu.toFixed(1)}.`}
+                                        رنين مرتفع في <span className="text-rose-300">الرياض</span>.
+                                        {sovereignReport && ` معدل العائد (ARPU) يقترب من $${sovereignReport.revenue.arpu.toFixed(1)}.`}
                                     </p>
                                 </div>
                             </div>
                             <div className="flex items-center justify-end">
-                                <button 
+                                <button
                                     onClick={() => {
                                         const url = new URL(window.location.href);
                                         url.searchParams.set("tab", "expansion-hub");
@@ -293,7 +354,7 @@ export const ExecutiveDashboard: FC = () => {
                                     }}
                                     className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
                                 >
-                                    عرض إستراتيجية التوسع الكاملة
+                                    عرض استراتيجية التوسع الكاملة
                                     <ArrowUpRight className="w-4 h-4" />
                                 </button>
                             </div>
@@ -301,7 +362,6 @@ export const ExecutiveDashboard: FC = () => {
                     </CollapsibleSection>
                 </div>
 
-                {/* The Timeline of Souls Sidebar */}
                 <div className="w-full xl:w-[350px] shrink-0 xl:h-[calc(100vh-200px)] xl:sticky top-6">
                     <TimelineOfSouls />
                 </div>

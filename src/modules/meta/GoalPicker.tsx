@@ -196,7 +196,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
     setIsWarping(true);
     
     const category = resolveAdviceCategory(goalId);
-    analyticsService.track(AnalyticsEvents.GOAL_SELECTED, { goal_id: goalId, category });
+    analyticsService.goal({ goal_id: goalId, category });
     
     // Warp delay for cinematic effect
     setTimeout(() => {

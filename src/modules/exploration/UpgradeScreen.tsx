@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, Sparkles, BrainCircuit, X, Check, Lock, Star, Loader2, Zap } from "lucide-react";
+import { Z_LAYERS } from "@/config/zIndices";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { TIER_PRICES_USD } from "@/config/pricing";
 import { PaymentCheckout } from '@/modules/meta/PaymentCheckout';
@@ -15,6 +17,8 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ isOpen, onClose })
   const [isUpgrading] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
+  useScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   const handleUpgrade = () => {
@@ -27,7 +31,10 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
+    >
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

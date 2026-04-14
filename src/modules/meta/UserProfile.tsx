@@ -6,7 +6,7 @@ import {
   ArrowLeft, Award, BarChart3, BookOpen,
   Flame, Pencil, Check,
   Map, TrendingUp, Zap,
-  Sparkles, Orbit
+  Sparkles, Orbit, Rocket, Compass, CalendarDays, Wind
 } from "lucide-react";
 import { useGamificationState } from "@/services/gamificationEngine";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
@@ -71,7 +71,7 @@ function PersonalityRadar({ dims, size = 260 }: { dims: RadarDim[]; size?: numbe
   }).join(" ");
 
   return (
-    <div className="relative flex justify-center items-center my-4" style={{ filter: "drop-shadow(0 0 15px rgba(45,212,191,0.2))" }}>
+    <div className="relative flex justify-center items-center my-4">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <defs>
           <linearGradient id="radar-glow" x1="0" y1="0" x2="0" y2="1">
@@ -148,13 +148,6 @@ function ProfileAvatar({ rank, level }: { rank: string; level: number }) {
 
   return (
     <div style={{ position: "relative", width: size, height: size, margin: "0 auto 16px" }}>
-      {/* Background Pulse Glow */}
-      <motion.div
-        className="absolute inset-0 rounded-full"
-        style={{ background: `radial-gradient(circle, ${cfg.color}30 0%, transparent 70%)`, filter: "blur(15px)" }}
-        animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.6, 0.4] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      />
       
       {/* SVG Ring Overlays */}
       <svg width={size} height={size} style={{ position: "absolute", transform: "rotate(-90deg)", zIndex: 2 }}>
@@ -166,7 +159,6 @@ function ProfileAvatar({ rank, level }: { rank: string; level: number }) {
           initial={{ strokeDashoffset: circ }}
           animate={{ strokeDashoffset: circ * (1 - progress) }}
           transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-          style={{ filter: `drop-shadow(0 0 6px ${cfg.color}80)` }} 
         />
       </svg>
 
@@ -178,7 +170,6 @@ function ProfileAvatar({ rank, level }: { rank: string; level: number }) {
         border: `1px solid ${cfg.color}30`,
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 38,
-        boxShadow: `inset 0 0 20px ${cfg.color}20`,
         zIndex: 1
       }}>
         <motion.div
@@ -197,8 +188,7 @@ function ProfileAvatar({ rank, level }: { rank: string; level: number }) {
           background: `linear-gradient(135deg, ${cfg.color}, ${cfg.color}dd)`,
           border: "3px solid #030712",
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 13, fontWeight: 900, color: "#000",
-          boxShadow: `0 4px 10px ${cfg.color}60`
+          fontSize: 13, fontWeight: 900, color: "#000"
         }}>
         {level}
       </motion.div>
@@ -239,7 +229,7 @@ function EditableBio() {
           <button onClick={cancel} className="px-4 py-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors">
             إلغاء
           </button>
-          <button onClick={save} className="flex items-center gap-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 px-5 py-1.5 rounded-full text-xs font-bold text-slate-950 shadow-[0_0_15px_rgba(45,212,191,0.4)] hover:shadow-[0_0_20px_rgba(45,212,191,0.6)] transition-all">
+          <button onClick={save} className="flex items-center gap-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 px-5 py-1.5 rounded-full text-xs font-bold text-slate-950 shadow-sm shadow-teal-500/10 hover:shadow-[0_0_20px_rgba(45,212,191,0.6)] transition-all">
             <Check size={14} /> حفظ المذكرة
           </button>
         </div>
@@ -248,7 +238,7 @@ function EditableBio() {
   }
 
   return (
-    <div className="mt-4 px-4 flex justify-center group relative cursor-text" onClick={() => setEditing(true)}>
+    <div className="mt-4 px-4 flex justify-center group relative" onClick={() => setEditing(true)}>
       <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed text-center italic opacity-80 group-hover:opacity-100 transition-opacity max-w-[280px]">
         "{bio || "لم يتم تدوين شيء هنا بعد. اضغط للتدوين في رحلتك المدارية."}"
       </p>
@@ -374,6 +364,40 @@ function JourneyBalance() {
         <span className="text-emerald-400 flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_currentColor]"></div>{green} في دائرة الأمان</span>
         <span className="text-amber-400 flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_currentColor]"></div>{yellow} في دائرة الحذر</span>
         <span className="text-rose-400 flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_5px_currentColor]"></div>{red} في دائرة الخطر</span>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ══════════════════════════════════════════
+   Active Satellites
+   ══════════════════════════════════════════ */
+function ActiveSatellites() {
+  const satellites = [
+    { id: "alrehla", name: "الرحلة", active: true, color: "#14b8a6", icon: <Rocket size={16} /> },
+    { id: "dawayir", name: "دواير", active: true, color: "#f5a623", icon: <Map size={16} /> },
+    { id: "masarat", name: "مسارات", active: false, color: "#10b981", icon: <Compass size={16} /> },
+    { id: "sessions", name: "جلسات", active: true, color: "#3b82f6", icon: <CalendarDays size={16} /> },
+    { id: "atmosfera", name: "أتموسفيرا", active: true, color: "#8b5cf6", icon: <Wind size={16} /> },
+  ];
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+      className="p-5 mb-6 relative overflow-hidden"
+      style={cosmicGlassBase}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <Orbit size={16} className="text-teal-400" />
+        <span className="text-sm font-bold text-slate-100">محطات المنظومة الفعالة</span>
+      </div>
+      <div className="flex flex-wrap gap-3">
+        {satellites.map(s => (
+          <div key={s.id} className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${s.active ? 'bg-white/10 border-white/20' : 'bg-slate-900/50 border-slate-800 opacity-50 grayscale'}`}>
+            <div style={{ color: s.active ? s.color : '#94a3b8' }}>{s.icon}</div>
+            <span className="text-xs font-bold" style={{ color: s.active ? '#f8fafc' : '#94a3b8' }}>{s.name}</span>
+            {s.active && <Check size={12} className="text-teal-400 mr-auto" />}
+          </div>
+        ))}
       </div>
     </motion.div>
   );
@@ -652,6 +676,8 @@ export function UserProfile({ onBack }: UserProfileProps) {
         </motion.div>
 
         <JourneyBalance />
+        
+        <ActiveSatellites />
         
         <AchievementsSummary unlockedIds={unlockedIds} totalPoints={totalPoints} />
         

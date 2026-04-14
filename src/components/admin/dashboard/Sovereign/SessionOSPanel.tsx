@@ -9,6 +9,19 @@ import {
 } from "lucide-react";
 import { isSupabaseReady, supabase } from "@/services/supabaseClient";
 
+const normalizePhoneNumber = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("0") && digits.length === 11) {
+    return `20${digits.slice(1)}`;
+  }
+  if (digits.length >= 8 && digits.length <= 15) {
+    return digits;
+  }
+  return null;
+};
+
 // ─── Types ────────────────────────────────────────────────────────────────────────
 
 type SessionStatus = "pending" | "active" | "done" | "cancelled";
@@ -17,6 +30,8 @@ interface Session {
   id: string;
   client_name: string;
   client_phone?: string;
+  user_id?: string; // New: Sovereign link
+  is_sovereign_captured?: boolean; // New: Sync flag
   session_type: "assessment" | "followup" | "crisis" | "coaching";
   status: SessionStatus;
   scheduled_at: string | null;
@@ -63,6 +78,10 @@ export const SessionOSPanel: React.FC = () => {
   const [form, setForm] = useState(EMPTY_SESSION);
   const [filter, setFilter] = useState<SessionStatus | "all">("all");
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+  const [isMasaratRunning, setIsMasaratRunning] = useState(false);
+  const [sovereignProfile, setSovereignProfile] = useState<{ diagnosis?: string; interpretation?: string } | null>(null);
+  const [isFetchingSovereign, setIsFetchingSovereign] = useState(false);
 
   // ─── Load sessions ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -94,6 +113,62 @@ export const SessionOSPanel: React.FC = () => {
       const stored = window.localStorage.getItem("session-os-data");
       if (stored) setSessions(JSON.parse(stored));
     } catch { /* ignore */ }
+  };
+
+  // ─── Fetch Sovereign Data ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (selected) {
+      fetchSovereignData(selected);
+    } else {
+      setSovereignProfile(null);
+    }
+  }, [selected?.id]);
+
+  const fetchSovereignData = async (session: Session) => {
+    if (!isSupabaseReady || !supabase) return;
+    setIsFetchingSovereign(true);
+    
+    try {
+      let resolvedUserId = session.user_id;
+      
+      const isUUID = (id: string | null) => 
+        id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) : false;
+
+      // 1. Fallback: look up by phone if user_id is missing or NOT a valid UUID (might be a phone number string)
+      if (!resolvedUserId && session.client_phone) {
+        const normalizedPhone = normalizePhoneNumber(session.client_phone);
+        if (normalizedPhone) {
+          const { data: lead } = await supabase
+            .from("marketing_leads")
+            .select("profile_id")
+            .eq("phone_normalized", normalizedPhone)
+            .maybeSingle();
+          if (lead?.profile_id && isUUID(lead.profile_id)) {
+            resolvedUserId = lead.profile_id;
+          }
+        }
+      }
+
+      // 2. Query Journey Map with verified UUID
+      if (resolvedUserId && isUUID(resolvedUserId)) {
+        const { data: mapData } = await supabase
+          .from("journey_maps")
+          .select("transformation_diagnosis, ai_interpretation")
+          .eq("user_id", resolvedUserId)
+          .maybeSingle();
+
+        if (mapData) {
+          setSovereignProfile({
+            diagnosis: mapData.transformation_diagnosis,
+            interpretation: mapData.ai_interpretation
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch sovereign data:", e);
+    } finally {
+      setIsFetchingSovereign(false);
+    }
   };
 
   const saveToLocalStorage = (data: Session[]) => {
@@ -160,7 +235,7 @@ export const SessionOSPanel: React.FC = () => {
 
   const generateAISummary = async (session: Session) => {
     setIsGeneratingAI(true);
-    // Simulate AI generation (replace with real Gemini call if needed)
+    // Simulate AI generation
     await new Promise(r => setTimeout(r, 1500));
     const summary = `📝 ملخص الجلسة لـ ${session.client_name}: نوع الجلسة "${TYPE_CONFIG[session.session_type].label}". المحاور: ${session.goals || "مش متحدد"}. تقييم سريع بناءً على ملاحظاتك.`;
     
@@ -175,6 +250,66 @@ export const SessionOSPanel: React.FC = () => {
     setIsGeneratingAI(false);
   };
 
+  const triggerWhatsApp = async (session: Session) => {
+    if (!session.ai_summary) {
+      alert("لازم تولد خلاصة الأول (AI Summary) عشان نبعتها للعميل!");
+      return;
+    }
+    setIsSendingWhatsApp(true);
+    try {
+      const res = await fetch("/api/admin/sovereign/whatsapp", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: session.id })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      alert("✅ تم دفع الرسالة للواتساب بنجاح!");
+    } catch (e: any) {
+      alert("❌ حصل مشكلة: " + e.message);
+    } finally {
+      setIsSendingWhatsApp(false);
+    }
+  };
+
+  const triggerMasarat = async (session: Session) => {
+    setIsMasaratRunning(true);
+    try {
+      const res = await fetch("/api/admin/sovereign/masarat", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: session.id })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      const summary = data.ai_summary;
+      const isSynced = data.is_sovereign_synced;
+      
+      const updated = sessions.map(s => s.id === session.id ? { 
+        ...s, 
+        ai_summary: summary, 
+        status: "active" as SessionStatus,
+        is_sovereign_captured: isSynced 
+      } : s);
+      
+      setSessions(updated);
+      saveToLocalStorage(updated);
+      if (selected?.id === session.id) {
+        setSelected(prev => prev ? { 
+          ...prev, 
+          ai_summary: summary, 
+          status: "active" as SessionStatus,
+          is_sovereign_captured: isSynced 
+        } : null);
+      }
+      
+      alert(isSynced ? "✅ تم التحليل بنجاح مع دمج الملف الخاص للمسافر!" : "✅ محرك مسارات خلص التحليل (بدون ربط متقدم).");
+    } catch (e: any) {
+      alert("❌ حصل مشكلة في المحرك: " + e.message);
+    } finally {
+      setIsMasaratRunning(false);
+    }
+  };
+
   // ─── Computed ─────────────────────────────────────────────────────────────────────
   const filtered = filter === "all" ? sessions : sessions.filter(s => s.status === filter);
   const counts = {
@@ -186,8 +321,10 @@ export const SessionOSPanel: React.FC = () => {
 
   // ─── Render ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700" dir="rtl">
-      
+    <div
+      className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700"
+      dir="rtl"
+    >
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -203,7 +340,7 @@ export const SessionOSPanel: React.FC = () => {
         </div>
         <button
           onClick={() => setIsCreating(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm rounded-2xl transition-all shadow-lg shadow-teal-500/20 hover:scale-105 active:scale-95"
+          className="flex items-center gap-2 px-6 py-3 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm rounded-2xl transition-all shadow-md shadow-teal-500/10 hover:scale-105 active:scale-95"
         >
           <Plus className="w-4 h-4" />
           افتح جلسة جديدة
@@ -220,7 +357,7 @@ export const SessionOSPanel: React.FC = () => {
               onClick={() => setFilter(filter === s ? "all" : s)}
               className={`p-4 rounded-2xl border transition-all text-right space-y-2 ${
                 filter === s ? cfg.bg + " " + cfg.color : "bg-white/[0.02] border-white/5 text-slate-400 hover:bg-white/5"
-              } ${cfg.bg}`}
+              }`}
             >
               <div className="flex items-center justify-between">
                 <span className={`text-2xl font-black ${filter === s ? cfg.color : "text-white"}`}>
@@ -292,7 +429,15 @@ export const SessionOSPanel: React.FC = () => {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-black text-white text-sm truncate">{session.client_name}</p>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <p className="font-black text-white text-sm truncate">{session.client_name}</p>
+                          {session.is_sovereign_captured && (
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 group-hover:bg-cyan-500/20 transition-all shadow-[0_0_8px_rgba(6,182,212,0.15)]">
+                              <Sparkles className="w-2.5 h-2.5 animate-pulse" />
+                              <span className="text-[7px] font-black uppercase tracking-tighter">Sovereign Link</span>
+                            </div>
+                          )}
+                        </div>
                         <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase px-2 py-1 rounded-full border ${cfg.bg} ${cfg.color}`}>
                           {cfg.icon}
                           {cfg.label}
@@ -335,7 +480,12 @@ export const SessionOSPanel: React.FC = () => {
                     {TYPE_CONFIG[selected.session_type].label}
                   </p>
                 </div>
-                <button onClick={() => setSelected(null)} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-all">
+                <button
+                  onClick={() => setSelected(null)}
+                  title="إغلاق التفاصيل"
+                  aria-label="إغلاق التفاصيل"
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-all"
+                >
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -361,6 +511,53 @@ export const SessionOSPanel: React.FC = () => {
                   })}
                 </div>
               </div>
+
+              {/* Sovereign Insights */}
+              <AnimatePresence>
+                {(sovereignProfile || isFetchingSovereign) && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-4 bg-cyan-500/5 border border-cyan-500/10 rounded-2xl space-y-3 relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Sparkles className="w-8 h-8 text-cyan-400" />
+                      </div>
+                      
+                      <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400 flex items-center gap-2">
+                        <Activity className="w-3.5 h-3.5" />
+                        الملف الخاص للمسافر (Private Insight)
+                      </p>
+
+                      {isFetchingSovereign ? (
+                        <div className="space-y-2 py-2">
+                          <div className="h-3 bg-cyan-500/10 rounded animate-pulse w-3/4" />
+                          <div className="h-3 bg-cyan-500/10 rounded animate-pulse w-1/2" />
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {sovereignProfile?.diagnosis && (
+                            <div className="space-y-1">
+                              <p className="text-[9px] font-black text-slate-500 uppercase">التشخيص الحالي</p>
+                              <p className="text-xs text-slate-300 leading-relaxed">{sovereignProfile.diagnosis}</p>
+                            </div>
+                          )}
+                          {sovereignProfile?.interpretation && (
+                            <div className="space-y-1">
+                              <p className="text-[9px] font-black text-slate-500 uppercase">رؤى الأوراكل</p>
+                              <p className="text-xs text-slate-200 font-medium italic border-r-2 border-cyan-500/30 pr-3 leading-relaxed">
+                                {sovereignProfile.interpretation}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Goals */}
               <div className="space-y-2">
@@ -420,6 +617,39 @@ export const SessionOSPanel: React.FC = () => {
                   </p>
                 )}
               </div>
+
+              {/* Sovereign Action Bar */}
+              <div className="pt-4 border-t border-white/5 space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                  <Activity className="w-3.5 h-3.5" />
+                  أدوات القيادة المتقدمة
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <button 
+                    disabled={isSendingWhatsApp}
+                    onClick={() => triggerWhatsApp(selected)}
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 hover:from-emerald-500/20 hover:to-teal-500/10 border border-emerald-500/20 hover:border-emerald-500/40 transition-all text-emerald-400 gap-2 group disabled:opacity-50"
+                  >
+                    {isSendingWhatsApp ? <Activity className="w-5 h-5 animate-spin" /> : <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />}
+                    <span className="text-[10px] font-black">{isSendingWhatsApp ? "جاري الإرسال.." : "أتمتة الواتساب"}</span>
+                  </button>
+                  <button 
+                    disabled={isMasaratRunning}
+                    onClick={() => triggerMasarat(selected)}
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 hover:from-cyan-500/20 hover:to-blue-500/10 border border-cyan-500/20 hover:border-cyan-500/40 transition-all text-cyan-400 gap-2 group disabled:opacity-50"
+                  >
+                    {isMasaratRunning ? <Sparkles className="w-5 h-5 animate-pulse" /> : <Target className="w-5 h-5 group-hover:scale-110 transition-transform" />}
+                    <span className="text-[10px] font-black">{isMasaratRunning ? "المحرك شغال.." : "تحليل مسارات"}</span>
+                  </button>
+                  <button 
+                    onClick={() => alert("سيتم عرض عائد الطاقة والأموال الخاص بهذه الجلسة.")}
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 hover:from-amber-500/20 hover:to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-all text-amber-400 gap-2 group"
+                  >
+                    <TrendingUp className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-black">Psychological P&amp;L</span>
+                  </button>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -447,70 +677,80 @@ export const SessionOSPanel: React.FC = () => {
                   <Timer className="w-5 h-5 text-teal-400" />
                   افتح جلسة جديدة
                 </h3>
-                <button onClick={() => setIsCreating(false)} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-all">
+                <button
+                  onClick={() => setIsCreating(false)}
+                  title="إغلاق النافذة"
+                  aria-label="إغلاق النافذة"
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-all"
+                >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="client_name" className="text-[10px] font-black uppercase tracking-widest text-slate-400">اسم المسافر *</label>
+                <input
+                  id="client_name"
+                  type="text"
+                  value={form.client_name}
+                  onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))}
+                  placeholder="بيانات المسافر..."
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors placeholder:text-slate-600"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="client_phone" className="text-[10px] font-black uppercase tracking-widest text-slate-400">رقم الواتساب</label>
+                <input
+                  id="client_phone"
+                  type="text"
+                  value={form.client_phone}
+                  onChange={e => setForm(f => ({ ...f, client_phone: e.target.value }))}
+                  placeholder="01xxxxxxxxx"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors placeholder:text-slate-600"
+                  dir="ltr"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">اسم المسافر *</label>
+                  <label htmlFor="session_type" className="text-[10px] font-black uppercase tracking-widest text-slate-400">نوع الجلسة</label>
+                  <select
+                    id="session_type"
+                    value={form.session_type}
+                    onChange={e => setForm(f => ({ ...f, session_type: e.target.value as Session["session_type"] }))}
+                    title="اختر نوع الجلسة"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors"
+                  >
+                    <option value="assessment">تقييم مبدئي</option>
+                    <option value="followup">متابعة</option>
+                    <option value="crisis">طوارئ</option>
+                    <option value="coaching">كوتشينج</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="scheduled_at" className="text-[10px] font-black uppercase tracking-widest text-slate-400">ميعادنا إمتى؟</label>
                   <input
-                    type="text"
-                    value={form.client_name}
-                    onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))}
-                    placeholder="بيانات المسافر..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors placeholder:text-slate-600"
+                    id="scheduled_at"
+                    type="datetime-local"
+                    value={form.scheduled_at || ""}
+                    onChange={e => setForm(f => ({ ...f, scheduled_at: e.target.value }))}
+                    title="اختر تاريخ وموعد الجلسة"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors"
                   />
                 </div>
+              </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">رقم الواتساب</label>
-                  <input
-                    type="text"
-                    value={form.client_phone}
-                    onChange={e => setForm(f => ({ ...f, client_phone: e.target.value }))}
-                    placeholder="01xxxxxxxxx"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors placeholder:text-slate-600"
-                    dir="ltr"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">نوع الجلسة</label>
-                    <select
-                      value={form.session_type}
-                      onChange={e => setForm(f => ({ ...f, session_type: e.target.value as Session["session_type"] }))}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors"
-                    >
-                      <option value="assessment">تقييم مبدئي</option>
-                      <option value="followup">متابعة</option>
-                      <option value="crisis">طوارئ</option>
-                      <option value="coaching">كوتشينج</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">ميعادنا إمتى؟</label>
-                    <input
-                      type="datetime-local"
-                      value={form.scheduled_at || ""}
-                      onChange={e => setForm(f => ({ ...f, scheduled_at: e.target.value }))}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">ناوي على إيه؟ (الأهداف)</label>
-                  <textarea
-                    value={form.goals}
-                    onChange={e => setForm(f => ({ ...f, goals: e.target.value }))}
-                    placeholder="أهداف الجلسة بوضوح..."
-                    rows={3}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors resize-none placeholder:text-slate-600"
-                  />
-                </div>
+              <div className="space-y-1.5">
+                <label htmlFor="goals" className="text-[10px] font-black uppercase tracking-widest text-slate-400">ناوي على إيه؟ (الأهداف)</label>
+                <textarea
+                  id="goals"
+                  value={form.goals}
+                  onChange={e => setForm(f => ({ ...f, goals: e.target.value }))}
+                  placeholder="أهداف الجلسة بوضوح..."
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors resize-none placeholder:text-slate-600"
+                />
               </div>
 
               <div className="flex gap-3">
@@ -538,3 +778,4 @@ export const SessionOSPanel: React.FC = () => {
 };
 
 export default SessionOSPanel;
+// Clean sanitized version - force-recompile-v2

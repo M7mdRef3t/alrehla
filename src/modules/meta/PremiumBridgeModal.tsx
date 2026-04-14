@@ -67,7 +67,7 @@ export const PremiumBridgeModal: FC = () => {
             <div className="flex flex-col items-center text-center">
               <div className="relative mb-6">
                 <div className="absolute inset-0 bg-teal-400/20 blur-2xl rounded-full" />
-                <div className="relative w-20 h-20 rounded-3xl bg-linear-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-teal-500/20 rotate-3">
+                <div className="relative w-20 h-20 rounded-3xl bg-linear-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-md shadow-teal-500/10 rotate-3">
                   <ShieldCheck className="w-10 h-10 text-slate-950 -rotate-3" />
                 </div>
                 <motion.div

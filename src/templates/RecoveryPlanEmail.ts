@@ -84,7 +84,7 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">الملاذ السيادي</div>
+            <div class="logo">الملاذ الآمن</div>
         </div>
 
         <div class="hero">
@@ -105,7 +105,7 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
         </div>
 
         <div class="prescription">
-            <h2>روشتة التعافي (تحذيرات سيادية)</h2>
+            <h2>روشتة التعافي (تحذيرات هامة)</h2>
             
             <div class="p-block">
                 <span class="p-title p-red">🔴 المدار الخارجي (نزيف حرفي):</span>

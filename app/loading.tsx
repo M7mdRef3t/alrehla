@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 export default function Loading() {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-all duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-all duration-300 pointer-events-none">
       <div className="flex flex-col items-center gap-6">
         {/* Cinematic Animated Orb */}
         <div className="relative h-24 w-24">
@@ -39,10 +39,10 @@ export default function Loading() {
 
         {/* Egyptian Slang Loading Text */}
         <div className="space-y-2 text-center">
-          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl font-ibm-arabic">
+          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
             استنى ثواني..
           </h2>
-          <p className="text-sm text-muted-foreground font-ibm-arabic opacity-80">
+          <p className="text-sm text-muted-foreground opacity-80">
             بنرتبلك الرحلة عشان تبدأ صح
           </p>
         </div>

@@ -19,17 +19,25 @@ export async function handleJourneyMap(req: AdminRequest, res: AdminResponse) {
   }
   const { data, error } = await client
     .from("journey_maps")
-    .select("session_id,nodes,updated_at")
+    .select("session_id,nodes,updated_at,ai_interpretation,transformation_diagnosis")
     .eq("session_id", sessionId)
     .maybeSingle();
   if (error || !data) {
-    res.status(404).json({ error: "Map not found" });
+    res.status(200).json({
+      sessionId: sessionId,
+      nodes: [],
+      updatedAt: null,
+      aiInterpretation: null,
+      transformationDiagnosis: null
+    });
     return;
   }
   res.status(200).json({
     sessionId: data.session_id,
     nodes: data.nodes ?? [],
-    updatedAt: data.updated_at
+    updatedAt: data.updated_at,
+    aiInterpretation: data.ai_interpretation,
+    transformationDiagnosis: data.transformation_diagnosis
   });
 }
 

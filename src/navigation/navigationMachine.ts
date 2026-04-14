@@ -23,7 +23,14 @@ export type AppScreen =
   | "profile"
   | "sanctuary"
   | "life-os"
-  | "protocol";
+  | "dawayir"
+  | "maraya"
+  | "session-intake"
+  | "session-console"
+  | "atmosfera"
+  | "masarat"
+  | "protocol"
+  | "diagnosis";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

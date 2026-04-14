@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useState, lazy, Suspense, type ComponentProps } from "react";
 import { type AppScreen } from "@/navigation/navigationMachine";
 import { AppStartScreens } from "../AppStartScreens";
@@ -12,8 +14,15 @@ import { ResourcesCenter } from "../../growth/ResourcesCenter";
 import type { ResourceTab } from "../../growth/ResourcesCenter";
 import { UserProfile } from "../UserProfile";
 import { SanctuaryDashboard } from "../SanctuaryDashboard";
+import { DawayirPlayground } from "../../social/DawayirPlayground";
+import { AwarenessSkeleton } from "../AwarenessSkeleton";
 
 const CommandCenter = lazy(() => import("../../lifeOS/CommandCenter"));
+const MarayaApp = lazy(() => import("../../maraya/MarayaApp"));
+const SessionIntakeScreen = lazy(() => import("../../sessions/SessionIntakeScreen").then(m => ({ default: m.SessionIntakeScreen })));
+const AtmosferaExperience = lazy(() => import("../../atmosfera/AtmosferaExperience"));
+const MasaratScreen = lazy(() => import("../../masarat/MasaratScreen"));
+const SessionOSConsole = lazy(() => import("../../sessions/SessionOSConsole"));
 
 
 
@@ -71,6 +80,7 @@ interface AppMainExperienceContentProps {
   onOpenMirror: MetaScreensProps["onOpenMirror"];
   onOpenConsciousnessArchive: MetaScreensProps["onOpenConsciousnessArchive"];
   onOpenTimeCapsule: MetaScreensProps["onOpenTimeCapsule"];
+  onDiagnosisComplete?: StartScreensProps["onDiagnosisComplete"];
 }
 
 export const AppMainExperienceContent = memo(function AppMainExperienceContent({
@@ -119,12 +129,13 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   onOpenMuteProtocol,
   onOpenMirror,
   onOpenConsciousnessArchive,
-  onOpenTimeCapsule
+  onOpenTimeCapsule,
+  onDiagnosisComplete,
 }: AppMainExperienceContentProps) {
   // State for deep-linking from BehavioralHub to ResourcesCenter
   const [resourceDeepLink, setResourceDeepLink] = useState<{ tab: ResourceTab; search: string } | null>(null);
 
-  if (screen === "landing" || screen === "goal" || screen === "survey" || screen === "map" || screen === "protocol") {
+  if (screen === "landing" || screen === "goal" || screen === "survey" || screen === "map" || screen === "protocol" || screen === "diagnosis") {
     return (
       <AppStartScreens
         screen={screen}
@@ -161,6 +172,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
         onOpenLibrary={onOpenLibrary}
         onOpenProfile={onOpenProfile}
         onNavigate={(s) => onNavigate?.(s as Parameters<typeof onNavigate>[0])}
+        onDiagnosisComplete={onDiagnosisComplete}
       />
     );
   }
@@ -174,21 +186,23 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
     screen === "grounding"
   ) {
     return (
-      <AppJourneyScreens
-        screen={screen}
-        toolsBackScreen={toolsBackScreen}
-        missionNodeId={missionNodeId}
-        canUseMap={canUseMap}
-        availableFeatures={availableFeatures}
-        nextStepDecision={nextStepDecision}
-        onNavigate={onNavigate}
-        onOpenDawayir={onOpenDawayir}
-        onOpenDawayirSetup={onOpenDawayirSetup}
-        onFeatureLocked={onFeatureLocked}
-        onOpenGoal={onOpenGoal}
-        onTakeNextStep={onTakeNextStep}
-        onRefreshNextStep={onRefreshNextStep}
-      />
+      <Suspense fallback={<AwarenessSkeleton />}>
+        <AppJourneyScreens
+          screen={screen}
+          toolsBackScreen={toolsBackScreen}
+          missionNodeId={missionNodeId}
+          canUseMap={canUseMap}
+          availableFeatures={availableFeatures}
+          nextStepDecision={nextStepDecision}
+          onNavigate={onNavigate}
+          onOpenDawayir={onOpenDawayir}
+          onOpenDawayirSetup={onOpenDawayirSetup}
+          onFeatureLocked={onFeatureLocked}
+          onOpenGoal={onOpenGoal}
+          onTakeNextStep={onTakeNextStep}
+          onRefreshNextStep={onRefreshNextStep}
+        />
+      </Suspense>
     );
   }
 
@@ -313,6 +327,65 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
             onBack={() => onNavigate?.("landing" as AppScreen)}
             onOpenLibrary={onOpenLibrary}
           />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "dawayir") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <DawayirPlayground
+          onBack={() => onNavigate?.("landing" as AppScreen)}
+        />
+      </PageShell>
+    );
+  }
+
+  if (screen === "maraya") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
+          <MarayaApp />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "session-intake") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#030308" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
+          <SessionIntakeScreen
+            onBack={() => onNavigate?.("landing" as AppScreen)}
+          />
+        </Suspense>
+      </PageShell>
+    );
+  }
+  if (screen === "atmosfera") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0e1f" }}><div className="w-8 h-8 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" /></div>}>
+          <AtmosferaExperience />
+        </Suspense>
+      </PageShell>
+    );
+  }
+  if (screen === "masarat") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0e1f" }}><div className="w-8 h-8 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" /></div>}>
+          <MasaratScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+  if (screen === "session-console") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0e1f" }}><div className="w-8 h-8 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" /></div>}>
+          <SessionOSConsole />
         </Suspense>
       </PageShell>
     );

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Compass, Star, BookOpen, Wind, ShieldAlert, Sparkles, Activity, Radar, Fingerprint, Database } from "lucide-react";
 import { getJourneyToolsView } from "@/data/journeyTools";
-import { useJourneyProgress } from "@/domains/journey";
+import { useJourneyProgress, trackingService } from "@/domains/journey";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useAdminState } from "@/domains/admin/store/admin.store";
@@ -116,6 +116,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
 
   const handleOpenMirrorStory = () => {
     if (typeof window === "undefined") return;
+    trackingService.recordFlow("mirror_journey_started", { meta: { surface: "journey-tools" } });
     window.location.assign(
       getMarayaStoryLaunchHref(marayaPath, {
         surface: "journey-tools"
@@ -138,9 +139,8 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
 
   return (
     <main
-      className="w-full max-w-2xl mx-auto py-10 md:py-14 space-y-12"
+      className="w-full max-w-2xl mx-auto py-10 md:py-14 space-y-12 font-sans"
       dir="rtl"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       {/* Header */}
       <motion.header

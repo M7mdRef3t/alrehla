@@ -209,7 +209,7 @@ export const InsightsLibrary: FC<InsightsLibraryProps> = ({ isOpen, onClose }) =
                                     animate={{ scale: 1 }}
                                     transition={{ delay: idx * 0.1, type: "spring" }}
                                     style={{ left: `${left}%`, top: `${top}%` }}
-                                    className="absolute z-20 group cursor-pointer"
+                                    className="absolute z-20 group"
                                 >
                                     <div className="w-4 h-4 rounded-full bg-fuchsia-400 shadow-[0_0_20px_rgba(217,70,239,0.8)] animate-pulse" />
                                     <div className="absolute top-6 right-1/2 translate-x-1/2 w-48 p-3 rounded-lg bg-slate-900/90 border border-fuchsia-500/30 backdrop-blur-md opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">

@@ -7,27 +7,32 @@ import {
   ChevronRight, Star, 
   LayoutGrid, ListTodo, 
   Coins, Sparkles, X,
-  ArrowUpCircle, Award, ShoppingBag
+  ArrowUpCircle, Award, ShoppingBag,
+  Snowflake, Swords
 } from "lucide-react";
 import { useGamification } from "@/domains/gamification";
 import { QuestBoard } from "./QuestBoard";
 import { SovereigntyStore } from "./SovereigntyStore";
+import { FrostBoard } from "./FrostBoard";
+import { ChallengeBoard } from "./ChallengeBoard";
 import { soundManager } from "@/services/soundManager";
 import { triggerConfetti } from "@/utils/confetti";
 
-export function EvolutionHub({ onClose }: { onClose: () => void }) {
+export function TajmeedHub({ onClose }: { onClose: () => void }) {
   const { 
     xp, level, coins, 
     badges,
     levelProgress,
-    checkAndResetQuests
+    checkAndResetQuests,
+    frostPoints,
+    freezeStats,
   } = useGamification();
 
   useEffect(() => {
     checkAndResetQuests();
   }, [checkAndResetQuests]);
 
-  const [activeTab, setActiveTab] = useState<'quests' | 'achievements' | 'store'>('quests');
+  const [activeTab, setActiveTab] = useState<'quests' | 'achievements' | 'frostboard' | 'challenges' | 'store'>('quests');
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [lastLevel, setLastLevel] = useState(level);
 
@@ -47,8 +52,8 @@ export function EvolutionHub({ onClose }: { onClose: () => void }) {
     <div className="relative w-full max-w-5xl mx-auto h-[85vh] flex flex-col bg-[#020617] rounded-[3.5rem] border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden">
       {/* Cinematic Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-600/10 blur-[120px] rounded-full" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-600/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full" />
         <div className="absolute inset-0 bg-[url('/assets/grid-white.svg')] opacity-[0.02]" />
       </div>
 
@@ -102,13 +107,13 @@ export function EvolutionHub({ onClose }: { onClose: () => void }) {
 
             <div className="space-y-4">
                 <div>
-                   <h2 className="text-3xl font-black text-white mb-1">تطور الكيان</h2>
+                   <h2 className="text-3xl font-black text-white mb-1">تجميد ❄️</h2>
                    <p className="text-sm font-medium text-white/40 max-w-xs">
-                      رصد مستمر لمسار نموك السِيادي وتراكم خبراتك في إدارة الواقع.
+                      حياتك لعبة — وأنت اللاعب والمؤلف. كل قرار واعي يُسجّل.
                    </p>
                 </div>
                 
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4 flex-wrap">
                     <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white/[0.03] border border-white/5">
                         <div className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
                              <Coins className="w-4 h-4" />
@@ -116,6 +121,16 @@ export function EvolutionHub({ onClose }: { onClose: () => void }) {
                         <div className="flex flex-col">
                             <span className="text-xs font-black text-white">{coins}</span>
                             <span className="text-[8px] font-bold text-white/30 uppercase tracking-tighter">عملة سِيادية</span>
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-cyan-500/[0.08] border border-cyan-500/20">
+                        <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
+                             <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-black text-cyan-300">{frostPoints}</span>
+                            <span className="text-[8px] font-bold text-cyan-400/40 uppercase tracking-tighter">❄️ نقاط صقيع</span>
                         </div>
                     </div>
                     
@@ -128,6 +143,18 @@ export function EvolutionHub({ onClose }: { onClose: () => void }) {
                             <span className="text-[8px] font-bold text-white/30 uppercase tracking-tighter">أوسمة سِيادية</span>
                         </div>
                     </div>
+                    
+                    {freezeStats.totalFreezes > 0 && (
+                      <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-blue-500/[0.05] border border-blue-500/15">
+                          <div className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400">
+                               <Shield className="w-4 h-4" />
+                          </div>
+                          <div className="flex flex-col">
+                              <span className="text-xs font-black text-blue-300">{freezeStats.totalFreezes}</span>
+                              <span className="text-[8px] font-bold text-blue-400/40 uppercase tracking-tighter">تجميد فعّال</span>
+                          </div>
+                      </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -136,7 +163,7 @@ export function EvolutionHub({ onClose }: { onClose: () => void }) {
         <div className="flex p-1.5 rounded-2xl bg-white/[0.03] border border-white/5 backdrop-blur-md">
            <button 
              onClick={() => setActiveTab('quests')}
-             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${
                activeTab === 'quests' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-white/40 hover:text-white/60'
              }`}
            >
@@ -144,19 +171,35 @@ export function EvolutionHub({ onClose }: { onClose: () => void }) {
            </button>
            <button 
              onClick={() => setActiveTab('achievements')}
-             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${
                activeTab === 'achievements' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-white/40 hover:text-white/60'
              }`}
            >
-             <Award className="w-4 h-4" /> سجل الإنجازات
+             <Award className="w-4 h-4" /> الإنجازات
+           </button>
+           <button 
+             onClick={() => setActiveTab('frostboard')}
+             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${
+               activeTab === 'frostboard' ? 'bg-cyan-600/80 text-white shadow-[0_0_20px_rgba(6,182,212,0.3)]' : 'text-white/40 hover:text-white/60'
+             }`}
+           >
+             <Snowflake className="w-4 h-4" /> ❄️ الصدارة
+           </button>
+           <button 
+             onClick={() => setActiveTab('challenges')}
+             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${
+               activeTab === 'challenges' ? 'bg-orange-600/70 text-white shadow-[0_0_20px_rgba(234,88,12,0.3)]' : 'text-white/40 hover:text-white/60'
+             }`}
+           >
+             <Swords className="w-4 h-4" /> التحديات
            </button>
            <button 
              onClick={() => setActiveTab('store')}
-             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${
                activeTab === 'store' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-white/40 hover:text-white/60'
              }`}
            >
-             <ShoppingBag className="w-4 h-4" /> متجر السيادة
+             <ShoppingBag className="w-4 h-4" /> المتجر
            </button>
         </div>
       </div>
@@ -191,6 +234,27 @@ export function EvolutionHub({ onClose }: { onClose: () => void }) {
                     <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">وسام الاستحقاق</p>
                  </div>
                ))}
+
+             ) : activeTab === 'frostboard' ? (
+               <motion.div
+                 key="frostboard"
+                 initial={{ opacity: 0, y: 10 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -10 }}
+                 className="h-full overflow-y-auto custom-scrollbar pr-2"
+               >
+                 <FrostBoard />
+               </motion.div>
+             ) : activeTab === 'challenges' ? (
+               <motion.div
+                 key="challenges"
+                 initial={{ opacity: 0, y: 10 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -10 }}
+                 className="h-full overflow-y-auto custom-scrollbar pr-2"
+               >
+                 <ChallengeBoard />
+               </motion.div>
                {badges.length === 0 && (
                  <div className="col-span-full h-full flex flex-col items-center justify-center text-center opacity-40">
                     <Award className="w-20 h-20 mb-4" />

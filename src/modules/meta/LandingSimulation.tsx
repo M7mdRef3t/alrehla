@@ -1,9 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Loader2, Target, AlertCircle, Zap, ShieldAlert, Cpu } from "lucide-react";
+import { ArrowLeft, Loader2, Target, Zap, ShieldAlert, Cpu } from "lucide-react";
 import { useJourneyProgress } from "@/domains/journey";
 import { recordFlowEvent } from "@/services/journeyTracking";
 import { soundManager } from "@/services/soundManager";
+import { ConversionOfferCard } from "../conversion/ConversionOfferCard";
+import { computeMiniDiagnosis } from "@/modules/meta/miniDiagnosisEngine";
+import type { UserStateObject, RecommendedProduct } from "@/modules/diagnosis/types";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 type Question = {
   id: string;
@@ -42,10 +46,11 @@ const QUESTIONS: Question[] = [
 ];
 
 export function LandingSimulation() {
-  const [step, setStep] = useState<"intro" | "questions" | "analyzing" | "result">("intro");
+  const [step, setStep] = useState<"intro" | "questions" | "analyzing" | "result" | "convert">("intro");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [dominantCategory, setDominantCategory] = useState<"future" | "relationships" | "progress" | null>(null);
+  const [userState, setUserState] = useState<UserStateObject | null>(null);
 
   // Connection to Ghost Backend
   const setLandingIntent = useJourneyProgress().setLandingIntent;
@@ -85,10 +90,16 @@ export function LandingSimulation() {
   };
 
   useEffect(() => {
-    if (step === "analyzing") {
+    if (step === "analyzing" && dominantCategory) {
       const timer = setTimeout(() => {
-        setStep("result");
-        soundManager.playEffect("cosmic_pulse");
+        // Compute mini diagnosis from answers
+        const miniAnswers = {
+          q1_category: answers.q1 as "future" | "relationships" | "progress",
+          q2_category: answers.q2 as "future" | "relationships" | "progress",
+          q3_category: answers.q3 as "future" | "relationships" | "progress",
+        };
+        const computedState = computeMiniDiagnosis(miniAnswers);
+        setUserState(computedState);
 
         // Sovereign Ghost Backend Linking
         let intent: "clarity" | "boundaries" | "calm" = "clarity";
@@ -97,37 +108,40 @@ export function LandingSimulation() {
         if (dominantCategory === "future") intent = "clarity";
 
         setLandingIntent(intent);
-        
+
         // Push hidden backend telemetry
-        recordFlowEvent("quiz_completed", { meta: { dominantCategory: dominantCategory, calculatedIntent: intent } });
+        recordFlowEvent("quiz_completed", { meta: { dominantCategory: dominantCategory, calculatedIntent: intent, recommendedProduct: computedState.recommendedProduct } });
+
+        setStep("convert");
+        soundManager.playEffect("cosmic_pulse");
 
       }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [step, dominantCategory, setLandingIntent]);
+  }, [step, dominantCategory, answers, setLandingIntent]);
 
   const getResultContent = () => {
     switch (dominantCategory) {
       case "future":
         return {
-          title: "الفوضى في التوقع، مش في الواقع",
-          message: "عقلك يستبق الأحداث لدرجة الشلل. أنت لا تحتاج لخطة خمسية، بل تحتاج تحديد إحداثية الخطوة القادمة فقط لفك الاشتباك المعرفي.",
-          action: "اكتشف إحداثية استقرارك",
-          icon: <Target className="h-10 w-10 text-emerald-400" />
+          title: "هدفك محتاج إعادة توصيل",
+          message: "الشعور بالضياع مش معناه إنك ضعيف. معناه إنك واعي كفاية إنك تحس بالفجوة. في الملاذ، بنساعدك ترسم خريطة هدف حقيقي.",
+          action: "اعرف إتجاهك الحقيقي",
+          icon: <Target className="h-10 w-10 text-[var(--teal)]" />
         };
       case "progress":
         return {
           title: "محاولة اللحاق المستمرة تستنزفك",
           message: "أنت لست متأخراً، أنت تستخدم مقياساً خاطئاً. المقارنة الصامتة تغذي جلد الذات وتأكل إنجازك. الحقيقة تكمن في تحديد سرعتك الخاصة.",
           action: "استعد سيادتك على إيقاعك",
-          icon: <Cpu className="h-10 w-10 text-amber-400" />
+          icon: <Cpu className="h-10 w-10 text-[var(--gold)]" />
         };
       case "relationships":
         return {
           title: "هناك ثغرة في جدارك",
           message: "طاقتك تتسرب عبر حدود غير مرسمة بوضوح. الردود والمجاملات تأكل توازنك. تحتاج لخريطة طقس تكشف مصدر الاستنزاف الخفي.",
           action: "اكتشف طقس علاقاتك الآن",
-          icon: <ShieldAlert className="h-10 w-10 text-red-400" />
+          icon: <ShieldAlert className="h-10 w-10 text-rose-500" />
         };
       default:
          return {
@@ -139,19 +153,38 @@ export function LandingSimulation() {
     }
   };
 
-  const handleEnterSanctuary = useCallback(() => {
+  const handleEnterSanctuary = useCallback((product?: RecommendedProduct) => {
     soundManager.playEffect("cosmic_pulse");
+    const productParam = product ? `&product=${product}` : "";
     setTimeout(() => {
-        if (typeof window !== "undefined") window.location.assign("/onboarding?source=simulation");
+        if (typeof window !== "undefined") window.location.assign(`/onboarding?source=simulation${productParam}`);
     }, 500);
   }, []);
+
+  const handleSessionBooking = useCallback(() => {
+    soundManager.playEffect("cosmic_pulse");
+    
+    // Set boot action for the main app to pick up
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("dawayir-app-boot-action", "navigate:session-intake");
+      
+      // Redirect to onboarding shell
+      window.location.assign("/onboarding?source=simulation&product=session");
+    }
+    
+    recordFlowEvent("cta_activation_clicked", { meta: { source: "landing_simulation", intent: "session_intake" } });
+  }, []);
+
+  const handleDismiss = useCallback(() => {
+    handleEnterSanctuary("dawayir");
+  }, [handleEnterSanctuary]);
 
   return (
     <div className="relative mx-auto mt-8 w-full max-w-lg overflow-hidden rounded-[2.5rem] glass-premium shadow-[0_20px_80px_rgba(0,0,0,0.8)]" id="simulation" dir="rtl">
       
       <div className={`absolute -inset-20 opacity-20 blur-[80px] transition-colors duration-1000 ${
-            step === 'analyzing' ? 'bg-indigo-500/40 animate-pulse' : 
-            step === 'result' ? (dominantCategory === 'future' ? 'bg-emerald-500/40' : dominantCategory === 'progress' ? 'bg-amber-500/40' : 'bg-red-500/40') : 
+            step === 'analyzing' ? 'bg-indigo-500/40 animate-pulse' :
+            step === 'convert' ? (dominantCategory === 'future' ? 'bg-emerald-500/40' : dominantCategory === 'progress' ? 'bg-amber-500/40' : 'bg-red-500/40') :
             'bg-[var(--ds-color-brand-teal-500)]/20'
         }`} />
 
@@ -166,12 +199,12 @@ export function LandingSimulation() {
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="text-center flex flex-col items-center"
             >
-              <div className="mb-6 inline-flex rounded-full bg-[rgba(255,255,255,0.03)] p-5 text-[var(--ds-color-brand-teal-400)] shadow-[inset_0_1px_rgba(255,255,255,0.1)] border border-[rgba(20,184,166,0.2)]">
+              <div className="mb-6 inline-flex rounded-full bg-[rgba(255,255,255,0.03)] p-5 text-[var(--teal)] shadow-[inset_0_1px_rgba(255,255,255,0.1)] border border-[rgba(0,240,255,0.25)]">
                 <Cpu className="h-8 w-8" />
               </div>
-              <h3 className="mb-4 text-3xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>صخب لا ينتهي؟</h3>
+              <h3 className="mb-4 text-3xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>تهيئة مرآة الوعي</h3>
               <p className="mb-10 text-[15px] leading-loose text-white/70 max-w-[34ch] mx-auto text-justify" style={{ textJustify: "inter-word", textAlignLast: "center" }}>
-                لا تجري استبيانات. 3 أسئلة من الأعماق، في دقيقتين فقط، لتشغيل مرآة الوعي الخاصة بك وتحديد نقطة الانطلاق.
+                لا نجري استبيانات تقليدية. هنا 3 أسئلة من المبادئ الأولى، في دقيقتين فقط، لتشغيل بروتوكول الرصد وتحديد ثغرات طاقتك.
               </p>
               <button
                 onClick={handleStart}
@@ -230,15 +263,15 @@ export function LandingSimulation() {
               exit={{ opacity: 0, filter: "blur(10px)" }}
               className="flex flex-col items-center justify-center text-center py-10"
             >
-              <Loader2 className="mb-8 h-12 w-12 animate-spin text-[var(--ds-color-brand-teal-400)] drop-shadow-[0_0_20px_rgba(45,212,191,0.5)]" />
-              <h3 className="text-xl font-black text-white mb-3" style={{ fontFamily: "var(--font-display)" }}>جاري فك التشفير</h3>
-              <p className="text-sm text-white/40">يتم رصد الإشارات الخفية للتبعية والاستنزاف..</p>
+              <Loader2 className="mb-8 h-12 w-12 animate-spin text-[var(--teal)] drop-shadow-[0_0_20px_rgba(0,240,255,0.5)]" />
+              <h3 className="text-xl font-black text-white mb-3" style={{ fontFamily: "var(--font-display)" }}>جاري تحليل الأنماط..</h3>
+              <p className="text-sm text-white/40">يتم رصد الإشارات الخفية للتبعية والاستنزاف وفك شفرة طاقتك.</p>
             </motion.div>
           )}
 
-          {step === "result" && (
+          {step === "convert" && (
             <motion.div
-              key="result"
+              key="convert"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
@@ -256,19 +289,17 @@ export function LandingSimulation() {
                 {getResultContent()?.message}
               </div>
 
-              <div className="w-full">
-                  <button
-                    onClick={handleEnterSanctuary}
-                    className="group relative w-full overflow-hidden rounded-2xl px-6 py-4 text-[16px] font-black text-white transition-all shadow-[0_10px_40px_rgba(0,0,0,0.5),inset_0_1px_rgba(255,255,255,0.1)]"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(20,184,166,0.3)", backdropFilter: "blur(12px)" }}
-                  >
-                    <div className="absolute inset-0 bg-[var(--ds-color-brand-teal-500)]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="relative flex justify-center items-center gap-3 z-10">
-                        {getResultContent()?.action}
-                        <ArrowLeft className="h-5 w-5 text-[var(--ds-color-brand-teal-400)] group-hover:-translate-x-1 transition-transform" />
-                    </div>
-                  </button>
-              </div>
+              {userState && (
+                <div className="mt-6">
+                  <ConversionOfferCard
+                    userState={userState}
+                    source="landing"
+                    onSelectFree={(product) => handleEnterSanctuary(product)}
+                    onSelectSession={handleSessionBooking}
+                    onDismiss={handleDismiss}
+                  />
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

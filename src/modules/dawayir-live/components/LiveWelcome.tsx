@@ -95,7 +95,7 @@ export default function LiveWelcome({ onStartSession, onBack, isConnecting }: Li
           <button
             onClick={onStartSession}
             disabled={isConnecting}
-            className="group relative px-10 py-4 bg-teal-500 text-white dark:text-slate-950 rounded-2xl font-black text-base shadow-lg shadow-teal-500/20 hover:bg-teal-400 hover:shadow-teal-500/30 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait flex items-center gap-3 mx-auto"
+            className="group relative px-10 py-4 bg-teal-500 text-white dark:text-slate-950 rounded-2xl font-black text-base shadow-md shadow-teal-500/10 hover:bg-teal-400 hover:shadow-teal-500/30 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait flex items-center gap-3 mx-auto"
           >
             {isConnecting ? (
               <>

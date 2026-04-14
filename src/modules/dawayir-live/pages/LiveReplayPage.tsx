@@ -351,7 +351,7 @@ export default function LiveReplayPage({ sessionId }: { sessionId: string }) {
                   <button
                     key={`${step.seq}-${index}`}
                     type="button"
-                    className={`session-replay-dot ${index === currentIndex ? "is-active" : ""}`}
+                    className={`session-replay-dot ${index === currentIndex ?"is-active" : ""}`}
                     onClick={() => {
                       setCurrentIndex(index);
                       setIsPlaying(false);

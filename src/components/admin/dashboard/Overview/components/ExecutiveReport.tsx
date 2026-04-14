@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import type { FC, ReactNode } from "react";
 import { AlertTriangle, Lightbulb, Zap, Activity } from "lucide-react";
 import type { ExecutiveReport as ExecutiveReportType } from "@/services/adminApi";
 
@@ -15,34 +15,32 @@ const KpiCard: FC<{ label: string; value: string | number; unit?: string; accent
         amber: "from-amber-500/10 to-amber-500/5 border-amber-500/30 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.1)]",
         indigo: "from-indigo-500/10 to-indigo-500/5 border-indigo-500/30 text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.1)]",
     };
-    
+
     return (
         <div className={`flex flex-col items-end justify-center p-3.5 rounded-xl border bg-gradient-to-br backdrop-blur-md transition-all hover:-translate-y-0.5 hover:shadow-lg ${accents[accent as keyof typeof accents] || accents.slate}`}>
             <span className="text-[10px] text-slate-500 font-mono uppercase tracking-[0.2em] mb-1.5 opacity-80">{label}</span>
             <div className="flex items-baseline gap-1">
-                <span className="text-xl font-black tabular-nums tracking-tighter">
-                    {value}
-                </span>
+                <span className="text-xl font-black tabular-nums tracking-tighter">{value}</span>
                 {unit && <span className="text-[10px] text-slate-500 font-bold ml-1 opacity-70 mb-1">{unit}</span>}
             </div>
         </div>
     );
 };
 
-const AttributionBox: FC<{ title: string; data: Array<{ key: string; count: number }> | null; icon?: React.ReactNode }> = ({ title, data, icon }) => (
+const AttributionBox: FC<{ title: string; data: Array<{ key: string; count: number }> | null; icon?: ReactNode }> = ({ title, data, icon }) => (
     <div className="p-4 rounded-xl border border-white/5 bg-slate-950/60 backdrop-blur-xl flex flex-col h-full hover:bg-slate-900/60 transition-colors shadow-inner relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-        
+
         <div className="flex justify-between items-center mb-4">
             {icon}
             <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{title}</span>
         </div>
-        
+
         <div className="flex-1 flex flex-col justify-end gap-2 relative z-10">
-            {(!data || data.length === 0) ? (
+            {!data || data.length === 0 ? (
                 <span className="text-[10px] uppercase tracking-widest text-slate-600 text-center py-4 border border-dashed border-slate-800 rounded-lg">No Intel Data</span>
             ) : (
-                data.slice(0, 3).map((item, i) => (
+                data.slice(0, 3).map((item) => (
                     <div key={item.key} className="flex items-center justify-between text-xs group/item">
                         <div className="flex items-center gap-2 max-w-[70%]">
                             <span className="w-1 h-3 rounded-full bg-slate-800 group-hover/item:bg-indigo-500 transition-colors" />
@@ -71,7 +69,6 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
 
     return (
         <div className="space-y-6 w-full admin-glass-card rounded-3xl p-6 shadow-2xl border-white/5 relative overflow-hidden group" dir="ltr">
-            {/* Cinematic background light */}
             <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
             <div className="absolute bottom-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
 
@@ -86,13 +83,14 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
                         </h3>
                         <div className="flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                            <span className="text-[10px] font-mono text-slate-500 tracking-wider">GENERATED: {new Date(data.generatedAt).toLocaleString("en-US")}</span>
+                            <span className="text-[10px] font-mono text-slate-500 tracking-wider">
+                                GENERATED: {new Date(data.generatedAt).toLocaleString("en-US")}
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Core KPI Matrix */}
             <div className="relative z-10">
                 <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4">Core Telemetry</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -103,7 +101,6 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
                 </div>
             </div>
 
-            {/* Micro KPI Flow */}
             <div className="relative z-10 pt-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
                     <KpiCard label="retention_7d" value={`${data.kpis.retention7d}%`} />
@@ -117,16 +114,16 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
                 </div>
             </div>
 
-            {/* Conscious Revenue Insights */}
             {data.consciousRevenue && (
                 <div className="relative z-10 pt-4">
                     <div
-                        className={`p-5 rounded-2xl border backdrop-blur-md relative overflow-hidden ${data.consciousRevenue.status === "strong"
-                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.05)]"
-                            : data.consciousRevenue.status === "watch"
-                                ? "bg-amber-500/10 border-amber-500/30 text-amber-100 shadow-[0_0_20px_rgba(245,158,11,0.05)]"
-                                : "bg-rose-500/10 border-rose-500/30 text-rose-100 shadow-[0_0_20px_rgba(244,63,94,0.05)]"
-                            }`}
+                        className={`p-5 rounded-2xl border backdrop-blur-md relative overflow-hidden ${
+                            data.consciousRevenue.status === "strong"
+                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.05)]"
+                                : data.consciousRevenue.status === "watch"
+                                  ? "bg-amber-500/10 border-amber-500/30 text-amber-100 shadow-[0_0_20px_rgba(245,158,11,0.05)]"
+                                  : "bg-rose-500/10 border-rose-500/30 text-rose-100 shadow-[0_0_20px_rgba(244,63,94,0.05)]"
+                        }`}
                         dir="rtl"
                     >
                         <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/10 to-transparent pointer-events-none" />
@@ -144,7 +141,6 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
                 </div>
             )}
 
-            {/* Organic Attribution */}
             <div className="relative z-10 pt-4">
                 <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4">Intel & Sources</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -155,7 +151,6 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
             </div>
 
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                {/* Reliability Warning */}
                 {data.reliability.status === "warning" && (
                     <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-100 shadow-[0_0_15px_rgba(245,158,11,0.05)]" dir="rtl">
                         <div className="flex gap-3 mb-3 pb-3 border-b border-amber-500/20">
@@ -164,7 +159,7 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
                             </div>
                             <div>
                                 <span className="text-[10px] font-black uppercase tracking-widest text-amber-500/80 block" dir="ltr">WARNING</span>
-                                <span className="text-sm font-bold tracking-wide">بيانات غير مكتملة (Reliability)</span>
+                                <span className="text-sm font-bold tracking-wide">بيانات غير مكتملة (الموثوقية)</span>
                             </div>
                         </div>
                         <div className="space-y-2">
@@ -178,7 +173,6 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
                     </div>
                 )}
 
-                {/* Recommended Actions */}
                 {data.recommendedActions.length > 0 && (
                     <div className="p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-100 shadow-[0_0_15px_rgba(99,102,241,0.05)]" dir="rtl">
                         <div className="flex gap-3 mb-3 pb-3 border-b border-indigo-500/20">

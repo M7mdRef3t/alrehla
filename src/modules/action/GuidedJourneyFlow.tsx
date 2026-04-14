@@ -148,7 +148,7 @@ export const GuidedJourneyFlow: FC<GuidedJourneyFlowProps> = ({
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${isBaselineLocked
                   ? "bg-white/5 text-slate-500 cursor-not-allowed opacity-60"
                   : isActive
-                    ? "bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-lg shadow-teal-500/20"
+                    ? "bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-md shadow-teal-500/10"
                     : isDone
                       ? "bg-teal-500/15 text-teal-300 hover:bg-teal-500/25 border border-teal-500/20"
                       : "bg-white/5 text-slate-500 cursor-not-allowed border border-white/5"

@@ -1,5 +1,5 @@
 /**
- * Sovereign Profile — الحالة السيادية 🛡️
+ * Sovereign Profile — ملف الرحلة الخاص 🛡️
  * ==========================================
  * تعرض رتبة المستخدم (Commander) وتقدمه في نقاط الخبرة (XP).
  */
@@ -8,22 +8,17 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Shield, Star, Zap, Award, Target } from "lucide-react";
 import { useGamificationState } from "@/services/gamificationEngine";
+import { useMapState } from "@/modules/map/store/map.store";
 
 const RANK_DATA: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-    "ستطع جدِد": { label: "ستطع جدد", icon: Target, color: "text-slate-400", bg: "bg-slate-500/10" },
-    "شاف دا": { label: "شاف دا", icon: Zap, color: "text-teal-400", bg: "bg-teal-500/10" },
-    "از تعاف": { label: "از تعاف", icon: Star, color: "text-[var(--soft-teal)]", bg: "bg-[var(--soft-teal)]/10" },
-    "ب حدد": { label: "ب حدد", icon: Shield, color: "text-amber-400", bg: "bg-amber-500/10" },
-    "رائد استرار": { label: "رائد استرار", icon: Shield, color: "text-cyan-400", bg: "bg-cyan-500/10" },
-    "عد حة": { label: "عد حة", icon: Award, color: "text-violet-400", bg: "bg-violet-500/10" },
-    "عد سا": { label: "عد سا", icon: Award, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-    "ارشا ادار": { label: "ارشا ادار", icon: Award, color: "text-rose-500", bg: "bg-rose-500/10" }
+// ... existing rank data ...
 };
 
 const DEFAULT_RANK = { label: " ", icon: Shield, color: "text-slate-400", bg: "bg-slate-500/10" };
 
 export const SovereignProfile: React.FC = () => {
     const { xp, rank, level } = useGamificationState();
+    const { transformationDiagnosis } = useMapState();
     if (xp <= 0) return null;
 
     const currentRank = RANK_DATA[rank] ?? DEFAULT_RANK;
@@ -40,33 +35,46 @@ export const SovereignProfile: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="glass-card p-4 border border-white/5 bg-white/5 backdrop-blur-md relative overflow-hidden"
         >
-            <div className="flex items-center gap-4 relative z-10">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border border-white/10 ${currentRank.bg}`}>
-                    <Icon className={`w-6 h-6 ${currentRank.color}`} />
+            <div className="flex flex-col gap-3 relative z-10">
+                <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border border-white/10 ${currentRank.bg}`}>
+                        <Icon className={`w-6 h-6 ${currentRank.color}`} />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                            <span className={`text-[10px] uppercase font-black tracking-widest ${currentRank.color}`}>
+                                {currentRank.label}
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-500">LVL {level}</span>
+                        </div>
+
+                        <div className="flex items-end justify-between mb-1.5">
+                            <h3 className="text-sm font-black text-white truncate">ملف الرحلة</h3>
+                            <span className="text-xs font-bold text-[var(--soft-teal)]">{xp} XP</span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progress}%` }}
+                                className="h-full bg-gradient-to-r from-[var(--soft-teal)] to-teal-400"
+                            />
+                        </div>
+                    </div>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                        <span className={`text-[10px] uppercase font-black tracking-widest ${currentRank.color}`}>
-                            {currentRank.label}
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-500">LVL {level}</span>
+                {transformationDiagnosis?.state && (
+                    <div className="pt-2 border-t border-white/5">
+                         <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Current State | الحالة</span>
+                            <span className="text-[10px] font-black text-amber-400/80 bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10">
+                                {transformationDiagnosis.state}
+                            </span>
+                         </div>
                     </div>
-
-                    <div className="flex items-end justify-between mb-1.5">
-                        <h3 className="text-sm font-black text-white truncate">الملف السيادي</h3>
-                        <span className="text-xs font-bold text-[var(--soft-teal)]">{xp} XP</span>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            className="h-full bg-gradient-to-r from-[var(--soft-teal)] to-teal-400"
-                        />
-                    </div>
-                </div>
+                )}
             </div>
 
             {/* Background flourish */}

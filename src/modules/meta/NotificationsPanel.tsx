@@ -78,14 +78,14 @@ export const NotificationsPanel = memo(function NotificationsPanel({
           exit={{ opacity: 0, y: -12, scale: 0.95 }}
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="absolute left-0 top-12 w-80 z-50 rounded-2xl overflow-hidden
-                     bg-slate-900/95 backdrop-blur-xl border border-white/10
-                     shadow-[0_20px_60px_rgba(0,0,0,0.7)]"
+                     bg-[rgba(2,4,10,0.7)] backdrop-blur-3xl border border-white/10
+                     shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
         >
           {/* ── Header ── */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.08]">
             <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-teal-400" />
-              <h2 className="text-sm font-bold text-white">الإشعارات</h2>
+              <Bell className="w-4 h-4 text-[var(--teal)] drop-shadow-[0_0_8px_var(--cyan-glow)]" />
+              <h2 className="text-sm font-bold text-white">إشعارات الرحلة</h2>
               {unlockedIds.length > 0 && (
                 <span className="text-[10px] text-slate-400">
                   {unlockedIds.length} إنجاز
@@ -105,11 +105,11 @@ export const NotificationsPanel = memo(function NotificationsPanel({
 
           {/* ── Points summary ── */}
           {totalPoints > 0 && (
-            <div className="px-4 py-2.5 bg-teal-500/[0.07] border-b border-teal-500/20">
+            <div className="px-4 py-2.5 bg-[var(--cyan-glow)] border-b border-[var(--teal)]/20">
               <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-teal-400 shrink-0" />
-                <p className="text-xs text-teal-300 font-medium">
-                  مجموع نقاطك: <span className="font-bold text-teal-200">{totalPoints} نقطة</span>
+                < Award className="w-4 h-4 text-[var(--teal)] shrink-0" />
+                <p className="text-xs text-[var(--teal)] font-medium">
+                  مجموع نقاطك: <span className="font-bold text-white">{totalPoints} نقطة</span>
                 </p>
               </div>
             </div>
@@ -147,8 +147,8 @@ export const NotificationsPanel = memo(function NotificationsPanel({
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-semibold text-white truncate">{a.title}</p>
                           {isLatest && (
-                            <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-teal-500/20
-                                             text-teal-400 text-[9px] font-bold">
+                            <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-[var(--cyan-glow)]
+                                             text-[var(--teal)] text-[9px] font-bold border border-[var(--teal)]/20">
                               جديد
                             </span>
                           )}
@@ -159,7 +159,7 @@ export const NotificationsPanel = memo(function NotificationsPanel({
                       </div>
 
                       {/* Trophy */}
-                      <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-1" />
+                      <Trophy className="w-3.5 h-3.5 text-[var(--gold)] shrink-0 mt-1" />
                     </motion.li>
                   );
                 })}
@@ -180,7 +180,7 @@ export const NotificationsPanel = memo(function NotificationsPanel({
                   animate={{ scaleX: unlockedIds.length / ACHIEVEMENTS.length }}
                   transition={{ duration: 0.6, ease: "easeOut" }}
                   style={{ transformOrigin: "right" }}
-                  className="h-full bg-gradient-to-l from-teal-400 to-emerald-500 rounded-full"
+                  className="h-full bg-gradient-to-l from-[var(--teal)] to-[var(--gold)] rounded-full"
                 />
               </div>
             </div>

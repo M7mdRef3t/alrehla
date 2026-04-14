@@ -222,7 +222,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "impulse_master",
     title: "حكيم الموارد",
     description: "تصفحت المتجر وتراجعت 5 مرات قبل الشراء",
-    hint: "التفكير قبل الإنفاق دليل على نضج الشخصية السيادية.",
+    hint: "التفكير قبل الإنفاق دليل على نضج الشخصية المتزنة.",
     icon: "💎",
     order: 22.3,
     hidden: true

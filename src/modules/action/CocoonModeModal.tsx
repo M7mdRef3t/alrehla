@@ -2,6 +2,8 @@ import type { FC } from "react";
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
+import { Z_LAYERS } from "@/config/zIndices";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface CocoonModeModalProps {
   isOpen: boolean;
@@ -47,6 +49,7 @@ export const CocoonModeModal: FC<CocoonModeModalProps> = ({
   onClose
 }) => {
   const { headline, sub, color, rgb } = useMemo(() => getTimeAwareTheme(), []);
+  useScrollLock(isOpen);
 
   if (!isOpen) return null;
 
@@ -58,8 +61,8 @@ export const CocoonModeModal: FC<CocoonModeModalProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.8, ease: "easeInOut" }}
-        className="fixed inset-0 z-[70] flex items-center justify-center overflow-hidden"
-        style={{ background: "#010207", colorScheme: "dark" }}
+        className="fixed inset-0 flex items-center justify-center overflow-hidden"
+        style={{ background: "#010207", colorScheme: "dark", zIndex: Z_LAYERS.TACTICAL_CONTENT }}
         dir="rtl"
       >
         {/* Chromotherapy Fluid Orbs */}
