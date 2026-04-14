@@ -33,6 +33,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   dawayir: "Dawayir Map",
   maraya: "Maraya Digital Twin",
   "session-intake": "Session Intake",
+  atmosfera: "Atmosfera Experience",
   protocol: "Action Protocol",
 };
 
@@ -64,6 +65,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   dawayir: { title: "خريطة الدوائر | Alrehla", description: "Visualize your relationship circles and social intelligence." },
   maraya: { title: "مرايا — التوأم الرقمي | Alrehla", description: "Explore your digital twin and uncover hidden patterns." },
   "session-intake": { title: "جلسة خاصة | Alrehla", description: "Request a private coaching or therapy session." },
+  atmosfera: { title: "أجواء الرحلة | Alrehla", description: "Experience your emotional atmosphere — live, reactive, and personal." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
 };
 

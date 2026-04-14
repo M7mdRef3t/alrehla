@@ -26,6 +26,7 @@ export type AppScreen =
   | "dawayir"
   | "maraya"
   | "session-intake"
+  | "atmosfera"
   | "protocol";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";

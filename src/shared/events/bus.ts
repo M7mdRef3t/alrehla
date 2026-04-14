@@ -69,6 +69,11 @@ export interface DomainEvents {
   "session:intake_completed": { userId?: string };
   "session:session_completed": { sessionId?: string };
 
+  // 🌬️ Atmosfera (Consciousness-Aware Theming)
+  "atmosfera:mood_explored": { state?: string };
+  "atmosfera:state_changed": { from?: string; to?: string };
+  "atmosfera:soundscape_toggled": { enabled: boolean };
+
   // Generic
   [key: `custom:${string}`]: unknown;
 }
