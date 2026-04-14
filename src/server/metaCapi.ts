@@ -47,7 +47,9 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
 
   // Wait for variables to be present
   if (!pixelId || !token) {
-    if (process.env.NODE_ENV === "development") {
+    // P0: Silence dev noise if keys are missing (common in local env)
+    // We only warn if it's NOT development or if we explicitly want to debug
+    if (process.env.NODE_ENV === "development" && process.env.DEBUG_CAPI === "true") {
       console.warn(`[Meta CAPI] Skipped ${params.eventName} (missing config PIXEL_ID or CAPI_TOKEN)`);
     }
     return false;
@@ -90,31 +92,57 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
     payload.test_event_code = process.env.META_TEST_EVENT_CODE;
   }
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-    
-    const res = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      keepalive: true,
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
+  let retryCount = 0;
+  const maxRetries = 2; // Total 3 attempts
+  const baseDelay = 1000;
 
-    if (!res.ok) {
+  while (retryCount <= maxRetries) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased timeout to 8s
+      
+      const res = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        keepalive: true,
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn(`[Meta CAPI] Success: ${eventName} for ${eventId}`);
+        }
+        return true;
+      }
+
       const body = await res.json().catch(() => ({}));
-      logger.error("[Meta CAPI Error]", body);
-      return false;
-    }
+      
+      // If server error (5xx), we retry. If 4xx (except rate limit), we stop.
+      const isRateLimit = res.status === 429;
+      const isServerError = res.status >= 500;
+      
+      if (!isRateLimit && !isServerError) {
+        logger.error("[Meta CAPI Fatal Error]", { status: res.status, body });
+        return false;
+      }
 
-    if (process.env.NODE_ENV === "development") {
-      console.warn(`[Meta CAPI] Success: ${eventName} for ${eventId}`);
+      logger.warn(`[Meta CAPI] Attempt ${retryCount + 1} failed (${res.status}). Retrying...`);
+      retryCount++;
+      if (retryCount <= maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, baseDelay * Math.pow(2, retryCount)));
+      }
+    } catch (err) {
+      logger.error(`[Meta CAPI Attempt ${retryCount + 1}] Error:`, err);
+      retryCount++;
+      if (retryCount <= maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, baseDelay * Math.pow(2, retryCount)));
+      } else {
+        return false;
+      }
     }
-    return true;
-  } catch (err) {
-    logger.error("[Meta CAPI Fetch Error]", err);
-    return false;
   }
+
+  return false;
 }

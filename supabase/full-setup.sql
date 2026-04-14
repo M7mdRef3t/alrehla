@@ -89,6 +89,30 @@ create trigger support_tickets_set_updated_at
 before update on support_tickets
 for each row execute function public.set_updated_at();
 
+create table if not exists marketing_gateways (
+  id text primary key,
+  name text not null,
+  status text default 'open' check (status in ('open', 'locked', 'restricted')),
+  energy_level integer default 50 check (energy_level >= 0 and energy_level <= 100),
+  last_recalibrated_at timestamptz default now(),
+  oracle_note text,
+  updated_at timestamptz default now()
+);
+
+-- Seed initial gateways
+insert into marketing_gateways (id, name, status, energy_level)
+values 
+    ('meta', 'رحلة ميتا', 'open', 50),
+    ('tiktok', 'رحلة تيك توك', 'open', 50),
+    ('google', 'رحلة جوجل / الموقع', 'open', 50),
+    ('direct', 'الرحلة المباشرة', 'open', 50)
+on conflict (id) do nothing;
+
+-- Default Harmony Override
+insert into system_settings (key, value)
+values ('global_harmony_override', '0.8'::jsonb)
+on conflict (key) do nothing;
+
 create table if not exists admin_missions (
   id text primary key,
   title text not null,
@@ -164,6 +188,34 @@ create table if not exists routing_events (
   occurred_at timestamptz not null default now(),
   client_event_id text,
   updated_at timestamptz default now()
+);
+
+-- Legacy/Real-time pulse source for Sovereign Dashboard
+create table if not exists journey_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users (id),
+  session_id text,
+  type text not null,
+  payload jsonb,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists system_settings (
+  key text primary key,
+  value jsonb not null,
+  updated_at timestamptz default now()
+);
+
+create table if not exists dawayir_ai_decisions (
+  id text primary key,
+  type text not null,
+  timestamp bigint not null,
+  reasoning text not null,
+  payload jsonb default '{}'::jsonb,
+  outcome text,
+  approved_by text,
+  executed_at bigint,
+  created_at timestamptz not null default now()
 );
 
 create table if not exists marketing_leads (

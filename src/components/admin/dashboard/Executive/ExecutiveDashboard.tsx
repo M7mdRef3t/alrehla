@@ -19,12 +19,14 @@ import {
 } from "@/services/adminApi";
 import { fetchFlowAuditLogs, type FlowAuditLogEntry } from "@/services/flowAudit";
 import type { ExecutiveReport as ExecutiveReportType } from "@/types/admin.types";
+import { vercelService, type VercelPulse } from "@/services/vercelService";
 
 export const ExecutiveDashboard: FC = () => {
     const [remoteStats, setRemoteStats] = useState<OverviewStats | null>(null);
     const [executiveReport, setExecutiveReport] = useState<ExecutiveReportType | null>(null);
     const [sovereignReport, setSovereignReport] = useState<SovereignExecutiveReport | null>(null);
     const [initialLoading, setInitialLoading] = useState(true);
+    const [infrastructurePulse, setInfrastructurePulse] = useState<VercelPulse | null>(null);
 
     const [weeklyDecisionLogs, setWeeklyDecisionLogs] = useState<FlowAuditLogEntry[]>([]);
     const [weeklyDecisionLoading, setWeeklyDecisionLoading] = useState(true);
@@ -51,13 +53,15 @@ export const ExecutiveDashboard: FC = () => {
             Promise.all([
                 fetchOverviewStats(),
                 fetchExecutiveReport(),
-                fetchSovereignExecutiveReport()
+                fetchSovereignExecutiveReport(),
+                vercelService.getPulse()
             ])
-                .then(([overviewData, execData, sovData]) => {
+                .then(([overviewData, execData, sovData, pulseData]) => {
                     if (!mounted) return;
                     setRemoteStats(overviewData ?? null);
                     setExecutiveReport(execData ?? null);
                     setSovereignReport(sovData ?? null);
+                    setInfrastructurePulse(pulseData);
                     setInitialLoading(false);
                 })
                 .catch(() => {
@@ -182,10 +186,28 @@ export const ExecutiveDashboard: FC = () => {
                             />
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-                            <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">متصل مباشر</p>
-                            <span className="text-slate-400 dark:text-slate-600 mx-1">•</span>
-                            <p className="text-xs text-slate-500">ملخص الرحلات</p>
+                            <span className={`w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)] ${
+                                infrastructurePulse?.status === "healthy" ? "bg-emerald-500" :
+                                infrastructurePulse?.status === "degraded" ? "bg-amber-500" :
+                                infrastructurePulse?.status === "down" ? "bg-rose-500" : "bg-slate-500"
+                            }`} />
+                            <p className={`text-sm font-medium ${
+                                infrastructurePulse?.status === "healthy" ? "text-emerald-600 dark:text-emerald-400" :
+                                infrastructurePulse?.status === "degraded" ? "text-amber-600 dark:text-amber-400" :
+                                infrastructurePulse?.status === "down" ? "text-rose-600 dark:text-rose-400" : "text-slate-500"
+                            }`}>
+                                {infrastructurePulse?.status === "healthy" ? "البنية التحتية: مستقرة" :
+                                 infrastructurePulse?.status === "degraded" ? "البنية التحتية: أداء متأثر" :
+                                 infrastructurePulse?.status === "down" ? "البنية التحتية: متوقفة" : "تكامل Vercel غير معدّ"}
+                            </p>
+                            {infrastructurePulse?.lastDeployment && (
+                                <>
+                                    <span className="text-slate-400 dark:text-slate-600 mx-1">•</span>
+                                    <p className="text-xs text-slate-500">
+                                        آخر تحديث: {new Date(infrastructurePulse.lastDeployment.createdAt).toLocaleDateString("ar-EG")}
+                                    </p>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

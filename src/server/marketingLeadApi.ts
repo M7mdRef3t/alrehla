@@ -135,7 +135,9 @@ async function enqueueOutreach(
 
   if (rows.length === 0) return;
 
-  const { error } = await supabaseAdmin.from("marketing_lead_outreach_queue").insert(rows);
+  const { error } = await supabaseAdmin
+    .from("marketing_lead_outreach_queue")
+    .upsert(rows, { onConflict: "lead_id, channel, step" });
   if (error) throw error;
 }
 

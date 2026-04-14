@@ -146,8 +146,11 @@ export const SovereignControl: FC = () => {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'journey_events' }, () => {
          if (subscribed) refreshData(true);
       })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'routing_events' }, () => {
+         if (subscribed) refreshData(true);
+      })
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') subscribed = true;
+         if (status === 'SUBSCRIBED') subscribed = true;
       });
 
     return () => {

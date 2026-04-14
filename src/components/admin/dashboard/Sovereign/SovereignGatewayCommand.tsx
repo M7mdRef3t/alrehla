@@ -178,16 +178,31 @@ export const SovereignGatewayCommand: FC<{
   const [awardingPoints, setAwardingPoints] = useState<Record<string, boolean>>({});
   const [localMetaOverrides, setLocalMetaOverrides] = useState<Record<string, any>>({});
   const [autoIgnitionRunning, setAutoIgnitionRunning] = useState(false);
+  const [resonanceError, setResonanceError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  const fetchOracle = async () => {
+  const fetchOracle = async (isRetry = false) => {
+    if (!isRetry) setResonanceError(null);
     try {
       const r = await fetch("/api/admin/intelligence/oracle-leads", {
         headers: { authorization: `Bearer ${getBearerToken()}` }
       });
       const d = await r.json();
-      if (d.ok) setOracleData(d);
-    } catch {
-      // Sliently skip
+      if (d.ok) {
+        setOracleData(d);
+        setResonanceError(null);
+        setRetryCount(0);
+      } else {
+        throw new Error(d.error || "Failed context fetch");
+      }
+    } catch (err: any) {
+      console.warn("Resonance Interruption:", err.message);
+      if (retryCount < 3) {
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => fetchOracle(true), 3000);
+      } else {
+        setResonanceError("فقدان الاتصال بالمدار (Resonance Lost)");
+      }
     }
   };
 
@@ -352,7 +367,29 @@ export const SovereignGatewayCommand: FC<{
   };
 
   return (
-    <div className="space-y-10" dir="rtl">
+    <div className="p-8 space-y-10 relative" dir="rtl">
+      {/* HUD Message - Resilience Layer */}
+      <AnimatePresence>
+        {resonanceError && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute top-4 right-8 z-[100] px-6 py-3 bg-rose-500/20 border border-rose-500/40 backdrop-blur-xl rounded-2xl flex items-center gap-3 text-rose-400"
+          >
+            <ZapOff className="w-5 h-5 animate-pulse" />
+            <span className="text-sm font-bold tracking-tight">{resonanceError}</span>
+            <button 
+              onClick={() => fetchOracle()} 
+              className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-black transition-colors"
+            >
+              إعادة محاولة
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="space-y-10">
       {/* 🚀 Pulse Dashboard (Velocity & kFactor) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="hud-glass p-8 rounded-[2.5rem] border-white/5 bg-white/[0.02] flex flex-col justify-between">
@@ -603,5 +640,6 @@ export const SovereignGatewayCommand: FC<{
         )}
       </AnimatePresence>
     </div>
-  );
+  </div>
+);
 };
