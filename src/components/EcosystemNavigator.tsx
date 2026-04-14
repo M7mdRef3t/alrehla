@@ -140,6 +140,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#06b6d4",
     url: "/#bawsala"
+  },
+  {
+    id: "riwaya",
+    name: "رواية",
+    description: "رحلتك كقصة — من البداية لهنا",
+    icon: <BookOpen className="w-5 h-5" />,
+    status: "active",
+    color: "#fb923c",
+    url: "/#riwaya"
   }
 ];
 
