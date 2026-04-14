@@ -101,6 +101,16 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
   // ── Telegram notification ────────────────────────────────────────
   const notifyOwner = useCallback(async (method: PaymentMethod) => {
     setIsSending(true);
+
+    // Perfect place for CompleteRegistration - User committed to paying
+    // Move to the top so it fires even if the following async tasks fail
+    analyticsService.trackCompleteRegistration({
+      method,
+      value: price.monthly,
+      currency: "USD",
+      content_name: TIER_LABELS.premium
+    });
+
     try {
       const user = await getUserInfo();
       const methodLabels: Record<PaymentMethod, string> = {
@@ -126,14 +136,6 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           "👇 *المطلوب:* تأكيد استلام الفلوس ثم تفعيل الحساب",
         ].join("\n"),
         parseMode: "Markdown",
-      });
-
-      // Perfect place for CompleteRegistration - User committed to paying
-      analyticsService.trackCompleteRegistration({
-        method,
-        value: price.monthly,
-        currency: "USD",
-        content_name: TIER_LABELS.premium
       });
 
       setRequestSent(true);

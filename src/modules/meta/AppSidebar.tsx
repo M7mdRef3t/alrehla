@@ -75,6 +75,7 @@ import { openInNewTab } from "@/services/clientDom";
 import { SovereignActionBar } from '@/modules/action/SovereignActionBar';
 import { getJourneyPathBySlug } from "@/utils/journeyPaths";
 import { PROTOCOLS } from "./ProtocolEngine";
+import { EcosystemNavigator } from "@/components/EcosystemNavigator";
 
 
 const NotificationSettings = lazy(() =>
@@ -507,7 +508,9 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             <SovereignActionBar viewingNodeId={viewingNode?.id} onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })} className="mb-4" />
             <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
             
-            <div className="flex-1 overflow-y-auto no-scrollbar py-2">
+            <div className="flex-1 overflow-y-auto no-scrollbar py-2 px-2 flex flex-col gap-4">
+              <EcosystemNavigator onNavigate={pushUrl} />
+              
               {/* 1. SECTOR: EXPLORATION (الاستكشاف) */}
               <SidebarSector title="الاستكشاف" icon={<Compass className="w-3.5 h-3.5" />} color="teal">
                 <SidebarItem
@@ -636,6 +639,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               </div>
 
               <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                <EcosystemNavigator onNavigate={(url) => { pushUrl(url); handleClose(); }} />
+                
                 <SidebarSector title="الاستكشاف" icon={<Compass className="w-4 h-4" />} color="teal">
                   <SidebarItem
                     label="الخريطة"

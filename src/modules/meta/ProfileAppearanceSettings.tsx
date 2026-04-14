@@ -60,7 +60,7 @@ export const ProfileAppearanceSettings: React.FC = () => {
                 
                 <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
                     <div className="relative group">
-                        <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-teal-400 via-indigo-500 to-teal-400 shadow-[0_0_15px_rgba(45,212,191,0.3)]">
+                        <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-teal-400 via-indigo-500 to-teal-400">
                             <div className="w-full h-full rounded-full overflow-hidden border-4 border-slate-950 bg-slate-800 flex items-center justify-center">
                                 <User size={40} className="text-teal-500" />
                             </div>

@@ -5,6 +5,7 @@ import { getHref } from "./navigation";
 import { getDocumentOrNull, getWindowOrNull, isClientRuntime } from "./clientRuntime";
 import { supabase } from "./supabaseClient";
 import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribution";
+import { EcosystemSyncService } from "./ecosystem";
 
 type AnalyticsValue = string | number | boolean;
 type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -377,6 +378,15 @@ export function trackEvent(
       windowRef.gtag("event", eventName, safeParams);
     }
   }
+
+  // --- 3) Ecosystem Synchronization ---
+  // Any significant event tracked in Dawayir should ping the Hub
+  if (eventName === AnalyticsEvents.BASELINE_COMPLETED || eventName === AnalyticsEvents.NODE_ADDED) {
+      EcosystemSyncService.updateSatelliteMetrics('dawayir', {
+          last_activity_event: eventName,
+          last_activity_time: new Date().toISOString()
+      });
+  }
 }
 
 export async function trackIdentityLinked(userId: string): Promise<void> {
@@ -414,7 +424,7 @@ export async function trackIdentityLinked(userId: string): Promise<void> {
         
         if (runtimeEnv.isDev) {
           if (error) console.error("[Analytics] RPC Link Error:", error);
-          else console.log("[Analytics] Identity Link Result:", rpcRes);
+          // console.log('[Analytics] Identity Link Result:', rpcRes);
         }
       }
     } catch (error) {
@@ -536,7 +546,7 @@ function resolveEventId(params?: Record<string, AnalyticsValue | null | undefine
 
 export function trackLead(params?: Record<string, AnalyticsValue | null | undefined>): void {
   const safeParams = sanitizeAnalyticsParams(params);
-  trackEvent(AnalyticsEvents.LEAD_FORM_SUBMITTED, safeParams);
+  // trackEvent(AnalyticsEvents.LEAD_FORM_SUBMITTED, safeParams);
   sendGtagEvent("generate_lead", safeParams);
 
   const googleAdsSendTo = getGoogleAdsSendTo();
@@ -566,7 +576,7 @@ export function trackCompleteRegistration(
   const safeParams = sanitizeAnalyticsParams(params);
   const client_event_id = resolveEventId(params);
   
-  trackEvent("registration_finalized", { ...safeParams, client_event_id });
+  // trackEvent("registration_finalized", { ...safeParams, client_event_id });
   sendGtagEvent("sign_up", safeParams);
 
   // Meta standard CompleteRegistration (Revenue-generating according to business logic)

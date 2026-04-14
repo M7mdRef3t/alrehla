@@ -7,6 +7,7 @@ import { replaceUrl, createCurrentUrl } from "@/services/navigation";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { trackEvent, AnalyticsEvents, trackIdentityLinked } from "@/services/analytics";
 import { markRevenueAccessUnlocked } from "@/services/revenueAccess";
+import { EcosystemData } from "@/types/ecosystem";
 
 export type UserToneGender = "male" | "female" | "neutral";
 export type SubscriptionTier = "free" | "pro";
@@ -21,10 +22,12 @@ interface AuthState {
   role: string | null;
   roleOverride: string | null;
   tier: SubscriptionTier;
+  ecosystemData: EcosystemData | null;
   setSession: (session: Session | null) => void;
   setRole: (role: string | null) => void;
   setRoleOverride: (role: string | null) => void;
   setTier: (tier: SubscriptionTier) => void;
+  setEcosystemData: (data: EcosystemData | null) => void;
 }
 
 const ROLE_OVERRIDE_KEY = "dawayir-role-override";
@@ -155,6 +158,7 @@ export const useAuthState = create<AuthState>((set) => ({
   role: null,
   roleOverride: getInitialRoleOverride(),
   tier: "free",
+  ecosystemData: null,
   setSession: (session) =>
     set(() => {
       const user = session?.user ?? null;
@@ -184,7 +188,8 @@ export const useAuthState = create<AuthState>((set) => ({
       }
       return { roleOverride: normalized };
     }),
-  setTier: (tier) => set({ tier })
+  setTier: (tier) => set({ tier }),
+  setEcosystemData: (data) => set({ ecosystemData: data })
 }));
 
 export function getAuthToken(): string | null {
@@ -241,7 +246,7 @@ async function syncAuthRole(session: Session | null): Promise<void> {
   try {
     const { data, error } = await supabaseClient
       .from("profiles")
-      .select("role, subscription_status")
+      .select("role, subscription_status, ecosystem_data")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -253,6 +258,9 @@ async function syncAuthRole(session: Session | null): Promise<void> {
       useAuthState.getState().setTier(tier);
       if (tier === "pro") {
         markRevenueAccessUnlocked();
+      }
+      if (data.ecosystem_data) {
+        useAuthState.getState().setEcosystemData(data.ecosystem_data as EcosystemData);
       }
       return;
     }

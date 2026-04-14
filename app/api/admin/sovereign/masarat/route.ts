@@ -16,13 +16,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Missing sessionId" }, { status: 400 });
     }
 
-    const supabase = getSupabaseAdminClient();
-    if (!supabase) {
-      return NextResponse.json({ ok: false, error: "System unconfigured" }, { status: 500 });
-    }
-
     // 1. Fetch Session Data (including the newly added user_id and client_phone)
-    const { data: session } = await supabase
+    const { data: session } = await supabaseAdmin
       .from("sessions")
       .select("client_name, client_phone, user_id, notes, goals, session_type")
       .eq("id", sessionId)
@@ -37,22 +32,20 @@ export async function POST(req: Request) {
     let linkedUserId = session.user_id;
 
     // If session isn't explicitly linked to a user_id, try to find one by phone
+    // If session isn't explicitly linked to a user_id, try to find one by phone in marketing_leads
     if (!linkedUserId && session.client_phone) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", session.client_phone) // This depends on how user_id is stored in profiles (could be auth.uid or a custom id)
-        // Note: In some migrations, profiles.user_id is the auth linking. 
-        // Let's also check for phone match if there's a phone column, 
-        // but for now we follow the "phone is the key" logic.
-        .single();
+      const { data: lead } = await supabaseAdmin
+        .from("marketing_leads")
+        .select("profile_id")
+        .eq("phone_normalized", session.client_phone)
+        .maybeSingle();
       
-      if (profile) linkedUserId = profile.id;
+      if (lead?.profile_id) linkedUserId = lead.profile_id;
     }
 
     // If we have a user identity, pull the Sovereign Journey Map
     if (linkedUserId) {
-      const { data: mapData } = await supabase
+      const { data: mapData } = await supabaseAdmin
         .from("journey_maps")
         .select("transformation_diagnosis, ai_interpretation")
         .eq("user_id", linkedUserId)
@@ -98,12 +91,19 @@ export async function POST(req: Request) {
     const aiSummary = `📝 تقرير مسارات لـ ${session.client_name}:\n\nالتشخيص الشامل: ${diagnosticText}\n${patternsText}\n\nالإجراء المقترح: مراجعة خطة العمل بناءً على محددات الجلسة والملف السيادي للمسافر.`;
 
     // 4. Save Summary and update sync flag
-    await supabase.from("sessions").update({ 
+    // 4. Save Summary and update sync flag
+    const updatePayload: any = { 
       ai_summary: aiSummary,
       status: "active",
-      user_id: linkedUserId, // Update the session with the discovered user_id
       is_sovereign_captured: !!sovereignContext
-    }).eq("id", sessionId);
+    };
+    
+    // Only update user_id if we actually resolved it to avoid overwriting existing valid links
+    if (linkedUserId) {
+      updatePayload.user_id = linkedUserId;
+    }
+
+    await supabaseAdmin.from("sessions").update(updatePayload).eq("id", sessionId);
 
     return NextResponse.json({ 
       ok: true, 

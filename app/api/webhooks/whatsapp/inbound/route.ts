@@ -4,7 +4,7 @@ import { WhatsAppCloudService } from "@/services/whatsappCloudService";
 // @ts-ignore — external package may not be installed locally
 import { quickAnalyze, getStaticQuickPath } from "@alrehla/masarat";
 
-const WEBHOOK_VERIFY_TOKEN = process.env.META_WA_WEBHOOK_VERIFY_TOKEN || "alrehla_sovereign_token";
+const WEBHOOK_VERIFY_TOKEN = process.env.META_WA_WEBHOOK_VERIFY_TOKEN;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
-  if (mode === "subscribe" && token === WEBHOOK_VERIFY_TOKEN) {
+  if (mode === "subscribe" && WEBHOOK_VERIFY_TOKEN && token === WEBHOOK_VERIFY_TOKEN) {
     console.log("[WhatsApp Webhook] Verified successfully!");
     return new NextResponse(challenge, { status: 200 });
   }
@@ -33,12 +33,16 @@ export async function POST(request: Request) {
     const value = changes?.value;
     const messages = value?.messages;
 
-    if (messages && messages.length > 0) {
-      const message = messages[0];
-      const fromPhone = message.from;
-      const messageText = message.text?.body;
+    // P0: Strict guard for malformed payloads
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json({ ok: true, status: "no_messages_to_process" });
+    }
 
-      if (messageText) {
+    const message = messages[0];
+    const fromPhone = message.from;
+    const messageText = message.text?.body;
+
+    if (fromPhone && messageText) {
         console.log(`[WhatsApp Webhook] Received message from ${fromPhone}: ${messageText}`);
 
         let aiReply = "أهلًا بك في منصة الرحلة. رسالتك وصلت، وجاري تحليلها.";
@@ -61,7 +65,6 @@ export async function POST(request: Request) {
 
         await WhatsAppCloudService.sendFreeText(fromPhone, "system-bot", aiReply);
       }
-    }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

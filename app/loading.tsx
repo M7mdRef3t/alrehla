@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 export default function Loading() {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-all duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-all duration-300 pointer-events-none">
       <div className="flex flex-col items-center gap-6">
         {/* Cinematic Animated Orb */}
         <div className="relative h-24 w-24">

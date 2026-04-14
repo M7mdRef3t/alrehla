@@ -207,7 +207,7 @@ export const PlatformHeader = memo(function PlatformHeader({
     hidden ? "-translate-y-full" : "translate-y-0"
   } ${
     scrolled
-      ? "backdrop-blur-3xl border-b border-[color:var(--glass-border)] shadow-[0_8px_32px_rgba(0,0,0,0.4)] h-16 bg-[rgba(2,4,10,0.65)]"
+      ? "backdrop-blur-3xl border-b border-[color:var(--glass-border)] h-16 bg-[rgba(2,4,10,0.65)]"
       : "border-b border-transparent h-20 bg-transparent"
   }`;
 
@@ -284,7 +284,7 @@ export const PlatformHeader = memo(function PlatformHeader({
               {isActive && (
                 <motion.div
                   layoutId="header-nav-indicator"
-                  className="absolute inset-0 rounded-full bg-slate-400/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 shadow-sm"
+                  className="absolute inset-0 rounded-full bg-slate-400/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/10"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
@@ -295,7 +295,7 @@ export const PlatformHeader = memo(function PlatformHeader({
               {isActive && (
                 <motion.div
                   layoutId="active-dot"
-                  className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] absolute -bottom-1.5 left-1/2 -translate-x-1/2 shadow-[0_0_8px_var(--gold)]"
+                  className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] absolute -bottom-1.5 left-1/2 -translate-x-1/2"
                 />
               )}
             </button>
@@ -415,7 +415,7 @@ export const PlatformHeader = memo(function PlatformHeader({
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((previous) => !previous)}
-                className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group"
+                className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group cursor-pointer"
                 aria-haspopup="true"
                 aria-expanded="true"
               >
@@ -426,10 +426,9 @@ export const PlatformHeader = memo(function PlatformHeader({
                       alt={displayName ?? "المسافر"}
                       className="w-7 h-7 rounded-full object-cover border border-white/10"
                     />
-                    <div className="absolute inset-0 rounded-full shadow-[0_0_8px_var(--gold-glow)] pointer-events-none" />
                   </div>
                 ) : (
-                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--teal)] to-emerald-600 flex items-center justify-center text-xs font-black text-slate-900 border border-white/20 shadow-[0_0_12px_var(--cyan-glow)]">
+                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--teal)] to-emerald-600 flex items-center justify-center text-xs font-black text-slate-900 border border-white/20">
                     {avatarInitial}
                   </span>
                 )}
@@ -442,7 +441,7 @@ export const PlatformHeader = memo(function PlatformHeader({
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((previous) => !previous)}
-                className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group"
+                className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-900 dark:text-white group cursor-pointer"
                 aria-haspopup="true"
                 aria-expanded="false"
               >
@@ -453,10 +452,9 @@ export const PlatformHeader = memo(function PlatformHeader({
                       alt={displayName ?? "المسافر"}
                       className="w-7 h-7 rounded-full object-cover border border-white/10"
                     />
-                    <div className="absolute inset-0 rounded-full shadow-[0_0_8px_var(--gold-glow)] pointer-events-none" />
                   </div>
                 ) : (
-                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--teal)] to-emerald-600 flex items-center justify-center text-xs font-black text-slate-900 border border-white/20 shadow-[0_0_12px_var(--cyan-glow)]">
+                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--teal)] to-emerald-600 flex items-center justify-center text-xs font-black text-slate-900 border border-white/20">
                     {avatarInitial}
                   </span>
                 )}
@@ -475,7 +473,7 @@ export const PlatformHeader = memo(function PlatformHeader({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="w-52 rounded-2xl overflow-hidden backdrop-blur-xl border border-[color:var(--glass-border)] bg-[var(--glass-bg)] shadow-[0_16px_48px_rgba(0,0,0,0.4)]"
+                    className="w-52 rounded-2xl overflow-hidden backdrop-blur-xl border border-[color:var(--glass-border)] bg-[var(--glass-bg)]"
                     role="presentation"
                   >
                   <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10">
@@ -600,7 +598,7 @@ export const PlatformHeader = memo(function PlatformHeader({
             type="button"
             id="header-landing-cta"
             onClick={handleLandingCta}
-            className="group relative flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold overflow-hidden"
+            className="group relative flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold overflow-hidden cursor-pointer"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-500 transition-transform group-hover:scale-110" />
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -646,7 +644,6 @@ export const MobileNavBar = memo(function MobileNavBar({
         backdrop-blur-2xl
         border-t
         pb-safe pt-2 px-4 h-20
-        shadow-lg
         bg-[var(--glass-bg)] border-[color:var(--glass-border)]"
     >
       {MOBILE_NAV.map(({ id, label, icon: Icon }) => {
@@ -656,7 +653,7 @@ export const MobileNavBar = memo(function MobileNavBar({
             key={id}
             type="button"
             onClick={() => handleNav(id)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-3 group relative"
+            className="flex-1 flex flex-col items-center justify-center gap-1 py-3 group relative cursor-pointer"
           >
             <Icon
               className={`w-6 h-6 transition-transform group-active:scale-90 ${isActive ? "text-[var(--teal)]" : "text-slate-500 dark:text-slate-400"}`}

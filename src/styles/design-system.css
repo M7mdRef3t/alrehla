@@ -214,6 +214,7 @@ svg [role="button"]:focus-visible {
     box-shadow var(--ds-motion-fast) var(--ds-motion-ease),
     background var(--ds-motion-fast) var(--ds-motion-ease),
     border-color var(--ds-motion-fast) var(--ds-motion-ease);
+  cursor: pointer;
 }
 
 .ds-button:focus-visible {
@@ -393,4 +394,19 @@ svg [role="button"]:focus-visible {
 
 .admin-glass-card:hover::before {
   opacity: 1;
+}
+
+/* ════════════════════════════════════════
+   GLOBAL INTERACTIVE ELEMENTS (CURSOR FIX)
+   ════════════════════════════════════════ */
+button,
+[role="button"],
+a,
+.cursor-pointer,
+.ds-interactive,
+.clickable,
+[data-state],
+.nav-link,
+.sidebar-item {
+  cursor: pointer !important;
 }

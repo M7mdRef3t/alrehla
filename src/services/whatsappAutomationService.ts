@@ -146,18 +146,20 @@ class WhatsAppAutomationService {
       const { error: eventError } = await supabase
         .from('whatsapp_message_events')
         .insert({
-          phone: phone,
-          phone_normalized: phoneNormalized,
-          message_text: payload.text,
+          from_phone: phoneNormalized,
+          to_phone: 'system',
+          message_body: payload.text,
+          message_type: 'text',
           direction: 'inbound',
           lead_id: leadId,
-          intent: intent,
-          raw_payload: payload.metadata?.raw || payload,
-          metadata: {
+          intent_detected: intent,
+          whatsapp_message_id: payload.messageId,
+          processed_at: new Date().toISOString(),
+          raw_payload: {
+            original_payload: payload.metadata?.raw || payload,
             sender_name: payload.name,
             gateway: payload.gateway,
             timestamp_raw: payload.timestamp,
-            message_id: payload.messageId,
             referral: referral || null,
             oracle_strategy: oracleStrategy
           }

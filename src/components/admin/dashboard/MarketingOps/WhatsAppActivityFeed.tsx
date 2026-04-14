@@ -5,12 +5,12 @@ import { MessageSquare, ArrowDownLeft, ArrowUpRight, Zap, Info, ShieldAlert, Use
 interface WhatsAppEvent {
   id: string;
   created_at: string;
-  phone: string;
-  message_text: string;
+  from_phone: string;
+  to_phone: string;
+  message_body: string;
   direction: 'inbound' | 'outbound';
-  intent: string;
-  status_assigned: string;
-  metadata: any;
+  intent_detected: string;
+  raw_payload: any;
   lead_id: string | null;
   marketing_leads: {
     name: string;
@@ -124,10 +124,10 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
                     if (onOpenWhatsapp && event.lead_id) {
                       onOpenWhatsapp(
                         event.lead_id, 
-                        event.phone, 
-                        event.marketing_leads?.name || event.phone,
-                        event.metadata?.oracle_strategy?.suggestion,
-                        event.metadata?.oracle_grade, // Assuming grade might be in metadata
+                        event.direction === 'inbound' ? event.from_phone : event.to_phone, 
+                        event.marketing_leads?.name || (event.direction === 'inbound' ? event.from_phone : event.to_phone),
+                        event.raw_payload?.oracle_strategy?.suggestion,
+                        event.raw_payload?.oracle_grade,
                         event.marketing_leads?.campaign,
                         event.marketing_leads?.source
                       );
@@ -151,11 +151,11 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-black text-white truncate max-w-[150px]">
-                            {event.marketing_leads?.name || event.phone}
+                            {event.marketing_leads?.name || (event.direction === 'inbound' ? event.from_phone : event.to_phone)}
                           </span>
-                          {event.intent && (
-                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${getIntentColor(event.intent)}`}>
-                              {getIntentLabel(event.intent)}
+                          {event.intent_detected && (
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${getIntentColor(event.intent_detected)}`}>
+                              {getIntentLabel(event.intent_detected)}
                             </span>
                           )}
                         </div>
@@ -166,15 +166,14 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
                       </div>
 
                       <p className="text-sm text-slate-300 leading-relaxed break-words">
-                        {event.message_text}
+                        {event.message_body}
                       </p>
 
-                      {/* CTWA / Referral Badge */}
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {event.metadata?.referral && (
+                        {event.raw_payload?.referral && (
                           <div className="text-[10px] bg-fuchsia-500/10 text-fuchsia-400 px-2 py-1 rounded-lg border border-fuchsia-500/20 flex items-center gap-2 w-fit">
                             <Zap className="w-3 h-3" />
-                            <span>مصدر إعلاني: {event.metadata.referral.headline || event.metadata.referral.source_id}</span>
+                            <span>مصدر إعلاني: {event.raw_payload.referral.headline || event.raw_payload.referral.source_id}</span>
                           </div>
                         )}
                         {event.marketing_leads?.campaign && (
@@ -192,7 +191,7 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
                       </div>
 
                       {/* Oracle Strategy Relay (New) */}
-                      {event.direction === 'inbound' && event.metadata?.oracle_strategy && (
+                      {event.direction === 'inbound' && event.raw_payload?.oracle_strategy && (
                         <div className="mt-3 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 relative overflow-hidden group/oracle">
                           <div className="absolute top-0 right-0 p-2 opacity-10 group-hover/oracle:scale-110 transition-transform">
                             <Brain className="w-8 h-8 text-indigo-400" />
@@ -202,10 +201,10 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
                             <div className="space-y-1">
                               <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest">تحليل الاستراتيجية (عين الصقر)</p>
                               <p className="text-[11px] text-slate-300 leading-relaxed italic">
-                                "{event.metadata.oracle_strategy.suggestion}"
+                                "{event.raw_payload.oracle_strategy.suggestion}"
                               </p>
                               <p className="text-[8px] text-indigo-400/70 font-bold uppercase">
-                                السبب: {event.metadata.oracle_strategy.reasoning}
+                                السبب: {event.raw_payload.oracle_strategy.reasoning}
                               </p>
                             </div>
                           </div>

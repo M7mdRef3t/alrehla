@@ -118,14 +118,14 @@ export const SessionOSPanel: React.FC = () => {
     try {
       let userId = session.user_id;
       
-      // Fallback: look up by phone if user_id is missing
+      // Fallback: look up by phone if user_id is missing -- Query marketing_leads (Source of Truth for phone identity)
       if (!userId && session.client_phone) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("user_id", session.client_phone)
-          .single();
-        if (profile) userId = profile.id;
+        const { data: lead } = await supabase
+          .from("marketing_leads")
+          .select("profile_id")
+          .eq("phone_normalized", session.client_phone)
+          .maybeSingle();
+        if (lead?.profile_id) userId = lead.profile_id;
       }
 
       if (userId) {

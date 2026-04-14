@@ -164,6 +164,17 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
   }
   const supabaseAdmin = getRequiredSupabaseAdminClient();
 
+  // P0-2: Check if profile already exists by email to link it
+  let existingProfileId = null;
+  if (input.email) {
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("email", input.email)
+      .maybeSingle();
+    if (profile) existingProfileId = profile.id;
+  }
+
   // ATOMIC UPSERT VIA RPC (Hardening V2)
   const { data, error } = await supabaseAdmin.rpc("upsert_marketing_lead_v2", {
     p_email: input.email || null,
@@ -196,6 +207,14 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
   const conflictDetected = result.conflict;
 
   if (storedLeadId) {
+    // P0-2: Explicitly link profile_id if we found one
+    if (existingProfileId) {
+      await supabaseAdmin
+        .from("marketing_leads")
+        .update({ profile_id: existingProfileId })
+        .eq("id", storedLeadId);
+    }
+
     enqueueOutreachAsync(input.email || null, input.source, input.utm, storedLeadId, input.phoneNormalized);
 
     // Validate WhatsApp if phone is present and it's a NEW lead
