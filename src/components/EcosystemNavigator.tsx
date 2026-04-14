@@ -14,7 +14,8 @@ import {
   BookOpen,
   Scale,
   Users,
-  Brain
+  Brain,
+  FileText
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -121,6 +122,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#8b5cf6",
     url: "/#murshid"
+  },
+  {
+    id: "taqrir",
+    name: "تقرير",
+    description: "بياناتك في صفحة واحدة",
+    icon: <FileText className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#taqrir"
   }
 ];
 

@@ -34,6 +34,7 @@ export type AppScreen =
   | "mizan"
   | "rifaq"
   | "murshid"
+  | "taqrir"
   | "protocol"
   | "diagnosis";
 

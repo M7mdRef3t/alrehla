@@ -736,6 +736,15 @@ const HERO_STYLES = `
     max-width: 100%;
   }
 
+  .cta-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-top: 48px;
+    margin-bottom: 24px;
+    overflow: visible;
+  }
+
   /* ── Primary CTA ── */
   .cta-primary {
     position: relative;
@@ -945,7 +954,12 @@ const techEase = [0, 0.7, 0.1, 1] as [number, number, number, number];
 
 const fadeUp = {
   hidden: { opacity: 0, clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", y: 15 },
-  visible: { opacity: 1, clipPath: "polygon(0 0%, 100% 0%, 100% 100%, 0% 100%)", y: 0, transition: { duration: 0.65, ease: techEase } },
+  visible: { 
+    opacity: 1, 
+    clipPath: "polygon(0 -100%, 100% -100%, 100% 200%, 0% 200%)", 
+    y: 0, 
+    transition: { duration: 0.65, ease: techEase } 
+  },
 };
 
 const stagger = {

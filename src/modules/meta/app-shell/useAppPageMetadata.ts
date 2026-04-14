@@ -41,6 +41,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   mizan: "Mizan Progress",
   rifaq: "Rifaq Buddies",
   murshid: "Murshid Guide",
+  taqrir: "Taqrir Report",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -81,6 +82,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   mizan: { title: "ميزان — قياس التقدم | Alrehla", description: "شوف تقدمك الحقيقي — طاقة، علاقات، واستمرارية في رحلة واحدة." },
   rifaq: { title: "رفاق — رفاق الطريق | Alrehla", description: "لست وحدك في الرحلة — اكتشف رفاق بنفس الهدف وتحدّوا معاً." },
   murshid: { title: "مرشد — الذكاء الموجّه | Alrehla", description: "ذكاء يقرأ رحلتك — ينبّهك، يوجّهك، يحتفل معاك." },
+  taqrir: { title: "تقرير — بياناتك في صفحة | Alrehla", description: "تقرير ذكي يجمع كل بياناتك — شاركه مع الكوتش أو احتفظ به." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };
