@@ -167,7 +167,7 @@ export function FeelingCheckModal({ onClose }: Props) {
             )}
             <button
               onClick={handleNext}
-              className="flex-[2] flex items-center justify-center gap-2 py-4 rounded-2xl bg-teal-600 dark:bg-teal-500 text-white dark:text-slate-950 hover:bg-teal-500 dark:hover:bg-teal-400 transition-all text-sm font-black shadow-lg shadow-teal-500/20"
+              className="flex-[2] flex items-center justify-center gap-2 py-4 rounded-2xl bg-teal-600 dark:bg-teal-500 text-white dark:text-slate-950 hover:bg-teal-500 dark:hover:bg-teal-400 transition-all text-sm font-black shadow-md shadow-teal-500/10"
             >
               {step === QUESTIONS.length - 1 ? (
                 <>شوف خريطتك <Check className="w-4 h-4" /></>

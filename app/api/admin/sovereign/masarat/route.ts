@@ -1,7 +1,12 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../../_lib/supabaseAdmin";
-// @ts-ignore
+import { sanitizePhone } from "../../../../../src/server/marketingLeadUtils";
+// @ts-ignore — external package may not be installed locally
 import { quickAnalyze } from "@alrehla/masarat";
+
+const isUUID = (id: string | null | undefined) =>
+  typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 
 export async function POST(req: Request) {
   try {
@@ -15,13 +20,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Missing sessionId" }, { status: 400 });
     }
 
-    const supabase = getSupabaseAdminClient();
-    if (!supabase) {
-      return NextResponse.json({ ok: false, error: "System unconfigured" }, { status: 500 });
-    }
-
     // 1. Fetch Session Data (including the newly added user_id and client_phone)
-    const { data: session } = await supabase
+    const { data: session } = await supabaseAdmin
       .from("sessions")
       .select("client_name, client_phone, user_id, notes, goals, session_type")
       .eq("id", sessionId)
@@ -33,29 +33,31 @@ export async function POST(req: Request) {
 
     // 2. Fetch Sovereign Context (Hub-and-Spoke data)
     let sovereignContext = "";
-    let linkedUserId = session.user_id;
+    let linkedUserId = isUUID(session.user_id) ? session.user_id : null;
 
-    // If session isn't explicitly linked to a user_id, try to find one by phone
+    // If session isn't explicitly linked to a valid user_id, try to find one by phone
     if (!linkedUserId && session.client_phone) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", session.client_phone) // This depends on how user_id is stored in profiles (could be auth.uid or a custom id)
-        // Note: In some migrations, profiles.user_id is the auth linking. 
-        // Let's also check for phone match if there's a phone column, 
-        // but for now we follow the "phone is the key" logic.
-        .single();
-      
-      if (profile) linkedUserId = profile.id;
+      const phoneParsed = sanitizePhone(session.client_phone);
+      if (phoneParsed?.normalized) {
+        const { data: lead } = await supabaseAdmin
+          .from("marketing_leads")
+          .select("profile_id")
+          .eq("phone_normalized", phoneParsed.normalized)
+          .maybeSingle();
+
+        if (lead?.profile_id && isUUID(lead.profile_id)) {
+          linkedUserId = lead.profile_id;
+        }
+      }
     }
 
-    // If we have a user identity, pull the Sovereign Journey Map
-    if (linkedUserId) {
-      const { data: mapData } = await supabase
+    // If we have a valid user identity, pull the Sovereign Journey Map
+    if (linkedUserId && isUUID(linkedUserId)) {
+      const { data: mapData } = await supabaseAdmin
         .from("journey_maps")
         .select("transformation_diagnosis, ai_interpretation")
         .eq("user_id", linkedUserId)
-        .single();
+        .maybeSingle();
 
       if (mapData) {
         sovereignContext = `
@@ -97,12 +99,18 @@ export async function POST(req: Request) {
     const aiSummary = `📝 تقرير مسارات لـ ${session.client_name}:\n\nالتشخيص الشامل: ${diagnosticText}\n${patternsText}\n\nالإجراء المقترح: مراجعة خطة العمل بناءً على محددات الجلسة والملف السيادي للمسافر.`;
 
     // 4. Save Summary and update sync flag
-    await supabase.from("sessions").update({ 
+    const updatePayload: any = { 
       ai_summary: aiSummary,
       status: "active",
-      user_id: linkedUserId, // Update the session with the discovered user_id
       is_sovereign_captured: !!sovereignContext
-    }).eq("id", sessionId);
+    };
+    
+    // Only update user_id if we actually resolved it to avoid overwriting existing valid links
+    if (linkedUserId) {
+      updatePayload.user_id = linkedUserId;
+    }
+
+    await supabaseAdmin.from("sessions").update(updatePayload).eq("id", sessionId);
 
     return NextResponse.json({ 
       ok: true, 

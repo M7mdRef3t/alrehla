@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 export type StoreItemType = "theme" | "voice" | "badge" | "feature";
+=======
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export type StoreItemType = "theme" | "voice" | "badge" | "feature" | "frost_token" | "border";
+>>>>>>> feat/sovereign-final-stabilization
 
 export interface StoreItem {
   id: string;
@@ -85,5 +90,84 @@ export const STORE_ITEMS: StoreItem[] = [
        tone: "military",
        speed: 1.1
     }
+<<<<<<< HEAD
+=======
+  },
+
+  // --- ❄️ Tajmeed: Frost Tokens ---
+  {
+    id: "frost_instant_freeze",
+    name: "تجميد فوري",
+    nameEn: "Instant Freeze",
+    description: "جمّد علاقة مستنزفة بضغطة واحدة من الخريطة — بدون المرور بخطوات الأرشفة.",
+    descriptionEn: "One-tap freeze from the map, skip the archive flow.",
+    price: 500,
+    type: "frost_token",
+    icon: "Sparkles",
+    metadata: {
+      uses: 3,
+      effect: "instant_archive"
+    }
+  },
+  {
+    id: "frost_mega_freeze",
+    name: "العاصفة الجليدية",
+    nameEn: "Ice Storm",
+    description: "جمّد كل العلاقات الحمراء دفعة واحدة. قرار جذري.",
+    descriptionEn: "Freeze all red-ring relationships at once. A sovereign decision.",
+    price: 2000,
+    type: "frost_token",
+    icon: "Sparkles",
+    metadata: {
+      uses: 1,
+      effect: "bulk_archive_red"
+    }
+  },
+
+  // --- ❄️ Tajmeed: Ice Borders ---
+  {
+    id: "border_crystal",
+    name: "إطار كريستالي",
+    nameEn: "Crystal Frame",
+    description: "إطار بصري كريستالي يظهر على العقد المجمدة في الخريطة.",
+    descriptionEn: "A crystal visual effect that renders on frozen map nodes.",
+    price: 800,
+    type: "border",
+    icon: "Sparkles",
+    metadata: {
+      borderStyle: "crystal_glow",
+      animation: "shimmer"
+    }
+  },
+  {
+    id: "border_aurora",
+    name: "إطار الشفق القطبي",
+    nameEn: "Aurora Borealis",
+    description: "تأثير شفق قطبي متحرك حول العقد المجمدة.",
+    descriptionEn: "Animated aurora borealis effect around frozen nodes.",
+    price: 1200,
+    type: "border",
+    icon: "Moon",
+    metadata: {
+      borderStyle: "aurora_ring",
+      animation: "wave"
+    }
+  },
+
+  // --- New AI Voice ---
+  {
+    id: "voice_siberian",
+    name: "المرشد السيبيري",
+    nameEn: "The Siberian Guide",
+    description: "شخصية هادئة وحازمة، تركز على التجميد الواعي وحماية الطاقة.",
+    descriptionEn: "Calm yet firm. Focused on conscious freezing and energy protection.",
+    price: 2000,
+    type: "voice",
+    icon: "Shield",
+    metadata: {
+      tone: "strategic",
+      speed: 0.95
+    }
+>>>>>>> feat/sovereign-final-stabilization
   }
 ];

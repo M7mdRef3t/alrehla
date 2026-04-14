@@ -52,9 +52,39 @@ export interface DomainEvents {
   "gamification:achievement-unlocked": { userId: string; achievementId: string };
   "gamification:streak-updated": { userId: string; streak: number };
 
+<<<<<<< HEAD
   // Analytics
   "analytics:event": { name: string; properties?: Record<string, unknown> };
 
+=======
+  // ❄️ Tajmeed (Freeze Gamification)
+  "tajmeed:achievement-unlocked": { achievements: string[]; trigger: string };
+  "tajmeed:frost-earned": { amount: number; reason: string; nodeId?: string };
+  "tajmeed:combo-activated": { comboCount: number; multiplier: number };
+
+  // Analytics
+  "analytics:event": { name: string; properties?: Record<string, unknown> };
+
+  // 🪞 Maraya (Digital Twin)
+  "maraya:story_completed": { userId?: string };
+  "maraya:pattern_discovered": { patternId?: string };
+  "maraya:judge_finale": { userId?: string };
+
+  // 🎯 Session Intake
+  "session:intake_completed": { userId?: string };
+  "session:session_completed": { sessionId?: string };
+
+  // 🌬️ Atmosfera (Consciousness-Aware Theming)
+  "atmosfera:mood_explored": { state?: string };
+  "atmosfera:state_changed": { from?: string; to?: string };
+  "atmosfera:soundscape_toggled": { enabled: boolean };
+
+  // 🧭 Masarat (Guided Path Engine)
+  "masarat:quick_path_used": { situation: string };
+  "masarat:path_resolved": { pathId: string };
+  "masarat:path_activated": { pathId: string };
+
+>>>>>>> feat/sovereign-final-stabilization
   // Generic
   [key: `custom:${string}`]: unknown;
 }

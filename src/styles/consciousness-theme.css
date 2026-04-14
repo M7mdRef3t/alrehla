@@ -28,7 +28,11 @@
   --consciousness-primary:     var(--teal-400);
   --consciousness-background:  var(--space-void);
   --consciousness-text:        #0f172a;          /* slate-900 */
+<<<<<<< HEAD
   --consciousness-text-muted:  #475569;          /* slate-600 */
+=======
+  --consciousness-text-muted:  #64748b;          /* slate-600 solid */
+>>>>>>> feat/sovereign-final-stabilization
   --consciousness-accent:      var(--amber-500);
   --consciousness-warning:     #FFB000;
   --consciousness-critical:    #FF3333;
@@ -47,7 +51,11 @@
   --page-border:      rgba(0, 0, 0, 0.08);
   --page-border-soft: rgba(0, 0, 0, 0.05);
   --page-text:        #0f172a;
+<<<<<<< HEAD
   --page-text-muted:  #64748b;
+=======
+  --page-text-muted:        #94a3b8;          /* solid Slate 400 */
+>>>>>>> feat/sovereign-final-stabilization
 
   /* 🪟 Glass — Light */
   --glass-bg:         rgba(255, 255, 255, 0.70);
@@ -70,7 +78,11 @@
   /* 🧠 Consciousness Mapping — Sovereign Dark */
   --consciousness-background:  var(--space-void);
   --consciousness-text:        #f0fdfa; /* Teal Tinted White */
+<<<<<<< HEAD
   --consciousness-text-muted:  rgba(148, 163, 184, 0.72);
+=======
+  --consciousness-text-muted:  #94a3b8; /* solid Slate 400 */
+>>>>>>> feat/sovereign-final-stabilization
 
   /* 📄 Page semantic tokens — Sovereign Dark */
   --page-bg:          #02040a;
@@ -80,7 +92,11 @@
   --page-border:      rgba(45, 212, 191, 0.15); /* Soft Teal Border */
   --page-border-soft: rgba(45, 212, 191, 0.05);
   --page-text:        #ffffff;
+<<<<<<< HEAD
   --page-text-muted:  rgba(203, 213, 225, 0.85);
+=======
+  --page-text-muted:        #cbd5e1; /* solid Slate 300 */
+>>>>>>> feat/sovereign-final-stabilization
 
   /* 🪟 Premium Glassmorphism — Dark */
   --glass-bg:         rgba(5, 8, 20, 0.6);
@@ -279,7 +295,11 @@ button:not(.unstyled) {
 }
 
 .terminal-text {
+<<<<<<< HEAD
   font-family: 'JetBrains Mono', 'Courier New', monospace;
+=======
+  font-family: monospace;
+>>>>>>> feat/sovereign-final-stabilization
   letter-spacing: -0.02em;
 }
 
@@ -366,7 +386,11 @@ button:not(.unstyled) {
   --consciousness-primary: #22c55e;
   --consciousness-accent:  #16a34a;
   --consciousness-text:    #4ade80;
+<<<<<<< HEAD
   --font-sans:     'JetBrains Mono', 'Courier New', monospace;
+=======
+  --font-sans:     monospace;
+>>>>>>> feat/sovereign-final-stabilization
   --atmosphere-grain:      0.15;
   --atmosphere-aberration: 0.2;
 }

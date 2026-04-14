@@ -23,7 +23,11 @@ export const StatCard: FC<{
 
     return (
         <div
+<<<<<<< HEAD
             className={`relative group perspective-1000 h-full ${onClick ? "cursor-pointer" : ""}`}
+=======
+            className={`relative group perspective-1000 h-full ${onClick ?"" : ""}`}
+>>>>>>> feat/sovereign-final-stabilization
             onClick={onClick}
             role={onClick ? "button" : undefined}
             tabIndex={onClick ? 0 : undefined}

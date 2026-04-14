@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from "react";
 import { Check, Shield, Sparkles, ArrowLeft, Zap } from "lucide-react";
 import { signInWithGoogleAtPath } from "@/services/authService";
@@ -83,7 +84,7 @@ export default function PricingPage() {
 
   const handleSubscribe = async () => {
     setIsLoading(true);
-    try { analyticsService.track(AnalyticsEvents.CTA_CLICK, { source: "pricing", plan: "premium" }); } catch { /* */ }
+    try { analyticsService.cta({ source: "pricing", plan: "premium" }); } catch { /* */ }
 
     if (!supabase) {
       alert("خدمة التسجيل غير متاحة حاليًا.");
@@ -227,7 +228,7 @@ export default function PricingPage() {
               </div>
               <div>
                 <h2 className="text-xl font-black text-app-foreground">{TIER_LABELS.premium}</h2>
-                <p className="text-xs text-teal-600 dark:text-teal-400/80">التعافي العميق بأدوات سيادية</p>
+                <p className="text-xs text-teal-600 dark:text-teal-400/80">التعافي العميق بأدوات خاصة</p>
               </div>
             </div>
 

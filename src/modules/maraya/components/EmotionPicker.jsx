@@ -1,1 +1,1 @@
-﻿export { default } from './emotion/EmotionPicker.jsx';
+export { default } from './emotion/EmotionPicker.jsx';

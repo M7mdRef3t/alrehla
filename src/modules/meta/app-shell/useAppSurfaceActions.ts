@@ -203,7 +203,7 @@ export function useAppSurfaceActions({
   ]);
 
   const handleChromeWhatsAppOpen = useCallback(() => {
-    analyticsService.track("whatsapp_contact_clicked", { placement: "app_floating" });
+    analyticsService.whatsapp({ placement: "app_floating" });
     if (whatsAppLink) openInNewTab(whatsAppLink);
   }, [whatsAppLink]);
 

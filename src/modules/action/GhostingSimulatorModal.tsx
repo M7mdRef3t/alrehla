@@ -2,6 +2,8 @@ import type { FC } from "react";
 import { useMemo, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, TrendingUp, Ghost, ShieldAlert, Loader2 } from "lucide-react";
+import { Z_LAYERS } from "@/config/zIndices";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { soundManager } from "@/services/soundManager";
 import { geminiClient } from "@/services/geminiClient";
@@ -47,6 +49,8 @@ export const GhostingSimulatorModal: FC<GhostingSimulatorModalProps> = ({ isOpen
         }
     }, [isOpen, node, simData.weeklyDrain]);
 
+    useScrollLock(isOpen);
+
     const handleGeneratePlan = async () => {
         if (!node) return;
         setIsGenerating(true);
@@ -72,7 +76,8 @@ export const GhostingSimulatorModal: FC<GhostingSimulatorModalProps> = ({ isOpen
     return (
         <AnimatePresence>
             <motion.div
-                className="fixed inset-0 z-[60] flex items-center justify-center px-4"
+                className="fixed inset-0 flex items-center justify-center px-4"
+                style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

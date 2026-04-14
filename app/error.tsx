@@ -28,10 +28,10 @@ export default function Error({
 
         {/* Message */}
         <div className="space-y-3">
-          <h1 className="text-3xl font-bold tracking-tighter text-foreground sm:text-4xl font-tajawal">
+          <h1 className="text-3xl font-bold tracking-tighter text-foreground sm:text-4xl">
             توقف مؤقت في الرحلة..
           </h1>
-          <p className="mx-auto max-w-[600px] text-muted-foreground font-ibm-arabic">
+          <p className="mx-auto max-w-[600px] text-muted-foreground">
             معلش، حاجة وقفتنا وإحنا بنرتبلك الطريق. متقلقش، تقدر تجرب تاني أو ترجع لرحلتك.
           </p>
         </div>

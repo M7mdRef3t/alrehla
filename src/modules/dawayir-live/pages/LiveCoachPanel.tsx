@@ -189,7 +189,7 @@ export default function LiveCoachPanel() {
               <button
                 key={filter.id}
                 type="button"
-                className={`presentation-step-btn ${statusFilter === filter.id ? "active" : ""}`}
+                className={`presentation-step-btn ${statusFilter === filter.id ?"active" : ""}`}
                 onClick={() => setStatusFilter(filter.id)}
               >
                 {filter.label}

@@ -275,7 +275,11 @@ const DesignLab: React.FC = () => {
             }`}
           >
             {isSyncing && <div className="w-4 h-4 border-2 border-slate-900 border-t-transparent animate-spin rounded-full" />}
+<<<<<<< HEAD
             نشر السحابة السيادية
+=======
+            نشر السحابة الخاصة
+>>>>>>> feat/sovereign-final-stabilization
           </button>
         </div>
       </header>
@@ -632,7 +636,11 @@ const DesignLab: React.FC = () => {
               </div>
             </div>
 
+<<<<<<< HEAD
             {/* 2. Structured List — القوائم السيادية */}
+=======
+            {/* 2. Structured List — القوائم المخصصة */}
+>>>>>>> feat/sovereign-final-stabilization
             <div className="space-y-6">
               <div className="flex items-center gap-3 text-blue-400">
                 <List className="w-5 h-5" />

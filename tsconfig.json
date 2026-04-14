@@ -29,6 +29,10 @@
         "name": "next"
       }
     ],
+<<<<<<< HEAD
+=======
+    "ignoreDeprecations": "5.0",
+>>>>>>> feat/sovereign-final-stabilization
     "baseUrl": ".",
     "paths": {
       "@/*": [

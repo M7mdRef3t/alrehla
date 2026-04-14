@@ -15,6 +15,10 @@ import { useEmergencyState } from "@/domains/admin/store/emergency.store";
 import { useToastState } from '@/modules/map/dawayirIndex';
 import { supabase } from "@/services/supabaseClient";
 import { isAlignedWithPrinciples } from "./CORE_PRINCIPLES";
+<<<<<<< HEAD
+=======
+import { telegramBot } from "@/services/telegramBot";
+>>>>>>> feat/sovereign-final-stabilization
 
 
 
@@ -61,7 +65,11 @@ export type DecisionType =
   | "subscription_activated"
   | "subscription_cancelled"
 
+<<<<<<< HEAD
   // ── تدخلات سيادية (Sovereign Interventions) ──
+=======
+  // ── تدخلات حاسمة (Direct Interventions) ──
+>>>>>>> feat/sovereign-final-stabilization
   | "sovereign_intervention_deployed"
   | "tactical_preset_deployed"
   | "market_ignition_campaign"
@@ -79,7 +87,12 @@ export type DecisionType =
   | "change_core_principles"
   | "pivot_business_model"
   | "remove_major_feature"
+<<<<<<< HEAD
   | "legal_decision";
+=======
+  | "legal_decision"
+  | "notify_admin";
+>>>>>>> feat/sovereign-final-stabilization
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🚦 مستويات الحكم الذاتي (Autonomy Levels)
@@ -134,7 +147,11 @@ export const DECISION_RULES: Record<DecisionType, AutonomyLevel> = {
   subscription_activated: "AUTONOMOUS_WITH_LOG",
   subscription_cancelled: "AUTONOMOUS_WITH_LOG",
 
+<<<<<<< HEAD
   // ── تدخلات سيادية ── (تحتاج تصديق إلا الأوامر السريعة)
+=======
+  // ── تدخلات حاسمة ── (تحتاج تصديق إلا الأوامر السريعة)
+>>>>>>> feat/sovereign-final-stabilization
   sovereign_intervention_deployed: "REQUIRES_APPROVAL", // الافتراضي للتدخلات عالية التأثير
   tactical_preset_deployed: "AUTONOMOUS_WITH_LOG",     // الأوامر النصية المجهزة مسبقا يتم تسجيلها
   market_ignition_campaign: "REQUIRES_APPROVAL",       // الحملات الإعلانية الجديدة تحتاج موافقة
@@ -153,6 +170,10 @@ export const DECISION_RULES: Record<DecisionType, AutonomyLevel> = {
   pivot_business_model: "FORBIDDEN",
   remove_major_feature: "FORBIDDEN",
   legal_decision: "FORBIDDEN",
+<<<<<<< HEAD
+=======
+  notify_admin: "AUTONOMOUS_WITH_LOG",
+>>>>>>> feat/sovereign-final-stabilization
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -311,6 +332,15 @@ export class DecisionEngine {
           }
         } catch (e) { logger.error(e); }
         break;
+<<<<<<< HEAD
+=======
+      case "notify_admin":
+        try {
+          await telegramBot.notifyAdminDecision(decision);
+          useToastState.getState().showToast("تم إرسال إشعار سيادي للأدمن", "info");
+        } catch (e) { logger.error(e); }
+        break;
+>>>>>>> feat/sovereign-final-stabilization
 
     }
 
@@ -324,7 +354,11 @@ export class DecisionEngine {
     decision.id = actId;
     this.logDecision({ ...decision, outcome: "pending_approval" });
 
+<<<<<<< HEAD
     const title = `طلب موافقة سيادية: ${decision.type}`;
+=======
+    const title = `طلب موافقة حاسمة: ${decision.type}`;
+>>>>>>> feat/sovereign-final-stabilization
     const body = decision.reasoning;
 
     try {

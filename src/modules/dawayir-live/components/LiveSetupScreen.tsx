@@ -42,12 +42,12 @@ export default function LiveSetupScreen({
         <p style={{ marginTop: "10px" }}>{copy.setupBody}</p>
 
         <div className="dawayir-setup-toolbar">
-          <button className={`icon-btn ${language === "ar" ? "active" : ""}`} type="button" onClick={() => onToggleLanguage("ar")}>عربي</button>
-          <button className={`icon-btn ${language === "en" ? "active" : ""}`} type="button" onClick={() => onToggleLanguage("en")}>English</button>
-          <button className={`icon-btn ${mode === "standard" ? "active" : ""}`} type="button" onClick={() => onToggleMode("standard")}>
+          <button className={`icon-btn ${language ==="ar" ? "active" : ""}`} type="button" onClick={() => onToggleLanguage("ar")}>عربي</button>
+          <button className={`icon-btn ${language ==="en" ? "active" : ""}`} type="button" onClick={() => onToggleLanguage("en")}>English</button>
+          <button className={`icon-btn ${mode ==="standard" ? "active" : ""}`} type="button" onClick={() => onToggleMode("standard")}>
             {language === "ar" ? "فردية" : "Standard"}
           </button>
-          <button className={`icon-btn ${mode === "hybrid" ? "active" : ""}`} type="button" onClick={() => onToggleMode("hybrid")}>
+          <button className={`icon-btn ${mode ==="hybrid" ? "active" : ""}`} type="button" onClick={() => onToggleMode("hybrid")}>
             {language === "ar" ? "معمّقة" : "Hybrid"}
           </button>
           <button className="icon-btn" type="button">

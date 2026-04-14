@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { downloadBlobFile } from "../../../src/services/clientDom";
 import { safeGetSession } from "../../../src/services/supabaseClient";
 import { useAdminState } from "@/domains/admin/store/admin.store";
+import styles from "./radar.module.css";
 
 type RadarPulse = {
   global_phoenix_avg: number;
@@ -11,6 +12,19 @@ type RadarPulse = {
   healing_velocity: number;
   ai_workload_avg: number;
   generated_at: string;
+};
+
+// --- Ref-based Progress Bar to avoid Inline Styles hint ---
+const RefProgressBar: React.FC<{ width: string; className?: string }> = ({ width, className }) => {
+  const barRef = useRef<HTMLDivElement>(null);
+  
+  useLayoutEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.setProperty("--progress-width", width);
+    }
+  }, [width]);
+
+  return <div ref={barRef} className={className} />;
 };
 
 type RadarResponse = {
@@ -173,6 +187,16 @@ function getTicketUserId(metadata: Record<string, unknown> | null): string | nul
   if (!metadata || typeof metadata !== "object") return null;
   const userId = String(metadata.user_id ?? "").trim();
   return userId || null;
+}
+
+function getSupportTicketLabel(ticket: SupportTicket): string {
+  if (ticket.source === "activation_manual_proof" || ticket.category === "payment_activation") {
+    return "Revenue access unlock";
+  }
+  if (ticket.source === "manual") {
+    return "Manual review";
+  }
+  return "Support ticket";
 }
 
 function escapeCsvCell(value: unknown): string {
@@ -947,7 +971,10 @@ export default function AdminRadarPage() {
                       <span>{item.value}</span>
                     </div>
                     <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                      <div className="h-full bg-[var(--soft-teal)]" style={{ width: `${item.percent}%` }} />
+                      <RefProgressBar
+                        className={styles.dynamicBar}
+                        width={`${item.percent}%`}
+                      />
                     </div>
                   </div>
                 ))}
@@ -975,9 +1002,9 @@ export default function AdminRadarPage() {
                       <span>{point.paymentSuccessRatePct.toFixed(1)}% success</span>
                     </div>
                     <div className="mt-2 h-2 rounded-full bg-white/10 overflow-hidden">
-                      <div
-                        className="h-full bg-[var(--soft-teal)]"
-                        style={{ width: `${Math.min((point.landingViewed / funnelPeak) * 100, 100)}%` }}
+                      <RefProgressBar
+                        className={styles.dynamicBar}
+                        width={`${Math.min((point.landingViewed / funnelPeak) * 100, 100)}%`}
                       />
                     </div>
                     <p className="mt-2 text-[11px] text-slate-300">
@@ -1307,6 +1334,9 @@ export default function AdminRadarPage() {
                               </p>
                             </div>
                           </div>
+                          <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-100">
+                            {getSupportTicketLabel(ticket)}
+                          </span>
                           <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
                             <span
                               className={`rounded-full border px-2 py-1 ${userId

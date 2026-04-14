@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+/* eslint-disable no-console */
+>>>>>>> feat/sovereign-final-stabilization
 import { useEffect } from "react";
 import { subscribeToDawayirSignals } from "@/modules/recommendation/recommendationBus";
 import { useGamification } from "@/domains/gamification";

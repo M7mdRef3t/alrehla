@@ -46,8 +46,8 @@
   --color-ring-danger: #f87171;
   --color-ring-detached: #94a3b8;
 
-  --font-sans: "Cairo", "Zain", "Tajawal", "Almarai", system-ui, sans-serif;
-  --font-display: "Zain", "Cairo", system-ui, sans-serif;
+  --font-sans: "Cairo", system-ui, sans-serif;
+  --font-display: "Noto Kufi Arabic", system-ui, sans-serif;
 
   --spacing-18: 4.5rem;
   --spacing-88: 22rem;
@@ -63,7 +63,18 @@
 @layer base {
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em; /* Gives Alexandria a majestic tight feel */
+    letter-spacing: -0.01em;
+  }
+  p {
+    text-align: justify;
+    text-justify: inter-word;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    opacity: 1 !important;
+    font-weight: 600 !important;
+    color: var(--page-text-muted) !important;
   }
 }
 

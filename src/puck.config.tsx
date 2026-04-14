@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+/* eslint-disable @typescript-eslint/no-explicit-any */
+>>>>>>> feat/sovereign-final-stabilization
 import { Config } from "@measured/puck";
 import { ReactNode } from "react";
 import "@measured/puck/puck.css"; // Basic puck styling

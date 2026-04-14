@@ -59,7 +59,11 @@ const templates: Record<EditorTemplatePath, Data> = {
       }),
       block("HeadingBlock", "home-principles-heading", {
         title: "إحنا مش بنخمّن. إحنا بنحلل الـ Logic.",
+<<<<<<< HEAD
         subtitle: "الرحلة بتستخدم \"نظام تشغيل سيادي\" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.",
+=======
+        subtitle: "الرحلة بتستخدم \"نظام تشغيل خاص\" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.",
+>>>>>>> feat/sovereign-final-stabilization
         align: "center",
         padding: "lg",
         visibility: "all",
@@ -151,7 +155,11 @@ const templates: Record<EditorTemplatePath, Data> = {
         visibility: "all",
       }),
       block("TextBlock", "about-intro", {
+<<<<<<< HEAD
         content: "الرحلة بتستخدم نظام تشغيل سيادي بيشوف علاقاتك كدوائر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.",
+=======
+        content: "الرحلة بتستخدم نظام تشغيل خاص بيشوف علاقاتك كدوائر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.",
+>>>>>>> feat/sovereign-final-stabilization
         align: "center",
         size: "lg",
         padding: "md",
@@ -335,7 +343,11 @@ const templates: Record<EditorTemplatePath, Data> = {
     content: [
       block("HeadingBlock", "dawayir-heading", {
         title: "دواير — خريطة علاقاتك الحية",
+<<<<<<< HEAD
         subtitle: "نظام تشغيل سيادي بيشوف علاقاتك كدوائر طاقة ومسارات تدفق.",
+=======
+        subtitle: "نظام تشغيل خاص بيشوف علاقاتك كدوائر طاقة ومسارات تدفق.",
+>>>>>>> feat/sovereign-final-stabilization
         align: "center",
         padding: "lg",
         visibility: "all",

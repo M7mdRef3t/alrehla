@@ -148,8 +148,7 @@ export const MapInsightPanel: FC = () => {
     return (
         <div className="w-full max-w-[38rem] mx-auto mt-6 mb-8 px-4">
             <div
-                className="relative overflow-hidden rounded-2xl border border-white/10 backdrop-blur-xl"
-                style={{ background: "rgba(15,23,42,0.4)" }}
+                className="relative overflow-hidden rounded-2xl glass-dark border border-white/10 backdrop-blur-3xl shadow-2xl"
             >
                 {/* Header & Tabs */}
                 <div className="flex items-center justify-between p-5 border-b border-white/5">
@@ -232,7 +231,7 @@ export const MapInsightPanel: FC = () => {
                                                     <div
                                                         key={item.id}
                                                         onClick={() => { setInsight(item); setActiveTab('current'); }}
-                                                        className="group flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-indigo-500/30 transition-all cursor-pointer"
+                                                        className="group flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-indigo-500/30 transition-all"
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">

@@ -25,10 +25,10 @@ export default function RadarError({
       </div>
 
       <div className="space-y-4 text-center">
-        <h1 className="text-4xl font-black uppercase tracking-tighter text-destructive font-inter">
+        <h1 className="text-4xl font-black uppercase tracking-tighter text-destructive">
           Radar Offline
         </h1>
-        <p className="mx-auto max-w-sm text-lg font-ibm-arabic text-muted-foreground">
+        <p className="mx-auto max-w-sm text-lg text-muted-foreground">
           فقدنا الاتصال بالمؤشرات.. معلش حاجة عطلت في المسح الشامل.
         </p>
       </div>

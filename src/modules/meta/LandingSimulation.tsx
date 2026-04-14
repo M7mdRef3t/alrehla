@@ -1,9 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Loader2, Target, AlertCircle, Zap, ShieldAlert, Cpu } from "lucide-react";
+import { ArrowLeft, Loader2, Target, Zap, ShieldAlert, Cpu } from "lucide-react";
 import { useJourneyProgress } from "@/domains/journey";
 import { recordFlowEvent } from "@/services/journeyTracking";
 import { soundManager } from "@/services/soundManager";
+import { ConversionOfferCard } from "../conversion/ConversionOfferCard";
+import { computeMiniDiagnosis } from "@/modules/meta/miniDiagnosisEngine";
+import type { UserStateObject, RecommendedProduct } from "@/modules/diagnosis/types";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 type Question = {
   id: string;
@@ -42,10 +46,11 @@ const QUESTIONS: Question[] = [
 ];
 
 export function LandingSimulation() {
-  const [step, setStep] = useState<"intro" | "questions" | "analyzing" | "result">("intro");
+  const [step, setStep] = useState<"intro" | "questions" | "analyzing" | "result" | "convert">("intro");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [dominantCategory, setDominantCategory] = useState<"future" | "relationships" | "progress" | null>(null);
+  const [userState, setUserState] = useState<UserStateObject | null>(null);
 
   // Connection to Ghost Backend
   const setLandingIntent = useJourneyProgress().setLandingIntent;
@@ -85,10 +90,16 @@ export function LandingSimulation() {
   };
 
   useEffect(() => {
-    if (step === "analyzing") {
+    if (step === "analyzing" && dominantCategory) {
       const timer = setTimeout(() => {
-        setStep("result");
-        soundManager.playEffect("cosmic_pulse");
+        // Compute mini diagnosis from answers
+        const miniAnswers = {
+          q1_category: answers.q1 as "future" | "relationships" | "progress",
+          q2_category: answers.q2 as "future" | "relationships" | "progress",
+          q3_category: answers.q3 as "future" | "relationships" | "progress",
+        };
+        const computedState = computeMiniDiagnosis(miniAnswers);
+        setUserState(computedState);
 
         // Sovereign Ghost Backend Linking
         let intent: "clarity" | "boundaries" | "calm" = "clarity";
@@ -97,14 +108,17 @@ export function LandingSimulation() {
         if (dominantCategory === "future") intent = "clarity";
 
         setLandingIntent(intent);
-        
+
         // Push hidden backend telemetry
-        recordFlowEvent("quiz_completed", { meta: { dominantCategory: dominantCategory, calculatedIntent: intent } });
+        recordFlowEvent("quiz_completed", { meta: { dominantCategory: dominantCategory, calculatedIntent: intent, recommendedProduct: computedState.recommendedProduct } });
+
+        setStep("convert");
+        soundManager.playEffect("cosmic_pulse");
 
       }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [step, dominantCategory, setLandingIntent]);
+  }, [step, dominantCategory, answers, setLandingIntent]);
 
   const getResultContent = () => {
     switch (dominantCategory) {
@@ -139,19 +153,38 @@ export function LandingSimulation() {
     }
   };
 
-  const handleEnterSanctuary = useCallback(() => {
+  const handleEnterSanctuary = useCallback((product?: RecommendedProduct) => {
     soundManager.playEffect("cosmic_pulse");
+    const productParam = product ? `&product=${product}` : "";
     setTimeout(() => {
-        if (typeof window !== "undefined") window.location.assign("/onboarding?source=simulation");
+        if (typeof window !== "undefined") window.location.assign(`/onboarding?source=simulation${productParam}`);
     }, 500);
   }, []);
+
+  const handleSessionBooking = useCallback(() => {
+    soundManager.playEffect("cosmic_pulse");
+    
+    // Set boot action for the main app to pick up
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("dawayir-app-boot-action", "navigate:session-intake");
+      
+      // Redirect to onboarding shell
+      window.location.assign("/onboarding?source=simulation&product=session");
+    }
+    
+    recordFlowEvent("cta_activation_clicked", { meta: { source: "landing_simulation", intent: "session_intake" } });
+  }, []);
+
+  const handleDismiss = useCallback(() => {
+    handleEnterSanctuary("dawayir");
+  }, [handleEnterSanctuary]);
 
   return (
     <div className="relative mx-auto mt-8 w-full max-w-lg overflow-hidden rounded-[2.5rem] glass-premium shadow-[0_20px_80px_rgba(0,0,0,0.8)]" id="simulation" dir="rtl">
       
       <div className={`absolute -inset-20 opacity-20 blur-[80px] transition-colors duration-1000 ${
-            step === 'analyzing' ? 'bg-indigo-500/40 animate-pulse' : 
-            step === 'result' ? (dominantCategory === 'future' ? 'bg-emerald-500/40' : dominantCategory === 'progress' ? 'bg-amber-500/40' : 'bg-red-500/40') : 
+            step === 'analyzing' ? 'bg-indigo-500/40 animate-pulse' :
+            step === 'convert' ? (dominantCategory === 'future' ? 'bg-emerald-500/40' : dominantCategory === 'progress' ? 'bg-amber-500/40' : 'bg-red-500/40') :
             'bg-[var(--ds-color-brand-teal-500)]/20'
         }`} />
 
@@ -236,9 +269,9 @@ export function LandingSimulation() {
             </motion.div>
           )}
 
-          {step === "result" && (
+          {step === "convert" && (
             <motion.div
-              key="result"
+              key="convert"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
@@ -256,19 +289,17 @@ export function LandingSimulation() {
                 {getResultContent()?.message}
               </div>
 
-              <div className="w-full">
-                  <button
-                    onClick={handleEnterSanctuary}
-                    className="group relative w-full overflow-hidden rounded-2xl px-6 py-4 text-[16px] font-black text-white transition-all shadow-[0_10px_40px_rgba(0,0,0,0.5),inset_0_1px_rgba(255,255,255,0.1)]"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(20,184,166,0.3)", backdropFilter: "blur(12px)" }}
-                  >
-                    <div className="absolute inset-0 bg-[var(--ds-color-brand-teal-500)]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="relative flex justify-center items-center gap-3 z-10">
-                        {getResultContent()?.action}
-                        <ArrowLeft className="h-5 w-5 text-[var(--ds-color-brand-teal-400)] group-hover:-translate-x-1 transition-transform" />
-                    </div>
-                  </button>
-              </div>
+              {userState && (
+                <div className="mt-6">
+                  <ConversionOfferCard
+                    userState={userState}
+                    source="landing"
+                    onSelectFree={(product) => handleEnterSanctuary(product)}
+                    onSelectSession={handleSessionBooking}
+                    onDismiss={handleDismiss}
+                  />
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

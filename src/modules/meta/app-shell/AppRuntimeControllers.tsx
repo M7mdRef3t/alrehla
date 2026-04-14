@@ -372,21 +372,21 @@ export function AppRuntimeControllers({
       if (!prevMilestones.registeredReached && nextMilestones.registeredReached) {
         await sendOwnerNotification(
           "تحقق الهدف: 10 تسجيلات",
-          `تم الوصول إلى ${alerts.phaseOne.registeredUsers} مستخدمين مسجلين.`,
+          `تم الوصول إلى ${alerts.phaseOne.registeredTravelers} مستخدمين مسجلين.`,
           "owner-goal-registered"
         );
       }
       if (!prevMilestones.installedReached && nextMilestones.installedReached) {
         await sendOwnerNotification(
           "تحقق الهدف: 10 تثبيتات",
-          `تم الوصول إلى ${alerts.phaseOne.installedUsers} مستخدمين ثبّتوا التطبيق.`,
+          `تم الوصول إلى ${alerts.phaseOne.installedTravelers} مستخدمين ثبّتوا التطبيق.`,
           "owner-goal-installed"
         );
       }
       if (!prevMilestones.addedReached && nextMilestones.addedReached) {
         await sendOwnerNotification(
           "تحقق الهدف: 10 أشخاص مضافين",
-          `تم الوصول إلى ${alerts.phaseOne.addedPeople} أشخاص مضافين على الخرائط.`,
+          `تم الوصول إلى ${alerts.phaseOne.addedPeers} أشخاص مضافين على الخرائط.`,
           "owner-goal-added"
         );
       }

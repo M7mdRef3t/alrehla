@@ -47,6 +47,30 @@ export interface PurchaseFeedback {
     itemId: string;
 }
 
+<<<<<<< HEAD
+=======
+// ─── Freeze Stats ─────────────────────────────────────
+export interface FreezeStats {
+    totalFreezes: number;
+    totalUnfreezes: number;
+    boundariesSet: number;
+    patternsDetected: number;
+    weeklyFreezes: number;
+    lastFreezeDate: string | null;
+    activeComboCount: number; // تجميدات متتالية في أسبوع → مضاعف
+}
+
+const DEFAULT_FREEZE_STATS: FreezeStats = {
+    totalFreezes: 0,
+    totalUnfreezes: 0,
+    boundariesSet: 0,
+    patternsDetected: 0,
+    weeklyFreezes: 0,
+    lastFreezeDate: null,
+    activeComboCount: 0,
+};
+
+>>>>>>> feat/sovereign-final-stabilization
 interface GamificationState {
     xp: number;
     level: number;
@@ -72,9 +96,31 @@ interface GamificationState {
 
     // Soft currency
     coins: number;
+<<<<<<< HEAD
     addCoins: (amount: number, reason: string) => void;
     spendCoins: (amount: number) => boolean;
 
+=======
+
+    // ❄️ Tajmeed: Frost Points — العملة السيادية للتجميد
+    frostPoints: number;
+    freezeStats: FreezeStats;
+    seasonId: string;
+    seasonXP: number;
+
+    // Currency Methods
+    addCoins: (amount: number, reason: string) => void;
+    spendCoins: (amount: number) => boolean;
+
+    // ❄️ Frost Points Methods
+    addFrostPoints: (amount: number, reason: string) => void;
+    spendFrostPoints: (amount: number) => boolean;
+    recordFreeze: (nodeId: string) => number; // returns FP earned
+    recordUnfreeze: (nodeId: string) => number;
+    recordBoundarySet: () => number;
+    recordPatternDetected: () => number;
+
+>>>>>>> feat/sovereign-final-stabilization
     addXP: (amount: number, reason: string) => void;
     awardBadge: (badgeId: string, name: string, description: string, icon: string) => void;
     recordActivity: () => { streakMaintained: boolean; xpLost: number };
@@ -117,6 +163,15 @@ export const useGamificationState = create<GamificationState>()(
             chronicles: [],
             lastNewChronicle: null,
 
+<<<<<<< HEAD
+=======
+            // ❄️ Tajmeed defaults
+            frostPoints: 0,
+            freezeStats: { ...DEFAULT_FREEZE_STATS },
+            seasonId: 'season_1',
+            seasonXP: 0,
+
+>>>>>>> feat/sovereign-final-stabilization
             addCoins: (amount, _reason) => {
                 set((state) => ({ coins: state.coins + amount }));
             },
@@ -133,6 +188,118 @@ export const useGamificationState = create<GamificationState>()(
                 return success;
             },
 
+<<<<<<< HEAD
+=======
+            // ❄️ Frost Points Methods
+            addFrostPoints: (amount, _reason) => {
+                set((state) => ({
+                    frostPoints: state.frostPoints + amount,
+                    seasonXP: state.seasonXP + amount,
+                }));
+            },
+
+            spendFrostPoints: (amount) => {
+                let success = false;
+                set((state) => {
+                    if (state.frostPoints >= amount) {
+                        success = true;
+                        return { frostPoints: state.frostPoints - amount };
+                    }
+                    return state;
+                });
+                return success;
+            },
+
+            recordFreeze: (_nodeId) => {
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+                const todayStr = now.toISOString();
+
+                let fpEarned = 50; // Base Frost Points for a freeze
+                
+                set((state) => {
+                    const stats = { ...state.freezeStats };
+                    stats.totalFreezes += 1;
+                    stats.lastFreezeDate = todayStr;
+
+                    // Combo system: freezes in same week
+                    const lastFreeze = state.freezeStats.lastFreezeDate;
+                    if (lastFreeze) {
+                        const daysSinceLast = Math.floor(
+                            (now.getTime() - new Date(lastFreeze).getTime()) / (1000 * 3600 * 24)
+                        );
+                        if (daysSinceLast <= 7) {
+                            stats.weeklyFreezes += 1;
+                            stats.activeComboCount += 1;
+                        } else {
+                            stats.weeklyFreezes = 1;
+                            stats.activeComboCount = 1;
+                        }
+                    } else {
+                        stats.weeklyFreezes = 1;
+                        stats.activeComboCount = 1;
+                    }
+
+                    // Combo bonus: ×2 after 3 freezes in a week
+                    if (stats.activeComboCount >= 3) {
+                        fpEarned = fpEarned * 2;
+                    }
+
+                    return {
+                        freezeStats: stats,
+                        frostPoints: state.frostPoints + fpEarned,
+                        seasonXP: state.seasonXP + fpEarned,
+                    };
+                });
+
+                // Also award XP
+                get().addXP(60, 'تجميد علاقة مستنزفة ❄️');
+                return fpEarned;
+            },
+
+            recordUnfreeze: (_nodeId) => {
+                const fpEarned = 30;
+                set((state) => ({
+                    freezeStats: {
+                        ...state.freezeStats,
+                        totalUnfreezes: state.freezeStats.totalUnfreezes + 1,
+                    },
+                    frostPoints: state.frostPoints + fpEarned,
+                    seasonXP: state.seasonXP + fpEarned,
+                }));
+                get().addXP(40, 'ذوبان واعي — إعادة علاقة 🌊');
+                return fpEarned;
+            },
+
+            recordBoundarySet: () => {
+                const fpEarned = 30;
+                set((state) => ({
+                    freezeStats: {
+                        ...state.freezeStats,
+                        boundariesSet: state.freezeStats.boundariesSet + 1,
+                    },
+                    frostPoints: state.frostPoints + fpEarned,
+                    seasonXP: state.seasonXP + fpEarned,
+                }));
+                get().addXP(30, 'وضع حدود سيادية 🛡️');
+                return fpEarned;
+            },
+
+            recordPatternDetected: () => {
+                const fpEarned = 20;
+                set((state) => ({
+                    freezeStats: {
+                        ...state.freezeStats,
+                        patternsDetected: state.freezeStats.patternsDetected + 1,
+                    },
+                    frostPoints: state.frostPoints + fpEarned,
+                    seasonXP: state.seasonXP + fpEarned,
+                }));
+                get().addXP(20, 'رصد نمط مكرر 👁️');
+                return fpEarned;
+            },
+
+>>>>>>> feat/sovereign-final-stabilization
             addXP: (amount, _reason) => {
                 set((state) => {
                     const newXP = Math.max(0, state.xp + amount);
@@ -334,7 +501,15 @@ export const useGamificationState = create<GamificationState>()(
                 activeVoiceId: null,
                 lastPurchaseFeedback: null,
                 chronicles: [],
+<<<<<<< HEAD
                 lastNewChronicle: null
+=======
+                lastNewChronicle: null,
+                frostPoints: 0,
+                freezeStats: { ...DEFAULT_FREEZE_STATS },
+                seasonId: 'season_1',
+                seasonXP: 0,
+>>>>>>> feat/sovereign-final-stabilization
             }),
 
         }),

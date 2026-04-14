@@ -17,9 +17,36 @@ export type {
   AnalyticsConsent,
   AnalyticsDiagnostics,
   TrackedEvent,
+<<<<<<< HEAD
 } from "./types";
 
 export { AnalyticsEvents } from "./types";
+=======
+  InternalTelemetryContext,
+  PageViewTelemetryPayload,
+  JourneyFlowTelemetryPayload,
+  CtaTelemetryPayload,
+  GoalTelemetryPayload,
+  AuthTelemetryPayload,
+  OnboardingTelemetryPayload,
+  WhatsappTelemetryPayload,
+  CableTelemetryPayload,
+} from "./types";
+
+export { AnalyticsEvents } from "./types";
+export {
+  buildAnalyticsEnvelope,
+  buildPageViewEnvelope,
+  buildIdentityLinkedEnvelope,
+  buildJourneyFlowEnvelope,
+  buildCtaEnvelope,
+  buildGoalEnvelope,
+  buildAuthEnvelope,
+  buildOnboardingEnvelope,
+  buildWhatsappEnvelope,
+  buildCableEnvelope,
+} from "./contracts";
+>>>>>>> feat/sovereign-final-stabilization
 
 // ─── Services ──────────────────────────────────────────
 export { analyticsService } from "./services/analytics.service";

@@ -155,7 +155,11 @@ const WeeklyRhythmCard: FC<{ data: OverviewStats["weeklyRhythm"] }> = ({ data })
                         />
                         <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={40}>
                             {chartData.map((entry: any, index: number) => (
+<<<<<<< HEAD
                                 <Cell key={`cell-${index}`} fill={entry.name === lowestDay ? '#f97316' : '#d946ef'} className="hover:opacity-80 transition-all cursor-pointer" /> 
+=======
+                                <Cell key={`cell-${index}`} fill={entry.name === lowestDay ? '#f97316' : '#d946ef'} className="hover:opacity-80 transition-all" /> 
+>>>>>>> feat/sovereign-final-stabilization
                             ))}
                         </Bar>
                         <XAxis

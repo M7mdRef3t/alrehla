@@ -30,7 +30,14 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   profile: "Profile",
   sanctuary: "Sanctuary",
   "life-os": "Life OS",
+  dawayir: "Dawayir Map",
+  maraya: "Maraya Digital Twin",
+  "session-intake": "Session Intake",
+  "session-console": "SessionOS Console",
+  atmosfera: "Atmosfera Experience",
+  masarat: "Masarat Paths",
   protocol: "Action Protocol",
+  diagnosis: "Diagnosis OS",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -58,7 +65,14 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   profile: { title: "Profile | Alrehla", description: "Review your progress, achievements, and personal bio." },
   sanctuary: { title: "Sanctuary | Alrehla", description: "A private space for reflection and restoration." },
   "life-os": { title: "Life OS | Alrehla", description: "Your unified operating system for self-growth and decisions." },
+  dawayir: { title: "خريطة الدوائر | Alrehla", description: "Visualize your relationship circles and social intelligence." },
+  maraya: { title: "مرايا — التوأم الرقمي | Alrehla", description: "Explore your digital twin and uncover hidden patterns." },
+  "session-intake": { title: "جلسة خاصة | Alrehla", description: "Request a private coaching or therapy session." },
+  "session-console": { title: "لوحة تحكم الكوتش | Alrehla", description: "SessionOS Coach Console — manage intake, AI Pre-Brief, and sessions." },
+  atmosfera: { title: "أجواء الرحلة | Alrehla", description: "Experience your emotional atmosphere — live, reactive, and personal." },
+  masarat: { title: "مسارات | Alrehla", description: "اكتشف مسارك في علاقاتك — حدود، تعافٍ، ونمو." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
+  diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {

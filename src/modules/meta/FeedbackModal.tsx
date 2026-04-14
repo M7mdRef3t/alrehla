@@ -1,6 +1,8 @@
 import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { X, MessageCircle } from "lucide-react";
+import { Z_LAYERS } from "@/config/zIndices";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 export interface FeedbackSubmission {
   category: "general" | "bug" | "idea";
@@ -21,12 +23,18 @@ export const FeedbackModal: FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmi
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
+  useScrollLock(isOpen);
+
   const canSubmit = useMemo(() => message.trim().length >= 8 && !sending, [message, sending]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
+      onClick={onClose}
+    >
       <div
         className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 text-right"
         onClick={(e) => e.stopPropagation()}

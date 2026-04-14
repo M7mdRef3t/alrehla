@@ -614,7 +614,7 @@ export default function LiveHistoryPage() {
                   <div className="presentation-toolbar-actions">
                     <button
                       type="button"
-                      className={`replay-control-btn ${demoRouteActive ? "active" : ""}`}
+                      className={`replay-control-btn ${demoRouteActive ?"active" : ""}`}
                       onClick={() => setDemoRouteActive((value) => !value)}
                     >
                       <GalleryVerticalEnd className="h-4 w-4" />
@@ -623,7 +623,7 @@ export default function LiveHistoryPage() {
 
                     <button
                       type="button"
-                      className={`replay-control-btn ${judgeMode ? "active" : ""}`}
+                      className={`replay-control-btn ${judgeMode ?"active" : ""}`}
                       onClick={() => setJudgeMode((value) => !value)}
                     >
                       <ShieldCheck className="h-4 w-4" />
@@ -665,7 +665,7 @@ export default function LiveHistoryPage() {
                     <button
                       key={step.key}
                       type="button"
-                      className={`presentation-step-btn ${demoRouteStep === index ? "active" : ""}`}
+                      className={`presentation-step-btn ${demoRouteStep === index ?"active" : ""}`}
                       onClick={() => {
                         setDemoRouteStep(index);
                         step.ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });

@@ -15,14 +15,14 @@ interface HeroSectionProps {
 
 /* ─── Constants ──────────────────────────────────────────────────────────────── */
 const ROTATING_WORDS = [
-  "دوايرك ملخبطة",
-  "طاقتك بتتسرب",
-  "حدودك مُستباحة",
-  "خايف تقول لأ",
-  "مراية لزعل غيرك",
-  "تايه في خوارزمياتهم",
-  "نبضك مربوط بغيرك",
-  "سايب بابك موارب"
+  "دوايرك متداخلة",
+  "طاقتك مهدرة",
+  "حدودك مكسورة",
+  "خايف ترفض",
+  "شايل همهم",
+  "تايه وسطهم",
+  "حياتك لغيرك",
+  "نفسك منسية"
 ];
 
 /* ─── Styles ─────────────────────────────────────────────────────────────────── */
@@ -156,7 +156,7 @@ const HERO_STYLES = `
     position: relative;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
   }
 
   .hero-input-wrapper::before {
@@ -175,11 +175,17 @@ const HERO_STYLES = `
     padding: 15px 20px;
     font-size: 15px;
     font-weight: 600;
-    color: #fff;
-    font-family: "Tajawal", sans-serif;
+    color: rgba(255, 255, 255, 1);
+    font-family: "Noto Kufi Arabic";
     text-align: right;
     position: relative;
     z-index: 1;
+  }
+
+  .hero-input::placeholder {
+    color: rgb(199, 220, 232);
+    opacity: 1;
+    font-weight: 600;
   }
 
   .hero-input-greeting {
@@ -319,7 +325,7 @@ const HERO_STYLES = `
     position: absolute;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(8px);
     padding: 16px;
     border-radius: 24px;
     min-width: 150px;
@@ -438,7 +444,7 @@ const HERO_STYLES = `
     font-weight: 800;
     color: #fff;
     white-space: nowrap;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(6px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 20px rgba(0, 240, 255, 0.14);
     font-family: "Tajawal", sans-serif;
   }
@@ -533,8 +539,8 @@ const HERO_STYLES = `
     inset: -20%;
     background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px);
     background-size: 80px 80px;
-    filter: blur(1px);
-    opacity: 0.25;
+    filter: blur(0px);
+    opacity: 0.15;
   }
 
   .warp-line {
@@ -565,21 +571,21 @@ const HERO_STYLES = `
   }
 
   .ambient-orb-1 {
-    width: 800px; height: 800px;
+    width: 400px; height: 400px;
     background: radial-gradient(circle, rgba(0, 240, 255, 0.14) 0%, transparent 60%);
     top: -20%; right: -10%;
     animation: orb-drift1 38s infinite ease-in-out alternate;
   }
 
   .ambient-orb-2 {
-    width: 900px; height: 900px;
+    width: 500px; height: 500px;
     background: radial-gradient(circle, rgba(245, 166, 35, 0.1) 0%, transparent 65%);
     bottom: -30%; left: -15%;
     animation: orb-drift2 52s infinite ease-in-out alternate;
   }
 
   .ambient-orb-3 {
-    width: 600px; height: 600px;
+    width: 300px; height: 300px;
     background: radial-gradient(circle, rgba(0, 240, 255, 0.05) 0%, transparent 70%);
     top: 45%; left: 20%;
     animation: orb-drift3 44s infinite ease-in-out alternate;
@@ -621,7 +627,7 @@ const HERO_STYLES = `
     background-position: center bottom;
     mask-image: radial-gradient(ellipse 80% 50% at 50% 50%, black 10%, transparent 70%);
     will-change: transform;
-    opacity: 0.6;
+    opacity: 0.3;
     transform: rotateX(60deg) scale(1.5);
     transform-origin: center center;
   }
@@ -635,9 +641,9 @@ const HERO_STYLES = `
       radial-gradient(circle at 35% 65%, rgba(0, 240, 255, 0.1) 0%, transparent 45%),
       radial-gradient(circle at 75% 25%, rgba(245, 166, 35, 0.08) 0%, transparent 45%),
       radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 60%);
-    filter: blur(45px);
+    filter: blur(20px);
     will-change: transform;
-    opacity: 0.8;
+    opacity: 0.6;
     pointer-events: none;
   }
 
@@ -649,7 +655,7 @@ const HERO_STYLES = `
     background-image: radial-gradient(2px 2px at 40px 60px, #ffffff 50%, rgba(0,0,0,0)), radial-gradient(2px 2px at 20px 50px, rgba(255,255,255,0.8) 50%, rgba(0,0,0,0)), radial-gradient(2px 2px at 30px 100px, rgba(255,255,255,0.6) 50%, rgba(0,0,0,0)), radial-gradient(2px 2px at 40px 60px, rgba(255,255,255,0.4) 50%, rgba(0,0,0,0));
     background-repeat: repeat;
     background-size: 200px 200px;
-    opacity: 0.15;
+    opacity: 0.08;
     will-change: transform;
     mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 90%);
   }
@@ -658,8 +664,7 @@ const HERO_STYLES = `
   .hero-grain {
     position: absolute;
     inset: 0;
-    opacity: 0.045;
-    mix-blend-mode: overlay;
+    opacity: 0.02;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
     pointer-events: none;
     z-index: 50;
@@ -734,7 +739,6 @@ const HERO_STYLES = `
   /* ── Primary CTA ── */
   .cta-primary {
     position: relative;
-    overflow: hidden;
     display: inline-flex;
     align-items: center;
     gap: 12px;
@@ -757,7 +761,6 @@ const HERO_STYLES = `
     box-shadow: 0 0 50px rgba(0,240,255,0.3), inset 0 2px 6px rgba(255,255,255,0.2);
     border-color: rgba(0,240,255,0.8);
     background: rgba(0,240,255,0.15);
-    transform: translateY(-4px) scale(1.02);
   }
 
   /* ── Secondary CTA ── */
@@ -942,7 +945,7 @@ const techEase = [0, 0.7, 0.1, 1] as [number, number, number, number];
 
 const fadeUp = {
   hidden: { opacity: 0, clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", y: 15 },
-  visible: { opacity: 1, clipPath: "polygon(0 0%, 100% 0%, 100% 100%, 0% 100%)", y: 0, transition: { duration: 0.65, ease: techEase } },
+  visible: { opacity: 1, clipPath: "polygon(-100% -100%, 200% -100%, 200% 200%, -100% 200%)", y: 0, transition: { duration: 0.8, ease: techEase } },
 };
 
 const stagger = {
@@ -998,17 +1001,9 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   const springX = useSpring(mouseX, { stiffness: 120, damping: 50, mass: 1.5 });
   const springY = useSpring(mouseY, { stiffness: 120, damping: 50, mass: 1.5 });
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (reduceMotion) return;
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    // Discretize mapping for robotic snap feeling
-    const rawX = (e.clientX - cx) / 90;
-    const rawY = (e.clientY - cy) / 90;
-    const step = 0.5;
-    mouseX.set(Math.round(rawX / step) * step);
-    mouseY.set(Math.round(rawY / step) * step);
-  }, [reduceMotion, mouseX, mouseY]);
+  const handleMouseMove = useCallback((_e: MouseEvent) => {
+    // Animation disabled to prevent device lag
+  }, []);
 
   useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove);
@@ -1024,7 +1019,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
   const nodes = [
     { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "علاقة بميزانها",  w: 1.2 },
-    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم سيادي",    w: 0.8 },
+    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم خاص",    w: 0.8 },
     { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "نبض متذبذب",  w: 1.5 },
     { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "تشويش روح",   w: 0.9 },
     { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "احتواء حقيقي",w: 1.1 },
@@ -1273,14 +1268,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const globalMouseX = useMotionValue(0);
   const globalMouseY = useMotionValue(0);
 
-  const handleGlobalMouseMove = useCallback((e: React.MouseEvent) => {
-    if (reduceMotion) return;
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    // 5x more sensitive for dramatic architectural tracking
-    globalMouseX.set((e.clientX - cx) / 20);
-    globalMouseY.set((e.clientY - cy) / 20);
-  }, [reduceMotion, globalMouseX, globalMouseY]);
+  const handleGlobalMouseMove = useCallback((_e: React.MouseEvent) => {
+    // Animation disabled to prevent device lag
+  }, []);
 
   // Layer 1: Foreground Grid (Fastest response, moves opposite to mouse context)
   const gridX = useSpring(useTransform(globalMouseX, x => -x * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
@@ -1329,9 +1319,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
   }, []);
 
   const warpLines = useMemo(() => (
-    Array.from({ length: 40 }, (_, i) => ({
+    Array.from({ length: 20 }, (_, i) => ({
       id: `warp-line-${i}`,
-      top: `${(i / 40) * 110 - 5}%`,
+      top: `${(i / 20) * 110 - 5}%`,
       width: `${15 + Math.random() * 45}%`,
       opacity: 0.15 + Math.random() * 0.55,
       delay: Math.random() * 0.4,
@@ -1408,7 +1398,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             <motion.div variants={fadeUp} className="hero-eyebrow-row">
               <span className="hero-badge">
                 <span className="hero-badge__dot" />
-                DAWAYIR — الرحلة
+                الرحلة
               </span>
               <PulseBadge count={pulseCount} />
             </motion.div>
@@ -1422,9 +1412,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             <motion.div variants={fadeUp} className="hero-divider" />
 
             <motion.p variants={fadeUp} className="hero-body">
-              قف. خذ نفساً عميقاً.
-              أنت لست بحاجة إلى المزيد من المهام. أنت بحاجة إلى <strong>خريطة تصبح فيها مرئياً لنفسك</strong>.
-              نترجم فوضى أفكارك فوراً لإحداثيات بصرية ترصد نزيف طاقتك.
+              قف خذ نفساً عميقاً أنت لست بحاجة إلى المزيد من المهام أنت بحاجة إلى خريطة تصبح فيها مرئياً لنفسك تترجم فوضى أفكارك فوراً لإحداثيات بصرية ترصد نزيف طاقتك.
             </motion.p>
 
             <motion.div variants={fadeUp} className="hero-input-group">
@@ -1453,30 +1441,20 @@ export const HeroSection: FC<HeroSectionProps> = ({
               )}
             </motion.div>
 
-            <motion.div variants={fadeUp} className="cta-group">
+            <motion.div variants={fadeUp} className="cta-group overflow-visible">
               <motion.button
                 type="button"
                 className="cta-primary"
                 onClick={handleStart}
-                whileHover={{ scale: 1.04, y: -3 }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: 1.04, y: -4 }}
+                whileTap={{ scale: 0.98 }}
                 id="hero-cta-start"
               >
                 <Zap className="hero-cta-icon" />
-                <span>{ctaJourney}</span>
+                <span>ابدأ رحلة علاقاتك</span>
                 <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
               </motion.button>
 
-              <motion.button
-                type="button"
-                className="cta-secondary"
-                onClick={() => document.getElementById("simulation")?.scrollIntoView({ behavior: "smooth" })}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                id="hero-cta-explore"
-              >
-                {secondaryCta}
-              </motion.button>
             </motion.div>
 
             <motion.div variants={fadeUp} className="hero-trust-row">

@@ -69,11 +69,8 @@ export const TEIWidget: FC = () => {
 
   return (
     <motion.div
-      className="rounded-[1.25rem] p-4 text-right w-full living-element flow-appear"
+      className="rounded-3xl p-5 text-right w-full living-element flow-appear bg-slate-950/40 backdrop-blur-xl border border-white/5 shadow-xl relative overflow-hidden"
       style={{
-        background: colors.bg,
-        border: `1px solid ${colors.border}`,
-        /* نبضة الحياة تتوافق مع لون المؤشر */
         ["--organic-pulse-color" as string]: colors.pulse,
       }}
       initial={{ opacity: 0, y: 10 }}
@@ -143,7 +140,7 @@ export const TEIWidget: FC = () => {
           </div>
 
           {/* الرسالة */}
-          <p className="text-[12px] leading-[1.65]" style={{ color: "rgba(203,213,225,0.75)" }}>
+          <p className="text-[13px] leading-[1.6] font-medium text-slate-300">
             {tei.message}
           </p>
 

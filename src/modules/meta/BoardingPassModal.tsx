@@ -167,7 +167,7 @@ export const BoardingPassModal: FC<BoardingPassModalProps> = ({ isOpen, onClose,
 
                     {poeticState && (
                       <div className="mt-6 border-t border-amber-500/10 pt-4 text-center">
-                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Sovereign State | الحالة السيادية</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Private State | الحالة الخاصة</p>
                         <div className="inline-block px-4 py-1 rounded-lg bg-amber-500/5 border border-amber-500/20">
                           <p className="text-sm font-black text-amber-200">{poeticState}</p>
                         </div>

@@ -103,3 +103,17 @@ final_hero_upgrade.py
 final_landing_fix.py
 repair_landing.py
 landing-hero-*.png
+<<<<<<< HEAD
+=======
+
+# Junk and local artifacts
+build_output_utf8.txt
+ts_errors_fresh.txt
+scratch/
+fix_cursors.js
+ts_errors_fresh.txt
+ts_errors.txt
+build-*.log
+*.log
+
+>>>>>>> feat/sovereign-final-stabilization

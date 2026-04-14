@@ -81,9 +81,15 @@ export const PhaseOneGoal: FC<PhaseOneGoalProps> = ({ data, loading }) => {
 
     const TARGET = 10;
     const metrics = [
+<<<<<<< HEAD
         { label: "مستخدمين سجلوا", current: data.registeredUsers, target: TARGET, color: "emerald" }, 
         { label: "مستخدمين ثبتوا التطبيق", current: data.installedUsers, target: TARGET, color: "cyan" },
         { label: "أشخاص مضافين على الخرائط", current: data.addedPeople, target: TARGET, color: "indigo" }
+=======
+        { label: "مسافرين سجلوا", current: data.registeredTravelers, target: TARGET, color: "emerald" }, 
+        { label: "ثبّتوا الرحلة (PWA)", current: data.installedTravelers, target: TARGET, color: "cyan" },
+        { label: "رفاق مضافين على الخرائط", current: data.addedPeers, target: TARGET, color: "indigo" }
+>>>>>>> feat/sovereign-final-stabilization
     ];
 
     const completedGoals = metrics.filter(m => m.current >= m.target).length;
@@ -93,7 +99,11 @@ export const PhaseOneGoal: FC<PhaseOneGoalProps> = ({ data, loading }) => {
         { lbl: "الرئيسية (انطلق)", completed: totalProgress > 10 },
         { lbl: "تسجيل الدخول", completed: totalProgress > 30 },
         { lbl: "خريطة الدواير", completed: totalProgress > 50 },
+<<<<<<< HEAD
         { lbl: "إضافة شخص", completed: totalProgress > 70 },
+=======
+        { lbl: "إضافة رفيق", completed: totalProgress > 70 },
+>>>>>>> feat/sovereign-final-stabilization
         { lbl: "إحساسك تجاهه", completed: totalProgress > 85, active: true },
         { lbl: "العبور (التشخيص)", completed: totalProgress >= 100 }
     ];
@@ -116,7 +126,11 @@ export const PhaseOneGoal: FC<PhaseOneGoalProps> = ({ data, loading }) => {
                             <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400">تتبع حي</span>
                         </div>
                         <h2 className="text-xl font-black text-white tracking-tight leading-none mb-1">الزخم الأول (Phase One)</h2>
+<<<<<<< HEAD
                         <p className="text-[11px] text-slate-400 font-medium tracking-wide">الوصول لـ 10 مسجلين - 10 تثبيت - 10 خيوط واعية على الخريطة.</p>
+=======
+                        <p className="text-[11px] text-slate-400 font-medium tracking-wide">الوصول لـ {TARGET} مسافرين - {TARGET} تثبيت - {TARGET} رفاق على الخريطة.</p>
+>>>>>>> feat/sovereign-final-stabilization
                     </div>
                 </div>
 

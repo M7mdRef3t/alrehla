@@ -44,7 +44,11 @@ export const SovereignFunnel: React.FC = () => {
             <div className="flex flex-col items-center justify-center min-h-[400px] border border-teal-500/20 rounded-3xl bg-[#0B0F19] shadow-2xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 to-indigo-500/5 animate-pulse" />
                 <Activity className="w-12 h-12 text-teal-400 animate-spin" />
+<<<<<<< HEAD
                 <p className="mt-4 text-teal-300 font-bold tracking-widest text-sm uppercase">جاري استدعاء البيانات السيادية...</p>
+=======
+                <p className="mt-4 text-teal-300 font-bold tracking-widest text-sm uppercase">جاري استدعاء بيانات الرحلة...</p>
+>>>>>>> feat/sovereign-final-stabilization
             </div>
         );
     }
@@ -67,7 +71,11 @@ export const SovereignFunnel: React.FC = () => {
         { label: 'الزوار الجدد (الرئيسية)', value: data.landing_views, icon: Users, color: 'from-blue-500 to-cyan-400', border: 'border-blue-500/30' },
         { label: 'بدء الرحلة (Onboarding)', value: data.onboarding_starts, icon: Target, color: 'from-indigo-500 to-purple-400', border: 'border-indigo-500/30' },
         { label: 'الوصول للالتزام (Activation)', value: data.activation_views, icon: Filter, color: 'from-amber-500 to-orange-400', border: 'border-amber-500/30' },
+<<<<<<< HEAD
         { label: 'التحويل الناجح (Success)', value: data.successful_payments, icon: CheckCircle2, color: 'from-teal-500 to-emerald-400', border: 'border-teal-500/30' },
+=======
+        { label: 'تأكيد الالتزام (Proof Submitted)', value: data.successful_payments, icon: CheckCircle2, color: 'from-teal-500 to-emerald-400', border: 'border-teal-500/30' },
+>>>>>>> feat/sovereign-final-stabilization
     ];
 
     return (
@@ -75,7 +83,11 @@ export const SovereignFunnel: React.FC = () => {
             <header className="flex flex-col gap-2">
                 <h2 className="text-3xl font-black text-white tracking-widest uppercase flex items-center gap-3">
                     <Activity className="w-8 h-8 text-teal-400" />
+<<<<<<< HEAD
                     قمع التحويل السيادي (Sovereign Funnel)
+=======
+                    قمع مسار الرحلة (Journey Funnel)
+>>>>>>> feat/sovereign-final-stabilization
                 </h2>
                 <p className="text-slate-400 font-medium">تحليل مسار الزوار وحساب نسب السقوط بدقة من قاعدة بيانات المنصة (آخر 30 يوم).</p>
             </header>

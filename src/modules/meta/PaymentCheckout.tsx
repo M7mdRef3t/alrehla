@@ -77,6 +77,11 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
 
   useEffect(() => {
     // Fired when the payment selector is shown
+    analyticsService.trackCheckoutViewed({
+      course: TIER_LABELS.premium,
+      price: price.monthly
+    });
+    
     analyticsService.trackAddPaymentInfo({ 
       course: TIER_LABELS.premium,
       price: price.monthly 
@@ -101,6 +106,23 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
   // ── Telegram notification ────────────────────────────────────────
   const notifyOwner = useCallback(async (method: PaymentMethod) => {
     setIsSending(true);
+
+    // P0: Critical funnel event - User committed to paying/sent proof
+    analyticsService.trackPaymentProofSubmitted({
+      method,
+      value: price.monthly,
+      currency: "USD",
+      content_name: TIER_LABELS.premium
+    });
+
+    // Keep standard registration tracking for third-party sync
+    analyticsService.trackCompleteRegistration({
+      method,
+      value: price.monthly,
+      currency: "USD",
+      content_name: TIER_LABELS.premium
+    });
+
     try {
       const user = await getUserInfo();
       const methodLabels: Record<PaymentMethod, string> = {
@@ -126,14 +148,6 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           "👇 *المطلوب:* تأكيد استلام الفلوس ثم تفعيل الحساب",
         ].join("\n"),
         parseMode: "Markdown",
-      });
-
-      // Perfect place for CompleteRegistration - User committed to paying
-      analyticsService.trackCompleteRegistration({
-        method,
-        value: price.monthly,
-        currency: "USD",
-        content_name: TIER_LABELS.premium
       });
 
       setRequestSent(true);
@@ -208,7 +222,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
       >
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-teal-500/20">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center mx-auto mb-3 shadow-md shadow-teal-500/10">
             <ShieldCheck className="w-7 h-7 text-slate-950" />
           </div>
           <h3 className="text-lg font-black text-white mb-1">اختر طريقة الدفع</h3>

@@ -1,1 +1,1 @@
-﻿export { default } from './layout/SettingsSheet.jsx';
+export { default } from './layout/SettingsSheet.jsx';

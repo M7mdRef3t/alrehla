@@ -1,3 +1,5 @@
+"use client";
+
 import { syncMemoryFromSupabase } from "@/services/userMemory";
 import { syncSubscription } from "@/services/subscriptionManager";
 import { syncLiveSessionsFromSupabase } from "@/modules/dawayir-live/utils/sessionHistory";
@@ -35,6 +37,7 @@ import { BoardingPassModal } from "../BoardingPassModal";
 import { useMapState } from "@/modules/map/store/map.store";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { UserbackWidget } from "@/components/UserbackWidget";
+import { hasDiagnosisCompleted } from "@/modules/diagnosis";
 
 function hasOAuthCallbackParams(): boolean {
   const search = new URLSearchParams(getSearch());
@@ -134,7 +137,18 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
     const APP_LOGIN_BOOT_ACTION = "open_login";
     
-    const action = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
+    let action = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
+    
+    // Fallback to URL parameters if no boot action exists (e.g., direct marketing links)
+    if (!action) {
+      const params = new URLSearchParams(window.location.search);
+      const product = params.get("product");
+      if (product === "session") action = "navigate:session-intake";
+      if (product === "masarat") action = "navigate:masarat";
+      if (product === "map") action = "navigate:map";
+      if (product === "atmosfera") action = "navigate:atmosfera";
+    }
+
     if (!action) return;
     skipExitToLandingOnceRef.current = true;
 
@@ -268,10 +282,29 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     }
   }, [screen, goalId, storedGoalId, setScreen, authStatus]);
 
+  // ── DIAGNOSIS GATE (Conversion Engine) ──
+  // First-time visitors who are anonymous go through diagnosis before anything else.
+  useEffect(() => {
+    if (authStatus === "loading") return;
+    if (screen !== "landing") return;
+    if (hasDiagnosisCompleted()) return;
+    // Don't gate returning authenticated users
+    if (authStatus === "ready" && authUser?.id) return;
+    void setScreen("diagnosis" as typeof screen);
+  }, [screen, authStatus, authUser, setScreen]);
+
   // STRICT CHECKOUT GATE: Guard map access for free tier
   useEffect(() => {
     if (authStatus !== "ready" || !authUser || tier !== "free" || isOwnerWatcher) return;
     
+    // First Sight Grace: If user just finished onboarding, let them see their sanctuary once.
+    const justFinishedOnboarding = typeof window !== "undefined" && window.sessionStorage.getItem("dawayir-onboarding-just-finished") === "true";
+    if (justFinishedOnboarding && screen === "map") {
+      // Consume the flag so the next time it's gated
+      window.sessionStorage.removeItem("dawayir-onboarding-just-finished");
+      return;
+    }
+
     // If user tries to access map or guided flow while being free, show the mandatory checkout
     if (screen === "map" || screen === "guided") {
       setAppOverlay("premiumBridge", true);

@@ -8,7 +8,7 @@ import { OracleService } from "./oracleService";
 export interface AutonomousAction {
     id: string;
     gatewayId: string;
-    type: "ignite_market" | "lock_gateway" | "scale_energy" | "notify_admin";
+    type: DecisionType;
     reasoning: string;
     payload: any;
     severity: "low" | "medium" | "high";
@@ -58,7 +58,7 @@ export class MarketingAutomationService {
                     const mappedAction: AutonomousAction = {
                         id: `auto-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
                         gatewayId: act.gatewayId,
-                        type: act.type as any, // mapping
+                        type: act.type, // No cast needed
                         reasoning: act.reasoning,
                         payload: act.payload,
                         severity: act.severity || "medium"

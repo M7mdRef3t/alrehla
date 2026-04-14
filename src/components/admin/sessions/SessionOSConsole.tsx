@@ -9,7 +9,12 @@ import html2canvas from 'html2canvas';
 
 type ConsoleTab = 'dashboard' | 'triage_queue' | 'ai_brief' | 'live_session' | 'post_session' | 'analytics';
 
+<<<<<<< HEAD
 const techEase: [number, number, number, number] = [0, 0.7, 0.1, 1];
+=======
+// Unused constant causing TS issues - definition kept but type-cast if used
+const techEase: any = [0, 0.7, 0.1, 1];
+>>>>>>> feat/sovereign-final-stabilization
 
 export function SessionOSConsole() {
   const [activeTab, setActiveTab] = useState<ConsoleTab>('dashboard');
@@ -67,8 +72,15 @@ export function SessionOSConsole() {
 
     return () => {
       if (channel) {
+<<<<<<< HEAD
          void getSupabaseClient().then((supabase) => {
            supabase?.removeChannel(channel);
+=======
+        void getSupabaseClient().then((supabase) => {
+           if (supabase) {
+             supabase.removeChannel(channel);
+           }
+>>>>>>> feat/sovereign-final-stabilization
          });
       }
     };
@@ -107,7 +119,13 @@ export function SessionOSConsole() {
             event: 'OVERRIDE',
             payload: { type, ...payload }
           }).then(() => {
+<<<<<<< HEAD
             supabase?.removeChannel(channel);
+=======
+            if (supabase) {
+              supabase.removeChannel(channel);
+            }
+>>>>>>> feat/sovereign-final-stabilization
           });
         }
       });
@@ -265,7 +283,11 @@ export function SessionOSConsole() {
       <aside className="w-64 border-l border-neutral-800 bg-[#0F0F0F] flex flex-col p-4 z-10">
         <div className="mb-8 px-2">
           <h2 className="text-xl font-black text-indigo-400 font-sans tracking-tight uppercase">بوصلة السيادة</h2>
+<<<<<<< HEAD
           <p className="text-[10px] text-neutral-500 mt-1 font-bold uppercase tracking-widest">محرك الوعي السيادي</p>
+=======
+          <p className="text-[10px] text-neutral-500 mt-1 font-bold uppercase tracking-widest">محرك الوعي الخاص</p>
+>>>>>>> feat/sovereign-final-stabilization
         </div>
 
         <nav className="space-y-1.5 flex-grow">
@@ -301,7 +323,11 @@ export function SessionOSConsole() {
           {/* Top Intelligence Bar */}
           <div className="flex justify-between items-center mb-12">
             <div>
+<<<<<<< HEAD
               <h1 className="text-3xl font-black tracking-tight">لوحة التحكم السيادية</h1>
+=======
+              <h1 className="text-3xl font-black tracking-tight">لوحة التحكم الخاصة</h1>
+>>>>>>> feat/sovereign-final-stabilization
               <p className="text-neutral-500 text-sm mt-1">إدارة وتحليل رحلات الوعي</p>
             </div>
             
@@ -475,7 +501,11 @@ export function SessionOSConsole() {
                     </div>
                     <div className="space-y-6">
                        <InputField label="التدخل المعرفي" value={mainIntervention} onChange={setMainIntervention} textarea />
+<<<<<<< HEAD
                        <InputField label="التكليف السيادي (Assignment)" value={assignment} onChange={setAssignment} textarea />
+=======
+                       <InputField label="المهمة الخاصة (Assignment)" value={assignment} onChange={setAssignment} textarea />
+>>>>>>> feat/sovereign-final-stabilization
                     </div>
                  </div>
               </motion.div>

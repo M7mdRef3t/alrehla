@@ -24,7 +24,7 @@ export default function WhisperInputButton({
     <div className={`whisper-starter ${disabled ? 'whisper-starter--disabled' : ''}`}>
       <button
         type="button"
-        className={`whisper-starter__button ${isListening ? 'whisper-starter__button--active' : ''}`}
+        className={`whisper-starter__button ${isListening ?'whisper-starter__button--active' : ''}`}
         onClick={isListening ? onStop : onStart}
         disabled={disabled || !isSupported}
         aria-pressed={isListening}

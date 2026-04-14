@@ -37,7 +37,11 @@ export function CollapsibleSection({
             setExpanded(!expanded);
           }
         }}
+<<<<<<< HEAD
         className="w-full flex items-center justify-between p-5 text-right hover:bg-white/5 transition-all focus:outline-none cursor-pointer"
+=======
+        className="w-full flex items-center justify-between p-5 text-right hover:bg-white/5 transition-all focus:outline-none"
+>>>>>>> feat/sovereign-final-stabilization
       >
         <div className="flex items-center gap-3">
           {expanded ? <ChevronUp className="w-4 h-4 opacity-70" /> : <ChevronDown className="w-4 h-4 opacity-70" />}

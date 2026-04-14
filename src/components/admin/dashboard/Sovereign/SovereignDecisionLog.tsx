@@ -74,7 +74,11 @@ export const SovereignDecisionLog: FC = () => {
             <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-indigo-400">
                     <Brain className="w-4 h-4" />
+<<<<<<< HEAD
                     <h3 className="text-xs font-black uppercase tracking-widest text-shadow-glow">سجل القرارات السيادية (AI Decisions)</h3>
+=======
+                    <h3 className="text-xs font-black uppercase tracking-widest text-shadow-glow">سجل قرارات الذكاء الاصطناعي (AI Decisions)</h3>
+>>>>>>> feat/sovereign-final-stabilization
                 </div>
                 <div className="flex items-center gap-2">
                     <div className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-indigo-400 animate-pulse' : 'bg-indigo-500'}`} />

@@ -113,7 +113,7 @@ export const DomainRadar = memo(function DomainRadar({
             fill={p.color}
             stroke="#0a0a0f"
             strokeWidth={2}
-            className="cursor-pointer"
+            className=""
             onClick={() => onDomainClick?.(p.id)}
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}

@@ -1,5 +1,7 @@
 import { logger } from "@/services/logger";
 import { FC, useState } from "react";
+import { Z_LAYERS } from "@/config/zIndices";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { motion, AnimatePresence } from "framer-motion";
 import { Share2, Check, Clock, ShieldCheck, X, LockKeyhole } from "lucide-react";
 import { supabase } from "@/services/supabaseClient";
@@ -17,6 +19,8 @@ export const ShareDialog: FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [shareUrl, setShareUrl] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+
+    useScrollLock(isOpen);
 
     const createShare = async () => {
         setIsLoading(true);
@@ -47,7 +51,7 @@ export const ShareDialog: FC = () => {
     return (
         <>
             {/* Float Issuance Button (Neutral & Iconic) */}
-            <div className="fixed bottom-32 right-6 z-[60]">
+            <div className="fixed bottom-32 right-6" style={{ zIndex: Z_LAYERS.NAVIGATION_BARS + 20 }}>
                 <button
                     onClick={() => setIsOpen(true)}
                     className="p-4 rounded-full bg-white text-black shadow-3xl flex items-center gap-3 transition-all active:scale-[0.98] group hover:bg-white/90 border border-white/10"
@@ -59,7 +63,10 @@ export const ShareDialog: FC = () => {
 
             <AnimatePresence>
                 {isOpen && (
-                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-6 backdrop-blur-[64px] backdrop-saturate-[0.9] bg-black/25 text-right">
+                    <div
+                        className="fixed inset-0 flex items-center justify-center p-6 backdrop-blur-[64px] backdrop-saturate-[0.9] bg-black/25 text-right"
+                        style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
+                    >
                         <motion.div
                             initial={{ opacity: 0, scale: 0.995, y: 5 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}

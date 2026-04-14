@@ -370,7 +370,11 @@ export const GhostMirror: React.FC = () => {
 
           <div className="p-6 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 shrink-0">
             <h3 className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2 uppercase tracking-widest">
+<<<<<<< HEAD
               <Eye className="h-4 w-4" /> رصد سيادي (Oracle)
+=======
+              <Eye className="h-4 w-4" /> رصد خاص (Oracle)
+>>>>>>> feat/sovereign-final-stabilization
             </h3>
             {anxiousCount > 0 && traces[0]?.sentiment === "anxious" ? (
               <p className="text-xs text-amber-400 leading-loose font-bold">
@@ -382,7 +386,11 @@ export const GhostMirror: React.FC = () => {
               </p>
             ) : (
                <p className="text-xs text-slate-500 leading-loose font-bold">
+<<<<<<< HEAD
                 "في انتظار البيانات الحية لتكوين الرؤية السيادية..."
+=======
+                "في انتظار البيانات الحية لتكوين الرؤية الخاصة..."
+>>>>>>> feat/sovereign-final-stabilization
               </p>
             )}
             

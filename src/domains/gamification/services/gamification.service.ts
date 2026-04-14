@@ -7,6 +7,10 @@
 
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { eventBus } from "@/shared/events";
+<<<<<<< HEAD
+=======
+import { freezeRewardsService } from "./freezeRewards";
+>>>>>>> feat/sovereign-final-stabilization
 import type { GamificationProfile, LevelProgress } from "../types";
 
 export const gamificationService = {
@@ -52,6 +56,45 @@ export const gamificationService = {
     return useGamificationState.getState().spendCoins(amount);
   },
 
+<<<<<<< HEAD
+=======
+  // ─── Frost Points ───────────────────────────────
+
+  addFrostPoints(amount: number, reason: string): void {
+    useGamificationState.getState().addFrostPoints(amount, reason);
+  },
+
+  spendFrostPoints(amount: number): boolean {
+    return useGamificationState.getState().spendFrostPoints(amount);
+  },
+
+  getFrostBalance(): number {
+    return useGamificationState.getState().frostPoints;
+  },
+
+  // ─── Freeze Rewards (delegated) ────────────────
+
+  rewardFreeze(nodeId: string) {
+    return freezeRewardsService.onNodeFrozen(nodeId);
+  },
+
+  rewardUnfreeze(nodeId: string) {
+    return freezeRewardsService.onNodeUnfrozen(nodeId);
+  },
+
+  rewardBoundary(nodeId: string) {
+    return freezeRewardsService.onBoundarySet(nodeId);
+  },
+
+  rewardPatternDetected(patternType: string) {
+    return freezeRewardsService.onPatternDetected(patternType);
+  },
+
+  getFreezeProfile() {
+    return freezeRewardsService.getFreezeProfile();
+  },
+
+>>>>>>> feat/sovereign-final-stabilization
   // ─── Badges ─────────────────────────────────────
 
   awardBadge(
@@ -106,7 +149,18 @@ export const gamificationService = {
     useGamificationState.getState().checkAndResetQuests();
   },
 
+<<<<<<< HEAD
   // ─── Reset ──────────────────────────────────────
+=======
+  // ─── Season ──────────────────────────────────
+
+  getSeasonProgress() {
+    const s = useGamificationState.getState();
+    return { seasonId: s.seasonId, seasonXP: s.seasonXP };
+  },
+
+  // ─── Reset ──────────────────────────────────
+>>>>>>> feat/sovereign-final-stabilization
 
   resetAll(): void {
     useGamificationState.getState().resetAll();

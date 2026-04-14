@@ -415,7 +415,11 @@ function ComposeTab({ templates, onSent }: { templates: EmailTemplate[]; onSent:
         <button
           onClick={handleSend}
           disabled={isSending || !to.trim() || !subject.trim()}
+<<<<<<< HEAD
           className="flex items-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-black text-sm uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-teal-500/20 hover:shadow-teal-500/40 active:scale-[0.98]"
+=======
+          className="flex items-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-black text-sm uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-teal-500/10 hover:shadow-teal-500/40 active:scale-[0.98]"
+>>>>>>> feat/sovereign-final-stabilization
         >
           {isSending ? (
             <RefreshCw className="w-4 h-4 animate-spin" />

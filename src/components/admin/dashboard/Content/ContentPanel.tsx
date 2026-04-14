@@ -466,7 +466,11 @@ export const ContentPanel: FC = () => {
                                             {SAFETY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                                         </select>
                                     </div>
+<<<<<<< HEAD
                                     <label className="flex items-center gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg cursor-pointer">
+=======
+                                    <label className="flex items-center gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg">
+>>>>>>> feat/sovereign-final-stabilization
                                         <input type="checkbox" checked={resultEmergency} onChange={(e) => setResultEmergency(e.target.checked)} className="peer" />
                                         <span className="text-xs font-bold text-rose-400">حالة طوارئ قصوى (Override)</span>
                                     </label>

@@ -5,8 +5,15 @@ import { safeGetSession, supabase } from "@/services/supabaseClient";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { replaceUrl, createCurrentUrl } from "@/services/navigation";
 import { runtimeEnv } from "@/config/runtimeEnv";
+<<<<<<< HEAD
 import { trackEvent, AnalyticsEvents, trackIdentityLinked } from "@/services/analytics";
 import { markRevenueAccessUnlocked } from "@/services/revenueAccess";
+=======
+import { AnalyticsEvents, trackIdentityLinked } from "@/services/analytics";
+import { analyticsService } from "@/domains/analytics";
+import { markRevenueAccessUnlocked } from "@/services/revenueAccess";
+import { EcosystemData } from "@/types/ecosystem";
+>>>>>>> feat/sovereign-final-stabilization
 
 export type UserToneGender = "male" | "female" | "neutral";
 export type SubscriptionTier = "free" | "pro";
@@ -21,10 +28,18 @@ interface AuthState {
   role: string | null;
   roleOverride: string | null;
   tier: SubscriptionTier;
+<<<<<<< HEAD
+=======
+  ecosystemData: EcosystemData | null;
+>>>>>>> feat/sovereign-final-stabilization
   setSession: (session: Session | null) => void;
   setRole: (role: string | null) => void;
   setRoleOverride: (role: string | null) => void;
   setTier: (tier: SubscriptionTier) => void;
+<<<<<<< HEAD
+=======
+  setEcosystemData: (data: EcosystemData | null) => void;
+>>>>>>> feat/sovereign-final-stabilization
 }
 
 const ROLE_OVERRIDE_KEY = "dawayir-role-override";
@@ -155,6 +170,10 @@ export const useAuthState = create<AuthState>((set) => ({
   role: null,
   roleOverride: getInitialRoleOverride(),
   tier: "free",
+<<<<<<< HEAD
+=======
+  ecosystemData: null,
+>>>>>>> feat/sovereign-final-stabilization
   setSession: (session) =>
     set(() => {
       const user = session?.user ?? null;
@@ -184,7 +203,12 @@ export const useAuthState = create<AuthState>((set) => ({
       }
       return { roleOverride: normalized };
     }),
+<<<<<<< HEAD
   setTier: (tier) => set({ tier })
+=======
+  setTier: (tier) => set({ tier }),
+  setEcosystemData: (data) => set({ ecosystemData: data })
+>>>>>>> feat/sovereign-final-stabilization
 }));
 
 export function getAuthToken(): string | null {
@@ -241,7 +265,11 @@ async function syncAuthRole(session: Session | null): Promise<void> {
   try {
     const { data, error } = await supabaseClient
       .from("profiles")
+<<<<<<< HEAD
       .select("role, subscription_status")
+=======
+      .select("role, subscription_status, ecosystem_data")
+>>>>>>> feat/sovereign-final-stabilization
       .eq("id", user.id)
       .maybeSingle();
 
@@ -254,6 +282,12 @@ async function syncAuthRole(session: Session | null): Promise<void> {
       if (tier === "pro") {
         markRevenueAccessUnlocked();
       }
+<<<<<<< HEAD
+=======
+      if (data.ecosystem_data) {
+        useAuthState.getState().setEcosystemData(data.ecosystem_data as EcosystemData);
+      }
+>>>>>>> feat/sovereign-final-stabilization
       return;
     }
   } catch {
@@ -298,7 +332,11 @@ async function initSupabaseAuth(): Promise<void> {
         void syncAuthRole(currentSession);
 
         if (event === "SIGNED_IN" && currentSession?.user?.id) {
+<<<<<<< HEAD
           trackEvent(AnalyticsEvents.AUTH_COMPLETED);
+=======
+          analyticsService.auth(AnalyticsEvents.AUTH_COMPLETED);
+>>>>>>> feat/sovereign-final-stabilization
           void trackIdentityLinked(currentSession.user.id);
         }
       });

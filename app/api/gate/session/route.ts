@@ -110,7 +110,7 @@ export async function POST(req: Request) {
       }
 
       // Trigger CAPI for layer 2
-      await sendToCapi('CompleteRegistration', eventId, 
+      await sendToCapi('GateQualified', eventId, 
         { em: existingSession.email || payload.email, external_id: sessionId }, 
         { intent: payload.intent, commitment: payload.commitment }
       );

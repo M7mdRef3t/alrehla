@@ -9,6 +9,22 @@ import {
 } from "lucide-react";
 import { isSupabaseReady, supabase } from "@/services/supabaseClient";
 
+<<<<<<< HEAD
+=======
+const normalizePhoneNumber = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("0") && digits.length === 11) {
+    return `20${digits.slice(1)}`;
+  }
+  if (digits.length >= 8 && digits.length <= 15) {
+    return digits;
+  }
+  return null;
+};
+
+>>>>>>> feat/sovereign-final-stabilization
 // ─── Types ────────────────────────────────────────────────────────────────────────
 
 type SessionStatus = "pending" | "active" | "done" | "cancelled";
@@ -116,6 +132,7 @@ export const SessionOSPanel: React.FC = () => {
     setIsFetchingSovereign(true);
     
     try {
+<<<<<<< HEAD
       let userId = session.user_id;
       
       // Fallback: look up by phone if user_id is missing
@@ -134,6 +151,35 @@ export const SessionOSPanel: React.FC = () => {
           .select("transformation_diagnosis, ai_interpretation")
           .eq("user_id", userId)
           .single();
+=======
+      let resolvedUserId = session.user_id;
+      
+      const isUUID = (id: string | null) => 
+        id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) : false;
+
+      // 1. Fallback: look up by phone if user_id is missing or NOT a valid UUID (might be a phone number string)
+      if (!resolvedUserId && session.client_phone) {
+        const normalizedPhone = normalizePhoneNumber(session.client_phone);
+        if (normalizedPhone) {
+          const { data: lead } = await supabase
+            .from("marketing_leads")
+            .select("profile_id")
+            .eq("phone_normalized", normalizedPhone)
+            .maybeSingle();
+          if (lead?.profile_id && isUUID(lead.profile_id)) {
+            resolvedUserId = lead.profile_id;
+          }
+        }
+      }
+
+      // 2. Query Journey Map with verified UUID
+      if (resolvedUserId && isUUID(resolvedUserId)) {
+        const { data: mapData } = await supabase
+          .from("journey_maps")
+          .select("transformation_diagnosis, ai_interpretation")
+          .eq("user_id", resolvedUserId)
+          .maybeSingle();
+>>>>>>> feat/sovereign-final-stabilization
 
         if (mapData) {
           setSovereignProfile({
@@ -213,7 +259,11 @@ export const SessionOSPanel: React.FC = () => {
 
   const generateAISummary = async (session: Session) => {
     setIsGeneratingAI(true);
+<<<<<<< HEAD
     // Simulate AI generation (replace with real Gemini call if needed)
+=======
+    // Simulate AI generation
+>>>>>>> feat/sovereign-final-stabilization
     await new Promise(r => setTimeout(r, 1500));
     const summary = `📝 ملخص الجلسة لـ ${session.client_name}: نوع الجلسة "${TYPE_CONFIG[session.session_type].label}". المحاور: ${session.goals || "مش متحدد"}. تقييم سريع بناءً على ملاحظاتك.`;
     
@@ -280,7 +330,11 @@ export const SessionOSPanel: React.FC = () => {
         } : null);
       }
       
+<<<<<<< HEAD
       alert(isSynced ? "✅ تم التحليل بنجاح مع دمج الملف السيادي للمسافر!" : "✅ محرك مسارات خلص التحليل (بدون ربط سيادي).");
+=======
+      alert(isSynced ? "✅ تم التحليل بنجاح مع دمج الملف الخاص للمسافر!" : "✅ محرك مسارات خلص التحليل (بدون ربط متقدم).");
+>>>>>>> feat/sovereign-final-stabilization
     } catch (e: any) {
       alert("❌ حصل مشكلة في المحرك: " + e.message);
     } finally {
@@ -318,7 +372,11 @@ export const SessionOSPanel: React.FC = () => {
         </div>
         <button
           onClick={() => setIsCreating(true)}
+<<<<<<< HEAD
           className="flex items-center gap-2 px-6 py-3 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm rounded-2xl transition-all shadow-lg shadow-teal-500/20 hover:scale-105 active:scale-95"
+=======
+          className="flex items-center gap-2 px-6 py-3 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm rounded-2xl transition-all shadow-md shadow-teal-500/10 hover:scale-105 active:scale-95"
+>>>>>>> feat/sovereign-final-stabilization
         >
           <Plus className="w-4 h-4" />
           افتح جلسة جديدة
@@ -335,7 +393,11 @@ export const SessionOSPanel: React.FC = () => {
               onClick={() => setFilter(filter === s ? "all" : s)}
               className={`p-4 rounded-2xl border transition-all text-right space-y-2 ${
                 filter === s ? cfg.bg + " " + cfg.color : "bg-white/[0.02] border-white/5 text-slate-400 hover:bg-white/5"
+<<<<<<< HEAD
               } ${cfg.bg}`}
+=======
+              }`}
+>>>>>>> feat/sovereign-final-stabilization
             >
               <div className="flex items-center justify-between">
                 <span className={`text-2xl font-black ${filter === s ? cfg.color : "text-white"}`}>
@@ -458,7 +520,16 @@ export const SessionOSPanel: React.FC = () => {
                     {TYPE_CONFIG[selected.session_type].label}
                   </p>
                 </div>
+<<<<<<< HEAD
                 <button onClick={() => setSelected(null)} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-all">
+=======
+                <button
+                  onClick={() => setSelected(null)}
+                  title="إغلاق التفاصيل"
+                  aria-label="إغلاق التفاصيل"
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-all"
+                >
+>>>>>>> feat/sovereign-final-stabilization
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -485,7 +556,11 @@ export const SessionOSPanel: React.FC = () => {
                 </div>
               </div>
 
+<<<<<<< HEAD
               {/* Sovereign Insights (The Bridge) */}
+=======
+              {/* Sovereign Insights */}
+>>>>>>> feat/sovereign-final-stabilization
               <AnimatePresence>
                 {(sovereignProfile || isFetchingSovereign) && (
                   <motion.div
@@ -501,7 +576,11 @@ export const SessionOSPanel: React.FC = () => {
                       
                       <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400 flex items-center gap-2">
                         <Activity className="w-3.5 h-3.5" />
+<<<<<<< HEAD
                         الملف السيادي للمسافر (Sovereign Insight)
+=======
+                        الملف الخاص للمسافر (Private Insight)
+>>>>>>> feat/sovereign-final-stabilization
                       </p>
 
                       {isFetchingSovereign ? (
@@ -591,11 +670,19 @@ export const SessionOSPanel: React.FC = () => {
                 )}
               </div>
 
+<<<<<<< HEAD
               {/* ── Sovereign Action Bar ── */}
               <div className="pt-4 border-t border-white/5 space-y-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
                   <Activity className="w-3.5 h-3.5" />
                   أدوات القيادة السيادية
+=======
+              {/* Sovereign Action Bar */}
+              <div className="pt-4 border-t border-white/5 space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                  <Activity className="w-3.5 h-3.5" />
+                  أدوات القيادة المتقدمة
+>>>>>>> feat/sovereign-final-stabilization
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <button 
@@ -650,11 +737,21 @@ export const SessionOSPanel: React.FC = () => {
                   <Timer className="w-5 h-5 text-teal-400" />
                   افتح جلسة جديدة
                 </h3>
+<<<<<<< HEAD
                 <button onClick={() => setIsCreating(false)} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-all">
+=======
+                <button
+                  onClick={() => setIsCreating(false)}
+                  title="إغلاق النافذة"
+                  aria-label="إغلاق النافذة"
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-all"
+                >
+>>>>>>> feat/sovereign-final-stabilization
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
+<<<<<<< HEAD
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">اسم المسافر *</label>
@@ -714,6 +811,72 @@ export const SessionOSPanel: React.FC = () => {
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors resize-none placeholder:text-slate-600"
                   />
                 </div>
+=======
+              <div className="space-y-1.5">
+                <label htmlFor="client_name" className="text-[10px] font-black uppercase tracking-widest text-slate-400">اسم المسافر *</label>
+                <input
+                  id="client_name"
+                  type="text"
+                  value={form.client_name}
+                  onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))}
+                  placeholder="بيانات المسافر..."
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors placeholder:text-slate-600"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="client_phone" className="text-[10px] font-black uppercase tracking-widest text-slate-400">رقم الواتساب</label>
+                <input
+                  id="client_phone"
+                  type="text"
+                  value={form.client_phone}
+                  onChange={e => setForm(f => ({ ...f, client_phone: e.target.value }))}
+                  placeholder="01xxxxxxxxx"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors placeholder:text-slate-600"
+                  dir="ltr"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="session_type" className="text-[10px] font-black uppercase tracking-widest text-slate-400">نوع الجلسة</label>
+                  <select
+                    id="session_type"
+                    value={form.session_type}
+                    onChange={e => setForm(f => ({ ...f, session_type: e.target.value as Session["session_type"] }))}
+                    title="اختر نوع الجلسة"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors"
+                  >
+                    <option value="assessment">تقييم مبدئي</option>
+                    <option value="followup">متابعة</option>
+                    <option value="crisis">طوارئ</option>
+                    <option value="coaching">كوتشينج</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="scheduled_at" className="text-[10px] font-black uppercase tracking-widest text-slate-400">ميعادنا إمتى؟</label>
+                  <input
+                    id="scheduled_at"
+                    type="datetime-local"
+                    value={form.scheduled_at || ""}
+                    onChange={e => setForm(f => ({ ...f, scheduled_at: e.target.value }))}
+                    title="اختر تاريخ وموعد الجلسة"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="goals" className="text-[10px] font-black uppercase tracking-widest text-slate-400">ناوي على إيه؟ (الأهداف)</label>
+                <textarea
+                  id="goals"
+                  value={form.goals}
+                  onChange={e => setForm(f => ({ ...f, goals: e.target.value }))}
+                  placeholder="أهداف الجلسة بوضوح..."
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-teal-500/50 transition-colors resize-none placeholder:text-slate-600"
+                />
+>>>>>>> feat/sovereign-final-stabilization
               </div>
 
               <div className="flex gap-3">
@@ -741,3 +904,7 @@ export const SessionOSPanel: React.FC = () => {
 };
 
 export default SessionOSPanel;
+<<<<<<< HEAD
+=======
+// Clean sanitized version - force-recompile-v2
+>>>>>>> feat/sovereign-final-stabilization

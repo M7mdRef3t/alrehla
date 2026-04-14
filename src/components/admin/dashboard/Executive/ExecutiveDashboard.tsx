@@ -86,9 +86,15 @@ export const ExecutiveDashboard: FC = () => {
         );
     }
 
+<<<<<<< HEAD
     const totalUsers = remoteStats?.totalUsers ?? 0;
     const marketingLeadsTotal = remoteStats?.marketingLeads?.total ?? 0;
     const activeNowValue = remoteStats?.activeNow ?? 0;
+=======
+    const totalUsers = remoteStats?.totalTravelers ?? 0;
+    const marketingLeadsTotal = remoteStats?.potentialTravelers?.total ?? 0;
+    const activeNowValue = remoteStats?.activeConsciousnessNow ?? 0;
+>>>>>>> feat/sovereign-final-stabilization
     const avgMoodValue = remoteStats?.avgMood ?? null;
     const aiTokensUsed = remoteStats?.aiTokensUsed ?? 0;
     const verificationGapIndex = remoteStats?.verificationGapIndex ?? 0;
@@ -185,7 +191,11 @@ export const ExecutiveDashboard: FC = () => {
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
                             <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">متصل مباشر</p>
                             <span className="text-slate-400 dark:text-slate-600 mx-1">•</span>
+<<<<<<< HEAD
                             <p className="text-xs text-slate-500">نظرة عامة سيادية</p>
+=======
+                            <p className="text-xs text-slate-500">ملخص الرحلات</p>
+>>>>>>> feat/sovereign-final-stabilization
                         </div>
                     </div>
                 </div>
@@ -206,6 +216,7 @@ export const ExecutiveDashboard: FC = () => {
                                 title="إجمالي المسافرين"
                                 value={formatNumber(totalUsers)}
                                 hint="مزامنة موثقة"
+<<<<<<< HEAD
                                 tooltip="إجمالي عدد المستخدمين المسجلين في المنصة حتى هذه اللحظة."
                                 onClick={() => navigateToTab("users-state")}
                             />
@@ -229,6 +240,31 @@ export const ExecutiveDashboard: FC = () => {
                                 hint="تدفق المزاج"
                                 glowColor="indigo"
                                 tooltip="متوسط حالة المزاج أو الصفاء للمستخدمين النشطين."
+=======
+                                tooltip="إجمالي عدد المسافرين السِياديين في المنصة حتى هذه اللحظة."
+                                onClick={() => navigateToTab("users-state")}
+                            />
+                            <StatCard
+                                title="المسافرين المحتملين"
+                                value={formatNumber(marketingLeadsTotal)}
+                                hint="فرص نمو"
+                                tooltip="إجمالي الأرواح التي بدأت التواصل ولم تدخل الرحلة بالكامل بعد."
+                                onClick={() => navigateToTab("marketing-ops")}
+                            />
+                            <StatCard
+                                title="وعي نشط الآن"
+                                value={formatNumber(activeNowValue)}
+                                hint="حضور مداري"
+                                tooltip="عدد الأرواح الحاضرة الآن في المدار وتتفاعل مع التجربة."
+                                onClick={() => navigateToTab("flow-map")}
+                            />
+                            <StatCard
+                                title="متوسط طاقة الروح"
+                                value={avgMoodValue !== null ? avgMoodValue.toFixed(1) : "—"}
+                                hint="تدفق المزاج"
+                                glowColor="indigo"
+                                tooltip="متوسط تردد الصفاء أو الاضطراب للأرواح النشطة حالياً."
+>>>>>>> feat/sovereign-final-stabilization
                                 onClick={() => navigateToTab("consciousness-atlas")}
                             />
                             <StatCard
@@ -240,11 +276,19 @@ export const ExecutiveDashboard: FC = () => {
                                 onClick={() => navigateToTab("marketing-ops")}
                             />
                             <StatCard
+<<<<<<< HEAD
                                 title="عمليات الذكاء"
                                 value={formatNumber(aiTokensUsed)}
                                 hint="استهلاك التفكير الاصطناعي"
                                 glowColor="indigo"
                                 tooltip="حجم استهلاك الـ Tokens في تشغيل المساعدات والتحليلات الذكية."
+=======
+                                title="العمليات السِيادية"
+                                value={formatNumber(aiTokensUsed)}
+                                hint="استهلاك التفكير الاصطناعي"
+                                glowColor="indigo"
+                                tooltip="حجم الطاقة الحسابية المستهلكة في تشغيل البصيرة الذكية."
+>>>>>>> feat/sovereign-final-stabilization
                                 onClick={() => navigateToTab("ai-studio")}
                             />
                         </div>

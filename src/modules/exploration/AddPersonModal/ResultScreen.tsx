@@ -640,7 +640,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
         {!summaryOnly && (
           <div id="tools" className="space-y-10 pt-8 border-t border-white/5">
             <div className="text-right">
-              <h3 className="text-2xl font-black text-white mb-2">🎒 الحقيبة السيادية</h3>
+              <h3 className="text-2xl font-black text-white mb-2">🎒 حقيبة الرحلة</h3>
               <p className="text-sm text-slate-500 font-medium tracking-wide">أدوات مساعدة وأعراض محتملة للتعامل الواعي</p>
             </div>
             {renderToolsTab()}

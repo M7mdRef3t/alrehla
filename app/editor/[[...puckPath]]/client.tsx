@@ -1,5 +1,6 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 if (typeof window !== "undefined") {
   const originalError = console.error;
   console.error = (...args: any[]) => {

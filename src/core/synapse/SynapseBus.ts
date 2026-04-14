@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+/* eslint-disable @typescript-eslint/no-explicit-any, no-console */
+>>>>>>> feat/sovereign-final-stabilization
 /**
  * Synapse Event Bus — جهاز النقل العصبي للمنصة 🌩️
  * ===================================================

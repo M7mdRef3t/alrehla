@@ -17,7 +17,14 @@ export const XP_ACTIONS = {
     NODE_ARCHIVED: 60,
     NOTE_ADDED: 15,
     ENERGY_TRANSACTION: 25,
-    JOURNEY_MILESTONE: 100
+    JOURNEY_MILESTONE: 100,
+    // ❄️ Tajmeed Freeze Actions
+    FREEZE_RELATIONSHIP: 60,
+    UNFREEZE_RELATIONSHIP: 40,
+    BOUNDARY_SET: 30,
+    PATTERN_DETECTED: 20,
+    RING_IMPROVED: 35,
+    FROST_COMBO: 100,
 } as const;
 
 /**
@@ -115,6 +122,36 @@ export function getDailyQuests(nodes: any[] = [], completedKeys: string[] = []):
             isCompleted: completedKeys.includes("wq_weekly_review"),
             actionKey: "weekly_review_completed",
             category: 'growth'
+        });
+    }
+
+    // --- ❄️ Tajmeed: Freeze-themed Quests ---
+
+    // 7. Freeze Guardian Quest (when there are archived/frozen nodes)
+    const archivedNodes = nodes.filter((n: any) => n.isNodeArchived === true);
+    if (archivedNodes.length > 0) {
+        quests.push({
+            id: "dq_frost_check",
+            title: "❄️ مراجعة الصقيع",
+            description: `راجع ${archivedNodes.length} علاقة مجمدة — هل حان وقت الذوبان الواعي؟`,
+            xpReward: 35,
+            isCompleted: completedKeys.includes("dq_frost_check"),
+            actionKey: "frost_review",
+            category: 'relational'
+        });
+    }
+
+    // 8. Boundary Quest (encourage boundary setting)
+    const hasRedOrYellow = nodes.some((n: any) => !n.isNodeArchived && (n.ring === 'red' || n.ring === 'yellow'));
+    if (hasRedOrYellow) {
+        quests.push({
+            id: "dq_set_boundary",
+            title: "🛡️ حراسة الحدود",
+            description: "ضع حدّاً واضحاً مع شخص في المدار الأحمر أو الأصفر",
+            xpReward: 45,
+            isCompleted: completedKeys.includes("dq_set_boundary"),
+            actionKey: "boundary_set",
+            category: 'relational'
         });
     }
 

@@ -27,10 +27,10 @@ export default function OnboardingLoading() {
       </div>
       
       <div className="space-y-2 text-center">
-        <h3 className="text-lg font-medium text-foreground font-ibm-arabic">
+        <h3 className="text-lg font-medium text-foreground">
           بنجهزلك الرحلة..
         </h3>
-        <p className="text-xs text-muted-foreground font-ibm-arabic">
+        <p className="text-xs text-muted-foreground">
           ثواني وهتكون جاهز تبدأ أول خطوة
         </p>
       </div>

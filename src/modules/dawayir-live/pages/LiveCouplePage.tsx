@@ -187,7 +187,7 @@ export default function LiveCouplePage() {
                     <button
                       key={filter.id}
                       type="button"
-                      className={`couple-filter-btn ${statusFilter === filter.id ? "active" : ""}`}
+                      className={`couple-filter-btn ${statusFilter === filter.id ?"active" : ""}`}
                       onClick={() => setStatusFilter(filter.id as "all" | "completed" | "active")}
                     >
                       {filter.label}

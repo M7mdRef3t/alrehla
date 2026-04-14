@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+>>>>>>> feat/sovereign-final-stabilization
 /**
  * 🕐 Ritual State — المتجر المركزي لنظام العادات اليومية
  * ======================================================

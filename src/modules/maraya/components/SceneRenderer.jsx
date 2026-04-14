@@ -1,1 +1,1 @@
-﻿export { default } from './story/SceneRenderer.jsx';
+export { default } from './story/SceneRenderer.jsx';

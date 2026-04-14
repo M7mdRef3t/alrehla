@@ -61,9 +61,15 @@ function TrendingUpFallback() {
 
 export const NAV_GROUPS: NavGroup[] = [
   {
+<<<<<<< HEAD
     title: "القيادة السيادية",
     items: [
       { id: "sovereign", label: "المركز السيادي", icon: <ShieldCheck className="h-4 w-4 text-amber-500" /> },
+=======
+    title: "القيادة المتقدمة",
+    items: [
+      { id: "sovereign", label: "المركز الرئيسي", icon: <ShieldCheck className="h-4 w-4 text-amber-500" /> },
+>>>>>>> feat/sovereign-final-stabilization
       { id: "exec-overview", label: "المركز التنفيذي", icon: <Activity className="h-4 w-4 text-emerald-400" /> },
       { id: "governance-ledger", label: "سجل الحوكمة", icon: <Gavel className="h-4 w-4 text-purple-400" /> },
       { id: "war-room", label: "غرفة العمليات", icon: <ShieldCheck className="h-4 w-4 text-red-500" /> },
@@ -123,7 +129,11 @@ export const NAV_GROUPS: NavGroup[] = [
 export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
 
 export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
+<<<<<<< HEAD
   sovereign: "المركز السيادي",
+=======
+  sovereign: "المركز الرئيسي",
+>>>>>>> feat/sovereign-final-stabilization
   entity: "كيان الرحلة (DNA)",
   "governance-ledger": "سجل الحوكمة",
   "design-lab": "مختبر التصميم",
@@ -150,13 +160,21 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "expansion-hub": "إستراتيجية الأسواق",
   "session-os": "غرفة الجلسات",
   "support-tickets": "بوابات العبور (الدعم)",
+<<<<<<< HEAD
   "sovereign-funnel": "مسار التحويل السيادي (Funnel)",
+=======
+  "sovereign-funnel": "مسار التحويل المتقدم (Funnel)",
+>>>>>>> feat/sovereign-final-stabilization
 };
 
 export const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "users-state"];
 
 export const NAV_TOOLTIPS: Record<AdminTab, string> = {
+<<<<<<< HEAD
   sovereign: "المركز السيادي: نظرة شاملة وعليا على حيوية النظام والعمليات الحساسة.",
+=======
+  sovereign: "المركز الرئيسي: نظرة شاملة وعليا على حيوية النظام والعمليات الحساسة.",
+>>>>>>> feat/sovereign-final-stabilization
   entity: "كيان الرحلة: استكشاف بصمة المنصة ورسالتها وأهدافها الأساسية.",
   "governance-ledger": "سجل الحوكمة: متابعة قرارات الذكاء الاصطناعي والمصادقة على التحركات الاستراتيجية.",
   "design-lab": "مختبر التصميم: مساحة لإدارة الهوية البصرية واتجاهات التصميم وتجارب الواجهات.",
@@ -183,5 +201,9 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "expansion-hub": "إستراتيجية الأسواق: تحليل فرص التوسع التجاري والأسواق المحتملة.",
   "session-os": "غرفة الجلسات: تتبع الجلسات النفسية والكوتشينج من الطلب حتى التوثيق.",
   "support-tickets": "بوابات العبور: مراجعة التحويلات اليدوية وتذاكر الدعم والتفعيل.",
+<<<<<<< HEAD
   "sovereign-funnel": "مسار التحويل السيادي: تحليل السقوط والنجاح داخل Funnel المنصة.",
+=======
+  "sovereign-funnel": "مسار التحويل المتقدم: تحليل السقوط والنجاح داخل Funnel المنصة.",
+>>>>>>> feat/sovereign-final-stabilization
 };

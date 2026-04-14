@@ -73,7 +73,11 @@ export const AwarenessAndScenarios: FC<AwarenessAndScenariosProps> = ({ zones, t
                                             stroke="none"
                                         >
                                             {zonesData.map((entry, index) => (
+<<<<<<< HEAD
                                                 <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity cursor-pointer" />
+=======
+                                                <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
+>>>>>>> feat/sovereign-final-stabilization
                                             ))}
                                         </Pie>
                                         <RechartsTooltip

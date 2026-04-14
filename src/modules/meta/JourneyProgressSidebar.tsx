@@ -113,7 +113,7 @@ export const JourneyProgressSidebar = memo(function JourneyProgressSidebar({
                         stage.status === "active"
                           ? "bg-teal-500/10 border border-teal-500/30 shadow-[0_0_20px_rgba(45,212,191,0.08)]"
                           : stage.status === "done"
-                          ? "bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] cursor-pointer"
+                          ? "bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06]"
                           : "bg-white/[0.015] border border-white/[0.04] opacity-50 cursor-not-allowed"
                       }`}
                     >

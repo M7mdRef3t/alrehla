@@ -55,10 +55,8 @@ export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive: _onOp
   const sidebarWidth = 380;
 
   const sidebarStyles = {
-    position: "fixed" as const,
-    top: 0,
     [isRight ? "right" : "left"]: 0,
-    height: "100vh",
+    height: "100dvh",
     width: `${sidebarWidth}px`,
     zIndex: 40
   };
@@ -92,28 +90,22 @@ export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive: _onOp
         style={sidebarStyles}
         animate={{ x: translateX }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="glass-card overflow-y-auto"
+        className="bg-slate-950/90 backdrop-blur-2xl overflow-y-auto border-x border-purple-500/20 shadow-[0_0_50px_rgba(0,0,0,0.5)] no-scrollbar relative"
       >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(168,85,247,0.05),transparent)] pointer-events-none" />
         {/* Header */}
         <div
-          className="sticky top-0 z-10 flex items-center justify-between p-4 border-b"
-          style={{
-            background: "rgba(15, 23, 42, 0.95)",
-            backdropFilter: "blur(16px)",
-            borderColor: "rgba(255, 255, 255, 0.1)"
-          }}
+          className="sticky top-0 z-10 flex items-center justify-between p-5 border-b border-white/5 bg-slate-950/40 backdrop-blur-xl"
         >
           <h2
-            className="text-lg font-bold"
-            style={{ color: "var(--text-primary)" }}
+            className="text-lg font-black tracking-tight text-slate-100"
           >
             📊 التحليل والإحصائيات
           </h2>
           <button
             type="button"
             onClick={toggleSidebar}
-            className="p-2 rounded-lg hover:bg-white/5 transition-colors"
-            style={{ color: "var(--text-secondary)" }}
+            className="p-2 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white transition-all active:scale-90"
             title="إخفاء"
           >
             <X className="w-5 h-5" />
@@ -124,10 +116,9 @@ export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive: _onOp
         <div className="p-4 space-y-4">
           {/* TEI Widget */}
           {activeNodes.length > 0 && (
-            <div>
+            <div className="space-y-3">
               <h3
-                className="text-xs font-semibold mb-2 text-right"
-                style={{ color: "var(--text-muted)" }}
+                className="text-[10px] font-black uppercase tracking-[0.25em] px-1 text-right text-purple-400/60"
               >
                 مؤشر الوضوح العاطفي
               </h3>
@@ -141,8 +132,7 @@ export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive: _onOp
           {/* Sidebar */}
           <div>
             <h3
-              className="text-xs font-semibold mb-2 text-right"
-              style={{ color: "var(--text-muted)" }}
+               className="text-[10px] font-black uppercase tracking-[0.2em] px-1 mb-2 text-right text-white/40"
             >
               ملخص النزيف الأسبوعي
             </h3>
@@ -152,8 +142,7 @@ export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive: _onOp
           {/* Daily Pulse */}
           <div>
             <h3
-              className="text-xs font-semibold mb-2 text-right"
-              style={{ color: "var(--text-muted)" }}
+               className="text-[10px] font-black uppercase tracking-[0.2em] px-1 mb-2 text-right text-white/40"
             >
               النبضة التكتيكية
             </h3>
@@ -163,37 +152,33 @@ export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive: _onOp
           {/* Dashboard Stats */}
           {activeNodes.length > 0 && (
             <div
-              className="rounded-xl p-4 space-y-4 text-right"
-              style={{
-                background: "rgba(15,23,42,0.5)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                backdropFilter: "blur(12px)"
-              }}
+              className="rounded-3xl p-6 space-y-4 text-right bg-white/[0.02] border border-white/5 backdrop-blur-md relative overflow-hidden group"
             >
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <h3
-                className="text-xs font-semibold"
-                style={{ color: "var(--text-muted)" }}
+                className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 relative z-10"
               >
                 توازن الدواير
               </h3>
 
               {/* Mini Gauge */}
-              <div className="flex gap-0.5 h-2 rounded-full overflow-hidden">
+              <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-white/5 relative z-10">
                 {["green", "yellow", "red"].map((ring) => {
                   const count = activeNodes.filter((n) => n.ring === ring).length;
                   if (!count) return null;
                   const colors = {
-                    green: "#34d399",
-                    yellow: "#fbbf24",
-                    red: "#f87171"
+                    green: "#10b981", // Emerald-500
+                    yellow: "#f59e0b", // Amber-500
+                    red: "#ef4444"    // Red-500
                   };
                   return (
                     <div
                       key={ring}
-                      className="transition-all duration-700"
+                      className="transition-all duration-1000 ease-out"
                       style={{
                         width: `${(count / activeNodes.length) * 100}%`,
-                        background: colors[ring as keyof typeof colors]
+                        background: colors[ring as keyof typeof colors],
+                        boxShadow: `0 0 10px ${colors[ring as keyof typeof colors]}40`
                       }}
                     />
                   );
@@ -201,32 +186,32 @@ export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive: _onOp
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="grid grid-cols-3 gap-3 text-center relative z-10">
                 {["green", "yellow", "red"].map((ring) => {
                   const count = activeNodes.filter((n) => n.ring === ring).length;
                   const colors = {
-                    green: "#34d399",
-                    yellow: "#fbbf24",
-                    red: "#f87171"
+                    green: "#10b981",
+                    yellow: "#f59e0b",
+                    red: "#ef4444"
                   };
                   const labels = { green: "آمن", yellow: "تعب", red: "ضاغط" };
                   return (
                     <div
                       key={ring}
-                      className="px-3 py-2 rounded-lg"
+                      className="px-2 py-3 rounded-2xl transition-all"
                       style={{
-                        background: `${colors[ring as keyof typeof colors]}15`,
-                        border: `1px solid ${colors[ring as keyof typeof colors]}30`
+                        background: `${colors[ring as keyof typeof colors]}08`,
+                        border: `1px solid ${colors[ring as keyof typeof colors]}20`
                       }}
                     >
                       <div
-                        className="text-2xl font-bold"
+                        className="text-2xl font-black mb-1"
                         style={{ color: colors[ring as keyof typeof colors] }}
                       >
                         {count}
                       </div>
                       <div
-                        className="text-[10px]"
+                        className="text-[9px] font-bold uppercase tracking-wider"
                         style={{ color: colors[ring as keyof typeof colors] }}
                       >
                         {labels[ring as keyof typeof labels]}
@@ -237,17 +222,20 @@ export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive: _onOp
               </div>
 
               {/* Summary */}
-              <div className="pt-2 border-t border-white/10 space-y-1">
-                <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-                  إجمالي الدوائر: <span className="font-bold">{activeNodes.length}</span>
-                </p>
-                <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-                  دوائر آمنة: <span className="font-bold">{greenNodes.length}</span>
-                </p>
+              <div className="pt-4 border-t border-white/5 space-y-2 relative z-10">
+                <div className="flex justify-between items-center text-xs">
+                   <span className="font-bold text-slate-200">{activeNodes.length}</span>
+                   <span className="text-slate-500">إجمالي الدوائر</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                   <span className="font-bold text-emerald-400">{greenNodes.length}</span>
+                   <span className="text-slate-500">دوائر آمنة</span>
+                </div>
                 {archivedNodes.length > 0 && (
-                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    في الأرشيف: <span className="font-bold">{archivedNodes.length}</span>
-                  </p>
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="font-bold text-slate-500">{archivedNodes.length}</span>
+                    <span className="text-slate-600">في الأرشيف</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -275,21 +263,21 @@ export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive: _onOp
           <motion.button
             type="button"
             onClick={toggleSidebar}
-            className="fixed top-1/2 -translate-y-1/2 z-30 p-3 rounded-full glass-card hover:bg-white/10 transition-colors"
+            className="fixed top-1/2 -translate-y-1/2 z-30 p-4 rounded-3xl bg-slate-950/80 border border-purple-500/30 backdrop-blur-2xl shadow-[0_0_30px_rgba(168,85,247,0.15)] hover:bg-slate-900 transition-all active:scale-90"
             style={{
-              [isRight ? "right" : "left"]: "1rem"
+              [isRight ? "right" : "left"]: "1.5rem"
             }}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            whileHover={{ scale: 1.1 }}
+            whileHover={{ scale: 1.1, boxShadow: "0 0 50px rgba(168,85,247,0.25)" }}
             whileTap={{ scale: 0.95 }}
             title="فتح الإحصائيات"
           >
             {isRight ? (
-              <ChevronLeft className="w-5 h-5" style={{ color: "var(--text-primary)" }} />
+              <ChevronLeft className="w-5 h-5 text-purple-400" />
             ) : (
-              <ChevronRight className="w-5 h-5" style={{ color: "var(--text-primary)" }} />
+              <ChevronRight className="w-5 h-5 text-purple-400" />
             )}
           </motion.button>
         )}

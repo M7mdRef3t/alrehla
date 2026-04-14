@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿import { logger } from "@/services/logger";
+=======
+import { logger } from "@/services/logger";
+>>>>>>> feat/sovereign-final-stabilization
 import type { FC, ReactNode } from "react";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -240,7 +244,11 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
             <ShieldCheck className="w-8 h-8 text-teal-400" />
           </div>
           <div>
+<<<<<<< HEAD
             <h1 className="text-2xl font-black text-white tracking-widest uppercase font-sans">الوصول السيادي</h1>
+=======
+            <h1 className="text-2xl font-black text-white tracking-widest uppercase font-sans">الوصول الرئيسي</h1>
+>>>>>>> feat/sovereign-final-stabilization
             <p className="text-sm text-teal-400/80 tracking-wider font-bold mt-1">مركز القيادة المتقدم</p>
           </div>
         </div>
@@ -348,7 +356,11 @@ const CollapsibleSidebarGroup: FC<{
                         {CLEAN_NAV_LABELS[item.id] ?? item.label}
                       </span>
                     </div>
+<<<<<<< HEAD
                     <div className={`mr-auto transition-opacity duration-300 flex items-center z-20 ${isActive ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'}`} onClick={(e) => e.stopPropagation()}>
+=======
+                    <div className={`mr-auto transition-opacity duration-300 flex items-center z-20 ${isActive ?'opacity-100' : 'opacity-0 group-hover/item:opacity-100'}`} onClick={(e) => e.stopPropagation()}>
+>>>>>>> feat/sovereign-final-stabilization
                       <AdminTooltip content={NAV_TOOLTIPS[item.id] || "القسم مخصص للإدارة المركزية"} position="bottom" />
                     </div>
                   </button>
@@ -540,7 +552,11 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
         {/* Mobile Sidebar Overlay */}
         <div
           className={`fixed inset-0 z-40 bg-[#030712]/80 backdrop-blur-sm lg:hidden transition-opacity duration-300 ${
+<<<<<<< HEAD
             isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+=======
+            isSidebarOpen ?"opacity-100" : "opacity-0 pointer-events-none"
+>>>>>>> feat/sovereign-final-stabilization
           }`}
           onClick={() => setIsSidebarOpen(false)}
           aria-hidden="true"
@@ -677,7 +693,11 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 </h2>
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-teal-500 animate-[pulse-ring_2s_infinite]" />
+<<<<<<< HEAD
                   <span className="text-xs font-bold text-teal-600 dark:text-teal-400/80 uppercase tracking-widest hidden sm:inline-block">تم تأسيس الاتصال السيادي</span>
+=======
+                  <span className="text-xs font-bold text-teal-600 dark:text-teal-400/80 uppercase tracking-widest hidden sm:inline-block">تم تأسيس الاتصال الرئيسي</span>
+>>>>>>> feat/sovereign-final-stabilization
                 </div>
               </div>
             </div>

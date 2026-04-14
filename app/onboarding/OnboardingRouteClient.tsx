@@ -123,6 +123,7 @@ export default function OnboardingRouteClient() {
     params.set("source", "onboarding");
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "navigate:map");
+      window.sessionStorage.setItem("dawayir-onboarding-just-finished", "true");
     }
 
     const nextUrl = `/?${params.toString()}`;

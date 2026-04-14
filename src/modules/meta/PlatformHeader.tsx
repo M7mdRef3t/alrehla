@@ -207,7 +207,7 @@ export const PlatformHeader = memo(function PlatformHeader({
     hidden ? "-translate-y-full" : "translate-y-0"
   } ${
     scrolled
-      ? "backdrop-blur-3xl border-b border-[color:var(--glass-border)] shadow-[0_8px_32px_rgba(0,0,0,0.4)] h-16 bg-[rgba(2,4,10,0.65)]"
+      ? "backdrop-blur-3xl border-b border-[color:var(--glass-border)] h-16 bg-[rgba(2,4,10,0.65)]"
       : "border-b border-transparent h-20 bg-transparent"
   }`;
 
@@ -284,7 +284,7 @@ export const PlatformHeader = memo(function PlatformHeader({
               {isActive && (
                 <motion.div
                   layoutId="header-nav-indicator"
-                  className="absolute inset-0 rounded-full bg-slate-400/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 shadow-sm"
+                  className="absolute inset-0 rounded-full bg-slate-400/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/10"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
@@ -295,7 +295,7 @@ export const PlatformHeader = memo(function PlatformHeader({
               {isActive && (
                 <motion.div
                   layoutId="active-dot"
-                  className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] absolute -bottom-1.5 left-1/2 -translate-x-1/2 shadow-[0_0_8px_var(--gold)]"
+                  className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] absolute -bottom-1.5 left-1/2 -translate-x-1/2"
                 />
               )}
             </button>
@@ -348,7 +348,7 @@ export const PlatformHeader = memo(function PlatformHeader({
           </AnimatePresence>
         </button>
 
-        <div className="relative">
+          <div className="relative text-amber-500">
             <AnimatePresence>
               {isLoggedIn && (
                 notifOpen ? (
@@ -426,14 +426,13 @@ export const PlatformHeader = memo(function PlatformHeader({
                       alt={displayName ?? "المسافر"}
                       className="w-7 h-7 rounded-full object-cover border border-white/10"
                     />
-                    <div className="absolute inset-0 rounded-full shadow-[0_0_8px_var(--gold-glow)] pointer-events-none" />
                   </div>
                 ) : (
-                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--teal)] to-emerald-600 flex items-center justify-center text-xs font-black text-slate-900 border border-white/20 shadow-[0_0_12px_var(--cyan-glow)]">
+                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--teal)] to-emerald-600 flex items-center justify-center text-xs font-black text-slate-900 border border-white/20">
                     {avatarInitial}
                   </span>
                 )}
-                <span className="hidden lg:inline max-w-[8rem] truncate font-bold">{firstName ?? "المسافر"}</span>
+                <span className="hidden lg:inline max-w-[8rem] truncate font-bold text-[var(--tw-ring-offset-color)]">{firstName ?? "المسافر"}</span>
                 <ChevronDown
                   className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 rotate-180"
                 />
@@ -453,14 +452,13 @@ export const PlatformHeader = memo(function PlatformHeader({
                       alt={displayName ?? "المسافر"}
                       className="w-7 h-7 rounded-full object-cover border border-white/10"
                     />
-                    <div className="absolute inset-0 rounded-full shadow-[0_0_8px_var(--gold-glow)] pointer-events-none" />
                   </div>
                 ) : (
-                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--teal)] to-emerald-600 flex items-center justify-center text-xs font-black text-slate-900 border border-white/20 shadow-[0_0_12px_var(--cyan-glow)]">
+                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--teal)] to-emerald-600 flex items-center justify-center text-xs font-black text-slate-900 border border-white/20">
                     {avatarInitial}
                   </span>
                 )}
-                <span className="hidden lg:inline max-w-[8rem] truncate font-bold">{firstName ?? "المسافر"}</span>
+                <span className="hidden lg:inline max-w-[8rem] truncate font-bold text-[var(--tw-ring-offset-color)]">{firstName ?? "المسافر"}</span>
                 <ChevronDown
                   className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
                 />
@@ -475,7 +473,7 @@ export const PlatformHeader = memo(function PlatformHeader({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="w-52 rounded-2xl overflow-hidden backdrop-blur-xl border border-[color:var(--glass-border)] bg-[var(--glass-bg)] shadow-[0_16px_48px_rgba(0,0,0,0.4)]"
+                    className="w-52 rounded-2xl overflow-hidden backdrop-blur-xl border border-[color:var(--glass-border)] bg-[var(--glass-bg)]"
                     role="presentation"
                   >
                   <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10">
@@ -646,7 +644,6 @@ export const MobileNavBar = memo(function MobileNavBar({
         backdrop-blur-2xl
         border-t
         pb-safe pt-2 px-4 h-20
-        shadow-lg
         bg-[var(--glass-bg)] border-[color:var(--glass-border)]"
     >
       {MOBILE_NAV.map(({ id, label, icon: Icon }) => {

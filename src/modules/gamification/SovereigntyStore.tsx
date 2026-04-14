@@ -23,7 +23,7 @@ export function SovereigntyStore() {
     setActiveVoice
   } = useGamification();
 
-  const [activeCategory, setActiveCategory] = useState<"theme" | "voice">("theme");
+  const [activeCategory, setActiveCategory] = useState<"theme" | "voice" | "frost_token" | "border">("theme");
 
   const filteredItems = STORE_ITEMS.filter(item => item.type === activeCategory);
 
@@ -84,7 +84,27 @@ export function SovereigntyStore() {
               : "text-white/30 hover:text-white/50"
           }`}
         >
-          <Mic2 className="w-4 h-4" /> شخصيات الذكاء الاصطناعي
+          <Mic2 className="w-4 h-4" /> شخصيات AI
+        </button>
+        <button 
+          onClick={() => setActiveCategory("frost_token")}
+          className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-black transition-all ${
+            activeCategory === "frost_token" 
+              ? "bg-white/10 text-white border border-white/20 shadow-lg" 
+              : "text-white/30 hover:text-white/50"
+          }`}
+        >
+          <Sparkles className="w-4 h-4" /> ❄️ رموز الصقيع
+        </button>
+        <button 
+          onClick={() => setActiveCategory("border")}
+          className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-black transition-all ${
+            activeCategory === "border" 
+              ? "bg-white/10 text-white border border-white/20 shadow-lg" 
+              : "text-white/30 hover:text-white/50"
+          }`}
+        >
+          <Palette className="w-4 h-4" /> إطارات جليدية
         </button>
       </div>
 

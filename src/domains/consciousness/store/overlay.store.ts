@@ -61,7 +61,12 @@ export type AppOverlayFlag =
   | "wisdomMatrix"
   | "immersionPath"
   | "vanguardCollective"
+<<<<<<< HEAD
   | "sovereignChronicle";
+=======
+  | "sovereignChronicle"
+  | "sanctuary";
+>>>>>>> feat/sovereign-final-stabilization
 
 export type AppOverlayFlags = Record<AppOverlayFlag, boolean>;
 
@@ -121,7 +126,12 @@ const defaultOverlayFlags: AppOverlayFlags = {
   wisdomMatrix: false,
   immersionPath: false,
   vanguardCollective: false,
+<<<<<<< HEAD
   sovereignChronicle: false
+=======
+  sovereignChronicle: false,
+  sanctuary: false
+>>>>>>> feat/sovereign-final-stabilization
 };
 
 interface AppOverlayState {

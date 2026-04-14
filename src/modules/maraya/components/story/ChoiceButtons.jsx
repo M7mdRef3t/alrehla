@@ -22,7 +22,7 @@ export default function ChoiceButtons({
         <button
           key={index}
           type="button"
-          className={`choice-button ${selectedIndex === index ? 'choice-button--selected' : ''}`}
+          className={`choice-button ${selectedIndex === index ?'choice-button--selected' : ''}`}
           onClick={() => onChoose(choice, index)}
         >
           <span className="choice-button__text">{choice.text_ar}</span>

@@ -62,10 +62,10 @@ export function useAppStartupOnboarding({
             : "general";
       setGoalId(mappedGoalId);
       setCategory(resolveAdviceCategory(mappedGoalId));
-      analyticsService.track(AnalyticsEvents.CTA_CLICK, {
+      analyticsService.cta({
         source: "landing_intent",
-        intent,
-        mappedGoalId
+        cta_name: intent,
+        placement: mappedGoalId
       });
     }
 

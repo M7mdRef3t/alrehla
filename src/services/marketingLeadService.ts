@@ -1,5 +1,6 @@
 import { logger } from "@/services/logger";
 import type { MarketingLeadPayload } from "@/types/marketingLead";
+import type { FunnelIdentifiers } from "@/domains/funnel/contracts";
 import { trackLead, getOrCreateAnonymousId, getStoredClientEventId } from "./analytics";
 import { recordFlowEvent } from "./journeyTracking";
 import { getStoredUtmParams } from "./marketingAttribution";
@@ -16,7 +17,7 @@ export type CaptureLeadResponse = {
   error?: string;
 };
 
-type CaptureMarketingLeadInput = {
+export type CaptureMarketingLeadInput = {
   email?: string;
   phone?: string;
   note?: string;
@@ -25,9 +26,12 @@ type CaptureMarketingLeadInput = {
   sourceType?: MarketingLeadPayload["sourceType"];
   metadata?: Record<string, any>;
   anonymousId?: string;
+  clientEventId?: string;
+  attribution?: FunnelIdentifiers;
 };
 
 function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayload {
+  const { attribution, ...payloadInput } = input;
   const utm = getStoredUtmParams();
   const utmSource = (utm?.utm_source || "").toLowerCase();
   const utmMedium = (utm?.utm_medium || "").toLowerCase();
@@ -41,7 +45,8 @@ function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayloa
   }
   
   return {
-    ...input,
+    ...payloadInput,
+    ...(attribution ?? {}),
     email: input.email || undefined,
     phone: input.phone || undefined,
     note: input.note?.trim() || undefined,
@@ -66,12 +71,36 @@ function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayloa
  * Capture or update a marketing lead.
  * This is the primary entry point for Lead CRM sync.
  */
-export async function captureMarketingLead(
+if (typeof window !== "undefined") { (window as any).marketingLeadService = { captureMarketingLead, syncLead: captureMarketingLead }; } export async function captureMarketingLead(
   input: CaptureMarketingLeadInput
 ): Promise<CaptureLeadResponse> {
   const payload = buildLeadPayload(input);
 
   try {
+    // Analytics & Event Tracking - Fire immediately upon user intent
+    // We do NOT wait for API response here to ensure marketing attribution persists even on network failure
+    try {
+      const campaign = payload.campaign || "unknown";
+      const source = payload.source || "landing";
+      
+      recordFlowEvent("lead_captured", {
+        meta: {
+          status: payload.status,
+          hasPhone: !!payload.phone,
+          sourceType: payload.sourceType
+        }
+      });
+
+      trackLead({
+        source,
+        source_type: payload.sourceType || "website",
+        campaign,
+        client_event_id: payload.clientEventId
+      });
+    } catch (e) {
+      console.warn("Analytics tracking failed:", e);
+    }
+
     const response = await fetch("/api/marketing/lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -97,29 +126,6 @@ export async function captureMarketingLead(
     }
     if (resolvedPhone) {
       setInLocalStorage(STORAGE_KEY_LEAD_PHONE, resolvedPhone);
-    }
-
-    // Analytics & Event Tracking
-    try {
-      const campaign = payload.campaign || "unknown";
-      const source = payload.source || "landing";
-      
-      recordFlowEvent("lead_captured", {
-        meta: {
-          leadId: resolvedLeadId,
-          status: payload.status,
-          hasPhone: !!payload.phone,
-          mergeConflict: resolvedConflict
-        }
-      });
-
-      trackLead({
-        source,
-        source_type: payload.sourceType || "website",
-        campaign
-      });
-    } catch (e) {
-      console.warn("Analytics failed, but lead captured:", e);
     }
 
     return {

@@ -91,13 +91,8 @@ export function queueMapSync(state: StoredState): void {
 }
 
 async function tryCloudSync() {
-  if (!isSupabaseReady || !supabase) return;
   if (!navigator.onLine) {
     useSyncState.getState().setOffline(true);
-    return;
-  }
-  const user = await safeGetUser();
-  if (!user) {
     return;
   }
   scheduleFlush(SYNC_DEBOUNCE_MS);
@@ -106,34 +101,50 @@ async function tryCloudSync() {
 async function flushMapSync(): Promise<void> {
   if (isFlushing || !pendingBuffer) return;
 
-  if (!isSupabaseReady || !supabase) {
-    useSyncState.getState().setError("supabase_unavailable");
-    return;
-  }
-
   const user = await safeGetUser();
-  if (!user) return; // Guard against mid-sync sign out
 
   isFlushing = true;
   useSyncState.getState().setSyncing();
 
+  // Pick up any locally stored phone (if user provided it during session checkout earlier)
+  const clientPhone = getFromLocalStorage("dawayir-client-phone") || undefined;
+
   const payload: any = {
     session_id: pendingBuffer.sessionId,
     nodes: pendingBuffer.nodes,
-    map_type: pendingBuffer.mapType,
+    map_type: pendingBuffer.mapType || "dawayir",
     feeling_results: pendingBuffer.feelingResults,
     transformation_diagnosis: pendingBuffer.transformationDiagnosis,
     ai_interpretation: pendingBuffer.aiInterpretation,
     updated_at: pendingBuffer.updatedAt,
-    user_id: user.id,
+    user_id: user ? user.id : undefined,
+    client_phone: clientPhone,
+    origin_product: "alrehla",
     last_sync_at: new Date().toISOString(),
     last_local_save_at: pendingBuffer.updatedAt
   };
 
   try {
-    const { error } = await supabase.from(SUPABASE_MAPS_TABLE).upsert(payload, {
-      onConflict: "session_id"
-    });
+    let error;
+    
+    if (user && isSupabaseReady && supabase) {
+      const res = await supabase.from(SUPABASE_MAPS_TABLE).upsert(payload, {
+        onConflict: "session_id"
+      });
+      error = res.error;
+    } else {
+      // Anonymous Sync via Gateway
+      const res = await fetch("/api/sync/map", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        error = new Error(errData.error || `HTTP ${res.status}`);
+      }
+    }
 
     if (!error) {
       useSyncState.getState().setSynced(new Date().toISOString());

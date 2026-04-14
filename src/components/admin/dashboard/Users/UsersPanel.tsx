@@ -107,6 +107,7 @@ export const UsersPanel: FC = () => {
            const activityLevel = s.eventsCount > 50 ? 'high' : s.eventsCount > 10 ? 'medium' : 'low';
            
            // الـ Glow الذهبي للمسجل والسياني للمجهول
+<<<<<<< HEAD
            const glowColor = isRegistered 
              ? 'shadow-[0_0_20px_rgba(245,158,11,0.15)] border-amber-500/30 bg-amber-500/5' 
              : activityLevel === 'high' 
@@ -114,6 +115,30 @@ export const UsersPanel: FC = () => {
                : 'border-slate-800';
 
            const dotColor = isRegistered ? 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]' : activityLevel === 'high' ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'bg-slate-500';
+=======
+           const risk = s.riskLevel?.toLowerCase();
+           
+           // منطق تلوين الرادار السِيادي بناءً على مستوى الخطر والنشاط
+           const glowColor = risk === 'emergency'
+             ? 'shadow-[0_0_25px_rgba(244,63,94,0.3)] border-rose-500/50 bg-rose-500/5'
+             : risk === 'high'
+               ? 'shadow-[0_0_20px_rgba(249,115,22,0.25)] border-orange-500/50 bg-orange-500/5'
+               : isRegistered 
+                 ? 'shadow-[0_0_20px_rgba(245,158,11,0.15)] border-amber-500/30 bg-amber-500/5' 
+                 : activityLevel === 'high' 
+                   ? 'shadow-[0_0_15px_rgba(34,211,238,0.15)] border-cyan-500/30' 
+                   : 'border-slate-800';
+
+           const dotColor = risk === 'emergency'
+             ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)] animate-pulse'
+             : risk === 'high'
+               ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.8)] animate-pulse'
+               : isRegistered 
+                 ? 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]' 
+                 : activityLevel === 'high' 
+                   ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]' 
+                   : 'bg-slate-500';
+>>>>>>> feat/sovereign-final-stabilization
 
            return (
             <motion.div 
@@ -306,7 +331,11 @@ const GodViewModal: FC<GodViewModalProps> = ({ isOpen, onClose, loading, error, 
                  </div>
                  
                  {/* AI Interpretation Panel */}
+<<<<<<< HEAD
                  {snapshot.aiInterpretation && Object.keys(snapshot.aiInterpretation).length > 0 && (
+=======
+                 {snapshot.aiInterpretation && typeof snapshot.aiInterpretation === 'object' && Object.keys(snapshot.aiInterpretation).length > 0 && (
+>>>>>>> feat/sovereign-final-stabilization
                    <div className="w-full lg:w-1/3 flex flex-col gap-4 z-10 bg-slate-900/80 border border-fuchsia-500/30 p-6 rounded-2xl shadow-[0_0_30px_rgba(217,70,239,0.1)] backdrop-blur-md relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/10 blur-[40px] pointer-events-none rounded-full" />
                      <h4 className="flex items-center gap-2 text-fuchsia-400 font-black tracking-widest uppercase mb-2">
@@ -325,7 +354,11 @@ const GodViewModal: FC<GodViewModalProps> = ({ isOpen, onClose, loading, error, 
                          <p className="text-sm text-indigo-100 font-mono bg-indigo-950/50 p-2 rounded-lg border border-indigo-500/20">{snapshot.aiInterpretation.state}</p>
                        </div>
                      )}
+<<<<<<< HEAD
                      {snapshot.aiInterpretation.focus_areas && snapshot.aiInterpretation.focus_areas.length > 0 && (
+=======
+                     {snapshot.aiInterpretation.focus_areas && Array.isArray(snapshot.aiInterpretation.focus_areas) && snapshot.aiInterpretation.focus_areas.length > 0 && (
+>>>>>>> feat/sovereign-final-stabilization
                        <div>
                          <p className="text-[10px] text-amber-400/50 font-bold uppercase tracking-widest mb-2">نقاط التركيز (Anomalies to watch)</p>
                          <ul className="space-y-2">
