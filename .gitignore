@@ -5,11 +5,17 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.env.vercel.production
 
 # Build output
 dist/
 dist-ssr/
 *.local
+.next/
+.next-dev/
+.vercel
+tsconfig.tsbuildinfo
+tsconfig.typecheck.tsbuildinfo
 
 # Editor directories
 .vscode/*
@@ -38,31 +44,16 @@ playwright-report/
 test-results/
 .playwright-cli/
 output/playwright/
-output/home-*.png
-output/home-*.txt
 
 # Temp files
 *.tmp
 *.bak
 tmp/
 .tmp_*.txt
-.codex-temp-package.ps1
 .cache/
 .claude/
 supabase/.temp/
-.vercel
-.next/
-.next-dev/
-tsconfig.tsbuildinfo
-tsconfig.typecheck.tsbuildinfo
-# Next.js
-.next/
-.next_stale_*/
-.next_stale_*
 
-.vercel
-
-.env.vercel.production
 # Local/ephemeral artifacts
 .Jules/
 artifacts/
@@ -71,18 +62,12 @@ vercel.marketing.env
 .tmp-lint.json
 .tmp-openapi.json
 nul
-
 build_output.txt
 dev_out*.txt
 dev_output.txt
-
-# Temp scripts and logs
-__*
 dir_out.txt
 netstat_out.txt
 netstat_check.txt
-
-# Local root artifacts
 *.err.log
 *.out.log
 build-*.log
@@ -103,17 +88,8 @@ final_hero_upgrade.py
 final_landing_fix.py
 repair_landing.py
 landing-hero-*.png
-<<<<<<< HEAD
-=======
-
-# Junk and local artifacts
 build_output_utf8.txt
 ts_errors_fresh.txt
 scratch/
 fix_cursors.js
-ts_errors_fresh.txt
-ts_errors.txt
-build-*.log
-*.log
-
->>>>>>> feat/sovereign-final-stabilization
+__*
