@@ -49,6 +49,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   markaz: "Markaz Command",
   sada: "Sada Nudges",
   hafiz: "Hafiz Vault",
+  mirah: "Mirah Mirror",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -97,6 +98,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   markaz: { title: "مركز — غرفة القيادة | Alrehla", description: "كل منتجاتك في نظرة واحدة — حالة المنظومة + إجراءات فورية." },
   sada: { title: "صدى — التنبيهات الذكية | Alrehla", description: "المنصة تتكلم معاك — تنبيهات مبنية على بياناتك الحقيقية." },
   hafiz: { title: "حافظ — خزنة الذكريات | Alrehla", description: "أهم لحظاتك محفوظة وقابلة للاسترجاع — مجموعات وبحث وذكريات مميّزة." },
+  mirah: { title: "مرآة — الوعي الذاتي | Alrehla", description: "شوف نفسك بعيون البيانات — خريطة شخصية + رؤى + نمو + تأمّل." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

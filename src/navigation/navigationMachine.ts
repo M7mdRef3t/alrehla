@@ -42,6 +42,7 @@ export type AppScreen =
   | "markaz"
   | "sada"
   | "hafiz"
+  | "mirah"
   | "protocol"
   | "diagnosis";
 

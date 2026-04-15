@@ -36,6 +36,7 @@ const WirdScreen = lazy(() => import("../../wird/WirdScreen"));
 const MarkazScreen = lazy(() => import("../../markaz/MarkazScreen"));
 const SadaScreen = lazy(() => import("../../sada/SadaScreen"));
 const HafizScreen = lazy(() => import("../../hafiz/HafizScreen"));
+const MirahScreen = lazy(() => import("../../mirah/MirahScreen"));
 
 
 
@@ -527,6 +528,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0612" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
           <HafizScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "mirah") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0c0616" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
+          <MirahScreen />
         </Suspense>
       </PageShell>
     );

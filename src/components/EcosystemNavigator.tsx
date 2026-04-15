@@ -199,6 +199,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#a855f7",
     url: "/#hafiz"
+  },
+  {
+    id: "mirah",
+    name: "مرآة",
+    description: "شوف نفسك بعيون البيانات",
+    icon: <Eye className="w-5 h-5" />,
+    status: "active",
+    color: "#c084fc",
+    url: "/#mirah"
   }
 ];
 
