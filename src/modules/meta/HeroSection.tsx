@@ -101,7 +101,6 @@ const HERO_STYLES = `
     box-shadow: 0 0 14px var(--cyan-glow);
   }
 
-  /* ليه موجود؟ علشان السطر الأول مايتقصش من فوق/تحت مع أحجام الخط الكبيرة. Time Complexity: O(1) */
   .headline-line {
     display: flex;
     align-items: flex-start;
@@ -114,32 +113,6 @@ const HERO_STYLES = `
     margin-bottom: 0.1em;
     color: var(--amber-500);
     font-family: "Noto Kufi Arabic";
-  }
-
-  /* ليه موجود؟ علشان السطر التاني يتمدّد طبيعي بدل height ثابت يسبب clipping. Time Complexity: O(1) */
-  .headline-subline {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    gap: 0;
-    flex-wrap: wrap;
-    min-height: 45px;
-    height: auto;
-    line-height: 1.2;
-    overflow: visible;
-    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
-    max-width: 100%;
-    color: var(--color-amber-50);
-    font-size: 0.78em;
-    font-weight: 600;
-    margin-bottom: 0.1em;
-    font-family: "Noto Kufi Arabic";
-  }
-
-  .hero-divider {
-    height: 1px;
-    background: linear-gradient(90deg, var(--cyan-glow), var(--gold-glow), transparent);
-    border-radius: 1px;
   }
 
   .hero-input-group {
@@ -158,14 +131,6 @@ const HERO_STYLES = `
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(8px);
-  }
-
-  .hero-input-wrapper::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: var(--glass-reflection);
-    pointer-events: none;
   }
 
   .hero-input {
@@ -207,7 +172,6 @@ const HERO_STYLES = `
     padding-right: 4px;
   }
 
-  /* ليه موجود؟ علشان container الهيدلاين يستوعب 3 سطور بدون قص. Time Complexity: O(1) */
   .hero-headline {
     font-size: clamp(2.4rem, 5.5vw, 4.4rem);
     display: flex;
@@ -258,6 +222,17 @@ const HERO_STYLES = `
     height: 160px;
     pointer-events: none;
     background: linear-gradient(to top, var(--void), transparent);
+  }
+
+  .warp-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #020408;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   .warp-overlay__content {
@@ -328,6 +303,11 @@ const HERO_STYLES = `
 
   .pulse-ring {
     animation: pulse-ring 1.4s ease-out infinite;
+  }
+
+  @keyframes pulse-ring {
+    0%   { transform: scale(1);    opacity: 0.6; }
+    100% { transform: scale(1.65); opacity: 0;   }
   }
 
   .center-core {
@@ -436,8 +416,7 @@ const HERO_STYLES = `
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background-color: currentColor; /* Fill with the specific status color */
-    /* Glow removed as per user request */
+    background-color: currentColor;
   }
 
   .legend-dot--teal { color: var(--cyan); }
@@ -448,7 +427,7 @@ const HERO_STYLES = `
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.14em;
-    color: rgba(255, 255, 255, 0.5); /* Base color for labels */
+    color: rgba(255, 255, 255, 0.5);
     text-transform: uppercase;
     font-family: "Tajawal", sans-serif;
   }
@@ -476,10 +455,18 @@ const HERO_STYLES = `
     gap: 6px;
   }
 
-  .metric-card-values--inline {
-    display: flex;
+  .trust-pill {
+    display: inline-flex;
     align-items: center;
     gap: 8px;
+    padding: 8px 14px;
+    border-radius: 100px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(12px);
+    font-size: 11px;
+    font-weight: 700;
+    color: #8faab8;
   }
 
   .trust-icon {
@@ -512,7 +499,6 @@ const HERO_STYLES = `
     border-radius: 50%;
     background: #ef4444;
     box-shadow: 0 0 12px #ef4444;
-    display: inline-block;
   }
 
   .pulse-badge__text {
@@ -525,7 +511,8 @@ const HERO_STYLES = `
 
   .hero-layer--nebula,
   .hero-layer--starfield,
-  .hero-layer--grid {
+  .hero-layer--grid,
+  .hero-layer--dust {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -534,25 +521,14 @@ const HERO_STYLES = `
   }
 
   .hero-cta-icon {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     fill: white;
   }
 
   .hero-cta-icon--arrow {
-    width: 17px;
-    height: 17px;
-  }
-
-  .trust-pill svg {
-    width: 13px;
-    height: 13px;
-    color: #14b8a6;
-  }
-
-  .hero-layer--dust {
-    z-index: 5;
-    pointer-events: none;
+    width: 18px;
+    height: 18px;
   }
 
   .neural-dust-field {
@@ -560,7 +536,6 @@ const HERO_STYLES = `
     inset: -20%;
     background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px);
     background-size: 80px 80px;
-    filter: blur(0px);
     opacity: 0.15;
   }
 
@@ -570,64 +545,13 @@ const HERO_STYLES = `
     background: linear-gradient(90deg, transparent, var(--cyan), transparent);
   }
 
-  .hero-canvas > .hero-screen-vignette,
-  .hero-canvas > .hero-screen-glow {
-    pointer-events: none;
-  }
-
-  /* ── Ambient Canvas ── */
   .hero-canvas {
     position: absolute;
     inset: 0;
     overflow: visible;
     pointer-events: none;
-    background: transparent;
   }
 
-  .ambient-orb {
-    position: absolute;
-    border-radius: 50%;
-    will-change: transform;
-    opacity: 0.8;
-  }
-
-  .ambient-orb-1 {
-    width: 400px; height: 400px;
-    background: radial-gradient(circle, rgba(0, 240, 255, 0.14) 0%, transparent 60%);
-    top: -20%; right: -10%;
-    animation: orb-drift1 38s infinite ease-in-out alternate;
-  }
-
-  .ambient-orb-2 {
-    width: 500px; height: 500px;
-    background: radial-gradient(circle, rgba(245, 166, 35, 0.1) 0%, transparent 65%);
-    bottom: -30%; left: -15%;
-    animation: orb-drift2 52s infinite ease-in-out alternate;
-  }
-
-  .ambient-orb-3 {
-    width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(0, 240, 255, 0.05) 0%, transparent 70%);
-    top: 45%; left: 20%;
-    animation: orb-drift3 44s infinite ease-in-out alternate;
-  }
-
-  @keyframes orb-drift1 {
-    0%   { transform: translate(0%,   0%)   scale(1);    }
-    50%  { transform: translate(-6%,  8%)   scale(1.15); }
-    100% { transform: translate(4%,  -5%)   scale(0.85); }
-  }
-  @keyframes orb-drift2 {
-    0%   { transform: translate(0%,   0%)   scale(1);    }
-    50%  { transform: translate(8%,  -10%)  scale(1.2); }
-    100% { transform: translate(-5%,  6%)   scale(0.9); }
-  }
-  @keyframes orb-drift3 {
-    0%   { transform: translate(0%,  0%)   scale(1);    }
-    100% { transform: translate(10%, -15%) scale(1.2); }
-  }
-
-  /* ── Grid ── */
   .hero-grid-wrapper {
     position: absolute;
     inset: -50%;
@@ -647,7 +571,6 @@ const HERO_STYLES = `
     background-size: 60px 60px;
     background-position: center bottom;
     mask-image: radial-gradient(ellipse 80% 50% at 50% 50%, black 10%, transparent 70%);
-    will-change: transform;
     opacity: 0.3;
     transform: rotateX(60deg) scale(1.5);
     transform-origin: center center;
@@ -663,9 +586,7 @@ const HERO_STYLES = `
       radial-gradient(circle at 75% 25%, rgba(245, 166, 35, 0.08) 0%, transparent 45%),
       radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 60%);
     filter: blur(20px);
-    will-change: transform;
     opacity: 0.6;
-    pointer-events: none;
   }
 
   .hero-starfield {
@@ -673,15 +594,13 @@ const HERO_STYLES = `
     inset: -50%;
     width: 200%;
     height: 200%;
-    background-image: radial-gradient(2px 2px at 40px 60px, #ffffff 50%, rgba(0,0,0,0)), radial-gradient(2px 2px at 20px 50px, rgba(255,255,255,0.8) 50%, rgba(0,0,0,0)), radial-gradient(2px 2px at 30px 100px, rgba(255,255,255,0.6) 50%, rgba(0,0,0,0)), radial-gradient(2px 2px at 40px 60px, rgba(255,255,255,0.4) 50%, rgba(0,0,0,0));
+    background-image: radial-gradient(2px 2px at 40px 60px, #ffffff 50%, rgba(0,0,0,0));
     background-repeat: repeat;
     background-size: 200px 200px;
     opacity: 0.08;
-    will-change: transform;
     mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 90%);
   }
 
-  /* ── Noise grain ── */
   .hero-grain {
     position: absolute;
     inset: 0;
@@ -691,14 +610,13 @@ const HERO_STYLES = `
     z-index: 50;
   }
 
-  /* ── Badge eyebrow ── */
   .hero-badge {
     display: inline-flex;
     align-items: center;
     gap: 10px;
     padding: 7px 18px;
     border-radius: 100px;
-    border: 1px solid var(--ds-color-border-default);
+    border: 1px solid rgba(0, 240, 255, 0.25);
     background: rgba(245, 166, 35, 0.05);
     backdrop-filter: blur(12px);
     font-size: 10px;
@@ -706,17 +624,13 @@ const HERO_STYLES = `
     letter-spacing: 0.35em;
     color: var(--gold);
     text-transform: uppercase;
-    box-shadow: inset 0 1px rgba(245, 166, 35, 0.1);
   }
 
-  /* ── Headline ── */
   .headline-static {
     font-family: "Alexandria", sans-serif;
     font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.02em;
-    color: var(--text-hero);
-    text-shadow: 0 0 60px rgba(45, 212, 191, 0.12);
     text-align: right;
   }
 
@@ -728,46 +642,30 @@ const HERO_STYLES = `
     filter: drop-shadow(0 0 24px rgba(45,212,191,0.28));
     display: block;
     width: 100%;
-    right: 0;
   }
 
-  /* ── Rotating word ── */
-  /* ليه موجود؟ علشان كلمة الـ rotation تاخد ارتفاع ثابت كافي بدون قص أثناء الأنيميشن. Time Complexity: O(1) */
   .rotating-word-wrapper {
     position: relative;
     display: inline-block;
-    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
-    max-width: 100%;
+    width: auto;
     min-height: 1.3em;
     padding: 0;
     overflow: visible;
     white-space: nowrap;
-    box-sizing: content-box;
     font-family: "Noto Kufi Arabic";
     line-height: 1.2;
     vertical-align: middle;
     text-align: right;
   }
 
-  /* ── Body copy ── */
   .hero-body {
     font-size: 1rem;
     line-height: 1.9;
-    color: var(--text-sub);
+    color: var(--text-muted);
     width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
     max-width: 100%;
   }
 
-  .cta-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 24px;
-    margin-top: 48px;
-    margin-bottom: 24px;
-    overflow: visible;
-  }
-
-  /* ── Primary CTA ── */
   .cta-primary {
     position: relative;
     display: inline-flex;
@@ -777,7 +675,6 @@ const HERO_STYLES = `
     border-radius: 20px;
     background: rgba(0, 240, 255, 0.08);
     backdrop-filter: blur(20px) saturate(180%);
-    font-family: var(--font-display);
     font-size: 1.15rem;
     font-weight: 950;
     color: #fff;
@@ -786,121 +683,8 @@ const HERO_STYLES = `
     box-shadow: 0 0 40px rgba(0, 240, 255, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.15);
     transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
     white-space: nowrap;
-    letter-spacing: -0.01em;
-  }
-  .cta-primary:hover {
-    box-shadow: 0 0 50px rgba(0,240,255,0.3), inset 0 2px 6px rgba(255,255,255,0.2);
-    border-color: rgba(0,240,255,0.8);
-    background: rgba(0,240,255,0.15);
   }
 
-  /* ── Secondary CTA ── */
-  .cta-secondary {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 16px 26px;
-    border-radius: 18px;
-    background: rgba(255,255,255,0.04);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.1);
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #a8bfcc;
-    cursor: pointer;
-    transition: background 0.3s, border-color 0.3s, color 0.3s;
-    white-space: nowrap;
-  }
-  .cta-secondary:hover {
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(255,255,255,0.2);
-    color: #e8f0f5;
-  }
-
-  /* ── Trust pills ── */
-  .trust-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    border-radius: 100px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(255,255,255,0.03);
-    backdrop-filter: blur(12px);
-    font-size: 11px;
-    font-weight: 700;
-    color: #8faab8;
-  }
-
-  /* ── Right panel: The Sovereign Map ── */
-  .sovereign-map {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1;
-    max-width: 520px;
-  }
-
-  /* ── Pulse ring ── */
-  @keyframes pulse-ring {
-    0%   { transform: scale(1);    opacity: 0.6; }
-    100% { transform: scale(1.65); opacity: 0;   }
-  }
-
-  /* ── Metric Card ── */
-  .metric-card {
-    position: absolute;
-    backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 18px;
-    padding: 16px 20px;
-    background: rgba(8, 12, 22, 0.7);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07);
-    min-width: 130px;
-    animation: card-hover-snap 8s steps(4) infinite alternate;
-  }
-  @keyframes card-hover-snap {
-    0%   { transform: translateY(0px);  }
-    25%  { transform: translateY(-4px); }
-    50%  { transform: translateY(-4px) translateX(2px); }
-    75%  { transform: translateY(-8px) translateX(2px); }
-    100% { transform: translateY(-8px); }
-  }
-
-  /* ── Warp transition ── */
-  .warp-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: #020408;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  }
-
-  /* ── Starfield dots ── */
-  .starfield-dot {
-    position: absolute;
-    border-radius: 50%;
-    background: white;
-    pointer-events: none;
-  }
-
-  /* ── Scan line ── */
-  @keyframes scan {
-    0%   { top: -4%; }
-    100% { top: 104%; }
-  }
-  .hero-scan-line {
-    position: absolute;
-    left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(45,212,191,0.35), transparent);
-    animation: scan 8s linear infinite;
-    pointer-events: none;
-  }
-
-  /* ── Layout ── */
   .hero-content-wrapper {
     position: relative;
     z-index: 2;
@@ -920,210 +704,58 @@ const HERO_STYLES = `
     position: relative;
     padding-bottom: 56px;
   }
-  /* ── Mobile Layout ── */
+
+  .headline-subline-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78em;
+  }
+
   @media (max-width: 1023px) {
     .hero-headline {
       font-size: clamp(1.6rem, 7.5vw, 2.4rem) !important;
-      width: 100% !important;
-      line-height: 1.15 !important;
-      gap: 0 !important;
+      align-items: center !important;
+      text-align: center !important;
     }
-    
+    .headline-line {
+      text-align: center !important;
+      justify-content: center !important;
+      width: 100% !important;
+    }
+    .headline-subline-container {
+      justify-content: center !important;
+      width: 100% !important;
+    }
     .hero-content-wrapper {
       flex-direction: column !important;
-      gap: 0.75rem !important;
-      padding: 5.5rem 1rem 2rem !important; /* Reduced top padding to lift everything */
-      width: 100% !important;
-      max-width: 100% !important;
-      overflow-x: hidden !important;
-      box-sizing: border-box !important;
+      padding: 5.5rem 1rem 2rem !important;
+      gap: 2rem !important;
     }
-
     .map-area {
       order: -1 !important;
       width: min(85vw, 320px) !important;
-      margin: 8px auto 0 !important; /* Raised map slightly */
-      padding-bottom: 0px !important; 
+      margin: 0 auto !important;
     }
-
-    .legend {
-      bottom: -18px !important; /* Lifted the legend words much closer to the map */
-    }
-
     .hero-copy-column {
-      order: 1 !important;
       max-width: 100% !important;
-      width: 100% !important;
-      gap: 0.5rem !important; /* Tightened from 0.85rem */
-    }
-
-    .hero-eyebrow-row {
-      display: none !important;
-    }
-    
-    .headline-static {
-      display: block !important;
-      width: 100% !important;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-      margin-top: 0px !important;  /* No margin to raise content */
-      text-align: center !important; /* سنتر الكتلة كلها */
-    }
-
-    .headline-line {
-      display: block !important;
-      width: 100% !important;
-      min-height: auto !important;
-      text-align: center !important;
-      white-space: normal !important;
-      margin-bottom: 6px !important; /* مسافة تنفس خفيفة بين السطرين */
-      line-height: 1.15 !important;
-    }
-
-    .headline-subline-container {
-      display: flex !important;
-      flex-direction: row !important;
-      justify-content: center !important;
-      align-items: baseline !important;
-      flex-wrap: wrap !important;         /* اسمح للنص يلف لو ضاق المكان */
-      gap: 6px !important;
-      width: 100% !important;
-      margin-top: 0 !important;
-      min-height: auto !important;
-    }
-
-    .headline-subline-text {
-      /* أبيض مطفي عشان الكلمة المتغيرة Cyan تبرز أكتر */
-      color: rgba(255, 255, 255, 0.75) !important;
-      font-size: 0.85em !important;
-      font-weight: 600 !important;
-      white-space: nowrap !important;
-      line-height: 1.15 !important;
-    }
-
-    .rotating-word-wrapper {
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-      width: auto !important;
-      max-width: calc(100vw - 2rem) !important; /* منع الطلوع بره الشاشة */
-      display: inline-block !important;
-      text-align: center !important;
-      white-space: nowrap !important;
-      overflow: visible !important; /* فك القص نهائياً */
-    }
-
-    .rotating-word-wrapper .headline-accent {
-      position: absolute !important;
-      top: 0 !important;
-      right: 0 !important;
-      width: auto !important;
-      max-width: none !important; /* فك القيد عشان ما تقصش من الشمال */
-      white-space: nowrap !important;
-    }
-
-    .rotating-word-wrapper .invisible {
-      display: block !important;
-      visibility: hidden !important;
-      max-width: calc(100vw - 2rem) !important;
-    }
-
-    .hero-body {
-      text-align: center !important;
-      text-align-last: center !important;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-      width: 100% !important;
-      font-size: clamp(12px, 3.8vw, 15px) !important;
-    }
-
-    .hero-action-row {
-      flex-direction: column !important; /* Stack vertically on mobile */
-      gap: 8px !important;
-      width: 100% !important;
       align-items: center !important;
     }
-
-    .cta-group {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 6px !important;
-      margin-top: 0 !important;   /* kill the 48px desktop margin */
-      margin-bottom: 0 !important; /* kill the 24px desktop margin */
-    }
-
-    .cta-free-badge {
-      font-size: 11px !important;
-      color: rgba(255, 255, 255, 0.45) !important;
-      font-weight: 500 !important;
+    .hero-body {
       text-align: center !important;
-      width: 100% !important;
     }
-
-    .hero-input-group {
-      flex: none !important;
-      width: 100% !important;
-      max-width: 320px !important; /* Prevent it from being too wide */
+    .hero-action-row {
+      align-items: center !important;
     }
-
-    .hero-input-wrapper {
-      max-width: 100% !important;
-      width: 100% !important;
-    }
-
-    .cta-group {
-      flex: none !important;
+    .hero-input-wrapper, .cta-primary {
       width: 100% !important;
       max-width: 320px !important;
     }
-
-    .cta-primary {
-      width: 100% !important; /* Button fills the container */
-      height: 52px !important; /* Better touch target */
-      font-size: 15px !important;
-      justify-content: center !important;
-    }
-
-    .hero-trust-row {
-      flex-wrap: nowrap !important;
-      justify-content: space-between !important;
-      width: 100% !important;
-      gap: 4px !important;
-    }
-
-    .trust-pill {
-      flex: 1 !important;
-      min-width: 0 !important;
-      font-size: 9px !important;
-      padding: 4px !important;
-      text-align: center !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-    }
-
-    .hero-cta-icon--arrow {
+    .hero-eyebrow-row {
       display: none !important;
     }
-
-    .cta-secondary {
-      width: 100%;
-      justify-content: center;
-    }
-
-    .trust-pill span {
-      display: block;
-    }
-
-    .trust-icon {
-      width: 10px;
-      height: 10px;
-      flex-shrink: 0;
-    }
-
-    .map-area {
-      width: min(95vw, 400px);
-      margin: 0 auto;
-      padding-bottom: 24px;
+    .legend {
+      bottom: -10px !important;
     }
   }
 `;
@@ -1141,10 +773,9 @@ const fadeUp = {
 };
 
 const fadeUpWithClip = {
-  hidden: { opacity: 0, clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", y: 15 },
+  hidden: { opacity: 0, y: 15 },
   visible: { 
     opacity: 1, 
-    clipPath: "polygon(-500% -500%, 500% -500%, 500% 500%, -500% 500%)", 
     y: 0, 
     transition: { duration: 0.65, ease: techEase } 
   },
@@ -1156,7 +787,7 @@ const stagger = {
 };
 
 /* ─── Rotating Headline Word ─────────────────────────────────────────────────── */
-const RotatingWord: FC = () => {
+const RotatingWord: FC = React.memo(() => {
   const [index, setIndex] = useState(0);
   const [show, setShow] = useState(true);
 
@@ -1172,8 +803,7 @@ const RotatingWord: FC = () => {
   }, []);
 
   return (
-    <span className="rotating-word-wrapper relative inline-block w-fit max-w-full">
-      {/* ليه موجود؟ علشان wrapper ياخد عرض كتلة العنوان كامل ويتحاذى معاها بصريًا. Time Complexity: O(1) */}
+    <span className="rotating-word-wrapper">
       <span className="invisible select-none block whitespace-nowrap font-extrabold" aria-hidden>
         {ROTATING_WORDS[0]}
       </span>
@@ -1186,7 +816,6 @@ const RotatingWord: FC = () => {
             animate="visible"
             exit="hidden"
             transition={{ duration: 0.45, ease: techEase }}
-            /* ليه موجود؟ علشان الكلمة المتحركة تبقى متراكبة فوق placeholder بدون ما تزود ارتفاع الحاوية. Time Complexity: O(1) */
             className="absolute top-0 flex items-center headline-accent h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content px-2 mt-0 mb-0 align-middle font-extrabold font-['Noto_Kufi_Arabic']"
           >
             {ROTATING_WORDS[index]}
@@ -1195,12 +824,10 @@ const RotatingWord: FC = () => {
       </AnimatePresence>
     </span>
   );
-};
+});
 
 /* ─── Sovereign Map (Right Panel) ───────────────────────────────────────────── */
-const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
-  // Mouse follow animation removed as per user request
-
+const SovereignMap: FC<{ reduceMotion: boolean | null }> = React.memo(({ reduceMotion }) => {
   const rings = [
     { r: 68,  stroke: "rgba(0, 240, 255, 0.35)", dash: "none", dur: 22 },
     { r: 110, stroke: "rgba(245, 166, 35, 0.25)", dash: "4 14", dur: 38 },
@@ -1223,18 +850,9 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
     typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
 
   return (
-    <motion.div
-      className="sovereign-map"
-      style={{ rotateX: 0, rotateY: 0 }}
-    >
+    <motion.div className="sovereign-map">
       <div className="sovereign-map__atmosphere" aria-hidden />
-      <div className="hero-scan-line" aria-hidden />
-
-      <svg
-        viewBox="0 0 380 380"
-        fill="none"
-        className="sovereign-map__svg"
-      >
+      <svg viewBox="0 0 380 380" fill="none" className="sovereign-map__svg">
         {nodes.map((n, i) => (
           <Fragment key={`nexus-${i}`}>
             <motion.line
@@ -1244,129 +862,57 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
               opacity={hovered === i ? 0.6 : 0.15}
               className="orbit-line"
             />
-            {/* Neural Pulse - Data traveling from core to node */}
-            <motion.circle
-              r="1.5"
-              fill={n.color}
-              initial={{ offsetDistance: "0%", opacity: 0 }}
-              animate={{ 
-                offsetDistance: ["0%", "100%"],
-                opacity: [0, 1, 0]
-              }}
-              transition={{ 
-                duration: 2 + Math.random() * 2, 
-                repeat: Infinity, 
-                delay: Math.random() * 3,
-                ease: "easeInOut"
-              }}
-              style={{
-                offsetPath: `path('M 190 190 L ${n.cx} ${n.cy}')`,
-                filter: `drop-shadow(0 0 4px ${n.color})`
-              }}
-            />
           </Fragment>
         ))}
 
-        {rings.map((ring, i) => (
-          (() => {
-            const safeRingRadius = toSafeRadius(ring.r, 1);
-            return (
-              <g key={i}>
-                <motion.circle
-                  cx="190" cy="190" r={safeRingRadius}
-                  stroke={ring.stroke}
-                  strokeWidth="1"
-                  fill="none"
-                  strokeDasharray={ring.dash === "none" ? undefined : ring.dash}
-                  animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
-                  transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
-                  className="orbit-ring"
-                  transformOrigin="190px 190px"
-                />
-                {!reduceMotion && (
-                  <motion.circle
-                    cx="190" cy="190" r={safeRingRadius}
-                    fill="none"
-                    stroke={ring.stroke}
-                    strokeWidth="2"
-                    strokeDasharray="1 100"
-                    animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
-                    transition={{ duration: ring.dur * 0.4, repeat: Infinity, ease: "linear" }}
-                    className="orbit-ring orbit-ring--glow"
-                    transformOrigin="190px 190px"
-                  />
-                )}
-              </g>
-            );
-          })()
-        ))}
+        {rings.map((ring, i) => {
+          const safeRingRadius = toSafeRadius(ring.r, 1);
+          return (
+            <g key={i}>
+              <motion.circle
+                cx="190" cy="190" r={safeRingRadius}
+                stroke={ring.stroke}
+                strokeWidth="1"
+                fill="none"
+                animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
+                transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
+                transformOrigin="190px 190px"
+              />
+            </g>
+          );
+        })}
 
-        {nodes.map((node, i) => (
-          (() => {
-            const safeNodeRadius = toSafeRadius(node.r, 1);
-            return (
-              <motion.g
-                key={i}
-                onMouseEnter={() => setHovered(i)}
-                onMouseLeave={() => setHovered(null)}
-                animate={reduceMotion ? {} : {
-                  opacity: hovered === i ? 1 : [0.7, 1, 0.7],
-                }}
-                transition={{
-                  opacity: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 },
-                }}
-                transformOrigin={`${node.cx}px ${node.cy}px`}
-                cursor="pointer"
-                className="node-group"
-              >
+        {nodes.map((node, i) => {
+          const safeNodeRadius = toSafeRadius(node.r, 1);
+          return (
+            <motion.g
+              key={i}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              cursor="pointer"
+            >
+              <circle cx={node.cx} cy={node.cy} r={safeNodeRadius + 4} fill={node.color} opacity={0.1} />
+              <circle cx={node.cx} cy={node.cy} r={safeNodeRadius} fill={node.color} />
+              <AnimatePresence>
                 {hovered === i && (
-                  <circle
-                    cx={node.cx} cy={node.cy} r={safeNodeRadius + 6}
-                    fill="none" stroke={node.color} strokeWidth="1.5"
-                    opacity={0.4}
-                    className="pulse-ring"
-                    transformOrigin={`${node.cx}px ${node.cy}px`}
-                  />
+                  <motion.foreignObject
+                    x={node.cx - 75} y={node.cy - 16}
+                    width="150" height="36"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <div className="node-tooltip-body">{node.label}</div>
+                  </motion.foreignObject>
                 )}
-                <circle cx={node.cx} cy={node.cy} r={safeNodeRadius + 8} fill={node.color} opacity={0.07} />
-                <circle
-                  cx={node.cx} cy={node.cy} r={safeNodeRadius}
-                  fill={node.color}
-                  className="node-core"
-                />
-                <circle cx={node.cx} cy={node.cy} r={safeNodeRadius * 0.35} fill="rgba(0,0,0,0.55)" />
+              </AnimatePresence>
+            </motion.g>
+          );
+        })}
 
-                <AnimatePresence>
-                  {hovered === i && (
-                    <motion.foreignObject
-                      x={node.cx > 190 ? node.cx - 160 : node.cx + 18}
-                      y={node.cy - 16}
-                      width="150" height="36"
-                      initial={{ opacity: 0, filter: "blur(4px)" }}
-                      animate={{ opacity: 1, filter: "blur(0px)" }}
-                      exit={{ opacity: 0, filter: "blur(4px)" }}
-                      transition={{ duration: 0.25 }}
-                    >
-                      <div className="node-tooltip-body">
-                        {node.label}
-                      </div>
-                    </motion.foreignObject>
-                  )}
-                </AnimatePresence>
-              </motion.g>
-            );
-          })()
-        ))}
-
-        <motion.g
-          animate={reduceMotion ? {} : { scale: [1, 1.18, 1], opacity: [0.9, 1, 0.9] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-          className="center-core"
-          transformOrigin="190px 190px"
-        >
-          <circle cx="190" cy="190" r="22" fill="rgba(0, 240, 255, 0.15)" />
-          <circle cx="190" cy="190" r="14" fill="var(--teal)" className="center-core__glow" />
-          <circle cx="190" cy="190" r="6" fill="#fff" opacity={0.9} />
+        <motion.g className="center-core" transformOrigin="190px 190px">
+          <circle cx="190" cy="190" r="14" fill="var(--cyan)" className="center-core__glow" />
+          <circle cx="190" cy="190" r="6" fill="#fff" />
         </motion.g>
       </svg>
 
@@ -1377,69 +923,67 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
           <span className="metric-card-text">/ ١٠٠</span>
         </div>
         <div className="metric-card-bar">
-          <motion.div
-            className="metric-card-bar__fill"
-            initial={{ width: "0%" }}
-            animate={{ width: "78%" }}
-            transition={{ duration: 1.2, ease: techEase, delay: 0.6 }}
-          />
-        </div>
-      </div>
-
-      <div className="metric-card metric-card--drain">
-        <p className="metric-card-label metric-card-label--alert">نزيف طاقة</p>
-        <div className="metric-card-values metric-card-values--inline">
-          <span className="metric-card-value metric-card-value--small">٣</span>
-          <span className="metric-card-text">مصادر الاستنزاف</span>
-        </div>
-        <div className="metric-card-dots">
-          {[1, 2, 3].map((dot) => (
-            <motion.div
-              key={dot}
-              className="metric-card-dot"
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 2, repeat: Infinity, delay: dot * 0.3 }}
-            />
-          ))}
+          <motion.div className="metric-card-bar__fill" initial={{ width: "0%" }} animate={{ width: "78%" }} transition={{ duration: 1.2, delay: 0.6 }} />
         </div>
       </div>
 
       <div className="legend">
         {[
-          { dotClass: "legend-dot legend-dot--teal", label: "توازن", colorClass: "legend-label--teal" },
-          { dotClass: "legend-dot legend-dot--gold", label: "تشتت", colorClass: "legend-label--gold" },
-          { dotClass: "legend-dot legend-dot--crimson", label: "استنزاف", colorClass: "legend-label--crimson" },
-        ].map(({ dotClass, label, colorClass }) => (
+          { label: "توازن", color: "var(--cyan)" },
+          { label: "تشتت", color: "var(--gold)" },
+          { label: "استنزاف", color: "var(--crimson)" },
+        ].map(({ label, color }) => (
           <div key={label} className="legend-item">
-            <span className={dotClass} />
-            <span className={`legend-label ${colorClass}`}>{label}</span>
+            <span className="legend-dot" style={{ color }} />
+            <span className="legend-label" style={{ color }}>{label}</span>
           </div>
         ))}
       </div>
     </motion.div>
   );
-};
+});
 
-const PulseBadge: FC<{ count: number }> = ({ count }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.85 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ delay: 1.4, duration: 0.6, ease: techEase }}
-    className="pulse-badge"
-  >
-    <motion.span
-      className="pulse-badge__dot"
-      animate={{ opacity: [1, 0.3, 1] }}
-      transition={{ duration: 1.6, repeat: Infinity }}
-    />
-    <span className="pulse-badge__text">
-      {count.toLocaleString("en-US")} يستعيدون نبضهم الآن
-    </span>
-  </motion.div>
-);
+/* ─── Pulse Badge ───────────────────────────────────────────────────────────── */
+const PulseBadge: FC<{ count?: number }> = React.memo(({ count: initialCount }) => {
+  const [count, setCount] = useState(initialCount ?? 1947);
+
+  useEffect(() => {
+    if (initialCount !== undefined) {
+      setCount(initialCount);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setCount(prev => {
+        const fluctuation = Math.floor(Math.random() * 5) - 2;
+        return Math.max(5, prev + fluctuation);
+      });
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [initialCount]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 1.4, duration: 0.6, ease: techEase }}
+      className="pulse-badge"
+    >
+      <motion.span
+        className="pulse-badge__dot"
+        animate={{ opacity: [1, 0.3, 1] }}
+        transition={{ duration: 1.6, repeat: Infinity }}
+      />
+      <span className="pulse-badge__text">
+        {count.toLocaleString("en-US")} يستعيدون نبضهم الآن
+      </span>
+    </motion.div>
+  );
+});
 
 /* ─── Main Hero Component ────────────────────────────────────────────────────── */
-export const HeroSection: FC<HeroSectionProps> = ({
+export const HeroSection: FC<HeroSectionProps> = React.memo(({
   onStartJourney,
   mirrorName,
   setMirrorName,
@@ -1453,7 +997,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const headlineLineRef = useRef<HTMLSpanElement | null>(null);
   const [headlineMeasuredWidth, setHeadlineMeasuredWidth] = useState<number>(0);
 
-  // Global Mouse tracking for Parallax Base
   const globalMouseX = useMotionValue(0);
   const globalMouseY = useMotionValue(0);
 
@@ -1461,42 +1004,41 @@ export const HeroSection: FC<HeroSectionProps> = ({
     if (reduceMotion) return;
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
-    // 5x more sensitive for dramatic architectural tracking
     globalMouseX.set((e.clientX - cx) / 20);
     globalMouseY.set((e.clientY - cy) / 20);
   }, [reduceMotion, globalMouseX, globalMouseY]);
 
-  // Layer 1: Foreground Grid (Fastest response, moves opposite to mouse context)
   const gridX = useSpring(useTransform(globalMouseX, x => -x * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
   const gridY = useSpring(useTransform(globalMouseY, y => -y * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
 
-  // Layer 2: Midground Stars (Medium response)
   const starX = useSpring(useTransform(globalMouseX, x => -x * 0.5), { stiffness: 20, damping: 30, mass: 1 });
   const starY = useSpring(useTransform(globalMouseY, y => -y * 0.5), { stiffness: 20, damping: 30, mass: 1 });
 
-  // Layer 3: Deep Nebula (Slow, heavy response)
-  const nebulaX = useSpring(useTransform(globalMouseX, x => -x * 0.2), { stiffness: 10, damping: 40, mass: 2 });
-  const nebulaY = useSpring(useTransform(globalMouseY, y => -y * 0.2), { stiffness: 10, damping: 40, mass: 2 });
+  const warpLines = useMemo(() => (
+    Array.from({ length: 40 }, (_, i) => ({
+      id: `warp-line-${i}`,
+      top: `${(i / 40) * 110 - 5}%`,
+      width: `${15 + Math.random() * 45}%`,
+      opacity: 0.15 + Math.random() * 0.55,
+      delay: Math.random() * 0.4,
+      duration: 0.25 + Math.random() * 0.3,
+    }))
+  ), []);
 
-  // Layer 4: Neural Dust (Extreme foreground, super fast)
-  const dustX = useSpring(useTransform(globalMouseX, x => -x * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
-  const dustY = useSpring(useTransform(globalMouseY, y => -y * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
-
-  // Tilt transforms for content removed as per user request
-  
-  const handleStart = useCallback(() => {
-    setIsWarping(true);
-    setTimeout(onStartJourney, 900);
-  }, [onStartJourney]);
-
-  // ليه موجود؟ علشان نثبت عرض بقية عناصر النص على نفس عرض جملة "أنت لست مرهقاً" بالظبط. Time Complexity: O(1) لكل تحديث قياس.
   useLayoutEffect(() => {
     const node = headlineLineRef.current;
     if (!node) return;
 
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      setHeadlineMeasuredWidth(window.innerWidth - 32);
+      return;
+    }
+
     const updateMeasuredWidth = () => {
+      if (window.innerWidth < 1024) return;
       const nextWidth = Math.ceil(node.getBoundingClientRect().width);
-      setHeadlineMeasuredWidth(prev => (prev === nextWidth ? prev : nextWidth));
+      setHeadlineMeasuredWidth(prev => (Math.abs(prev - nextWidth) < 2 ? prev : nextWidth));
     };
 
     updateMeasuredWidth();
@@ -1510,86 +1052,36 @@ export const HeroSection: FC<HeroSectionProps> = ({
     };
   }, []);
 
-  const warpLines = useMemo(() => (
-    Array.from({ length: 40 }, (_, i) => ({
-      id: `warp-line-${i}`,
-      top: `${(i / 40) * 110 - 5}%`,
-      width: `${15 + Math.random() * 45}%`,
-      opacity: 0.15 + Math.random() * 0.55,
-      delay: Math.random() * 0.4,
-      duration: 0.25 + Math.random() * 0.3,
-    }))
-  ), []);
-
-  const warpLineStyles = useMemo(() => warpLines.map((line) => `
-    .${line.id} {
-      top: ${line.top};
-      width: ${line.width};
-      opacity: ${line.opacity};
-    }
-  `).join('\n'), [warpLines]);
+  const handleStart = useCallback(() => {
+    setIsWarping(true);
+    setTimeout(onStartJourney, 1200);
+  }, [onStartJourney]);
 
   return (
     <>
       <style>{HERO_STYLES}</style>
-      <style>{warpLineStyles}</style>
 
-      {/* ── Section wrapper ── */}
-      <section
-        className="hero-root"
-        dir="rtl"
-        onMouseMove={handleGlobalMouseMove}
-      >
-        {/* ── Ambient canvas ── */}
+      <section className="hero-root" dir="rtl" onMouseMove={handleGlobalMouseMove}>
         <div className="hero-canvas" aria-hidden>
-          {/* Layer 3: Deep Nebula */}
-          <motion.div className="hero-layer hero-layer--nebula" style={{ x: nebulaX, y: nebulaY }}>
-            <div className="hero-nebula" />
-            <div className="ambient-orb ambient-orb-3" />
-          </motion.div>
-
-          {/* Layer 2: Starfield */}
           <motion.div className="hero-layer hero-layer--starfield" style={{ x: starX, y: starY }}>
             <div className="hero-starfield" />
-            <div className="ambient-orb ambient-orb-2" />
           </motion.div>
-
-          {/* Layer 1: Foreground Grid */}
           <motion.div className="hero-layer hero-layer--grid" style={{ x: gridX, y: gridY }}>
-            <div className="hero-grid-wrapper">
-              <div className="hero-grid" />
-            </div>
-            <div className="ambient-orb ambient-orb-1" />
+            <div className="hero-grid-wrapper"><div className="hero-grid" /></div>
           </motion.div>
-
-          {/* Layer 4: Neural Dust (Near plane) */}
-          <motion.div className="hero-layer hero-layer--dust" style={{ x: dustX, y: dustY }}>
-            <div className="neural-dust-field" />
-          </motion.div>
-
           <div className="hero-grain" />
           <div className="hero-screen-vignette" />
           <div className="hero-screen-glow" />
         </div>
 
-        {/* ── Content container ── */}
         <div className="hero-content-wrapper">
           <motion.div
-            variants={stagger}
-            initial="hidden"
-            animate="visible"
+            variants={stagger} initial="hidden" animate="visible"
             className="hero-copy-column"
-            style={{
-              // ليه موجود؟ علشان نخلي العناصر التانية تلتزم بنفس عرض العنوان الأول وقت الرندر. Time Complexity: O(1).
-              ["--headline-measured-width" as any]:
-                headlineMeasuredWidth > 0 ? `${headlineMeasuredWidth}px` : undefined,
-            }}
+            style={{ ["--headline-measured-width" as any]: headlineMeasuredWidth > 0 ? `${headlineMeasuredWidth}px` : undefined }}
           >
             <motion.div variants={fadeUp} className="hero-eyebrow-row">
-              <span className="hero-badge">
-                <span className="hero-badge__dot" />
-                الرحلة
-              </span>
+              <span className="hero-badge"><span className="hero-badge__dot" />الرحلة</span>
               <PulseBadge count={pulseCount} />
             </motion.div>
 
@@ -1601,76 +1093,31 @@ export const HeroSection: FC<HeroSectionProps> = ({
               </div>
             </motion.h1>
 
-            <motion.div variants={fadeUp} className="hero-divider" />
-
             <motion.p variants={fadeUp} className="hero-body">
               قف خذ نفساً عميقاً أنت مش محتاج مهام أكتر أنت محتاج تشوف نفسك خريطة تترجم فوضى أفكارك لإحداثيات بصرية وترصد نزيف طاقتك فوراً
             </motion.p>
 
-            <motion.div variants={fadeUp} className="hero-action-row">
-              <div className="hero-input-group">
-                <div className="glass-premium hero-input-wrapper">
-                  <input
-                    type="text"
-                    id="mirror-name"
-                    name="mirrorName"
-                    placeholder="اسمك عشان الخريطة تنادهلك"
-                    value={mirrorName}
-                    onChange={e => setMirrorName(e.target.value)}
-                    maxLength={24}
-                    dir="rtl"
-                    className="hero-input"
-                  />
-                  {mirrorName && (
-                    <span className="hero-input-greeting">
-                      أهلاً {mirrorName} ✦
-                    </span>
-                  )}
-                </div>
-                {!mirrorName && (
-                  <p className="hero-input-note">
-                    اختياري — بس هتفرق في التجربة
-                  </p>
-                )}
-              </div>
+            <div className="hero-action-row">
+              <motion.div variants={fadeUp} className="hero-input-wrapper">
+                <div className="hero-input-greeting">يا مسافر،</div>
+                <input type="text" className="hero-input" placeholder="اسمك إيه؟" value={mirrorName} onChange={(e) => setMirrorName(e.target.value)} />
+              </motion.div>
+              <motion.button variants={fadeUp} onClick={handleStart} className="cta-primary">
+                <Zap className="hero-cta-icon" />{ctaJourney}<ArrowLeft className="hero-cta-icon--arrow" />
+              </motion.button>
+              <motion.p variants={fadeUp} className="cta-free-badge">استكشاف مجاني ١٠٠٪ — لا يتطلب بطاقة ائتمان</motion.p>
+            </div>
 
-              <div className="cta-group overflow-visible">
-                <motion.button
-                  type="button"
-                  className="cta-primary"
-                  onClick={handleStart}
-                  whileHover={{ scale: 1.04, y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  id="hero-cta-start"
-                >
-                  <Zap className="hero-cta-icon" />
-                  <span>شوف خريطتك دلوقتي</span>
-                  <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
-                </motion.button>
-                <p className="cta-free-badge">مجاني تماماً — بدون تسجيل</p>
-              </div>
-            </motion.div>
-
-            <motion.div variants={fadeUp} className="hero-trust-row">
-              {[
-                { icon: <Zap className="trust-icon" />, label: trustPoints[0] },
-                { icon: <Heart className="trust-icon" />, label: trustPoints[1] },
-                { icon: <Shield className="trust-icon" />, label: trustPoints[2] },
-              ].map(({ icon, label }) => (
-                <span key={label} className="trust-pill">
-                  {icon}
-                  <span>{label}</span>
-                </span>
+            <motion.div variants={stagger} className="hero-trust-row mt-4">
+              {trustPoints.map(point => (
+                <motion.div key={point} variants={fadeUp} className="trust-pill">
+                  <Shield className="trust-icon" /><span>{point}</span>
+                </motion.div>
               ))}
             </motion.div>
           </motion.div>
 
-          <motion.div
-            className="map-area"
-            initial={{ opacity: 0, scale: 0.88, filter: "blur(12px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            transition={{ duration: 1.1, ease: techEase, delay: 0.35 }}
-          >
+          <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.2, delay: 0.4, ease: techEase }} className="map-area">
             <SovereignMap reduceMotion={reduceMotion} />
           </motion.div>
         </div>
@@ -1680,41 +1127,17 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
       <AnimatePresence>
         {isWarping && (
-          <motion.div
-            className="warp-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            {warpLines.map((line) => (
-              <motion.div
-                key={line.id}
-                className={`warp-line ${line.id}`}
-                animate={{ left: ["-150%", "300%"] }}
-                transition={{
-                  duration: line.duration,
-                  repeat: Infinity,
-                  ease: "linear",
-                  delay: line.delay,
-                }}
-              />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="warp-overlay">
+            <div className="warp-overlay__content">
+              <div className="warp-icon-shell"><Zap className="warp-icon" /></div>
+              <div className="warp-text">جاري تحليل وعيك...</div>
+            </div>
+            {warpLines.map(line => (
+              <motion.div key={line.id} className={`warp-line ${line.id}`} initial={{ left: "-100%" }} animate={{ left: "200%" }} transition={{ duration: line.duration, repeat: Infinity, delay: line.delay, ease: "linear" }} style={{ top: line.top, width: line.width, opacity: line.opacity }} />
             ))}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="warp-overlay__content"
-            >
-              <div className="warp-icon-shell">
-                <Zap className="warp-icon" />
-              </div>
-              <p className="warp-text">
-                جاري تحليل وعيك...
-              </p>
-            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
     </>
   );
-};
+});
