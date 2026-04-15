@@ -33,6 +33,7 @@ const BawsalaScreen = lazy(() => import("../../bawsala/BawsalaScreen"));
 const RiwayaScreen = lazy(() => import("../../riwaya/RiwayaScreen"));
 const NadhirScreen = lazy(() => import("../../nadhir/NadhirScreen"));
 const WirdScreen = lazy(() => import("../../wird/WirdScreen"));
+const MarkazScreen = lazy(() => import("../../markaz/MarkazScreen"));
 
 
 
@@ -494,6 +495,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a12" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <WirdScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "markaz") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#060812" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
+          <MarkazScreen />
         </Suspense>
       </PageShell>
     );

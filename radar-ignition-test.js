@@ -54,6 +54,9 @@ async function radarTest() {
     console.error(`❌ Oracle Analysis Failed: ${oracleResult.error || oracleResult.message}`);
   } else {
     console.log(`✅ Oracle Analysis Complete. Analyzed: ${oracleResult.analyzedCount || 0}`);
+    if (oracleResult.analyzedCount === 0) {
+        console.log("ℹ️ Raw Oracle Result payload:", JSON.stringify(oracleResult, null, 2));
+    }
     if (oracleResult.results && Object.keys(oracleResult.results).length > 0) {
         console.log("Insights (First 2):", JSON.stringify(Object.values(oracleResult.results).slice(0, 2), null, 2));
     } else {

@@ -17,7 +17,8 @@ import {
   Brain,
   FileText,
   AlertTriangle,
-  Flame
+  Flame,
+  LayoutGrid
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -169,6 +170,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#fbbf24",
     url: "/#wird"
+  },
+  {
+    id: "markaz",
+    name: "مركز",
+    description: "غرفة القيادة — كل شيء في نظرة",
+    icon: <LayoutGrid className="w-5 h-5" />,
+    status: "active",
+    color: "#6366f1",
+    url: "/#markaz"
   }
 ];
 
