@@ -91,12 +91,15 @@ export const TaqrirScreen: FC = () => {
   const [coachMode, setCoachMode] = useState(false);
 
   // ── Data Sources ──
-  const logs = usePulseState((s) => s.logs) ?? [];
+  const rawLogs = usePulseState((s) => s.logs);
+  const logs = useMemo(() => rawLogs ?? [], [rawLogs]);
   const { xp, level, streak, badges } = useGamificationState();
   const levelProgress = useGamificationState((s) => s.getLevelProgress());
-  const nodes = useMapState((s) => s.nodes) ?? [];
+  const rawNodes = useMapState((s) => s.nodes);
+  const nodes = useMemo(() => rawNodes ?? [], [rawNodes]);
   const { crashProbability } = usePredictiveState();
-  const journalEntries = useDailyJournalState((s) => s.entries) ?? [];
+  const rawJournalEntries = useDailyJournalState((s) => s.entries);
+  const journalEntries = useMemo(() => rawJournalEntries ?? [], [rawJournalEntries]);
   const { buddies } = useRifaqState();
 
   const cutoff = useMemo(() => {

@@ -204,7 +204,7 @@ export function toVisualizationData(graph: DawayirGraph) {
   const active = graph.nodes.filter(n => !n.archived);
 
   // Position nodes in concentric circles based on ring
-  const positioned = active.map((node, i) => {
+  const positioned = active.map((node, _i) => {
     const sameRing = active.filter(n => n.ring === node.ring);
     const idx = sameRing.indexOf(node);
     const angle = (2 * Math.PI * idx) / sameRing.length;

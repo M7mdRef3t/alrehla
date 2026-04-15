@@ -288,7 +288,8 @@ export const NadhirScreen: FC = () => {
     logCrisis, resolveCrisis,
   } = useNadhirState();
 
-  const logs = usePulseState((s) => s.logs) ?? [];
+  const rawLogs = usePulseState((s) => s.logs);
+  const logs = useMemo(() => rawLogs ?? [], [rawLogs]);
 
   // ── Crisis Level Calculation ──
   const crisisLevel = useMemo(() => {

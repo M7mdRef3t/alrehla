@@ -65,14 +65,14 @@ export const useBawsalaState = create<BawsalaState>()(
 
       addValue: (v) =>
         set((s) => ({
-          values: [...s.values, { ...v, id: `v_${Date.now()}` }],
+          values: [...s.values, { ...v, id: `v_${crypto.randomUUID()}` }],
         })),
 
       removeValue: (id) =>
         set((s) => ({ values: s.values.filter((v) => v.id !== id) })),
 
       addDecision: (question, context) => {
-        const id = `d_${Date.now()}`;
+        const id = `d_${crypto.randomUUID()}`;
         set((s) => ({
           decisions: [
             {
@@ -101,7 +101,7 @@ export const useBawsalaState = create<BawsalaState>()(
                   ...d,
                   options: [
                     ...d.options,
-                    { id: `o_${Date.now()}`, label, pros: [], cons: [], gutFeeling: 5, valuesAlignment: 50 },
+                    { id: `o_${crypto.randomUUID()}`, label, pros: [], cons: [], gutFeeling: 5, valuesAlignment: 50 },
                   ],
                 }
               : d

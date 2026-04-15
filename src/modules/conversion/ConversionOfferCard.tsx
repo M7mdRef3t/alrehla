@@ -13,6 +13,8 @@
 import { motion } from "framer-motion";
 import { RECOMMENDED_PRODUCT_LABELS } from "../diagnosis/diagnosisEngine";
 import type { RecommendedProduct, UserStateObject } from "../diagnosis/types";
+import { analyticsService } from "@/domains/analytics";
+import { useEffect } from "react";
 
 // ════════════════════════════════════════════════
 // Types
@@ -60,38 +62,36 @@ export function ConversionOfferCard({
   const product = RECOMMENDED_PRODUCT_LABELS[userState.recommendedProduct];
   const urgencyLine = URGENCY_LINES[userState.type] ?? "";
 
+  // Track initial view of the offer
+  useEffect(() => {
+    analyticsService.track(analyticsService.Events.CONVERSION_OFFER_VIEW, {
+      product: userState.recommendedProduct,
+      source,
+      user_state_type: userState.type,
+      readiness: userState.readiness,
+    });
+  }, [userState.recommendedProduct, source, userState.type, userState.readiness]);
+
   const handleFree = () => {
     // Track conversion intent
-    if (typeof window !== "undefined") {
-      try {
-        import("@/domains/analytics").then(({ analyticsService }) => {
-          analyticsService.track("conversion_offer_clicked", {
-            tier: "free",
-            product: userState.recommendedProduct,
-            source,
-            user_state_type: userState.type,
-            readiness: userState.readiness,
-          });
-        }).catch(() => {});
-      } catch { /* analytics non-critical */ }
-    }
+    analyticsService.track(analyticsService.Events.CONVERSION_OFFER_CLICKED, {
+      tier: "free",
+      product: userState.recommendedProduct,
+      source,
+      user_state_type: userState.type,
+      readiness: userState.readiness,
+    });
     onSelectFree(userState.recommendedProduct);
   };
 
   const handleSession = () => {
-    if (typeof window !== "undefined") {
-      try {
-        import("@/domains/analytics").then(({ analyticsService }) => {
-          analyticsService.track("conversion_offer_clicked", {
-            tier: "paid",
-            product: "session",
-            source,
-            user_state_type: userState.type,
-            readiness: userState.readiness,
-          });
-        }).catch(() => {});
-      } catch { /* analytics non-critical */ }
-    }
+    analyticsService.track(analyticsService.Events.CONVERSION_OFFER_CLICKED, {
+      tier: "paid",
+      product: "session",
+      source,
+      user_state_type: userState.type,
+      readiness: userState.readiness,
+    });
     onSelectSession();
   };
 

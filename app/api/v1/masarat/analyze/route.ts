@@ -35,50 +35,75 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { input, ring = "red", expectedOutput = "quick" } = body;
 
-    if (!input || typeof input !== "string") {
-      return NextResponse.json({ error: "Missing 'input' field in payload" }, { status: 400 });
+    // 1. Precise Input Validation
+    if (!input || typeof input !== "string" || input.trim().length < 5) {
+      return NextResponse.json({ 
+        error: "Invalid payload", 
+        detail: "Input must be a string of at least 5 characters" 
+      }, { status: 400 });
     }
 
-    console.log(`[MaaS Gateway] Processing request for platform: ${keyRecord.platform_name}`);
+    console.log(`[MaaS Gateway] Processing [${expectedOutput}] for platform: ${keyRecord.platform_name}`);
 
-    let engineResponse: unknown;
+    let engineResponse: any = null;
+    let engineRaw: any = null;
     const startTime = Date.now();
 
+    // 2. Controlled Execution Loop
     try {
       if (expectedOutput === "full_plan") {
         const analysis = quickAnalyze ? (quickAnalyze(input) as any) : null;
+        engineRaw = analysis;
         const patterns = Array.isArray(analysis?.patterns) ? analysis.patterns : [];
-        engineResponse = generateDynamicPlan
-          ? generateDynamicPlan("العميل", ring as any, patterns, ["Generated via MaaS API"])
-          : { status: "Feature missing in engine" };
+        
+        if (generateDynamicPlan) {
+          engineResponse = generateDynamicPlan("العميل", ring as any, patterns, ["Generated via MaaS API"]);
+        } else {
+          engineResponse = { status: "Maintenance", detail: "Dynamic planning module currently unavailable" };
+        }
       } else {
-        engineResponse = quickAnalyze ? quickAnalyze(input) : { patterns: [] };
+        engineResponse = quickAnalyze ? quickAnalyze(input) : { patterns: [], error: "Engine logic missing" };
+        engineRaw = engineResponse;
       }
-    } catch (engineError) {
-      console.error("[MaaS Gateway] Engine Core Error:", engineError);
-      return NextResponse.json({ error: "Masarat Engine failed to process the request" }, { status: 500 });
+    } catch (engineError: any) {
+      console.error("[MaaS Gateway] Engine Core Crash:", engineError);
+      
+      // Attempt legacy fallback or return structured error
+      return NextResponse.json({ 
+        error: "Engine Failure", 
+        message: "Masarat Engine failed to process the request",
+        timestamp: new Date().toISOString()
+      }, { status: 500 });
     }
 
     const computeTimeMs = Date.now() - startTime;
 
-    await supabaseAdmin.from("api_usage_logs").insert([{
-      organization_id: keyRecord.organization_id,
-      endpoint: "/api/v1/masarat/analyze",
-      compute_time_ms: computeTimeMs,
-      payload_size_bytes: JSON.stringify(body).length,
-      status: "success"
-    }]);
+    // 3. Telemetry Persistence
+    try {
+      await supabaseAdmin.from("api_usage_logs").insert([{
+        organization_id: keyRecord.organization_id,
+        endpoint: "/api/v1/masarat/analyze",
+        compute_time_ms: computeTimeMs,
+        payload_size_bytes: JSON.stringify(body).length,
+        status: "success",
+        metadata: { expectedOutput, ring }
+      }]);
+    } catch (logError) {
+      console.error("[MaaS Gateway] Non-blocking logging failure:", logError);
+    }
 
     return NextResponse.json({
       meta: {
         platform: "Masarat Engine (MaaS)",
-        version: "1.0",
-        compute_ms: computeTimeMs
+        version: "1.1", // Bumped version for hardening
+        compute_ms: computeTimeMs,
+        platform_name: keyRecord.platform_name
       },
-      data: engineResponse
+      data: engineResponse,
+      engine_raw: process.env.NODE_ENV === "development" ? engineRaw : undefined
     }, { status: 200 });
-  } catch (err) {
-    console.error("[MaaS Gateway] Fatal API Error:", err);
-    return NextResponse.json({ error: "Internal Gateway Error" }, { status: 500 });
+  } catch (err: any) {
+    console.error("[MaaS Gateway] Fatal API Hub Error:", err);
+    return NextResponse.json({ error: "Internal Gateway Error", id: "FATAL_GW_001" }, { status: 500 });
   }
 }

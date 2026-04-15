@@ -24,6 +24,7 @@ import {
 import { WizardProgressBar } from "./_components/wizard/WizardProgressBar";
 import { StepChooseMethod } from "./_components/wizard/StepChooseMethod";
 import { StepSendProof } from "./_components/wizard/StepSendProof";
+import { ActivationPulse } from "../../src/components/ActivationPulse";
 import {
   ALLOWED_PROOF_IMAGE_TYPES,
   isLikelyEgyptUser,
@@ -78,7 +79,9 @@ export default function ActivationPage() {
   // Selected method id & track id for the wizard
   const [selectedMethodId, setSelectedMethodId] = useState<ManualProofMethod | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [activationStatus, setActivationStatus] = useState<"pending" | "activated">("pending");
   const syncAttemptedRef = useRef(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const availableProofMethods = getProofMethods(mode);
 
@@ -91,6 +94,16 @@ export default function ActivationPage() {
     // Also check for email in params to pre-fill
     const emailParam = params.get("email");
     if (emailParam) setEmail(emailParam);
+
+    // Capture Gate Session Continuity
+    const gateSessionId = params.get("gateSessionId");
+    if (gateSessionId) {
+      fetch("/api/gate/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: gateSessionId })
+      }).catch(err => console.error("[activation] Gate activation error:", err));
+    }
   }, []);
 
   useEffect(() => {
@@ -219,6 +232,67 @@ export default function ActivationPage() {
     }
   }, []);
 
+  // Path 2: Real-time Activation Polling
+  useEffect(() => {
+    if (wizardStep !== 3 || activationStatus === "activated") {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+      return;
+    }
+
+    const checkStatus = async () => {
+      try {
+        const session = await safeGetSession();
+        const user = session?.user;
+        if (!user) return;
+
+        const { supabase } = await import("../../src/services/supabaseClient");
+        if (!supabase) return;
+
+        // Use public client to check profile (RLS should allow user to see their own profile)
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          console.error("[activation] Status poll error:", error);
+          return;
+        }
+
+        const isPremium = data.role === "premium";
+        if (isPremium) {
+          setActivationStatus("activated");
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
+          recordFlowEvent("activation_detected_realtime");
+        }
+      } catch (err) {
+        console.error("[activation] Status poll exception:", err);
+      }
+    };
+
+    // Initial check
+    void checkStatus();
+
+    // Poll every 3 seconds (faster for better UX)
+    pollingIntervalRef.current = setInterval(() => {
+      void checkStatus();
+    }, 3000);
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [wizardStep, activationStatus]);
+
   const scarcityPct = useMemo(() => {
     if (typeof seatsLeft !== "number") return 0;
     const sold = Math.max(totalSeats - seatsLeft, 0);
@@ -306,7 +380,8 @@ export default function ActivationPage() {
           reference: referenceValue,
           amount: amountValue,
           note: proofNote,
-          proofImage
+          proofImage,
+          clarity_session_id: typeof window !== "undefined" ? (window as any).clarity?.useSessionId?.() || null : null
         })
       });
 
@@ -475,24 +550,22 @@ export default function ActivationPage() {
                 className="flex w-full max-w-lg flex-col items-center justify-center py-16 text-center"
                 dir="rtl"
               >
-                <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
-                  <svg className="w-12 h-12 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
-                <h2 className="mb-4 text-3xl font-black text-white">
-                  خطوتك وصلت بأمان
-                </h2>
-                <p className="mb-8 text-sm leading-8 text-slate-300 max-w-sm mx-auto">
-                  {paymentNotice || "استلمنا إثبات الدفع بنجاح. سنراجع التحويل ونقوم بتفعيل حسابك يدويًا لتكمل رحلتك."}
-                </p>
+                <ActivationPulse 
+                  isChecking={activationStatus === "pending"} 
+                  status={activationStatus}
+                  method={proofMethod}
+                />
                 
                 <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
                   <a
-                    href="/app"
-                    className="flex items-center justify-center rounded-2xl bg-teal-500 py-4 px-8 text-sm font-black text-slate-950 shadow-[0_0_24px_rgba(20,184,166,0.3)] transition-all hover:bg-teal-400 hover:shadow-[0_0_36px_rgba(20,184,166,0.4)] w-full sm:w-auto"
+                    href={activationStatus === "activated" ? "/app/dashboard" : "/app"}
+                    className={`flex items-center justify-center rounded-2xl py-4 px-8 text-sm font-black text-slate-950 transition-all w-full sm:w-auto ${
+                      activationStatus === "activated" 
+                        ? "bg-emerald-500 shadow-[0_0_24px_rgba(16,185,129,0.3)] hover:bg-emerald-400 hover:shadow-[0_0_36px_rgba(16,185,129,0.4)]" 
+                        : "bg-teal-500 shadow-[0_0_24px_rgba(20,184,166,0.3)] hover:bg-teal-400 hover:shadow-[0_0_36px_rgba(20,184,166,0.4)]"
+                    }`}
                   >
-                    العودة إلى التطبيق
+                    {activationStatus === "activated" ? "Ø§Ø¯Ø®Ù„ Ø¥Ù„Ù‰ Ø§Ù„Ø±Ø­Ù„Ø©" : "Ø§Ù„Ø¹ÙˆØ¯Ø© Ø¥Ù„Ù‰ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚"}
                   </a>
                 </div>
               </motion.div>

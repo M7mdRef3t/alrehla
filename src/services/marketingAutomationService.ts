@@ -22,7 +22,7 @@ export class MarketingAutomationService {
         if (!isSupabaseReady || !supabase) return [];
 
         try {
-            logger.info("🚀 Starting Sovereign Auto-Ignition Loop...");
+            logger.log("🚀 Starting Sovereign Auto-Ignition Loop...");
             
             // 1. Get current state
             const [gateways, diffusion] = await Promise.all([
@@ -84,7 +84,7 @@ export class MarketingAutomationService {
     }
 
     private static async executeAction(action: AutonomousAction) {
-        logger.info(`⚡ Executing Autonomous Action: ${action.type} for ${action.gatewayId}`);
+        logger.log(`⚡ Executing Autonomous Action: ${action.type} for ${action.gatewayId}`);
 
         try {
             // A. Update Gateway State
@@ -109,7 +109,7 @@ export class MarketingAutomationService {
             });
 
             // C. Pulse Notification (Simulated for Now)
-            logger.info(`✅ Autonomous Outcome Logged: ${decisionId}`);
+            logger.log(`✅ Autonomous Outcome Logged: ${decisionId}`);
         } catch (err) {
             logger.error(`Failed to execute autonomous action ${action.id}:`, err);
         }

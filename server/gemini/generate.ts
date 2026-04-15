@@ -65,7 +65,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     for (let i = 0; i < models.length; i += 1) {
       try {
         const model = getModel(client, models[i], config);
-        const result = await withTimeout(model.generateContent(finalPrompt), 15_000);
+        const result = await withTimeout(model.generateContent(finalPrompt), 25_000);
         console.log("[Gemini API] Content generated successfully");
         const response = result.response;
         const text = response.text();

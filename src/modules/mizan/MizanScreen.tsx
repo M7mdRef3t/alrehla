@@ -25,6 +25,8 @@ import { useConsciousnessHistory } from "@/domains/consciousness/store/history.s
 import { usePredictiveState } from "@/domains/consciousness/store/predictive.store";
 import { useMapState } from "@/modules/map/dawayirIndex";
 import { useDailyJournalState } from "@/domains/journey/store/journal.store";
+import { trackEvent, AnalyticsEvents } from "@/services/analytics";
+import { useEffect } from "react";
 
 /* ═══════════════════════════════════════════ */
 /*                 HELPERS                    */
@@ -162,7 +164,7 @@ export const MizanScreen: FC = () => {
   const nodes = useMapState((s) => s.nodes);
   const journalEntries = useDailyJournalState((s) => s.entries);
 
-  const levelProgress = useMemo(() => getLevelProgress(), [xp, level]);
+  const levelProgress = useMemo(() => getLevelProgress(), [getLevelProgress]);
   const rankColor = RANK_COLORS[rank] ?? "#94a3b8";
 
   // ── Pulse Analytics ──
@@ -244,6 +246,20 @@ export const MizanScreen: FC = () => {
   }, [pulseAnalytics.total, journalData.total, relationshipData, streak, consciousness, level]);
 
   const achievedCount = milestones.filter((m) => m.achieved).length;
+
+  useEffect(() => {
+    trackEvent(AnalyticsEvents.MIZAN_VIEW, {
+      overall_score: overallScore,
+      level,
+      streak,
+      rank,
+      achieved_milestones: achievedCount,
+      total_milestones: milestones.length,
+      pulse_total: pulseAnalytics.total,
+      journal_total: journalData.total,
+      relationships_total: relationshipData.total
+    });
+  }, [overallScore, level, streak, rank, achievedCount, milestones.length, pulseAnalytics.total, journalData.total, relationshipData.total]);
 
   // ── Dimension Scores ──
   const dimensions = useMemo(() => [

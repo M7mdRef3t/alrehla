@@ -1097,6 +1097,12 @@ export default function useStoryLogic(canvasRef, { judgeMode = false } = {}) {
     setSpatialModeEnabled((prev) => !prev);
   }, []);
 
+  // --- State Transitions ---
+  const transitionTo = useCallback((newState) => {
+    console.log(`[Maraya Engine] Transitioning State: ${appState} -> ${newState}`);
+    setAppState(newState);
+  }, [appState]);
+
   const handleOpenSettings = useCallback(() => {
     setSettingsOpen(true);
   }, []);
@@ -1120,6 +1126,13 @@ export default function useStoryLogic(canvasRef, { judgeMode = false } = {}) {
     setStoryMode('judge_en');
     setBiometricsEnabled(false);
     setSpatialModeEnabled(false);
+    const search = typeof window !== 'undefined' ? window.location.search : '';
+    const params = new URLSearchParams(search);
+    const modeParam = params.get('mode');
+    if (modeParam && modeParam === 'spatial') {
+      console.log('[Maraya Engine] Setting Spatial Mode from URL');
+      setSpatialModeEnabled(true);
+    }
   }, [voiceSupported]);
 
   const handleDuoNameChange = useCallback((name) => {

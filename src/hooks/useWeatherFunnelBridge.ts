@@ -31,7 +31,6 @@ export function useWeatherFunnelBridge() {
             windowRef.sessionStorage.removeItem('weather_context');
             
             console.log("🌦️ [Weather Bridge] Data detected. Initiating modern radar sync...");
-            trackEvent("weather_bridge_initiated", { level: weatherCtx.weatherLevel });
 
             const aiAnswers = [
                 `المجالات التي تشغل تفكيري: ${weatherCtx.dominantSource} (تحديداً العلاقات المستنزفة)`,
@@ -39,14 +38,23 @@ export function useWeatherFunnelBridge() {
                 `الحاجة التي أتجنبها: ${weatherCtx.behavioralExplanation}`
             ];
 
-            // استدعاء محرك التحليل
-            const response = await fetch('/api/analyze', {
+            // ⏱️ تأخير بسيط لضمان استقرار الصفحة على الموبايل
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            trackEvent('weather_bridge_initiated', { source: 'useWeatherFunnelBridge' });
+
+            const response = await fetch('/api/weather/diagnostic', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ answers: aiAnswers }),
+                keepalive: true,
+                credentials: 'same-origin'
             });
 
-            if (!response.ok) throw new Error('Failed to analyze weather data');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
 
             const result = await response.json();
             

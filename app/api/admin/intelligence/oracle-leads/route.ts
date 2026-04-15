@@ -93,12 +93,15 @@ export async function POST(req: Request) {
   const { batchSize = 10 } = await req.json();
   const supabase = buildClient();
 
-  // 1. Fetch leads that need analysis
+  // 1. Fetch leads that need analysis (Never analyzed OR stale > 7 days)
   console.log("[Oracle Intelligence] Fetching leads for analysis...");
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  
   const { data: leads, error: fetchError } = await supabase
     .from("marketing_leads")
     .select("*")
-    .is("last_ai_analysis_at", null)
+    .or(`last_ai_analysis_at.is.null,last_ai_analysis_at.lt.${sevenDaysAgo}`)
+    .order("last_ai_analysis_at", { ascending: true, nullsFirst: true })
     .limit(batchSize);
 
   if (fetchError) {

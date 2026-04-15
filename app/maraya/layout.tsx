@@ -9,12 +9,14 @@ export const metadata: Metadata = {
     "Maraya is an emotional mirror that unfolds as a cinematic storytelling ritual inside Alrehla.",
 };
 
+import { runtimeEnv } from "@/config/runtimeEnv";
+
 function isMarayaEnabled() {
-  if (process.env.NODE_ENV !== "production") {
+  if (runtimeEnv.isDev) {
     return true;
   }
 
-  return process.env.NEXT_PUBLIC_MARAYA_ENABLED === "true";
+  return runtimeEnv.marayaEnabled === "true";
 }
 
 export default function MarayaLayout({ children }: { children: ReactNode }) {

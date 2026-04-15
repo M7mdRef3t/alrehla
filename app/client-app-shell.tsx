@@ -62,6 +62,8 @@ function shouldSilenceAiLog(args: unknown[]): boolean {
     })
     .join(" ");
 
+  const lowerMsg = text.toLowerCase();
+
   return (
     text.includes("Download the React DevTools for a better development experience") ||
     text.includes("Auto Health Check") ||
@@ -88,7 +90,10 @@ function shouldSilenceAiLog(args: unknown[]): boolean {
     text.includes("[ORCHESTRATOR] SANCTUARY_MODE_ACTIVATED") ||
     text.includes("[ORCHESTRATOR] Sanctuary Mode deactivated") ||
     text.includes("[Decision]") ||
-    text.includes("Question generation requires approval")
+    text.includes("Question generation requires approval") ||
+    (lowerMsg.includes("[meta pixel] unavailable") && lowerMsg.includes("traffic permission")) ||
+    lowerMsg.includes("skipping auto-scroll behavior") ||
+    lowerMsg.includes("pulse anchored to reality")
   );
 }
 
@@ -153,6 +158,7 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
     const originalWarn = console.warn.bind(console);
     const originalError = console.error.bind(console);
     const originalInfo = console.info.bind(console);
+    const originalDebug = console.debug.bind(console);
 
     console.warn = (...args: unknown[]) => {
       if (!shouldSilenceAiLog(args)) originalWarn(...args);
@@ -166,10 +172,20 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
       if (!shouldSilenceAiLog(args)) originalInfo(...args);
     };
 
+    console.debug = (...args: unknown[]) => {
+      const msg = args.join(" ");
+      if (msg.includes("Pulse")) {
+        originalDebug(`[Pulse] Reality anchor: ${msg}`);
+      } else {
+        originalDebug(...args);
+      }
+    };
+
     return () => {
       console.warn = originalWarn;
       console.error = originalError;
       console.info = originalInfo;
+      console.debug = originalDebug;
     };
   }, []);
 

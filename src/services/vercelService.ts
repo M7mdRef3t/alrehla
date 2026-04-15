@@ -1,4 +1,6 @@
 import { logger } from "./logger";
+import { getAuthToken } from "@/domains/auth/store/auth.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 
 export interface VercelDeployment {
   id: string;
@@ -14,61 +16,37 @@ export interface VercelPulse {
   deploymentFrequency: string;
 }
 
-const VERCEL_TOKEN = process.env.NEXT_PUBLIC_VERCEL_TOKEN || process.env.VITE_VERCEL_TOKEN || "";
-const VERCEL_TEAM_ID = process.env.NEXT_PUBLIC_VERCEL_TEAM_ID || process.env.VITE_VERCEL_TEAM_ID || "";
-const PROJECT_NAME = "alrehla"; // Should match your Vercel project name
-
-/**
- * Service to bridge Alrehla with Vercel Infrastructure
- * Provides real-time pulse for the Sovereign Admin Dashboard
- */
 export const vercelService = {
   getPulse: async (): Promise<VercelPulse> => {
-    if (!VERCEL_TOKEN) {
-      logger.warn("Vercel Integration: VITE_VERCEL_TOKEN is not configured.");
-      return { status: "unconfigured", deploymentFrequency: "Unknown" };
-    }
-
     try {
-      const response = await fetch(
-        `https://api.vercel.com/v6/deployments?projectId=${PROJECT_NAME}&limit=1${
-          VERCEL_TEAM_ID ? `&teamId=${VERCEL_TEAM_ID}` : ""
-        }`,
-        {
-          headers: {
-            Authorization: `Bearer ${VERCEL_TOKEN}`,
-          },
-        }
-      );
+      const authToken = getAuthToken();
+      const adminCode = useAdminState.getState().adminCode;
+      const bearer = authToken ?? adminCode;
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json"
+      };
+      
+      if (bearer) {
+        headers["Authorization"] = `Bearer ${bearer}`;
+      }
+
+      // Direct call to Vercel API from the browser is insecure as it exposes VERCEL_TOKEN.
+      // We now proxy this through our internal API.
+      const response = await fetch("/api/admin/infrastructure/vercel-pulse", {
+        headers
+      });
 
       if (!response.ok) {
-        throw new Error(`Vercel API returned ${response.status}`);
+        if (response.status === 401 || response.status === 403) {
+          return { status: "unconfigured", deploymentFrequency: "Forbidden" };
+        }
+        throw new Error(`Proxy API returned ${response.status}`);
       }
 
-      const data = await response.json();
-      const lastDeployment = data.deployments?.[0];
-
-      if (!lastDeployment) {
-        return { status: "healthy", deploymentFrequency: "N/A" };
-      }
-
-      const status = lastDeployment.state === "READY" ? "healthy" : 
-                    lastDeployment.state === "ERROR" ? "down" : 
-                    "degraded";
-
-      return {
-        status,
-        lastDeployment: {
-          id: lastDeployment.uid,
-          name: lastDeployment.name,
-          url: lastDeployment.url,
-          state: lastDeployment.state,
-          createdAt: lastDeployment.created,
-        },
-        deploymentFrequency: "Daily", // This could be calculated from history
-      };
+      return await response.json();
     } catch (error) {
-      logger.error("Vercel Pulse Fetch Error:", error);
+      logger.error("Vercel Pulse Client Fetch Error:", error);
       return { status: "degraded", deploymentFrequency: "Error" };
     }
   },

@@ -12,7 +12,6 @@ export interface LiveAuthContext {
 export function getLiveFeatureFlag(name: string): boolean {
   const raw =
     process.env[name] ??
-    process.env[`NEXT_PUBLIC_${name}`] ??
     process.env[`VITE_${name}`];
   if (!raw) return true;
   return raw === "1" || raw === "true" || raw === "on";
@@ -20,19 +19,17 @@ export function getLiveFeatureFlag(name: string): boolean {
 
 export function getLiveModel(): string {
   return (
-    process.env.NEXT_PUBLIC_DAWAYIR_LIVE_MODEL ||
     process.env.DAWAYIR_LIVE_MODEL ||
     "gemini-2.5-flash-native-audio-latest"
   );
 }
 
 export function getLiveVoice(): string {
-  return process.env.NEXT_PUBLIC_DAWAYIR_LIVE_VOICE || process.env.DAWAYIR_LIVE_VOICE || "Aoede";
+  return process.env.DAWAYIR_LIVE_VOICE || "Aoede";
 }
 
 export function getLiveApiKey(): string {
   return (
-    process.env.NEXT_PUBLIC_DAWAYIR_LIVE_API_KEY ||
     process.env.DAWAYIR_LIVE_API_KEY ||
     process.env.GEMINI_API_KEY ||
     process.env.GOOGLE_API_KEY ||
@@ -51,7 +48,7 @@ export async function getOptionalLiveAuthContext(req: NextRequest): Promise<Live
   const { data, error } = await client.auth.getUser(token);
   
   // Support for static Admin Code bypass for system tests/automation
-  const adminCode = process.env.ADMIN_CODE || process.env.NEXT_PUBLIC_ADMIN_CODE;
+  const adminCode = process.env.ADMIN_CODE;
   if (token && adminCode && token === adminCode) {
     return {
       client,
@@ -88,7 +85,7 @@ export async function requireLiveAuth(req: NextRequest): Promise<LiveAuthContext
   }
 
   // Support for static Admin Code bypass for system tests/automation
-  const adminCode = process.env.ADMIN_CODE || process.env.NEXT_PUBLIC_ADMIN_CODE;
+  const adminCode = process.env.ADMIN_CODE;
   if (token && adminCode && token === adminCode) {
     return {
       client,
@@ -99,7 +96,7 @@ export async function requireLiveAuth(req: NextRequest): Promise<LiveAuthContext
 
   const { data, error } = await client.auth.getUser(token);
   if (error || !data?.user?.id) {
-    console.error(`[requireLiveAuth] Auth failure for path: ${req.nextUrl.pathname}. Token starts with: ${token.substring(0, 5)}... Expected Admin Code: ${adminCode ? adminCode.substring(0, 5) + '...' : 'NONE'}`);
+    console.error(`[requireLiveAuth] Auth failure for path: ${req.nextUrl.pathname}.`);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

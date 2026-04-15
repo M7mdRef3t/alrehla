@@ -1,9 +1,10 @@
 import { GoogleGenerativeAI, type GenerativeModel } from "@google/generative-ai";
+import { getSupabaseAdminClient } from "../../app/api/_lib/supabaseAdmin";
 
 export const DEFAULT_MODEL_ORDER: string[] = [
-  "gemini-1.5-flash",
-  "gemini-1.5-pro",
-  "gemini-2.0-flash-exp"
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-flash-latest"
 ];
 
 export const DEFAULT_GENERATION_CONFIG = {
@@ -99,5 +100,41 @@ export async function withTimeout<T>(task: Promise<T>, timeoutMs = 18_000): Prom
     ]);
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
+export async function logAiTelemetry(data: {
+  feature: string;
+  model: string;
+  latency_ms: number;
+  tokens: { prompt: number; completion: number; total: number };
+  success: boolean;
+  failure_reason?: string | null;
+  errorMessage?: string | null;
+  metadata?: Record<string, any>;
+}) {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) return;
+
+    const requestId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`).toString();
+
+    const { error } = await admin.from("ai_telemetry").insert({
+      request_id: requestId,
+      feature: data.feature,
+      model: data.model,
+      llm_latency_ms: data.latency_ms,
+      prompt_tokens: data.tokens.prompt,
+      completion_tokens: data.tokens.completion,
+      total_tokens: data.tokens.total,
+      json_success: data.success,
+      failure_reason: data.failure_reason,
+      error_message: data.errorMessage,
+      metadata: data.metadata || {}
+    });
+
+    if (error) console.error("[Gemini Telemetry] Insert failed:", error);
+  } catch (err) {
+    console.error("[Gemini Telemetry] Critical error:", err);
   }
 }

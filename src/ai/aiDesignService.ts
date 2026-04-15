@@ -9,7 +9,7 @@ export class AiDesignService {
     const client = getGeminiClient();
     if (!client) return null;
 
-    const model = getGeminiModel(client, "gemini-1.5-flash", {
+    const model = getGeminiModel(client, "gemini-2.5-flash", {
       ...DEFAULT_GENERATION_CONFIG,
       temperature: 0.9,
     });

@@ -14,6 +14,7 @@ import { saveDiagnosisState } from "./types";
 import type { DiagnosisAnswers, UserStateObject, MainPain, RecommendedProduct } from "./types";
 import { ConversionOfferCard } from "../conversion/ConversionOfferCard";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import { analyticsService } from "@/domains/analytics";
 
 // ════════════════════════════════════════════════
 // Constants
@@ -191,12 +192,45 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
     setAnswers((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  // Track initial view
+  useState(() => {
+    analyticsService.track(analyticsService.Events.DIAGNOSIS_VIEW);
+    if (typeof window !== "undefined" && (window as any).clarity) {
+      (window as any).clarity("set", "diagnosis_started", "true");
+    }
+  });
+
   const next = useCallback(() => {
+    // Determine what was answered for tracking
+    const currentAnswer = step === 1 ? answers.q1_pain :
+                        step === 2 ? answers.q2_feeling :
+                        step === 3 ? answers.q3_duration :
+                        step === 4 ? answers.q4_blocker :
+                        step === 5 ? answers.q5_goal : undefined;
+
+    analyticsService.track(analyticsService.Events.DIAGNOSIS_STEP_COMPLETE, {
+      step_number: step,
+      answer: currentAnswer,
+      is_last_step: step === STEPS
+    });
+
+    if (typeof window !== "undefined" && (window as any).clarity) {
+      (window as any).clarity("set", "diagnosis_step", String(step));
+    }
+
     if (step < STEPS) {
       setStep((s) => s + 1);
     } else {
       const computed = computeDiagnosis(answers);
       saveDiagnosisState(computed);
+      
+      analyticsService.track(analyticsService.Events.DIAGNOSIS_RESULT_VIEW, {
+        score: computed.diagnosisScore,
+        type: computed.type,
+        main_pain: computed.mainPain,
+        product: computed.recommendedProduct
+      });
+
       setResult(computed);
     }
   }, [step, answers]);

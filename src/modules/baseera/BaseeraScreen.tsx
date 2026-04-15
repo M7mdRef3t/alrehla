@@ -23,6 +23,7 @@ import { usePulseState, type PulseEntry, type PulseMood } from "@/domains/consci
 import { usePredictiveState } from "@/domains/consciousness/store/predictive.store";
 import { useConsciousnessHistory } from "@/domains/consciousness/store/history.store";
 import { useMapState } from "@/modules/map/dawayirIndex";
+import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { calculateEntropy, type PredictiveInsight } from "@/services/predictiveEngine";
 import { DissonanceEngine, type DissonanceReport } from "@/services/dissonanceEngine";
 import { eventBus } from "@/shared/events/bus";
@@ -101,19 +102,20 @@ export default function BaseeraScreen() {
   const predictive = usePredictiveState();
   const history = useConsciousnessHistory(s => s.history);
   const nodes = useMapState(s => s.nodes);
+  const journey = useJourneyState();
   const [expandedSection, setExpandedSection] = useState<string | null>("entropy");
 
   // Compute entropy on mount
   const entropy = useMemo<PredictiveInsight>(() => {
-    try { return calculateEntropy(); }
+    try { return calculateEntropy(nodes, pulses); }
     catch { return { state: "ORDER" as const, entropyScore: 0, primaryFactor: "N/A", unstableNodes: 0, pulseVolatility: 0, lowEnergyRatio: 0 }; }
   }, [pulses, nodes]);
 
   // Compute dissonance
   const dissonance = useMemo<DissonanceReport>(() => {
-    try { return DissonanceEngine.evaluate(); }
+    try { return DissonanceEngine.evaluate(nodes, journey, pulses); }
     catch { return { hasDissonance: false, score: 0, message: "لا توجد بيانات كافية" }; }
-  }, [nodes, pulses]);
+  }, [nodes, pulses, journey]);
 
   // Pulse analytics
   const pulseAnalytics = useMemo(() => {

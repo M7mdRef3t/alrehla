@@ -71,10 +71,6 @@ async function signInWithGoogleInternal(pathname?: string): Promise<OAuthRespons
     if (windowRef) {
       try {
         const nextUrl = new URL(target);
-        if (redirectTo) {
-          nextUrl.searchParams.set("redirect_to", redirectTo);
-          nextUrl.searchParams.set("redirectTo", redirectTo);
-        }
         windowRef.location.assign(nextUrl.toString());
       } catch {
         windowRef.location.assign(target);

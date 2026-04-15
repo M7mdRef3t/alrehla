@@ -66,7 +66,7 @@ export const useNadhirState = create<NadhirState>()(
 
       addSafeContact: (c) =>
         set((s) => ({
-          safeContacts: [...s.safeContacts, { ...c, id: `sc_${Date.now()}` }],
+          safeContacts: [...s.safeContacts, { ...c, id: `sc_${crypto.randomUUID()}` }],
         })),
 
       removeSafeContact: (id) =>
@@ -83,7 +83,7 @@ export const useNadhirState = create<NadhirState>()(
         set((s) => ({
           safetyPlan: [
             ...s.safetyPlan,
-            { id: `s_${Date.now()}`, order: s.safetyPlan.length + 1, text, done: false },
+            { id: `s_${crypto.randomUUID()}`, order: s.safetyPlan.length + 1, text, done: false },
           ],
         })),
 
@@ -95,7 +95,7 @@ export const useNadhirState = create<NadhirState>()(
         })),
 
       logCrisis: (level, trigger) => {
-        const id = `cr_${Date.now()}`;
+        const id = `cr_${crypto.randomUUID()}`;
         set((s) => ({
           crisisHistory: [
             { id, timestamp: Date.now(), level, trigger, whatHelped: "", resolved: false },

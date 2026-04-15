@@ -72,7 +72,7 @@ export const useWirdState = create<WirdState>()(
 
       addRitual: (r) =>
         set((s) => ({
-          rituals: [...s.rituals, { ...r, id: `r_${Date.now()}` }],
+          rituals: [...s.rituals, { ...r, id: `r_${crypto.randomUUID()}` }],
         })),
 
       removeRitual: (id) =>

@@ -313,7 +313,7 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
     if (hasSupabaseConfig()) {
       const result = await upsertMarketingLead(input);
 
-      logger.info("[Intelligence Radar] Lead Ingested", { 
+      logger.log("[Intelligence Radar] Lead Ingested", { 
         leadId: result.lead_id, 
         source: input.source, 
         isNew: result.is_new,

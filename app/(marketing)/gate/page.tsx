@@ -132,7 +132,7 @@ function MarketingGateContent() {
         />
       )}
       {state.step === 'layer2' && (
-        <LayerTwoQualifier onComplete={handleQualifierComplete} />
+        <LayerTwoQualifier onComplete={handleQualifierComplete} sessionId={state.sessionId} />
       )}
     </main>
   );

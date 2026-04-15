@@ -15,8 +15,8 @@ import {
  * ترتيب الموديلات النصية — من الأفضل للاحتياط. مرجع كامل: docs/GEMINI_MODELS.md
  */
 const TEXT_MODEL_FALLBACK_ORDER: string[] = [
+  "gemini-2.5-flash",
   "gemini-2.0-flash",
-  "gemini-1.5-flash",
   "gemini-flash-latest"
 ];
 
@@ -137,7 +137,8 @@ class GeminiClient {
         );
         if (!result.text) {
           const reason = (result as { reason?: string }).reason ?? "unknown";
-          console.error("[GeminiClient:server] Generation failed, reason:", reason);
+          const detail = (result as { detail?: string }).detail ?? "no_detail";
+          console.error(`[GeminiClient:server] Generation failed. Reason: ${reason}. Detail: ${detail}`);
           this.markServerUnavailable();
           recordAIFallback();
           return null;
@@ -169,7 +170,7 @@ class GeminiClient {
             }),
             signal
           },
-          { retries: 1, breaker: this.generateBreaker }
+          { retries: 1, breaker: this.generateBreaker, timeoutMs: 25_000 }
         ),
         {
           timeoutMs: 30_000,
@@ -177,7 +178,8 @@ class GeminiClient {
           outputCharsEstimate: 0
         }
       );
-    } catch {
+    } catch (error) {
+      console.error("[GeminiClient] Browser fetch proxy failed for generate:", error);
       recordAIFallback();
       return null;
     }
@@ -188,6 +190,16 @@ class GeminiClient {
     }
     this.markServerAvailable();
     this.applyUsageCost(data.usage);
+    if (!data.text) {
+      // Log the fallback reason if available (from generateHandler)
+      const reason = (data as { reason?: string }).reason ?? "unknown";
+      const detail = (data as { detail?: string }).detail ?? "no_detail";
+      const fallback = (data as { fallback?: boolean }).fallback;
+      if (fallback) {
+        console.warn(`[GeminiClient] Generation returned fallback. Reason: ${reason}. Detail: ${detail}. Check server terminal for detailed model-level errors.`);
+      }
+      recordAIFallback();
+    }
     return data.text ?? null;
   }
 

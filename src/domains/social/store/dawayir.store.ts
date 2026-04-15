@@ -1,9 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { DawayirGraph, DawayirNode, DawayirEdge, Ring, GraphInsights, EdgeType } from "../types";
+import type { DawayirGraph, DawayirNode, Ring, GraphInsights, EdgeType } from "../types";
 import { 
-  createGraph, createNode, createEdge, analyzeGraph, 
-  getRingStats, autoClassifyNodes 
+  createGraph, createNode, createEdge, analyzeGraph
 } from "../services/engine";
 import { eventBus as bus } from "@/shared/events/bus";
 

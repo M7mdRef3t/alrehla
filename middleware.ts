@@ -24,7 +24,7 @@ function checkRateLimit(ip: string, path: string): { limited: boolean; current: 
     // Determine the tier based on path
     let limit = LIMITS.DEFAULT;
     if (path.startsWith('/api/analytics')) limit = LIMITS.ANALYTICS;
-    else if (path.startsWith('/api/gemini') || path.startsWith('/api/maraya')) limit = LIMITS.AI_GEN;
+    else if (path.startsWith('/api/gemini') || path.startsWith('/api/maraya') || path.startsWith('/api/weather')) limit = LIMITS.AI_GEN;
     else if (path.startsWith('/api/admin')) limit = LIMITS.ADMIN;
 
     const key = `${ip}:${path.split('/')[2] || 'global'}`; // Segment by IP and root API category
@@ -73,10 +73,10 @@ export async function middleware(request: NextRequest) {
         const isSecretMatch = allowedSecrets.some((secret) => authHeader === `Bearer ${secret}`);
 
         if (!isSecretMatch) {
-            // Fallback: Allow if there's a Supabase auth session cookie (browser-side admin dashboard calls)
-            // The cookie name pattern is `sb-<ref>-auth-token` (can contain local IPs like 127-0-0-1)
+            // The cookie name pattern is `sb-<ref>-auth-token` OR the custom ecosystem key
             const cookieHeader = request.headers.get('cookie') || '';
-            const hasSupabaseSession = /sb-[a-z0-9\-]+-auth-token/i.test(cookieHeader);
+            const hasSupabaseSession = /sb-[a-z0-9\-]+-auth-token/i.test(cookieHeader) || 
+                                     /alrehla-ecosystem-auth/i.test(cookieHeader);
 
             if (!hasSupabaseSession) {
                 const hasBearer = authHeader.startsWith('Bearer ') && authHeader.length > 7;
@@ -89,7 +89,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // 3. Protect Gemini/Maraya AI Routes (Internal Secret check)
-    if (pathname.startsWith('/api/gemini') || pathname.startsWith('/api/maraya')) {
+    if (pathname.startsWith('/api/gemini') || pathname.startsWith('/api/maraya') || pathname.startsWith('/api/weather')) {
         const geminiSecret = request.headers.get('x-internal-secret');
         const isInternal = geminiSecret && geminiSecret === process.env.GEMINI_INTERNAL_SECRET;
 
@@ -113,6 +113,7 @@ export const config = {
     matcher: [
         '/api/gemini/:path*', 
         '/api/maraya/:path*', 
+        '/api/weather/:path*',
         '/api/admin/:path*', 
         '/api/analytics/:path*',
         '/api/checkout/:path*'

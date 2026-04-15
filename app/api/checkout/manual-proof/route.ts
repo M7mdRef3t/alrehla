@@ -183,6 +183,7 @@ export async function POST(req: NextRequest) {
       reference: reference || null,
       amount: amount || null,
       note: note || null,
+      clarity_session_id: sanitizeText(body?.clarity_session_id, 80) || null,
       user_id: authUserId,
       origin: req.headers.get("origin") || null,
       proof_image: proofImage

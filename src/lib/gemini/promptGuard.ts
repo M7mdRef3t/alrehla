@@ -14,7 +14,7 @@ const STRICT_CODE_HINTS = [
 const DATA_PROMPT_HINTS = [
   "analyze", "grade", "score", "rate", "classify", "evaluate",
   "return json", "respond with json", "output json", "json format",
-  "json object", "respond only with", "respond in json",
+  "json object", "json array", "respond only with", "respond in json",
   "حلل", "قيّم", "صنّف", "درجة", "تقييم",
 ];
 

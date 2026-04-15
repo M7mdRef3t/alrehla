@@ -47,7 +47,8 @@ const PRIORITY_STYLES = {
 
 function useNudgeGenerator() {
   const { addNudge, preferences, lastGeneratedDate, setLastGeneratedDate, nudges } = useSadaState();
-  const logs = usePulseState((s) => s.logs) ?? [];
+  const rawLogs = usePulseState((s) => s.logs);
+  const logs = useMemo(() => rawLogs ?? [], [rawLogs]);
   const { badges, streak: gameStreak, level } = useGamificationState();
   const wirdState = useWirdState();
   const { decisions } = useBawsalaState();
@@ -213,7 +214,7 @@ function useNudgeGenerator() {
       newNudges.forEach((n) => addNudge(n));
       setLastGeneratedDate(key);
     }
-  }, [lastGeneratedDate]);
+  }, [lastGeneratedDate, addNudge, isEnabled, wirdState, logs, badges, decisions, nudges, setLastGeneratedDate]);
 }
 
 /* ═══════════════════════════════════════════ */

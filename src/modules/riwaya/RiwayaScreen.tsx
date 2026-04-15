@@ -99,10 +99,13 @@ export const RiwayaScreen: FC = () => {
   const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
 
   // ── Data Sources ──
-  const logs = usePulseState((s) => s.logs) ?? [];
+  const rawLogs = usePulseState((s) => s.logs);
+  const logs = useMemo(() => rawLogs ?? [], [rawLogs]);
   const { badges, streak, level, xp } = useGamificationState();
-  const nodes = useMapState((s) => s.nodes) ?? [];
-  const journalEntries = useDailyJournalState((s) => s.entries) ?? [];
+  const rawNodes = useMapState((s) => s.nodes);
+  const nodes = useMemo(() => rawNodes ?? [], [rawNodes]);
+  const rawJournalEntries = useDailyJournalState((s) => s.entries);
+  const journalEntries = useMemo(() => rawJournalEntries ?? [], [rawJournalEntries]);
   const { decisions } = useBawsalaState();
 
   // ── Build Timeline Events ──

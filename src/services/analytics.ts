@@ -1,11 +1,13 @@
 import { isUserMode } from "@/config/appEnv";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import Clarity from "@microsoft/clarity";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { getHref } from "./navigation";
 import { getDocumentOrNull, getWindowOrNull, isClientRuntime } from "./clientRuntime";
 import { supabase } from "./supabaseClient";
 import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribution";
 import { EcosystemSyncService } from "./ecosystem";
+import { identifyUser } from "./monitoring";
 import {
   buildAnalyticsEnvelope,
   buildIdentityLinkedEnvelope,
@@ -119,41 +121,52 @@ function ensureMetaPixel(): void {
   const windowRef = getWindowOrNull();
   const pixelId = getMetaPixelId();
   if (!windowRef || !pixelId || !areMetaEventsEnabled()) return;
-  if (runtimeEnv.isDev && !getMetaPixelId()) return;
+  
+  // Script loaded check
   if (windowRef.__dawayirMetaPixelScriptLoaded) return;
 
+  // Prevent Meta Pixel from firing on localhost to avoid console error spam
+  // "unavailable on this website due to it's traffic permission settings"
+  if (windowRef.location.hostname === "localhost" || windowRef.location.hostname === "127.0.0.1") {
+    return;
+  }
+
   if (!windowRef.fbq) {
-    // Standard Meta Pixel bootstrap stub — must match the official snippet exactly.
-    // fbevents.js checks for fbq existence on load; if it finds a non-standard stub
-    // it emits the "conflicting versions" warning.
-    const n = ((...args: unknown[]) => {
+    /**
+     * Official Meta Pixel Bootstrap (Logic Aligned)
+     * We use a function that correctly captures arguments and pushes to a queue.
+     * fbevents.js explicitly checks for .callMethod, .queue, .version, and .loaded.
+     */
+    const n = function(...args: unknown[]) {
       if (n.callMethod) {
         n.callMethod(...args);
       } else {
-        (n.queue ??= []).push(args);
+        (n.queue = n.queue || []).push(args);
       }
-    }) as FbqFn;
-    n.push = n as unknown as (...args: unknown[]) => number;
+      return 0;
+    } as any;
+
+    if (!windowRef._fbq) windowRef._fbq = n;
+    n.push = n;
     n.loaded = true;
     n.version = "2.0";
     n.queue = [];
     windowRef.fbq = n;
-    if (!(windowRef as unknown as Record<string, unknown>)._fbq) {
-      (windowRef as unknown as Record<string, unknown>)._fbq = n;
-    }
   }
 
+  // Inject script
   loadScriptOnce("dawayir-meta-pixel-script", "https://connect.facebook.net/en_US/fbevents.js");
 
+  // Initialize once per session/pixel
   if (!windowRef.__dawayirMetaPixelInitialized) {
-    windowRef.fbq("init", pixelId);
+    windowRef.fbq?.("init", pixelId);
     windowRef.__dawayirMetaPixelInitialized = true;
   }
 
   windowRef.__dawayirMetaPixelScriptLoaded = true;
 }
 
-function sendGtagEvent(eventName: string, params?: Record<string, AnalyticsValue | null | undefined>): void {
+export function sendGtagEvent(eventName: string, params?: Record<string, AnalyticsValue | null | undefined>): void {
   if (!isClientRuntime() || !isAnalyticsEnabled()) return;
   const safeParams = sanitizeAnalyticsParams(params);
   const windowRef = getWindowOrNull();
@@ -162,7 +175,7 @@ function sendGtagEvent(eventName: string, params?: Record<string, AnalyticsValue
   }
 }
 
-function sendMetaEvent(
+export function sendMetaEvent(
   eventName: string,
   params?: Record<string, AnalyticsValue | null | undefined>,
   options?: { bypassConsent?: boolean; client_event_id?: string }
@@ -202,19 +215,6 @@ export function initAnalytics(): void {
 
   const windowRef = getWindowOrNull();
   if (!windowRef) return;
-
-  const clarityProjectId = getClarityProjectId();
-  if (clarityProjectId) {
-    if (!windowRef.clarity) {
-      const clarity = ((...args: unknown[]) => {
-        clarity.q = clarity.q || [];
-        clarity.q.push(args);
-      }) as ClarityFn;
-      windowRef.clarity = clarity;
-    }
-
-    loadScriptOnce("dawayir-clarity-script", `https://www.clarity.ms/tag/${clarityProjectId}`);
-  }
 
   const contentSquareProjectId = getContentSquareProjectId();
   if (contentSquareProjectId) {
@@ -323,6 +323,34 @@ export function getOrCreateSessionId(): string {
   return id;
 }
 
+/**
+ * Capture Microsoft Clarity Session ID if available.
+ * Returns the short ID used in Clarity URLs: https://clarity.microsoft.com/projects/.../sessions/{shortId}
+ */
+export function getClaritySessionId(): string | null {
+  const windowRef = getWindowOrNull() as any;
+  if (!windowRef) return null;
+
+  // Pattern 1: Official Metadata Callback (Best if already fired)
+  // Since we need this synchronously for event tagging, we check the global queue or cookies
+  
+  // Pattern 2: Cookie extraction (Most reliable synchronous way)
+  try {
+    const documentRef = getDocumentOrNull();
+    if (documentRef) {
+      const match = documentRef.cookie.match(/_clsk=([^;]+)/);
+      if (match) {
+        // _clsk format: [sessionid]|[timestamp]|[sequence]|[pageid]|[etc]
+        return match[1].split("|")[0];
+      }
+    }
+  } catch (e) {
+    // Cookie access denied
+  }
+
+  return null;
+}
+
 async function sendInternalAnalytics(
   eventName: string,
   params?: Record<string, AnalyticsValue | null | undefined>
@@ -337,6 +365,8 @@ async function sendInternalAnalytics(
 
   const anonymous_id = getOrCreateAnonymousId();
   const session_id = getOrCreateSessionId();
+  const clarity_session_id = getClaritySessionId();
+  
   const client_event_id = typeof params?.client_event_id === "string"
     ? params.client_event_id
     : generateUUID();
@@ -356,12 +386,13 @@ async function sendInternalAnalytics(
     utm_campaign: utm?.utm_campaign || null,
     payload: {
       ...(safeParams || {}),
+      ...(clarity_session_id ? { clarity_session_id } : {}),
       pathname: windowRef?.location?.pathname || null,
       page_location: getHref(),
       referrer: documentRef?.referrer || null,
       device_type: isMobile ? "mobile" : "desktop",
-      screen_width: windowRef?.innerWidth,
-      viewport_height: windowRef?.innerHeight
+      screen_width: windowRef?.innerWidth || null,
+      viewport_height: windowRef?.innerHeight || null
     }
   });
 
@@ -383,14 +414,42 @@ async function sendInternalAnalytics(
   }
 }
 
+let _analyticsEnvelopeQueue: any[] = [];
+let _analyticsEnvelopeTimer: ReturnType<typeof setTimeout> | null = null;
+
 async function sendAnalyticsEnvelope(envelope: ReturnType<typeof buildAnalyticsEnvelope> extends infer T ? Exclude<T, null> : never): Promise<void> {
-  await fetch("/api/analytics", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(envelope),
-    keepalive: true,
-    credentials: "same-origin"
-  });
+  // Instead of sending immediately, push to a batch queue to mitigate 429 Too Many Requests
+  _analyticsEnvelopeQueue.push(envelope);
+
+  if (_analyticsEnvelopeTimer === null) {
+    _analyticsEnvelopeTimer = setTimeout(() => {
+      const batch = [..._analyticsEnvelopeQueue];
+      _analyticsEnvelopeQueue = [];
+      _analyticsEnvelopeTimer = null;
+
+      // Grouping them into one bulk call or just sending the last one to save network?
+      // For now, let's just send them individually but throttled, 
+      // or if it's too much, just send the latest one if it's identical type, but to be safe:
+      // Since the backend handles individual payloads, we will send them sequentially with a small delay
+      // or just send the most recent one to prevent flooding
+      if (batch.length > 0) {
+        // Send only the first and last of a large batch to prevent 429, or send all if small
+        const toSend = batch.length > 3 ? [batch[0], batch[batch.length - 1]] : batch;
+        
+        toSend.forEach((env, i) => {
+          setTimeout(() => {
+            fetch("/api/analytics", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(env),
+              keepalive: true,
+              credentials: "same-origin"
+            }).catch(e => console.warn("Analytics flush error:", e));
+          }, i * 300); // Stagger by 300ms
+        });
+      }
+    }, 1000); // 1-second debounce window
+  }
 }
 
 export function trackEvent(
@@ -423,6 +482,30 @@ export function trackEvent(
     const windowRef = getWindowOrNull();
     if (windowRef?.gtag) {
       windowRef.gtag("event", eventName, safeParams);
+    }
+    
+    // 3) Forward to Microsoft Clarity for Smart Events & Funnels
+    try {
+      Clarity.event(eventName);
+      
+      // Professional Behavioral Tagging
+      if (safeParams?.product) Clarity.setTag("recommended_product", String(safeParams.product));
+      if (safeParams?.step_number) Clarity.setTag("diagnosis_step", String(safeParams.step_number));
+      if (safeParams?.tier) Clarity.setTag("conversion_tier", String(safeParams.tier));
+      
+      // Engagement Anchors
+      if (eventName === AnalyticsEvents.MIZAN_VIEW) Clarity.setTag("user_intent", "mizan_exploration");
+      if (eventName === AnalyticsEvents.WIRD_VIEW) Clarity.setTag("user_intent", "wird_ritual");
+      if (eventName === AnalyticsEvents.PAYMENT_PROOF_SUBMITTED) {
+        Clarity.setTag("revenue_intent", "high");
+        Clarity.setTag("payment_method", String(safeParams?.method || "unknown"));
+      }
+
+      // Sync Internal Session with Clarity
+      const internalSession = getOrCreateSessionId();
+      Clarity.setTag("dawayir_session", internalSession);
+    } catch (e) {
+      // Clarity non-critical
     }
   }
 
@@ -463,6 +546,9 @@ export async function trackIdentityLinked(userId: string): Promise<void> {
       received: userId
     });
   }
+  
+  // 0) Identity Linking for Monitoring (Sentry / Clarity)
+  identifyUser(userId);
   
   // 1) Internal Telemetry Link (API)
   const identityPayload = buildIdentityLinkedEnvelope({
@@ -598,8 +684,32 @@ export const AnalyticsEvents = {
   WEATHER_ONBOARDING_CLICKED: "weather_onboarding_clicked",
   WEATHER_WHATSAPP_CLICKED: "weather_whatsapp_clicked",
 
+  // --- Payment Funnel Diagnostics (ARD-9) ---
+  PAYMENT_METHOD_SELECTED: "payment_method_selected",
+  PAYMENT_NUMBER_COPIED: "payment_number_copied",
+  WHATSAPP_SUPPORT_CLICKED: "whatsapp_support_clicked",
+
   // --- External Attribution Persistence ---
   EXTERNAL_ID_SYNCED: "external_id_synced",
+
+  // --- Mizan & Wird Instrumentation ---
+  MIZAN_VIEW: "mizan_view",
+  WIRD_VIEW: "wird_view",
+  WIRD_MODE_CHANGE: "wird_mode_change",
+  WIRD_RITUAL_COMPLETE: "wird_ritual_complete",
+  WIRD_INTENTION_SAVE: "wird_intention_save",
+  WIRD_GRATITUDE_SAVE: "wird_gratitude_save",
+
+  // ─── Diagnosis & Conversion ────────────────
+  DIAGNOSIS_VIEW: "diagnosis_view",
+  DIAGNOSIS_STEP_COMPLETE: "diagnosis_step_complete",
+  DIAGNOSIS_RESULT_VIEW: "diagnosis_result_view",
+  CONVERSION_OFFER_VIEW: "conversion_offer_view",
+  CONVERSION_OFFER_CLICKED: "conversion_offer_clicked",
+
+  // ─── Professional Hardening (Phase 2) ────────────────
+  SYSTEM_ERROR: "system_error",
+  AHA_MOMENT: "aha_moment",
 } as const;
 
 /**
@@ -722,6 +832,74 @@ export function trackInitiateCheckout(
   sendMetaEvent("InitiateCheckout", safeParams, { client_event_id });
 }
 
+export function trackPaymentMethodSelected(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams(params);
+  const client_event_id = resolveEventId(params);
+  trackEvent(AnalyticsEvents.PAYMENT_METHOD_SELECTED, { ...safeParams, client_event_id });
+}
+
+export function trackPaymentNumberCopied(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams(params);
+  const client_event_id = resolveEventId(params);
+  trackEvent(AnalyticsEvents.PAYMENT_NUMBER_COPIED, { ...safeParams, client_event_id });
+}
+
+export function trackWhatsAppSupportClicked(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams(params);
+  const client_event_id = resolveEventId(params);
+  trackEvent(AnalyticsEvents.WHATSAPP_SUPPORT_CLICKED, { ...safeParams, client_event_id });
+}
+
+/**
+ * Tracks a critical JavaScript or Runtime error, linking it to Clarity recordings.
+ */
+export function trackError(error: Error | string, metadata?: Record<string, unknown>): void {
+  const message = error instanceof Error ? error.message : String(error);
+  const stack = error instanceof Error ? error.stack : undefined;
+  
+  trackEvent(AnalyticsEvents.SYSTEM_ERROR, {
+    error_message: message,
+    error_stack: stack,
+    ...metadata
+  });
+
+  // System Architect: Link mechanical failure to behavioral context
+  if (isClientRuntime()) {
+    try {
+      Clarity.setTag("has_error", "true");
+    } catch (e) { /* non-critical */ }
+  }
+}
+
+/**
+ * Tracks the "Aha! Moment" (First Spark / Value Delivery)
+ */
+export function trackAhaMoment(kind: string, metadata?: Record<string, unknown>): void {
+  trackEvent(AnalyticsEvents.AHA_MOMENT, {
+    aha_kind: kind,
+    ...metadata
+  });
+}
+
+/**
+ * Specifically tags sessions with high revenue intent (cliking payment/premium)
+ */
+export function trackRevenueIntent(tier: string = "premium"): void {
+  trackEvent(AnalyticsEvents.PREMIUM_UPGRADE_VIEWED, { tier });
+  
+  if (isClientRuntime()) {
+    try {
+      Clarity.setTag("revenue_intent", "high");
+    } catch (e) { /* non-critical */ }
+  }
+}
+
 export function setAnalyticsConsent(consent: boolean): void {
   setInLocalStorage("dawayir-analytics-consent", String(consent));
 
@@ -762,6 +940,7 @@ declare global {
     __dawayirMetaPixelScriptLoaded?: boolean;
     dataLayer: unknown[];
     fbq?: FbqFn;
+    _fbq?: FbqFn;
     gtag?: (...args: unknown[]) => void;
     clarity?: ClarityFn;
   }

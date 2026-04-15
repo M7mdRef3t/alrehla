@@ -1,8 +1,8 @@
 import { GoogleGenerativeAI, type GenerativeModel, type GenerateContentResult } from "@google/generative-ai";
 
 export const DEFAULT_MODEL_ORDER: string[] = [
+  "gemini-2.5-flash",
   "gemini-2.0-flash",
-  "gemini-1.5-flash",
   "gemini-flash-latest"
 ];
 
@@ -139,5 +139,5 @@ export async function performInternalGeneration(
   const msg = lastError instanceof Error ? lastError.message : String(lastError ?? "unknown");
   const reason = msg.includes("gemini_timeout") ? "generation_timeout" : "generation_failed";
   console.error("[Gemini:performInternalGeneration] Failed:", msg);
-  return { text: null, usage: null, fallback: true, reason };
+  return { text: null, usage: null, fallback: true, reason, detail: msg };
 }

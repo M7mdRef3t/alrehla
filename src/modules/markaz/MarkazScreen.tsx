@@ -76,9 +76,11 @@ const STATUS_COLORS: Record<ProductStatus, string> = {
 
 export const MarkazScreen: FC = () => {
   // ── All Data Sources ──
-  const logs = usePulseState((s) => s.logs) ?? [];
+  const rawLogs = usePulseState((s) => s.logs);
+  const logs = useMemo(() => rawLogs ?? [], [rawLogs]);
   const { badges, streak, level, xp } = useGamificationState();
-  const journalEntries = useDailyJournalState((s) => s.entries) ?? [];
+  const rawJournalEntries = useDailyJournalState((s) => s.entries);
+  const journalEntries = useMemo(() => rawJournalEntries ?? [], [rawJournalEntries]);
   const { decisions } = useBawsalaState();
   const { crisisHistory, safeContacts, safetyPlan } = useNadhirState();
   const wirdState = useWirdState();

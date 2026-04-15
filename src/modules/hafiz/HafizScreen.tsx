@@ -86,9 +86,9 @@ export const HafizScreen: FC = () => {
     if (selectedTag) result = result.filter((m) => m.tags.includes(selectedTag));
     if (searchQuery.trim()) result = searchMemories(searchQuery);
     return result;
-  }, [memories, showStarredOnly, selectedTag, searchQuery]);
+  }, [memories, showStarredOnly, selectedTag, searchQuery, searchMemories]);
 
-  const onThisDay = useMemo(() => getOnThisDay(), [memories]);
+  const onThisDay = useMemo(() => getOnThisDay(), [getOnThisDay]);
 
   // ── Handlers ──
   const handleAddMemory = () => {

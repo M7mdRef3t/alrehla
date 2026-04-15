@@ -63,6 +63,7 @@
     "@google/genai": "^1.46.0",
     "@google/generative-ai": "^0.24.1",
     "@measured/puck": "^0.20.2",
+    "@microsoft/clarity": "^1.0.2",
     "@sentry/browser": "^10.38.0",
     "@sentry/node": "^10.38.0",
     "@sentry/react": "^10.38.0",

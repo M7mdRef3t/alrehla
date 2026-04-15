@@ -49,7 +49,8 @@ const HERO_STYLES = `
     min-height: 100svh;
     display: flex;
     align-items: center;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: clip;
     background: var(--void);
   }
 
@@ -225,6 +226,13 @@ const HERO_STYLES = `
     font-weight: 500;
     font-size: 1.1rem;
     color: rgba(255,255,255,0.85);
+  }
+
+  .hero-action-row {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
   }
 
   .hero-trust-row {
@@ -707,6 +715,7 @@ const HERO_STYLES = `
     filter: drop-shadow(0 0 24px rgba(45,212,191,0.28));
     display: block;
     width: 100%;
+    right: 0;
   }
 
   /* ── Rotating word ── */
@@ -898,47 +907,183 @@ const HERO_STYLES = `
     position: relative;
     padding-bottom: 56px;
   }
-
   /* ── Mobile Layout ── */
   @media (max-width: 1023px) {
-    .hero-content-wrapper {
-      flex-direction: column;
-      gap: 2rem;
-      padding: 5rem 1.25rem 3rem;
+    .hero-headline {
+      font-size: clamp(1.6rem, 7.5vw, 2.4rem) !important;
+      width: 100% !important;
+      line-height: 1.15 !important;
+      gap: 0 !important;
     }
     
-    .headline-static, 
-    .rotating-word-wrapper, 
-    .hero-body {
+    .hero-content-wrapper {
+      flex-direction: column !important;
+      gap: 1.25rem;
+      padding: 6.5rem 1rem 2.5rem !important; /* Increased top padding to push map down */
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    .map-area {
+      order: -1 !important;
+      width: min(85vw, 320px) !important;
+      margin: 0 auto !important;
+      padding-bottom: 27px !important;
+    }
+
+    .hero-copy-column {
+      order: 1 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+
+    .hero-eyebrow-row {
+      display: none !important;
+    }
+    
+    .headline-static {
+      display: block !important;
+      width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      margin-top: 10px !important;  /* تنفس بين الخريطة والهيدلاين */
+      text-align: center !important; /* سنتر الكتلة كلها */
+    }
+
+    .headline-line {
+      display: block !important;
+      width: 100% !important;
+      min-height: auto !important;
       text-align: center !important;
-      margin-left: auto;
-      margin-right: auto;
+      white-space: normal !important;
+      margin-bottom: 6px !important; /* مسافة تنفس خفيفة بين السطرين */
+      line-height: 1.15 !important;
+    }
+
+    .headline-subline-container {
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: center !important;
+      align-items: baseline !important;
+      flex-wrap: wrap !important;         /* اسمح للنص يلف لو ضاق المكان */
+      gap: 6px !important;
+      width: 100% !important;
+      margin-top: 0 !important;
+      min-height: auto !important;
+    }
+
+    .headline-subline-text {
+      /* أبيض مطفي عشان الكلمة المتغيرة Cyan تبرز أكتر */
+      color: rgba(255, 255, 255, 0.75) !important;
+      font-size: 0.85em !important;
+      font-weight: 600 !important;
+      white-space: nowrap !important;
+      line-height: 1.15 !important;
     }
 
     .rotating-word-wrapper {
-        justify-content: center;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      width: auto !important;
+      max-width: calc(100vw - 2rem) !important; /* منع الطلوع بره الشاشة */
+      display: inline-block !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+    }
+
+    .rotating-word-wrapper .headline-accent {
+      position: absolute !important;
+      top: 0 !important;
+      right: 0 !important;
+      width: auto !important;
+      max-width: 100% !important;
+      white-space: nowrap !important;
+    }
+
+    .rotating-word-wrapper .invisible {
+      display: block !important;
+      visibility: hidden !important;
+      max-width: calc(100vw - 2rem) !important;
+    }
+
+    .hero-body {
+      text-align: center !important;
+      text-align-last: center !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      width: 100% !important;
+      font-size: clamp(12px, 3.8vw, 15px) !important;
+    }
+
+    .hero-action-row {
+      flex-direction: column !important; /* Stack vertically on mobile */
+      gap: 16px !important; /* Proper breathing room */
+      width: 100% !important;
+      align-items: center !important;
+    }
+
+    .hero-input-group {
+      flex: none !important;
+      width: 100% !important;
+      max-width: 320px !important; /* Prevent it from being too wide */
+    }
+
+    .hero-input-wrapper {
+      max-width: 100% !important;
+      width: 100% !important;
     }
 
     .cta-group {
-      justify-content: center;
-      width: 100%;
-      flex-direction: column;
-      gap: 16px;
+      flex: none !important;
+      width: 100% !important;
+      max-width: 320px !important;
     }
 
     .cta-primary {
-      width: 100%;
-      justify-content: center;
-      padding: 22px 24px;
-      font-size: 1.2rem;
-      background: rgba(20,184,166,0.2);
-      border: 1px solid rgba(20,184,166,0.8);
-      box-shadow: 0 0 40px rgba(20,184,166,0.2), inset 0 1px rgba(255,255,255,0.1);
+      width: 100% !important; /* Button fills the container */
+      height: 52px !important; /* Better touch target */
+      font-size: 15px !important;
+      justify-content: center !important;
+    }
+
+    .hero-trust-row {
+      flex-wrap: nowrap !important;
+      justify-content: space-between !important;
+      width: 100% !important;
+      gap: 4px !important;
+    }
+
+    .trust-pill {
+      flex: 1 !important;
+      min-width: 0 !important;
+      font-size: 9px !important;
+      padding: 4px !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    .hero-cta-icon--arrow {
+      display: none !important;
     }
 
     .cta-secondary {
       width: 100%;
       justify-content: center;
+    }
+
+    .trust-pill span {
+      display: block;
+    }
+
+    .trust-icon {
+      width: 10px;
+      height: 10px;
+      flex-shrink: 0;
     }
 
     .map-area {
@@ -984,7 +1129,7 @@ const RotatingWord: FC = () => {
   }, []);
 
   return (
-    <span className="rotating-word-wrapper relative inline-block w-full max-w-full">
+    <span className="rotating-word-wrapper relative inline-block w-fit max-w-full">
       {/* ليه موجود؟ علشان wrapper ياخد عرض كتلة العنوان كامل ويتحاذى معاها بصريًا. Time Complexity: O(1) */}
       <span className="invisible select-none block whitespace-nowrap" aria-hidden>
         {ROTATING_WORDS[5]}
@@ -998,7 +1143,7 @@ const RotatingWord: FC = () => {
             exit={{ opacity: 0, y: -12, clipPath: "polygon(0 -50%, 100% -50%, 100% -50%, 0% -50%)" }}
             transition={{ duration: 0.45, ease: techEase }}
             /* ليه موجود؟ علشان الكلمة المتحركة تبقى متراكبة فوق placeholder بدون ما تزود ارتفاع الحاوية. Time Complexity: O(1) */
-            className="absolute right-0 top-0 flex items-center headline-accent w-fit h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal font-['Noto_Kufi_Arabic']"
+            className="absolute top-0 flex items-center headline-accent h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal font-['Noto_Kufi_Arabic']"
           >
             {ROTATING_WORDS[index]}
           </motion.span>
@@ -1406,8 +1551,10 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
             <motion.h1 variants={fadeUp} className="headline-static hero-headline">
               <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
-              <span className="headline-subline">أنت فقط</span>
-              <RotatingWord />
+              <div className="headline-subline-container">
+                <span className="headline-subline-text">أنت فقط</span>
+                <RotatingWord />
+              </div>
             </motion.h1>
 
             <motion.div variants={fadeUp} className="hero-divider" />
@@ -1416,46 +1563,47 @@ export const HeroSection: FC<HeroSectionProps> = ({
               قف خذ نفساً عميقاً أنت لست بحاجة إلى المزيد من المهام أنت بحاجة إلى خريطة تصبح فيها مرئياً لنفسك تترجم فوضى أفكارك فوراً لإحداثيات بصرية ترصد نزيف طاقتك.
             </motion.p>
 
-            <motion.div variants={fadeUp} className="hero-input-group">
-              <div className="glass-premium hero-input-wrapper">
-                <input
-                  type="text"
-                  id="mirror-name"
-                  name="mirrorName"
-                  placeholder="اسمك (اختياري)"
-                  value={mirrorName}
-                  onChange={e => setMirrorName(e.target.value)}
-                  maxLength={24}
-                  dir="rtl"
-                  className="hero-input"
-                />
-                {mirrorName && (
-                  <span className="hero-input-greeting">
-                    أهلاً {mirrorName} ✦
-                  </span>
+            <motion.div variants={fadeUp} className="hero-action-row">
+              <div className="hero-input-group">
+                <div className="glass-premium hero-input-wrapper">
+                  <input
+                    type="text"
+                    id="mirror-name"
+                    name="mirrorName"
+                    placeholder="اسمك (اختياري)"
+                    value={mirrorName}
+                    onChange={e => setMirrorName(e.target.value)}
+                    maxLength={24}
+                    dir="rtl"
+                    className="hero-input"
+                  />
+                  {mirrorName && (
+                    <span className="hero-input-greeting">
+                      أهلاً {mirrorName} ✦
+                    </span>
+                  )}
+                </div>
+                {!mirrorName && (
+                  <p className="hero-input-note">
+                    اضف اسمك عشان تجربتك تبقى شخصية
+                  </p>
                 )}
               </div>
-              {!mirrorName && (
-                <p className="hero-input-note">
-                  اضف اسمك عشان تجربتك تبقى شخصية
-                </p>
-              )}
-            </motion.div>
 
-            <motion.div variants={fadeUp} className="cta-group overflow-visible">
-              <motion.button
-                type="button"
-                className="cta-primary"
-                onClick={handleStart}
-                whileHover={{ scale: 1.04, y: -4 }}
-                whileTap={{ scale: 0.98 }}
-                id="hero-cta-start"
-              >
-                <Zap className="hero-cta-icon" />
-                <span>ابدأ رحلة علاقاتك</span>
-                <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
-              </motion.button>
-
+              <div className="cta-group overflow-visible">
+                <motion.button
+                  type="button"
+                  className="cta-primary"
+                  onClick={handleStart}
+                  whileHover={{ scale: 1.04, y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  id="hero-cta-start"
+                >
+                  <Zap className="hero-cta-icon" />
+                  <span>ابدأ رحلتك</span>
+                  <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
+                </motion.button>
+              </div>
             </motion.div>
 
             <motion.div variants={fadeUp} className="hero-trust-row">

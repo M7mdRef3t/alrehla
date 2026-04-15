@@ -19,6 +19,8 @@ import {
   Heart, PenLine, X, ChevronDown,
 } from "lucide-react";
 import { useWirdState, type Ritual } from "./store/wird.store";
+import { trackEvent, AnalyticsEvents } from "@/services/analytics";
+import { useEffect } from "react";
 
 /* ═══════════════════════════════════════════ */
 /*               CONSTANTS                    */
@@ -55,7 +57,7 @@ export const WirdScreen: FC = () => {
     setIntention, setGratitude, getTodayCompletion,
   } = useWirdState();
 
-  const today = useMemo(() => getTodayCompletion(), [getTodayCompletion, history]);
+  const today = useMemo(() => getTodayCompletion(), [getTodayCompletion]);
   const enabledRituals = useMemo(() => rituals.filter((r) => r.enabled), [rituals]);
   const completedCount = today.completedRituals.length;
   const totalEnabled = enabledRituals.length;
@@ -98,14 +100,36 @@ export const WirdScreen: FC = () => {
     return totalEnabled > 0 ? Math.round((completed / 30) * 100) : 0;
   }, [history, totalEnabled]);
 
+  // ── Analytics ──
+  useEffect(() => {
+    trackEvent(AnalyticsEvents.WIRD_VIEW, {
+      streak,
+      progress,
+      total_rituals: totalEnabled,
+      completed_count: completedCount
+    });
+  }, []); // Only once on mount
+
+  useEffect(() => {
+    trackEvent(AnalyticsEvents.WIRD_MODE_CHANGE, {
+      new_mode: viewMode
+    });
+  }, [viewMode]);
+
   const handleAddRitual = useCallback(() => {
     if (!newTitle.trim()) return;
     addRitual({ title: newTitle.trim(), emoji: TYPE_EMOJIS[newType], time: newTime, type: newType, enabled: true });
     setNewTitle(""); setShowAddRitual(false);
   }, [newTitle, newTime, newType, addRitual]);
 
-  const handleSaveIntention = () => { setIntention(intentionInput); };
-  const handleSaveGratitude = () => { setGratitude(gratitudeInput); };
+  const handleSaveIntention = () => { 
+    setIntention(intentionInput); 
+    trackEvent(AnalyticsEvents.WIRD_INTENTION_SAVE, { text_length: intentionInput.length });
+  };
+  const handleSaveGratitude = () => { 
+    setGratitude(gratitudeInput); 
+    trackEvent(AnalyticsEvents.WIRD_GRATITUDE_SAVE, { text_length: gratitudeInput.length });
+  };
 
   const viewTabs: { id: ViewMode; label: string; icon: typeof Sun }[] = [
     { id: "today", label: "اليوم", icon: Sun },
@@ -125,7 +149,17 @@ export const WirdScreen: FC = () => {
           const isDone = today.completedRituals.includes(ritual.id);
           return (
             <motion.button key={ritual.id} layout
-              onClick={() => !isDone && completeRitual(ritual.id)}
+              onClick={() => {
+                if (!isDone) {
+                  completeRitual(ritual.id);
+                  trackEvent(AnalyticsEvents.WIRD_RITUAL_COMPLETE, {
+                    ritual_id: ritual.id,
+                    ritual_title: ritual.title,
+                    ritual_type: ritual.type,
+                    ritual_time: ritual.time
+                  });
+                }
+              }}
               className="w-full p-3.5 rounded-xl flex items-center gap-3 text-right transition-all active:scale-98"
               style={{
                 background: isDone ? `${color}08` : "rgba(255,255,255,0.02)",

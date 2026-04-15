@@ -1,6 +1,6 @@
-import { useMapState } from '@/modules/map/dawayirIndex';
+import { useMapState, type MapNode } from '@/modules/map/dawayirIndex';
 import { useJourneyState } from "@/domains/journey/store/journey.store";
-import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { usePulseState, type PulseEntry } from "@/domains/consciousness/store/pulse.store";
 import { calculateEntropy } from "./predictiveEngine";
 
 export interface DissonanceReport {
@@ -16,10 +16,10 @@ export interface DissonanceReport {
  * Detects the gap between stated intentions (journey goals) and revealed preferences (map chaos).
  */
 export const DissonanceEngine = {
-    evaluate: (): DissonanceReport => {
-        const nodes = useMapState.getState().nodes;
-        const journey = useJourneyState.getState();
-        const pulses = usePulseState.getState().logs;
+    evaluate: (customNodes?: MapNode[], customJourney?: { category: string | null; goalId: string | null }, customPulses?: PulseEntry[]): DissonanceReport => {
+        const nodes = customNodes ?? useMapState.getState().nodes;
+        const journey = customJourney ?? useJourneyState.getState();
+        const pulses = customPulses ?? usePulseState.getState().logs;
 
         const statedCategory = journey.category; 
 
@@ -32,7 +32,7 @@ export const DissonanceEngine = {
             return { hasDissonance: false, score: 0, message: "لا توجد قياسات نبض كافية." };
         }
 
-        const evaluation = calculateEntropy();
+        const evaluation = calculateEntropy(nodes, pulses);
 
         const goalNodes = nodes.filter(n => n.goalId === journey.goalId);
         const nonGoalNodes = nodes.filter(n => n.goalId !== journey.goalId);

@@ -1333,6 +1333,13 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
         );
       }
     }
+    analyticsService.trackAhaMoment("onboarding_map_visualized", {
+      relationshipCount: mapped.length,
+      redCount,
+      yellowCount,
+      greenCount
+    });
+
     goTo(4);
   }, [addNode, gateContext, goTo, collectedItems, painDump]);
 
@@ -1417,6 +1424,12 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
       window.sessionStorage.setItem("dawayir-lead-email", email);
       window.sessionStorage.setItem("dawayir-lead-whatsapp", whatsapp);
     }
+    analyticsService.trackAhaMoment("onboarding_results_unlocked", {
+      hasEmail: !!email.trim(),
+      hasWhatsapp: !!whatsapp.trim(),
+      protocol: currentDiagnosis.protocolKey
+    });
+
     goTo(6);
   }, [collectedItems, derivedResult, diagnosis, gateContext, painDump, seededMirrorName, goTo, setMirrorName]);
 
