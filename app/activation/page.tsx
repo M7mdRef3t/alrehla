@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { Copy, Check, Upload, Send, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Copy, Check, Upload, Send, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { marketingLeadService } from "../../src/services/marketingLeadService";
@@ -138,8 +138,8 @@ export default function ActivationPage() {
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
-    } catch (err) {
-      setNotice(err instanceof Error ? err.message : "حدث خطأ غير متوقع.");
+    } catch (_err) {
+      setNotice(_err instanceof Error ? _err.message : "حدث خطأ غير متوقع.");
       setNoticeKind("error");
       recordFlowEvent("activation_submit_failed");
     } finally {

@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/react";
 import Clarity from "@microsoft/clarity";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import { trackError } from "./analytics";
 
 let initialized = false;
 
@@ -28,7 +29,6 @@ export function initMonitoring(): void {
     const originalOnError = window.onerror;
     window.onerror = (message, source, lineno, colno, error) => {
       try {
-        const { trackError } = require("./analytics");
         trackError(error || String(message), { source, lineno, colno });
       } catch (e) { /* ignore import/tracking failures */ }
       

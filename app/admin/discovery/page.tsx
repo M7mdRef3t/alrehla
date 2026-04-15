@@ -2,9 +2,6 @@ import React from "react";
 import DiscoveryBoard from "./_components/DiscoveryBoard";
 import { Plus, Search, Filter } from "lucide-react";
 
-export const metadata = {
-  title: "Decision Engine | Alrehla OS",
-};
 
 export default function DiscoveryPage() {
   return (

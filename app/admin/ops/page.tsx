@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { opsLinks, revenueConfig } from "@/config/opsLinks";
-import { CheckCircle, AlertCircle, TrendingUp, Settings, Link as LinkIcon, Database, Terminal, Copy } from "lucide-react";
+import { CheckCircle, TrendingUp, Link as LinkIcon, Database, Terminal, Copy } from "lucide-react";
 
 export default function OpsCockpit() {
   const [copied, setCopied] = useState(false);

@@ -27,33 +27,6 @@ const STAGES: DiscoveryStage[] = [
   "Shipped"
 ];
 
-// Initial mock data
-const INITIAL_ITEMS: DiscoveryItem[] = [
-  {
-    id: "item-1",
-    title: "Review automated activation pipeline",
-    description: "Connect VF Cash with webhooks.",
-    source: "ops_insight",
-    stage: "Inbox",
-    priority: "high",
-    facts: ["Manual verification takes 2hrs avg"],
-    interpretations: ["This bottleneck restricts scaling campaigns"],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "item-2",
-    title: "Implement mobile-first checkout",
-    description: "Reduce friction on the /activation route.",
-    source: "user_signal",
-    stage: "Shipped",
-    priority: "critical",
-    facts: [],
-    interpretations: [],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-];
 
 export default function DiscoveryBoard() {
   const [items, setItems] = useState<DiscoveryItem[]>([]);
@@ -119,7 +92,7 @@ export default function DiscoveryBoard() {
       // Dropping item over another item
       if (!isOverContainer && overIndex >= 0) {
         const overItem = items[overIndex];
-        let newItems = [...items];
+        const newItems = [...items];
         
         if (activeItem.stage !== overItem.stage) {
           newItems[activeIndex] = { ...activeItem, stage: overItem.stage };
