@@ -101,7 +101,7 @@ export const analyticsEnvelopeSchema = z.object({
   utm_source: z.string().max(128).optional().nullable(),
   utm_medium: z.string().max(128).optional().nullable(),
   utm_campaign: z.string().max(128).optional().nullable(),
-}).strict();
+});
 
 export function resolveAnalyticsPayloadSchema(eventType: string) {
   if (eventType === "identity_linked") return identityLinkedPayloadSchema;
@@ -124,9 +124,24 @@ export type AnalyticsEnvelopeInput = Partial<Omit<AnalyticsEnvelope, "event_type
 
 export function buildAnalyticsEnvelope(input: AnalyticsEnvelopeInput): AnalyticsEnvelope | null {
   const sanitizedInput = { ...input } as Record<string, unknown>;
+
+  // Normalize event_type to match internal schema (lowercase only)
+  if (typeof sanitizedInput.event_type === "string") {
+    sanitizedInput.event_type = sanitizedInput.event_type.toLowerCase();
+  }
+
+  // Identity scrubbing & sanitization
   for (const key of ["lead_id", "client_event_id", "anonymous_id", "session_id"]) {
-    if (sanitizedInput[key] === "") {
+    if (sanitizedInput[key] === "" || sanitizedInput[key] === undefined) {
       sanitizedInput[key] = null;
+    }
+  }
+
+  // Critical: Validate UUID format for lead_id if present
+  if (typeof sanitizedInput.lead_id === "string") {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sanitizedInput.lead_id);
+    if (!isUuid) {
+      sanitizedInput.lead_id = null;
     }
   }
 

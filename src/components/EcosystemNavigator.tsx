@@ -21,7 +21,8 @@ import {
   LayoutGrid,
   Bell,
   Gem,
-  ScrollText
+  ScrollText,
+  Droplets
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -218,6 +219,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#10b981",
     url: "/#sijil"
+  },
+  {
+    id: "naba",
+    name: "نبع",
+    description: "رشفة إلهام يومية",
+    icon: <Droplets className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#naba"
   }
 ];
 

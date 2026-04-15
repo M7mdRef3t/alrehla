@@ -38,6 +38,7 @@ const SadaScreen = lazy(() => import("../../sada/SadaScreen"));
 const HafizScreen = lazy(() => import("../../hafiz/HafizScreen"));
 const MirahScreen = lazy(() => import("../../mirah/MirahScreen"));
 const SijilScreen = lazy(() => import("../../sijil/SijilScreen"));
+const NabaScreen = lazy(() => import("../../naba/NabaScreen"));
 
 
 
@@ -549,6 +550,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#060a10" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
           <SijilScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "naba") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#080612" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
+          <NabaScreen />
         </Suspense>
       </PageShell>
     );

@@ -51,6 +51,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   hafiz: "Hafiz Vault",
   mirah: "Mirah Mirror",
   sijil: "Sijil Chronicle",
+  naba: "Naba Inspiration",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -101,6 +102,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   hafiz: { title: "حافظ — خزنة الذكريات | Alrehla", description: "أهم لحظاتك محفوظة وقابلة للاسترجاع — مجموعات وبحث وذكريات مميّزة." },
   mirah: { title: "مرآة — الوعي الذاتي | Alrehla", description: "شوف نفسك بعيون البيانات — خريطة شخصية + رؤى + نمو + تأمّل." },
   sijil: { title: "سِجل — السجل المفتوح | Alrehla", description: "كل حركة في المنصة موثّقة — timeline + heatmap + اتجاهات + تفاعل." },
+  naba: { title: "نبع — إلهام يومي | Alrehla", description: "كل يوم رشفة إلهام جديدة — اقتباسات + أسئلة + تحديات + حكم + تمارين." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

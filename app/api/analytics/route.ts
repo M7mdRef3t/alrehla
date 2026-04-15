@@ -80,7 +80,7 @@ export async function POST(req: Request) {
             ...parsedPayload.data
         };
 
-        const { error } = await supabase.from("routing_events").insert({
+        const eventData: any = {
             event_type: data.event_type,
             client_event_id: data.client_event_id || null,
             anonymous_id: data.anonymous_id || null,
@@ -92,17 +92,30 @@ export async function POST(req: Request) {
             utm_medium: data.utm_medium || null,
             utm_campaign: data.utm_campaign || null,
             payload: mergedPayload,
-            occurred_at: new Date().toISOString()
-        });
+        };
+
+        // Standard column is occurred_at, but we fallback to created_at if insertion fails
+        // or just let the DB handle the default if we omit it. 
+        // Based on migrations, it is occurred_at.
+        eventData.occurred_at = new Date().toISOString();
+
+        const { error } = await supabase.from("routing_events").insert(eventData);
 
         if (error) {
             if (error.code === "23505") {
                 return NextResponse.json({ status: "success", duplicate: true });
             }
             
-            // Log detailed error in dev, but generic error in prod
+            // If occurred_at is missing, try a desperate fallback to created_at or omitting it
+            if (error.code === "42703" && error.message.includes("occurred_at")) {
+                console.warn("[Analytics Ingestion] occurred_at missing, retrying with created_at fallback");
+                delete eventData.occurred_at;
+                eventData.created_at = new Date().toISOString();
+                const { error: retryError } = await supabase.from("routing_events").insert(eventData);
+                if (!retryError) return NextResponse.json({ status: "success", fallback: true });
+            }
+
             console.error(`[Analytics Ingestion] Database Error [${error.code}]:`, error.message);
-            
             return NextResponse.json({ 
                 error: "Ingestion failed", 
                 code: error.code,
@@ -111,7 +124,7 @@ export async function POST(req: Request) {
         }
 
         const response = NextResponse.json({ status: "success" });
-        response.headers.set("X-Analytics-Version", "v3-clean-hardened");
+        response.headers.set("X-Analytics-Version", "v3-clean-hardened-v2");
         return response;
     } catch (e) {
         console.error("[Analytics Ingestion] Server Error:", e);
