@@ -94,18 +94,28 @@ export async function POST(req: Request) {
   const supabase = buildClient();
 
   // 1. Fetch leads that need analysis
+  console.log("[Oracle Intelligence] Fetching leads for analysis...");
   const { data: leads, error: fetchError } = await supabase
     .from("marketing_leads")
     .select("*")
-    .or("last_ai_analysis_at.is.null,last_ai_analysis_at.lt." + new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+    .is("last_ai_analysis_at", null)
     .limit(batchSize);
 
-  if (fetchError || !leads || leads.length === 0) {
-    return NextResponse.json({ ok: false, message: "No leads found for analysis" });
+  if (fetchError) {
+    console.error("[Oracle Intelligence] Fetch error:", fetchError);
+    return NextResponse.json({ ok: false, error: fetchError.message });
   }
+
+  if (!leads || leads.length === 0) {
+    console.log("[Oracle Intelligence] No leads found matching criteria.");
+    return NextResponse.json({ ok: true, analyzedCount: 0, message: "No leads found for analysis" });
+  }
+
+  console.log(`[Oracle Intelligence] Analyzing ${leads.length} leads...`);
 
   // 2. Run Oracle Analysis
   const results = await OracleService.analyzeLeadBatch(leads);
+  console.log(`[Oracle Intelligence] Analysis results received:`, Object.keys(results).length);
 
   // 3. Update Leads in Database
   const updates = leads.map(lead => {

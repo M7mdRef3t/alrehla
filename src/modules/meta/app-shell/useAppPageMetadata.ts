@@ -44,6 +44,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   taqrir: "Taqrir Report",
   bawsala: "Bawsala Compass",
   riwaya: "Riwaya Timeline",
+  nadhir: "Nadhir Shield",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -87,6 +88,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   taqrir: { title: "تقرير — بياناتك في صفحة | Alrehla", description: "تقرير ذكي يجمع كل بياناتك — شاركه مع الكوتش أو احتفظ به." },
   bawsala: { title: "بوصلة — بوصلة القرارات | Alrehla", description: "كل قرار صعب عنده بوصلة — حلّل، قيّم، واختار." },
   riwaya: { title: "رواية — قصة رحلتك | Alrehla", description: "رحلتك كقصة — من البداية لهنا — بكل قمة ووادي." },
+  nadhir: { title: "نذير — نظام الإنذار المبكر | Alrehla", description: "الدرع الأخير — تنفس، تأريض، وخطة أمان شخصية." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

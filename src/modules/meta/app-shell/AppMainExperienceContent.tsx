@@ -31,6 +31,7 @@ const MurshidScreen = lazy(() => import("../../murshid/MurshidScreen"));
 const TaqrirScreen = lazy(() => import("../../taqrir/TaqrirScreen"));
 const BawsalaScreen = lazy(() => import("../../bawsala/BawsalaScreen"));
 const RiwayaScreen = lazy(() => import("../../riwaya/RiwayaScreen"));
+const NadhirScreen = lazy(() => import("../../nadhir/NadhirScreen"));
 
 
 
@@ -472,6 +473,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a1a" }}><div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" /></div>}>
           <RiwayaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "nadhir") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0508" }}><div className="w-8 h-8 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" /></div>}>
+          <NadhirScreen />
         </Suspense>
       </PageShell>
     );

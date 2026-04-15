@@ -37,6 +37,7 @@ export type AppScreen =
   | "taqrir"
   | "bawsala"
   | "riwaya"
+  | "nadhir"
   | "protocol"
   | "diagnosis";
 

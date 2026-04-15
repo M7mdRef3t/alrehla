@@ -15,7 +15,8 @@ import {
   Scale,
   Users,
   Brain,
-  FileText
+  FileText,
+  AlertTriangle
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -149,6 +150,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#fb923c",
     url: "/#riwaya"
+  },
+  {
+    id: "nadhir",
+    name: "نذير",
+    description: "الدرع الأخير — تنفس وتأريض وخطة أمان",
+    icon: <AlertTriangle className="w-5 h-5" />,
+    status: "active",
+    color: "#ef4444",
+    url: "/#nadhir"
   }
 ];
 
