@@ -125,9 +125,8 @@ function ensureMetaPixel(): void {
   // Script loaded check
   if (windowRef.__dawayirMetaPixelScriptLoaded) return;
 
-  // Prevent Meta Pixel from firing on localhost to avoid console error spam
-  // "unavailable on this website due to it's traffic permission settings"
-  if (windowRef.location.hostname === "localhost" || windowRef.location.hostname === "127.0.0.1") {
+  // Prevent Meta Pixel from firing on localhost in production to avoid console error spam
+  if (runtimeEnv.isProd && (windowRef.location.hostname === "localhost" || windowRef.location.hostname === "127.0.0.1")) {
     return;
   }
 
