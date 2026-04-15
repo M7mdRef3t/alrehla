@@ -8,8 +8,9 @@ function getEnv(key) {
   return line ? line.split('=')[1].replace(/['"]/g, '').trim() : '';
 }
 
-const API_URL = "http://localhost:3030";
-const ADMIN_CODE = getEnv('NEXT_PUBLIC_ADMIN_CODE');
+const API_URL = 'http://localhost:3031';
+const ADMIN_CODE = getEnv('NEXT_PUBLIC_ADMIN_CODE') || '667788'; 
+console.log(`[Debug] Using ADMIN_CODE: ${String(ADMIN_CODE).substring(0, 5)}... (length: ${String(ADMIN_CODE).length})`);
 
 async function radarTest() {
   console.log("🚀 Starting [Intelligence Radar] Sovereign Test Cycle...");

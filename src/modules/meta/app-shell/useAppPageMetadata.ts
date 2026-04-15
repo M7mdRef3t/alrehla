@@ -47,6 +47,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   nadhir: "Nadhir Shield",
   wird: "Wird Rituals",
   markaz: "Markaz Command",
+  sada: "Sada Nudges",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -93,6 +94,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   nadhir: { title: "نذير — نظام الإنذار المبكر | Alrehla", description: "الدرع الأخير — تنفس، تأريض، وخطة أمان شخصية." },
   wird: { title: "وِرد — الطقوس اليومية | Alrehla", description: "كل يوم طقس — والطقس يبني العادة — صباح + مساء + أفعال صغيرة." },
   markaz: { title: "مركز — غرفة القيادة | Alrehla", description: "كل منتجاتك في نظرة واحدة — حالة المنظومة + إجراءات فورية." },
+  sada: { title: "صدى — التنبيهات الذكية | Alrehla", description: "المنصة تتكلم معاك — تنبيهات مبنية على بياناتك الحقيقية." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

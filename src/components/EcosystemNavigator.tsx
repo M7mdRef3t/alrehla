@@ -18,7 +18,8 @@ import {
   FileText,
   AlertTriangle,
   Flame,
-  LayoutGrid
+  LayoutGrid,
+  Bell
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -179,6 +180,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#6366f1",
     url: "/#markaz"
+  },
+  {
+    id: "sada",
+    name: "صدى",
+    description: "المنصة تتكلم معاك — تنبيهات ذكية",
+    icon: <Bell className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#sada"
   }
 ];
 

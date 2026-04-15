@@ -99,6 +99,7 @@ export async function requireLiveAuth(req: NextRequest): Promise<LiveAuthContext
 
   const { data, error } = await client.auth.getUser(token);
   if (error || !data?.user?.id) {
+    console.error(`[requireLiveAuth] Auth failure for path: ${req.nextUrl.pathname}. Token starts with: ${token.substring(0, 5)}... Expected Admin Code: ${adminCode ? adminCode.substring(0, 5) + '...' : 'NONE'}`);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

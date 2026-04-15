@@ -166,7 +166,10 @@ class GeminiClient {
    */
   async generateJSON<T>(prompt: string): Promise<T | null> {
     const result = await this.generate(prompt);
-    if (!result) return null;
+    if (!result) {
+      console.error("[GeminiClient] No response generated for prompt");
+      return null;
+    }
 
     try {
       // Extract JSON from various delimiters: [BEGIN JSON], markdown code blocks, or raw text
@@ -174,8 +177,16 @@ class GeminiClient {
       const markdownMatch = result.match(/```json\n([\s\S]*?)\n```/i) || result.match(/```\n([\s\S]*?)\n```/i);
       
       const jsonText = customMatch ? customMatch[1] : (markdownMatch ? markdownMatch[1] : result);
-      return JSON.parse(jsonText.trim());
-    } catch {
+      
+      try {
+        return JSON.parse(jsonText.trim());
+      } catch (parseError) {
+        console.error("[GeminiClient] JSON Parse Error. Raw Text:", jsonText);
+        console.error("[GeminiClient] Full Model Output:", result);
+        return null;
+      }
+    } catch (err) {
+      console.error("[GeminiClient] Extraction Error:", err);
       return null;
     }
   }
