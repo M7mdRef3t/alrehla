@@ -16,7 +16,8 @@ import {
   Users,
   Brain,
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  Flame
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -159,6 +160,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#ef4444",
     url: "/#nadhir"
+  },
+  {
+    id: "wird",
+    name: "وِرد",
+    description: "كل يوم طقس — والطقس يبني العادة",
+    icon: <Flame className="w-5 h-5" />,
+    status: "active",
+    color: "#fbbf24",
+    url: "/#wird"
   }
 ];
 

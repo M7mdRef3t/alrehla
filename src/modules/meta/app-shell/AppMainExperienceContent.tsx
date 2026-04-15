@@ -32,6 +32,7 @@ const TaqrirScreen = lazy(() => import("../../taqrir/TaqrirScreen"));
 const BawsalaScreen = lazy(() => import("../../bawsala/BawsalaScreen"));
 const RiwayaScreen = lazy(() => import("../../riwaya/RiwayaScreen"));
 const NadhirScreen = lazy(() => import("../../nadhir/NadhirScreen"));
+const WirdScreen = lazy(() => import("../../wird/WirdScreen"));
 
 
 
@@ -483,6 +484,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0508" }}><div className="w-8 h-8 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" /></div>}>
           <NadhirScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "wird") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a12" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
+          <WirdScreen />
         </Suspense>
       </PageShell>
     );

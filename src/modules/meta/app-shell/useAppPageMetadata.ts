@@ -45,6 +45,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   bawsala: "Bawsala Compass",
   riwaya: "Riwaya Timeline",
   nadhir: "Nadhir Shield",
+  wird: "Wird Rituals",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -89,6 +90,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   bawsala: { title: "بوصلة — بوصلة القرارات | Alrehla", description: "كل قرار صعب عنده بوصلة — حلّل، قيّم، واختار." },
   riwaya: { title: "رواية — قصة رحلتك | Alrehla", description: "رحلتك كقصة — من البداية لهنا — بكل قمة ووادي." },
   nadhir: { title: "نذير — نظام الإنذار المبكر | Alrehla", description: "الدرع الأخير — تنفس، تأريض، وخطة أمان شخصية." },
+  wird: { title: "وِرد — الطقوس اليومية | Alrehla", description: "كل يوم طقس — والطقس يبني العادة — صباح + مساء + أفعال صغيرة." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };
