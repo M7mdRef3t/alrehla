@@ -1,18 +1,30 @@
 // Only trigger for EXPLICIT programming / code requests — NOT Arabic analysis prompts
+// or prompts that simply ask for structured JSON output or data analysis.
 const STRICT_CODE_HINTS = [
   "```",
   "function ", "class ", "const ", "let ", "var ",
   "import ", "export ",
   "implement ", "refactor ", "algorithm ", "complexity ",
-  "memory leak", "memory leak",
-  "typescript", "javascript", "python", "java", "c++",
+  "memory leak",
+  " typescript", " javascript", " python", " java", " c++",
   "اكتب كود", "خوارزمية", "حل برمجي", "تسريب ذاكرة"
+];
+
+// These are common in data/AI prompts and should NOT trigger coding constraints
+const DATA_PROMPT_HINTS = [
+  "analyze", "grade", "score", "rate", "classify", "evaluate",
+  "return json", "respond with json", "output json", "json format",
+  "json object", "respond only with", "respond in json",
+  "حلل", "قيّم", "صنّف", "درجة", "تقييم",
 ];
 
 function isCodingLike(text: unknown): boolean {
   const lower = String(text ?? "").toLowerCase();
+  // If it looks like a data/analysis prompt, skip coding guard entirely
+  if (DATA_PROMPT_HINTS.some((h) => lower.includes(h))) return false;
   return STRICT_CODE_HINTS.some((k) => lower.includes(k.toLowerCase()));
 }
+
 
 function hasComplexity(text: unknown): boolean {
   const source = String(text ?? "");

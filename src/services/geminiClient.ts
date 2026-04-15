@@ -3,6 +3,7 @@ import { runtimeEnv } from "@/config/runtimeEnv";
 import { useToastState } from '@/modules/map/dawayirIndex';
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { fetchJsonWithResilience } from "../architecture/resilientHttp";
+import { performInternalGeneration } from "../lib/gemini/shared";
 import {
   hydrateAIGuardrailSnapshot,
   recordAICostFromUsage,
@@ -123,6 +124,35 @@ class GeminiClient {
     }
     this.ensureGuardHydrated();
 
+    // Server-side: call the Gemini SDK directly to avoid relative URL failures.
+    // Browser-side: go through the /api/gemini/generate proxy as usual.
+    const isServer = typeof window === "undefined";
+
+    if (isServer) {
+      try {
+        const result = await performInternalGeneration(
+          prompt,
+          GENERATION_CONFIG as Record<string, unknown>,
+          TEXT_MODEL_FALLBACK_ORDER
+        );
+        if (!result.text) {
+          const reason = (result as { reason?: string }).reason ?? "unknown";
+          console.error("[GeminiClient:server] Generation failed, reason:", reason);
+          this.markServerUnavailable();
+          recordAIFallback();
+          return null;
+        }
+        this.markServerAvailable();
+        this.applyUsageCost(result.usage as GenerateResponse["usage"]);
+        return result.text;
+      } catch (err) {
+        console.error("[GeminiClient:server] Unexpected error:", err);
+        recordAIFallback();
+        return null;
+      }
+    }
+
+    // Browser path — fetch through the API route proxy
     let data: GenerateResponse | null = null;
     try {
       data = await runWithAIGuardrails(

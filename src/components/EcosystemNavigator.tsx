@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   Flame,
   LayoutGrid,
-  Bell
+  Bell,
+  Gem
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -189,6 +190,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#06b6d4",
     url: "/#sada"
+  },
+  {
+    id: "hafiz",
+    name: "حافظ",
+    description: "خزنة الذكريات — لحظاتك المحفوظة",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#a855f7",
+    url: "/#hafiz"
   }
 ];
 
