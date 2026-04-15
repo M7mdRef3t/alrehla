@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { AlertTriangle, Lightbulb, Activity } from "lucide-react";
 import type { OverviewStats } from "@/services/adminApi";
 import { AdminTooltip } from "./AdminTooltip";
-
+import { CollapsibleSection } from "../../../ui/CollapsibleSection";
 interface ConversionDiagnosisProps {
     data: OverviewStats["conversionHealth"] | undefined | null;
     loading: boolean;
@@ -49,7 +49,8 @@ export const ConversionDiagnosis: FC<ConversionDiagnosisProps> = ({ data, loadin
     const hasWarnings = warnings.length > 0;
 
     return (
-        <div className="w-full space-y-6 admin-glass-card p-8 rounded-3xl border border-white/5 bg-slate-950/60 shadow-2xl relative overflow-hidden group" dir="rtl">
+        <CollapsibleSection title="تشخيص التحويل والصحة" icon={<Activity className="w-5 h-5 text-slate-300" />} headerColors="border-indigo-500/10 bg-slate-900/40 text-slate-300" defaultExpanded={false}>
+            <div className="w-full space-y-6 admin-glass-card p-8 rounded-3xl border border-white/5 bg-slate-950/60 shadow-2xl relative overflow-hidden group" dir="rtl">
             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-slate-500/5 blur-[100px] rounded-full pointer-events-none opacity-50 transition-opacity duration-1000 group-hover:opacity-80" />
 
             {/* Header */}
@@ -129,5 +130,6 @@ export const ConversionDiagnosis: FC<ConversionDiagnosisProps> = ({ data, loadin
                 </div>
             </div>
         </div>
+        </CollapsibleSection>
     );
 };

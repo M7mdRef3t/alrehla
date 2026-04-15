@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { DawayirPlayground } from "@/modules/social/DawayirPlayground";
 import { Metadata } from "next";
 

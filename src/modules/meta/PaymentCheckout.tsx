@@ -100,6 +100,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
       document.body.removeChild(el);
     });
     setCopied(key);
+    analyticsService.trackPaymentNumberCopied({ field: key, value: text });
     setTimeout(() => setCopied(null), 2000);
   }, []);
 
@@ -162,6 +163,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
   const openWhatsApp = useCallback((extraText = "") => {
     const base = `مرحباً، حابب أفعّل باقة "${TIER_LABELS.premium}" في الرحلة.`;
     const msg = extraText ? `${base}\n${extraText}` : base;
+    analyticsService.trackWhatsAppSupportClicked({ context: extraText || "general_support" });
     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, "_blank");
   }, [whatsappNumber]);
 
@@ -240,6 +242,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             label="فودافون كاش"
             sub={localPriceLabel}
             onClick={() => {
+              analyticsService.trackPaymentMethodSelected({ method: "vodafone_cash" });
               analyticsService.trackInitiateCheckout({ method: "vodafone_cash" });
               setSelectedMethod("vodafone_cash");
             }}
@@ -252,6 +255,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             label="InstaPay"
             sub={localPriceLabel}
             onClick={() => {
+              analyticsService.trackPaymentMethodSelected({ method: "instapay" });
               analyticsService.trackInitiateCheckout({ method: "instapay" });
               setSelectedMethod("instapay");
             }}
@@ -265,6 +269,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             sub={`$${price.monthly}/شهر`}
             badge="دولي"
             onClick={() => {
+              analyticsService.trackPaymentMethodSelected({ method: "paypal" });
               analyticsService.trackInitiateCheckout({ method: "paypal" });
               setSelectedMethod("paypal");
             }}
@@ -278,6 +283,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             sub={`$${price.monthly}/شهر — Apple Pay, Visa, Mastercard`}
             badge="دولي"
             onClick={() => {
+              analyticsService.trackPaymentMethodSelected({ method: "gumroad" });
               analyticsService.trackInitiateCheckout({ method: "gumroad" });
               setSelectedMethod("gumroad");
             }}

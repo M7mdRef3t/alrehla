@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { AIOrchestrator } from '../../../src/services/aiOrchestrator';
+import { AIOrchestrator } from '../../../../src/services/aiOrchestrator';
 import { getGeminiClient } from '@/lib/gemini/shared';
+import { buildAnalyzeFallback } from '@/lib/gemini/fallbacks';
 
 const SYSTEM_PROMPT = `
 أنت "محرك الوعي" (Consciousness Engine) لأداة "دواير". دورك هو تحليل الحالة الذهنية والطاقية للمستخدم بناءً على مدخلاته السريعة، وتحويل هذه الفوضى النفسية إلى **هيكل بيانات بصري (Nodes and Edges)**، مع تقديم بصيرة نفسية قاطعة واكتشاف **الأعراض (Symptoms)** الناتجة عن هذا الاستنزاف.
@@ -54,64 +55,6 @@ const SYSTEM_PROMPT = `
   "detected_symptoms": ["symptom_id_1", "symptom_id_2"]
 }`;
 
-function buildAnalyzeFallback(answers: string[]) {
-  const firstAnswer = String(answers[0] ?? "").trim();
-  const stressScoreRaw = Number.parseInt(String(answers[1] ?? "").trim(), 10);
-  const stressScore = Number.isFinite(stressScoreRaw) ? Math.max(1, Math.min(10, stressScoreRaw)) : 6;
-  const ignoredAnswer = String(answers[2] ?? "").trim();
-  const primaryItems = firstAnswer
-    .split(/[،,\n]/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, 3);
-
-  const nodes = [
-    { id: "user_core", label: "أنت (المركز)", size: "medium", color: "core", mass: 10 },
-    ...primaryItems.map((item, index) => ({
-      id: `node_${index + 1}`,
-      label: item,
-      size: stressScore >= 8 ? "large" : "medium",
-      color: stressScore >= 8 ? "danger" : "neutral",
-      mass: Math.max(4, stressScore)
-    })),
-    ...(ignoredAnswer
-      ? [{
-        id: "ignored_node",
-        label: ignoredAnswer,
-        size: "small",
-        color: "ignored",
-        mass: 3
-      }]
-      : [])
-  ];
-
-  const edges = nodes
-    .filter((node) => node.id !== "user_core")
-    .map((node) => ({
-      source: "user_core",
-      target: node.id,
-      type: node.color === "danger" ? "draining" : node.color === "ignored" ? "ignored" : "stable",
-      animated: node.color === "danger"
-    }));
-
-  const lower = `${firstAnswer} ${ignoredAnswer}`.toLowerCase();
-  const detectedSymptoms = [
-    lower.includes("ذنب") ? "guilt" : null,
-    lower.includes("قلق") || lower.includes("توتر") ? "ruminating" : null,
-    lower.includes("حدود") || lower.includes("أتجاهل") || lower.includes("اتجاهل") ? "self_neglect" : null,
-    stressScore >= 8 ? "exhausted" : null
-  ].filter(Boolean);
-
-  return {
-    nodes,
-    edges,
-    insight_message: ignoredAnswer
-      ? `الاستنزاف لا يأتي فقط من ${primaryItems[0] || "الضغط"}، بل من تجاهلك المستمر لـ "${ignoredAnswer}".`
-      : `الضغط الحالي حول ${primaryItems[0] || "أكثر من جبهة"} يسحب طاقتك أسرع من قدرتك على الاستعادة.`,
-    detected_symptoms: detectedSymptoms
-  };
-}
-
 export async function POST(req: Request) {
   let answers: unknown;
   try {
@@ -130,9 +73,10 @@ export async function POST(req: Request) {
     // Get the dynamic model route from the Meta-Orchestrator
     const modelId = await AIOrchestrator.getRouteForFeature("quick_analysis");
 
-    // We assume the model routed here is compatible with Gemini SDK (since the project standardized on it).
-    // In a fully agnostic setup, we'd have a wrapper supporting both SDKs.
-    const model = genAI.getGenerativeModel({ model: modelId, generationConfig: { responseMimeType: "application/json" } });
+    const model = genAI.getGenerativeModel({ 
+        model: modelId, 
+        generationConfig: { responseMimeType: "application/json" } 
+    });
 
     const prompt = `${SYSTEM_PROMPT}
 
@@ -144,7 +88,6 @@ User answers:
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 
-    // Gemini can occasionally return JSON wrapped in markdown fences.
     const cleanedText = responseText
       .replace(/^```json\s*/i, "")
       .replace(/^```\s*/i, "")
@@ -155,7 +98,7 @@ User answers:
 
     return NextResponse.json({ ...data, source: "gemini", is_live: true });
   } catch (error: unknown) {
-    console.error("Analyze API Error:", error);
+    console.error("Weather Diagnostic API Error:", error);
     if (Array.isArray(answers) && answers.length > 0) {
       return NextResponse.json({ ...buildAnalyzeFallback(answers), source: "fallback_after_error", is_live: false });
     }

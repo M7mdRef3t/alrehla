@@ -3,7 +3,7 @@
  * Pure functions for cognitive relational mapping analysis for Alrehla.
  */
 
-import type { DawayirNode, Ring } from "../types";
+// Removed unused imports: DawayirNode, Ring
 
 export interface AnalyticNode {
   ring: string;
@@ -15,12 +15,13 @@ export interface AnalyticNode {
     ruminationLogCount?: number;
     pathStage?: string;
     boundaryLegitimacyScore?: number;
-    completedSteps?: any[];
+    completedSteps?: string[];
   };
   missionProgress?: {
     isCompleted?: boolean;
   };
 }
+
 
 export interface TelemetryPulse {
   timestamp: number;
@@ -31,13 +32,13 @@ export interface TelemetryPulse {
 export interface TelemetrySignal {
   timestamp: number;
   type: string;
-  payload?: any;
+  payload?: Record<string, unknown>;
 }
 
 export interface TelemetryJourneyEvent {
   timestamp: number;
   type: string;
-  payload?: any;
+  payload?: Record<string, unknown>;
 }
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -122,7 +123,7 @@ function journeyEventWeight(event: TelemetryJourneyEvent): number {
   if (event.type === "task_completed") return -1.2;
   if (event.type === "task_started") return 0.4;
   if (event.type === "path_regenerated") return 0.8;
-  if (event.type === "mood_logged") return event.payload?.moodScore <= 4 ? 1.2 : -0.4;
+  if (event.type === "mood_logged") return (event.payload?.moodScore as number) <= 4 ? 1.2 : -0.4;
   if (event.type !== "flow_event") return 0;
 
   const flowStep = event.payload?.step;
@@ -216,7 +217,7 @@ function computeSessionHesitation(events: TelemetryJourneyEvent[]): number {
   let dwellCount = 0;
   for (const event of flowEvents) {
     if (event.payload?.step === "pulse_abandoned") abandoned += 1;
-    const dwell = event.payload?.extra?.dwellTime;
+    const dwell = (event.payload?.extra as Record<string, unknown>)?.dwellTime;
     if (typeof dwell === "number") {
       dwellCount += 1;
       if (dwell >= 45_000) longDwell += 1;

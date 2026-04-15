@@ -43,7 +43,15 @@ export async function fetchJsonWithResilience<T>(
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
-      const res = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
+      // Combine caller signal (if any) with our timeout signal.
+      // If the caller already set a signal (e.g. from runWithAIGuardrails), use the
+      // longer of the two to avoid prematurely aborting AI generation requests.
+      const ownSignal = AbortSignal.timeout(timeoutMs);
+      const callerSignal = init?.signal;
+      const combinedSignal = callerSignal
+        ? AbortSignal.any([callerSignal, ownSignal])
+        : ownSignal;
+      const res = await fetch(url, { ...init, signal: combinedSignal });
       if (res.ok || res.status === 429) {
         if (breaker && res.ok) breaker.markSuccess();
         try {

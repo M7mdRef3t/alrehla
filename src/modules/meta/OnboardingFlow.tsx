@@ -6,7 +6,7 @@ import { useState, useCallback, useEffect, useRef, memo, useTransition } from "r
 import { motion, AnimatePresence } from "framer-motion";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { useJourneyProgress } from "@/domains/journey";
-import { setInLocalStorage } from "@/services/browserStorage";
+import { setInLocalStorage, getFromLocalStorage, removeFromLocalStorage } from "@/services/browserStorage";
 import { trackingService } from "@/domains/journey";
 import { type PulseEntry } from "@/domains/consciousness/store/pulse.store";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
@@ -131,6 +131,7 @@ const ONBOARDING_STYLES = `
    ════════════════════════════════════════════════ */
 
 const ONBOARDING_KEY = "dawayir-journey-onboarding-done";
+const TEMP_STATE_KEY = "dawayir_onboarding_temp_state";
 
 /* eslint-disable react-refresh/only-export-components */
 export function markJourneyOnboardingDone(): void {
@@ -489,7 +490,7 @@ const StepInventory: FC<{
         يلا نكمل →
       </button>
 
-      <button onClick={onSkip} className="text-center text-xs text-slate-500 hover:text-slate-300 transition-colors">ادخل الملاذ الآمن</button>
+      <button onClick={onSkip} className="text-center text-xs text-slate-500 hover:text-slate-300 transition-colors">تخطي وادخل مساحتك الخاصة</button>
     </div>
   );
 });
@@ -652,7 +653,7 @@ const StepMapping: FC<{
             شوف النتيجة <ArrowRight className="w-4 h-4 rotate-180" />
           </span>
         </button>
-        <button onClick={onSkip} className="text-xs text-slate-500 mt-4 hover:text-slate-300">ادخل الملاذ الآمن</button>
+
       </div>
     </div>
   );
@@ -700,7 +701,7 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
         كَمّل لخطتك ←
       </button>
 
-      <button onClick={onSkip} className="text-xs text-slate-500">ادخل الملاذ الآمن</button>
+
     </div>
   );
 };
@@ -841,7 +842,7 @@ const StepContactCapture: FC<{
         {/* Trust Badge */}
         <div className="flex items-center justify-center gap-1.5 opacity-70">
            <Lock className="w-3 h-3 text-slate-400" />
-           <span className="text-[9px] text-slate-400 font-semibold tracking-wide">بياناتك مشفرة بالكامل ومعزولة في الملاذ الآمن</span>
+           <span className="text-[9px] text-slate-400 font-semibold tracking-wide">بياناتك آمنة ١٠٠٪ ومحمية بالكامل</span>
         </div>
 
         {/* Submit Button */}
@@ -852,14 +853,14 @@ const StepContactCapture: FC<{
         >
           <div className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform -translate-x-[150%] transition-transform duration-1000 group-hover:translate-x-[50%] skew-x-12"></div>
           <span className="relative z-10 flex items-center justify-center gap-2">
-            {loading ? "جاري الإرسال المشفّر..." : "استلم خطة التعافي دلوقتي"}
+            {loading ? "جاري الإرسال..." : "استلم خطة التعافي دلوقتي"}
             {!loading && <Sparkles className="w-4 h-4 text-[#064e3b]" />}
           </span>
         </button>
       </form>
 
       <button onClick={onSkip} className="text-[10px] text-slate-500 mt-2 hover:text-slate-300 transition-colors uppercase font-bold tracking-widest inline-flex items-center justify-center gap-1 mx-auto">
-        ادخل الملاذ الآمن <ArrowRight className="w-3 h-3 rotate-180"/>
+        تخطي وكمّل بدون بيانات <ArrowRight className="w-3 h-3 rotate-180"/>
       </button>
     </div>
   );
@@ -922,9 +923,9 @@ const StepRecoveryPlanPreview: FC<{
           onClick={onComplete}
           className="w-full rounded-2xl py-4 bg-teal-400 text-zinc-900 font-extrabold ob-btn-tap shadow-[0_4px_25px_rgba(45,212,191,0.3)] hover:scale-[1.02] transition-all"
         >
-          تفعيل الدرع والدخول للملاذ ←
+          ابدأ خطتك دلوقتي ←
         </button>
-        <p className="text-[10px] text-slate-500 text-center mt-4">تم تشفير وتحميل الخطة الكاملة (٤ أسابيع) في حسابك.</p>
+        <p className="text-[10px] text-slate-500 text-center mt-4">الخطة الكاملة (٤ أسابيع) جاهزة في مساحتك الخاصة.</p>
       </div>
     </div>
   );
@@ -1086,14 +1087,14 @@ const StepResultsScreen: FC<{
              <div className="absolute -top-3 -right-3 w-12 h-12 bg-teal-500/20 rounded-full blur-xl group-hover:bg-teal-500/40 transition-all opacity-50"></div>
              <div className="flex items-center gap-2 mb-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">عهد المسافر</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">أول خطوة ليك</span>
              </div>
              <p className="text-md font-bold text-slate-100 leading-relaxed mb-4">
                {pledgeText}
              </p>
              <div className="flex items-center gap-2 text-[10px] text-teal-400 font-bold border-t border-white/5 pt-4">
                 <Zap className="w-3 h-3" />
-                <span>أنت الآن في منطقة السيادة الذاتية</span>
+                <span>أنت دلوقتي في بداية التحول</span>
              </div>
           </div>
         )}
@@ -1104,7 +1105,7 @@ const StepResultsScreen: FC<{
           onClick={onComplete}
           className="w-full rounded-2xl py-4.5 bg-gradient-to-r from-teal-500 to-teal-400 text-zinc-950 font-black ob-btn-tap shadow-[0_10px_30px_rgba(45,212,191,0.3)] hover:shadow-[0_15px_40px_rgba(45,212,191,0.4)] transition-all flex items-center justify-center gap-2 group"
         >
-          دخول المساحة الخاصة
+          ادخل مساحتك الخاصة
           <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform rotate-180" />
         </button>
       </div>
@@ -1139,6 +1140,18 @@ const StepSafetyTriage = () => (
   </div>
 );
 
+const ONBOARDING_STEP_NAMES = [
+  "noise_check",   // 0: First Spark
+  "pain_dump",     // 1
+  "inventory",     // 2
+  "mapping",       // 3
+  "insight",       // 4
+  "contact",       // 5
+  "results",       // 6
+  "unknown",       // 7
+  "safety"         // 8
+];
+
 export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initialMirrorName, gateContext = null }) => {
   const router = useRouter();
   const addNode = useMapState((s) => s.addNode);
@@ -1151,6 +1164,8 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   
   const [step, setStep] = useState(0);
   const [, setPrevStep] = useState(-1);
+  
+
   const [name, setName] = useState((initialMirrorName ?? "").trim());
   const [painDump, setPainDump] = useState("");
   const [diagnosis, setDiagnosis] = useState<TransformationDiagnosis | null>(null);
@@ -1188,6 +1203,44 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
     }
   }, []);
 
+  const stepStartTimeRef = useRef<number>(Date.now());
+
+  // 🔄 Memory System: Hydrate session state from localStorage
+  useEffect(() => {
+    const saved = getFromLocalStorage(TEMP_STATE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.step !== undefined) {
+          setStep(data.step);
+          stepRef.current = data.step;
+        }
+        if (data.name) setName(data.name);
+        if (data.painDump) setPainDump(data.painDump);
+        if (data.collectedItems) setCollectedItems(data.collectedItems);
+        if (data.isSafetyTriggered) setIsSafetyTriggered(data.isSafetyTriggered);
+        if (data.diagnosis) setDiagnosis(data.diagnosis);
+        if (data.recommendedProduct) setRecommendedProduct(data.recommendedProduct);
+      } catch (e) {
+        console.warn("[Onboarding] Persistence hydration failed:", e);
+      }
+    }
+  }, []);
+
+  // 🔄 Memory System: Auto-sync session state to localStorage
+  useEffect(() => {
+    const stateToSave = {
+      step,
+      name,
+      painDump,
+      collectedItems,
+      isSafetyTriggered,
+      diagnosis,
+      recommendedProduct
+    };
+    setInLocalStorage(TEMP_STATE_KEY, JSON.stringify(stateToSave));
+  }, [step, name, painDump, collectedItems, isSafetyTriggered, diagnosis, recommendedProduct]);
+
   useEffect(() => {
     if (seededMirrorName) {
       setName(seededMirrorName);
@@ -1208,27 +1261,27 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
     });
   }, [seededMirrorName, recommendedProduct]);
 
-  // 🟢 Funnel Traceability: Track step views for drop-off analysis
-  useEffect(() => {
-    const stepNames = [
-      "pain_dump",
-      "noise_check", 
-      "inventory", 
-      "mapping", 
-      "insight", 
-      "contact_capture", 
-      "recovery_plan_preview",
-      "safety_route"
-    ];
-    if (step < stepNames.length) {
-      analyticsService.track(`onboarding_step_${stepNames[step]}`, {
-        step_index: step,
+
+  const goTo = useCallback((next: number) => {
+    // 🟢 Granular Completion Tracking: Fired when moving forward
+    const currentStepIndex = stepRef.current;
+    const now = Date.now();
+    const duration = now - stepStartTimeRef.current;
+    
+    // Reset timer for next step
+    stepStartTimeRef.current = now;
+
+    if (next > currentStepIndex && currentStepIndex < ONBOARDING_STEP_NAMES.length) {
+      analyticsService.track(AnalyticsEvents.ONBOARDING_STEP_COMPLETE, {
+        step_index: currentStepIndex,
+        step_name: ONBOARDING_STEP_NAMES[currentStepIndex],
+        next_step_index: next,
+        next_step_name: ONBOARDING_STEP_NAMES[next] || "unknown",
+        duration_ms: duration,
         client_event_id: clientEventIdRef.current!
       });
     }
-  }, [step]);
 
-  const goTo = useCallback((next: number) => {
     startTransition(() => {
       setStep((prev) => {
         setPrevStep(prev);
@@ -1242,6 +1295,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
     trackingService.recordFlow("onboarding_skipped", {
       atStep: `step_${stepRef.current}`,
     });
+    removeFromLocalStorage(TEMP_STATE_KEY);
     markJourneyOnboardingDone();
     onComplete(true);
   }, [onComplete]);
@@ -1333,6 +1387,13 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
         );
       }
     }
+    analyticsService.trackAhaMoment("onboarding_map_visualized", {
+      relationshipCount: mapped.length,
+      redCount,
+      yellowCount,
+      greenCount
+    });
+
     goTo(4);
   }, [addNode, gateContext, goTo, collectedItems, painDump]);
 
@@ -1417,10 +1478,28 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
       window.sessionStorage.setItem("dawayir-lead-email", email);
       window.sessionStorage.setItem("dawayir-lead-whatsapp", whatsapp);
     }
+    analyticsService.trackAhaMoment("onboarding_results_unlocked", {
+      hasEmail: !!email.trim(),
+      hasWhatsapp: !!whatsapp.trim(),
+      protocol: currentDiagnosis.protocolKey
+    });
+
     goTo(6);
   }, [collectedItems, derivedResult, diagnosis, gateContext, painDump, seededMirrorName, goTo, setMirrorName]);
 
   const handleComplete = useCallback(() => {
+    // 🎯 Track duration of the final step (Results Screen) before completion
+    if (!completionTrackedRef.current) {
+        const now = Date.now();
+        const duration = now - stepStartTimeRef.current;
+        analyticsService.track(AnalyticsEvents.ONBOARDING_STEP_COMPLETE, {
+            step_index: 6,
+            step_name: ONBOARDING_STEP_NAMES[6],
+            duration_ms: duration,
+            client_event_id: clientEventIdRef.current!
+        });
+    }
+
     if (!completionTrackedRef.current) {
       trackingService.recordFlow("onboarding_completed", {
         meta: {
@@ -1437,6 +1516,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
         recommendedProduct: recommendedProduct ?? undefined
       });
       completionTrackedRef.current = true;
+      removeFromLocalStorage(TEMP_STATE_KEY);
     }
 
     // Gamification & Persistence

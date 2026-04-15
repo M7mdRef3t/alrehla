@@ -45,15 +45,17 @@ const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ r
         stroke="var(--app-border)" 
         strokeWidth="0.5" 
       />
-      <motion.circle
+      <circle
         cx="50" cy="50" r={safeRadius}
         fill="none"
         stroke={colors[ring]}
         strokeOpacity="0.15"
         strokeWidth="0.2"
         strokeDasharray="1 2"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+        style={{
+          transformOrigin: '50% 50%',
+          animation: 'rotate-ring 60s linear infinite'
+        }}
       />
     </g>
   );
@@ -90,14 +92,26 @@ const EntropyGlow: FC<{ x: number; y: number; level: EntropyLevel }> = memo(({ x
 const MeNodeCenter: FC = memo(() => {
   const feelingResults = useMapState((s) => s.feelingResults);
   
-  // Calculate "health" of assets for visual cues
-  const assets = [
-    { id: "body", icon: User, color: "text-blue-400" },
-    { id: "time", icon: Clock, color: "text-purple-400" },
-    { id: "energy", icon: Zap, color: "text-yellow-400" },
-    { id: "money", icon: Coins, color: "text-emerald-400" },
-    { id: "space", icon: Maximize, color: "text-rose-400" },
-  ];
+  // Memoize assets mapping to avoid recalculations every render
+  const indicators = useMemo(() => {
+    const assets = [
+      { id: "body", icon: User, color: "text-blue-400" },
+      { id: "time", icon: Clock, color: "text-purple-400" },
+      { id: "energy", icon: Zap, color: "text-yellow-400" },
+      { id: "money", icon: Coins, color: "text-emerald-400" },
+      { id: "space", icon: Maximize, color: "text-rose-400" },
+    ];
+
+    return assets.map((asset, i) => {
+      const angle = (i * (360 / assets.length) * Math.PI) / 180;
+      const x = Math.cos(angle) * 10;
+      const y = Math.sin(angle) * 10;
+      const val = feelingResults?.[asset.id as keyof typeof feelingResults] || 50;
+      const opacity = 0.2 + (val / 100) * 0.8;
+
+      return { ...asset, x, y, val, opacity };
+    });
+  }, [feelingResults]);
 
   return (
     <g transform="translate(50, 50)">
@@ -133,30 +147,22 @@ const MeNodeCenter: FC = memo(() => {
       </text>
 
       {/* Asset Indicators around the Me Node */}
-      {assets.map((asset, i) => {
-        const angle = (i * (360 / assets.length) * Math.PI) / 180;
-        const x = Math.cos(angle) * 10;
-        const y = Math.sin(angle) * 10;
-        const val = feelingResults?.[asset.id as keyof typeof feelingResults] || 50;
-        const opacity = 0.2 + (val / 100) * 0.8;
-
-        return (
-          <g key={asset.id} transform={`translate(${x}, ${y})`}>
-            <circle r="2" fill="rgba(15, 23, 42, 0.8)" stroke="rgba(255,255,255,0.1)" strokeWidth="0.2" />
-            <motion.circle 
-              r="2" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="0.3"
-              strokeDasharray="12.56" // 2 * PI * 2
-              strokeDashoffset={12.56 * (1 - val / 100)}
-              className={asset.color}
-              initial={{ opacity: 0 }}
-              animate={{ opacity }}
-            />
-          </g>
-        );
-      })}
+      {indicators.map((asset) => (
+        <g key={asset.id} transform={`translate(${asset.x}, ${asset.y})`}>
+          <circle r="2" fill="rgba(15, 23, 42, 0.8)" stroke="rgba(255,255,255,0.1)" strokeWidth="0.2" />
+          <motion.circle 
+            r="2" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="0.3"
+            strokeDasharray="12.56" // 2 * PI * 2
+            strokeDashoffset={12.56 * (1 - asset.val / 100)}
+            className={asset.color}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: asset.opacity }}
+          />
+        </g>
+      ))}
     </g>
   );
 });
@@ -215,14 +221,24 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
     <>
     <motion.g 
       ref={setNodeRef as any} 
-      style={{ ...style, outline: "none", WebkitTapHighlightColor: "transparent", zIndex: isDragging ? 50 : "auto" } as any}
+      style={{ 
+        ...style, 
+        outline: "none", 
+        WebkitTapHighlightColor: "transparent", 
+        zIndex: isDragging ? 50 : "auto",
+        willChange: "transform",
+        transform: style?.transform ? `${style.transform} translateZ(0)` : "translateZ(0)"
+      } as any}
       {...attributes} 
       {...listeners}
       tabIndex={-1}
       className={`cursor-grab ${isDragging ? "cursor-grabbing" : ""}`}
       whileHover={{ scale: 1.15, transition: { type: "spring", stiffness: 400, damping: 10 } }}
       whileTap={{ scale: 0.95 }}
-      animate={isDragging ? { scale: 1.3, filter: "drop-shadow(0 0 15px rgba(45,212,191,0.6))" } : { scale: 1, filter: "drop-shadow(0 0 0px rgba(45,212,191,0))" }}
+      animate={isDragging ? 
+        { scale: 1.3, filter: "drop-shadow(0 0 15px rgba(45,212,191,0.6))" } : 
+        { scale: 1, filter: "none" }
+      }
       onTap={() => {
         if (!isDragging && !deleteClickedRef.current && !showConfirmDelete) onClick(node);
       }}

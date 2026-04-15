@@ -3,6 +3,7 @@ import { runtimeEnv } from "@/config/runtimeEnv";
 import { useToastState } from '@/modules/map/dawayirIndex';
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { fetchJsonWithResilience } from "../architecture/resilientHttp";
+import { performInternalGeneration } from "../lib/gemini/shared";
 import {
   hydrateAIGuardrailSnapshot,
   recordAICostFromUsage,
@@ -14,8 +15,8 @@ import {
  * ترتيب الموديلات النصية — من الأفضل للاحتياط. مرجع كامل: docs/GEMINI_MODELS.md
  */
 const TEXT_MODEL_FALLBACK_ORDER: string[] = [
+  "gemini-2.5-flash",
   "gemini-2.0-flash",
-  "gemini-1.5-flash",
   "gemini-flash-latest"
 ];
 
@@ -115,14 +116,55 @@ class GeminiClient {
   /**
    * Generate content — عبر Proxy
    */
-  async generate(prompt: string): Promise<string | null> {
-    if (!this.isEnabled()) return null;
+  async generate(prompt: string, feature: string = "dynamic_generation"): Promise<string | null> {
+    if (!this.isEnabled()) {
+      console.warn(`[GeminiClient] Disabled via runtimeEnv.geminiEnabled. Feature: ${feature}`);
+      return null;
+    }
     if (!this.canAttemptServerRequest()) {
+      const remainingMs = Math.max(0, this.unavailableUntil - Date.now());
+      console.warn(`[GeminiClient] Server unavailable — cooldown ${Math.ceil(remainingMs / 1000)}s remaining. Feature: ${feature}`);
       this.notifyTemporarilyUnavailable();
+      return null;
+    }
+    const breakerState = this.generateBreaker.getState();
+    if (breakerState === 'open') {
+      console.warn(`[GeminiClient] Circuit breaker open — waiting for cooldown. Feature: ${feature}`);
       return null;
     }
     this.ensureGuardHydrated();
 
+    // Server-side: call the Gemini SDK directly to avoid relative URL failures.
+    // Browser-side: go through the /api/gemini/generate proxy as usual.
+    const isServer = typeof window === "undefined";
+
+    if (isServer) {
+      try {
+        const result = await performInternalGeneration(
+          prompt,
+          GENERATION_CONFIG as Record<string, unknown>,
+          TEXT_MODEL_FALLBACK_ORDER,
+          feature
+        );
+        if (!result.text) {
+          const reason = (result as { reason?: string }).reason ?? "unknown";
+          const detail = (result as { detail?: string }).detail ?? "no_detail";
+          console.error(`[GeminiClient:server] Generation failed. Reason: ${reason}. Detail: ${detail}`);
+          this.markServerUnavailable();
+          recordAIFallback();
+          return null;
+        }
+        this.markServerAvailable();
+        this.applyUsageCost(result.usage as GenerateResponse["usage"]);
+        return result.text;
+      } catch (err) {
+        console.error("[GeminiClient:server] Unexpected error:", err);
+        recordAIFallback();
+        return null;
+      }
+    }
+
+    // Browser path — fetch through the API route proxy
     let data: GenerateResponse | null = null;
     try {
       data = await runWithAIGuardrails(
@@ -135,11 +177,12 @@ class GeminiClient {
             body: JSON.stringify({
               prompt,
               generationConfig: GENERATION_CONFIG,
-              modelOrder: TEXT_MODEL_FALLBACK_ORDER
+              modelOrder: TEXT_MODEL_FALLBACK_ORDER,
+              feature
             }),
             signal
           },
-          { retries: 1, breaker: this.generateBreaker }
+          { retries: 1, breaker: this.generateBreaker, timeoutMs: 25_000 }
         ),
         {
           timeoutMs: 30_000,
@@ -147,26 +190,44 @@ class GeminiClient {
           outputCharsEstimate: 0
         }
       );
-    } catch {
+    } catch (error) {
+      console.error("[GeminiClient] Browser fetch proxy failed for generate:", error);
       recordAIFallback();
       return null;
     }
     if (!data) {
+      // No response at all = network/server error → mark unavailable
+      console.warn(`[GeminiClient] Browser fetch returned null (network/server error). Feature: ${feature}`);
       this.markServerUnavailable();
       recordAIFallback();
       return null;
     }
     this.markServerAvailable();
     this.applyUsageCost(data.usage);
+    if (!data.text) {
+      // Server responded but model returned no text — NOT a server error, don't lock out
+      const reason = (data as { reason?: string }).reason ?? "unknown";
+      const detail = (data as { detail?: string }).detail ?? "no_detail";
+      const fallback = (data as { fallback?: boolean }).fallback;
+      if (fallback) {
+        console.warn(`[GeminiClient] Model fallback. Feature: ${feature}. Reason: ${reason}. Detail: ${detail}`);
+      } else {
+        console.warn(`[GeminiClient] Empty text (non-fallback). Feature: ${feature}. Reason: ${reason}`);
+      }
+      recordAIFallback();
+    }
     return data.text ?? null;
   }
 
   /**
    * Generate structured JSON response
    */
-  async generateJSON<T>(prompt: string): Promise<T | null> {
-    const result = await this.generate(prompt);
-    if (!result) return null;
+  async generateJSON<T>(prompt: string, feature: string = "dynamic_generation"): Promise<T | null> {
+    const result = await this.generate(prompt, feature);
+    if (!result) {
+      console.warn(`[GeminiClient] No response generated for prompt feature: ${feature}`);
+      return null;
+    }
 
     try {
       // Extract JSON from various delimiters: [BEGIN JSON], markdown code blocks, or raw text
@@ -174,8 +235,16 @@ class GeminiClient {
       const markdownMatch = result.match(/```json\n([\s\S]*?)\n```/i) || result.match(/```\n([\s\S]*?)\n```/i);
       
       const jsonText = customMatch ? customMatch[1] : (markdownMatch ? markdownMatch[1] : result);
-      return JSON.parse(jsonText.trim());
-    } catch {
+      
+      try {
+        return JSON.parse(jsonText.trim());
+      } catch (parseError) {
+        console.warn("[GeminiClient] JSON Parse Error. Raw Text:", jsonText);
+        console.warn("[GeminiClient] Full Model Output:", result);
+        return null;
+      }
+    } catch (err) {
+      console.warn("[GeminiClient] Extraction Error:", err);
       return null;
     }
   }

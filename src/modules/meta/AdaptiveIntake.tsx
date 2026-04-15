@@ -19,23 +19,23 @@ interface IntakeQuestion {
 const INTAKE_QUESTIONS: IntakeQuestion[] = [
   {
     id: "state_detection",
-    text: "حس بجسمك دلوقتي.. إيه أكتر كلمة توصف اللي حاسس بيه؟",
+    text: "راقب حالتك دلوقتي.. إيه أكتر كلمة بتوصف تأثير المشهد عليك؟",
     options: [
-      { value: "heavy", label: "دماغي تقيلة من كتر الضغط", state: "overloaded", icon: Brain },
-      { value: "lost", label: "تايه ومش عارف أبدأ منين", state: "confused", icon: Compass },
-      { value: "burning", label: "واكل في نفسي من اللي حصل", state: "triggered", icon: Zap },
-      { value: "frozen", label: "عالق ومفيش طاقة للحركة", state: "stuck", icon: Lock },
-      { value: "running", label: "عايز أهرب من كل حاجة", state: "avoiding", icon: Target },
-      { value: "ready", label: "جاهز ومتحمس للتغيير", state: "ready", icon: Sparkles },
+      { value: "heavy", label: "ضبابية ومش قادر أقرر", state: "overloaded", icon: Brain },
+      { value: "lost", label: "الرؤية مشوشة ومفيش مسار واضح", state: "confused", icon: Compass },
+      { value: "burning", label: "في مشهد دفاع/هجوم ساخن", state: "triggered", icon: Zap },
+      { value: "frozen", label: "عالق ومحتاج أكسر التجميد", state: "stuck", icon: Lock },
+      { value: "running", label: "عايز أنسحب وأعيد التموضع", state: "avoiding", icon: Target },
+      { value: "ready", label: "جاهز أخد قرارات حاسمة", state: "ready", icon: Sparkles },
     ]
   },
   {
       id: "pain_depth",
-      text: "الوجع ده بقاله قد إيه مستمر معاك؟",
+      text: "التشويش/الاستنزاف ده بقاله قد إيه مأثر على قراراتك؟",
       options: [
-          { value: "today", label: "من النهاردة بس", icon: Target },
-          { value: "week", label: "بقاله أسبوع مخيم عليّ", icon: Target },
-          { value: "long", label: "نمط متكرر في حياتي", icon: Target }
+          { value: "today", label: "موقف طارئ النهاردة", icon: Target },
+          { value: "week", label: "أسبوع من الاستنزاف المستمر", icon: Target },
+          { value: "long", label: "نمط متكرر محتاج يتكسر", icon: Target }
       ]
   }
 ];
@@ -91,7 +91,7 @@ export const AdaptiveIntake: FC<{ onComplete: () => void }> = ({ onComplete }) =
       {/* Header */}
       <div className="text-center mb-10">
         <h2 className="text-2xl font-black text-white mb-2 adaptive-intake-heading">
-            تحليل اللحظة الحالية
+            قراءة المشهد الداخلي
         </h2>
         <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mt-4">
             <motion.div 

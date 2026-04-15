@@ -27,6 +27,8 @@ import {
   getStoredClientEventId,
   trackOnboardingCompleted,
   trackAddPaymentInfo,
+  trackAhaMoment,
+  trackError,
   AnalyticsEvents,
   generateUUID,
 } from "@/services/analytics";
@@ -128,6 +130,8 @@ export interface AnalyticsService {
   getStoredClientEventId(): string | null;
   trackOnboardingCompleted(params?: AnalyticsOptionalParams): void;
   trackAddPaymentInfo(params?: AnalyticsOptionalParams): void;
+  trackAhaMoment(kind: string, metadata?: Record<string, unknown>): void;
+  trackError(error: Error | string, metadata?: Record<string, unknown>): void;
   Events: typeof AnalyticsEvents;
 }
 
@@ -321,6 +325,14 @@ export const analyticsService: AnalyticsService = {
 
   trackAddPaymentInfo(params?: AnalyticsOptionalParams): void {
     trackAddPaymentInfo(params);
+  },
+
+  trackAhaMoment(kind: string, metadata?: Record<string, unknown>): void {
+    trackAhaMoment(kind, metadata);
+  },
+
+  trackError(error: Error | string, metadata?: Record<string, unknown>): void {
+    trackError(error, metadata);
   },
 
   Events: AnalyticsEvents,

@@ -22,7 +22,7 @@ interface UseAppGateHandoffParams {
 const GATE_ONBOARDING_PAYLOAD_KEY = "dawayir-gate-onboarding-payload";
 
 function redirectGateUserToOnboarding(): void {
-  assignUrl("/onboarding?source=gate");
+  assignUrl("/activation?source=gate");
 }
 
 export function useAppGateHandoff({

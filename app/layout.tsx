@@ -8,6 +8,7 @@ import { ConsciousnessSensoryProvider } from "@/components/providers/Consciousne
 import { WhisperOverlay } from "@/components/ui/WhisperOverlay";
 import { SovereignReceiver } from "@/components/providers/SovereignReceiver";
 import { SovereignThemeSync } from "@/components/providers/SovereignThemeSync";
+import ClarityInit from "@/components/analytics/ClarityInit";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.alrehla.app"),
@@ -67,7 +68,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {process.env.NODE_ENV !== "production" && (
           <Script
             id="silence-react-devtools-info"
-            strategy="lazyOnload"
+            strategy="beforeInteractive"
             dangerouslySetInnerHTML={{
               __html: `
                 (function () {
@@ -137,6 +138,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <ClarityInit />
           <ConsciousnessSensoryProvider>
             <WhisperOverlay />
             <SovereignReceiver />

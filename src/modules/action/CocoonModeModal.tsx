@@ -124,7 +124,7 @@ export const CocoonModeModal: FC<CocoonModeModalProps> = ({
               color: `rgba(${rgb},0.8)`
             }}
           >
-            الملاذ الآمن
+            مساحتك الخاصة
           </div>
 
           <h2

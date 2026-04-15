@@ -21,6 +21,7 @@ import { APP_STATES, JUDGE_MODE_QUERY_PARAM } from './utils/constants.js';
 import { buildTransformationSummary, toDisplayEmotionLabel } from './utils/transformation.js';
 import { useAdminState } from '@/domains/admin/store/admin.store';
 import { trackingService } from '@/domains/journey';
+import { analyticsService } from '@/domains/analytics';
 import {
   getMarayaStoryPath,
   getMarayaStoryRestartLabel,
@@ -167,14 +168,24 @@ export default function App() {
   const [imageAnnouncement, setImageAnnouncement] = useState('');
   const [judgeEndingSceneAccent, setJudgeEndingSceneAccent] = useState('');
   const [endingActionsVisible, setEndingActionsVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [isIsolated, setIsIsolated] = useState(false);
   const [hrvValue, setHrvValue] = useState(68);
   const longPressTimerRef = useRef(null);
   const hideUiTimerRef = useRef(null);
   const hrvIntervalRef = useRef(null);
-  const judgeMode = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(JUDGE_MODE_QUERY_PARAM) === '1' : false;
+  
+  // Safe judge mode check after mount
+  const [judgeMode, setJudgeMode] = useState(false);
+
   const journeyPaths = useAdminState((state) => state.journeyPaths);
   const marayaPath = getMarayaStoryPath(journeyPaths);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const search = typeof window !== 'undefined' ? window.location.search : '';
+    setJudgeMode(new URLSearchParams(search).get(JUDGE_MODE_QUERY_PARAM) === '1');
+  }, []);
 
   const handlePointerDown = (e) => {
     if (e.target.closest('button') || e.target.closest('input')) return;
@@ -322,6 +333,7 @@ export default function App() {
       trackingService.recordFlow('mirror_journey_completed', {
         meta: { surface: 'maraya' },
       });
+      analyticsService.trackAhaMoment('mirror_journey_completed', { surface: 'maraya' });
     }
   }, [appState]);
 
@@ -502,15 +514,16 @@ export default function App() {
     <div
       className={`app app--maraya ${judgeMode ? 'app--judge' : ''} ${spatialModeEnabled ? 'app--spatial' : ''}`}
       dir={uiLanguage === 'en' ? 'ltr' : 'rtl'}
-      aria-hidden={settingsOpen ? "true" : null}
     >
-      <StoryCanvas
-        ref={canvasRef}
-        mood={currentMood}
-        isStale={imageStale}
-        uiLanguage={uiLanguage}
-        sceneAltText={currentScene?.visual_desc || currentScene?.visual_prompt || currentScene?.narration_ar || ''}
-      />
+      {!isMounted ? null : (
+        <>
+          <StoryCanvas
+            ref={canvasRef}
+            mood={currentMood}
+            isStale={imageStale}
+            uiLanguage={uiLanguage}
+            sceneAltText={currentScene?.visual_desc || currentScene?.visual_prompt || currentScene?.narration_ar || ''}
+          />
 
       <div
         className={`app__overlay ${isIsolated && appState === APP_STATES.STORY ? 'app__overlay--hidden' : ''}`}
@@ -813,22 +826,25 @@ export default function App() {
         </div>
 
         <SettingsSheet
-          open={settingsOpen}
-          uiLanguage={uiLanguage}
-          musicEnabled={musicEnabled}
-          voiceEnabled={voiceEnabled}
-          onToggleMusic={handleToggleMusic}
-          onToggleVoice={handleToggleVoice}
-          biometricsEnabled={biometricsEnabled}
-          onToggleBiometrics={handleToggleBiometrics}
-          spatialModeEnabled={spatialModeEnabled}
-          onToggleSpatialMode={handleToggleSpatialMode}
-          narrationSpeed={narrationSpeed}
-          onNarrationSpeedChange={setNarrationSpeed}
+          isOpen={settingsOpen}
           onClose={handleCloseSettings}
           onReset={handleResetSettings}
+          uiLanguage={uiLanguage}
+          uiText={uiText}
+          musicEnabled={musicEnabled}
+          voiceEnabled={voiceEnabled}
+          biometricsEnabled={biometricsEnabled}
+          spatialModeEnabled={spatialModeEnabled}
+          narrationSpeed={narrationSpeed}
+          onToggleMusic={handleToggleMusic}
+          onToggleVoice={handleToggleVoice}
+          onToggleBiometrics={handleToggleBiometrics}
+          onToggleSpatialMode={handleToggleSpatialMode}
+          onSetNarrationSpeed={setNarrationSpeed}
         />
       </div>
-    </div>
-  );
+    </>
+  )}
+</div>
+);
 }

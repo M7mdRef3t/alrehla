@@ -261,7 +261,7 @@ export const metaLeadsService = {
       }
 
       const { data: leads } = await response.json();
-      logger.info(`[MetaLeadsService] Fetched ${leads?.length || 0} recent leads from Meta API`);
+      logger.log(`[MetaLeadsService] Fetched ${leads?.length || 0} recent leads from Meta API`);
 
       if (!leads || leads.length === 0) {
         return { success: true, count: 0 };

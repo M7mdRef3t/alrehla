@@ -6,55 +6,77 @@ import type { User } from "@supabase/supabase-js";
 const supabaseUrl = runtimeEnv.supabaseUrl;
 const supabaseAnonKey = runtimeEnv.supabaseAnonKey;
 
-// Create a custom cross-domain storage adapter for Unified SSO (Hub + Satellites)
+/**
+ * Checks if we need cross-domain cookie storage (production with subdomains).
+ * On localhost, JWT tokens exceed the 4KB browser cookie limit and get silently dropped,
+ * so we always use the default localStorage for localhost/dev.
+ */
+function needsCrossDomainCookies(): boolean {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  if (h === "localhost" || h === "127.0.0.1" || h.startsWith("192.168.")) return false;
+  // Only use cookies for production domains (enables cross-domain SSO between subdomains)
+  return true;
+}
+
+// Create a custom cross-domain storage adapter for Unified SSO (Hub + Satellites).
+// ONLY used in production — avoids 4KB cookie limit issues in dev.
 const createCrossDomainStorage = () => {
   if (typeof window === "undefined") return undefined;
+  if (!needsCrossDomainCookies()) {
+    // In dev/localhost, use the default storage (localStorage) for reliability
+    return undefined;
+  }
 
   return {
     getItem: (key: string): string | null => {
-      const name = encodeURIComponent(key) + "=";
-      const decodedCookie = decodeURIComponent(document.cookie);
-      const cookies = decodedCookie.split(";");
-      for (let i = 0; i < cookies.length; i++) {
-        const c = cookies[i].trim();
-        if (c.indexOf(name) === 0) {
-          return c.substring(name.length, c.length);
+      try {
+        // First try localStorage as a fallback in case cookies are unavailable
+        const lsValue = window.localStorage.getItem(key);
+        if (lsValue) return lsValue;
+
+        const name = encodeURIComponent(key) + "=";
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const c = cookies[i].trim();
+          if (c.indexOf(name) === 0) {
+            return decodeURIComponent(c.substring(name.length));
+          }
         }
+      } catch (err) {
+        console.error("[StorageAdapter] Error reading storage:", err);
       }
       return null;
     },
     setItem: (key: string, value: string): void => {
-      const hostname = window.location.hostname;
-      let domainString = "";
-      
-      // Share cookies across subdomains (e.g. .alrehla.io covers dawayir.alrehla.io and alrehla.io)
-      if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+      try {
+        // Always mirror to localStorage for fast reads
+        window.localStorage.setItem(key, value);
+
+        const hostname = window.location.hostname;
         const parts = hostname.split(".");
-        if (parts.length >= 2) {
-          const tld = parts.slice(-2).join(".");
-          domainString = `; domain=.${tld}`;
-        }
+        const tld = parts.length >= 2 ? parts.slice(-2).join(".") : hostname;
+        const domainString = `; domain=.${tld}`;
+        const expireDate = new Date();
+        expireDate.setFullYear(expireDate.getFullYear() + 1);
+        const isSecure = "; Secure";
+        
+        // Write cookie for cross-domain access between subdomains
+        document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(value)}; expires=${expireDate.toUTCString()}; path=/${domainString}; SameSite=None${isSecure}`;
+      } catch (err) {
+        console.error("[StorageAdapter] Error writing storage:", err);
       }
-      
-      const expireDate = new Date();
-      expireDate.setFullYear(expireDate.getFullYear() + 1); // 1 year expiration
-      
-      // Secure required for cross-domain Lax in modern browsers
-      const isSecure = window.location.protocol === "https:" ? "; Secure" : "";
-      
-      document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(value)}; expires=${expireDate.toUTCString()}; path=/${domainString}; SameSite=Lax${isSecure}`;
     },
     removeItem: (key: string): void => {
-      const hostname = window.location.hostname;
-      let domainString = "";
-      if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+      try {
+        window.localStorage.removeItem(key);
+        const hostname = window.location.hostname;
         const parts = hostname.split(".");
-        if (parts.length >= 2) {
-          const tld = parts.slice(-2).join(".");
-          domainString = `; domain=.${tld}`;
-        }
+        const tld = parts.length >= 2 ? parts.slice(-2).join(".") : hostname;
+        document.cookie = `${encodeURIComponent(key)}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${tld}; SameSite=None; Secure`;
+      } catch (err) {
+        console.error("[StorageAdapter] Error removing from storage:", err);
       }
-      document.cookie = `${encodeURIComponent(key)}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/${domainString}; SameSite=Lax`;
     }
   };
 };
@@ -62,13 +84,13 @@ const createCrossDomainStorage = () => {
 declare global {
   // Keep a single Supabase client across Fast Refresh / repeated module evaluation.
   // This avoids duplicate auth-lock traffic and session churn in dev.
-   
   var __dawayirSupabaseClient: SupabaseClient | undefined;
 }
 
 export const supabase: SupabaseClient | null = (() => {
   if (!supabaseUrl || !supabaseAnonKey) return null;
 
+  // Reuse existing client across Fast Refresh cycles (crucial for session continuity in dev)
   if (typeof window !== "undefined" && globalThis.__dawayirSupabaseClient) {
     return globalThis.__dawayirSupabaseClient;
   }
@@ -77,10 +99,13 @@ export const supabase: SupabaseClient | null = (() => {
     auth: { 
       persistSession: true, 
       autoRefreshToken: true,
-      storageKey: "alrehla-ecosystem-auth", // Semantic key for Unified Identity SSO
-      storage: createCrossDomainStorage()
+      storageKey: "alrehla-ecosystem-auth", // Unified Identity SSO key
+      storage: createCrossDomainStorage(),  // undefined on localhost = use default localStorage
+      detectSessionInUrl: true,             // Let Supabase auto-detect hash-based tokens
     }
   });
+
+
 
   if (typeof window !== "undefined") {
     globalThis.__dawayirSupabaseClient = client;

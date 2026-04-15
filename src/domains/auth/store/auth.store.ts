@@ -161,13 +161,14 @@ export const useAuthState = create<AuthState>((set) => ({
   tier: "free",
   ecosystemData: null,
   setSession: (session) =>
-    set(() => {
+    set((state) => {
       const user = session?.user ?? null;
       const displayName = getDisplayNameFromUser(user);
+      console.log("[Auth Store] Session updated. User exists:", !!user, "Status was:", state.status);
       return {
         session,
         user,
-        status: "ready",
+        status: "ready", // Force ready whenever session is explicitly set
         displayName,
         firstName: getFirstName(displayName),
         toneGender: getToneGenderFromUser(user)
@@ -293,15 +294,23 @@ async function initSupabaseAuth(): Promise<void> {
       }
       supabaseClient = supabase;
       const session = await safeGetSession();
+      console.log("[Auth Store] Initializing with session:", !!session);
+      
       await syncAuthRole(session);
       useAuthState.getState().setSession(session);
       
+      // Ensure we are ready even if session is null
+      if (useAuthState.getState().status === "loading") {
+        useAuthState.setState({ status: "ready" });
+      }
+
       // P0: Link initial identity if session exists
       if (session?.user?.id) {
         void trackIdentityLinked(session.user.id);
       }
 
       supabase.auth.onAuthStateChange((event, nextSession) => {
+        console.log("[Auth Store] Auth state changed event:", event, "Session exists:", !!nextSession);
         const currentSession = nextSession ?? null;
         useAuthState.getState().setSession(currentSession);
         void syncAuthRole(currentSession);

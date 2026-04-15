@@ -131,7 +131,15 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
 }
 
 function normalizeEnvValue(value: string): string | undefined {
-  const trimmed = value.trim();
+  if (typeof value !== "string") return undefined;
+  
+  // 1. Remove non-printable characters, zero-width spaces, and other "ghost" characters
+  // that can cause Header construction errors in fetch (TypeError: Invalid name).
+  // This regex matches non-ASCII characters that aren't typical for URLs or keys.
+  // We keep basic printable ASCII (32-126).
+  const sanitized = value.replace(/[^\x20-\x7E]/g, "");
+  
+  const trimmed = sanitized.trim();
   if (!trimmed) return undefined;
 
   const hasMatchingQuotes =
@@ -141,6 +149,7 @@ function normalizeEnvValue(value: string): string | undefined {
   const unquoted = hasMatchingQuotes ? trimmed.slice(1, -1).trim() : trimmed;
   return unquoted || undefined;
 }
+
 
 function readEnv(key: RuntimeKey): string | undefined {
   // 1. Try Next.js public env/runtime fallback via the safe process accessor.

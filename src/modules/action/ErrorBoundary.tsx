@@ -1,3 +1,5 @@
+"use client";
+
 import { logger } from "@/services/logger";
 /**
  * ErrorBoundary Component

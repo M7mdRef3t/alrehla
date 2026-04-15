@@ -317,7 +317,7 @@ export const Landing: FC<LandingPropsExtended> = ({
         mirrorName={mirrorName}
         setMirrorName={setMirrorName}
         pulseCount={pulseCount}
-        trustPoints={landingCopy.trustPoints}
+        trustPoints={["توازن", "تشتت", "استنزاف"]}
         ctaJourney={landingCopy.ctaJourney}
         secondaryCta={landingCopy.secondaryCta}
       />

@@ -1,4 +1,4 @@
-﻿import { supabase, supabaseAdmin } from "@/services/supabaseClient";
+import { supabase, supabaseAdmin } from "@/services/supabaseClient";
 import { logger } from "@/services/logger";
 import { MetaAdsService } from "./integrations/metaAdsService";
 import { GoogleAdsService } from "./integrations/googleAdsService";
@@ -80,7 +80,7 @@ export class MarketingGatewayService {
             // Update Google
             await this.updateGateway("google", { actual_spend: googleSpend });
 
-            logger.info(`Synced real spend: Meta=$${metaSpend}, Google=$${googleSpend}`);
+            logger.log(`Synced real spend: Meta=$${metaSpend}, Google=$${googleSpend}`);
             return { metaSpend, googleSpend };
         } catch (error) {
             logger.error("Failed to sync real spend:", error);

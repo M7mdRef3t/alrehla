@@ -156,7 +156,7 @@ const DEFAULT_JOURNEY_PATHS: JourneyPath[] = [
         title: "قرار التوجيه",
         kind: "decision",
         screen: "cocoon",
-        description: "إذا كانت الطاقة منخفضة يتم عرض دعوة الدخول إلى الملاذ الآمن.",
+        description: "إذا كانت الطاقة منخفضة يتم عرض دعوة الدخول إلى مساحتك الخاصة.",
         note: "مربوطة حالياً بـ Cocoon mode.",
         enabled: true
       },

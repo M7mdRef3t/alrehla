@@ -84,7 +84,7 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">الملاذ الآمن</div>
+            <div class="logo">مساحتك الخاصة</div>
         </div>
 
         <div class="hero">

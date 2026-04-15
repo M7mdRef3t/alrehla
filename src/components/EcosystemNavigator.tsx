@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
+// Removed unused import: motion
 import { 
   Rocket, 
   Map, 
@@ -9,7 +9,18 @@ import {
   CheckCircle2,
   LockKeyhole,
   ArrowLeft,
-  Sparkles
+  Sparkles,
+  Eye,
+  BookOpen,
+  Scale,
+  Users,
+  Brain,
+  FileText,
+  AlertTriangle,
+  Flame,
+  LayoutGrid,
+  Bell,
+  Gem
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -50,7 +61,7 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     name: "مسارات",
     description: "أداة التنفيذ والتحرك",
     icon: <Compass className="w-5 h-5" />,
-    status: "coming_soon",
+    status: "active",
     color: "#10b981",
     url: "/#masarat"
   },
@@ -59,7 +70,7 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     name: "جلسات",
     description: "تدخلات عميقة وتوجيه",
     icon: <CalendarDays className="w-5 h-5" />,
-    status: "active", // assuming active based on sidebar items
+    status: "active",
     color: "#3b82f6",
     url: "/#session-intake"
   },
@@ -71,6 +82,123 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#8b5cf6",
     url: "/#atmosfera"
+  },
+  {
+    id: "baseera",
+    name: "بصيرة",
+    description: "لوحة الوعي الذاتي",
+    icon: <Eye className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#baseera"
+  },
+  {
+    id: "watheeqa",
+    name: "وثيقة",
+    description: "سجّل رحلتك يومياً",
+    icon: <BookOpen className="w-5 h-5" />,
+    status: "active",
+    color: "#fb923c",
+    url: "/#watheeqa"
+  },
+  {
+    id: "mizan",
+    name: "ميزان",
+    description: "قياس التقدم الحقيقي",
+    icon: <Scale className="w-5 h-5" />,
+    status: "active",
+    color: "#10b981",
+    url: "/#mizan"
+  },
+  {
+    id: "rifaq",
+    name: "رفاق",
+    description: "رفاق الطريق — لست وحدك",
+    icon: <Users className="w-5 h-5" />,
+    status: "active",
+    color: "#ec4899",
+    url: "/#rifaq"
+  },
+  {
+    id: "murshid",
+    name: "مرشد",
+    description: "ذكاء يقرأ رحلتك ويوجّهك",
+    icon: <Brain className="w-5 h-5" />,
+    status: "active",
+    color: "#8b5cf6",
+    url: "/#murshid"
+  },
+  {
+    id: "taqrir",
+    name: "تقرير",
+    description: "بياناتك في صفحة واحدة",
+    icon: <FileText className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#taqrir"
+  },
+  {
+    id: "bawsala",
+    name: "بوصلة",
+    description: "كل قرار صعب — عنده بوصلة",
+    icon: <Compass className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#bawsala"
+  },
+  {
+    id: "riwaya",
+    name: "رواية",
+    description: "رحلتك كقصة — من البداية لهنا",
+    icon: <BookOpen className="w-5 h-5" />,
+    status: "active",
+    color: "#fb923c",
+    url: "/#riwaya"
+  },
+  {
+    id: "nadhir",
+    name: "نذير",
+    description: "الدرع الأخير — تنفس وتأريض وخطة أمان",
+    icon: <AlertTriangle className="w-5 h-5" />,
+    status: "active",
+    color: "#ef4444",
+    url: "/#nadhir"
+  },
+  {
+    id: "wird",
+    name: "وِرد",
+    description: "كل يوم طقس — والطقس يبني العادة",
+    icon: <Flame className="w-5 h-5" />,
+    status: "active",
+    color: "#fbbf24",
+    url: "/#wird"
+  },
+  {
+    id: "markaz",
+    name: "مركز",
+    description: "غرفة القيادة — كل شيء في نظرة",
+    icon: <LayoutGrid className="w-5 h-5" />,
+    status: "active",
+    color: "#6366f1",
+    url: "/#markaz"
+  },
+  {
+    id: "sada",
+    name: "صدى",
+    description: "المنصة تتكلم معاك — تنبيهات ذكية",
+    icon: <Bell className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#sada"
+  },
+  {
+    id: "hafiz",
+    name: "حافظ",
+    description: "خزنة الذكريات — لحظاتك المحفوظة",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#a855f7",
+    url: "/#hafiz"
   }
 ];
 

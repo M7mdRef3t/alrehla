@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { verifyAdminWithRoles, parseJsonBody } from "./_shared";
+import { verifyAdminWithRoles, parseJsonBody, getAdminSupabase } from "./_shared";
 import type { AdminRequest, AdminResponse } from "./_shared";
 
 function getBearerToken(req: AdminRequest): string | null {
@@ -32,20 +32,9 @@ function getRpcClientWithUserJwt(jwt: string) {
 export async function handleRadarGrants(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdminWithRoles(req, res, ["admin", "owner", "superadmin", "super_admin"]))) return;
 
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
-  }
-
-  const bearer = getBearerToken(req);
-  if (!bearer) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
-
-  const rpcClient = getRpcClientWithUserJwt(bearer);
-  if (!rpcClient) {
-    res.status(503).json({ error: "Supabase RPC client not configured" });
+  const adminClient = getAdminSupabase();
+  if (!adminClient) {
+    res.status(503).json({ error: "Admin API not configured" });
     return;
   }
 
@@ -56,7 +45,7 @@ export async function handleRadarGrants(req: AdminRequest, res: AdminResponse) {
     return;
   }
 
-  const { data, error } = await rpcClient.rpc("grant_premium_access", {
+  const { data, error } = await adminClient.rpc("grant_premium_access", {
     user_id_input: userId
   });
 

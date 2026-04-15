@@ -769,7 +769,7 @@ export const useMapState = create<MapState>((set, get) => ({
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
   },
-  markTrainingComplete: (nodeId) => {
+  markTrainingComplete: (nodeId: string) => {
     const nextNodes = get().nodes.map((node) =>
       node.id === nodeId
         ? { ...node, hasCompletedTraining: true }
@@ -836,7 +836,7 @@ export const useMapState = create<MapState>((set, get) => ({
     set({ nodes: nextNodes });
     get().syncMapStorage();
   },
-  incrementRuminationLog: (nodeId) => {
+  incrementRuminationLog: (nodeId: string) => {
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
       const progress = node.recoveryProgress || { completedSteps: [], situationLogs: [] };
@@ -1028,7 +1028,7 @@ export const useMapState = create<MapState>((set, get) => ({
       payload: { amount }
     });
   },
-  togglePowerBank: (nodeId) => {
+  togglePowerBank: (nodeId: string) => {
     const nextNodes = get().nodes.map((node) =>
       node.id === nodeId ? { ...node, isPowerBank: !node.isPowerBank } : node
     );

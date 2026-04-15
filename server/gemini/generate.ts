@@ -7,7 +7,8 @@ import {
   isRetryableModelError,
   markGeminiRequestEnd,
   markGeminiRequestStart,
-  withTimeout
+  withTimeout,
+  logAiTelemetry
 } from "./_shared";
 import {
   applyCodingOutputContractToPrompt,
@@ -25,6 +26,7 @@ type ApiResponse = {
 type GeminiResponseWithUsage = { usageMetadata?: unknown; text: () => string };
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
+  const startTime = Date.now();
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -42,13 +44,25 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   markGeminiRequestStart();
   console.log("[Gemini API] Request started with prompt length:", (req.body?.prompt as string)?.length);
 
-  const { prompt, generationConfig, modelOrder } = req.body ?? {};
+  const { prompt, generationConfig, modelOrder, feature } = req.body ?? {};
+  const featureTag = (feature as string) || "dynamic_generation";
+
   if (!prompt || typeof prompt !== "string") {
     res.status(400).json({ error: "Missing prompt" });
     return;
   }
   const guard = evaluatePrompt(prompt);
   if (!guard.ok) {
+    const errorMsg = "Prompt guard blocked request";
+    await logAiTelemetry({
+      feature: featureTag,
+      model: "guard",
+      latency_ms: Date.now() - startTime,
+      tokens: { prompt: 0, completion: 0, total: 0 },
+      success: false,
+      failure_reason: "unknown",
+      errorMessage: errorMsg
+    });
     res.status(422).json(buildPromptGuardResponse(guard.missing));
     return;
   }
@@ -65,36 +79,73 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     for (let i = 0; i < models.length; i += 1) {
       try {
         const model = getModel(client, models[i], config);
-        const result = await withTimeout(model.generateContent(finalPrompt), 15_000);
-        console.log("[Gemini API] Content generated successfully");
+        const result = await withTimeout(model.generateContent(finalPrompt), 25_000);
+        console.log("[Gemini API] Content generated successfully using", models[i]);
         const response = result.response;
         const text = response.text();
+        
         if (guard.coding) {
           const validation = validateCodingCommentContract(text);
           if (!validation.ok) {
+            const errorMsg = "Output contract violation";
+            await logAiTelemetry({
+              feature: featureTag,
+              model: models[i],
+              latency_ms: Date.now() - startTime,
+              tokens: { prompt: 0, completion: 0, total: 0 },
+              success: false,
+              failure_reason: "format_mismatch",
+              errorMessage: errorMsg
+            });
             res.status(422).json(buildOutputContractViolationResponse(validation.violations));
             return;
           }
         }
+        
         const usage = (response as GeminiResponseWithUsage)?.usageMetadata ?? null;
+        const promptTokens = (usage as Record<string, any>)?.promptTokenCount || 0;
+        const completionTokens = (usage as Record<string, any>)?.candidatesTokenCount || 0;
+        
+        await logAiTelemetry({
+          feature: featureTag,
+          model: models[i],
+          latency_ms: Date.now() - startTime,
+          tokens: { prompt: promptTokens, completion: completionTokens, total: promptTokens + completionTokens },
+          success: true
+        });
+
         res.status(200).json({ text, usage });
         return;
       } catch (error) {
         lastError = error;
         if (isRetryableModelError(error)) {
+          console.warn(`[Gemini API] Attempt with ${models[i]} failed (retryable):`, String(error).slice(0, 100));
           continue;
         }
         break;
       }
     }
   } catch (err) {
-    console.error("[Gemini API] Critical error in handler:", err);
+    console.error("[Gemini API] Critical error in handler loop:", err);
     lastError = err;
   } finally {
     markGeminiRequestEnd();
   }
 
-  if (String(lastError).includes("gemini_timeout")) {
+  const errorMsg = lastError ? String(lastError) : "unknown_error";
+  const latency = Date.now() - startTime;
+  
+  await logAiTelemetry({
+    feature: featureTag,
+    model: models[models.length - 1] || "unknown",
+    latency_ms: latency,
+    tokens: { prompt: 0, completion: 0, total: 0 },
+    success: false,
+    failure_reason: errorMsg.includes("gemini_timeout") ? "timeout" : "provider_error",
+    errorMessage: errorMsg
+  });
+
+  if (errorMsg.includes("gemini_timeout")) {
     res.status(200).json({ text: null, usage: null, fallback: true, reason: "generation_timeout" });
     return;
   }
@@ -103,6 +154,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     usage: null,
     fallback: true,
     reason: "generation_failed",
-    detail: lastError ? String(lastError) : undefined
+    detail: errorMsg
   });
 }
+

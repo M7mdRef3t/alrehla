@@ -451,3 +451,11 @@ a,
 .sidebar-item {
   cursor: pointer !important;
 }
+
+/* ════════════════════════════════════════
+   ANIMATIONS & EFFECTS
+   ════════════════════════════════════════ */
+@keyframes rotate-ring {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

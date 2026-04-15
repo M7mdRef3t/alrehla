@@ -95,8 +95,11 @@ export class OracleService {
             }
         }));
 
+        console.log(`[OracleService] Analyzing batch of ${leads.length} leads...`);
+        
         const prompt = `
-      بصفتك "The Oracle"، قم بتحليل جودة "الأرواح" (Leads) التالية في منصة الدواير. 
+      أنت الـ (Grand Oracle) لنظام "الرحلة" (Alrehla).
+      مهمتك تحليل مجموعة من الـ (Marketing Leads) وتصنيفهم بناءً على رحلة المستخدم (User Journey).
 
       المعطيات:
       ${JSON.stringify(leadData, null, 2)}
@@ -128,9 +131,14 @@ export class OracleService {
 
         try {
             const result = await geminiClient.generateJSON<Record<string, LeadAnalysisVerdict>>(prompt);
+            if (!result || Object.keys(result).length === 0) {
+                console.warn("[OracleService] Gemini returned empty or null results for batch");
+            } else {
+                console.log(`[OracleService] Successfully analyzed ${Object.keys(result).length} leads`);
+            }
             return result || {};
         } catch (error) {
-            logger.error("Oracle Lead Analysis Error:", error);
+            console.error("[OracleService] Lead Analysis Error:", error);
             return {};
         }
     }

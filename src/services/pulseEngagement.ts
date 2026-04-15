@@ -53,7 +53,7 @@ async function refreshRealPulseStats() {
         if (!error && data && data[0]) {
             cachedRealPulse = Number(data[0].total_recent_visitors);
             lastFetchTime = Date.now();
-            console.info("💓 Pulse anchored to reality:", cachedRealPulse);
+            console.debug("💓 Pulse anchored to reality:", cachedRealPulse);
         }
     } catch (err) {
         console.warn("💓 Pulse sync failed, using deterministic model.");

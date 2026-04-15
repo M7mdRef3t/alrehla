@@ -3,7 +3,8 @@ import { geminiClient } from "./geminiClient";
 import { useConsciousnessHistory } from "@/domains/consciousness/store/history.store";
 import { usePredictiveState } from "@/domains/consciousness/store/predictive.store";
 import { useMapState } from '@/modules/map/dawayirIndex';
-import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { MapNode } from "@/modules/map/mapTypes";
+import { usePulseState, PulseEntry } from "@/domains/consciousness/store/pulse.store";
 import { GrowthEngine } from "./growthEngine";
 import { fetchOverviewStats } from "./adminApi";
 
@@ -44,9 +45,9 @@ function resolvePrimaryFactor(parts: Array<{ label: string; value: number }>): s
   return sorted[0]?.label ?? "general_variability";
 }
 
-export function calculateEntropy(): PredictiveInsight {
-  const nodes = useMapState.getState().nodes ?? [];
-  const pulses = (usePulseState.getState().logs ?? []).slice(0, 14);
+export function calculateEntropy(customNodes?: MapNode[], customPulseLogs?: PulseEntry[]): PredictiveInsight {
+  const nodes = customNodes ?? useMapState.getState().nodes ?? [];
+  const pulses = (customPulseLogs ?? usePulseState.getState().logs ?? []).slice(0, 14);
 
   const activeNodes = nodes.filter((node) => !node.isNodeArchived);
   const redCount = activeNodes.filter((node) => node.ring === "red").length;

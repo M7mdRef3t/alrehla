@@ -57,6 +57,7 @@ function isAdminSecretToken(token: string | null): boolean {
 export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promise<boolean> {
   const client = getAdminSupabase();
   if (!client) {
+    console.warn("[verifyAdmin] Admin API not configured (client is null). SUPABASE_SERVICE_ROLE_KEY missing?");
     res.status(503).json({ error: "Admin API not configured" });
     return false;
   }
@@ -64,7 +65,7 @@ export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promis
   const bearer = getBearerToken(req);
   if (!bearer) {
     console.error("[verifyAdmin] No bearer token provided:", req.headers);
-    res.status(401).json({ error: "Unauthorized" });
+    res.status(401).json({ error: "Unauthorized: Missing Token" });
     return false;
   }
 
@@ -75,7 +76,7 @@ export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promis
   const { data, error } = await client.auth.getUser(bearer);
   if (error || !data?.user?.id) {
     console.error("[verifyAdmin] Failed to getUser from token:", error?.message || "Missing user ID", "Token start:", bearer.slice(0, 10));
-    res.status(401).json({ error: "Unauthorized" });
+    res.status(401).json({ error: "Unauthorized: Invalid Token" });
     return false;
   }
 
@@ -86,13 +87,15 @@ export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promis
     .maybeSingle();
 
   if (profileError || !profile?.role) {
-    res.status(403).json({ error: "Forbidden" });
+    console.error(`[verifyAdmin] Forbidden: User ${data.user.id} has no valid role or profile error`, profileError);
+    res.status(403).json({ error: "Forbidden: No valid role" });
     return false;
   }
 
   const allowed = getAllowedRoles();
   if (!allowed.includes(String(profile.role))) {
-    res.status(403).json({ error: "Forbidden" });
+    console.error(`[verifyAdmin] Forbidden: User ${data.user.id} has role '${profile.role}' which is not in allowed types: ${allowed.join(", ")}`);
+    res.status(403).json({ error: "Forbidden: Not allowed" });
     return false;
   }
 

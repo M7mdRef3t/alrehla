@@ -87,7 +87,7 @@ export function getMarayaStoryTargetLabel(path: JourneyPath | null): string {
     tools: "الأدوات",
     map: "الخريطة",
     insights: "الرؤى",
-    sanctuary: "الملاذ الآمن",
+    sanctuary: "مساحتك الخاصة",
     armory: "الترسانة"
   };
 

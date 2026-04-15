@@ -1,0 +1,64 @@
+﻿
+> alrehla@0.1.0 lint
+> eslint "app/**/*.{ts,tsx}" "src/**/*.{ts,tsx}" "server/**/*.{ts,tsx}"
+
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\app\admin\radar\page.tsx
+  320:81  error  Parsing error: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\domains\social\services\analytics.ts
+  34:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\domains\social\services\dawayirRewardsBridge.ts
+  17:47  warning  'label' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\domains\social\types.ts
+  112:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\lib\analytics\eventTracker.ts
+  10:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\modules\baseera\BaseeraScreen.tsx
+  110:6  warning  React Hook useMemo has unnecessary dependencies: 'nodes' and 'pulses'. Either exclude them or remove the dependency array  react-hooks/exhaustive-deps
+  116:6  warning  React Hook useMemo has unnecessary dependencies: 'nodes' and 'pulses'. Either exclude them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\modules\hafiz\HafizScreen.tsx
+  89:6   warning  React Hook useMemo has a missing dependency: 'searchMemories'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  91:51  warning  React Hook useMemo has a missing dependency: 'getOnThisDay'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\modules\markaz\MarkazScreen.tsx
+  79:9  warning  The 'logs' logical expression could make the dependencies of useMemo Hook (at line 87) change on every render. To fix this, wrap the initialization of 'logs' in its own useMemo() Hook                                                             react-hooks/exhaustive-deps
+  79:9  warning  The 'logs' logical expression could make the dependencies of useMemo Hook (at line 191) change on every render. To fix this, wrap the initialization of 'logs' in its own useMemo() Hook                                                            react-hooks/exhaustive-deps
+  79:9  warning  The 'logs' logical expression could make the dependencies of useMemo Hook (at line 234) change on every render. To fix this, wrap the initialization of 'logs' in its own useMemo() Hook                                                            react-hooks/exhaustive-deps
+  81:9  warning  The 'journalEntries' logical expression could make the dependencies of useMemo Hook (at line 98) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'journalEntries' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\modules\mizan\MizanScreen.tsx
+  165:59  warning  React Hook useMemo has a missing dependency: 'getLevelProgress'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\modules\nadhir\NadhirScreen.tsx
+  291:9  warning  The 'logs' logical expression could make the dependencies of useMemo Hook (at line 311) change on every render. To fix this, wrap the initialization of 'logs' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\modules\riwaya\RiwayaScreen.tsx
+  102:9  warning  The 'logs' logical expression could make the dependencies of useMemo Hook (at line 171) change on every render. To fix this, wrap the initialization of 'logs' in its own useMemo() Hook                      react-hooks/exhaustive-deps
+  102:9  warning  The 'logs' logical expression could make the dependencies of useMemo Hook (at line 268) change on every render. To fix this, wrap the initialization of 'logs' in its own useMemo() Hook                      react-hooks/exhaustive-deps
+  102:9  warning  The 'logs' logical expression could make the dependencies of useMemo Hook (at line 277) change on every render. To fix this, wrap the initialization of 'logs' in its own useMemo() Hook                      react-hooks/exhaustive-deps
+  105:9  warning  The 'journalEntries' logical expression could make the dependencies of useMemo Hook (at line 171) change on every render. To fix this, wrap the initialization of 'journalEntries' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  105:9  warning  The 'journalEntries' logical expression could make the dependencies of useMemo Hook (at line 268) change on every render. To fix this, wrap the initialization of 'journalEntries' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\modules\sada\SadaScreen.tsx
+  216:6  warning  React Hook useEffect has missing dependencies: 'addNudge', 'badges', 'decisions', 'isEnabled', 'logs', 'nudges', 'setLastGeneratedDate', and 'wirdState'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\modules\taqrir\TaqrirScreen.tsx
+  94:9  warning  The 'logs' logical expression could make the dependencies of useMemo Hook (at line 142) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'logs' in its own useMemo() Hook                      react-hooks/exhaustive-deps
+  97:9  warning  The 'nodes' logical expression could make the dependencies of useMemo Hook (at line 151) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'nodes' in its own useMemo() Hook                    react-hooks/exhaustive-deps
+  99:9  warning  The 'journalEntries' logical expression could make the dependencies of useMemo Hook (at line 161) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'journalEntries' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\modules\wird\WirdScreen.tsx
+  58:53  warning  React Hook useMemo has an unnecessary dependency: 'history'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\ty\Downloads\Dawayir-main\Dawayir-main\src\utils\relationshipWeatherJourney.ts
+  134:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 27 problems (1 error, 26 warnings)
+

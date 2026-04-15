@@ -37,33 +37,45 @@ export function getRelationshipWeatherPrimaryLabel(path: JourneyPath | null): st
   return configuredLabel || "ابدأ دواير وارسم خريطتك";
 }
 
-export function getRelationshipWeatherTargetLabel(path: JourneyPath | null): string {
+export function getRelationshipWeatherTargetLabel(path: JourneyPath | null, weatherLevel?: string): string {
   const target = path?.targetScreen?.trim();
 
-  if (!target) return "الخريطة";
+  if (!target) {
+    if (weatherLevel === "hurricane" || weatherLevel === "storm") return "وحدة نذير";
+    if (weatherLevel === "wind" || weatherLevel === "sun") return "وحدة ميزان";
+    return "الخريطة";
+  }
   if (target.startsWith("/weather")) return "طقس العلاقات";
   if (target.startsWith("/")) return "الوجهة التالية";
 
   const targetLabelMap: Record<string, string> = {
     map: "الخريطة",
-    sanctuary: "الملاذ الآمن",
+    sanctuary: "مساحتك الخاصة",
     tools: "الأدوات",
     insights: "الرؤى",
-    armory: "الترسانة"
+    armory: "الترسانة",
+    nadhir: "وحدة نذير",
+    mizan: "وحدة ميزان"
   };
 
   return targetLabelMap[target] ?? target;
 }
 
-export function getRelationshipWeatherTargetDescription(path: JourneyPath | null): string {
+export function getRelationshipWeatherTargetDescription(path: JourneyPath | null, weatherLevel?: string): string {
   const target = path?.targetScreen?.trim();
 
   if (target === "map" || !target) {
+    if (weatherLevel === "hurricane" || weatherLevel === "storm") {
+      return "نذير: وحدة المواجهة ووضع الحدود الصارمة لاستعادة سيادتك على طاقتك المسلوبة.";
+    }
+    if (weatherLevel === "wind" || weatherLevel === "sun") {
+      return "ميزان: وحدة الاتزان الصحي وقياس جودة العلاقات لضمان استقرار طاقتك الذهنية.";
+    }
     return "دواير بتخليك تشوف كل دوائر حياتك على خريطة تفاعلية وتعرف مين بياخد وإيه نمط العلاقة.";
   }
 
   if (target === "sanctuary") {
-    return "الملاذ الآمن يستقبلك أولًا لو كنت محتاج تهدئة قبل ما تدخل على أي تشخيص أو خريطة أعمق.";
+    return "مساحتك الخاصة تستقبلك أولاً لو كنت محتاج تهدئة قبل ما تدخل على أي تشخيص أو خريطة أعمق.";
   }
 
   if (target === "tools") {
@@ -77,12 +89,16 @@ export function getRelationshipWeatherTargetDescription(path: JourneyPath | null
   return "الوجهة التالية في هذا المسار تُحدد من لوحة التحكم حسب شكل الرحلة التي تريدها.";
 }
 
-function getRelationshipWeatherAppTarget(path: JourneyPath | null): string {
+function getRelationshipWeatherAppTarget(path: JourneyPath | null, weatherContext?: Record<string, unknown>): string {
   const outcomeScreen = getFirstJourneyStepByKind(path, "outcome")?.screen?.trim();
   if (outcomeScreen && !outcomeScreen.startsWith("/")) return outcomeScreen;
 
   const configuredTarget = path?.targetScreen?.trim();
   if (configuredTarget && !configuredTarget.startsWith("/")) return configuredTarget;
+
+  const level = weatherContext?.weatherLevel as string;
+  if (level === "hurricane" || level === "storm") return "nadhir";
+  if (level === "wind" || level === "sun") return "mizan";
 
   return "map";
 }
@@ -131,7 +147,7 @@ export function getRelationshipWeatherNextStage(
 
 export function launchRelationshipWeatherFlow(
   path: JourneyPath | null,
-  weatherContext: any,
+  weatherContext: Record<string, unknown>,
   source = "weather_v3",
   clientEventId?: string
 ) {
@@ -145,7 +161,7 @@ export function launchRelationshipWeatherFlow(
 
   window.sessionStorage.setItem("weather_context", JSON.stringify(enhancedContext));
 
-  const appTarget = getRelationshipWeatherAppTarget(path);
+  const appTarget = getRelationshipWeatherAppTarget(path, enhancedContext);
   if (appTarget) {
     window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, `navigate:${appTarget}`);
   }

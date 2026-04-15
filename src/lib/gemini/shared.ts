@@ -1,8 +1,8 @@
-import { GoogleGenerativeAI, type GenerativeModel } from "@google/generative-ai";
+import { GoogleGenerativeAI, type GenerativeModel, type GenerateContentResult } from "@google/generative-ai";
 
 export const DEFAULT_MODEL_ORDER: string[] = [
+  "gemini-2.5-flash",
   "gemini-2.0-flash",
-  "gemini-1.5-flash",
   "gemini-flash-latest"
 ];
 
@@ -97,3 +97,49 @@ export async function withTimeout<T>(task: Promise<T>, timeoutMs = 25_000): Prom
     if (timeoutId) clearTimeout(timeoutId);
   }
 }
+
+/**
+ * Direct SDK call — for server-side use without going through the HTTP API route.
+ * Avoids relative URL resolution failures in Next.js SSR/API contexts.
+ */
+export async function performInternalGeneration(
+  prompt: string,
+  config: Record<string, unknown> = DEFAULT_GENERATION_CONFIG,
+  models: string[] = DEFAULT_MODEL_ORDER,
+  feature: string = "dynamic_generation"
+): Promise<{ text: string; usage: unknown } | { text: null; usage: null; fallback: true; reason: string; detail?: string }> {
+  const client = getGeminiClient();
+  if (!client) {
+    return { text: null, usage: null, fallback: true, reason: "gemini_api_key_missing" };
+  }
+  if (!canAcceptGeminiRequest()) {
+    return { text: null, usage: null, fallback: true, reason: "rate_limited" };
+  }
+
+  markGeminiRequestStart();
+  let lastError: unknown = null;
+  try {
+    for (const modelName of models) {
+      try {
+        const model = getGeminiModel(client, modelName, config);
+        const result: GenerateContentResult = await withTimeout(model.generateContent(prompt), 25_000);
+        const response = result.response;
+        const text = response.text();
+        const usage = (response as { usageMetadata?: unknown }).usageMetadata ?? null;
+        return { text, usage };
+      } catch (err) {
+        lastError = err;
+        if (isRetryableModelError(err)) continue;
+        break;
+      }
+    }
+  } finally {
+    markGeminiRequestEnd();
+  }
+
+  const msg = lastError instanceof Error ? lastError.message : String(lastError ?? "unknown");
+  const reason = msg.includes("gemini_timeout") ? "generation_timeout" : "generation_failed";
+  console.error(`[Gemini:performInternalGeneration] [${feature}] Failed:`, msg);
+  return { text: null, usage: null, fallback: true, reason, detail: msg };
+}
+

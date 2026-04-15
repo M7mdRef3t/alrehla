@@ -109,7 +109,7 @@ export interface DawayirMapState {
   metadata?: Record<string, unknown>;
 }
 
-export interface MapSyncPayload<TNode = any> {
+export interface MapSyncPayload<TNode = unknown> {
   sessionId: string;
   nodes: TNode[];
   updatedAt: string;

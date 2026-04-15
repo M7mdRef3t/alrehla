@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { downloadBlobFile } from "../../../src/services/clientDom";
-import { safeGetSession } from "../../../src/services/supabaseClient";
+import { safeGetSession, supabase } from "../../../src/services/supabaseClient";
 import { useAdminState } from "@/domains/admin/store/admin.store";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import styles from "./radar.module.css";
 
 type RadarPulse = {
@@ -67,6 +68,65 @@ type WeeklyReportResponse = {
   funnelDailySeries?: FunnelDailyPoint[];
 };
 
+type GateFunnelStats = {
+  summary: {
+    total_impressions: number;
+    lead_count: number;
+    qualified_count: number;
+    activation_count: number;
+    rates: {
+      impression_to_lead: number;
+      lead_to_qualified: number;
+      qualified_to_activated: number;
+      overall_conversion: number;
+    };
+  };
+  question_telemetry_last_7d: {
+    q1_view: number;
+    q1_answer: number;
+    q2_view: number;
+    q2_answer: number;
+    q3_view: number;
+    q3_answer: number;
+  };
+  payment_telemetry_last_7d: {
+    checkout_init: number;
+    method_selected: number;
+    number_copied: number;
+    support_clicked: number;
+  };
+  diagnosis_funnel_last_7d?: {
+    view: number;
+    step1: number;
+    step2: number;
+    step3: number;
+    step4: number;
+    step5: number;
+    result_view: number;
+  };
+  onboarding_funnel_last_7d?: {
+    opened: number;
+    noise_check: number;
+    pain_dump: number;
+    inventory: number;
+    mapping: number;
+    insight: number;
+    contact: number;
+    results: number;
+    completed: number;
+  };
+  onboarding_avg_durations?: Record<string, number>;
+  engagement_telemetry_last_7d?: {
+    mizan_view: number;
+    wird_view: number;
+    ritual_complete: number;
+    offer_view: number;
+    offer_click: number;
+  };
+  sources: Record<string, unknown>;
+  timestamp: string;
+};
+
 type OpsAlert = {
   level: "warning" | "critical";
   code: string;
@@ -75,12 +135,41 @@ type OpsAlert = {
   threshold: number;
 };
 
+type AiFailure = {
+  id: string;
+  created_at: string;
+  feature: string | null;
+  model: string | null;
+  failure_reason: string;
+  error_message: string | null;
+};
+
 type SystemHealthResponse = {
+  status: "healthy" | "warning" | "degraded";
+  generatedAt: string;
   alerts?: OpsAlert[];
+  probe?: {
+    supabaseReachable: boolean;
+    supabaseProbeMs: number;
+  };
+  api?: {
+    uptimeSec: number;
+    requests: number;
+    errors: number;
+    errorRate: number;
+    p50LatencyMs: number;
+    p95LatencyMs: number;
+    lastErrorAt: string | null;
+  };
   telemetry?: {
     api5xx24h?: number;
     llmLatencyP95Ms?: number;
     tokenUsage24h?: number;
+    recentAiFailures?: AiFailure[];
+  };
+  observability?: {
+    errorPulse24h?: number;
+    ahaMomentPulse24h?: number;
   };
 };
 
@@ -219,6 +308,441 @@ async function copyTextValue(value: string, onDone: (message: string) => void) {
   onDone(`Copied: ${value}`);
 }
 
+const GateFunnelRadar: React.FC<{ stats: GateFunnelStats | null }> = ({ stats }) => {
+  if (!stats) return <p className="text-sm text-[var(--color-text-muted)]">Gate telemetry warming up...</p>;
+
+  const { total_impressions, lead_count, qualified_count, activation_count, rates } = stats.summary;
+  const qStats = stats.question_telemetry_last_7d;
+
+  const steps = [
+    { label: "Impressions", value: total_impressions, rate: 100, color: "var(--color-text-muted)" },
+    { label: "Leads", value: lead_count, rate: rates.impression_to_lead, color: "var(--soft-teal)" },
+    { label: "Qualified", value: qualified_count, rate: rates.lead_to_qualified, color: "var(--vibrant-blue)" },
+    { label: "Activated", value: activation_count, rate: rates.overall_conversion, color: "#fcd34d" }
+  ];
+
+  const qSteps = [
+    { label: "Q1", view: qStats?.q1_view || 0, ans: qStats?.q1_answer || 0 },
+    { label: "Q2", view: qStats?.q2_view || 0, ans: qStats?.q2_answer || 0 },
+    { label: "Q3", view: qStats?.q3_view || 0, ans: qStats?.q3_answer || 0 }
+  ].filter(q => q.view > 0);
+
+  return (
+    <div className="space-y-6">
+      {/* Main Funnel */}
+      <div className="space-y-4">
+        {steps.map((step, idx) => (
+          <div key={step.label} className="relative">
+            <div className="flex items-center justify-between mb-1 px-1">
+              <span className="text-[10px] uppercase tracking-widest text-[var(--color-text-muted)]">{step.label}</span>
+              <span className="text-xs font-bold">{step.value}</span>
+            </div>
+            <div className="h-3 rounded-full bg-white/5 overflow-hidden border border-white/5 relative">
+              <div 
+                className="h-full transition-all duration-1000 ease-out"
+                style={{ 
+                  width: `${Math.max(step.rate, 2)}%`, 
+                  backgroundColor: step.color,
+                  boxShadow: `0 0 15px ${step.color}44`
+                }}
+              />
+            </div>
+            {idx > 0 && (
+              <div className="absolute -top-3 right-0 text-[10px] font-black text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30 backdrop-blur-sm">
+                {step.rate.toFixed(1)}%
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Question Dropout Micro-Funnel */}
+      {qSteps.length > 0 && (
+        <div className="pt-4 border-t border-white/5">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)] mb-4">Qualifier Retention (Last 7d)</p>
+          <div className="grid grid-cols-3 gap-2">
+            {qSteps.map((q) => {
+              const retention = q.view > 0 ? (q.ans / q.view) * 100 : 0;
+              const isLeaky = retention < 70;
+              return (
+                <div key={q.label} className="p-3 rounded-2xl bg-white/5 border border-white/5 flex flex-col items-center justify-center text-center">
+                  <span className="text-[10px] font-black text-[var(--color-text-muted)] mb-1">{q.label}</span>
+                  <p className={`text-sm font-black ${isLeaky ? "text-rose-400" : "text-emerald-400"}`}>
+                    {retention.toFixed(0)}%
+                  </p>
+                  <span className="text-[8px] opacity-60 mt-1">{q.ans}/{q.view}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Summary Rates */}
+      <div className="pt-4 border-t border-white/5 grid grid-cols-2 gap-2">
+        <div className="p-2 rounded-xl bg-white/5 border border-white/5">
+          <p className="text-[9px] text-[var(--color-text-muted)] uppercase">L1 -{">"} L2 Drop</p>
+          <p className="text-sm font-bold text-rose-300">{(100 - rates.lead_to_qualified).toFixed(1)}%</p>
+        </div>
+        <div className="p-2 rounded-xl bg-white/5 border border-white/5">
+          <p className="text-[9px] text-[var(--color-text-muted)] uppercase">Overall Conv</p>
+          <p className="text-sm font-bold text-emerald-300">{rates.overall_conversion.toFixed(1)}%</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const RevenueFunnelRadar: React.FC<{ stats: GateFunnelStats | null }> = ({ stats }) => {
+  if (!stats?.payment_telemetry_last_7d) return <p className="text-sm text-[var(--color-text-muted)]">Revenue telemetry warming up...</p>;
+
+  const pStats = stats.payment_telemetry_last_7d;
+  
+  const steps = [
+    { label: "Checkout Init", value: pStats.checkout_init, color: "var(--soft-teal)" },
+    { label: "Method Selected", value: pStats.method_selected, color: "var(--vibrant-blue)" },
+    { label: "Number Copied", value: pStats.number_copied, color: "#fcd34d" },
+  ];
+
+  const getRate = (current: number, previous: number) => {
+    if (previous === 0) return 0;
+    return (current / previous) * 100;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Revenue Funnel */}
+      <div className="space-y-4">
+        {steps.map((step, idx) => {
+          const rate = idx === 0 ? 100 : getRate(step.value, steps[idx-1].value);
+          const overallRate = idx === 0 ? 100 : (step.value / (steps[0].value || 1)) * 100;
+
+          return (
+            <div key={step.label} className="relative">
+              <div className="flex items-center justify-between mb-1 px-1">
+                <span className="text-[10px] uppercase tracking-widest text-[var(--color-text-muted)]">{step.label}</span>
+                <span className="text-xs font-bold">{step.value}</span>
+              </div>
+              <div className="h-3 rounded-full bg-white/5 overflow-hidden border border-white/5 relative">
+                <div 
+                  className="h-full transition-all duration-1000 ease-out"
+                  style={{ 
+                    width: `${Math.max(overallRate, 2)}%`, 
+                    backgroundColor: step.color,
+                    boxShadow: `0 0 15px ${step.color}44`
+                  }}
+                />
+              </div>
+              {idx > 0 && (
+                <div className="absolute -top-3 right-0 text-[10px] font-black text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30 backdrop-blur-sm">
+                  {rate.toFixed(1)}%
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Payment Health Metrics */}
+      <div className="pt-4 border-t border-white/5 grid grid-cols-2 gap-2">
+        <div className="p-3 rounded-2xl bg-white/5 border border-white/5 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] font-black text-[var(--color-text-muted)] mb-1">Support Contact</span>
+          <p className="text-lg font-black text-emerald-400">{pStats.support_clicked}</p>
+          <span className="text-[8px] opacity-60 mt-1">Friction Alerts</span>
+        </div>
+        <div className="p-3 rounded-2xl bg-white/5 border border-white/5 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] font-black text-[var(--color-text-muted)] mb-1">Intent vs Exit</span>
+          <p className="text-lg font-black text-rose-300">
+            {getRate(pStats.checkout_init - pStats.number_copied, pStats.checkout_init).toFixed(0)}%
+          </p>
+          <span className="text-[8px] opacity-60 mt-1">Drop-off Rate</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DiagnosisFunnelRadar: React.FC<{ stats: GateFunnelStats | null }> = ({ stats }) => {
+  if (!stats?.diagnosis_funnel_last_7d) return <p className="text-sm text-[var(--color-text-muted)]">Diagnosis telemetry warming up...</p>;
+
+  const d = stats.diagnosis_funnel_last_7d;
+  const steps = [
+    { label: "Viewed", value: d.view, color: "var(--color-text-muted)" },
+    { label: "Step 1", value: d.step1, color: "var(--soft-teal)" },
+    { label: "Step 3", value: d.step3, color: "var(--vibrant-blue)" },
+    { label: "Step 5", value: d.step5, color: "#a78bfa" },
+    { label: "Results", value: d.result_view, color: "#fcd34d" },
+  ];
+
+  const getRate = (current: number, previous: number) => (previous === 0 ? 0 : (current / previous) * 100);
+
+  return (
+    <div className="space-y-4">
+      {steps.map((step, idx) => {
+        const rate = idx === 0 ? 100 : getRate(step.value, steps[idx - 1].value);
+        const overallRate = idx === 0 ? 100 : (step.value / (steps[0].value || 1)) * 100;
+
+        return (
+          <div key={step.label} className="relative">
+            <div className="flex items-center justify-between mb-1 px-1">
+              <span className="text-[10px] uppercase tracking-widest text-[var(--color-text-muted)]">{step.label}</span>
+              <span className="text-xs font-bold">{step.value}</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5 relative">
+              <div
+                className="h-full transition-all duration-1000 ease-out"
+                style={{
+                  width: `${Math.max(overallRate, 2)}%`,
+                  backgroundColor: step.color,
+                }}
+              />
+            </div>
+            {idx > 0 && (
+              <div className="absolute -top-3 right-0 text-[10px] font-black text-emerald-400">
+                {rate.toFixed(1)}%
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const OnboardingFunnelRadar: React.FC<{ stats: GateFunnelStats | null }> = ({ stats }) => {
+  if (!stats?.onboarding_funnel_last_7d) return <p className="text-sm text-[var(--color-text-muted)]">Onboarding telemetry warming up...</p>;
+
+  const o = stats.onboarding_funnel_last_7d;
+  const durs = stats.onboarding_avg_durations || {};
+  
+  const steps = [
+    { label: "Opened", value: o.opened, key: "opened", color: "var(--color-text-muted)" },
+    { label: "Noise", value: o.noise_check, key: "noise_check", color: "#94a3b8" },
+    { label: "Pain", value: o.pain_dump, key: "pain_dump", color: "#f87171" },
+    { label: "Inv", value: o.inventory, key: "inventory", color: "#fb923c" },
+    { label: "Map", value: o.mapping, key: "mapping", color: "#38bdf8" },
+    { label: "Insight", value: o.insight, key: "insight", color: "#818cf8" },
+    { label: "Contact", value: o.contact, key: "contact", color: "#c084fc" },
+    { label: "Results", value: o.results, key: "results", color: "#4ade80" },
+    { label: "Done", value: o.completed, key: "completed", color: "#22c55e" },
+  ];
+
+  const getRate = (current: number, previous: number) => (previous === 0 ? 0 : (current / previous) * 100);
+  
+  const formatDuration = (ms?: number) => {
+    if (!ms) return null;
+    const sec = Math.round(ms / 1000);
+    if (sec < 60) return `${sec}s`;
+    return `${Math.floor(sec / 60)}m ${sec % 60}s`;
+  };
+
+  const getFrictionLevel = (key: string, ms?: number) => {
+    if (!ms) return "normal";
+    const sec = ms / 1000;
+    if (key === "mapping" && sec > 120) return "high";
+    if (key === "pain_dump" && sec > 90) return "high";
+    if (sec > 60) return "high";
+    return "normal";
+  };
+
+  return (
+    <div className="space-y-3">
+      {steps.map((step, idx) => {
+        const rate = idx === 0 ? 100 : getRate(step.value, steps[idx - 1].value);
+        const overallRate = idx === 0 ? 100 : (step.value / (steps[0].value || 1)) * 100;
+        const duration = durs[step.key];
+        const friction = getFrictionLevel(step.key, duration);
+
+        return (
+          <div key={step.label} className="relative group">
+            <div className="flex items-center justify-between mb-0.5 px-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] uppercase tracking-tighter text-[var(--color-text-muted)] font-medium">{step.label}</span>
+                {duration && (
+                  <span className={`text-[8px] font-black px-1 rounded ${friction === "high" ? "bg-rose-500/20 text-rose-400" : "bg-white/5 text-[var(--color-text-muted)]"}`}>
+                    {formatDuration(duration)}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-bold">{step.value}</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-white/5 overflow-hidden border border-white/5 relative">
+              <div
+                className="h-full transition-all duration-1000 ease-out"
+                style={{
+                  width: `${Math.max(overallRate, 2)}%`,
+                  backgroundColor: step.color,
+                  opacity: friction === "high" ? 0.8 : 1
+                }}
+              />
+            </div>
+            {idx > 0 && step.value > 0 && (
+              <div className="absolute -top-3 right-0 text-[9px] font-black text-emerald-400">
+                {rate.toFixed(0)}%
+              </div>
+            )}
+            
+            {/* Friction Tooltip Area */}
+            {friction === "high" && (
+                <div className="absolute -right-1 top-1 w-1 h-1 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const EngagementRadar: React.FC<{ stats: GateFunnelStats | null }> = ({ stats }) => {
+  if (!stats?.engagement_telemetry_last_7d) return <p className="text-sm text-[var(--color-text-muted)]">Engagement telemetry warming up...</p>;
+
+  const e = stats.engagement_telemetry_last_7d;
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <div className="p-3 rounded-2xl bg-white/5 border border-emerald-500/10">
+        <p className="text-[10px] uppercase text-[var(--color-text-muted)]">Mizan Views</p>
+        <p className="text-lg font-black text-emerald-400 mt-1">{e.mizan_view}</p>
+      </div>
+      <div className="p-3 rounded-2xl bg-white/5 border border-vibrant-blue/10">
+        <p className="text-[10px] uppercase text-[var(--color-text-muted)]">Wird Views</p>
+        <p className="text-lg font-black text-vibrant-blue mt-1">{e.wird_view}</p>
+      </div>
+      <div className="p-3 rounded-2xl bg-white/5 border border-amber-500/10 col-span-2 flex justify-between items-center">
+        <div>
+          <p className="text-[10px] uppercase text-[var(--color-text-muted)]">Rituals Completed</p>
+          <p className="text-lg font-black text-amber-400">{e.ritual_complete}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] uppercase text-[var(--color-text-muted)]">Offer Clicks</p>
+          <p className="text-sm font-bold text-rose-400">{e.offer_click} / {e.offer_view}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AiStabilityRadar: React.FC<{ failures: AiFailure[] }> = ({ failures }) => {
+  if (failures.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
+          <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <p className="text-xs text-emerald-300 font-bold uppercase tracking-widest">Sovereign Awareness Stable</p>
+        <p className="text-[10px] text-emerald-200/40 mt-1">No AI failures detected in recent cycles.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[10px] uppercase tracking-widest text-rose-400 font-bold">Recent Awareness Failures</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300">{failures.length} Anomalies</span>
+      </div>
+      
+      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+        {failures.map((fail) => (
+          <div key={fail.id} className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-rose-500/20 transition-all group">
+            <div className="flex items-start justify-between gap-2">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-vibrant-blue/20 text-vibrant-blue border border-vibrant-blue/10">
+                    {fail.feature || "global"}
+                  </span>
+                  <span className="text-[9px] font-medium text-[var(--color-text-muted)]">
+                    {fail.model?.split("/").pop()}
+                  </span>
+                </div>
+                <p className="text-[11px] font-bold text-rose-200 leading-tight">
+                  {fail.failure_reason.replace(/_/g, " ")}
+                </p>
+              </div>
+              <span className="text-[8px] text-[var(--color-text-muted)] whitespace-nowrap">
+                {new Date(fail.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+            {fail.error_message && (
+              <p className="mt-2 text-[9px] text-slate-400 line-clamp-1 group-hover:line-clamp-none transition-all">
+                {fail.error_message}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const SystemHealthRadar: React.FC<{
+  api: SystemHealthResponse["api"] | null;
+  probe: SystemHealthResponse["probe"] | null;
+  status: SystemHealthResponse["status"];
+}> = ({ api, probe, status }) => {
+  if (!api || !probe) return <p className="text-sm text-[var(--color-text-muted)]">System vitals warming up...</p>;
+
+  const statusColor = status === "healthy" ? "text-emerald-400" : status === "warning" ? "text-amber-400" : "text-rose-400";
+  
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] uppercase tracking-widest text-[var(--color-text-muted)]">Global Health</span>
+        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/5 border border-white/10 ${statusColor}`}>{status}</span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="p-2.5 rounded-2xl bg-white/5 border border-white/5">
+          <p className="text-[8px] uppercase tracking-widest text-[var(--color-text-muted)] mb-1">DB Probe</p>
+          <p className="text-sm font-black text-emerald-400">{probe.supabaseProbeMs}ms</p>
+        </div>
+        <div className="p-2.5 rounded-2xl bg-white/5 border border-white/5">
+          <p className="text-[8px] uppercase tracking-widest text-[var(--color-text-muted)] mb-1">API Uptime</p>
+          <p className="text-sm font-black text-vibrant-blue">{(api.uptimeSec / 3600).toFixed(1)}h</p>
+        </div>
+      </div>
+
+      <div className="space-y-3 px-1">
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-[10px]">
+             <span className="text-[var(--color-text-muted)] uppercase tracking-tighter">P95 Response</span>
+             <span className="font-bold">{api.p95LatencyMs}ms</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-white/5 overflow-hidden border border-white/5">
+            <div 
+               className="h-full bg-vibrant-blue transition-all duration-1000" 
+               style={{ width: `${Math.min((api.p95LatencyMs / 1000) * 100, 100)}%` }} 
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-[10px]">
+             <span className="text-[var(--color-text-muted)] uppercase tracking-tighter">Error Flux</span>
+             <span className={`font-bold ${api.errorRate > 2 ? "text-rose-400" : "text-emerald-400"}`}>{api.errorRate.toFixed(2)}%</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-white/5 overflow-hidden border border-white/5">
+            <div 
+               className="h-full bg-rose-400 transition-all duration-1000" 
+               style={{ width: `${Math.min(api.errorRate * 5, 100)}%` }} 
+            />
+          </div>
+        </div>
+      </div>
+
+      {api.lastErrorAt && (
+        <div className="pt-2 border-t border-white/5">
+          <p className="text-[9px] text-rose-300/50 text-center italic">
+            Last anomaly: {new Date(api.lastErrorAt).toLocaleTimeString()}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function AdminRadarPage() {
   const adminCode = useAdminState((s) => s.adminCode);
   const [loading, setLoading] = useState(true);
@@ -236,6 +760,9 @@ export default function AdminRadarPage() {
   const [dailyFunnel, setDailyFunnel] = useState<FunnelDailyPoint[]>([]);
   const [opsAlerts, setOpsAlerts] = useState<OpsAlert[]>([]);
   const [opsTelemetry, setOpsTelemetry] = useState<SystemHealthResponse["telemetry"] | null>(null);
+  const [apiStats, setApiStats] = useState<SystemHealthResponse["api"] | null>(null);
+  const [probeStatus, setProbeStatus] = useState<SystemHealthResponse["probe"] | null>(null);
+  const [healthStatus, setHealthStatus] = useState<SystemHealthResponse["status"]>("healthy");
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [ticketActionId, setTicketActionId] = useState<string | null>(null);
   const [ticketVisibility, setTicketVisibility] = useState<TicketVisibilityFilter>("open");
@@ -244,6 +771,27 @@ export default function AdminRadarPage() {
   const [ticketNotice, setTicketNotice] = useState<string | null>(null);
   const [selectedTicketIds, setSelectedTicketIds] = useState<string[]>([]);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [gateFunnel, setGateFunnel] = useState<GateFunnelStats | null>(null);
+  const [observability, setObservability] = useState<SystemHealthResponse["observability"] | null>(null);
+
+  const getSecureProofUrl = async (path: string) => {
+    if (!supabase) return;
+    try {
+      setTicketNotice("Generating secure preview link...");
+      const { data, error } = await supabase.storage
+        .from("payment-proofs")
+        .createSignedUrl(path, 3600);
+      
+      if (error) throw error;
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, "_blank");
+        setTicketNotice("Secure preview opened in new tab.");
+      }
+    } catch (err) {
+      console.error("Signed URL error:", err);
+      setTicketNotice("Error generating secure preview.");
+    }
+  };
 
   const getAdminAccessToken = useCallback(async (): Promise<string> => {
     const session = await safeGetSession();
@@ -254,78 +802,93 @@ export default function AdminRadarPage() {
     return effectiveToken;
   }, [adminCode]);
 
-  useEffect(() => {
-    let isMounted = true;
-    let timer: ReturnType<typeof setInterval> | null = null;
+  const loadRadar = useCallback(async (isInitial = false) => {
+    try {
+      if (isInitial) setLoading(true);
+      setError(null);
+      const accessToken = await getAdminAccessToken();
 
-    async function loadRadar(isInitial = false) {
-      try {
-        if (isInitial) setLoading(true);
-        setError(null);
-        const accessToken = await getAdminAccessToken();
+      const [radarResponse, weeklyResponse, healthResponse, supportResponse, gateResponse] = await Promise.all([
+        fetch("/api/admin?path=radar", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store"
+        }),
+        fetch("/api/admin?path=overview&kind=weekly-report&days=7", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store"
+        }),
+        fetch("/api/admin?path=overview&kind=system-health", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store"
+        }),
+        fetch("/api/admin?path=overview&kind=support-tickets&limit=12", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store"
+        }),
+        fetch("/api/admin/analytics/gate-dropout", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store"
+        })
+      ]);
+      const radarBody = (await radarResponse.json()) as RadarResponse;
+      const weeklyBody = (await weeklyResponse.json()) as WeeklyReportResponse;
+      const healthBody = (await healthResponse.json()) as SystemHealthResponse;
+      const supportBody = (await supportResponse.json()) as SupportTicketResponse;
+      const gateBody = (await gateResponse.json()) as GateFunnelStats;
 
-        const [radarResponse, weeklyResponse, healthResponse, supportResponse] = await Promise.all([
-          fetch("/api/admin?path=radar", {
-            method: "GET",
-            headers: { Authorization: `Bearer ${accessToken}` },
-            cache: "no-store"
-          }),
-          fetch("/api/admin?path=overview&kind=weekly-report&days=7", {
-            method: "GET",
-            headers: { Authorization: `Bearer ${accessToken}` },
-            cache: "no-store"
-          }),
-          fetch("/api/admin?path=overview&kind=system-health", {
-            method: "GET",
-            headers: { Authorization: `Bearer ${accessToken}` },
-            cache: "no-store"
-          }),
-          fetch("/api/admin?path=overview&kind=support-tickets&limit=12", {
-            method: "GET",
-            headers: { Authorization: `Bearer ${accessToken}` },
-            cache: "no-store"
-          })
-        ]);
-        const body = (await radarResponse.json()) as RadarResponse;
-        const weeklyBody = (await weeklyResponse.json()) as WeeklyReportResponse;
-        const healthBody = (await healthResponse.json()) as SystemHealthResponse;
-        const supportBody = (await supportResponse.json()) as SupportTicketResponse;
-        if (!radarResponse.ok || body?.is_live !== true || !body?.pulse) {
-          throw new Error(body?.error || "Failed to load radar pulse");
-        }
-
-        if (isMounted) {
-          setPulse(body.pulse);
-          setTrendHistory((prev) => [...prev.slice(-19), Number(body.pulse?.global_phoenix_avg ?? 0)]);
-          setOneDecision(weeklyBody?.oneDecision ?? null);
-          setDailyFunnel(Array.isArray(weeklyBody?.funnelDailySeries) ? weeklyBody.funnelDailySeries : []);
-          setOpsAlerts(Array.isArray(healthBody?.alerts) ? healthBody.alerts : []);
-          setOpsTelemetry(healthBody?.telemetry ?? null);
-          setSupportTickets(
-            Array.isArray(supportBody?.tickets)
-              ? supportBody.tickets
-                .map(toSupportTicket)
-                .filter((ticket) => ticket.source === "activation_manual_proof" || ticket.category === "payment_activation")
-              : []
-          );
-        }
-      } catch (err: unknown) {
-        if (isMounted) setError(toErrorMessage(err, "Failed to load radar pulse"));
-      } finally {
-        if (isMounted && isInitial) setLoading(false);
+      if (!radarResponse.ok || radarBody?.is_live !== true || !radarBody?.pulse) {
+        throw new Error(radarBody?.error || "Failed to load radar pulse");
       }
-    }
 
+      setPulse(radarBody.pulse);
+      setTrendHistory((prev) => [...prev.slice(-19), Number(radarBody.pulse?.global_phoenix_avg ?? 0)]);
+      setOneDecision(weeklyBody?.oneDecision ?? null);
+      setDailyFunnel(Array.isArray(weeklyBody?.funnelDailySeries) ? weeklyBody.funnelDailySeries : []);
+      
+      // Health mappings with explicit status checks
+      if (healthResponse.ok) {
+        setOpsAlerts(Array.isArray(healthBody?.alerts) ? healthBody.alerts : []);
+        setOpsTelemetry(healthBody?.telemetry ?? null);
+        setObservability(healthBody?.observability ?? null);
+        setApiStats(healthBody?.api ?? null);
+        setProbeStatus(healthBody?.probe ?? null);
+        setHealthStatus(healthBody?.status || "healthy");
+      } else {
+        console.error("[Radar] System health probe failed", healthBody);
+      }
+
+      setSupportTickets(
+        Array.isArray(supportBody?.tickets)
+          ? supportBody.tickets
+            .map(toSupportTicket)
+            .filter((ticket) => ticket.source === "activation_manual_proof" || ticket.category === "payment_activation")
+          : []
+      );
+      if (gateBody?.summary) {
+        setGateFunnel(gateBody);
+      }
+    } catch (err: unknown) {
+      setError(toErrorMessage(err, "Failed to load radar pulse"));
+    } finally {
+      if (isInitial) setLoading(false);
+    }
+  }, [getAdminAccessToken]);
+
+  useEffect(() => {
     void loadRadar(true);
-    timer = setInterval(() => {
+    const timer = setInterval(() => {
       void loadRadar(false);
     }, 60_000);
 
     return () => {
-      isMounted = false;
       if (timer) clearInterval(timer);
     };
-  }, [getAdminAccessToken]);
+  }, [loadRadar]);
 
   useEffect(() => {
     setSelectedTicketIds((current) => current.filter((ticketId) => supportTickets.some((ticket) => ticket.id === ticketId)));
@@ -918,10 +1481,22 @@ export default function AdminRadarPage() {
   return (
     <main className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] p-6 md:p-10">
       <div className="mx-auto max-w-6xl space-y-6">
-        <header className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Admin</p>
-          <h1 className="text-2xl md:text-3xl font-black">Architect&apos;s Radar</h1>
-          <p className="text-sm text-[var(--color-text-muted)]">Aggregated awareness telemetry only. No chat/message text.</p>
+        <header className="flex items-center justify-between">
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Admin</p>
+            <h1 className="text-2xl md:text-3xl font-black">Architect&apos;s Radar</h1>
+            <p className="text-sm text-[var(--color-text-muted)]">Aggregated awareness telemetry only. No chat/message text.</p>
+          </div>
+          <button 
+            onClick={() => loadRadar()}
+            disabled={loading}
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-[var(--vibrant-blue)] backdrop-blur-md transition-all hover:bg-white/10 active:scale-95 disabled:opacity-40"
+          >
+            <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {loading ? "تحديث..." : "تحديث النبض"}
+          </button>
         </header>
 
         {!loading && !error && showAnomaly && (
@@ -989,6 +1564,68 @@ export default function AdminRadarPage() {
               </p>
             </article>
 
+            <article className="rounded-2xl border border-[var(--vibrant-blue)]/20 bg-[var(--vibrant-blue)]/5 p-5 md:col-span-1">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--vibrant-blue)] font-bold">System Vitals</p>
+              <div className="mt-4">
+                <SystemHealthRadar api={apiStats} probe={probeStatus} status={healthStatus} />
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-white/10 bg-black/20 p-5 md:col-span-1">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Gate Drop-off Radar</p>
+              <div className="mt-4">
+                <GateFunnelRadar stats={gateFunnel} />
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-white/10 bg-black/20 p-5 md:col-span-1">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Revenue Diagnostics</p>
+              <div className="mt-4">
+                <RevenueFunnelRadar stats={gateFunnel} />
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-white/10 bg-black/20 p-5 md:col-span-1">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Diagnosis Funnel</p>
+              <div className="mt-4">
+                <DiagnosisFunnelRadar stats={gateFunnel} />
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-white/10 bg-black/20 p-5 md:col-span-1">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Onboarding Journey</p>
+              <div className="mt-4">
+                <OnboardingFunnelRadar stats={gateFunnel} />
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-white/10 bg-black/20 p-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Deep Engagement</p>
+              <div className="mt-4">
+                <EngagementRadar stats={gateFunnel} />
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5 md:col-span-1 flex flex-col justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-400 font-bold">Behavioral Analysis</p>
+                <p className="mt-2 text-sm text-emerald-200/60 leading-relaxed">
+                  Deep-dive into visual session recordings and heatmaps via Microsoft Clarity.
+                </p>
+              </div>
+              <a 
+                href="https://clarity.microsoft.com/projects" 
+                target="_blank" 
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-black text-xs font-black uppercase tracking-widest hover:bg-emerald-400 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+              >
+                Open Clarity Radar
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </article>
+
             <article className="rounded-2xl border border-white/10 bg-black/20 p-5 md:col-span-2">
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Daily Conversion Funnel</p>
               <div className="mt-4 space-y-2">
@@ -1042,6 +1679,42 @@ export default function AdminRadarPage() {
                 <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm">
                   <p className="text-[11px] text-[var(--color-text-muted)]">Token Usage / 24h</p>
                   <p className="font-black text-teal-200">{Number(opsTelemetry?.tokenUsage24h ?? 0)}</p>
+                </div>
+              </div>
+
+              {/* Sovereign AI Stability Radar */}
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <AiStabilityRadar failures={opsTelemetry?.recentAiFailures ?? []} />
+              </div>
+
+              {/* Technical Friction Pulse (Professional Observability) */}
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="p-4 rounded-3xl bg-rose-500/5 border border-rose-500/10 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                      <p className="text-[10px] text-rose-300 font-bold uppercase tracking-wider">Technical Friction</p>
+                    </div>
+                    <p className="text-xs text-rose-200/60 leading-tight">نبض أخطاء الواجهة (JS/UI) خلال آخر 24 ساعة.</p>
+                  </div>
+                  <div className="mt-4 flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-rose-400">{observability?.errorPulse24h ?? 0}</span>
+                    <span className="text-[10px] text-rose-300/50 uppercase">Errors Detected</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <p className="text-[10px] text-emerald-300 font-bold uppercase tracking-wider">Momentum Pulse</p>
+                    </div>
+                    <p className="text-xs text-emerald-200/60 leading-tight">لحظات استلام القيمة (Aha! Moments) المكتشفة.</p>
+                  </div>
+                  <div className="mt-4 flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-emerald-400">{observability?.ahaMomentPulse24h ?? 0}</span>
+                    <span className="text-[10px] text-emerald-300/50 uppercase">Success Anchors</span>
+                  </div>
                 </div>
               </div>
               <div className="mt-3 space-y-2">
@@ -1172,6 +1845,28 @@ export default function AdminRadarPage() {
                       }`}
                   >
                     High priority
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => loadRadar(false)}
+                    className="flex items-center gap-1.5 rounded-full border border-teal-400/30 bg-teal-400/5 px-3 py-1 text-xs font-semibold text-teal-200 transition-colors hover:bg-teal-400/15"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+                      <path d="M21 3v5h-5" />
+                    </svg>
+                    Refresh
                   </button>
                 </div>
               </div>
@@ -1312,6 +2007,7 @@ export default function AdminRadarPage() {
                     const reference = ticket.metadata?.reference ? String(ticket.metadata.reference) : null;
                     const proofMethod = ticket.metadata?.method ? String(ticket.metadata.method).replace(/_/g, " ") : null;
                     const userId = getTicketUserId(ticket.metadata);
+                    const claritySessionId = ticket.metadata?.clarity_session_id ? String(ticket.metadata.clarity_session_id) : null;
 
                     return (
                       <section key={ticket.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -1419,12 +2115,35 @@ export default function AdminRadarPage() {
                           ))}
                           {proofImage?.previewUrl && (
                             <a
-                              href={proofImage.previewUrl}
+                              href={proofImage.previewUrl || undefined}
                               target="_blank"
                               rel="noreferrer"
                               className="rounded-xl border border-teal-400/20 bg-teal-400/10 px-3 py-2 text-xs font-semibold text-teal-100 transition-colors hover:bg-teal-400/20"
                             >
                               Open proof
+                            </a>
+                          )}
+                          {!proofImage?.previewUrl && proofImage?.storagePath && (
+                            <button
+                              type="button"
+                              onClick={() => { void getSecureProofUrl(proofImage.storagePath!); }}
+                              className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs font-semibold text-amber-100 transition-all hover:bg-amber-400/20 active:scale-95"
+                            >
+                              Generate Secure Preview
+                            </button>
+                          )}
+                          {claritySessionId && runtimeEnv.clarityProjectId && (
+                            <a
+                              href={`https://clarity.microsoft.com/projects/view/${runtimeEnv.clarityProjectId}/sessions/${claritySessionId}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-2 rounded-xl border border-indigo-400/30 bg-indigo-500/10 px-3 py-2 text-xs font-bold text-indigo-100 transition-all hover:bg-indigo-500/20 hover:scale-[1.02]"
+                            >
+                              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <circle cx="12" cy="12" r="10" />
+                                <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" />
+                              </svg>
+                              Watch Session
                             </a>
                           )}
                         </div>

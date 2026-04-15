@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { AlertTriangle, Filter, User, Play, CheckCircle2 } from "lucide-react";
 import type { OverviewStats } from "@/services/adminApi";
 import { AdminTooltip } from "./AdminTooltip";
-
+import { CollapsibleSection } from "../../../ui/CollapsibleSection";
 interface FunnelAndEmergencyProps {
     funnelData: { steps: Array<{ label: string; count: number; key: string }> } | null | undefined;
     emergencyData: OverviewStats["emergencyLogs"];
@@ -73,7 +73,8 @@ export const FunnelAndEmergency: FC<FunnelAndEmergencyProps> = ({ funnelData, em
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start" dir="rtl">
+        <CollapsibleSection title="قمع التحويل الكلي والطوارئ" icon={<Filter className="w-5 h-5 text-cyan-400" />} headerColors="border-cyan-500/10 bg-slate-900/40 text-slate-300" defaultExpanded={false}>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start" dir="rtl">
 
             {/* Funnel Section (Right/Main) */}
             <div className="lg:col-span-2 admin-glass-card p-8 border border-white/5 bg-slate-950/60 rounded-3xl shadow-2xl relative overflow-hidden group">
@@ -168,5 +169,6 @@ export const FunnelAndEmergency: FC<FunnelAndEmergencyProps> = ({ funnelData, em
             </div>
 
         </div>
+        </CollapsibleSection>
     );
 };

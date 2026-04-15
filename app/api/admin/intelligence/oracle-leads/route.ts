@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { OracleService } from "@/services/oracleService";
+import { requireLiveAuth, isAdminLikeRole } from "@/modules/dawayir-live/server/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,15 @@ function buildClient() {
 }
 
 // 👁️ GET — Oracle Overview & Stats
-export async function GET() {
+export async function GET(req: Request) {
+  const auth = await requireLiveAuth(req as any);
+  if ("status" in auth) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+  if (!isAdminLikeRole(auth.role)) {
+    return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
+  }
+
   const supabase = buildClient();
   
   // 1. Get stats of analyzed vs unanalyzed
@@ -73,25 +82,43 @@ export async function GET() {
 
 // 🧠 POST — Trigger Batch Analysis
 export async function POST(req: Request) {
+  const auth = await requireLiveAuth(req as any);
+  if ("status" in auth) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+  if (!isAdminLikeRole(auth.role)) {
+    return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
+  }
+
   const { batchSize = 10 } = await req.json();
   const supabase = buildClient();
 
-  // 1. Fetch leads that need analysis
-  // Prioritize "Engaged" or "Converted" leads first for maximum impact
+  // 1. Fetch leads that need analysis (Never analyzed OR stale > 7 days)
+  console.log("[Oracle Intelligence] Fetching leads for analysis...");
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  
   const { data: leads, error: fetchError } = await supabase
     .from("marketing_leads")
     .select("*")
-    .or("last_ai_analysis_at.is.null,last_ai_analysis_at.lt." + new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-    .order("has_deep_converted", { ascending: false })
-    .order("has_converted", { ascending: false })
+    .or(`last_ai_analysis_at.is.null,last_ai_analysis_at.lt.${sevenDaysAgo}`)
+    .order("last_ai_analysis_at", { ascending: true, nullsFirst: true })
     .limit(batchSize);
 
-  if (fetchError || !leads || leads.length === 0) {
-    return NextResponse.json({ ok: false, message: "No leads found for analysis" });
+  if (fetchError) {
+    console.error("[Oracle Intelligence] Fetch error:", fetchError);
+    return NextResponse.json({ ok: false, error: fetchError.message });
   }
+
+  if (!leads || leads.length === 0) {
+    console.log("[Oracle Intelligence] No leads found matching criteria.");
+    return NextResponse.json({ ok: true, analyzedCount: 0, message: "No leads found for analysis" });
+  }
+
+  console.log(`[Oracle Intelligence] Analyzing ${leads.length} leads...`);
 
   // 2. Run Oracle Analysis
   const results = await OracleService.analyzeLeadBatch(leads);
+  console.log(`[Oracle Intelligence] Analysis results received:`, Object.keys(results).length);
 
   // 3. Update Leads in Database
   const updates = leads.map(lead => {

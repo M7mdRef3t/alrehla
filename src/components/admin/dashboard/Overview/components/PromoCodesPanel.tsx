@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { KeyRound, Plus, Trash2, Power, PowerOff, Loader2, RefreshCw } from "lucide-react";
 import { supabase } from "@/services/supabaseClient";
-
+import { CollapsibleSection } from "../../../ui/CollapsibleSection";
 interface PromoCode {
     id: string;
     code: string;
@@ -88,7 +88,8 @@ export const PromoCodesPanel: FC = () => {
     };
 
     return (
-        <div className="admin-glass-card rounded-3xl p-6 border-indigo-500/20" dir="rtl">
+        <CollapsibleSection title="أكواد الـ VIP (السحرية)" icon={<KeyRound className="w-5 h-5 text-indigo-400" />} headerColors="border-indigo-500/10 bg-slate-900/40 text-slate-300" defaultExpanded={false}>
+            <div className="admin-glass-card rounded-3xl p-6 border-indigo-500/20" dir="rtl">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
@@ -166,5 +167,6 @@ export const PromoCodesPanel: FC = () => {
                 </div>
             )}
         </div>
+        </CollapsibleSection>
     );
 };

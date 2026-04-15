@@ -135,7 +135,9 @@ async function enqueueOutreach(
 
   if (rows.length === 0) return;
 
-  const { error } = await supabaseAdmin.from("marketing_lead_outreach_queue").insert(rows);
+  const { error } = await supabaseAdmin
+    .from("marketing_lead_outreach_queue")
+    .upsert(rows, { onConflict: "lead_id, channel, step" });
   if (error) throw error;
 }
 
@@ -310,6 +312,14 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
 
     if (hasSupabaseConfig()) {
       const result = await upsertMarketingLead(input);
+
+      logger.log("[Intelligence Radar] Lead Ingested", { 
+        leadId: result.lead_id, 
+        source: input.source, 
+        isNew: result.is_new,
+        hasPhone: !!input.phoneNormalized,
+        hasEmail: !!input.email
+      });
 
       // --- META CAPI Tracking Data Extraction ---
       const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || null;

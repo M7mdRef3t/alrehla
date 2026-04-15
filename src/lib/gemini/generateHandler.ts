@@ -49,6 +49,7 @@ export default async function generateHandler(req: ApiRequest, res: ApiResponse)
   
   const guard = evaluatePrompt(prompt);
   if (!guard.ok) {
+    console.warn("[Gemini API] Prompt Guard REJECTED prompt due to missing constraints:", guard.missing, "Prompt preview:", prompt.substring(0, 50));
     res.status(422).json(buildPromptGuardResponse(guard.missing));
     return;
   }
@@ -59,12 +60,15 @@ export default async function generateHandler(req: ApiRequest, res: ApiResponse)
       ? (generationConfig as Record<string, unknown>)
       : DEFAULT_GENERATION_CONFIG;
   const models = Array.isArray(modelOrder) && modelOrder.length > 0 ? modelOrder : DEFAULT_MODEL_ORDER;
+  console.log("[Gemini API] Starting generation with models:", models);
 
   let lastError: unknown = null;
   try {
     for (let i = 0; i < models.length; i += 1) {
+      const modelName = models[i];
+      console.log(`[Gemini API] Trying model [${i + 1}/${models.length}]: ${modelName}`);
       try {
-        const model = getGeminiModel(client, models[i], config);
+        const model = getGeminiModel(client, modelName, config);
         const result = await withTimeout(model.generateContent(finalPrompt), 20_000);
         const response = result.response;
         const text = response.text();
@@ -78,13 +82,18 @@ export default async function generateHandler(req: ApiRequest, res: ApiResponse)
         }
         
         const usage = (response as GeminiResponseWithUsage)?.usageMetadata ?? null;
+        console.log(`[Gemini API] ✅ Success with model: ${modelName}`);
         res.status(200).json({ text, usage });
         return;
       } catch (error) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        console.error(`[Gemini API] ❌ Model ${modelName} failed:`, errMsg);
         lastError = error;
         if (isRetryableModelError(error)) {
+          console.warn(`[Gemini API] Error is retryable, trying next model...`);
           continue;
         }
+        console.error(`[Gemini API] Error is NOT retryable, stopping fallback chain.`);
         break;
       }
     }

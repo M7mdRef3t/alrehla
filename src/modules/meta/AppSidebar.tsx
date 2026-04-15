@@ -41,7 +41,11 @@ import {
   HeartHandshake,
   CalendarDays,
   Library,
-  Map
+  Map,
+  Unlink,
+  CheckCircle2,
+  Archive,
+  Undo2
 } from "lucide-react";
 import { useJourneyProgress } from "@/domains/journey";
 import { useJourneyState as useJourneyStore } from "@/domains/journey/store/journey.store";
@@ -545,10 +549,99 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             <div className="flex-1 overflow-y-auto no-scrollbar py-2 px-2 flex flex-col gap-4">
               <EcosystemNavigator onNavigate={pushUrl} />
               
-              {/* 1. SECTOR: EXPLORATION (الاستكشاف) */}
               <SidebarSector title="الاستكشاف" icon={<Compass className="w-3.5 h-3.5" />} color="teal">
                 <SidebarItem
                   label="الخريطة (فهم الذات)"
+                  icon={<Map className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => pushUrl("/")}
+                  active={window.location.pathname === "/"}
+                  color="#14b8a6"
+                />
+                <SidebarItem
+                  label="الأهداف الذكية"
+                  icon={<Target className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => setShowGoals2025(true)}
+                  color="#10b981"
+                />
+              </SidebarSector>
+
+              {/* Missions Section */}
+              {activeMissions.length > 0 && (
+                <SidebarSector title="المهمات الحالية" icon={<Sparkles className="w-3.5 h-3.5" />} color="amber">
+                  {activeMissions.map((mission) => (
+                    <SidebarItem
+                      key={mission.node.id}
+                      label={mission.summary.missionLabel}
+                      icon={<Target className="w-3.5 h-3.5" />}
+                      onClick={() => onOpenMission?.(mission.node.id)}
+                      badge={mission.summary.completed + "/" + mission.summary.total}
+                      color="#f5a623"
+                    />
+                  ))}
+                </SidebarSector>
+              )}
+
+              {completedMissions.length > 0 && (
+                <SidebarSector title="مهمات مكتملة" icon={<CheckCircle2 className="w-3.5 h-3.5" />} color="emerald">
+                  {completedMissions.map((mission) => (
+                    <div key={mission.node.id} className="group flex items-center justify-between px-3 py-1.5 hover:bg-emerald-500/5 rounded-md transition-colors">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                        <span className="text-xs text-slate-400 group-hover:text-emerald-500 transition-colors truncate">
+                          {mission.summary.missionLabel}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => archiveMission(mission.node.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-emerald-500/10 rounded text-slate-400 hover:text-emerald-500 transition-all"
+                        title="أرشفة"
+                      >
+                        <Archive className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </SidebarSector>
+              )}
+
+              {/* Archive Section */}
+              {(archivedMissions.length > 0 || archivedNodes.length > 0) && (
+                <SidebarSector title="الأرشيف" icon={<Archive className="w-3.5 h-3.5" />} color="slate">
+                  {archivedMissions.map((mission) => (
+                    <div key={mission.node.id} className="group flex items-center justify-between px-3 py-1.5 hover:bg-slate-500/5 rounded-md transition-colors">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <History className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                        <span className="text-xs text-slate-500 truncate">{mission.summary.missionLabel}</span>
+                      </div>
+                      <button
+                        onClick={() => unarchiveMission(mission.node.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-500/10 rounded text-slate-400 hover:text-slate-200"
+                        title="استعادة"
+                      >
+                        <Undo2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  {archivedNodes.map((node) => (
+                    <div key={node.id} className="group flex items-center justify-between px-3 py-1.5 hover:bg-slate-500/5 rounded-md transition-colors">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <User className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                        <span className="text-xs text-slate-500 truncate">{node.label}</span>
+                      </div>
+                      <button
+                        onClick={() => unarchiveNode(node.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-500/10 rounded text-slate-400 hover:text-slate-200"
+                        title="استعادة"
+                      >
+                        <Undo2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </SidebarSector>
+              )}
+
+              <SidebarSector title="رحلتي" icon={<Wind className="w-3.5 h-3.5" />} color="violet">
+                <SidebarItem
+                  label="محطة الانطلاق"
                   icon={<Map className="w-4 h-4" />}
                   onClick={() => onOpenDawayir?.()}
                   color={goalColor}
@@ -568,7 +661,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   );
                 })()}
                 <SidebarItem
-                  label="الملاذ الآمن"
+                  label="مساحتك الخاصة"
                   icon={<ShieldCheck className="w-4 h-4" />}
                   onClick={() => pushUrl(sanctuaryPathUrl, { screen: sanctuaryPathTarget })}
                   color={goalColor}
@@ -682,36 +775,115 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 
                 <SidebarSector title="الاستكشاف" icon={<Compass className="w-4 h-4" />} color="teal">
                   <SidebarItem
-                    label="الخريطة"
+                    label="الخريطة (فهم الذات)"
+                    icon={<Map className="w-5 h-5 outline-none" />}
+                    onClick={() => { pushUrl("/"); handleClose(); }}
+                    active={window.location.pathname === "/"}
+                    color="#14b8a6"
+                  />
+                  <SidebarItem
+                    label="الأهداف الذكية"
+                    icon={<Target className="w-5 h-5 outline-none" />}
+                    onClick={() => { setShowGoals2025(true); handleClose(); }}
+                    color="#10b981"
+                  />
+                </SidebarSector>
+
+                {/* Missions Section (Mobile) */}
+                {activeMissions.length > 0 && (
+                  <SidebarSector title="المهمات الحالية" icon={<Sparkles className="w-4 h-4" />} color="amber">
+                    {activeMissions.map((mission) => (
+                      <SidebarItem
+                        key={mission.node.id}
+                        label={mission.summary.missionLabel}
+                        icon={<Target className="w-5 h-5" />}
+                        onClick={() => { onOpenMission?.(mission.node.id); handleClose(); }}
+                        badge={mission.summary.completed + "/" + mission.summary.total}
+                        color="#f5a623"
+                      />
+                    ))}
+                  </SidebarSector>
+                )}
+
+                {completedMissions.length > 0 && (
+                  <SidebarSector title="مهمات مكتملة" icon={<CheckCircle2 className="w-4 h-4" />} color="emerald">
+                    {completedMissions.map((mission) => (
+                      <div key={mission.node.id} className="group flex items-center justify-between px-3 py-2 hover:bg-emerald-500/5 rounded-xl transition-colors">
+                        <div className="flex items-center gap-4 overflow-hidden">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                          <span className="text-sm text-slate-400 group-hover:text-emerald-500 transition-colors truncate">
+                            {mission.summary.missionLabel}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => archiveMission(mission.node.id)}
+                          className="p-2 hover:bg-emerald-500/10 rounded-lg text-slate-400 hover:text-emerald-500"
+                        >
+                          <Archive className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </SidebarSector>
+                )}
+
+                {/* Archive Section (Mobile) */}
+                {(archivedMissions.length > 0 || archivedNodes.length > 0) && (
+                  <SidebarSector title="الأرشيف" icon={<Archive className="w-4 h-4" />} color="slate">
+                    {archivedMissions.map((mission) => (
+                      <div key={mission.node.id} className="group flex items-center justify-between px-3 py-2 hover:bg-slate-500/5 rounded-xl transition-colors">
+                        <div className="flex items-center gap-4 overflow-hidden">
+                          <History className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                          <span className="text-sm text-slate-500 truncate">{mission.summary.missionLabel}</span>
+                        </div>
+                        <button
+                          onClick={() => unarchiveMission(mission.node.id)}
+                          className="p-2 hover:bg-slate-500/10 rounded-lg text-slate-400 hover:text-slate-200"
+                        >
+                          <Undo2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                    {archivedNodes.map((node) => (
+                      <div key={node.id} className="group flex items-center justify-between px-3 py-2 hover:bg-slate-500/5 rounded-xl transition-colors">
+                        <div className="flex items-center gap-4 overflow-hidden">
+                          <User className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                          <span className="text-sm text-slate-500 truncate">{node.label}</span>
+                        </div>
+                        <button
+                          onClick={() => unarchiveNode(node.id)}
+                          className="p-2 hover:bg-slate-500/10 rounded-lg text-slate-400 hover:text-slate-200"
+                        >
+                          <Undo2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </SidebarSector>
+                )}
+
+                <SidebarSector title="رحلتي" icon={<Wind className="w-4 h-4" />} color="violet">
+                  <SidebarItem
+                    label="محطة الانطلاق"
                     icon={<Map className="w-5 h-5" />}
                     onClick={() => { onOpenDawayir?.(); handleClose(); }}
                     color={goalColor}
                   />
-                {activeProtocolInfo && (
+                  {activeProtocolInfo && (
                     <SidebarItem
-                      label={activeProtocolInfo!.label}
+                      label={activeProtocolInfo.label}
                       icon={<Activity className="w-5 h-5" />}
                       onClick={() => { onOpenProtocol?.(); handleClose(); }}
-                      color={activeProtocolInfo!.color}
+                      color={activeProtocolInfo.color}
                       badge="جاري"
                     />
                   )}
                   <SidebarItem
-                    label="الملاذ الآمن"
+                    label="مساحتك الخاصة"
                     icon={<ShieldCheck className="w-5 h-5" />}
                     onClick={() => { pushUrl(sanctuaryPathUrl, { screen: sanctuaryPathTarget }); handleClose(); }}
                     color={goalColor}
                   />
-                  {availableFeatures.dawayir_map && (
-                    <SidebarItem
-                      label="فهم المسافات"
-                      icon={<Radar className="w-5 h-5" />}
-                      onClick={() => { setShowRadarShield(true); handleClose(); }}
-                      color={goalColor}
-                    />
-                  )}
                   <SidebarItem
-                    label="مرايا"
+                    label="مرايا (التوأم الرقمي)"
                     icon={<Sparkles className="w-5 h-5" />}
                     onClick={() => { pushUrl("/#maraya", { screen: "maraya" }); handleClose(); }}
                     color="#a78bfa"

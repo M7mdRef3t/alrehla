@@ -165,7 +165,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                             >
                                 <Sparkles className="w-10 h-10 text-teal-400 mb-4 animate-pulse" />
                                 <h2 className="text-2xl sm:text-3xl font-black text-white mb-2 leading-tight">أنت في أمان</h2>
-                                <p className="text-[11px] sm:text-xs text-teal-100/60 font-bold uppercase tracking-[0.2em]">هذا هو الملاذ الآمن</p>
+                                <p className="text-[11px] sm:text-xs text-teal-100/60 font-bold uppercase tracking-[0.2em]">هذه هي مساحتك الخاصة</p>
                             </motion.div>
                         </motion.div>
 

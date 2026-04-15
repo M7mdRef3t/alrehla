@@ -49,14 +49,9 @@ export async function handleRadar(req: AdminRequest, res: AdminResponse) {
     return;
   }
 
-  const rpcClient = getRpcClientWithUserJwt(bearer);
-  if (!rpcClient) {
-    res.status(503).json({ error: "Supabase RPC client not configured" });
-    return;
-  }
-
-  const { data, error } = await rpcClient.rpc("get_global_awareness_pulse");
+  const { data, error } = await adminClient.rpc("get_public_awareness_pulse");
   if (error) {
+    console.error("[Radar RPC Error]:", error);
     res.status(500).json({
       error: "Failed to fetch awareness pulse",
       source: "query_failed",

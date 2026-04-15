@@ -1,9 +1,10 @@
 import { GoogleGenerativeAI, type GenerativeModel } from "@google/generative-ai";
+import { getSupabaseAdminClient } from "../../app/api/_lib/supabaseAdmin";
 
 export const DEFAULT_MODEL_ORDER: string[] = [
-  "gemini-1.5-flash",
-  "gemini-1.5-pro",
-  "gemini-2.0-flash-exp"
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-flash-latest"
 ];
 
 export const DEFAULT_GENERATION_CONFIG = {
@@ -101,3 +102,60 @@ export async function withTimeout<T>(task: Promise<T>, timeoutMs = 18_000): Prom
     if (timeoutId) clearTimeout(timeoutId);
   }
 }
+
+export async function logAiTelemetry(data: {
+  feature: string;
+  model: string;
+  latency_ms: number;
+  tokens: { prompt: number; completion: number; total: number };
+  success: boolean;
+  failure_reason?: string | null;
+  errorMessage?: string | null;
+  metadata?: Record<string, any>;
+}) {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) {
+      console.warn("[Gemini Telemetry] Supabase Admin client not available.");
+      return;
+    }
+
+    const requestId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`).toString();
+
+    // Mapping failure reasons to allowed enum values in ai_telemetry table
+    let mappedReason = data.failure_reason;
+    if (!data.success && !mappedReason) {
+      mappedReason = "unknown";
+    }
+    
+    // Ensure reason is one of the allowed types or null if success
+    const allowedReasons = ['hallucination', 'format_mismatch', 'token_limit_exceeded', 'rate_limited', 'timeout', 'provider_error', 'network_error', 'unknown'];
+    if (data.success) {
+      mappedReason = undefined; 
+    } else if (mappedReason && !allowedReasons.includes(mappedReason)) {
+      mappedReason = "provider_error"; // Default for unmapped errors
+    }
+
+    const { error } = await admin.from("ai_telemetry").insert({
+      request_id: requestId,
+      feature: data.feature || "unknown",
+      model: data.model || "unknown",
+      llm_latency_ms: Math.max(0, Math.floor(data.latency_ms)),
+      prompt_tokens: data.tokens.prompt || 0,
+      completion_tokens: data.tokens.completion || 0,
+      total_tokens: data.tokens.total || 0,
+      json_success: data.success,
+      failure_reason: mappedReason,
+      error_message: data.errorMessage || null,
+      metadata: {
+        ...(data.metadata || {}),
+        timestamp: new Date().toISOString()
+      }
+    });
+
+    if (error) console.error("[Gemini Telemetry] Insert failed:", error);
+  } catch (err) {
+    console.error("[Gemini Telemetry] Critical error logging AI data:", err);
+  }
+}
+

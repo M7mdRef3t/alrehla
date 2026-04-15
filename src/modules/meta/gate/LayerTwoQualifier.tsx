@@ -1,21 +1,44 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { trackGateEventPixelOnly } from '@/lib/analytics/eventTracker';
 
 interface Props {
   onComplete: (q1: string, q2: string, q3: string) => void;
+  sessionId?: string;
 }
 
-export default function LayerTwoQualifier({ onComplete }: Props) {
+export default function LayerTwoQualifier({ onComplete, sessionId }: Props) {
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState({ q1: '', q2: '', q3: '' });
 
+  // Track Q1 View on Mount
+  React.useEffect(() => {
+    if (sessionId) {
+      trackGateEventPixelOnly('Gate_Q1_Viewed', { external_id: sessionId }, `${sessionId}-q1-viewed`);
+    }
+  }, [sessionId]);
+
   const handleSelect = (question: 'q1'|'q2'|'q3', value: string) => {
+    // Tracking per-question answers for dropout diagnosis
+    if (sessionId) {
+      trackGateEventPixelOnly(`Gate_${question.toUpperCase()}_Answered`, { 
+        external_id: sessionId,
+        answer: value 
+      }, `${sessionId}-${question}-answered`);
+    }
+
     setAnswers(prev => ({ ...prev, [question]: value }));
     setTimeout(() => {
-      if (step < 3) setStep(step + 1);
-      else onComplete(answers.q1 || (question === 'q1' ? value : ''), 
-                     answers.q2 || (question === 'q2' ? value : ''), 
-                     question === 'q3' ? value : answers.q3);
+      if (step < 3) {
+        setStep(step + 1);
+        if (sessionId) {
+          trackGateEventPixelOnly(`Gate_Q${step + 1}_Viewed`, { external_id: sessionId }, `${sessionId}-q${step + 1}-viewed`);
+        }
+      } else {
+        onComplete(answers.q1 || (question === 'q1' ? value : ''), 
+                   answers.q2 || (question === 'q2' ? value : ''), 
+                   question === 'q3' ? value : answers.q3);
+      }
     }, 400); // short delay for selection feedback
   };
 

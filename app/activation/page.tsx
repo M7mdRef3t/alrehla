@@ -1,506 +1,362 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import type { ChangeEvent, FormEvent } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { Copy, Check, Upload, Send, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-
-import {
-  trackInitiateCheckout as trackActivationInitiated,
-  trackCheckoutViewed as trackActivationViewed,
-  trackEvent,
-  AnalyticsEvents,
-} from "../../src/services/analytics";
-import {
-  buildPaymentWhatsappHref,
-  getFoundingPriceLine,
-  getPaymentAmountPlaceholder,
-  getProofMethods,
-  paymentConfig,
-  type ManualProofMethod,
-  type PaymentMode,
-} from "../../src/config/paymentConfig";
-import { WizardProgressBar } from "./_components/wizard/WizardProgressBar";
-import { StepChooseMethod } from "./_components/wizard/StepChooseMethod";
-import { StepSendProof } from "./_components/wizard/StepSendProof";
-import {
-  ALLOWED_PROOF_IMAGE_TYPES,
-  isLikelyEgyptUser,
-  LAST_PAYMENT_MODE_KEY,
-  MAX_PROOF_IMAGE_BYTES,
-  readFileAsDataUrl,
-  type ProofImageState,
-} from "./_lib/paymentProof";
+import { marketingLeadService } from "../../src/services/marketingLeadService";
 import { recordFlowEvent } from "../../src/services/journeyTracking";
 import { safeGetSession } from "../../src/services/supabaseClient";
-import { marketingLeadService } from "../../src/services/marketingLeadService";
-import { getStoredLeadEmail, setStoredLeadEmail } from "../../src/services/revenueAccess";
 
-type ScarcityResponse = {
-  total_seats: number;
-  seats_left: number | null;
-  source: string;
-  is_live?: boolean;
-};
+const VODAFONE_CASH_NUMBER = "01023050092";
+const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
+const MAX_IMAGE_BYTES = 900_000;
 
-const ACTIVATION_PUBLIC_ENABLED = paymentConfig.activationPublicEnabled;
+type ProofImageState = { name: string; type: string; bytes: number; dataUrl: string };
 
-function getPreferredMethod(mode: PaymentMode): ManualProofMethod {
-  if (mode === "international") {
-    if (paymentConfig.paypalUrl || paymentConfig.paypalEmail) return "paypal";
-    if (paymentConfig.etisalatCashNumber) return "etisalat_cash";
-    return "paypal";
-  }
-
-  if (paymentConfig.instapayAlias || paymentConfig.instapayNumber) return "instapay";
-  if (paymentConfig.vodafoneCashNumber) return "vodafone_cash";
-  if (paymentConfig.etisalatCashNumber) return "etisalat_cash";
-  if (paymentConfig.bankIban || paymentConfig.bankAccountNumber) return "bank_transfer";
-  return "fawry";
+async function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 export default function ActivationPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<PaymentMode>("local");
-  const [email, setEmail] = useState("");
-  const [seatsLeft, setSeatsLeft] = useState<number | null>(null);
-  const [totalSeats, setTotalSeats] = useState(50);  const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
-  const [paymentNoticeKind, setPaymentNoticeKind] = useState<"info" | "success" | "error">("info");
-  const [proofMethod, setProofMethod] = useState<ManualProofMethod>("instapay");
-  const [proofReference, setProofReference] = useState("");
-  const [proofAmount, setProofAmount] = useState("");
-  const [proofNote, setProofNote] = useState("");
+  
+  const [copied, setCopied] = useState(false);
+  const [phone, setPhone] = useState("");
   const [proofImage, setProofImage] = useState<ProofImageState | null>(null);
-  const [isSubmittingProof, setIsSubmittingProof] = useState(false);
-  // Wizard step: 1=choose method, 2=payment + proof
-  const [wizardStep, setWizardStep] = useState(1);
-  // Selected method id & track id for the wizard
-  const [selectedMethodId, setSelectedMethodId] = useState<ManualProofMethod | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
-  const syncAttemptedRef = useRef(false);
-
-  const availableProofMethods = getProofMethods(mode);
+  const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [notice, setNotice] = useState<string | null>(null);
+  const [noticeKind, setNoticeKind] = useState<"info" | "success" | "error">("info");
+  
+  const [step, setStep] = useState<"upload" | "success">("upload");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const nameParam = params.get("name");
-    if (nameParam) setUserName(nameParam);
     
-    // Also check for email in params to pre-fill
-    const emailParam = params.get("email");
-    if (emailParam) setEmail(emailParam);
+    // Auto-fill phone if we have it locally
+    const storedPhone = marketingLeadService.getStoredLeadPhone();
+    if (storedPhone) setPhone(storedPhone);
+
+    recordFlowEvent("activation_page_viewed");
   }, []);
 
-  useEffect(() => {
-    if (!ACTIVATION_PUBLIC_ENABLED) return;
-    try {
-      recordFlowEvent("activation_page_viewed");
-      trackActivationViewed();
-    } catch {
-      // Never block activation rendering on analytics issues.
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!ACTIVATION_PUBLIC_ENABLED) return;
-    if (isLikelyEgyptUser()) {
-      setMode("local");
-      return;
-    }
-    if (typeof window !== "undefined") {
-      const storedMode = window.localStorage.getItem(LAST_PAYMENT_MODE_KEY);
-      if (storedMode === "local" || storedMode === "international") {
-        setMode(storedMode);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(LAST_PAYMENT_MODE_KEY, mode);
-  }, [mode]);
-
-  useEffect(() => {
-    setProofMethod((current) =>
-      availableProofMethods.some((method) => method.value === current)
-        ? current
-        : availableProofMethods[0]?.value ?? "instapay"
-    );
-  }, [availableProofMethods]);
-
-  useEffect(() => {
-    const preferredMethod = getPreferredMethod(mode);
-    setSelectedMethodId((current) => {
-      if (current === preferredMethod) return current;
-      if (current && availableProofMethods.some((method) => method.value === current)) {
-        return current;
-      }
-      return preferredMethod;
-    });
-
-    setProofMethod((current) => {
-      if (current === preferredMethod) return current;
-      if (availableProofMethods.some((method) => method.value === current)) {
-        return current;
-      }
-      return preferredMethod;
-    });
-  }, [mode, availableProofMethods]);
-
-  useEffect(() => {
-    if (!ACTIVATION_PUBLIC_ENABLED) return;
-    let mounted = true;
-    const load = async () => {
-      try {
-        const [sessionRes, scarcityRes] = await Promise.all([
-          safeGetSession().then((session) => ({ data: { session } })),
-          fetch("/api/public/scarcity", { cache: "no-store" })
-        ]);
-        const params = new URLSearchParams(window.location.search);
-        const emailFromUrl = params.get("email");
-        const sessionUser = sessionRes?.data?.session?.user ?? null;
-        
-        let resolvedEmail = emailFromUrl || sessionUser?.email || "";
-        if (!resolvedEmail && typeof window !== "undefined") {
-          resolvedEmail = getStoredLeadEmail() || "";
-        }
-        
-        if (resolvedEmail) {
-          setStoredLeadEmail(resolvedEmail);
-        }
-        
-        const scarcity = (await scarcityRes.json()) as ScarcityResponse;
-        const isLive = scarcity?.is_live === true;
-        if (!mounted) return;
-        
-        setEmail(resolvedEmail);
-        setSeatsLeft(isLive && typeof scarcity?.seats_left === "number" ? Number(scarcity.seats_left) : null);
-        setTotalSeats(Number(scarcity?.total_seats ?? 50));
-        if (!syncAttemptedRef.current) {
-          syncAttemptedRef.current = true;
-          const storedPhone = marketingLeadService.getStoredLeadPhone();
-          const storedLeadId = marketingLeadService.getStoredLeadId();
-          const hasRealIdentifier = Boolean(storedPhone || resolvedEmail);
-          if (hasRealIdentifier) {
-            marketingLeadService.syncLead({
-              phone: storedPhone ?? undefined,
-              email: resolvedEmail || undefined,
-              status: "payment_requested",
-              source: "activation_page",
-              sourceType: "website",
-              metadata: { leadId: storedLeadId ?? undefined }
-            }).catch(err => console.error("[activation] Lead sync error:", err));
-          }
-        }
-      } catch {
-        if (!mounted) return;
-        setEmail("");
-        setSeatsLeft(null);
-        setTotalSeats(50);      }
-    };
-    void load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const paymentState = params.get("payment");
-    if (paymentState === "success") {
-      setPaymentNotice("ØªÙ…ÙŽÙ‘Øª Ø¹Ù…Ù„ÙŠØ© Ø§Ù„Ø¯ÙØ¹ Ø¨Ù†Ø¬Ø§Ø­. Ø¥Ø°Ø§ Ù„Ù… ÙŠØµÙ„Ùƒ ØªØ£ÙƒÙŠØ¯ Ø§Ù„ØªÙØ¹ÙŠÙ„ Ø¨Ø¹Ø¯ØŒ Ø£Ø±Ø³Ù„ Ø±Ù‚Ù… Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ø£Ùˆ Ù„Ù‚Ø·Ø© Ø§Ù„Ø´Ø§Ø´Ø© Ø£Ø¯Ù†Ø§Ù‡.");
-      setPaymentNoticeKind("success");
-    } else if (paymentState === "cancelled") {
-      setPaymentNotice("Ù„Ù… ØªÙƒØªÙ…Ù„ Ø§Ù„Ø¹Ù…Ù„ÙŠØ©. ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø¬Ø¯Ø¯Ø§Ù‹ Ø£Ùˆ Ø§Ø®ØªÙŠØ§Ø± ÙˆØ³ÙŠÙ„Ø© Ø¯ÙØ¹ Ù…Ø®ØªÙ„ÙØ©.");
-      setPaymentNoticeKind("error");
-    }
-  }, []);
-
-  const scarcityPct = useMemo(() => {
-    if (typeof seatsLeft !== "number") return 0;
-    const sold = Math.max(totalSeats - seatsLeft, 0);
-    if (totalSeats <= 0) return 0;
-    return Math.min((sold / totalSeats) * 100, 100);
-  }, [seatsLeft, totalSeats]);
-
-  const priceLine = getFoundingPriceLine();
-  const amountPlaceholder = getPaymentAmountPlaceholder(mode);
-
-  const pricingRows = [
-    { title: "Ø§Ù„Ø®Ø·Ø©", value: "Ø§Ù„Ø¹Ø¶ÙˆÙŠØ© Ø§Ù„ØªØ£Ø³ÙŠØ³ÙŠØ©", note: "Ø¹Ø¶ÙˆÙŠØ© Ø­ØµØ±ÙŠØ© Ù„Ù„Ù…Ø´ØªØ±ÙƒÙŠÙ† Ø§Ù„Ø£ÙˆØ§Ø¦Ù„" },
-    { title: "Ø§Ù„Ù…Ø¯Ø©", value: "Ù…Ø¯Ù‰ Ø§Ù„Ø­ÙŠØ§Ø©", note: "ÙˆØµÙˆÙ„ ÙƒØ§Ù…Ù„ ÙˆØ¯Ø§Ø¦Ù… Ù„ÙƒØ§ÙØ© Ø§Ù„Ù…Ù…ÙŠØ²Ø§Øª" },
-    { title: "Ø§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª", value: "ØªÙ„Ù‚Ø§Ø¦ÙŠØ©", note: "Ù…Ø´Ù…ÙˆÙ„Ø© Ø¯Ø§Ø¦Ù…Ø§Ù‹ Ø¯ÙˆÙ† Ø£ÙŠ ØªÙƒØ§Ù„ÙŠÙ Ø¥Ø¶Ø§ÙÙŠØ©" },
-  ];
-  const selectPaymentMethod = (method: ManualProofMethod, trackingMethod: string) => {
-    setProofMethod(method);
-    setSelectedMethodId(method);
-    try {
-      recordFlowEvent("payment_intent_submitted", { meta: { source: `manual_${trackingMethod}` } });
-      trackActivationInitiated({ payment_method: trackingMethod, payment_mode: mode });
-    } catch {
-      // Keep payment flow resilient.
-    }
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(VODAFONE_CASH_NUMBER).catch(() => null);
+    setCopied(true);
+    recordFlowEvent("activation_copy_number_clicked");
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleProofImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) {
       setProofImage(null);
       return;
     }
-    if (!ALLOWED_PROOF_IMAGE_TYPES.includes(file.type as (typeof ALLOWED_PROOF_IMAGE_TYPES)[number])) {
+    
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type as typeof ALLOWED_IMAGE_TYPES[number])) {
       setProofImage(null);
-      setPaymentNotice("Ø§Ø±ÙØ¹ PNG Ø£Ùˆ JPG Ø£Ùˆ WEBP ÙÙ‚Ø·.");
-      setPaymentNoticeKind("error");
-      event.target.value = "";
+      setNotice("برجاء رفع صورة بصيغة PNG أو JPG أو WEBP فقط.");
+      setNoticeKind("error");
+      e.target.value = "";
       return;
     }
-    if (file.size > MAX_PROOF_IMAGE_BYTES) {
+    
+    if (file.size > MAX_IMAGE_BYTES) {
       setProofImage(null);
-      setPaymentNotice("Ø§Ù„ØµÙˆØ±Ø© Ø£ÙƒØ¨Ø± Ù…Ù† Ø§Ù„Ù…Ø³Ù…ÙˆØ­. Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰ 900KB.");
-      setPaymentNoticeKind("error");
-      event.target.value = "";
+      setNotice("الصورة أكبر من المسموح. الحد الأقصى 900KB.");
+      setNoticeKind("error");
+      e.target.value = "";
       return;
     }
+    
     try {
+      recordFlowEvent("activation_proof_upload_started");
       const dataUrl = await readFileAsDataUrl(file);
       setProofImage({ name: file.name, type: file.type, bytes: file.size, dataUrl });
-      setPaymentNotice("Ø§Ù„ØµÙˆØ±Ø© Ø§ØªØ±ÙØ¹Øª. ÙƒÙ…Ù„ Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø¥Ø«Ø¨Ø§Øª.");
-      setPaymentNoticeKind("success");
-    } catch (error) {
+      setNotice("الصورة اترفعت بنجاح. كمل إرسال الإثبات.");
+      setNoticeKind("success");
+      recordFlowEvent("activation_proof_upload_completed");
+    } catch (err) {
       setProofImage(null);
-      setPaymentNotice(error instanceof Error ? error.message : "ØªØ¹Ø°Ø± ØªØ¬Ù‡ÙŠØ² ØµÙˆØ±Ø© Ø§Ù„Ø¥Ø«Ø¨Ø§Øª.");
-      setPaymentNoticeKind("error");
+      setNotice("حدث خطأ أثناء تجهيز الصورة.");
+      setNoticeKind("error");
     }
   };
 
-  const handleProofSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const referenceValue = proofReference.trim();
-    const amountValue = proofAmount.trim();
-    const hasProofImage = Boolean(proofImage);
-    const methodValue = proofMethod;
-    const modeValue = mode;
-
-    if (!referenceValue && !hasProofImage) {
-      setPaymentNotice("Ø£Ø¶Ù Ø±Ù‚Ù… Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ø£Ùˆ Ø§Ø±ÙØ¹ Ù„Ù‚Ø·Ø© ÙˆØ§Ø¶Ø­Ø© Ù‚Ø¨Ù„ Ø§Ù„Ø¥Ø±Ø³Ø§Ù„.");
-      setPaymentNoticeKind("error");
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!phone) {
+      setNotice("الجوال مطلوب عشان نربط التحويل بحسابك.");
+      setNoticeKind("error");
+      return;
+    }
+    if (!proofImage) {
+      setNotice("برجاء رفع إثبات الدفع (لقطة شاشة).");
+      setNoticeKind("error");
       return;
     }
 
-    setIsSubmittingProof(true);
+    setIsSubmitting(true);
+    setNotice(null);
+    recordFlowEvent("activation_submit_clicked");
+
     try {
       const session = await safeGetSession();
-      const response = await fetch("/api/activation/manual-proof", {
+      const payload = {
+        phone,
+        method: "vodafone_cash",
+        proofImage,
+        note: notes
+      };
+      
+      const res = await fetch("/api/activation/manual-proof", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
         },
-        body: JSON.stringify({
-          email,
-          method: methodValue,
-          reference: referenceValue,
-          amount: amountValue,
-          note: proofNote,
-          proofImage
-        })
+        body: JSON.stringify(payload)
       });
-
-      const data = (await response.json().catch(() => ({}))) as { error?: string; message?: string };
-      if (!response.ok) {
-        throw new Error(data.error || "ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹.");
-      }
-
-      trackEvent(AnalyticsEvents.PAYMENT_PROOF_SUBMITTED, {
-        flow: "activation_manual_proof",
-        method: methodValue,
-        payment_mode: modeValue,
-        has_reference: Boolean(referenceValue),
-        has_proof_image: hasProofImage
-      });
-
-      recordFlowEvent("payment_proof_submitted", {
-        meta: {
-          source: "activation_manual_proof",
-          method: methodValue,
-          payment_mode: modeValue
-        }
-      });
-
-      setProofReference("");
-      setProofAmount("");
-      setProofNote("");
-      setProofImage(null);
-      setPaymentNotice(data.message || "ØªÙ… Ø§Ø³ØªÙ„Ø§Ù… Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹. Ù‡Ù†Ø±Ø§Ø¬Ø¹ Ø§Ù„ØªØ­ÙˆÙŠÙ„ ÙˆÙ†ÙØ¹Ù„ Ø§Ù„Ø­Ø³Ø§Ø¨.");
-      setPaymentNoticeKind("success");
-      setWizardStep(3);
+      
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "تعذر إرسال إثبات الدفع.");
+      
+      // Update local lead status
+      marketingLeadService.syncLead({ status: "proof_received", phone });
+      recordFlowEvent("activation_submit_success");
+      
+      setStep("success");
       
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
-    } catch (error) {
-      setPaymentNotice(error instanceof Error ? error.message : "ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹.");
-      setPaymentNoticeKind("error");
+    } catch (_err) {
+      setNotice(_err instanceof Error ? _err.message : "حدث خطأ غير متوقع.");
+      setNoticeKind("error");
+      recordFlowEvent("activation_submit_failed");
     } finally {
-      setIsSubmittingProof(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (!ACTIVATION_PUBLIC_ENABLED) {
-    return (
-      <main className="min-h-screen bg-[#020408] px-4 py-10 text-white relative overflow-hidden flex items-center justify-center">
-        {/* Cinematic Orbs */}
-        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-teal-500/10 blur-[80px] pointer-events-none" />
-        <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-[80px] pointer-events-none" />
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-10 mx-auto max-w-2xl rounded-[32px] border border-white/5 bg-slate-900/40 backdrop-blur-xl p-10 text-center shadow-[0_30px_120px_-60px_rgba(20,184,166,0.3)]"
-        >
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-400/80 mb-6">Ø±Ø­Ù„Ø© Ø§Ù„Ù…ØºØ§Ø¯Ø±Ø©</p>
-          <h1 className="text-3xl font-black mb-4">Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ù…Ù„Ø§Ø° Ù…ØºÙ„Ù‚Ø© Ù…Ø¤Ù‚ØªØ§Ù‹</h1>
-          <p className="text-sm leading-8 text-slate-400 mb-8 max-w-lg mx-auto">
-            Ø£Ù†Øª Ø§Ù„Ø¢Ù† Ø¹Ù„Ù‰ Ø£Ø¹ØªØ§Ø¨ Ø§Ù„Ø±Ø­Ù„Ø©ØŒ Ù„ÙƒÙ† Ø§Ù„Ø£Ø¨ÙˆØ§Ø¨ Ø­Ø§Ù„ÙŠØ§Ù‹ ÙÙŠ ÙØªØ±Ø© ØµÙŠØ§Ù†Ø© ÙˆØªØ¬Ù‡ÙŠØ² Ù„Ø§Ø³ØªÙ‚Ø¨Ø§Ù„ Ø§Ù„Ø±ÙØ§Ù‚ Ø§Ù„Ø¬Ø¯Ø¯. 
-            Ù‚Ø±ÙŠØ¨Ø§Ù‹ Ø³ØªÙØªØ­ Ø§Ù„Ø¨ÙˆØ§Ø¨Ø§Øª. Ø¥Ø°Ø§ ÙƒØ§Ù†Øª Ù„Ø¯ÙŠÙƒ Ø­Ø§Ù„Ø© Ø®Ø§ØµØ©ØŒ Ø±ÙØ§Ù‚ Ø§Ù„Ø·Ø±ÙŠÙ‚ ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø±Ùƒ.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <a href="/" className="rounded-2xl border border-teal-500/20 bg-teal-500/10 px-6 py-3.5 text-sm font-black text-teal-300 transition hover:bg-teal-500/20">
-              Ø§Ù„Ø¹ÙˆØ¯Ø© Ø¥Ù„Ù‰ Ø§Ù„Ø³Ø§Ø­Ø©
-            </a>
-            <a
-              href={buildPaymentWhatsappHref({ email: "", method: "Ø§Ø³ØªÙØ³Ø§Ø± Ø¹Ø§Ù…" })}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
-            >
-              ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ø§Ù„Ø±ÙØ§Ù‚ (ÙˆØ§ØªØ³Ø¢Ø¨)
-            </a>
-          </div>
-        </motion.div>
-      </main>
-    );
-  }
-
-  const goNext = () => setWizardStep((s) => Math.min(s + 1, 4));
-  const goBack = () => {
-    setWizardStep((s) => {
-      if (s === 1) {
-        router.push("/pricing");
-        return s;
-      }
-      return Math.max(s - 1, 1);
-    });
-  };
-  const scrollTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
-
   return (
-    <main className="min-h-screen bg-[#020408] text-white selection:bg-teal-500/30 relative overflow-hidden flex flex-col">
-      {/* Cinematic Deep Background */}
-      <div className="fixed inset-0 z-0 bg-[#020408]">
-        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-teal-500/10 blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/10 blur-[100px] pointer-events-none" />
-        <div className="absolute top-[40%] left-[20%] w-[400px] h-[400px] rounded-full bg-emerald-500/5 blur-[100px] pointer-events-none" />
-        <div 
-          className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-          style={{ 
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-            maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%)'
-          }}
-        />
+    <main className="min-h-screen bg-[#020408] text-white selection:bg-teal-500/30 relative flex flex-col items-center py-10 px-4 md:px-0" dir="rtl">
+      {/* Background cinematic elements */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-teal-500/10 blur-[100px]" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/10 blur-[100px]" />
       </div>
 
-      <div className="relative z-10 w-full flex-1 flex flex-col">
-        {/* Sticky step progress bar */}
-        <WizardProgressBar currentStep={Math.min(wizardStep, 2)} />
+      <div className="relative z-10 w-full max-w-lg mt-8">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+          <span className="rounded-full border border-teal-500/20 bg-teal-500/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-teal-300 shadow-[0_0_15px_rgba(45,212,191,0.2)]">
+            مرحلة التفعيل
+          </span>
+          <h1 className="mt-6 text-3xl font-black text-white drop-shadow-md">
+            تأكيد إثبات الدفع
+          </h1>
+          <p className="mt-3 text-sm text-slate-400 max-w-sm mx-auto leading-relaxed">
+            الرحلة تعتمد على نظام إثبات دقيق. حول المبلغ المطلوب للرقم بالأسفل، وارفع التأكيد المباشر لتفعيل ملفك.
+          </p>
+        </motion.div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-4">
-          <AnimatePresence mode="wait" initial={false}>
-            {/* Step 1 â€” Choose payment method */}
-            {wizardStep === 1 && (
-              <StepChooseMethod
-                key="step-choose-method"
-                mode={mode}
-                setMode={setMode}
-                selectedMethod={selectedMethodId}
-                onSelect={(method, trackId) => {
-                  selectPaymentMethod(method, trackId);
-                }}
-                onNext={() => { goNext(); scrollTop(); }}
-                onBack={() => { goBack(); scrollTop(); }}
-              />
-            )}
-
-            {/* Step 2 â€” Payment + send proof */}
-            {wizardStep === 2 && (
-              <StepSendProof
-                key="step-send-proof"
-                selectedMethod={selectedMethodId ?? proofMethod}
-                mode={mode}
-                email={email}
-                setEmail={setEmail}
-                proofMethod={proofMethod}
-                setProofMethod={setProofMethod}
-                availableProofMethods={availableProofMethods}
-                proofReference={proofReference}
-                setProofReference={setProofReference}
-                proofAmount={proofAmount}
-                setProofAmount={setProofAmount}
-                amountPlaceholder={amountPlaceholder}
-                handleProofImageChange={handleProofImageChange}
-                proofImage={proofImage}
-                setProofImage={setProofImage}
-                proofNote={proofNote}
-                setProofNote={setProofNote}
-                isSubmittingProof={isSubmittingProof}
-                handleProofSubmit={handleProofSubmit}
-                onBack={() => { goBack(); scrollTop(); }}
-                paymentNotice={paymentNotice}
-                paymentNoticeKind={paymentNoticeKind}
-              />
-            )}
-
-            {/* Step 3 - Success Screen */}
-            {wizardStep === 3 && (
-              <motion.div
-                key="step-success"
-                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="flex w-full max-w-lg flex-col items-center justify-center py-16 text-center"
-                dir="rtl"
-              >
-                <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
-                  <svg className="w-12 h-12 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
-                <h2 className="mb-4 text-3xl font-black text-white">
-                  خطوتك وصلت بأمان
-                </h2>
-                <p className="mb-8 text-sm leading-8 text-slate-300 max-w-sm mx-auto">
-                  {paymentNotice || "استلمنا إثبات الدفع بنجاح. سنراجع التحويل ونقوم بتفعيل حسابك يدويًا لتكمل رحلتك."}
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-                  <a
-                    href="/app"
-                    className="flex items-center justify-center rounded-2xl bg-teal-500 py-4 px-8 text-sm font-black text-slate-950 shadow-[0_0_24px_rgba(20,184,166,0.3)] transition-all hover:bg-teal-400 hover:shadow-[0_0_36px_rgba(20,184,166,0.4)] w-full sm:w-auto"
+        <AnimatePresence mode="wait">
+          {step === "upload" && (
+            <motion.form 
+              key="form"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              onSubmit={handleSubmit} 
+              className="space-y-6"
+            >
+              
+              {/* Payment Number Card */}
+              <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 transition hover:border-white/20 shadow-lg">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+                  <p className="text-xs font-black uppercase tracking-wider text-slate-400">فودافون كاش</p>
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                      copied
+                        ? "bg-teal-500/20 text-teal-300"
+                        : "bg-teal-500/10 text-teal-400 hover:bg-teal-500/20 hover:text-teal-300"
+                    }`}
                   >
-                    العودة إلى التطبيق
-                  </a>
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? "تم النسخ" : "نسخ الرقم"}
+                  </button>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                <div className="px-5 py-6">
+                  <p className="text-center font-mono text-3xl font-black tracking-[0.1em] text-white">
+                    {VODAFONE_CASH_NUMBER.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div className="rounded-2xl border border-teal-500/15 bg-teal-500/[0.04] px-5 py-4 text-xs text-slate-300 leading-6">
+                <ul className="space-y-2 list-none p-0 m-0">
+                  <li className="flex items-start gap-2">
+                    <span className="text-teal-400 font-bold">•</span>
+                    تأكد إن التحويل من محفظة فودافون كاش مباشرة.
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-teal-400 font-bold">•</span>
+                    خد سكرين شوت لرسالة الإرسال اللي بتظهر بنجاح.
+                  </li>
+                </ul>
+              </div>
+
+              {/* Notice */}
+              {notice && (
+                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className={`rounded-2xl border px-4 py-3 text-xs leading-6 ${
+                  noticeKind === "success" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200" :
+                  noticeKind === "error" ? "border-rose-500/30 bg-rose-500/10 text-rose-200" :
+                  "border-sky-500/30 bg-sky-500/10 text-sky-200"
+                }`}>
+                  {notice}
+                </motion.div>
+              )}
+
+              {/* Fields */}
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-[13px] font-black text-slate-300">رقم الهاتف <span className="font-normal text-slate-500">(الذي تم التحويل منه أو التواصل به)</span></label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="01xxxxxxxxx"
+                    dir="ltr"
+                    className="w-full text-left rounded-2xl border border-white/5 bg-slate-900/60 px-5 py-4 text-sm font-mono text-white outline-none placeholder:text-slate-600 transition-all focus:border-teal-500/50 focus:bg-slate-900/80 focus:ring-1 focus:ring-teal-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[13px] font-black text-slate-300">لقطة شاشة التفعيل</label>
+                  <AnimatePresence mode="wait">
+                    {proofImage ? (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="overflow-hidden rounded-2xl border border-teal-500/30 bg-slate-900/80 shadow-[0_0_20px_rgba(20,184,166,0.1)]"
+                      >
+                        <div className="flex items-center justify-between px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <CheckCircle2 className="h-5 w-5 text-teal-400 drop-shadow-[0_0_8px_rgba(45,212,191,0.5)]" />
+                            <span className="text-sm font-black text-white">{proofImage.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setProofImage(null)}
+                            className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-xs font-black text-rose-300 transition-all hover:border-rose-500/40 hover:bg-rose-500/20"
+                          >
+                            إزالة
+                          </button>
+                        </div>
+                        <div className="border-t border-white/5 bg-black/40 p-2">
+                          <img src={proofImage.dataUrl} alt="الإثبات" className="max-h-48 w-full rounded-lg object-contain" />
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.label
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className="group flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed border-white/10 bg-slate-900/40 px-6 py-10 text-center shadow-inner transition-all hover:border-teal-500/40 hover:bg-slate-900/60"
+                      >
+                        <Upload className="h-8 w-8 text-slate-500 transition-colors group-hover:text-teal-400" />
+                        <p className="text-sm font-black text-slate-300">أرفق لقطة الشاشة (Screenshot)</p>
+                        <p className="text-[10px] uppercase tracking-widest text-slate-500">Max size: 900KB</p>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          onChange={handleFileChange}
+                          className="sr-only"
+                        />
+                      </motion.label>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[13px] font-black text-slate-300">ملاحظات <span className="font-normal text-slate-500">(اختياري)</span></label>
+                  <textarea
+                    rows={2}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="أي ملاحظة أو اسم إضافي لتسريع المراجعة"
+                    className="w-full resize-none rounded-2xl border border-white/5 bg-slate-900/60 px-5 py-4 text-sm text-white outline-none placeholder:text-slate-600 transition-all focus:border-teal-500/50 focus:bg-slate-900/80"
+                  />
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-6 mt-4">
+                <button
+                  type="button"
+                  onClick={() => router.push("/")}
+                  className="flex items-center justify-center rounded-2xl border border-white/10 px-5 py-4 text-sm font-bold text-slate-400 transition hover:border-white/20 hover:bg-white/5 hover:text-slate-200"
+                >
+                  العودة
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="group flex flex-1 items-center justify-center gap-3 rounded-2xl bg-teal-500 py-4 text-sm font-black text-slate-950 shadow-[0_0_24px_rgba(20,184,166,0.3)] transition-all hover:bg-teal-400 hover:shadow-[0_0_36px_rgba(20,184,166,0.4)] disabled:opacity-40"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950 border-t-transparent" />
+                      جاري الإرسال...
+                    </span>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+                      إرسال الإثبات
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </motion.form>
+          )}
+
+          {step === "success" && (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex w-full flex-col items-center justify-center py-10 text-center bg-slate-900/40 border border-white/5 rounded-3xl p-8"
+            >
+              <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mb-6">
+                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+              </div>
+              <h2 className="text-2xl font-black text-white mb-3">تم تسلُم الإثبات بنجاح</h2>
+              <p className="text-sm text-slate-400 leading-relaxed mb-8 max-w-sm">
+                تم تسجيل طلبك وحالياً قيد المراجعة اليدوية من قبل فريق التشغيل. سيتم تفعيل وصولك وربطه بملفك خلال ساعات.
+              </p>
+              
+              <button
+                onClick={() => router.push("/")}
+                className="rounded-2xl border border-teal-500/20 bg-teal-500/10 px-8 py-4 text-sm font-black text-teal-300 transition-all hover:bg-teal-500/20 w-full md:w-auto"
+              >
+                العودة للرحلة
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </main>
   );
 }
-

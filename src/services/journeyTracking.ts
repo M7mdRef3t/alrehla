@@ -337,6 +337,7 @@ export type FlowStep =
   | "payment_failed"
   | "payment_intent_submitted"
   | "payment_proof_submitted"
+  | "activation_detected_realtime"
   | "lead_form_submitted"
   | "lead_followup_attempted"
   | "lead_followup_connected"
@@ -412,7 +413,13 @@ export type FlowStep =
   | "safety_triage_triggered"
   | "quiz_completed"
   | "quiz_hub_opened"
-  | "diagnosis_completed";
+  | "diagnosis_completed"
+  | "activation_copy_number_clicked"
+  | "activation_proof_upload_started"
+  | "activation_proof_upload_completed"
+  | "activation_submit_clicked"
+  | "activation_submit_success"
+  | "activation_submit_failed";
 
 export function recordFlowEvent(
   step: FlowStep,

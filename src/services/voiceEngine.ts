@@ -41,7 +41,7 @@ export async function generateVoiceScript(event: VoiceEvent, context: any): Prom
 
     try {
     const result = await getGenAI().models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
     });
         return (result.text ?? "").trim().replace(/['"]/g, '');
