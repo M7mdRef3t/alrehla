@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, Ticket, XCircle, ArrowRight, Loader2, Image as ImageIcon, Zap } from "lucide-react";
 import { fetchOpenSupportTickets, resolveActivationTicket, rejectActivationTicket, type SupportTicketEntry } from "@/services/adminApi";
 import { supabase } from "@/services/supabaseClient";
-
+import { CollapsibleSection } from "../../../ui/CollapsibleSection";
 function getSupportTicketLabel(ticket: SupportTicketEntry): string {
     if (ticket.source === "activation_manual_proof" || ticket.category === "payment_activation") {
         return "Revenue access unlock";
@@ -140,7 +140,8 @@ export const SupportTicketsPanel: FC = () => {
     };
 
     return (
-        <div className="admin-glass-card rounded-3xl p-6 border-emerald-500/20 relative" dir="rtl">
+        <CollapsibleSection title="بوابة العبور (طلبات التفعيل)" icon={<Ticket className="w-5 h-5 text-emerald-400" />} headerColors="border-emerald-500/10 bg-slate-900/40 text-slate-300" defaultExpanded={false}>
+            <div className="admin-glass-card rounded-3xl p-6 border-emerald-500/20 relative" dir="rtl">
             {localError && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-rose-500/90 backdrop-blur text-white px-4 py-2 rounded-xl text-sm font-bold shadow-[0_0_20px_rgba(244,63,94,0.3)] flex items-center gap-2 z-50 animate-in slide-in-from-top-4 fade-in duration-300 pointer-events-none">
                     <XCircle className="w-4 h-4" />
@@ -340,5 +341,6 @@ export const SupportTicketsPanel: FC = () => {
                 </div>
             )}
         </div>
+        </CollapsibleSection>
     );
 };

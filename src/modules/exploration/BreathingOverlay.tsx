@@ -240,7 +240,7 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
       style={{ background: "#010207", colorScheme: "dark" }}
       role="dialog"
       aria-modal="true"
-      aria-label="الملاذ الآمن"
+      aria-label="مساحتك الخاصة"
       dir="rtl"
     >
       {/* Deep ambient orb - matches accent color */}

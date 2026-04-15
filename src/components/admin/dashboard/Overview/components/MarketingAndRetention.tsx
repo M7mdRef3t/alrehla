@@ -3,7 +3,7 @@ import { Users, Target, Zap } from "lucide-react";
 import type { RetentionCohortRow, UtmBreakdownEntry } from "@/services/adminApi";
 import { decideVisualGeneLayout } from "@/services/visualGenes";
 import { AdminTooltip } from "./AdminTooltip";
-
+import { CollapsibleSection } from "../../../ui/CollapsibleSection";
 interface MarketingAndRetentionProps {
     utmBreakdown: { sources: UtmBreakdownEntry[]; mediums: UtmBreakdownEntry[]; campaigns: UtmBreakdownEntry[] } | null | undefined;
     retentionCohorts: RetentionCohortRow[] | null | undefined;
@@ -42,7 +42,8 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mb-6" dir="rtl">
+        <CollapsibleSection title="التسويق والاستبقاء" icon={<Target className="w-5 h-5 text-teal-400" />} headerColors="border-teal-500/10 bg-slate-900/40 text-slate-300" defaultExpanded={false}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mb-6" dir="rtl">
 
             {/* UTM Breakdown (Sources) */}
             <div className="admin-glass-card p-6 border border-white/5 bg-slate-950/60 rounded-3xl shadow-2xl relative overflow-hidden group">
@@ -161,5 +162,6 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
             </div>
 
         </div>
+        </CollapsibleSection>
     );
 };

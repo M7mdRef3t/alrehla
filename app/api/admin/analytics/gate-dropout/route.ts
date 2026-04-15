@@ -43,8 +43,10 @@ export async function GET(req: Request) {
             .from('routing_events')
             .select('event_type, payload')
             .gte('occurred_at', sevenDaysAgo.toISOString())
-            .or('event_type.like.Gate_%,event_type.like.payment_%,event_type.like.whatsapp_%,event_type.like.diagnosis_%,event_type.like.mizan_%,event_type.like.wird_%,event_type.like.conversion_%');
+            .or('event_type.like.Gate_%,event_type.like.payment_%,event_type.like.whatsapp_%,event_type.like.diagnosis_%,event_type.like.mizan_%,event_type.like.wird_%,event_type.like.conversion_%,event_type.like.onboarding_%');
 
+        const onboardingSteps: Record<string, number> = {};
+        const onboardingDurations: Record<string, number[]> = {};
         const tStats: Record<string, number> = {};
         const diagSteps: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         
@@ -58,7 +60,27 @@ export async function GET(req: Request) {
                     diagSteps[step]++;
                 }
             }
+
+            // Granular onboarding step tracking
+            if (e.event_type === 'onboarding_step_complete') {
+                const stepName = (e.payload as any)?.step_name;
+                const duration = (e.payload as any)?.duration_ms;
+                if (stepName) {
+                    onboardingSteps[stepName] = (onboardingSteps[stepName] || 0) + 1;
+                    if (typeof duration === 'number') {
+                        if (!onboardingDurations[stepName]) onboardingDurations[stepName] = [];
+                        onboardingDurations[stepName].push(duration);
+                    }
+                }
+            }
         });
+
+        // Calculate Average Durations
+        const onboardingAvgDurations: Record<string, number> = {};
+        for (const step in onboardingDurations) {
+            const sum = onboardingDurations[step].reduce((a, b) => a + b, 0);
+            onboardingAvgDurations[step] = Math.round(sum / onboardingDurations[step].length);
+        }
 
         const stats = {
             total: sessions.length,
@@ -125,6 +147,19 @@ export async function GET(req: Request) {
                 offer_view: tStats['conversion_offer_view'] || 0,
                 offer_click: tStats['conversion_offer_clicked'] || 0
             },
+            // NEW: Onboarding Journey
+            onboarding_funnel_last_7d: {
+                opened: tStats['onboarding_started'] || 0,
+                noise_check: onboardingSteps['noise_check'] || 0,
+                pain_dump: onboardingSteps['pain_dump'] || 0,
+                inventory: onboardingSteps['inventory'] || 0,
+                mapping: onboardingSteps['mapping'] || 0,
+                insight: onboardingSteps['insight'] || 0,
+                contact: onboardingSteps['contact'] || 0,
+                results: onboardingSteps['results'] || 0,
+                completed: tStats['onboarding_completed'] || 0
+            },
+            onboarding_avg_durations: onboardingAvgDurations,
             sources: stats.sourceBreakdown,
             timestamp: new Date().toISOString()
         });

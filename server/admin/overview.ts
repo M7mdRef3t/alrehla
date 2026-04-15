@@ -1765,7 +1765,14 @@ async function handleSystemHealth(client: SupabaseClient, res: JsonResponder) {
   const now = new Date();
   const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const probeStart = Date.now();
-  const [{ error }, { data: telemetryRows }, { count: api5xx24h }, { count: systemErrors24h }, { count: ahaMoments24h }] = await Promise.all([
+  const [
+    { error }, 
+    { data: telemetryRows }, 
+    { count: api5xx24h }, 
+    { count: systemErrors24h }, 
+    { count: ahaMoments24h },
+    { data: recentAiFailures }
+  ] = await Promise.all([
     client.from("journey_events").select("id", { count: "exact", head: true }).limit(1),
     client
       .from("ai_telemetry")
@@ -1786,7 +1793,13 @@ async function handleSystemHealth(client: SupabaseClient, res: JsonResponder) {
       .from("routing_events")
       .select("id", { count: "exact", head: true })
       .eq("event_type", "aha_moment")
-      .gte("occurred_at", since24h)
+      .gte("occurred_at", since24h),
+    client
+      .from("ai_telemetry")
+      .select("id,created_at,feature,model,failure_reason,error_message")
+      .eq("json_success", false)
+      .order("created_at", { ascending: false })
+      .limit(10)
   ]);
   const probeMs = Date.now() - probeStart;
   const uptimeSec = Math.max(0, Math.round((Date.now() - overviewRuntimeStats.startedAt) / 1000));
@@ -1805,6 +1818,8 @@ async function handleSystemHealth(client: SupabaseClient, res: JsonResponder) {
   const api5xxCount24h = Number(api5xx24h ?? 0);
   const errorPulse24h = Number(systemErrors24h ?? 0);
   const ahaMomentPulse24h = Number(ahaMoments24h ?? 0);
+  const aiFailures = (recentAiFailures ?? []) as any[];
+
 
   const operationsAlerts: Array<{
     level: "warning" | "critical";
@@ -1883,11 +1898,13 @@ async function handleSystemHealth(client: SupabaseClient, res: JsonResponder) {
     telemetry: {
       api5xx24h: api5xxCount24h,
       llmLatencyP95Ms,
-      tokenUsage24h
+      tokenUsage24h,
+      recentAiFailures: aiFailures
     },
     alerts: operationsAlerts
   });
 }
+
 
 async function handleSecuritySignals(client: SupabaseClient, res: JsonResponder) {
   const now = Date.now();

@@ -1380,9 +1380,77 @@ export async function updateSupportTicketStatus(payload: {
   };
 }
 
+/** Maps the server-side overview API response (snake_case/legacy naming) to the OverviewStats type. */
+function normalizeOverviewApiData(raw: Record<string, unknown>): OverviewStats {
+  const ml = raw.marketingLeads as Record<string, unknown> | null | undefined;
+  const pg = raw.phaseOneGoal as Record<string, unknown> | null | undefined;
+  const fs = raw.flowStats as Record<string, unknown> | null | undefined;
+
+  return {
+    // Core counters — server uses totalUsers/activeNow
+    totalTravelers: (raw.totalUsers ?? raw.totalTravelers ?? null) as number | null,
+    activeConsciousnessNow: (raw.activeNow ?? raw.activeConsciousnessNow ?? null) as number | null,
+    avgMood: (raw.avgMood ?? null) as number | null,
+    aiTokensUsed: (raw.aiTokensUsed ?? null) as number | null,
+    growthData: (raw.growthData ?? []) as OverviewStats["growthData"],
+    zones: (raw.zones ?? []) as OverviewStats["zones"],
+
+    // Phase one goal — server uses registeredUsers/installedUsers/addedPeople
+    phaseOneGoal: {
+      registeredTravelers: Number(pg?.registeredUsers ?? pg?.registeredTravelers ?? 0),
+      installedTravelers: Number(pg?.installedUsers ?? pg?.installedTravelers ?? 0),
+      addedPeers: Number(pg?.addedPeople ?? pg?.addedPeers ?? 0),
+    },
+
+    // Marketing leads — server wraps in marketingLeads{}, client type uses potentialTravelers{}
+    potentialTravelers: ml ? {
+      total: Number(ml.total ?? 0),
+      last24h: Number(ml.last24h ?? 0),
+      bySource: (ml.bySource ?? []) as OverviewStats["potentialTravelers"] extends undefined ? never : NonNullable<OverviewStats["potentialTravelers"]>["bySource"],
+      bySourceType: (ml.bySourceType ?? []) as NonNullable<OverviewStats["potentialTravelers"]>["bySourceType"],
+      byStatus: (ml.byStatus ?? []) as NonNullable<OverviewStats["potentialTravelers"]>["byStatus"],
+      byCampaign: (ml.byCampaign ?? []) as NonNullable<OverviewStats["potentialTravelers"]>["byCampaign"],
+      dailyTrend: (ml.dailyTrend ?? []) as NonNullable<OverviewStats["potentialTravelers"]>["dailyTrend"],
+      sovereignPassage: (ml.conversion ?? ml.sovereignPassage ?? {
+        potential: 0, startClicks: 0, pulseCompleted: 0, journeyMaps: 0,
+        startClickRatePct: null, pulseCompletedRatePct: null, mapCreatedRatePct: null
+      }) as NonNullable<OverviewStats["potentialTravelers"]>["sovereignPassage"],
+    } : undefined,
+
+    // Flow stats — same shape
+    flowStats: fs ? {
+      byStep: (fs.byStep ?? {}) as Record<string, number>,
+      avgTimeToActionMs: (fs.avgTimeToActionMs ?? null) as number | null,
+      addPersonCompletionRate: (fs.addPersonCompletionRate ?? null) as number | null,
+      pulseAbandonedByReason: (fs.pulseAbandonedByReason ?? {}) as Record<string, number>,
+    } : {
+      byStep: {},
+      avgTimeToActionMs: null,
+      addPersonCompletionRate: null,
+      pulseAbandonedByReason: {},
+    },
+
+    // Pass through as-is
+    conversionHealth: (raw.conversionHealth ?? { pathStarted24h: 0, journeyMapsTotal: 0, addPersonOpened: 0, addPersonDoneShowOnMap: 0 }) as OverviewStats["conversionHealth"],
+    funnel: (raw.funnel ?? { steps: [] }) as OverviewStats["funnel"],
+    awarenessGap: (raw.awarenessGap ?? null) as OverviewStats["awarenessGap"],
+    topScenarios: (raw.topScenarios ?? null) as OverviewStats["topScenarios"],
+    verificationGapIndex: (raw.verificationGapIndex ?? null) as number | null,
+    routingV2: raw.routingV2,
+    routingTelemetry: raw.routingTelemetry,
+    taskFriction: (raw.taskFriction ?? null) as OverviewStats["taskFriction"],
+    weeklyRhythm: raw.weeklyRhythm,
+    emergencyLogs: (raw.emergencyLogs ?? null) as OverviewStats["emergencyLogs"],
+    pulseEnergyWeekly: (raw.pulseEnergyWeekly ?? { points: [], unstableToCompletedPct: null }) as OverviewStats["pulseEnergyWeekly"],
+    moodWeekly: (raw.moodWeekly ?? { points: [], unstableToCompletedPct: null }) as OverviewStats["moodWeekly"],
+    pulseCopyVariants: (raw.pulseCopyVariants ?? { assigned: { energy: { a: 0, b: 0 }, mood: { a: 0, b: 0 }, focus: { a: 0, b: 0 } }, completed: { energy: { a: 0, b: 0 }, mood: { a: 0, b: 0 }, focus: { a: 0, b: 0 } } }) as OverviewStats["pulseCopyVariants"],
+    pulseCopyVariantTrend: (raw.pulseCopyVariantTrend ?? { energy: [], mood: [], focus: [] }) as OverviewStats["pulseCopyVariantTrend"],
+  };
+}
+
 export async function fetchOverviewStats(): Promise<OverviewStats | null> {
-  const apiData = await callAdminApi<OverviewStats>("overview");
-  if (apiData) return apiData;
+  const apiData = await callAdminApi<Record<string, unknown>>("overview");
+  if (apiData) return normalizeOverviewApiData(apiData);
   if (!isSupabaseReady || !supabase) return null;
   const now = new Date();
   const isoDate = (d: Date) => d.toISOString().slice(0, 10);

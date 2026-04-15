@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { BarChart3, Target, Users } from "lucide-react";
 import type { OverviewStats } from "@/services/adminApi";
 import { AdminTooltip } from "./AdminTooltip";
-
+import { CollapsibleSection } from "../../../ui/CollapsibleSection";
 type PotentialTravelersStats = NonNullable<OverviewStats["potentialTravelers"]>;
 
 interface MarketingLeadsPanelProps {
@@ -75,7 +75,8 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
   const peakDaily = (data.dailyTrend || []).reduce((max, day) => Math.max(max, day.count), 0);
 
   return (
-    <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2" dir="ltr">
+    <CollapsibleSection title="محرك العبور السِيادي (Leads)" icon={<Target className="w-5 h-5 text-teal-400" />} headerColors="border-teal-500/10 bg-slate-900/40 text-slate-300" defaultExpanded={false}>
+        <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2" dir="ltr">
       
       {/* Leads Engine Matrix */}
       <div className="admin-glass-card rounded-3xl border-teal-500/10 bg-slate-950/60 p-6 shadow-2xl relative overflow-hidden group">
@@ -221,5 +222,6 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
         </div>
       </div>
     </div>
+    </CollapsibleSection>
   );
 };

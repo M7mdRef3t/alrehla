@@ -150,13 +150,13 @@ export default function PricingPage() {
         {/* Header */}
         <div className="mb-10 max-w-lg text-center">
           <p className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-teal-500 dark:text-teal-400">
-            مساحات الملاذ الآمن
+            مساحاتك الخاصة
           </p>
             <h1 className="mb-4 text-3xl font-black leading-tight text-app-foreground md:text-3xl" style={{ fontFamily: "var(--font-display)" }}>
             خطوة واحدة بينك وبين التعافي
           </h1>
           <p className="text-sm leading-[1.8] text-app-muted-foreground">
-            أنت الآن في أمان.. يمكنك البقاء في الملاذ المبدئي للتحليل، أو فتح المسار الأكثر خطورة وعمقاً.
+            أنت الآن في أمان.. يمكنك البقاء في مساحتك المبدئية للتحليل، أو فتح المسار الأكثر خطورة وعمقاً.
           </p>
         </div>
 
@@ -171,8 +171,8 @@ export default function PricingPage() {
                 <Shield className="h-6 w-6 text-app-muted-foreground" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-app-foreground">الملاذ المبدئي</h2>
-                <p className="text-xs text-app-muted-foreground">مساحة آمنة لاكتشاف خريطتك</p>
+                <h2 className="text-xl font-black text-app-foreground">مساحتك المبدئية</h2>
+                <p className="text-xs text-app-muted-foreground">مساحة خاصة لاكتشاف خريطتك</p>
               </div>
             </div>
 
@@ -206,7 +206,7 @@ export default function PricingPage() {
               onClick={() => { window.location.href = "/"; }}
               className="mt-auto w-full py-4 text-sm font-bold text-app-muted-foreground border border-app-border rounded-2xl hover:bg-app-muted hover:text-app-foreground transition-all"
             >
-              استمر في الملاذ
+              استمر في مساحتك
             </button>
           </div>
 

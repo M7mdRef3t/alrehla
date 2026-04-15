@@ -623,6 +623,7 @@ export const AnalyticsEvents = {
   LEAD_FORM_SUBMITTED: "lead_form_submitted",
   ONBOARDING_STARTED: "onboarding_started",
   ONBOARDING_COMPLETED: "onboarding_completed",
+  ONBOARDING_STEP_COMPLETE: "onboarding_step_complete",
   ACTIVATION_VIEWED: "activation_viewed",
   PAYMENT_INTENT_SUBMITTED: "payment_intent_submitted",
   GATE_QUALIFIED: "gate_qualified",
@@ -706,6 +707,8 @@ export const AnalyticsEvents = {
   DIAGNOSIS_RESULT_VIEW: "diagnosis_result_view",
   CONVERSION_OFFER_VIEW: "conversion_offer_view",
   CONVERSION_OFFER_CLICKED: "conversion_offer_clicked",
+
+  // ─── Onboarding Funnel ────────────────
 
   // ─── Professional Hardening (Phase 2) ────────────────
   SYSTEM_ERROR: "system_error",

@@ -105,8 +105,9 @@ export async function withTimeout<T>(task: Promise<T>, timeoutMs = 25_000): Prom
 export async function performInternalGeneration(
   prompt: string,
   config: Record<string, unknown> = DEFAULT_GENERATION_CONFIG,
-  models: string[] = DEFAULT_MODEL_ORDER
-): Promise<{ text: string; usage: unknown } | { text: null; usage: null; fallback: true; reason: string }> {
+  models: string[] = DEFAULT_MODEL_ORDER,
+  feature: string = "dynamic_generation"
+): Promise<{ text: string; usage: unknown } | { text: null; usage: null; fallback: true; reason: string; detail?: string }> {
   const client = getGeminiClient();
   if (!client) {
     return { text: null, usage: null, fallback: true, reason: "gemini_api_key_missing" };
@@ -138,6 +139,7 @@ export async function performInternalGeneration(
 
   const msg = lastError instanceof Error ? lastError.message : String(lastError ?? "unknown");
   const reason = msg.includes("gemini_timeout") ? "generation_timeout" : "generation_failed";
-  console.error("[Gemini:performInternalGeneration] Failed:", msg);
+  console.error(`[Gemini:performInternalGeneration] [${feature}] Failed:`, msg);
   return { text: null, usage: null, fallback: true, reason, detail: msg };
 }
+

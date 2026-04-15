@@ -104,6 +104,18 @@ type GateFunnelStats = {
     step5: number;
     result_view: number;
   };
+  onboarding_funnel_last_7d?: {
+    opened: number;
+    noise_check: number;
+    pain_dump: number;
+    inventory: number;
+    mapping: number;
+    insight: number;
+    contact: number;
+    results: number;
+    completed: number;
+  };
+  onboarding_avg_durations?: Record<string, number>;
   engagement_telemetry_last_7d?: {
     mizan_view: number;
     wird_view: number;
@@ -121,6 +133,15 @@ type OpsAlert = {
   message: string;
   value: number;
   threshold: number;
+};
+
+type AiFailure = {
+  id: string;
+  created_at: string;
+  feature: string | null;
+  model: string | null;
+  failure_reason: string;
+  error_message: string | null;
 };
 
 type SystemHealthResponse = {
@@ -144,6 +165,7 @@ type SystemHealthResponse = {
     api5xx24h?: number;
     llmLatencyP95Ms?: number;
     tokenUsage24h?: number;
+    recentAiFailures?: AiFailure[];
   };
   observability?: {
     errorPulse24h?: number;
@@ -487,6 +509,90 @@ const DiagnosisFunnelRadar: React.FC<{ stats: GateFunnelStats | null }> = ({ sta
   );
 };
 
+const OnboardingFunnelRadar: React.FC<{ stats: GateFunnelStats | null }> = ({ stats }) => {
+  if (!stats?.onboarding_funnel_last_7d) return <p className="text-sm text-[var(--color-text-muted)]">Onboarding telemetry warming up...</p>;
+
+  const o = stats.onboarding_funnel_last_7d;
+  const durs = stats.onboarding_avg_durations || {};
+  
+  const steps = [
+    { label: "Opened", value: o.opened, key: "opened", color: "var(--color-text-muted)" },
+    { label: "Noise", value: o.noise_check, key: "noise_check", color: "#94a3b8" },
+    { label: "Pain", value: o.pain_dump, key: "pain_dump", color: "#f87171" },
+    { label: "Inv", value: o.inventory, key: "inventory", color: "#fb923c" },
+    { label: "Map", value: o.mapping, key: "mapping", color: "#38bdf8" },
+    { label: "Insight", value: o.insight, key: "insight", color: "#818cf8" },
+    { label: "Contact", value: o.contact, key: "contact", color: "#c084fc" },
+    { label: "Results", value: o.results, key: "results", color: "#4ade80" },
+    { label: "Done", value: o.completed, key: "completed", color: "#22c55e" },
+  ];
+
+  const getRate = (current: number, previous: number) => (previous === 0 ? 0 : (current / previous) * 100);
+  
+  const formatDuration = (ms?: number) => {
+    if (!ms) return null;
+    const sec = Math.round(ms / 1000);
+    if (sec < 60) return `${sec}s`;
+    return `${Math.floor(sec / 60)}m ${sec % 60}s`;
+  };
+
+  const getFrictionLevel = (key: string, ms?: number) => {
+    if (!ms) return "normal";
+    const sec = ms / 1000;
+    if (key === "mapping" && sec > 120) return "high";
+    if (key === "pain_dump" && sec > 90) return "high";
+    if (sec > 60) return "high";
+    return "normal";
+  };
+
+  return (
+    <div className="space-y-3">
+      {steps.map((step, idx) => {
+        const rate = idx === 0 ? 100 : getRate(step.value, steps[idx - 1].value);
+        const overallRate = idx === 0 ? 100 : (step.value / (steps[0].value || 1)) * 100;
+        const duration = durs[step.key];
+        const friction = getFrictionLevel(step.key, duration);
+
+        return (
+          <div key={step.label} className="relative group">
+            <div className="flex items-center justify-between mb-0.5 px-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] uppercase tracking-tighter text-[var(--color-text-muted)] font-medium">{step.label}</span>
+                {duration && (
+                  <span className={`text-[8px] font-black px-1 rounded ${friction === "high" ? "bg-rose-500/20 text-rose-400" : "bg-white/5 text-[var(--color-text-muted)]"}`}>
+                    {formatDuration(duration)}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-bold">{step.value}</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-white/5 overflow-hidden border border-white/5 relative">
+              <div
+                className="h-full transition-all duration-1000 ease-out"
+                style={{
+                  width: `${Math.max(overallRate, 2)}%`,
+                  backgroundColor: step.color,
+                  opacity: friction === "high" ? 0.8 : 1
+                }}
+              />
+            </div>
+            {idx > 0 && step.value > 0 && (
+              <div className="absolute -top-3 right-0 text-[9px] font-black text-emerald-400">
+                {rate.toFixed(0)}%
+              </div>
+            )}
+            
+            {/* Friction Tooltip Area */}
+            {friction === "high" && (
+                <div className="absolute -right-1 top-1 w-1 h-1 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const EngagementRadar: React.FC<{ stats: GateFunnelStats | null }> = ({ stats }) => {
   if (!stats?.engagement_telemetry_last_7d) return <p className="text-sm text-[var(--color-text-muted)]">Engagement telemetry warming up...</p>;
 
@@ -516,10 +622,65 @@ const EngagementRadar: React.FC<{ stats: GateFunnelStats | null }> = ({ stats })
   );
 };
 
-const SystemVitalsRadar: React.FC<{ 
+const AiStabilityRadar: React.FC<{ failures: AiFailure[] }> = ({ failures }) => {
+  if (failures.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
+          <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <p className="text-xs text-emerald-300 font-bold uppercase tracking-widest">Sovereign Awareness Stable</p>
+        <p className="text-[10px] text-emerald-200/40 mt-1">No AI failures detected in recent cycles.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[10px] uppercase tracking-widest text-rose-400 font-bold">Recent Awareness Failures</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300">{failures.length} Anomalies</span>
+      </div>
+      
+      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+        {failures.map((fail) => (
+          <div key={fail.id} className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-rose-500/20 transition-all group">
+            <div className="flex items-start justify-between gap-2">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-vibrant-blue/20 text-vibrant-blue border border-vibrant-blue/10">
+                    {fail.feature || "global"}
+                  </span>
+                  <span className="text-[9px] font-medium text-[var(--color-text-muted)]">
+                    {fail.model?.split("/").pop()}
+                  </span>
+                </div>
+                <p className="text-[11px] font-bold text-rose-200 leading-tight">
+                  {fail.failure_reason.replace(/_/g, " ")}
+                </p>
+              </div>
+              <span className="text-[8px] text-[var(--color-text-muted)] whitespace-nowrap">
+                {new Date(fail.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+            {fail.error_message && (
+              <p className="mt-2 text-[9px] text-slate-400 line-clamp-1 group-hover:line-clamp-none transition-all">
+                {fail.error_message}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const SystemHealthRadar: React.FC<{
   api: SystemHealthResponse["api"] | null;
   probe: SystemHealthResponse["probe"] | null;
-  status: "healthy" | "warning" | "degraded";
+  status: SystemHealthResponse["status"];
 }> = ({ api, probe, status }) => {
   if (!api || !probe) return <p className="text-sm text-[var(--color-text-muted)]">System vitals warming up...</p>;
 
@@ -1406,7 +1567,7 @@ export default function AdminRadarPage() {
             <article className="rounded-2xl border border-[var(--vibrant-blue)]/20 bg-[var(--vibrant-blue)]/5 p-5 md:col-span-1">
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--vibrant-blue)] font-bold">System Vitals</p>
               <div className="mt-4">
-                <SystemVitalsRadar api={apiStats} probe={probeStatus} status={healthStatus} />
+                <SystemHealthRadar api={apiStats} probe={probeStatus} status={healthStatus} />
               </div>
             </article>
 
@@ -1432,6 +1593,13 @@ export default function AdminRadarPage() {
             </article>
 
             <article className="rounded-2xl border border-white/10 bg-black/20 p-5 md:col-span-1">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Onboarding Journey</p>
+              <div className="mt-4">
+                <OnboardingFunnelRadar stats={gateFunnel} />
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-white/10 bg-black/20 p-5">
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Deep Engagement</p>
               <div className="mt-4">
                 <EngagementRadar stats={gateFunnel} />
@@ -1512,6 +1680,11 @@ export default function AdminRadarPage() {
                   <p className="text-[11px] text-[var(--color-text-muted)]">Token Usage / 24h</p>
                   <p className="font-black text-teal-200">{Number(opsTelemetry?.tokenUsage24h ?? 0)}</p>
                 </div>
+              </div>
+
+              {/* Sovereign AI Stability Radar */}
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <AiStabilityRadar failures={opsTelemetry?.recentAiFailures ?? []} />
               </div>
 
               {/* Technical Friction Pulse (Professional Observability) */}

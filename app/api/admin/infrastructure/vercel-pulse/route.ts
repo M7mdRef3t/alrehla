@@ -18,6 +18,9 @@ export async function GET(req: NextRequest) {
 
   // 3. Check configuration
   if (!VERCEL_TOKEN) {
+    if (process.env.NODE_ENV !== "production") {
+      return NextResponse.json({ status: "healthy", deploymentFrequency: "Dev Environment (Vercel Not Configured)" });
+    }
     logger.warn("Vercel Integration: VERCEL_TOKEN is not configured on the server.");
     return NextResponse.json({ status: "unconfigured", deploymentFrequency: "Unknown" });
   }

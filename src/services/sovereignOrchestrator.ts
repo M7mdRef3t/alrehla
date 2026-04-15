@@ -87,8 +87,9 @@ export class SovereignOrchestrator {
         `;
 
         try {
-            const result = await geminiClient.generateJSON<SovereignIntervention[]>(promptContext);
+            const result = await geminiClient.generateJSON<SovereignIntervention[]>(promptContext, "sovereign_intervention");
             if (result && Array.isArray(result) && result.length > 0) {
+
                 return result;
             }
         } catch (e) {

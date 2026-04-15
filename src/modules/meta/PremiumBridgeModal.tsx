@@ -117,7 +117,7 @@ export const PremiumBridgeModal: FC = () => {
                     <Lock className="w-6 h-6 text-slate-950" />
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-black text-slate-950">افتح الملاذ الآمن الآن 🚀</p>
+                    <p className="text-lg font-black text-slate-950">افتح مساحتك الخاصة الآن 🚀</p>
                     <p className="text-xs text-slate-800/70 font-bold">باقة المسار المتقدم لتعافي كامل وعميق</p>
                   </div>
                 </div>

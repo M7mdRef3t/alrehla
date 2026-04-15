@@ -50,7 +50,7 @@ export function getRelationshipWeatherTargetLabel(path: JourneyPath | null, weat
 
   const targetLabelMap: Record<string, string> = {
     map: "الخريطة",
-    sanctuary: "الملاذ الآمن",
+    sanctuary: "مساحتك الخاصة",
     tools: "الأدوات",
     insights: "الرؤى",
     armory: "الترسانة",
@@ -75,7 +75,7 @@ export function getRelationshipWeatherTargetDescription(path: JourneyPath | null
   }
 
   if (target === "sanctuary") {
-    return "الملاذ الآمن يستقبلك أولًا لو كنت محتاج تهدئة قبل ما تدخل على أي تشخيص أو خريطة أعمق.";
+    return "مساحتك الخاصة تستقبلك أولاً لو كنت محتاج تهدئة قبل ما تدخل على أي تشخيص أو خريطة أعمق.";
   }
 
   if (target === "tools") {

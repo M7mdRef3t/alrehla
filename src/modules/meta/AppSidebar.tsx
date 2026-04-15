@@ -661,7 +661,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   );
                 })()}
                 <SidebarItem
-                  label="الملاذ الآمن"
+                  label="مساحتك الخاصة"
                   icon={<ShieldCheck className="w-4 h-4" />}
                   onClick={() => pushUrl(sanctuaryPathUrl, { screen: sanctuaryPathTarget })}
                   color={goalColor}
@@ -877,7 +877,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     />
                   )}
                   <SidebarItem
-                    label="الملاذ الآمن"
+                    label="مساحتك الخاصة"
                     icon={<ShieldCheck className="w-5 h-5" />}
                     onClick={() => { pushUrl(sanctuaryPathUrl, { screen: sanctuaryPathTarget }); handleClose(); }}
                     color={goalColor}

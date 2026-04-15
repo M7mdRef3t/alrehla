@@ -241,6 +241,15 @@ const HERO_STYLES = `
     gap: 8px;
   }
 
+  .cta-free-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(45, 212, 191, 0.8);
+    text-align: center;
+    margin-top: 8px;
+    letter-spacing: 0.03em;
+  }
+
   .hero-bottom-fade {
     position: absolute;
     bottom: 0;
@@ -427,7 +436,8 @@ const HERO_STYLES = `
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    box-shadow: 0 0 8px currentColor;
+    background-color: currentColor; /* Fill with the specific status color */
+    /* Glow removed as per user request */
   }
 
   .legend-dot--teal { color: var(--cyan); }
@@ -438,10 +448,13 @@ const HERO_STYLES = `
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.14em;
-    color: #7a95a8;
+    color: rgba(255, 255, 255, 0.5); /* Base color for labels */
     text-transform: uppercase;
     font-family: "Tajawal", sans-serif;
   }
+  .legend-label--teal { color: var(--cyan); filter: brightness(1.2); }
+  .legend-label--gold { color: var(--gold); filter: brightness(1.2); }
+  .legend-label--crimson { color: var(--crimson); filter: brightness(1.2); }
 
   .node-tooltip-body {
     background: rgba(4,8,18,0.9);
@@ -918,8 +931,8 @@ const HERO_STYLES = `
     
     .hero-content-wrapper {
       flex-direction: column !important;
-      gap: 1.25rem;
-      padding: 6.5rem 1rem 2.5rem !important; /* Increased top padding to push map down */
+      gap: 0.75rem !important;
+      padding: 5.5rem 1rem 2rem !important; /* Reduced top padding to lift everything */
       width: 100% !important;
       max-width: 100% !important;
       overflow-x: hidden !important;
@@ -929,14 +942,19 @@ const HERO_STYLES = `
     .map-area {
       order: -1 !important;
       width: min(85vw, 320px) !important;
-      margin: 0 auto !important;
-      padding-bottom: 27px !important;
+      margin: 8px auto 0 !important; /* Raised map slightly */
+      padding-bottom: 0px !important; 
+    }
+
+    .legend {
+      bottom: -18px !important; /* Lifted the legend words much closer to the map */
     }
 
     .hero-copy-column {
       order: 1 !important;
       max-width: 100% !important;
       width: 100% !important;
+      gap: 0.5rem !important; /* Tightened from 0.85rem */
     }
 
     .hero-eyebrow-row {
@@ -948,7 +966,7 @@ const HERO_STYLES = `
       width: 100% !important;
       margin-left: 0 !important;
       margin-right: 0 !important;
-      margin-top: 10px !important;  /* تنفس بين الخريطة والهيدلاين */
+      margin-top: 0px !important;  /* No margin to raise content */
       text-align: center !important; /* سنتر الكتلة كلها */
     }
 
@@ -991,7 +1009,7 @@ const HERO_STYLES = `
       display: inline-block !important;
       text-align: center !important;
       white-space: nowrap !important;
-      overflow: hidden !important;
+      overflow: visible !important; /* فك القص نهائياً */
     }
 
     .rotating-word-wrapper .headline-accent {
@@ -999,7 +1017,7 @@ const HERO_STYLES = `
       top: 0 !important;
       right: 0 !important;
       width: auto !important;
-      max-width: 100% !important;
+      max-width: none !important; /* فك القيد عشان ما تقصش من الشمال */
       white-space: nowrap !important;
     }
 
@@ -1020,9 +1038,25 @@ const HERO_STYLES = `
 
     .hero-action-row {
       flex-direction: column !important; /* Stack vertically on mobile */
-      gap: 16px !important; /* Proper breathing room */
+      gap: 8px !important;
       width: 100% !important;
       align-items: center !important;
+    }
+
+    .cta-group {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 6px !important;
+      margin-top: 0 !important;   /* kill the 48px desktop margin */
+      margin-bottom: 0 !important; /* kill the 24px desktop margin */
+    }
+
+    .cta-free-badge {
+      font-size: 11px !important;
+      color: rgba(255, 255, 255, 0.45) !important;
+      font-weight: 500 !important;
+      text-align: center !important;
+      width: 100% !important;
     }
 
     .hero-input-group {
@@ -1098,6 +1132,15 @@ const HERO_STYLES = `
 const techEase = [0, 0.7, 0.1, 1] as [number, number, number, number];
 
 const fadeUp = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.65, ease: techEase } 
+  },
+};
+
+const fadeUpWithClip = {
   hidden: { opacity: 0, clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", y: 15 },
   visible: { 
     opacity: 1, 
@@ -1131,19 +1174,20 @@ const RotatingWord: FC = () => {
   return (
     <span className="rotating-word-wrapper relative inline-block w-fit max-w-full">
       {/* ليه موجود؟ علشان wrapper ياخد عرض كتلة العنوان كامل ويتحاذى معاها بصريًا. Time Complexity: O(1) */}
-      <span className="invisible select-none block whitespace-nowrap" aria-hidden>
-        {ROTATING_WORDS[5]}
+      <span className="invisible select-none block whitespace-nowrap font-extrabold" aria-hidden>
+        {ROTATING_WORDS[0]}
       </span>
       <AnimatePresence mode="wait">
         {show && (
           <motion.span
             key={index}
-            initial={{ opacity: 0, y: 12, clipPath: "polygon(0 150%, 100% 150%, 100% 150%, 0% 150%)" }}
-            animate={{ opacity: 1, y: 0, clipPath: "polygon(0 -50%, 100% -50%, 100% 150%, 0% 150%)" }}
-            exit={{ opacity: 0, y: -12, clipPath: "polygon(0 -50%, 100% -50%, 100% -50%, 0% -50%)" }}
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
             transition={{ duration: 0.45, ease: techEase }}
             /* ليه موجود؟ علشان الكلمة المتحركة تبقى متراكبة فوق placeholder بدون ما تزود ارتفاع الحاوية. Time Complexity: O(1) */
-            className="absolute top-0 flex items-center headline-accent h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal font-['Noto_Kufi_Arabic']"
+            className="absolute top-0 flex items-center headline-accent h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content px-2 mt-0 mb-0 align-middle font-extrabold font-['Noto_Kufi_Arabic']"
           >
             {ROTATING_WORDS[index]}
           </motion.span>
@@ -1362,13 +1406,13 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
       <div className="legend">
         {[
-          { dotClass: "legend-dot legend-dot--teal", label: "توازن ذاتي" },
-          { dotClass: "legend-dot legend-dot--gold", label: "تشتت" },
-          { dotClass: "legend-dot legend-dot--crimson", label: "استنزاف" },
-        ].map(({ dotClass, label }) => (
+          { dotClass: "legend-dot legend-dot--teal", label: "توازن", colorClass: "legend-label--teal" },
+          { dotClass: "legend-dot legend-dot--gold", label: "تشتت", colorClass: "legend-label--gold" },
+          { dotClass: "legend-dot legend-dot--crimson", label: "استنزاف", colorClass: "legend-label--crimson" },
+        ].map(({ dotClass, label, colorClass }) => (
           <div key={label} className="legend-item">
             <span className={dotClass} />
-            <span className="legend-label">{label}</span>
+            <span className={`legend-label ${colorClass}`}>{label}</span>
           </div>
         ))}
       </div>
@@ -1549,7 +1593,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
               <PulseBadge count={pulseCount} />
             </motion.div>
 
-            <motion.h1 variants={fadeUp} className="headline-static hero-headline">
+            <motion.h1 variants={fadeUpWithClip} className="headline-static hero-headline">
               <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
               <div className="headline-subline-container">
                 <span className="headline-subline-text">أنت فقط</span>
@@ -1560,7 +1604,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             <motion.div variants={fadeUp} className="hero-divider" />
 
             <motion.p variants={fadeUp} className="hero-body">
-              قف خذ نفساً عميقاً أنت لست بحاجة إلى المزيد من المهام أنت بحاجة إلى خريطة تصبح فيها مرئياً لنفسك تترجم فوضى أفكارك فوراً لإحداثيات بصرية ترصد نزيف طاقتك.
+              قف خذ نفساً عميقاً أنت مش محتاج مهام أكتر أنت محتاج تشوف نفسك خريطة تترجم فوضى أفكارك لإحداثيات بصرية وترصد نزيف طاقتك فوراً
             </motion.p>
 
             <motion.div variants={fadeUp} className="hero-action-row">
@@ -1570,7 +1614,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                     type="text"
                     id="mirror-name"
                     name="mirrorName"
-                    placeholder="اسمك (اختياري)"
+                    placeholder="اسمك عشان الخريطة تنادهلك"
                     value={mirrorName}
                     onChange={e => setMirrorName(e.target.value)}
                     maxLength={24}
@@ -1585,7 +1629,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                 </div>
                 {!mirrorName && (
                   <p className="hero-input-note">
-                    اضف اسمك عشان تجربتك تبقى شخصية
+                    اختياري — بس هتفرق في التجربة
                   </p>
                 )}
               </div>
@@ -1600,9 +1644,10 @@ export const HeroSection: FC<HeroSectionProps> = ({
                   id="hero-cta-start"
                 >
                   <Zap className="hero-cta-icon" />
-                  <span>ابدأ رحلتك</span>
+                  <span>شوف خريطتك دلوقتي</span>
                   <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
                 </motion.button>
+                <p className="cta-free-badge">مجاني تماماً — بدون تسجيل</p>
               </div>
             </motion.div>
 

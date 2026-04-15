@@ -6,7 +6,7 @@ import {
   type EmotionalPricingStats,
 } from "@/services/emotionalPricingAnalytics";
 import { AdminTooltip } from "./AdminTooltip";
-
+import { CollapsibleSection } from "../../../ui/CollapsibleSection";
 interface EmotionalPricingCardProps {
   loading: boolean;
 }
@@ -59,7 +59,8 @@ export const EmotionalPricingCard: FC<EmotionalPricingCardProps> = ({ loading })
   }
 
   return (
-    <div className="admin-glass-card rounded-3xl border border-amber-500/10 bg-slate-950/60 p-6 shadow-2xl relative overflow-hidden group">
+    <CollapsibleSection title="التسعير العاطفي" icon={<Sparkles className="w-5 h-5 text-amber-400" />} headerColors="border-amber-500/10 bg-slate-900/40 text-slate-300" defaultExpanded={false}>
+        <div className="admin-glass-card rounded-3xl border border-amber-500/10 bg-slate-950/60 p-6 shadow-2xl relative overflow-hidden group">
       {/* Cinematic Ambient Glow */}
       <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-amber-500/10 blur-[100px] rounded-full pointer-events-none opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
       <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-rose-500/5 blur-[80px] rounded-full pointer-events-none opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
@@ -105,5 +106,6 @@ export const EmotionalPricingCard: FC<EmotionalPricingCardProps> = ({ loading })
         />
       </div>
     </div>
+    </CollapsibleSection>
   );
 };

@@ -64,7 +64,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // 2. Protect Admin / Cron Routes
-    if (pathname.startsWith('/api/admin')) {
+    if (pathname.startsWith('/api/admin') || pathname.startsWith('/admin')) {
         const authHeader = request.headers.get('authorization') || '';
         const allowedSecrets = [process.env.CRON_SECRET, process.env.ADMIN_API_SECRET]
             .filter((value): value is string => Boolean(value && value.trim()))
@@ -78,7 +78,13 @@ export async function middleware(request: NextRequest) {
             const hasSupabaseSession = /sb-[a-z0-9\-]+-auth-token/i.test(cookieHeader) || 
                                      /alrehla-ecosystem-auth/i.test(cookieHeader);
 
-            if (!hasSupabaseSession) {
+            // We bypass the cookie/bearer check completely for UI routes (/admin).
+            // UI routes do not send Authorization headers during navigation, and Supabase 
+            // session tokens are often in localStorage which this middleware cannot read.
+            // Client-side access control is handled robustly by AdminGate instead.
+            const isUiRoute = pathname.startsWith('/admin') && !pathname.startsWith('/api/admin');
+
+            if (!hasSupabaseSession && !isUiRoute) {
                 const hasBearer = authHeader.startsWith('Bearer ') && authHeader.length > 7;
                 if (!hasBearer) {
                     console.warn(`[Security Alert] Unauthorized Admin access attempt from IP: ${ip} on path: ${pathname}`);
@@ -115,6 +121,7 @@ export const config = {
         '/api/maraya/:path*', 
         '/api/weather/:path*',
         '/api/admin/:path*', 
+        '/admin/:path*',
         '/api/analytics/:path*',
         '/api/checkout/:path*'
     ],
