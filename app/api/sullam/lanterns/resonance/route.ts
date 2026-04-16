@@ -21,26 +21,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing lantern_id parameter" }, { status: 400 });
     }
 
-    // Since we don't have an RPC for atomic increment right now, we will do a read/write.
-    // For production scaling, convert this to an RPC function: `increment_lantern_resonance`
-    const { data: currentLantern, error: fetchErr } = await supabaseAdmin
-      .from("sullam_lanterns")
-      .select("resonance_count")
-      .eq("id", lantern_id)
-      .single();
+    // Atomic increment using a PostgreSQL function (RPC)
+    const { data: newCount, error: rpcError } = await supabaseAdmin.rpc(
+      "increment_lantern_resonance",
+      { lantern_id }
+    );
 
-    if (fetchErr || !currentLantern) {
+    if (rpcError) {
+      console.error("Lantern resonance RPC error:", rpcError);
+      return NextResponse.json({ error: "Failed to update lantern resonance" }, { status: 500 });
+    }
+
+    if (newCount === null || newCount === undefined) {
       return NextResponse.json({ error: "Lantern not found" }, { status: 404 });
     }
 
-    const { error: updateErr } = await supabaseAdmin
-      .from("sullam_lanterns")
-      .update({ resonance_count: currentLantern.resonance_count + 1 })
-      .eq("id", lantern_id);
-
-    if (updateErr) throw updateErr;
-
-    return NextResponse.json({ success: true, new_count: currentLantern.resonance_count + 1 });
+    return NextResponse.json({ success: true, new_count: newCount });
   } catch (err) {
     console.error("Lantern resonance error:", err);
     return NextResponse.json({ error: "Failed to light lantern" }, { status: 500 });

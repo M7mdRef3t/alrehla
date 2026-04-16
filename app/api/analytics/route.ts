@@ -150,8 +150,9 @@ export async function POST(req: Request) {
                 const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || req.headers.get("x-real-ip");
                 const userAgent = req.headers.get("user-agent");
 
-                // Note: We don't await this to keep ingestion latency low, but we start the promise
-                sendMetaCapiEvent({
+                // Note: We must await this in serverless environments (e.g. Vercel) 
+                // to prevent the promise from being aborted before CAPI delivery.
+                await sendMetaCapiEvent({
                     eventName: mappedEvent,
                     eventId: event_id,
                     sourceUrl: req.headers.get("referer") || "https://alrehla.com",

@@ -70,6 +70,8 @@ export interface BathraState {
 /*              CONSTANTS                     */
 /* ═══════════════════════════════════════════ */
 
+export const MS_PER_DAY = 86400000;
+
 export const CATEGORY_META: Record<HabitCategory, { label: string; emoji: string; color: string }> = {
   mind:   { label: "العقل",    emoji: "🧠", color: "#818cf8" },
   body:   { label: "الجسم",    emoji: "💪", color: "#f472b6" },
@@ -104,7 +106,7 @@ function calcStreak(logs: WaterLog[]): number {
 
   const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date));
   const today = todayKey();
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - MS_PER_DAY).toISOString().slice(0, 10);
 
   // Check if the last log is today or yesterday
   if (sorted[0].date !== today && sorted[0].date !== yesterday) return 0;
@@ -113,7 +115,7 @@ function calcStreak(logs: WaterLog[]): number {
   for (let i = 1; i < sorted.length; i++) {
     const curr = new Date(sorted[i - 1].date);
     const prev = new Date(sorted[i].date);
-    const diff = (curr.getTime() - prev.getTime()) / 86400000;
+    const diff = (curr.getTime() - prev.getTime()) / MS_PER_DAY;
     if (diff === 1) {
       streak++;
     } else {

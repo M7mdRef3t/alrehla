@@ -25,7 +25,8 @@ import {
   Droplets,
   TrendingUp,
   Mail,
-  Moon
+  Moon,
+  Handshake
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -303,6 +304,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#a78bfa",
     url: "/#tazkiya"
+  },
+  {
+    id: "jisr",
+    name: "جسر",
+    description: "إصلاح العلاقات — حدّد · عبّر · افعل",
+    icon: <Handshake className="w-5 h-5" />,
+    status: "active",
+    color: "#10b981",
+    url: "/#jisr"
   }
 ];
 

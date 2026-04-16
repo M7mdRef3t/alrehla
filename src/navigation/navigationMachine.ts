@@ -53,6 +53,7 @@ export type AppScreen =
   | "khalwa"
   | "ecosystem-hub"
   | "tazkiya"
+  | "jisr"
   | "protocol"
   | "diagnosis";
 

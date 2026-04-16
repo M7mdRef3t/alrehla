@@ -6,6 +6,8 @@ import { WhatsAppCloudService } from "@/services/whatsappCloudService";
 
 export const dynamic = "force-dynamic";
 
+const SUBSCRIPTION_DURATION_DAYS = 30;
+
 function buildAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
@@ -57,7 +59,7 @@ export async function POST(req: NextRequest) {
     if (userId || email) {
       const query = db.from("profiles").update({ 
         subscription_status: "active",
-        journey_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+        journey_expires_at: new Date(Date.now() + SUBSCRIPTION_DURATION_DAYS * 24 * 60 * 60 * 1000).toISOString()
       });
       
       if (userId) query.eq("user_id", userId);

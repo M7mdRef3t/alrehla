@@ -648,7 +648,7 @@ const HERO_STYLES = `
     position: relative;
     display: flex;
     align-items: center;
-    width: auto;
+    width: 100%;
     min-height: 1.3em;
     padding: 0;
     overflow: visible;
@@ -657,9 +657,6 @@ const HERO_STYLES = `
     line-height: 1.2;
     vertical-align: middle;
     text-align: right;
-    grid-column: 2;
-    grid-row: 1 / span 2;
-    align-self: center;
   }
 
   .hero-body {
@@ -710,28 +707,25 @@ const HERO_STYLES = `
   }
 
   .headline-subline-container {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    align-items: center;
-    column-gap: 14px;
-    row-gap: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
     font-size: 0.78em;
     margin-top: 18px;
     width: 100%;
   }
 
-  .word-ant,
-  .word-faqat {
-    display: inline-block;
-    width: max-content;
+  .headline-fixed-subline {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.28em;
     font-size: 1.1em;
     font-weight: 800;
-    text-align: right;
+    line-height: 1;
+    white-space: nowrap;
   }
-  .word-ant  {
-    opacity: 0.98;
-    font-size: 1.42em;
-  }
+  .word-ant  { opacity: 0.98; font-size: 1.42em; }
   .word-faqat { opacity: 0.95; }
 
   @media (max-width: 1023px) {
@@ -746,7 +740,7 @@ const HERO_STYLES = `
       width: 100% !important;
     }
     .headline-subline-container {
-      justify-content: center !important;
+      align-items: center !important;
       width: 100% !important;
     }
     .hero-content-wrapper {
@@ -1110,8 +1104,10 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
             <motion.h1 variants={fadeUpWithClip} className="headline-static hero-headline">
               <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
               <div className="headline-subline-container">
-                <span className="word-ant" style={{ gridColumn: 1, gridRow: 1 }}>أنت</span>
-                <span className="word-faqat" style={{ gridColumn: 1, gridRow: 2 }}>فقط</span>
+                <div className="headline-fixed-subline">
+                  <span className="word-ant">أنت</span>
+                  <span className="word-faqat">فقط</span>
+                </div>
                 <RotatingWord />
               </div>
             </motion.h1>

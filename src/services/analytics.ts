@@ -438,9 +438,13 @@ export function flushPendingAnalytics(): void {
   });
 }
 
-// Ensure pending events are flushed on navigation or tab close
+// Ensure pending events are flushed reliably when navigating away (mobile & desktop)
 if (isClientRuntime()) {
-  window.addEventListener("beforeunload", flushPendingAnalytics);
+  window.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      flushPendingAnalytics();
+    }
+  });
 }
 
 async function sendAnalyticsEnvelope(envelope: ReturnType<typeof buildAnalyticsEnvelope> extends infer T ? Exclude<T, null> : never): Promise<void> {
