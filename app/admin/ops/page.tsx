@@ -14,6 +14,7 @@ import {
   Users,
   Cpu,
   RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import { runtimeEnv } from "@/config/runtimeEnv";
 
@@ -103,9 +104,36 @@ export default function OpsCockpit() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const capiSuccessRate = capiStats && capiStats.total > 0 
+    ? Math.round((capiStats.success / capiStats.total) * 100) 
+    : 100;
+  const showHealthAlert = capiStats && (capiSuccessRate < 90 || capiStats.failed > 0);
+
   return (
     <div className="min-h-screen bg-neutral-900 text-neutral-100 p-8 font-sans">
       <div className="max-w-6xl mx-auto space-y-10">
+
+        {showHealthAlert && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex items-center justify-between text-red-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center text-red-400">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold">Meta CAPI Alert</h3>
+                <p className="text-xs text-red-400/80">
+                  Telemetry health is compromised ({capiSuccessRate}% success). {capiStats.failed} failure(s) detected.
+                </p>
+              </div>
+            </div>
+            <Link 
+              href="/admin/radar"
+              className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-xs font-bold transition-all"
+            >
+              Investigate Signals
+            </Link>
+          </div>
+        )}
 
         {/* Header */}
         <header className="flex justify-between items-center bg-black/40 p-6 rounded-2xl border border-white/5 backdrop-blur-sm">

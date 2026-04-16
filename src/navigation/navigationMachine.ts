@@ -47,6 +47,7 @@ export type AppScreen =
   | "naba"
   | "mithaq"
   | "sullam"
+  | "bathra"
   | "protocol"
   | "diagnosis";
 

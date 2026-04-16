@@ -254,9 +254,10 @@ const OptionCard: FC<{
 };
 
 /* ── Active Decision Panel ── */
-const ActiveDecision: FC<{ decision: Decision }> = ({ decision }) => {
+const ActiveDecision: FC<{ decision: Decision; values: any[] }> = ({ decision, values }) => {
   const [newOptionLabel, setNewOptionLabel] = useState("");
-  const { addOption, chooseOption, removeDecision } = useBawsalaState();
+  const [reflectionText, setReflectionText] = useState("");
+  const { addOption, chooseOption, removeDecision, addReflection } = useBawsalaState();
 
   const handleAddOption = () => {
     if (!newOptionLabel.trim()) return;
@@ -272,6 +273,30 @@ const ActiveDecision: FC<{ decision: Decision }> = ({ decision }) => {
       return scoreB - scoreA;
     })[0];
   }, [decision.options]);
+
+  const oracleInsight = useMemo(() => {
+    if (!bestOption || decision.options.length < 2) return null;
+    if (bestOption.gutFeeling >= 7 && bestOption.valuesAlignment <= 40) {
+      return {
+        type: "warning",
+        text: `بصيرة البوصلة: إحساسك يميل بقوة نحو «${bestOption.label}»، لكنه يتعارض بشدة مع مبادئك. هل تشتري الراحة المؤقتة بثمن مبادئك؟`,
+      };
+    }
+    if (bestOption.gutFeeling <= 4 && bestOption.valuesAlignment >= 75) {
+      return {
+        type: "insight",
+        text: `بصيرة البوصلة: «${bestOption.label}» يطابق قيمك الأساسية، ولكن إحساسك يقاومه بضيق. ربما لأن الصواب أحياناً يكون الأثقل على النفس؟`,
+      };
+    }
+    const score = (bestOption.gutFeeling * 10 + bestOption.valuesAlignment) / 2;
+    if (score >= 80) {
+      return {
+        type: "alignment",
+        text: `تناغم كامل: «${bestOption.label}» يتوافق مع قلبك ومبادئك. توكل على الله.`,
+      };
+    }
+    return null;
+  }, [bestOption, decision.options.length]);
 
   return (
     <div className="mx-5 mb-5 space-y-3">
@@ -305,16 +330,22 @@ const ActiveDecision: FC<{ decision: Decision }> = ({ decision }) => {
           <span className="text-[8px] text-slate-600">{decision.options.length} خيارات</span>
         </div>
 
-        {/* AI Suggestion */}
-        {bestOption && decision.options.length >= 2 && decision.status === "active" && (
-          <div className="mt-3 p-2.5 rounded-xl flex items-center gap-2"
-            style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.1)" }}
+        {/* AI Suggestion / Oracle */}
+        {decision.status === "active" && oracleInsight && (
+          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+            className="mt-3 p-3 rounded-xl flex items-start gap-2.5"
+            style={{
+              background: oracleInsight.type === "warning" ? "rgba(239,68,68,0.08)" : oracleInsight.type === "insight" ? "rgba(139,92,246,0.08)" : "rgba(16,185,129,0.08)",
+              border: `1px solid ${oracleInsight.type === "warning" ? "rgba(239,68,68,0.15)" : oracleInsight.type === "insight" ? "rgba(139,92,246,0.15)" : "rgba(16,185,129,0.15)"}`
+            }}
           >
-            <Sparkles className="w-3.5 h-3.5 text-violet-400 shrink-0" />
-            <p className="text-[10px] text-violet-300">
-              البوصلة تميل نحو: <strong className="text-violet-200">{bestOption.label}</strong>
+            {oracleInsight.type === "warning" ? <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" /> : <Sparkles className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />}
+            <p className="text-[11px] font-bold leading-relaxed"
+              style={{ color: oracleInsight.type === "warning" ? "#fca5a5" : oracleInsight.type === "insight" ? "#c4b5fd" : "#6ee7b7" }}
+            >
+              {oracleInsight.text}
             </p>
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -332,7 +363,7 @@ const ActiveDecision: FC<{ decision: Decision }> = ({ decision }) => {
 
       {/* Add Option */}
       {decision.status === "active" && (
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-4">
           <input value={newOptionLabel} onChange={(e) => setNewOptionLabel(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAddOption()}
             placeholder='أضف خيار — مثلاً: "أسامح وأكمل"'
@@ -346,6 +377,52 @@ const ActiveDecision: FC<{ decision: Decision }> = ({ decision }) => {
             <Plus className="w-4 h-4 text-cyan-400" />
           </button>
         </div>
+      )}
+
+      {/* Reflection Panel */}
+      {decision.status === "decided" && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          className="mt-6 p-4 rounded-2xl"
+          style={{ background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.15)" }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Eye className="w-4 h-4 text-violet-400" />
+            <p className="text-xs font-black text-violet-300">كبسولة الزمن: تأمل قرارك</p>
+          </div>
+          <p className="text-[10px] text-violet-200/60 mb-3 leading-relaxed">
+            لقد اتخذت قرارك. بعد مرور الوقت، هل كان هذا القرار هو الصواب؟ ماذا تعلمت؟ اكتب لنسختك المستقبلية.
+          </p>
+          <textarea
+            value={reflectionText}
+            onChange={(e) => setReflectionText(e.target.value)}
+            placeholder="اكتب تأملك الصادق هنا..."
+            rows={3}
+            className="w-full p-3 rounded-xl text-xs text-white placeholder:text-violet-400/30 outline-none resize-none mb-3"
+            style={{ background: "rgba(168,85,247,0.06)", border: "1px solid rgba(168,85,247,0.1)" }}
+          />
+          <button
+            onClick={() => {
+              if (reflectionText.trim()) addReflection(decision.id, reflectionText.trim());
+            }}
+            disabled={!reflectionText.trim()}
+            className="w-full py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-30"
+            style={{ background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.25)", color: "#c4b5fd" }}
+          >
+            حفظ التأمل
+          </button>
+        </motion.div>
+      )}
+
+      {/* Show reflection if already reflected */}
+      {decision.status === "reflected" && decision.reflectionNote && (
+        <motion.div className="mt-4 p-4 rounded-2xl"
+          style={{ background: "rgba(168,85,247,0.08)", border: "1px dashed rgba(168,85,247,0.3)" }}
+        >
+          <p className="text-[10px] text-violet-400 font-bold mb-2">تأملك الزمني:</p>
+          <p className="text-xs text-violet-100 leading-relaxed italic border-r-2 border-violet-500/50 pr-3">
+            {decision.reflectionNote}
+          </p>
+        </motion.div>
       )}
     </div>
   );
@@ -446,7 +523,7 @@ export const BawsalaScreen: FC = () => {
               >
                 <ChevronRight className="w-3 h-3 rotate-180" /> كل القرارات
               </button>
-              <ActiveDecision decision={selectedDecision} />
+              <ActiveDecision decision={selectedDecision} values={values} />
             </>
           ) : (
             <div className="px-5 space-y-3">

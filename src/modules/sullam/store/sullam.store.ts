@@ -29,6 +29,11 @@ export interface Goal {
 
 interface SullamState {
   goals: Goal[];
+  sanctuary: {
+    isActive: boolean;
+    startedAt: number | null;
+    endsAt: number | null;
+  };
 
   addGoal: (data: { title: string; area: GrowthArea; emoji: string; rungs: string[] }) => string;
   toggleRung: (goalId: string, rungId: string) => void;
@@ -39,6 +44,10 @@ interface SullamState {
   getCompletedGoals: () => Goal[];
   getProgressForGoal: (id: string) => number;
   getAreaStats: () => { area: GrowthArea; total: number; completed: number }[];
+  getStuckAreas: () => GrowthArea[];
+
+  enterSanctuary: (days: number) => void;
+  leaveSanctuary: () => void;
 }
 
 export const AREA_META: Record<GrowthArea, { label: string; emoji: string; color: string }> = {
@@ -54,6 +63,11 @@ export const useSullamState = create<SullamState>()(
   persist(
     (set, get) => ({
       goals: [],
+      sanctuary: {
+        isActive: false,
+        startedAt: null,
+        endsAt: null,
+      },
 
       addGoal: (data) => {
         const id = `gl_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
@@ -130,6 +144,66 @@ export const useSullamState = create<SullamState>()(
             completed: areaGoals.filter((g) => g.completedAt).length,
           };
         }).filter((s) => s.total > 0);
+      },
+
+      getStuckAreas: () => {
+        if (get().sanctuary.isActive) return [];
+
+        const goals = get().goals;
+        const now = Date.now();
+        const THRESHOLD = process.env.NODE_ENV === "development" ? 60 * 1000 : 3 * 24 * 60 * 60 * 1000;
+        
+        const stuckAreas = new Set<GrowthArea>();
+        
+        goals.forEach(g => {
+          if (g.completedAt) return; // not stuck if done
+          // Find last completed rung time
+          const completedRungs = g.rungs.filter(r => r.done && r.completedAt).sort((a, b) => b.completedAt! - a.completedAt!);
+          const lastProgressTime = completedRungs.length > 0 ? completedRungs[0].completedAt! : g.createdAt;
+          
+          if (now - lastProgressTime > THRESHOLD) {
+            stuckAreas.add(g.area);
+          }
+        });
+        
+        return Array.from(stuckAreas);
+      },
+
+      enterSanctuary: (days) => {
+        set({
+          sanctuary: {
+            isActive: true,
+            startedAt: Date.now(),
+            endsAt: Date.now() + days * 24 * 60 * 60 * 1000,
+          },
+        });
+      },
+
+      leaveSanctuary: () => {
+        const { sanctuary, goals } = get();
+        if (!sanctuary.isActive || !sanctuary.startedAt) return;
+
+        const timeFrozen = Date.now() - sanctuary.startedAt;
+
+        // Shift all timestamps by `timeFrozen` so they don't lose their relative age / streaks
+        const shiftedGoals = goals.map(g => ({
+          ...g,
+          createdAt: g.createdAt + timeFrozen,
+          completedAt: g.completedAt ? g.completedAt + timeFrozen : null,
+          rungs: g.rungs.map(r => ({
+            ...r,
+            completedAt: r.completedAt ? r.completedAt + timeFrozen : null,
+          }))
+        }));
+
+        set({
+          goals: shiftedGoals,
+          sanctuary: {
+            isActive: false,
+            startedAt: null,
+            endsAt: null,
+          },
+        });
       },
     }),
     { name: "alrehla-sullam" }

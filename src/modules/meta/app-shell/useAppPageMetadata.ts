@@ -54,6 +54,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   naba: "Naba Inspiration",
   mithaq: "Mithaq Contract",
   sullam: "Sullam Growth",
+  bathra: "Bathra Seeds",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -107,6 +108,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   naba: { title: "نبع — إلهام يومي | Alrehla", description: "كل يوم رشفة إلهام جديدة — اقتباسات + أسئلة + تحديات + حكم + تمارين." },
   mithaq: { title: "ميثاق — عقد مع النفس | Alrehla", description: "التزم بوعد — وراقب نفسك. check-in يومي + تقدم + تأمل ختامي." },
   sullam: { title: "سُلّم — سلالم النمو | Alrehla", description: "حطّ أهداف صغيرة — واصعد درجة درجة. تقدم بصري + ميلستونات + إنجازات." },
+  bathra: { title: "بذرة — بذور العادات الصغيرة | Alrehla", description: "ازرع عادة صغيرة — واسقِها كل يوم. شاهدها تنمو من بذرة إلى شجرة في 21 يوم." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

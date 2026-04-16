@@ -95,19 +95,16 @@ export async function POST(req: Request) {
         };
 
         // Standard column is occurred_at, but we fallback to created_at if insertion fails
-        // or just let the DB handle the default if we omit it. 
-        // Based on migrations, it is occurred_at.
         eventData.occurred_at = new Date().toISOString();
 
-        const { error } = await supabase.from("routing_events").insert(eventData);
+        const { error: insertError } = await supabase.from("routing_events").insert(eventData);
 
-        if (error) {
-            if (error.code === "23505") {
+        if (insertError) {
+            if (insertError.code === "23505") {
                 return NextResponse.json({ status: "success", duplicate: true });
             }
             
-            // If occurred_at is missing, try a desperate fallback to created_at or omitting it
-            if (error.code === "42703" && error.message.includes("occurred_at")) {
+            if (insertError.code === "42703" && insertError.message.includes("occurred_at")) {
                 console.warn("[Analytics Ingestion] occurred_at missing, retrying with created_at fallback");
                 delete eventData.occurred_at;
                 eventData.created_at = new Date().toISOString();
@@ -115,20 +112,65 @@ export async function POST(req: Request) {
                 if (!retryError) return NextResponse.json({ status: "success", fallback: true });
             }
 
-            console.error(`[Analytics Ingestion] Database Error [${error.code}]:`, error.message);
+            console.error(`[Analytics Ingestion] Database Error [${insertError.code}]:`, insertError.message);
             return NextResponse.json({ 
                 error: "Ingestion failed", 
-                code: error.code,
-                message: process.env.NODE_ENV === "development" ? error.message : undefined
+                code: insertError.code,
             }, { status: 500 });
         }
 
+        // --- CAPI Bridge (Server-Side Side Effect) ---
+        // This is where we bridge analytics to Meta CAPI without waiting for the response
+        try {
+            const { sendMetaCapiEvent } = await import("@/server/metaCapi");
+            
+            const event_id = data.client_event_id || data.lead_id || `${data.event_type}_${Date.now()}`;
+            
+            // Map internal events to Meta Standard Events
+            const capiMapping: Record<string, "Lead" | "ViewContent" | "Contact" | "CompleteRegistration" | "GateQualified" | "Purchase"> = {
+                "lead_form_submitted": "Lead",
+                "weather_share_completed": "Contact",
+                "payment_proof_submitted": "Purchase",
+                "gate_qualified": "GateQualified",
+                "onboarding_completed": "CompleteRegistration",
+            };
+
+            const mappedEvent = capiMapping[data.event_type];
+            
+            if (mappedEvent) {
+                // Extract browser context for CAPI
+                const cookies = req.headers.get("cookie") || "";
+                const fbp = cookies.split("; ").find(row => row.startsWith("_fbp="))?.split("=")[1];
+                const fbc = cookies.split("; ").find(row => row.startsWith("_fbc="))?.split("=")[1];
+                const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || req.headers.get("x-real-ip");
+                const userAgent = req.headers.get("user-agent");
+
+                // Note: We don't await this to keep ingestion latency low, but we start the promise
+                sendMetaCapiEvent({
+                    eventName: mappedEvent,
+                    eventId: event_id,
+                    sourceUrl: req.headers.get("referer") || "https://alrehla.com",
+                    userData: {
+                        email: (mergedPayload as any).email || null,
+                        phone: (mergedPayload as any).phone || null,
+                        fbc,
+                        fbp,
+                        clientIpAddress: ip,
+                        clientUserAgent: userAgent
+                    }
+                }).catch(err => console.error("[Analytics CAPI Bridge] Error:", err));
+            }
+        } catch (capiErr) {
+            console.error("[Analytics CAPI Bridge] Failed to trigger CAPI:", capiErr);
+        }
+
         const response = NextResponse.json({ status: "success" });
-        response.headers.set("X-Analytics-Version", "v3-clean-hardened-v2");
+        response.headers.set("X-Analytics-Version", "v3-bridge-capi-v1");
         return response;
     } catch (e) {
         console.error("[Analytics Ingestion] Server Error:", e);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
 

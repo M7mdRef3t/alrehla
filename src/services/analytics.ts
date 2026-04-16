@@ -14,6 +14,8 @@ import {
   buildPageViewEnvelope
 } from "@/domains/analytics/contracts";
 
+export { buildAnalyticsEnvelope };
+
 type AnalyticsValue = string | number | boolean;
 type AnalyticsParams = Record<string, AnalyticsValue>;
 

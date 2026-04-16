@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/server/requireAdmin";
 import { sendMetaCapiEvent } from "@/server/metaCapi";
+import { WhatsAppCloudService } from "@/services/whatsappCloudService";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +84,18 @@ export async function POST(req: NextRequest) {
       status: "resolved",
       metadata: { ...metadata, decision: "approved", approved_at: new Date().toISOString() } 
     }).eq("id", ticketId);
+
+    // 6. Automated WhatsApp Activation Hook (Sovereign Loop)
+    if (phone) {
+      console.log(`[Decision API] Triggering WhatsApp activation for ${phone}`);
+      try {
+        // Use lead_id if exists, fallback to ticket ref
+        const leadIdForWA = metadata.lead_id || `tkt_${ticketId}`;
+        await WhatsAppCloudService.validateNumber(phone, leadIdForWA);
+      } catch (waErr) {
+        console.error("[Decision API] WhatsApp activation hook failed:", waErr);
+      }
+    }
 
     return NextResponse.json({ ok: true, message: "Proof approved and user activated." });
   } else {

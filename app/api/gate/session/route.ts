@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { sendToCapi } from '@/lib/analytics/metaCapi'; // existing server-side CAPI sender
+import { sendMetaCapiEvent } from '@/server/metaCapi';
 
 function getGateDb() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -27,6 +27,10 @@ export async function POST(req: Request) {
     if (!sessionId || !step) {
       return NextResponse.json({ error: 'Missing sessionId or step' }, { status: 400 });
     }
+
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || req.headers.get("x-real-ip");
+    const userAgent = req.headers.get("user-agent");
+    const referer = req.headers.get("referer") || "https://alrehla.com";
 
     // 1. Fetch current session to strictly prevent duplicates
     const { data: existingSession } = await db
@@ -64,13 +68,17 @@ export async function POST(req: Request) {
       }
 
       // Trigger CAPI only on successful atomic write
-      await sendToCapi('Lead', eventId, { 
-        em: payload.email, 
-        fbp, 
-        fbc, 
-        external_id: sessionId 
-      }, { 
-        source_area: payload.sourceArea 
+      await sendMetaCapiEvent({
+        eventName: 'Lead',
+        eventId: eventId,
+        sourceUrl: referer,
+        userData: {
+          email: payload.email,
+          fbp,
+          fbc,
+          clientIpAddress: ip,
+          clientUserAgent: userAgent
+        }
       });
 
       return NextResponse.json({ status: 'success' });
@@ -110,13 +118,22 @@ export async function POST(req: Request) {
       }
 
       // Trigger CAPI for layer 2
-      await sendToCapi('GateQualified', eventId, 
-        { em: existingSession.email || payload.email, external_id: sessionId }, 
-        { intent: payload.intent, commitment: payload.commitment }
-      );
+      await sendMetaCapiEvent({
+        eventName: 'GateQualified',
+        eventId: eventId,
+        sourceUrl: referer,
+        userData: {
+          email: existingSession.email || payload.email,
+          fbp,
+          fbc,
+          clientIpAddress: ip,
+          clientUserAgent: userAgent
+        }
+      });
 
       return NextResponse.json({ status: 'success' });
     }
+
 
     return NextResponse.json({ error: 'Invalid step' }, { status: 400 });
 

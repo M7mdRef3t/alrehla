@@ -247,6 +247,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#84cc16",
     url: "/#sullam"
+  },
+  {
+    id: "bathra",
+    name: "بذرة",
+    description: "بذور العادات الصغيرة",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#10b981",
+    url: "/#bathra"
   }
 ];
 

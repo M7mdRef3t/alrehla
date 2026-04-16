@@ -11,7 +11,7 @@
  */
 
 import type { FC } from "react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp as Ladder, Plus, Check, Trophy, ChevronDown, Trash2,
 } from "lucide-react";
@@ -21,12 +21,19 @@ import {
   type GrowthArea,
   type Goal,
 } from "./store/sullam.store";
+import { LanternGlow } from "./components/LanternGlow";
+import { LanternDropModal } from "./components/LanternDropModal";
+import { PassageRelicGenerator } from "./components/PassageRelicGenerator";
+import { PassageRelic } from "./components/PassageRelic";
+import { SanctuaryView } from "./components/SanctuaryView";
+import { ObservatoryScreen } from "../observatory/ObservatoryScreen";
+import { Moon } from "lucide-react";
 
 /* ═══════════════════════════════════════════ */
 /*               CONSTANTS                    */
 /* ═══════════════════════════════════════════ */
 
-type ViewMode = "active" | "archive" | "create" | "overview";
+type ViewMode = "active" | "archive" | "create" | "overview" | "observatory";
 
 const PRESET_RUNGS: Record<string, string[]> = {
   "عادة يومية": ["حدد العادة بوضوح", "نفذها أول مرة", "3 أيام متتالية", "أسبوع كامل", "21 يوم — عادة!"],
@@ -172,11 +179,9 @@ const CreateGoalForm: FC<{ onDone: () => void }> = ({ onDone }) => {
 /*           GOAL CARD (LADDER)               */
 /* ═══════════════════════════════════════════ */
 
-const GoalCard: FC<{ goal: Goal; idx: number }> = ({ goal, idx }) => {
+const GoalCard: FC<{ goal: Goal; idx: number; onStartRelic: (goal: Goal) => void }> = ({ goal, idx, onStartRelic }) => {
   const { toggleRung, completeGoal, getProgressForGoal } = useSullamState();
   const [expanded, setExpanded] = useState(false);
-  const [reflection, setReflection] = useState("");
-  const [showComplete, setShowComplete] = useState(false);
 
   const areaMeta = AREA_META[goal.area];
   const progress = getProgressForGoal(goal.id);
@@ -282,26 +287,12 @@ const GoalCard: FC<{ goal: Goal; idx: number }> = ({ goal, idx }) => {
               {/* Complete button */}
               {!goal.completedAt && allDone && (
                 <div className="space-y-2 pt-2">
-                  {!showComplete ? (
-                    <button onClick={() => setShowComplete(true)}
-                      className="w-full py-2.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1"
-                      style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.15)" }}
-                    >
-                      <Trophy className="w-3.5 h-3.5" /> 🎉 وصلت القمة!
-                    </button>
-                  ) : (
-                    <>
-                      <textarea value={reflection} onChange={(e) => setReflection(e.target.value)}
-                        placeholder="ماذا تعلمت من هذا السلم؟"
-                        rows={2}
-                        className="w-full px-3 py-2 rounded-lg text-[10px] text-white placeholder-slate-600 bg-white/[0.03] border border-white/[0.04] resize-none focus:outline-none"
-                      />
-                      <button onClick={() => { completeGoal(goal.id, reflection); setShowComplete(false); }}
-                        className="w-full py-2 rounded-lg text-[10px] font-bold"
-                        style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}
-                      >🏆 تأكيد الإنجاز</button>
-                    </>
-                  )}
+                  <button onClick={() => onStartRelic(goal)}
+                    className="w-full py-2.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all"
+                    style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.15)" }}
+                  >
+                    <Trophy className="w-3.5 h-3.5" /> 🎉 وصلت القمة، اصنع الأثر!
+                  </button>
                 </div>
               )}
 
@@ -375,18 +366,118 @@ const AreaOverview: FC = () => {
 
 export const SullamScreen: FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("active");
-  const { goals, getActiveGoals, getCompletedGoals } = useSullamState();
+  const { goals, sanctuary, getActiveGoals, getCompletedGoals, getStuckAreas, completeGoal, enterSanctuary } = useSullamState();
+  
+  const [lanternDropArea, setLanternDropArea] = useState<GrowthArea | null>(null);
+  const [relicGeneratorGoal, setRelicGeneratorGoal] = useState<Goal | null>(null);
+  const [relicGoal, setRelicGoal] = useState<Goal | null>(null);
+  const [showSanctuaryPrompt, setShowSanctuaryPrompt] = useState(false);
 
   const activeGoals = useMemo(() => getActiveGoals(), [goals]);
   const completedGoals = useMemo(() => getCompletedGoals(), [goals]);
+  const stuckAreas = useMemo(() => getStuckAreas(), [getStuckAreas]);
 
   const totalRungs = goals.reduce((sum, g) => sum + g.rungs.length, 0);
   const doneRungs = goals.reduce((sum, g) => sum + g.rungs.filter((r) => r.done).length, 0);
 
   return (
-    <div className="min-h-screen pb-32 select-none" dir="rtl"
+    <div className="min-h-screen pb-32 select-none relative" dir="rtl"
       style={{ background: "linear-gradient(180deg, #080c06 0%, #101c0a 40%, #080c08 100%)" }}
     >
+      <SanctuaryView />
+
+      {/* Floating Lanterns for Stuck Areas */}
+      <div className="fixed top-24 left-4 z-40 flex flex-col gap-4 pointer-events-none">
+        {stuckAreas.map(area => (
+          <div key={area} className="pointer-events-auto">
+            <LanternGlow area={area} onLightUp={() => {}} />
+          </div>
+        ))}
+      </div>
+
+      {relicGeneratorGoal && (
+        <PassageRelicGenerator
+          goal={relicGeneratorGoal}
+          onClose={() => setRelicGeneratorGoal(null)}
+          onSubmit={(reflection) => {
+            completeGoal(relicGeneratorGoal.id, reflection);
+            const finishedGoal = { ...relicGeneratorGoal, completedAt: Date.now(), reflection };
+            setRelicGeneratorGoal(null);
+            // Wait slightly for modal animation
+            setTimeout(() => setRelicGoal(finishedGoal), 300);
+          }}
+        />
+      )}
+
+      {relicGoal && (
+        <PassageRelic
+          goal={relicGoal}
+          onClose={() => {
+            const area = relicGoal.area;
+            setRelicGoal(null);
+            setTimeout(() => setLanternDropArea(area), 400); // Ask to drop lantern
+          }}
+        />
+      )}
+
+      {lanternDropArea && (
+        <LanternDropModal 
+          area={lanternDropArea} 
+          onClose={() => setLanternDropArea(null)} 
+          onSuccess={() => setLanternDropArea(null)} 
+        />
+      )}
+
+      {/* Sanctuary Prompt Modal */}
+      <AnimatePresence>
+        {showSanctuaryPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 font-sans"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="w-full max-w-sm bg-slate-900 border border-slate-700/50 rounded-3xl p-6 overflow-hidden relative"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[50px] -m-10" />
+              <div className="relative text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-blue-900/20 border border-blue-500/20 mx-auto flex items-center justify-center mb-4">
+                  <Moon className="w-8 h-8 text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white tracking-tight">كم يوماً تحتاج للراحة؟</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  سيتم تجميد الزمن وأهدافك بالكامل حتى عودتك، دون التأثير على إحصائياتك.
+                </p>
+                <div className="flex gap-2 pt-4">
+                  {[1, 3, 7].map((days) => (
+                    <button
+                      key={days}
+                      onClick={() => {
+                        enterSanctuary(days);
+                        setShowSanctuaryPrompt(false);
+                      }}
+                      className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-blue-500/30 text-white font-medium transition-colors"
+                    >
+                      {days} {days === 1 ? "يوم" : "أيام"}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowSanctuaryPrompt(false)}
+                  className="w-full py-2 mt-2 text-sm text-slate-500 hover:text-slate-300"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ═══ Header ═══ */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="px-5 pt-8 pb-4">
         <div className="flex items-center justify-between mb-5">
@@ -397,7 +488,25 @@ export const SullamScreen: FC = () => {
               <Ladder className="w-6 h-6 text-lime-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white tracking-tight">سُلّم</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-black text-white tracking-tight">سُلّم</h1>
+                {!sanctuary.isActive && (
+                  <div className="flex gap-1.5 ml-2">
+                    <button onClick={() => setShowSanctuaryPrompt(true)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 border border-blue-900/30 transition-all font-medium"
+                    >
+                      <Moon className="w-3.5 h-3.5" />
+                      <span className="text-[10px]">الملاذ</span>
+                    </button>
+                    <button onClick={() => setViewMode("observatory")}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-900/20 text-indigo-400 hover:bg-indigo-900/40 border border-indigo-900/30 transition-all font-medium"
+                    >
+                      <span className="text-sm">🕸️</span>
+                      <span className="text-[10px]">المرصد</span>
+                    </button>
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-slate-500 font-medium mt-0.5">سلالم النمو</p>
             </div>
           </div>
@@ -465,7 +574,9 @@ export const SullamScreen: FC = () => {
               </button>
             </div>
           ) : (
-            activeGoals.map((g, idx) => <GoalCard key={g.id} goal={g} idx={idx} />)
+            activeGoals.map((g, idx) => (
+              <GoalCard key={g.id} goal={g} idx={idx} onStartRelic={(goal) => setRelicGeneratorGoal(goal)} />
+            ))
           )}
         </motion.div>
       )}
@@ -482,7 +593,9 @@ export const SullamScreen: FC = () => {
               <p className="text-xs text-slate-600">الأرشيف فارغ — أكمل أول سلّم ليظهر هنا</p>
             </div>
           ) : (
-            completedGoals.map((g, idx) => <GoalCard key={g.id} goal={g} idx={idx} />)
+            completedGoals.map((g, idx) => (
+              <GoalCard key={g.id} goal={g} idx={idx} onStartRelic={() => {}} />
+            ))
           )}
         </motion.div>
       )}
@@ -490,6 +603,15 @@ export const SullamScreen: FC = () => {
       {/* ═══ Create View ═══ */}
       {viewMode === "create" && (
         <CreateGoalForm onDone={() => setViewMode("active")} />
+      )}
+
+      {viewMode === "observatory" && (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.4 }} className="absolute inset-0 z-40">
+           <button onClick={() => setViewMode("active")} className="absolute top-8 left-6 z-50 text-indigo-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 p-2.5 px-4 rounded-full backdrop-blur-md border border-indigo-500/30 hover:border-indigo-400/50 transition-all font-bold text-sm shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+             عودة للسُلّم ✕
+           </button>
+           <ObservatoryScreen />
+        </motion.div>
       )}
 
       {/* ═══ Footer ═══ */}

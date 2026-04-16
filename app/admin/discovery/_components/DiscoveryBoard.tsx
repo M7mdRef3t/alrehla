@@ -178,6 +178,12 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem }: Discove
     return <div className="p-12 text-center text-neutral-500 animate-pulse">Loading signals pipeline...</div>;
   }
 
+  const totalSignals = items.length;
+  const prioritized = items.filter(i => i.stage === "Prioritized").length;
+  const shipped = items.filter(i => i.stage === "Shipped").length;
+  const validated = items.filter(i => ["Validated", "Prioritized", "In Delivery", "Shipped"].includes(i.stage)).length;
+  const validationRate = totalSignals > 0 ? Math.round((validated / totalSignals) * 100) : 0;
+
   return (
     <DndContext
       sensors={sensors}
@@ -186,7 +192,33 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem }: Discove
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 p-6 h-[calc(100vh-6rem)] overflow-x-auto overflow-y-hidden">
+      <div className="px-6 pt-4 pb-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="bg-neutral-800/50 border border-white/5 rounded-xl p-4">
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Total Signals</p>
+            <p className="text-2xl font-black text-white">{totalSignals}</p>
+          </div>
+          <div className="bg-neutral-800/50 border border-white/5 rounded-xl p-4">
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Prioritized</p>
+            <p className="text-2xl font-black text-purple-400">{prioritized}</p>
+          </div>
+          <div className="bg-neutral-800/50 border border-white/5 rounded-xl p-4">
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Shipped</p>
+            <p className="text-2xl font-black text-emerald-400">{shipped}</p>
+          </div>
+          <div className="bg-neutral-800/50 border border-white/5 rounded-xl p-4">
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Validation Rate</p>
+            <div className="flex items-center gap-2">
+              <p className="text-2xl font-black text-blue-400">{validationRate}%</p>
+              <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${validationRate}%` }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-4 px-6 pb-6 h-[calc(100vh-14rem)] overflow-x-auto overflow-y-hidden">
         {STAGES.map((stage) => {
           const columnItems = filtered.filter((i) => i.stage === stage);
           return (
