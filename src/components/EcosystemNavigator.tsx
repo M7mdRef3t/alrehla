@@ -285,6 +285,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#8b5cf6",
     url: "/#khalwa"
+  },
+  {
+    id: "ecosystem-hub",
+    name: "مركز القيادة",
+    description: "كل أدوات رحلتك — نظرة واحدة",
+    icon: <LayoutGrid className="w-5 h-5" />,
+    status: "active",
+    color: "#6366f1",
+    url: "/#ecosystem-hub"
   }
 ];
 

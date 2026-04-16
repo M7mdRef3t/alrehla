@@ -430,7 +430,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     if (!adminAccess) return;
     const interval = setInterval(() => {
       void SovereignOrchestrator.evaluateIntelligence();
-    }, 60000); // evaluate every 60 seconds
+    }, 120_000); // evaluate every 120 seconds
     
     // Initial evaluation
     void SovereignOrchestrator.evaluateIntelligence();

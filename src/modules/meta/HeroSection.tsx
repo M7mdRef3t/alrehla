@@ -711,7 +711,7 @@ const HERO_STYLES = `
 
   .headline-subline-container {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: max-content 1fr;
     align-items: center;
     column-gap: 14px;
     row-gap: 8px;
@@ -723,11 +723,10 @@ const HERO_STYLES = `
   .word-ant,
   .word-faqat {
     display: block;
-    width: 100%;
+    min-width: 3.1ch;
     font-size: 1.1em;
     font-weight: 800;
-    text-align: justify;
-    text-align-last: justify;
+    text-align: center;
   }
   .word-ant  { opacity: 0.98; }
   .word-faqat { opacity: 0.95; }
