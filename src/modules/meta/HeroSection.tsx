@@ -712,6 +712,14 @@ const HERO_STYLES = `
     font-size: 0.78em;
   }
 
+  .balanced-word {
+    display: inline-block;
+    text-align: center;
+    width: 2.5em; /* Fixed width to ensure equality */
+    white-space: nowrap;
+    opacity: 0.9;
+  }
+
   @media (max-width: 1023px) {
     .hero-headline {
       font-size: clamp(1.6rem, 7.5vw, 2.4rem) !important;
@@ -1088,7 +1096,10 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
             <motion.h1 variants={fadeUpWithClip} className="headline-static hero-headline">
               <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
               <div className="headline-subline-container">
-                <span className="headline-subline-text">أنت فقط</span>
+                <span className="headline-subline-text">
+                  <span className="balanced-word">أنت</span>
+                  <span className="balanced-word">فقط</span>
+                </span>
                 <RotatingWord />
               </div>
             </motion.h1>
