@@ -646,7 +646,8 @@ const HERO_STYLES = `
 
   .rotating-word-wrapper {
     position: relative;
-    display: inline-block;
+    display: flex;
+    align-items: center;
     width: auto;
     min-height: 1.3em;
     padding: 0;
@@ -656,6 +657,9 @@ const HERO_STYLES = `
     line-height: 1.2;
     vertical-align: middle;
     text-align: right;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
   }
 
   .hero-body {
@@ -716,18 +720,17 @@ const HERO_STYLES = `
     width: 100%;
   }
 
-  .word-ant {
-    display: block;
-    font-size: 1.1em;
-    font-weight: 800;
-    opacity: 0.98;
-  }
+  .word-ant,
   .word-faqat {
     display: block;
+    width: 100%;
     font-size: 1.1em;
     font-weight: 800;
-    opacity: 0.95;
+    text-align: justify;
+    text-align-last: justify;
   }
+  .word-ant  { opacity: 0.98; }
+  .word-faqat { opacity: 0.95; }
 
   @media (max-width: 1023px) {
     .hero-headline {
@@ -1105,9 +1108,8 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
             <motion.h1 variants={fadeUpWithClip} className="headline-static hero-headline">
               <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
               <div className="headline-subline-container">
-                <span className="word-ant">أنت</span>
-                <span aria-hidden />
-                <span className="word-faqat">فقط</span>
+                <span className="word-ant" style={{ gridColumn: 1, gridRow: 1 }}>أنت</span>
+                <span className="word-faqat" style={{ gridColumn: 1, gridRow: 2 }}>فقط</span>
                 <RotatingWord />
               </div>
             </motion.h1>
