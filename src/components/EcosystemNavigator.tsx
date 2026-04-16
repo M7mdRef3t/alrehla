@@ -23,7 +23,8 @@ import {
   Gem,
   ScrollText,
   Droplets,
-  TrendingUp
+  TrendingUp,
+  Mail
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -256,6 +257,24 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#10b981",
     url: "/#bathra"
+  },
+  {
+    id: "observatory",
+    name: "المرصد",
+    description: "الخريطة السلوكية — اكتشف أنماطك",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#818cf8",
+    url: "/#observatory"
+  },
+  {
+    id: "wasiyya",
+    name: "وصية",
+    description: "رسائل مختومة لنفسك المستقبلية",
+    icon: <Mail className="w-5 h-5" />,
+    status: "active",
+    color: "#fbbf24",
+    url: "/#wasiyya"
   }
 ];
 

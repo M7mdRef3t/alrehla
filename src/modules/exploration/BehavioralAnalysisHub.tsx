@@ -815,37 +815,7 @@ export function BehavioralAnalysisHub({
                 >
                   {pushOn
                     ? <><BellOff size={10} color="#06B6D4" /><span style={{ fontSize: 9, color: "#06B6D4", fontWeight: 700 }}>إيقاف</span></>
-                    : <><Bell size={10} color="#134e4a" /><span style={{ fontSize: 9, color: "#134e4a", fontWeight: 700 }}>اشترك</span></>}
-                </motion.button>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        {activeSection === "analysis" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {/* Top Analysis Cards using pattern cards */}
-            <h3 style={{ margin: 0, fontSize: 13, fontWeight: 900, color: "#e2e8f0" }}>الأنماط המكتشفة حالياً</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
-              {PATTERNS.map((p) => (
-                <PatternCard key={p.id} pattern={p} onShare={handleSharePattern} onOpenResource={onNavigateToResources} onOpenEchoSimulator={(title) => setEchoPatternTitle(title)} />
-              ))}
-            </div>
-            
-            <div style={{ height: 20 }} />
-          </div>
-        )}
-
-      </main>
-
-      <AnimatePresence>
-        {echoPatternTitle && (
-          <FutureEchoSimulator patternTitle={echoPatternTitle} onClose={() => setEchoPatternTitle(null)} />
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
                     : <><Bell size={10} color="#A78BFA" /><span style={{ fontSize: 9, color: "#A78BFA", fontWeight: 700 }}>تفعيل</span></>
                   }
                 </motion.button>
@@ -962,6 +932,7 @@ export function BehavioralAnalysisHub({
                     pattern={p}
                     onShare={handleSharePattern}
                     onOpenResource={onNavigateToResources}
+                    onOpenEchoSimulator={(title) => setEchoPatternTitle(title)}
                   />
                 </motion.div>
               </div>
@@ -1128,6 +1099,12 @@ export function BehavioralAnalysisHub({
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {echoPatternTitle && (
+          <FutureEchoSimulator patternTitle={echoPatternTitle} onClose={() => setEchoPatternTitle(null)} />
         )}
       </AnimatePresence>
     </div>

@@ -42,6 +42,8 @@ const NabaScreen = lazy(() => import("../../naba/NabaScreen"));
 const MithaqScreen = lazy(() => import("../../mithaq/MithaqScreen"));
 const SullamScreen = lazy(() => import("../../sullam/SullamScreen"));
 const BathraScreen = lazy(() => import("../../bathra/BathraScreen"));
+const ObservatoryScreen = lazy(() => import("../../observatory/ObservatoryScreen").then(m => ({ default: m.ObservatoryScreen })));
+const WasiyyaScreen = lazy(() => import("../../wasiyya/WasiyyaScreen"));
 
 
 
@@ -593,6 +595,26 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#061208" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
           <BathraScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "observatory") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#020617" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
+          <ObservatoryScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "wasiyya") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0c0a06" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
+          <WasiyyaScreen />
         </Suspense>
       </PageShell>
     );

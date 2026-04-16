@@ -444,7 +444,9 @@ export function recordFlowEvent(
   const leadAttribution = getStoredLeadAttribution();
 
   const client_event_id = extra?.meta?.client_event_id as string || generateUUID();
-  const hasExtraKeys = !!(extra || utmParams || leadAttribution || dwellTime != null || previousStep);
+  
+  const hasExtraData = extra && Object.keys(extra).length > 0;
+  const hasExtraKeys = !!(hasExtraData || utmParams || leadAttribution || dwellTime != null || previousStep);
 
   const event = {
     type: "flow_event" as const,

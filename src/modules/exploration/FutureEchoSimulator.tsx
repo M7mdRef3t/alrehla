@@ -1,6 +1,7 @@
+"use client";
 import type { FC } from "react";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as m, AnimatePresence } from "framer-motion";
 import { ArrowLeft, GitBranch, Zap, HeartPulse, AlertTriangle, ShieldCheck } from "lucide-react";
 
 interface FutureEchoSimulatorProps {
@@ -45,7 +46,7 @@ export const FutureEchoSimulator: FC<FutureEchoSimulatorProps> = ({ patternTitle
   const activeData = reality === "healing" ? healingData : reality === "collapse" ? collapseData : null;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
       style={{
         position: "fixed", inset: 0, zIndex: 100,
@@ -79,7 +80,7 @@ export const FutureEchoSimulator: FC<FutureEchoSimulatorProps> = ({ patternTitle
         {/* Initial Choice (Bifurcation) */}
         <AnimatePresence mode="wait">
           {!reality ? (
-            <motion.div key="split" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <m.div key="split" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <p style={{ textAlign: "center", fontSize: 14, color: "#94a3b8", marginBottom: 32, fontWeight: 700 }}>
                 اختر مساراً لرؤية النتيجة...
               </p>
@@ -90,7 +91,7 @@ export const FutureEchoSimulator: FC<FutureEchoSimulatorProps> = ({ patternTitle
                   border: "1px solid rgba(244,63,94,0.2)", cursor: "pointer",
                   display: "flex", alignItems: "center", gap: 16
                 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(244,63,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center", shrink: 0 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(244,63,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <AlertTriangle size={24} color="#f43f5e" />
                   </div>
                   <div style={{ flex: 1 }}>
@@ -105,7 +106,7 @@ export const FutureEchoSimulator: FC<FutureEchoSimulatorProps> = ({ patternTitle
                   border: "1px solid rgba(16,185,129,0.2)", cursor: "pointer",
                   display: "flex", alignItems: "center", gap: 16
                 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(16,185,129,0.1)", display: "flex", alignItems: "center", justifyContent: "center", shrink: 0 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(16,185,129,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <ShieldCheck size={24} color="#10b981" />
                   </div>
                   <div style={{ flex: 1 }}>
@@ -114,14 +115,14 @@ export const FutureEchoSimulator: FC<FutureEchoSimulatorProps> = ({ patternTitle
                   </div>
                 </button>
               </div>
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+            <m.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <div style={{
                 background: activeData!.bg, border: `1px solid ${activeData!.border}`,
                 borderRadius: 32, padding: "32px 24px", textAlign: "center"
               }}>
-                <activeData.Icon size={48} color={activeData!.accent} style={{ margin: "0 auto 16px", display: "block" }} />
+                {activeData?.Icon && <activeData.Icon size={48} color={activeData.accent} style={{ margin: "0 auto 16px", display: "block" }} />}
                 <h3 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: activeData!.accent }}>{activeData!.title}</h3>
                 <p style={{ margin: "8px 0 24px", fontSize: 12, color: "#64748b", fontWeight: 700 }}>{activeData!.date}</p>
                 <p style={{ margin: "0 auto 32px", fontSize: 14, color: "#e2e8f0", lineHeight: 1.8, maxWidth: 300 }}>
@@ -157,10 +158,10 @@ export const FutureEchoSimulator: FC<FutureEchoSimulatorProps> = ({ patternTitle
                   فهمت الرسالة
                 </button>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </m.div>
   );
 };

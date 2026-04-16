@@ -728,8 +728,6 @@ const HERO_STYLES = `
     font-weight: 800;
     vertical-align: middle;
     opacity: 0.98;
-    transform: scaleX(1.36);
-    transform-origin: right center; /* Stretch from right to keep right-alignment intact */
   }
   .word-faqat {
     display: inline-block;

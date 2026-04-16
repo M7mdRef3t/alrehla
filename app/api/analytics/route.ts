@@ -119,6 +119,10 @@ export async function POST(req: Request) {
             }, { status: 500 });
         }
 
+        if (process.env.NODE_ENV === "development") {
+            console.log(`[Analytics Ingestion] Received: ${data.event_type} | CID: ${data.client_event_id}`);
+        }
+
         // --- CAPI Bridge (Server-Side Side Effect) ---
         // This is where we bridge analytics to Meta CAPI without waiting for the response
         try {

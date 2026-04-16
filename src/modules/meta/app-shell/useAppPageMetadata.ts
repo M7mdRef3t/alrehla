@@ -55,6 +55,8 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   mithaq: "Mithaq Contract",
   sullam: "Sullam Growth",
   bathra: "Bathra Seeds",
+  observatory: "Observatory",
+  wasiyya: "Wasiyya Letters",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -109,6 +111,8 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   mithaq: { title: "ميثاق — عقد مع النفس | Alrehla", description: "التزم بوعد — وراقب نفسك. check-in يومي + تقدم + تأمل ختامي." },
   sullam: { title: "سُلّم — سلالم النمو | Alrehla", description: "حطّ أهداف صغيرة — واصعد درجة درجة. تقدم بصري + ميلستونات + إنجازات." },
   bathra: { title: "بذرة — بذور العادات الصغيرة | Alrehla", description: "ازرع عادة صغيرة — واسقِها كل يوم. شاهدها تنمو من بذرة إلى شجرة في 21 يوم." },
+  observatory: { title: "المرصد — الخريطة السلوكية | Alrehla", description: "اكتشف الأنماط الخفية بين مجالات نموك — خريطة سلوكية بصرية لرحلتك." },
+  wasiyya: { title: "وصية — رسائل مختومة للمستقبل | Alrehla", description: "اكتب رسالة لنفسك المستقبلية — اختمها وانتظر اللحظة." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

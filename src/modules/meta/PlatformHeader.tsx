@@ -32,11 +32,11 @@ import { useGamificationState } from "@/domains/gamification/store/gamification.
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 // Re-importing missing icons correctly
-import { BookOpen, Info } from "lucide-react";
+import { BookOpen, Info, Compass } from "lucide-react";
 
 const NAV_LINKS_RESOLVED = [
   { id: "home", label: "الأفق", icon: Home },
-  { id: "tools", label: "البوصلة", icon: Wrench },
+  { id: "bawsala", label: "البوصلة", icon: Compass },
   { id: "insights", label: "الرادار", icon: BarChart2 },
   { id: "stories", label: "قصص", icon: BookOpen },
   { id: "about", label: "لماذا الرحلة؟", icon: Info },
@@ -48,6 +48,7 @@ const SCREEN_MAP: Record<string, string> = {
   home: "landing",
   landing: "landing",
   tools: "tools",
+  bawsala: "bawsala",
   stories: "stories",
   about: "about",
   insights: "insights",
@@ -60,6 +61,7 @@ const SCREEN_MAP: Record<string, string> = {
 
 const SCREEN_LABELS: Record<string, string> = {
   tools: "الأدوات",
+  bawsala: "البوصلة",
   insights: "تحليل العلاقات",
   stories: "قصص",
   about: "لماذا الرحلة؟",
@@ -80,6 +82,7 @@ export interface PlatformHeaderProps {
 function getActiveNavId(screen?: string): string {
   if (!screen || screen === "landing") return "home";
   if (screen === "tools" || screen === "guided" || screen === "mission") return "tools";
+  if (screen === "bawsala") return "bawsala";
   return screen;
 }
 
@@ -193,7 +196,7 @@ export const PlatformHeader = memo(function PlatformHeader({
   const handleLandingCta = useCallback(() => {
     if (isLoggedIn) {
       if (onNavigate) {
-        onNavigate("tools");
+        onNavigate("bawsala");
       }
       return;
     }
