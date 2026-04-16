@@ -712,12 +712,25 @@ const HERO_STYLES = `
     font-size: 0.78em;
   }
 
-  .balanced-word {
+  .word-ant {
     display: inline-block;
     text-align: center;
-    width: 2.5em; /* Fixed width to ensure equality */
-    white-space: nowrap;
-    opacity: 0.9;
+    width: 2.87em; /* 3.5 / 1.22 */
+    font-size: 1.22em;
+    letter-spacing: 0.08em;
+    font-weight: 800;
+    vertical-align: middle;
+    opacity: 0.98;
+    transform: translateY(-0.02em);
+  }
+  .word-faqat {
+    display: inline-block;
+    text-align: center;
+    width: 3.33em; /* 3.5 / 1.05 */
+    font-size: 1.05em;
+    font-weight: 800;
+    vertical-align: middle;
+    opacity: 0.95;
   }
 
   @media (max-width: 1023px) {
@@ -1097,8 +1110,8 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
               <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
               <div className="headline-subline-container">
                 <span className="headline-subline-text">
-                  <span className="balanced-word">أنت</span>
-                  <span className="balanced-word">فقط</span>
+                  <span className="word-ant">أنت</span>
+                  <span className="word-faqat">فقط</span>
                 </span>
                 <RotatingWord />
               </div>

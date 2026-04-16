@@ -52,6 +52,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   mirah: "Mirah Mirror",
   sijil: "Sijil Chronicle",
   naba: "Naba Inspiration",
+  mithaq: "Mithaq Contract",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -103,6 +104,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   mirah: { title: "مرآة — الوعي الذاتي | Alrehla", description: "شوف نفسك بعيون البيانات — خريطة شخصية + رؤى + نمو + تأمّل." },
   sijil: { title: "سِجل — السجل المفتوح | Alrehla", description: "كل حركة في المنصة موثّقة — timeline + heatmap + اتجاهات + تفاعل." },
   naba: { title: "نبع — إلهام يومي | Alrehla", description: "كل يوم رشفة إلهام جديدة — اقتباسات + أسئلة + تحديات + حكم + تمارين." },
+  mithaq: { title: "ميثاق — عقد مع النفس | Alrehla", description: "التزم بوعد — وراقب نفسك. check-in يومي + تقدم + تأمل ختامي." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

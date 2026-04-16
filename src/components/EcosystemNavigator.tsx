@@ -228,6 +228,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#06b6d4",
     url: "/#naba"
+  },
+  {
+    id: "mithaq",
+    name: "ميثاق",
+    description: "عقد مع النفس",
+    icon: <ScrollText className="w-5 h-5" />,
+    status: "active",
+    color: "#fbbf24",
+    url: "/#mithaq"
   }
 ];
 
