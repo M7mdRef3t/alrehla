@@ -4,11 +4,15 @@ import { getSupabaseAdminClient } from "../../../_lib/supabaseAdmin";
 import { sanitizePhone } from "../../../../../src/server/marketingLeadUtils";
 // @ts-ignore — external package may not be installed locally
 import { quickAnalyze } from "@alrehla/masarat";
+import { requireAdmin } from "@/server/requireAdmin";
 
 const isUUID = (id: string | null | undefined) =>
   typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 
 export async function POST(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const supabaseAdmin = getSupabaseAdminClient();
     if (!supabaseAdmin) {

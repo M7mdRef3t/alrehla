@@ -17,31 +17,61 @@ import { SortableContext, arrayMove, sortableKeyboardCoordinates } from "@dnd-ki
 import { DiscoveryItem, DiscoveryStage } from "@/types/discovery";
 import BoardColumn from "./BoardColumn";
 import ItemCard from "./ItemCard";
+import ItemDetailModal from "./ItemDetailModal";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 const STAGES: DiscoveryStage[] = [
-  "Inbox", 
-  "Needs Evidence", 
-  "Validated", 
-  "Prioritized", 
-  "In Delivery", 
-  "Shipped"
+  "Inbox",
+  "Needs Evidence",
+  "Validated",
+  "Prioritized",
+  "In Delivery",
+  "Shipped",
+  "Dropped",
 ];
 
+type DiscoveryBoardProps = {
+  searchQuery?: string;
+  latestItem?: DiscoveryItem | null;
+};
 
-export default function DiscoveryBoard() {
+export default function DiscoveryBoard({ searchQuery = "", latestItem }: DiscoveryBoardProps) {
   const [items, setItems] = useState<DiscoveryItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<DiscoveryItem | null>(null);
+
+  const adminCode = runtimeEnv.adminCode ?? "";
 
   useEffect(() => {
-    fetch("/api/admin/discovery")
-      .then(res => res.json())
-      .then(data => {
+    fetch("/api/admin/discovery", {
+      headers: { Authorization: `Bearer ${adminCode}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
         if (Array.isArray(data)) setItems(data);
         setLoading(false);
       })
       .catch(console.error);
-  }, []);
+  }, [adminCode]);
+
+  // Prepend newly captured signal optimistically
+  useEffect(() => {
+    if (latestItem) {
+      setItems((prev) => {
+        const already = prev.some((i) => i.id === latestItem.id);
+        return already ? prev : [latestItem, ...prev];
+      });
+    }
+  }, [latestItem]);
+
+  const filtered = searchQuery.trim()
+    ? items.filter(
+        (i) =>
+          i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          i.description.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : items;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -81,7 +111,10 @@ export default function DiscoveryBoard() {
           // Persist
           fetch("/api/admin/discovery", {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${adminCode}`
+            },
             body: JSON.stringify({ id: activeItem.id, updates: { stage: overId } })
           }).catch(console.error);
           return newItems;
@@ -99,7 +132,10 @@ export default function DiscoveryBoard() {
           // Persist
           fetch("/api/admin/discovery", {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${adminCode}`
+            },
             body: JSON.stringify({ id: activeItem.id, updates: { stage: overItem.stage } })
           }).catch(console.error);
         }
@@ -111,19 +147,28 @@ export default function DiscoveryBoard() {
     });
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = () => {
     setActiveId(null);
-    const { active, over } = event;
-    if (!over) return;
+  };
 
-    const activeId = active.id;
-    const overId = over.id;
+  const handleUpdate = (id: string, updates: Partial<DiscoveryItem>) => {
+    setItems((prev) => 
+      prev.map((it) => (it.id === id ? { ...it, ...updates } : it))
+    );
+  };
 
-    const activeIndex = items.findIndex(t => t.id === activeId);
-    const overIndex = items.findIndex(t => t.id === overId);
-
-    if (activeIndex !== overIndex && overIndex >= 0) {
-       setItems((items) => arrayMove(items, activeIndex, overIndex));
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/discovery?id=${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${adminCode}` },
+      });
+      if (res.ok) {
+        setItems((prev) => prev.filter((it) => it.id !== id));
+        setSelectedItem(null);
+      }
+    } catch (err) {
+      console.error("Delete failed:", err);
     }
   };
 
@@ -143,13 +188,17 @@ export default function DiscoveryBoard() {
     >
       <div className="flex gap-4 p-6 h-[calc(100vh-6rem)] overflow-x-auto overflow-y-hidden">
         {STAGES.map((stage) => {
-          const columnItems = items.filter((i) => i.stage === stage);
+          const columnItems = filtered.filter((i) => i.stage === stage);
           return (
             <BoardColumn key={stage} id={stage} title={stage}>
               <SortableContext items={columnItems.map((i) => i.id)}>
                 <div className="flex flex-col gap-3 min-h-[150px]">
                   {columnItems.map((item) => (
-                    <ItemCard key={item.id} item={item} />
+                    <ItemCard 
+                      key={item.id} 
+                      item={item} 
+                      onClick={setSelectedItem}
+                    />
                   ))}
                 </div>
               </SortableContext>
@@ -157,10 +206,19 @@ export default function DiscoveryBoard() {
           );
         })}
       </div>
-      
+
       <DragOverlay>
         {activeItem ? <ItemCard item={activeItem} isOverlay /> : null}
       </DragOverlay>
+
+      {selectedItem && (
+        <ItemDetailModal 
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+        />
+      )}
     </DndContext>
   );
 }

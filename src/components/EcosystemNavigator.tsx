@@ -22,7 +22,8 @@ import {
   Bell,
   Gem,
   ScrollText,
-  Droplets
+  Droplets,
+  TrendingUp
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -237,6 +238,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#fbbf24",
     url: "/#mithaq"
+  },
+  {
+    id: "sullam",
+    name: "سُلّم",
+    description: "سلالم النمو",
+    icon: <TrendingUp className="w-5 h-5" />,
+    status: "active",
+    color: "#84cc16",
+    url: "/#sullam"
   }
 ];
 

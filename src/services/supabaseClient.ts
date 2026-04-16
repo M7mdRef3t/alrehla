@@ -102,6 +102,8 @@ export const supabase: SupabaseClient | null = (() => {
       storageKey: "alrehla-ecosystem-auth", // Unified Identity SSO key
       storage: createCrossDomainStorage(),  // undefined on localhost = use default localStorage
       detectSessionInUrl: true,             // Let Supabase auto-detect hash-based tokens
+      // Bypass navigator.locks on localhost to suppress unhandled AbortErrors caused by Fast Refresh & React Strict Mode
+      lock: needsCrossDomainCookies() ? undefined : async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => fn(),
     }
   });
 

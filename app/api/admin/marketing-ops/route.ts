@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { verifyAdmin, type AdminRequest, type AdminResponse } from "../../../../server/admin/_shared";
+import { requireAdmin } from "@/server/requireAdmin";
 import { GET as runMarketingCron } from "../../cron/marketing-outreach/route";
 
 export const dynamic = "force-dynamic";
@@ -14,28 +14,15 @@ function buildClient() {
 }
 
 async function checkAuth(req: Request): Promise<boolean> {
-  const secret = process.env.CRON_SECRET || process.env.MARKETING_DEBUG_KEY;
+  const secret = process.env.CRON_SECRET || process.env.MARKETING_DEBUG_KEY || process.env.ADMIN_CODE;
   const auth = req.headers.get("authorization");
 
-  // 1. Secret/Cron Auth
+  // 1. Secret/Cron/Admin Auth
   if (secret && auth === `Bearer ${secret}`) return true;
 
-  // 2. Admin Session Auth
-  const mockReq: AdminRequest = {
-    method: req.method,
-    url: req.url,
-    headers: Object.fromEntries(req.headers.entries()),
-  };
-  const mockRes: AdminResponse = {
-    status: () => mockRes,
-    json: () => mockRes,
-  };
-  
-  const isAdmin = await verifyAdmin(mockReq, mockRes);
-  if (isAdmin) return true;
-
-  // 3. Fallback for Manual Local Recording (only if no secret is mandated)
-  if (!secret) return true;
+  // 2. Head-less requireAdmin check
+  const denied = await requireAdmin(req);
+  if (!denied) return true;
 
   return false;
 }

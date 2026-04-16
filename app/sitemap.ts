@@ -30,6 +30,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.9,
     },
+    {
+      url: `${base}/go`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
 
     // ═══ Product Pages ═══
     {

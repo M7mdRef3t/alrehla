@@ -111,7 +111,7 @@ export function saveReferralData(data: ReferralData): void {
 /* ── Actions ── */
 export function getMyReferralLink(): string {
     const data = loadReferralData();
-    return `https://dawayir.app?ref=${data.myCode}`;
+    return `https://alrehla.app/go?ref=${data.myCode}&utm_source=referral&utm_medium=share&utm_campaign=viral`;
 }
 
 export function getMyReferralCode(): string {
@@ -206,16 +206,19 @@ export function getReferralShareText(): string {
     
     const variants = [
         `🗺️ يابني اكتشفت تطبيق حكاية بيعرفني مين في حياتي "جدع" ومين "هجاص".. جربه وهتفهم قصدي.
-        استخدم كودي: ${code}
-        أو الرابط: ${link}`,
+
+استخدم كودي: ${code}
+أو الرابط: ${link}`,
         
-        `🧿 لو عايز تروق بالك وتفهم حدودك مع الناس من غير ما تحس بذنب.. البرنامج ده "دواير" هيظبطلك الدنيا.
-        كودي الشخصي: ${code}
-        الرابط: ${link}`,
+        `🧿 لو عايز تروق بالك وتفهم حدودك مع الناس من غير ما تحس بذنب.. "الرحلة" هتظبطلك الدنيا.
+
+كودي الشخصي: ${code}
+الرابط: ${link}`,
         
         `🤝 يا زميلي السكة طويلة ومحتاجة ناس "أصيلة".. دخل الكود ده في رحلتك وخلينا نكبر الدايرة.
-        كود الدعوة: ${code}
-        نزل من هنا: ${link}`
+
+كود الدعوة: ${code}
+ابدأ من هنا: ${link}`
     ];
 
     // Randomize for authentic feel

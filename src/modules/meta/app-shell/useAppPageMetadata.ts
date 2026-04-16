@@ -53,6 +53,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   sijil: "Sijil Chronicle",
   naba: "Naba Inspiration",
   mithaq: "Mithaq Contract",
+  sullam: "Sullam Growth",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -105,6 +106,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   sijil: { title: "سِجل — السجل المفتوح | Alrehla", description: "كل حركة في المنصة موثّقة — timeline + heatmap + اتجاهات + تفاعل." },
   naba: { title: "نبع — إلهام يومي | Alrehla", description: "كل يوم رشفة إلهام جديدة — اقتباسات + أسئلة + تحديات + حكم + تمارين." },
   mithaq: { title: "ميثاق — عقد مع النفس | Alrehla", description: "التزم بوعد — وراقب نفسك. check-in يومي + تقدم + تأمل ختامي." },
+  sullam: { title: "سُلّم — سلالم النمو | Alrehla", description: "حطّ أهداف صغيرة — واصعد درجة درجة. تقدم بصري + ميلستونات + إنجازات." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };
