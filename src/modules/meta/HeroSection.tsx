@@ -706,34 +706,26 @@ const HERO_STYLES = `
   }
 
   .headline-subline-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 14px;
+    row-gap: 8px;
     font-size: 0.78em;
     margin-top: 18px;
     width: 100%;
   }
 
-  .subline-row-2 {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
   .word-ant {
-    display: inline-block;
+    display: block;
     font-size: 1.1em;
     font-weight: 800;
-    vertical-align: middle;
     opacity: 0.98;
   }
   .word-faqat {
-    display: inline-block;
+    display: block;
     font-size: 1.1em;
     font-weight: 800;
-    vertical-align: middle;
     opacity: 0.95;
   }
 
@@ -1114,10 +1106,9 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
               <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
               <div className="headline-subline-container">
                 <span className="word-ant">أنت</span>
-                <div className="subline-row-2">
-                  <span className="word-faqat">فقط</span>
-                  <RotatingWord />
-                </div>
+                <span aria-hidden />
+                <span className="word-faqat">فقط</span>
+                <RotatingWord />
               </div>
             </motion.h1>
 

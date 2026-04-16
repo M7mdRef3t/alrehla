@@ -24,7 +24,8 @@ import {
   ScrollText,
   Droplets,
   TrendingUp,
-  Mail
+  Mail,
+  Moon
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -275,6 +276,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#fbbf24",
     url: "/#wasiyya"
+  },
+  {
+    id: "khalwa",
+    name: "خلوة",
+    description: "وضع التركيز العميق — عزلة واعية",
+    icon: <Moon className="w-5 h-5" />,
+    status: "active",
+    color: "#8b5cf6",
+    url: "/#khalwa"
   }
 ];
 

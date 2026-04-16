@@ -50,6 +50,7 @@ export type AppScreen =
   | "bathra"
   | "observatory"
   | "wasiyya"
+  | "khalwa"
   | "protocol"
   | "diagnosis";
 
