@@ -43,6 +43,7 @@ function signal(
 function flowEvent(step: FlowStep, timestamp: number): JourneyEvent {
   return {
     type: "flow_event",
+    client_event_id: `flow_${timestamp}`,
     timestamp,
     payload: {
       step
@@ -54,6 +55,7 @@ function flowEvent(step: FlowStep, timestamp: number): JourneyEvent {
 function taskCompleted(timestamp: number): JourneyEvent {
   return {
     type: "task_completed",
+    client_event_id: `task_${timestamp}`,
     timestamp,
     payload: {
       pathId: "path_protection",

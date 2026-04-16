@@ -23,6 +23,21 @@ const EVENT_TEMPLATES = [
 
 const NAMES = ["مُسافر صامت", "روح متحولة", "طالب سكينة", "صائد وعي", "نواة مضيئة"];
 
+const formatTimeAgo = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return "الآن";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "الآن";
+    
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    
+    if (seconds < 60) return "الآن";
+    if (seconds < 3600) return `منذ ${Math.floor(seconds / 60)} دقيقة`;
+    if (seconds < 86400) return `منذ ${Math.floor(seconds / 3600)} ساعة`;
+    if (seconds < 172800) return "منذ يوم";
+    if (seconds < 259200) return "منذ يومين";
+    return `منذ ${Math.floor(seconds / 86400)} يوم`;
+};
+
 const generateRandomEvent = (): SoulEvent => {
     const tpl = EVENT_TEMPLATES[Math.floor(Math.random() * EVENT_TEMPLATES.length)];
     const name = NAMES[Math.floor(Math.random() * NAMES.length)];
@@ -65,23 +80,23 @@ const mapDatabaseRowToSoulEvent = (row: any): SoulEvent => {
         userName: name,
         action,
         type,
-        timeAgo: "الآن"
+        timeAgo: formatTimeAgo(row.created_at)
     };
 };
 
 const mapAiDecisionToSoulEvent = (row: any): SoulEvent => {
-    const name = NAMES[Math.floor(Math.random() * NAMES.length)];
+    const name = "جارفيس (النظام)";
     let type: SoulEvent["type"] = "ai_insight";
-    let action = "تلقى توجيه وإدراك من جارفيس";
+    let action = "تدخل ذكي واصدار إدراك فوري";
 
     const aiType = row.type?.toUpperCase() || "";
     if (aiType === "INJECT_WHISPER" || aiType === "PROPOSE_ACTION") {
-        action = "استقبل همسة وتوجيه دقيق من جارفيس";
+        action = "إرسال همسة وتوجيه دقيق لمسار الرحلة";
     } else if (aiType === "OVERRIDE" || aiType === "FORCE_STOP") {
         type = "protection";
-        action = "تدخل جارفيس لحماية مسار الرحلة";
+        action = "تدخل وقائي لحماية مسار الرحلة";
     } else if (aiType === "ANALYZE_PATTERN") {
-        action = "جارفيس التقط نمطاً سلوكياً جديداً";
+        action = "التقاط نمط سلوكي شامل في المنصة";
     }
 
     return {
@@ -89,7 +104,7 @@ const mapAiDecisionToSoulEvent = (row: any): SoulEvent => {
         userName: name,
         action,
         type,
-        timeAgo: "الآن",
+        timeAgo: formatTimeAgo(row.created_at),
         details: row.reasoning,
         status: row.outcome
     };

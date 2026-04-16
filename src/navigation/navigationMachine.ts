@@ -54,6 +54,7 @@ export type AppScreen =
   | "ecosystem-hub"
   | "tazkiya"
   | "jisr"
+  | "risala"
   | "protocol"
   | "diagnosis";
 

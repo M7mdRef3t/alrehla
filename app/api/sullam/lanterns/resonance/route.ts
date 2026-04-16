@@ -4,10 +4,13 @@ import { requireAuth } from "@/server/requireAuth";
 
 // We use the service_role key to bypass RLS when incrementing resonance
 // to prevent letting regular users overwrite the resonance_count field arbitrarily.
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabaseAdmin =
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      )
+    : null;
 
 export async function POST(req: NextRequest) {
   // Ensure only authenticated travelers can light a lantern
@@ -22,6 +25,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Atomic increment using a PostgreSQL function (RPC)
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: "DB configuration missing" }, { status: 500 });
+    }
     const { data: newCount, error: rpcError } = await supabaseAdmin.rpc(
       "increment_lantern_resonance",
       { lantern_id }
