@@ -722,13 +722,16 @@ const HERO_STYLES = `
 
   .word-ant,
   .word-faqat {
-    display: block;
-    min-width: 3.1ch;
+    display: inline-block;
+    width: max-content;
     font-size: 1.1em;
     font-weight: 800;
-    text-align: center;
+    text-align: right;
   }
-  .word-ant  { opacity: 0.98; }
+  .word-ant  {
+    opacity: 0.98;
+    font-size: 1.42em;
+  }
   .word-faqat { opacity: 0.95; }
 
   @media (max-width: 1023px) {

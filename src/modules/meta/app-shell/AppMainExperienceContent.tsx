@@ -46,6 +46,7 @@ const ObservatoryScreen = lazy(() => import("../../observatory/ObservatoryScreen
 const WasiyyaScreen = lazy(() => import("../../wasiyya/WasiyyaScreen"));
 const KhalwaScreen = lazy(() => import("../../khalwa/KhalwaScreen"));
 const EcosystemHub = lazy(() => import("../../ecosystem/EcosystemHub"));
+const TazkiyaScreen = lazy(() => import("../../tazkiya/TazkiyaScreen"));
 
 
 
@@ -637,6 +638,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <EcosystemHub onNavigate={(s) => onNavigate?.(s as any)} />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "tazkiya") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#08061a" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
+          <TazkiyaScreen />
         </Suspense>
       </PageShell>
     );

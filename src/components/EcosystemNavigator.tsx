@@ -294,6 +294,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#6366f1",
     url: "/#ecosystem-hub"
+  },
+  {
+    id: "tazkiya",
+    name: "تزكية",
+    description: "تطهير يومي — اعترف · سامح · اترك",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#a78bfa",
+    url: "/#tazkiya"
   }
 ];
 

@@ -61,7 +61,8 @@ export async function POST(req: NextRequest) {
     ).catch(console.error);
 
     return NextResponse.json({ success: true, item: data });
-  } catch {
+  } catch (error) {
+    console.error("Failed to create discovery item:", error);
     return NextResponse.json({ error: "Failed to create item" }, { status: 500 });
   }
 }
@@ -96,7 +97,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, item: data });
-  } catch {
+  } catch (error) {
+    console.error("Failed to update discovery item:", error);
     return NextResponse.json({ error: "Failed to update item" }, { status: 500 });
   }
 }

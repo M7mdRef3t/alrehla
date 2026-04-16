@@ -1,4 +1,4 @@
-import { logger } from "@/services/logger";
+const logger = console;
 import crypto from "crypto";
 
 export interface MetaCapiEventData {

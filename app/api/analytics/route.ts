@@ -116,6 +116,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ 
                 error: "Ingestion failed", 
                 code: insertError.code,
+                message: insertError.message
             }, { status: 500 });
         }
 
@@ -171,9 +172,9 @@ export async function POST(req: Request) {
         const response = NextResponse.json({ status: "success" });
         response.headers.set("X-Analytics-Version", "v3-bridge-capi-v1");
         return response;
-    } catch (e) {
+    } catch (e: any) {
         console.error("[Analytics Ingestion] Server Error:", e);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal Server Error", details: e?.message || String(e) }, { status: 500 });
     }
 }
 

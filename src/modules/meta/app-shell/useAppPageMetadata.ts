@@ -59,6 +59,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   wasiyya: "Wasiyya Letters",
   khalwa: "Khalwa Focus",
   "ecosystem-hub": "Ecosystem Hub",
+  tazkiya: "Tazkiya Purification",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -117,6 +118,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   wasiyya: { title: "وصية — رسائل مختومة للمستقبل | Alrehla", description: "اكتب رسالة لنفسك المستقبلية — اختمها وانتظر اللحظة." },
   khalwa: { title: "خلوة — وضع التركيز العميق | Alrehla", description: "ادخل عزلة واعية — حدد نيتك، انغمس، واخرج بوضوح." },
   "ecosystem-hub": { title: "مركز القيادة — كل أدواتك في نظرة | Alrehla", description: "لوحة موحدة لـ 27 منتج في منظومة الرحلة." },
+  tazkiya: { title: "تزكية — تطهير يومي للقلب | Alrehla", description: "اعترف بما يثقلك، سامح، واترك — دورة تطهير عاطفي في دقيقتين." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };
