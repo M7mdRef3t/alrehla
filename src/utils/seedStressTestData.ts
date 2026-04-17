@@ -5,6 +5,7 @@
 
 import { useMapState } from '@/modules/map/dawayirIndex';
 import type { JourneyEvent, JourneyEventPayload } from "@/services/journeyTracking";
+import { generateUUID } from "@/services/analytics";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { runtimeEnv } from "@/config/runtimeEnv";
 
@@ -90,7 +91,8 @@ export function seedJourneyEvents(nodeIds: string[], count: number): void {
           personLabel: `شخص ${(i % 10) + 1}`,
           nodeId
         } as JourneyEventPayload["task_completed"],
-        timestamp: ts
+        timestamp: ts,
+        client_event_id: generateUUID()
       });
     } else if (i % 3 === 1) {
       events.push({
@@ -100,7 +102,8 @@ export function seedJourneyEvents(nodeIds: string[], count: number): void {
           personLabel: `شخص ${(i % 10) + 1}`,
           nodeId
         } as JourneyEventPayload["node_added"],
-        timestamp: ts
+        timestamp: ts,
+        client_event_id: generateUUID()
       });
     } else {
       events.push({
@@ -109,7 +112,8 @@ export function seedJourneyEvents(nodeIds: string[], count: number): void {
           pathId: "path_protection",
           zone: "red"
         } as JourneyEventPayload["path_started"],
-        timestamp: ts
+        timestamp: ts,
+        client_event_id: generateUUID()
       });
     }
   }

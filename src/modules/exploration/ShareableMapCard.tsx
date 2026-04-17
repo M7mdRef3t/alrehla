@@ -51,7 +51,7 @@ export const ShareableMapCard: FC<ShareableMapCardProps> = ({ onClose }) => {
             canvas.toBlob(async (blob) => {
                 if (!blob) throw new Error("Canvas to Blob failed");
                 const file = new File([blob], "dawayir-map.png", { type: "image/png" });
-                const text = `🗺️ خريطتي في الرحلة\n\n✅ دائرة الأمان: ${greenCount} شخص\n⚠️ دائرة الحذر: ${yellowCount} شخص\n🚨 دائرة الخطر: ${redCount} شخص\n\nابدأ رحلتك: https://dawayir.app`;
+                const text = `🗺️ خريطتي في الرحلة\n\n✅ دائرة الأمان: ${greenCount} شخص\n⚠️ دائرة الحذر: ${yellowCount} شخص\n🚨 دائرة الخطر: ${redCount} شخص\n\nابدأ رحلتك: https://alrehla.app/go?utm_source=share_card&utm_medium=share`;
 
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     await navigator.share({

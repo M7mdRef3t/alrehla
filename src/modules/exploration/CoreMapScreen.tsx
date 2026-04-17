@@ -56,6 +56,8 @@ import { getDawayirLiveLaunchHref, getDawayirLivePath } from "@/utils/dawayirLiv
 import { SoulGeometryOverlay } from "./SoulGeometryOverlay";
 import { ContextNotePanel } from "./ContextNotePanel";
 import { MapAnalyticalPanel, MapOperationalStrip, MapSupportPanel } from "./Map/CoreMapPanels";
+import { LanternSwarm } from "./LanternSwarm";
+import { LanternInsightModal } from "./LanternInsightModal";
 
 const DawayirCanvas = lazy(() => import("@/modules/dawayir/DawayirCanvas").then(m => ({ default: m.DawayirCanvas })));
 const FeelingCheckModal = lazy(() => import("@/modules/dawayir/FeelingCheckModal").then(m => ({ default: m.FeelingCheckModal })));
@@ -621,6 +623,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </motion.div>
       </div>
       <SovereignBroadcastOverlay message={sovereignMessage} />
+      
+      <LanternSwarm />
+      <LanternInsightModal />
       
       {showViralNudge && <ViralLoopNudge />}
 

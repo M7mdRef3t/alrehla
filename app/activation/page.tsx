@@ -7,8 +7,10 @@ import { useRouter } from "next/navigation";
 import { marketingLeadService } from "../../src/services/marketingLeadService";
 import { recordFlowEvent } from "../../src/services/journeyTracking";
 import { safeGetSession } from "../../src/services/supabaseClient";
+import { revenueConfig } from "../../src/config/opsLinks";
 
-const VODAFONE_CASH_NUMBER = "01023050092";
+// We now use revenueConfig.number from src/config/opsLinks.ts
+const VODAFONE_CASH_NUMBER = revenueConfig.number;
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 const MAX_IMAGE_BYTES = 900_000;
 
@@ -84,7 +86,7 @@ export default function ActivationPage() {
       setNotice("الصورة اترفعت بنجاح. كمل إرسال الإثبات.");
       setNoticeKind("success");
       recordFlowEvent("activation_proof_upload_completed");
-    } catch (err) {
+    } catch {
       setProofImage(null);
       setNotice("حدث خطأ أثناء تجهيز الصورة.");
       setNoticeKind("error");

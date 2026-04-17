@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { OracleService } from "@/services/oracleService";
-import { requireLiveAuth, isAdminLikeRole } from "@/modules/dawayir-live/server/auth";
+import { requireAdmin } from "@/server/requireAdmin";
 
 export const dynamic = "force-dynamic";
 
@@ -15,13 +15,8 @@ function buildClient() {
 
 // 👁️ GET — Oracle Overview & Stats
 export async function GET(req: Request) {
-  const auth = await requireLiveAuth(req as any);
-  if ("status" in auth) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
-  if (!isAdminLikeRole(auth.role)) {
-    return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
-  }
+  const adminError = await requireAdmin(req);
+  if (adminError) return adminError;
 
   const supabase = buildClient();
   
@@ -82,13 +77,8 @@ export async function GET(req: Request) {
 
 // 🧠 POST — Trigger Batch Analysis
 export async function POST(req: Request) {
-  const auth = await requireLiveAuth(req as any);
-  if ("status" in auth) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
-  if (!isAdminLikeRole(auth.role)) {
-    return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
-  }
+  const adminError = await requireAdmin(req);
+  if (adminError) return adminError;
 
   const { batchSize = 10 } = await req.json();
   const supabase = buildClient();

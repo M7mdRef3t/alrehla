@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
   // If Storage is unavailable, fall back to inline data_url so activation never blocks.
   const { error } = await admin.from("support_tickets").insert({
     source: "activation_manual_proof",
-    status: "open",
+    status: "pending",
     priority: "high",
     category: "payment_activation",
     title: `Manual payment proof - ${methodLabel} (${identifier})`,

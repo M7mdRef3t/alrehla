@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../../_lib/supabaseAdmin";
+import { requireAdmin } from "@/server/requireAdmin";
 
 // POST /api/admin/sovereign/whatsapp
 // Pushes session summary to the client's WhatsApp via Meta API
 export async function POST(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const { sessionId } = await req.json();
 

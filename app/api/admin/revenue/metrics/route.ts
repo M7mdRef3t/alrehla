@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireLiveAuth } from "../../../../../src/modules/dawayir-live/server/auth";
+import { requireAdmin } from "@/server/requireAdmin";
 import { revenueEngine } from "../../../../../src/ai/revenueAutomation";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const auth = await requireLiveAuth(req as any);
-  if ("status" in auth) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
 
   try {
     const metrics = await revenueEngine.analyzeCurrentMetrics();

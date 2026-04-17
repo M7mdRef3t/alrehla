@@ -38,7 +38,7 @@ export function ViralLoopNudge({ onClose, forceShow = false }: ViralLoopNudgePro
     try {
       if (navigator.share) {
         await navigator.share({
-          title: "الرحلة — افهم حواراتك",
+          title: "الرحلة — اكتشف خريطة علاقاتك",
           text: text,
           url: link,
         });

@@ -14,6 +14,8 @@ import {
   buildPageViewEnvelope
 } from "@/domains/analytics/contracts";
 
+export { buildAnalyticsEnvelope };
+
 type AnalyticsValue = string | number | boolean;
 type AnalyticsParams = Record<string, AnalyticsValue>;
 
@@ -416,37 +418,42 @@ async function sendInternalAnalytics(
 let _analyticsEnvelopeQueue: any[] = [];
 let _analyticsEnvelopeTimer: ReturnType<typeof setTimeout> | null = null;
 
+export function flushPendingAnalytics(): void {
+  if (_analyticsEnvelopeQueue.length === 0) return;
+  const batch = [..._analyticsEnvelopeQueue];
+  _analyticsEnvelopeQueue = [];
+  if (_analyticsEnvelopeTimer) {
+    clearTimeout(_analyticsEnvelopeTimer);
+    _analyticsEnvelopeTimer = null;
+  }
+
+  batch.forEach((env) => {
+    fetch("/api/analytics", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(env),
+      keepalive: true,
+      credentials: "same-origin"
+    }).catch(() => {});
+  });
+}
+
+// Ensure pending events are flushed reliably when navigating away (mobile & desktop)
+if (isClientRuntime()) {
+  window.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      flushPendingAnalytics();
+    }
+  });
+}
+
 async function sendAnalyticsEnvelope(envelope: ReturnType<typeof buildAnalyticsEnvelope> extends infer T ? Exclude<T, null> : never): Promise<void> {
   // Instead of sending immediately, push to a batch queue to mitigate 429 Too Many Requests
   _analyticsEnvelopeQueue.push(envelope);
 
   if (_analyticsEnvelopeTimer === null) {
     _analyticsEnvelopeTimer = setTimeout(() => {
-      const batch = [..._analyticsEnvelopeQueue];
-      _analyticsEnvelopeQueue = [];
-      _analyticsEnvelopeTimer = null;
-
-      // Grouping them into one bulk call or just sending the last one to save network?
-      // For now, let's just send them individually but throttled, 
-      // or if it's too much, just send the latest one if it's identical type, but to be safe:
-      // Since the backend handles individual payloads, we will send them sequentially with a small delay
-      // or just send the most recent one to prevent flooding
-      if (batch.length > 0) {
-        // Send only the first and last of a large batch to prevent 429, or send all if small
-        const toSend = batch.length > 3 ? [batch[0], batch[batch.length - 1]] : batch;
-        
-        toSend.forEach((env, i) => {
-          setTimeout(() => {
-            fetch("/api/analytics", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(env),
-              keepalive: true,
-              credentials: "same-origin"
-            }).catch(e => console.warn("Analytics flush error:", e));
-          }, i * 300); // Stagger by 300ms
-        });
-      }
+      flushPendingAnalytics();
     }, 1000); // 1-second debounce window
   }
 }

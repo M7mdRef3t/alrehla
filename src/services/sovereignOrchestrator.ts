@@ -15,6 +15,9 @@ export interface SovereignIntervention {
 
 export class SovereignOrchestrator {
     private static isOrchestrating = false;
+    private static lastResonance = -1;
+    private static lastFriction: string | null = null;
+    private static cachedInterventions: SovereignIntervention[] = [];
 
     /**
      * Polls the system telemetry (simulated or real) to generate proactive interventions
@@ -22,15 +25,28 @@ export class SovereignOrchestrator {
      */
     static async evaluateIntelligence(): Promise<void> {
         if (this.isOrchestrating) return;
+
+        const state = useAdminState.getState();
+        const { resonanceScore, latestFriction } = state;
+
+        // Skip evaluation if state hasn't meaningfully changed to save API credits
+        const resonanceDiff = Math.abs(resonanceScore - this.lastResonance);
+        const frictionChanged = latestFriction !== this.lastFriction;
+        
+        if (resonanceDiff < 5 && !frictionChanged && this.lastResonance !== -1) {
+            useAdminState.setState({ aiInterventions: this.cachedInterventions });
+            return;
+        }
+
         this.isOrchestrating = true;
-
         try {
-            const state = useAdminState.getState();
-            const { resonanceScore, latestFriction } = state;
-
             // Generate interventions based on the current system friction
             const interventions = await this.synthesizeInterventions(resonanceScore, latestFriction);
             
+            this.lastResonance = resonanceScore;
+            this.lastFriction = latestFriction;
+            this.cachedInterventions = interventions;
+
             useAdminState.setState({ aiInterventions: interventions });
         } catch (error) {
             console.error("❌ [SovereignOrchestrator] Core evaluation failed:", error);

@@ -8,9 +8,10 @@ import { DiscoveryItem } from "@/types/discovery";
 interface ItemCardProps {
   item: DiscoveryItem;
   isOverlay?: boolean;
+  onClick?: (item: DiscoveryItem) => void;
 }
 
-export default function ItemCard({ item, isOverlay }: ItemCardProps) {
+export default function ItemCard({ item, isOverlay, onClick }: ItemCardProps) {
   const {
     attributes,
     listeners,
@@ -54,7 +55,13 @@ export default function ItemCard({ item, isOverlay }: ItemCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-neutral-800 border border-white/10 rounded-xl p-4 cursor-grab active:cursor-grabbing hover:border-white/20 transition-colors shadow-sm ${
+      onClick={(_e) => {
+        // Only trigger click if not an overlay and not dragging
+        if (!isOverlay && onClick) {
+          onClick(item);
+        }
+      }}
+      className={`bg-neutral-800 border border-white/10 rounded-xl p-4 cursor-grab active:cursor-grabbing hover:border-white/20 transition-colors shadow-sm group ${
         isOverlay ? "rotate-2 scale-105 shadow-xl border-emerald-500/50" : ""
       }`}
     >

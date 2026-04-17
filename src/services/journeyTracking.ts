@@ -11,8 +11,7 @@ import { getAuthUserId } from "@/domains/auth/store/auth.store";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { sendJsonWithResilience } from "../architecture/resilientHttp";
 import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribution";
-import { ANALYTICS_SESSION_KEY, getOrCreateSessionId as getUnifiedSessionId, getOrCreateAnonymousId } from "./analytics";
-import { buildAnalyticsEnvelope } from "@/domains/analytics/contracts";
+import { ANALYTICS_SESSION_KEY, getOrCreateSessionId as getUnifiedSessionId, getOrCreateAnonymousId, sendMetaEvent, AnalyticsEvents, generateUUID, buildAnalyticsEnvelope } from "./analytics";
 
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
@@ -50,6 +49,8 @@ export type JourneyEvent = {
     timestamp: number;
     /** رقم الجلسة في وضع "مع هوية" */
     sessionId?: string;
+    /** Unique ID for deduplication (Meta CAPI / Gtag) */
+    client_event_id: string;
   };
 }[JourneyEventType]
 
@@ -175,7 +176,7 @@ async function flushSupabaseSync(): Promise<void> {
         event_type: event.type,
         session_id: event.sessionId ?? null,
         anonymous_id: anonymousId,
-        client_event_id: crypto.randomUUID(),
+        client_event_id: event.client_event_id,
         lead_id: leadAttr?.lead_id || null,
         lead_source: leadAttr?.lead_source || null,
         utm_source: utm?.utm_source || null,
@@ -442,16 +443,17 @@ export function recordFlowEvent(
   const utmParams = getStoredUtmParams();
   const leadAttribution = getStoredLeadAttribution();
 
-  const hasExtra = Boolean(
-    extra?.atStep || extra?.closeReason || extra?.meta ||
-    utmParams || leadAttribution || dwellTime != null || previousStep
-  );
+  const client_event_id = extra?.meta?.client_event_id as string || generateUUID();
+  
+  const hasExtraData = extra && Object.keys(extra).length > 0;
+  const hasExtraKeys = !!(hasExtraData || utmParams || leadAttribution || dwellTime != null || previousStep);
+
   const event = {
     type: "flow_event" as const,
     payload: {
       step,
       timeToAction: extra?.timeToAction,
-      extra: hasExtra
+      extra: hasExtraKeys
         ? {
             ...(extra?.atStep ? { atStep: extra.atStep } : {}),
             ...(extra?.closeReason ? { closeReason: extra.closeReason } : {}),
@@ -464,8 +466,17 @@ export function recordFlowEvent(
         : undefined
     } as JourneyEventPayload["flow_event"],
     timestamp: now,
-    sessionId: getOrCreateSessionId()
+    sessionId: getOrCreateSessionId(),
+    client_event_id
   } as JourneyEvent;
+
+  // Bridge to Meta Pixel (Client-side) for high-value events
+  const metaBypass = { bypassConsent: true, client_event_id };
+  if (step === "lead_form_submitted") sendMetaEvent("Lead", {}, metaBypass);
+  if (step === "onboarding_completed") sendMetaEvent("CompleteRegistration", {}, metaBypass);
+  if (step === "payment_proof_submitted") sendMetaEvent("Purchase", { currency: "USD", value: 30 }, metaBypass); // Baseline value
+  if (step === "qualified_lead" || step === "gate_qualified" as any) sendMetaEvent("ViewContent", { content_name: "Qualified" }, metaBypass);
+
   const events = loadEvents();
   events.push(event);
   saveEvents(events);
@@ -493,7 +504,8 @@ export function recordJourneyEvent(
   const event = {
     type,
     payload,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    client_event_id: generateUUID()
   } as JourneyEvent;
   if (mode === "identified") {
     event.sessionId = getOrCreateSessionId();

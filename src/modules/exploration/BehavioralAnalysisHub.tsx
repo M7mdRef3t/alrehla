@@ -13,6 +13,7 @@ import { supabase } from "@/services/supabaseClient";
 import type { ResourceTab } from '@/modules/growth/ResourcesCenter';
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { UserProfile } from '@/modules/meta/UserProfile';
+import { FutureEchoSimulator } from './FutureEchoSimulator';
 
 /* ══════════════════════════════════════════
    Types
@@ -336,10 +337,12 @@ function PatternCard({
   pattern,
   onShare,
   onOpenResource,
+  onOpenEchoSimulator,
 }: {
   pattern: BehavioralPattern;
   onShare: (p: BehavioralPattern) => void;
   onOpenResource?: (tab: ResourceTab, search: string) => void;
+  onOpenEchoSimulator?: (title: string) => void;
 }) {
   const [locked, setLocked] = useState(pattern.isSensitive ? true : false);
   const [showShare, setShowShare] = useState(false);
@@ -427,6 +430,19 @@ function PatternCard({
                 <span style={{ fontSize: 8, color: "#06B6D4", fontWeight: 700 }}>اقرأ أكثر</span>
               </button>
             )}
+            {onOpenEchoSimulator && (
+              <button
+                onClick={() => onOpenEchoSimulator(pattern.title)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 3,
+                  background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.2)",
+                  borderRadius: 8, padding: "1px 6px", cursor: "pointer",
+                }}
+              >
+                <Zap size={8} color="#EC4899" />
+                <span style={{ fontSize: 8, color: "#EC4899", fontWeight: 700 }}>صدى المستقبل</span>
+              </button>
+            )}
           </div>
 
           {/* Share CTA */}
@@ -479,6 +495,7 @@ export function BehavioralAnalysisHub({
   const [alertVisible, setAlertVisible] = useState(true);
   const [activeAlert, setActiveAlert] = useState(0);
   const [shareModal, setShareModal] = useState<BehavioralPattern | null>(null);
+  const [echoPatternTitle, setEchoPatternTitle] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [supabaseAlerts, setSupabaseAlerts] = useState<SupabaseAlert[]>([]);
 
@@ -798,6 +815,7 @@ export function BehavioralAnalysisHub({
                 >
                   {pushOn
                     ? <><BellOff size={10} color="#06B6D4" /><span style={{ fontSize: 9, color: "#06B6D4", fontWeight: 700 }}>إيقاف</span></>
+
                     : <><Bell size={10} color="#A78BFA" /><span style={{ fontSize: 9, color: "#A78BFA", fontWeight: 700 }}>تفعيل</span></>
                   }
                 </motion.button>
@@ -914,6 +932,7 @@ export function BehavioralAnalysisHub({
                     pattern={p}
                     onShare={handleSharePattern}
                     onOpenResource={onNavigateToResources}
+                    onOpenEchoSimulator={(title) => setEchoPatternTitle(title)}
                   />
                 </motion.div>
               </div>
@@ -1080,6 +1099,12 @@ export function BehavioralAnalysisHub({
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {echoPatternTitle && (
+          <FutureEchoSimulator patternTitle={echoPatternTitle} onClose={() => setEchoPatternTitle(null)} />
         )}
       </AnimatePresence>
     </div>

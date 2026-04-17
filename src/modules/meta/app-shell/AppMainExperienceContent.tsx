@@ -36,6 +36,20 @@ const WirdScreen = lazy(() => import("../../wird/WirdScreen"));
 const MarkazScreen = lazy(() => import("../../markaz/MarkazScreen"));
 const SadaScreen = lazy(() => import("../../sada/SadaScreen"));
 const HafizScreen = lazy(() => import("../../hafiz/HafizScreen"));
+const MirahScreen = lazy(() => import("../../mirah/MirahScreen"));
+const SijilScreen = lazy(() => import("../../sijil/SijilScreen"));
+const NabaScreen = lazy(() => import("../../naba/NabaScreen"));
+const MithaqScreen = lazy(() => import("../../mithaq/MithaqScreen"));
+const SullamScreen = lazy(() => import("../../sullam/SullamScreen"));
+const BathraScreen = lazy(() => import("../../bathra/BathraScreen"));
+const ObservatoryScreen = lazy(() => import("../../observatory/ObservatoryScreen").then(m => ({ default: m.ObservatoryScreen })));
+const WasiyyaScreen = lazy(() => import("../../wasiyya/WasiyyaScreen"));
+const KhalwaScreen = lazy(() => import("../../khalwa/KhalwaScreen"));
+const EcosystemHub = lazy(() => import("../../ecosystem/EcosystemHub"));
+const TazkiyaScreen = lazy(() => import("../../tazkiya/TazkiyaScreen"));
+const JisrScreen = lazy(() => import("../../jisr/JisrScreen"));
+const RisalaScreen = lazy(() => import("../../risala/RisalaScreen"));
+const ShahadaScreen = lazy(() => import("../../shahada/ShahadaScreen"));
 
 
 
@@ -527,6 +541,146 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0612" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
           <HafizScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "mirah") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0c0616" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
+          <MirahScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "sijil") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#060a10" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
+          <SijilScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "naba") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#080612" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
+          <NabaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "mithaq") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0c0810" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
+          <MithaqScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "sullam") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#080c06" }}><div className="w-8 h-8 border-2 border-lime-500/30 border-t-lime-500 rounded-full animate-spin" /></div>}>
+          <SullamScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "bathra") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#061208" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
+          <BathraScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "observatory") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#020617" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
+          <ObservatoryScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "wasiyya") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0c0a06" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
+          <WasiyyaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "khalwa") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0616" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
+          <KhalwaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "ecosystem-hub") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
+          <EcosystemHub onNavigate={(s) => onNavigate?.(s as any)} />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "tazkiya") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#08061a" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
+          <TazkiyaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "jisr") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
+          <JisrScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "risala") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
+          <RisalaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "shahada") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
+          <ShahadaScreen />
         </Suspense>
       </PageShell>
     );

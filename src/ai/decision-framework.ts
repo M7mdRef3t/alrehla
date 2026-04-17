@@ -422,7 +422,9 @@ export class DecisionEngine {
        decision.id = `decision-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     }
     const existingIdx = this.decisionLog.findIndex(d => d.id === decision.id);
-    if (existingIdx >= 0) {
+    const isNew = existingIdx < 0;
+
+    if (!isNew) {
       this.decisionLog[existingIdx] = decision;
     } else {
       this.decisionLog.push(decision);
@@ -432,6 +434,27 @@ export class DecisionEngine {
        this.decisionLog = this.decisionLog.slice(-100);
     }
     this.saveLogToStorage();
+
+    // إرسال التدخلات الحرجة لتيليجرام لحظياً
+    if (isNew) {
+      const notifyTypes: DecisionType[] = [
+        "lock_gateway", 
+        "sovereign_intervention_deployed", 
+        "tactical_preset_deployed", 
+        "ignite_market", 
+        "scale_energy", 
+        "escalate_crisis",
+        "market_ignition_campaign",
+        "notify_admin"
+      ];
+      if (notifyTypes.includes(decision.type)) {
+        try {
+          telegramBot.notifyAdminDecision(decision);
+        } catch (e) {
+          logger.error("Failed to notify Telegram:", e);
+        }
+      }
+    }
   }
 
   /**

@@ -20,7 +20,13 @@ import {
   Flame,
   LayoutGrid,
   Bell,
-  Gem
+  Gem,
+  ScrollText,
+  Droplets,
+  TrendingUp,
+  Mail,
+  Moon,
+  Handshake
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -199,6 +205,132 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#a855f7",
     url: "/#hafiz"
+  },
+  {
+    id: "mirah",
+    name: "مرآة",
+    description: "شوف نفسك بعيون البيانات",
+    icon: <Eye className="w-5 h-5" />,
+    status: "active",
+    color: "#c084fc",
+    url: "/#mirah"
+  },
+  {
+    id: "sijil",
+    name: "سِجل",
+    description: "كل حركة في المنصة — موثّقة",
+    icon: <ScrollText className="w-5 h-5" />,
+    status: "active",
+    color: "#10b981",
+    url: "/#sijil"
+  },
+  {
+    id: "naba",
+    name: "نبع",
+    description: "رشفة إلهام يومية",
+    icon: <Droplets className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#naba"
+  },
+  {
+    id: "mithaq",
+    name: "ميثاق",
+    description: "عقد مع النفس",
+    icon: <ScrollText className="w-5 h-5" />,
+    status: "active",
+    color: "#fbbf24",
+    url: "/#mithaq"
+  },
+  {
+    id: "sullam",
+    name: "سُلّم",
+    description: "سلالم النمو",
+    icon: <TrendingUp className="w-5 h-5" />,
+    status: "active",
+    color: "#84cc16",
+    url: "/#sullam"
+  },
+  {
+    id: "bathra",
+    name: "بذرة",
+    description: "بذور العادات الصغيرة",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#10b981",
+    url: "/#bathra"
+  },
+  {
+    id: "observatory",
+    name: "المرصد",
+    description: "الخريطة السلوكية — اكتشف أنماطك",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#818cf8",
+    url: "/#observatory"
+  },
+  {
+    id: "wasiyya",
+    name: "وصية",
+    description: "رسائل مختومة لنفسك المستقبلية",
+    icon: <Mail className="w-5 h-5" />,
+    status: "active",
+    color: "#fbbf24",
+    url: "/#wasiyya"
+  },
+  {
+    id: "khalwa",
+    name: "خلوة",
+    description: "وضع التركيز العميق — عزلة واعية",
+    icon: <Moon className="w-5 h-5" />,
+    status: "active",
+    color: "#8b5cf6",
+    url: "/#khalwa"
+  },
+  {
+    id: "ecosystem-hub",
+    name: "مركز القيادة",
+    description: "كل أدوات رحلتك — نظرة واحدة",
+    icon: <LayoutGrid className="w-5 h-5" />,
+    status: "active",
+    color: "#6366f1",
+    url: "/#ecosystem-hub"
+  },
+  {
+    id: "tazkiya",
+    name: "تزكية",
+    description: "تطهير يومي — اعترف · سامح · اترك",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#a78bfa",
+    url: "/#tazkiya"
+  },
+  {
+    id: "jisr",
+    name: "جسر",
+    description: "إصلاح العلاقات — حدّد · عبّر · افعل",
+    icon: <Handshake className="w-5 h-5" />,
+    status: "active",
+    color: "#10b981",
+    url: "/#jisr"
+  },
+  {
+    id: "risala",
+    name: "رسالة",
+    description: "كلمات مجهولة بين مسافرين",
+    icon: <Mail className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#risala"
+  },
+  {
+    id: "shahada",
+    name: "شهادة",
+    description: "إنجازات رحلتك — شهادات بصرية",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#fbbf24",
+    url: "/#shahada"
   }
 ];
 

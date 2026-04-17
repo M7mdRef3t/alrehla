@@ -10,38 +10,67 @@ import {
   useSensor, 
   useSensors,
   DragStartEvent,
-  DragOverEvent,
-  DragEndEvent
+  DragOverEvent
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { DiscoveryItem, DiscoveryStage } from "@/types/discovery";
 import BoardColumn from "./BoardColumn";
 import ItemCard from "./ItemCard";
+import ItemDetailModal from "./ItemDetailModal";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 const STAGES: DiscoveryStage[] = [
-  "Inbox", 
-  "Needs Evidence", 
-  "Validated", 
-  "Prioritized", 
-  "In Delivery", 
-  "Shipped"
+  "Inbox",
+  "Needs Evidence",
+  "Validated",
+  "Prioritized",
+  "In Delivery",
+  "Shipped",
+  "Dropped",
 ];
 
+type DiscoveryBoardProps = {
+  searchQuery?: string;
+  latestItem?: DiscoveryItem | null;
+};
 
-export default function DiscoveryBoard() {
+export default function DiscoveryBoard({ searchQuery = "", latestItem }: DiscoveryBoardProps) {
   const [items, setItems] = useState<DiscoveryItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<DiscoveryItem | null>(null);
+
+  const adminCode = runtimeEnv.adminCode ?? "";
 
   useEffect(() => {
-    fetch("/api/admin/discovery")
-      .then(res => res.json())
-      .then(data => {
+    fetch("/api/admin/discovery", {
+      headers: { Authorization: `Bearer ${adminCode}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
         if (Array.isArray(data)) setItems(data);
         setLoading(false);
       })
       .catch(console.error);
-  }, []);
+  }, [adminCode]);
+
+  // Prepend newly captured signal optimistically
+  useEffect(() => {
+    if (latestItem) {
+      setItems((prev) => {
+        const already = prev.some((i) => i.id === latestItem.id);
+        return already ? prev : [latestItem, ...prev];
+      });
+    }
+  }, [latestItem]);
+
+  const filtered = searchQuery.trim()
+    ? items.filter(
+        (i) =>
+          i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          i.description.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : items;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -81,7 +110,10 @@ export default function DiscoveryBoard() {
           // Persist
           fetch("/api/admin/discovery", {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${adminCode}`
+            },
             body: JSON.stringify({ id: activeItem.id, updates: { stage: overId } })
           }).catch(console.error);
           return newItems;
@@ -99,7 +131,10 @@ export default function DiscoveryBoard() {
           // Persist
           fetch("/api/admin/discovery", {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${adminCode}`
+            },
             body: JSON.stringify({ id: activeItem.id, updates: { stage: overItem.stage } })
           }).catch(console.error);
         }
@@ -111,19 +146,28 @@ export default function DiscoveryBoard() {
     });
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = () => {
     setActiveId(null);
-    const { active, over } = event;
-    if (!over) return;
+  };
 
-    const activeId = active.id;
-    const overId = over.id;
+  const handleUpdate = (id: string, updates: Partial<DiscoveryItem>) => {
+    setItems((prev) => 
+      prev.map((it) => (it.id === id ? { ...it, ...updates } : it))
+    );
+  };
 
-    const activeIndex = items.findIndex(t => t.id === activeId);
-    const overIndex = items.findIndex(t => t.id === overId);
-
-    if (activeIndex !== overIndex && overIndex >= 0) {
-       setItems((items) => arrayMove(items, activeIndex, overIndex));
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/discovery?id=${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${adminCode}` },
+      });
+      if (res.ok) {
+        setItems((prev) => prev.filter((it) => it.id !== id));
+        setSelectedItem(null);
+      }
+    } catch (err) {
+      console.error("Delete failed:", err);
     }
   };
 
@@ -133,6 +177,12 @@ export default function DiscoveryBoard() {
     return <div className="p-12 text-center text-neutral-500 animate-pulse">Loading signals pipeline...</div>;
   }
 
+  const totalSignals = items.length;
+  const prioritized = items.filter(i => i.stage === "Prioritized").length;
+  const shipped = items.filter(i => i.stage === "Shipped").length;
+  const validated = items.filter(i => ["Validated", "Prioritized", "In Delivery", "Shipped"].includes(i.stage)).length;
+  const validationRate = totalSignals > 0 ? Math.round((validated / totalSignals) * 100) : 0;
+
   return (
     <DndContext
       sensors={sensors}
@@ -141,15 +191,45 @@ export default function DiscoveryBoard() {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 p-6 h-[calc(100vh-6rem)] overflow-x-auto overflow-y-hidden">
+      <div className="px-6 pt-4 pb-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="bg-neutral-800/50 border border-white/5 rounded-xl p-4">
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Total Signals</p>
+            <p className="text-2xl font-black text-white">{totalSignals}</p>
+          </div>
+          <div className="bg-neutral-800/50 border border-white/5 rounded-xl p-4">
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Prioritized</p>
+            <p className="text-2xl font-black text-purple-400">{prioritized}</p>
+          </div>
+          <div className="bg-neutral-800/50 border border-white/5 rounded-xl p-4">
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Shipped</p>
+            <p className="text-2xl font-black text-emerald-400">{shipped}</p>
+          </div>
+          <div className="bg-neutral-800/50 border border-white/5 rounded-xl p-4">
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Validation Rate</p>
+            <div className="flex items-center gap-2">
+              <p className="text-2xl font-black text-blue-400">{validationRate}%</p>
+              <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${validationRate}%` }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-4 px-6 pb-6 h-[calc(100vh-14rem)] overflow-x-auto overflow-y-hidden">
         {STAGES.map((stage) => {
-          const columnItems = items.filter((i) => i.stage === stage);
+          const columnItems = filtered.filter((i) => i.stage === stage);
           return (
             <BoardColumn key={stage} id={stage} title={stage}>
               <SortableContext items={columnItems.map((i) => i.id)}>
                 <div className="flex flex-col gap-3 min-h-[150px]">
                   {columnItems.map((item) => (
-                    <ItemCard key={item.id} item={item} />
+                    <ItemCard 
+                      key={item.id} 
+                      item={item} 
+                      onClick={setSelectedItem}
+                    />
                   ))}
                 </div>
               </SortableContext>
@@ -157,10 +237,19 @@ export default function DiscoveryBoard() {
           );
         })}
       </div>
-      
+
       <DragOverlay>
         {activeItem ? <ItemCard item={activeItem} isOverlay /> : null}
       </DragOverlay>
+
+      {selectedItem && (
+        <ItemDetailModal 
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+        />
+      )}
     </DndContext>
   );
 }

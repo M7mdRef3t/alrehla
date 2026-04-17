@@ -1,6 +1,7 @@
 import { getAdminSupabase, recordAdminAudit } from "./_shared";
 import { sendMetaCapiEvent } from "../../src/server/metaCapi";
 import { headers } from "next/headers";
+import { UltramsgService } from "../../src/services/ultramsgService";
 
 export async function handleTicketsResolve(req: any, res: any) {
     const admin = getAdminSupabase();
@@ -132,6 +133,14 @@ export async function handleTicketsResolve(req: any, res: any) {
                 activationUnlocked: true,
                 subscriptionStatus: "active"
             });
+
+            // 4. Fire-and-forget WhatsApp activation message
+            if (phone) {
+                // Not awaiting this so the admin UI updates immediately
+                UltramsgService.sendSubscriberActivationMessage(phone)
+                    .catch(err => console.error("Failed to send WhatsApp activation", err));
+            }
+
             return res.status(200).json({ ok: true });
         }
 

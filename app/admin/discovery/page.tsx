@@ -1,9 +1,20 @@
-import React from "react";
-import DiscoveryBoard from "./_components/DiscoveryBoard";
-import { Plus, Search, Filter } from "lucide-react";
+"use client";
 
+import React, { useState, useCallback } from "react";
+import { Plus, Search, Filter } from "lucide-react";
+import DiscoveryBoard from "./_components/DiscoveryBoard";
+import CaptureSignalModal from "./_components/CaptureSignalModal";
+import { DiscoveryItem } from "@/types/discovery";
 
 export default function DiscoveryPage() {
+  const [showModal, setShowModal] = useState(false);
+  const [newItem, setNewItem] = useState<DiscoveryItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSignalCaptured = useCallback((item: unknown) => {
+    setNewItem(item as DiscoveryItem);
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-neutral-100 font-sans flex flex-col">
       {/* Header */}
@@ -20,9 +31,11 @@ export default function DiscoveryPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 bg-neutral-900 border border-white/10 rounded-lg px-3 py-1.5 focus-within:border-purple-500/50 transition-colors">
             <Search className="w-4 h-4 text-neutral-500" />
-            <input 
-              type="text" 
-              placeholder="Search signals..." 
+            <input
+              type="text"
+              placeholder="Search signals..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-sm w-48 text-white placeholder:text-neutral-600 focus:ring-0"
             />
           </div>
@@ -31,7 +44,10 @@ export default function DiscoveryPage() {
             <Filter className="w-4 h-4" />
           </button>
 
-          <button className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg shadow-lg shadow-purple-900/20 transition-all active:scale-95">
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg shadow-lg shadow-purple-900/20 transition-all active:scale-95"
+          >
             <Plus className="w-4 h-4" />
             Capture Signal
           </button>
@@ -40,8 +56,16 @@ export default function DiscoveryPage() {
 
       {/* Board Container */}
       <main className="flex-1 overflow-hidden">
-        <DiscoveryBoard />
+        <DiscoveryBoard searchQuery={searchQuery} latestItem={newItem} />
       </main>
+
+      {/* Capture Signal Modal */}
+      {showModal && (
+        <CaptureSignalModal
+          onClose={() => setShowModal(false)}
+          onSuccess={handleSignalCaptured}
+        />
+      )}
     </div>
   );
 }

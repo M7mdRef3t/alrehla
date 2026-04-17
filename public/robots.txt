@@ -1,8 +1,22 @@
+# ═══════════════════════════════════════════
+# الرحلة (Alrehla) — Robots.txt
+# This is a static fallback. The dynamic version
+# is served by Next.js from app/robots.ts
+# ═══════════════════════════════════════════
+
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /analytics
 Disallow: /api/
+Disallow: /admin/
+Disallow: /admin
+Disallow: /analytics/
+Disallow: /_next/
+Disallow: /auth/
+Disallow: /activation
+Disallow: /checkout/
+Disallow: /debug-*
+Disallow: /editor/
+Disallow: /plasmic-host/
 
 User-agent: GPTBot
 Allow: /
@@ -25,4 +39,8 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
+User-agent: YandexBot
+Allow: /
+
 Sitemap: https://www.alrehla.app/sitemap.xml
+Host: https://www.alrehla.app

@@ -1,8 +1,8 @@
-import { logger } from "@/services/logger";
+const logger = console;
 import crypto from "crypto";
 
 export interface MetaCapiEventData {
-  eventName: "Lead" | "ViewContent" | "Contact" | "CompleteRegistration" | "GateQualified";
+  eventName: "Lead" | "ViewContent" | "Contact" | "CompleteRegistration" | "GateQualified" | "Purchase";
   eventId: string; // lead_id for deduplication
   sourceUrl: string;
   userData: {
@@ -114,6 +114,14 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
         if (process.env.NODE_ENV === "development") {
           console.warn(`[Meta CAPI] Success: ${eventName} for ${eventId}`);
         }
+        // Log telemetry
+        await logCapiTelemetry({
+          event_name: eventName,
+          event_id: eventId,
+          status: "success",
+          response_code: res.status,
+          payload
+        });
         return true;
       }
 
@@ -125,6 +133,14 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
       
       if (!isRateLimit && !isServerError) {
         logger.error("[Meta CAPI Fatal Error]", { status: res.status, body });
+        await logCapiTelemetry({
+          event_name: eventName,
+          event_id: eventId,
+          status: "failed",
+          response_code: res.status,
+          payload,
+          error_message: JSON.stringify(body)
+        });
         return false;
       }
 
@@ -132,6 +148,15 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
       retryCount++;
       if (retryCount <= maxRetries) {
         await new Promise(resolve => setTimeout(resolve, baseDelay * Math.pow(2, retryCount)));
+      } else {
+        await logCapiTelemetry({
+          event_name: eventName,
+          event_id: eventId,
+          status: "failed",
+          response_code: res.status,
+          payload,
+          error_message: "Max retries reached"
+        });
       }
     } catch (err) {
       logger.error(`[Meta CAPI Attempt ${retryCount + 1}] Error:`, err);
@@ -139,10 +164,42 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
       if (retryCount <= maxRetries) {
         await new Promise(resolve => setTimeout(resolve, baseDelay * Math.pow(2, retryCount)));
       } else {
+        await logCapiTelemetry({
+          event_name: eventName,
+          event_id: eventId,
+          status: "error",
+          payload,
+          error_message: err instanceof Error ? err.message : String(err)
+        });
         return false;
       }
     }
   }
 
   return false;
+}
+
+/**
+ * Log CAPI event to the database for monitoring.
+ */
+async function logCapiTelemetry(data: {
+  event_name: string;
+  event_id: string;
+  status: string;
+  response_code?: number;
+  payload: any;
+  error_message?: string;
+}) {
+  try {
+    const { createClient } = await import("@supabase/supabase-js");
+    const admin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+      process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+      { auth: { persistSession: false } }
+    );
+    
+    await admin.from("capi_telemetry").insert([data]);
+  } catch (err) {
+    console.error("[CAPI Telemetry] Failed to log to DB:", err);
+  }
 }

@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowRight, ShieldCheck, HeartPulse, BrainCircuit } from "lucide-react";
+import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 
 interface SoulEvent {
     id: string;
@@ -9,6 +10,8 @@ interface SoulEvent {
     action: string;
     timeAgo: string;
     type: "healing" | "milestone" | "ai_insight" | "protection";
+    details?: string;
+    status?: string;
 }
 
 const EVENT_TEMPLATES = [
@@ -19,6 +22,21 @@ const EVENT_TEMPLATES = [
 ];
 
 const NAMES = ["مُسافر صامت", "روح متحولة", "طالب سكينة", "صائد وعي", "نواة مضيئة"];
+
+const formatTimeAgo = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return "الآن";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "الآن";
+    
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    
+    if (seconds < 60) return "الآن";
+    if (seconds < 3600) return `منذ ${Math.floor(seconds / 60)} دقيقة`;
+    if (seconds < 86400) return `منذ ${Math.floor(seconds / 3600)} ساعة`;
+    if (seconds < 172800) return "منذ يوم";
+    if (seconds < 259200) return "منذ يومين";
+    return `منذ ${Math.floor(seconds / 86400)} يوم`;
+};
 
 const generateRandomEvent = (): SoulEvent => {
     const tpl = EVENT_TEMPLATES[Math.floor(Math.random() * EVENT_TEMPLATES.length)];
@@ -32,23 +50,145 @@ const generateRandomEvent = (): SoulEvent => {
     };
 };
 
+const mapDatabaseRowToSoulEvent = (row: any): SoulEvent => {
+    // للحفاظ على الخصوصية، نظهر أسماء مستعارة
+    const name = NAMES[Math.floor(Math.random() * NAMES.length)];
+    let type: SoulEvent["type"] = "healing";
+    let action = "نفّذ حدثاً في رحلته";
+
+    const evtName = row.event_name?.toLowerCase() || "";
+    
+    if (evtName.includes('pulse') || evtName.includes('healing')) {
+        type = "healing";
+        action = "أتم جلسة تفريغ سريعة (Pulse)";
+    } else if (evtName.includes('auth') || evtName.includes('login') || evtName.includes('signup')) {
+        type = "milestone";
+        action = "عبر البوابة وبدأ رحلته";
+    } else if (evtName.includes('ai') || evtName.includes('chat') || evtName.includes('insight') || evtName.includes('interaction')) {
+        type = "ai_insight";
+        action = "تفاعل مع مستشار الرحلة العميق";
+    } else if (evtName.includes('boundary') || evtName.includes('gate') || evtName.includes('protection') || evtName.includes('marketing')) {
+        type = "protection";
+        action = "خطا خطوة في حماية المساحة الشخصية";
+    } else {
+        type = "milestone";
+        action = `سجل حدثاً: ${evtName.replace(/_/g, " ")}`;
+    }
+
+    return {
+        id: row.id,
+        userName: name,
+        action,
+        type,
+        timeAgo: formatTimeAgo(row.created_at)
+    };
+};
+
+const mapAiDecisionToSoulEvent = (row: any): SoulEvent => {
+    const name = "جارفيس (النظام)";
+    let type: SoulEvent["type"] = "ai_insight";
+    let action = "تدخل ذكي واصدار إدراك فوري";
+
+    const aiType = row.type?.toUpperCase() || "";
+    if (aiType === "INJECT_WHISPER" || aiType === "PROPOSE_ACTION") {
+        action = "إرسال همسة وتوجيه دقيق لمسار الرحلة";
+    } else if (aiType === "OVERRIDE" || aiType === "FORCE_STOP") {
+        type = "protection";
+        action = "تدخل وقائي لحماية مسار الرحلة";
+    } else if (aiType === "ANALYZE_PATTERN") {
+        action = "التقاط نمط سلوكي شامل في المنصة";
+    }
+
+    return {
+        id: row.id,
+        userName: name,
+        action,
+        type,
+        timeAgo: formatTimeAgo(row.created_at),
+        details: row.reasoning,
+        status: row.outcome
+    };
+};
+
 export const TimelineOfSouls: FC = () => {
     const [events, setEvents] = useState<SoulEvent[]>([]);
+    const [isLive, setIsLive] = useState(false);
 
     useEffect(() => {
-        // Initial load
-        setEvents(Array.from({ length: 4 }).map(generateRandomEvent));
+        let analyticsSub: any;
+        let aiSub: any;
+        let isMounted = true;
 
-        // Simulate live feed
+        const loadInitialEvents = async () => {
+            if (isSupabaseReady && supabase) {
+                const [analyticsRes, aiRes] = await Promise.all([
+                    supabase.from('analytics_events').select('*').order('created_at', { ascending: false }).limit(4),
+                    supabase.from('dawayir_ai_decisions').select('*').order('created_at', { ascending: false }).limit(4)
+                ]);
+                
+                let allEvents: SoulEvent[] = [];
+                if (!analyticsRes.error && analyticsRes.data) {
+                    allEvents = [...allEvents, ...analyticsRes.data.map(mapDatabaseRowToSoulEvent)];
+                }
+                if (!aiRes.error && aiRes.data) {
+                    allEvents = [...allEvents, ...aiRes.data.map(mapAiDecisionToSoulEvent)];
+                }
+                
+                if (allEvents.length > 0 && isMounted) {
+                    // Mix and show up to 8
+                    setEvents(allEvents.slice(0, 8));
+                    setIsLive(true);
+                } else if (isMounted) {
+                    setEvents(Array.from({ length: 4 }).map(generateRandomEvent));
+                }
+            } else {
+                setEvents(Array.from({ length: 4 }).map(generateRandomEvent));
+            }
+        };
+
+        void loadInitialEvents();
+
+        if (isSupabaseReady && supabase) {
+            analyticsSub = supabase.channel('timeline-of-souls-analytics')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'analytics_events' }, (payload) => {
+                    if (isMounted) {
+                        const newEvent = mapDatabaseRowToSoulEvent(payload.new);
+                        setEvents(prev => [newEvent, ...prev].slice(0, 8));
+                        setIsLive(true);
+                    }
+                })
+                .subscribe();
+
+            aiSub = supabase.channel('timeline-of-souls-ai')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'dawayir_ai_decisions' }, (payload) => {
+                    if (isMounted) {
+                        const newEvent = mapAiDecisionToSoulEvent(payload.new);
+                        setEvents(prev => [newEvent, ...prev].slice(0, 8));
+                        setIsLive(true);
+                    }
+                })
+                .subscribe();
+        }
+
+        // Sim fallback if no real events occur to keep it looking alive?
+        // Let's only run sim interval if not live, or just keep it entirely real if configured to real
+        // But local might be idle, so let's keep a slow sim heartbeat for aesthetics if not live
         const interval = setInterval(() => {
-            setEvents(prev => {
-                const newEvent = generateRandomEvent();
-                return [newEvent, ...prev].slice(0, 8); // Keep last 8
-            });
-        }, 8000);
+            if (!isLive) {
+                setEvents(prev => {
+                    const newEvent = generateRandomEvent();
+                    return [newEvent, ...prev].slice(0, 8);
+                });
+            }
+        }, 12000);
 
-        return () => clearInterval(interval);
-    }, []);
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+            if (analyticsSub && supabase) supabase.removeChannel(analyticsSub);
+            if (aiSub && supabase) supabase.removeChannel(aiSub);
+        };
+    }, [isLive]);
 
     const getColorClass = (type: string) => {
         switch (type) {
@@ -133,6 +273,17 @@ export const TimelineOfSouls: FC = () => {
                                             <span className="text-[9px] font-bold uppercase tracking-widest opacity-60 shrink-0">{evt.timeAgo}</span>
                                         </div>
                                         <p className="text-[11px] font-medium opacity-80 leading-relaxed truncate">{evt.action}</p>
+                                        
+                                        {evt.details && (
+                                            <div className="mt-2 p-2 rounded bg-slate-900/50 border border-white/5">
+                                                <p className="text-[9px] text-slate-300 leading-relaxed line-clamp-2" title={evt.details}>{evt.details}</p>
+                                                {evt.status && (
+                                                    <span className={`inline-block mt-1.5 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${evt.status === 'executed' ? 'bg-teal-500/10 text-teal-400' : evt.status === 'pending_approval' ? 'bg-amber-500/10 text-amber-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                                        {evt.status === 'executed' ? 'تم التنفيذ' : evt.status === 'pending_approval' ? 'مطلوب تصديق' : 'مرفوض/ملغى'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             );

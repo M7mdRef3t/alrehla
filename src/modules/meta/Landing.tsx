@@ -223,58 +223,41 @@ export const Landing: FC<LandingPropsExtended> = ({
   }
 
   const [mirrorName, setMirrorName] = useState(storedMirrorName ?? "");
-  const [pulseCount, setPulseCount] = useState(getLivePulseCount());
   const landingViewTrackedRef = useRef(false);
   const startTrackedRef = useRef(false);
 
   const setStoreMirrorName = useJourneyProgress().setMirrorName;
+  const syncLockRef = useRef(false);
 
+  // Sync LOCAL -> STORE
   useEffect(() => {
+    if (syncLockRef.current) {
+      syncLockRef.current = false;
+      return;
+    }
     if (storedMirrorName !== mirrorName) {
       setStoreMirrorName(mirrorName);
     }
-  }, [mirrorName, storedMirrorName, setStoreMirrorName]);
+  }, [mirrorName]);
 
+  // Sync STORE -> LOCAL
   useEffect(() => {
     const nextName = storedMirrorName ?? "";
-    if (nextName && nextName.trim() !== mirrorName.trim()) {
+    if (nextName !== mirrorName) {
+      syncLockRef.current = true;
       setMirrorName(nextName);
     }
-  }, [storedMirrorName, mirrorName]);
+  }, [storedMirrorName]);
 
   useEffect(() => {
-    let timeoutId: number | null = null;
-
-    const scheduleNextUpdate = () => {
-      // Fluctuates every 3-6 seconds
-      const nextDelay = 3000 + Math.random() * 3000;
-
-      timeoutId = window.setTimeout(() => {
-        // Base count from logic + minor fluctuation (-2 to +2)
-        const base = getLivePulseCount();
-        const fluctuation = Math.floor(Math.random() * 5) - 2; 
-        setPulseCount(Math.max(5, base + fluctuation));
-        
-        scheduleNextUpdate();
-      }, nextDelay);
-    };
-
-    scheduleNextUpdate();
-
-    return () => {
-      if (timeoutId != null) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isUserMode || landingViewTrackedRef.current) return;
+    if (landingViewTrackedRef.current) return;
     landingViewTrackedRef.current = true;
-    analyticsService.trackLanding({
-      entry_variant: "default"
+    void trackingService.recordFlow("landing_viewed");
+    void analyticsService.track(AnalyticsEvents.LANDING_VIEW, {
+      pwa_status: pwaInstall?.canShowInstallButton === false ? "pwa" : "browser",
+      device: pwaInstall?.isIOS ? "ios" : pwaInstall?.isAndroid ? "android" : "desktop",
     });
-  }, []);
+  }, [pwaInstall]);
 
   const handleStart = useCallback(() => {
     if (startTrackedRef.current) return;
@@ -316,7 +299,7 @@ export const Landing: FC<LandingPropsExtended> = ({
         onStartJourney={handleStart}
         mirrorName={mirrorName}
         setMirrorName={setMirrorName}
-        pulseCount={pulseCount}
+        pulseCount={1947}
         trustPoints={["توازن", "تشتت", "استنزاف"]}
         ctaJourney={landingCopy.ctaJourney}
         secondaryCta={landingCopy.secondaryCta}
