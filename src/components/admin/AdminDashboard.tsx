@@ -1,6 +1,6 @@
 import { logger } from "@/services/logger";
 import type { FC, ReactNode } from "react";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
@@ -425,13 +425,22 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
   }, [resonanceScore]);
 
-  // 🔱 Sovereign Orchestrator Evaluator — runs lazily after mount
+  // 🔱 Sovereign Intelligence Initialization
+  const agentStartedRef = useRef(false);
+
   useEffect(() => {
-    if (!adminAccess) return;
+    if (!adminAccess || agentStartedRef.current) return;
     
     // Start Local Autonomous Agent
-    const { sovereignAgent } = require("@/services/LocalSovereignAgent");
-    sovereignAgent.start();
+    try {
+      const { sovereignAgent } = require("@/services/LocalSovereignAgent");
+      if (sovereignAgent) {
+        sovereignAgent.start();
+        agentStartedRef.current = true;
+      }
+    } catch (e) {
+      console.error("[SovereignAgent] Failed to load agent logic:", e);
+    }
 
     // Keep Cloud Orchestrator as observer/fallback
     const initialTimer = setTimeout(() => {
@@ -447,7 +456,15 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     return () => {
       clearTimeout(initialTimer);
       clearInterval(interval);
-      sovereignAgent.stop();
+      try {
+        const { sovereignAgent } = require("@/services/LocalSovereignAgent");
+        if (sovereignAgent) {
+          sovereignAgent.stop();
+          agentStartedRef.current = false;
+        }
+      } catch (e) {
+        // Silently fail on unmount
+      }
     };
   }, [adminAccess]);
 

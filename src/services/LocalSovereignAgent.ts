@@ -59,7 +59,7 @@ class LocalSovereignAgent {
         try {
             const isAvailable = await ollamaClient.isAvailable();
             if (!isAvailable) {
-                console.warn("[SovereignAgent] Ollama not available. Skipping cycle.");
+                // Silently skip if no brain found — prevents console spam
                 return;
             }
 

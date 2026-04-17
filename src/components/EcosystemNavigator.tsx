@@ -376,6 +376,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#6366f1",
     url: "/#rafiq"
+  },
+  {
+    id: "ruya",
+    name: "رؤيا",
+    description: "مفكرة الأحلام والتأملات الليلية",
+    icon: <Moon className="w-5 h-5" />,
+    status: "active",
+    color: "#8b5cf6",
+    url: "/#ruya"
   }
 ];
 

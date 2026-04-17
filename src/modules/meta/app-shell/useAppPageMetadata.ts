@@ -68,6 +68,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   qalb: "Qalb Heart Health",
   athar: "Athar Impact Log",
   rafiq: "Rafiq Journey Companion",
+  ruya: "Ruya Dream Journal",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -135,6 +136,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   qalb: { title: "قلب — صحة قلبك العاطفي | Alrehla", description: "مؤشر موحّد يقيس صحة قلبك عبر 9 أبعاد من أدوات الرحلة." },
   athar: { title: "أثر — سجل حياتك في الرحلة | Alrehla", description: "كل فعل في رحلتك يـُكتب هنا تلقائياً ليصبح قصة حياتك." },
   rafiq: { title: "رفيق — مرافقك الذكي | Alrehla", description: "يقرأ رحلتك ويقترح الخطوة التالية دائماً." },
+  ruya: { title: "رؤيا — مفكرة أحلامك | Alrehla", description: "سجّل أحلامك وتأملاتك الليلية — رحلة الوعي تبدأ من الأحلام." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };
