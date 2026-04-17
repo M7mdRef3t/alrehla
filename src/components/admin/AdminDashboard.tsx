@@ -36,6 +36,7 @@ import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
 import { isPrivilegedRole } from "@/utils/featureFlags";
+import { sovereignAgent } from "@/services/LocalSovereignAgent";
 import {
   fetchAdminConfig,
   fetchAiLogs,
@@ -433,7 +434,6 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     
     // Start Local Autonomous Agent
     try {
-      const { sovereignAgent } = require("@/services/LocalSovereignAgent");
       if (sovereignAgent) {
         sovereignAgent.start();
         agentStartedRef.current = true;
@@ -457,7 +457,6 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
       clearTimeout(initialTimer);
       clearInterval(interval);
       try {
-        const { sovereignAgent } = require("@/services/LocalSovereignAgent");
         if (sovereignAgent) {
           sovereignAgent.stop();
           agentStartedRef.current = false;
