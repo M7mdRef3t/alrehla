@@ -40,6 +40,12 @@ export class SovereignOrchestrator {
 
         this.isOrchestrating = true;
         try {
+            // Check if Gemini is available before making an API call.
+            // Avoids "Browser fetch returned null" noise on every mount.
+            if (!geminiClient.isAvailable()) {
+                useAdminState.setState({ aiInterventions: this.cachedInterventions.length > 0 ? this.cachedInterventions : [] });
+                return;
+            }
             // Generate interventions based on the current system friction
             const interventions = await this.synthesizeInterventions(resonanceScore, latestFriction);
             

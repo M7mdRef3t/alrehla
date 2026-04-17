@@ -64,7 +64,7 @@ export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promis
 
   const bearer = getBearerToken(req);
   if (!bearer) {
-    console.warn("[verifyAdmin] 401: No bearer token provided for path:", req.query.path || "overview");
+    console.warn("[verifyAdmin] 401: No bearer token provided for path:", req.query?.path || "overview");
     res.status(401).json({ error: "Unauthorized: Missing Token" });
     return false;
   }

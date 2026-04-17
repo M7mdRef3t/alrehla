@@ -412,6 +412,7 @@ interface AdminState {
   resonanceScore: number;
   latestFriction: string | null;
   aiInterventions: import("@/services/sovereignOrchestrator").SovereignIntervention[];
+  agentActivity: import("@/services/LocalSovereignAgent").AgentActivityStep[];
 
   setAdminAccess: (value: boolean) => void;
   toggleContentEditing: (value: boolean) => void;
@@ -443,6 +444,8 @@ interface AdminState {
   setCopilotOpen: (value: boolean) => void;
   setResonanceScore: (score: number) => void;
   setLatestFriction: (friction: string | null) => void;
+  addAgentActivity: (activity: import("@/services/LocalSovereignAgent").AgentActivityStep) => void;
+  clearAgentActivity: () => void;
 }
 
 const DEFAULT_PROMPT =
@@ -511,6 +514,7 @@ export const useAdminState = create<AdminState>()(
       resonanceScore: 100,
       latestFriction: null,
       aiInterventions: [],
+      agentActivity: [],
 
       setAdminAccess: (value) => set({ adminAccess: value }),
       toggleContentEditing: (value) => set({ isContentEditingEnabled: value }),
@@ -561,7 +565,12 @@ export const useAdminState = create<AdminState>()(
         set({ liveStatsCache: data ? { data, timestamp: Date.now() } : null }),
       setCopilotOpen: (value) => set({ isCopilotOpen: value }),
       setResonanceScore: (score) => set({ resonanceScore: score }),
-      setLatestFriction: (friction) => set({ latestFriction: friction })
+      setLatestFriction: (friction) => set({ latestFriction: friction }),
+      addAgentActivity: (activity) =>
+        set((state) => ({
+          agentActivity: [activity, ...state.agentActivity].slice(0, 100)
+        })),
+      clearAgentActivity: () => set({ agentActivity: [] })
     }),
     {
       name: "dawayir-admin-state",

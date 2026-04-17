@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Sparkles, Send, Zap, Wind, AlertCircle, Users, Activity, ShieldAlert, History, Radio, TrendingUp, Target, Brain, Box, Eye } from "lucide-react";
+import { Shield, Sparkles, Send, Zap, Wind, AlertCircle, Users, Activity, ShieldAlert, History, Radio, TrendingUp, Target, Brain, Box, Eye, Terminal } from "lucide-react";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import { fetchOverviewStats, fetchAlertIncidents, fetchBroadcasts, type OverviewStats, type AlertIncident } from "@/services/adminApi";
@@ -433,6 +433,88 @@ export const SovereignControl: FC = () => {
         </div>
         <div className="h-[500px]">
           <WarRoomAlertsPanel />
+        </div>
+      </div>
+
+      {/* Sovereign Neural Trace - Local Agent Activity */}
+      <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
+        <header className="flex items-center justify-between mb-8">
+           <div className="flex items-center gap-3 text-teal-400">
+             <Terminal className="w-6 h-6" />
+             <div>
+               <h2 className="text-xl font-black uppercase tracking-widest">التتبع العصبي السيادي (Neural Trace)</h2>
+               <p className="text-[10px] text-teal-500/60 font-black uppercase tracking-[0.2em]">Autonomous Agent Activity Log</p>
+             </div>
+           </div>
+           <button 
+             onClick={() => useAdminState.getState().clearAgentActivity()}
+             className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black text-slate-400 hover:text-white hover:bg-rose-500/20 transition-all uppercase tracking-widest"
+           >
+             Clear Trace
+           </button>
+        </header>
+
+        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
+          {useAdminState.getState().agentActivity.length > 0 ? (
+            useAdminState.getState().agentActivity.map((step, idx) => (
+              <motion.div 
+                key={step.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="p-6 bg-white/2 border border-white/5 rounded-3xl space-y-3 relative group hover:bg-white/5 transition-all"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${
+                      step.status === 'thinking' ? 'bg-amber-500 animate-pulse' :
+                      step.status === 'acting' ? 'bg-indigo-500 animate-pulse' :
+                      step.status === 'error' ? 'bg-rose-500' : 'bg-teal-500'
+                    }`} />
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                      {new Date(step.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  {step.status === 'thinking' && (
+                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Thinking...</span>
+                  )}
+                </div>
+
+                <p className="text-sm font-bold text-slate-200 leading-relaxed pr-4 border-r-2 border-teal-500/30">
+                  {step.thought}
+                </p>
+
+                {step.action && (
+                  <div className="mt-4 p-4 bg-slate-950/50 rounded-2xl border border-white/5 flex items-start gap-4">
+                    <Box className="w-5 h-5 text-indigo-400 shrink-0" />
+                    <div>
+                      <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Executing Tool</p>
+                      <code className="text-xs text-indigo-200 font-mono">
+                        {step.action}({JSON.stringify(step.actionArgs)})
+                      </code>
+                    </div>
+                  </div>
+                )}
+
+                {step.observation && (
+                  <div className="mt-4 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex items-start gap-4">
+                    <Activity className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <div className="overflow-hidden">
+                      <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Observation</p>
+                      <pre className="text-[10px] text-emerald-200/70 font-mono whitespace-pre-wrap break-all">
+                        {JSON.stringify(step.observation, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ))
+          ) : (
+            <div className="py-20 text-center space-y-4">
+              <Brain className="w-12 h-12 text-slate-800 mx-auto animate-pulse" />
+              <p className="text-xs font-black text-slate-700 uppercase tracking-[0.3em] italic">The Autonomous Mind is Idle...</p>
+            </div>
+          )}
         </div>
       </div>
 

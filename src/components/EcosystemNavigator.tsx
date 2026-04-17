@@ -367,6 +367,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#10b981",
     url: "/#athar"
+  },
+  {
+    id: "rafiq",
+    name: "رفيق",
+    description: "مرافقك الذكي في الرحلة",
+    icon: <Compass className="w-5 h-5" />,
+    status: "active",
+    color: "#6366f1",
+    url: "/#rafiq"
   }
 ];
 

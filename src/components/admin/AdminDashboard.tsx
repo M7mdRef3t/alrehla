@@ -425,17 +425,30 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
   }, [resonanceScore]);
 
-  // 🔱 Sovereign Orchestrator Evaluator
+  // 🔱 Sovereign Orchestrator Evaluator — runs lazily after mount
   useEffect(() => {
     if (!adminAccess) return;
-    const interval = setInterval(() => {
+    
+    // Start Local Autonomous Agent
+    const { sovereignAgent } = require("@/services/LocalSovereignAgent");
+    sovereignAgent.start();
+
+    // Keep Cloud Orchestrator as observer/fallback
+    const initialTimer = setTimeout(() => {
       void SovereignOrchestrator.evaluateIntelligence();
-    }, 120_000); // evaluate every 120 seconds
+    }, 10_000);
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void SovereignOrchestrator.evaluateIntelligence();
+      }
+    }, 300_000); // 5 minutes
     
-    // Initial evaluation
-    void SovereignOrchestrator.evaluateIntelligence();
-    
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+      sovereignAgent.stop();
+    };
   }, [adminAccess]);
 
   useEffect(() => {

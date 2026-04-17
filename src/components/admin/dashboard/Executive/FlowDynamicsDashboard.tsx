@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Compass, Activity, ShieldAlert, Cpu } from "lucide-react";
 
 import { StatCard, formatNumber } from "./components/StatCard";
@@ -11,25 +11,50 @@ import { AdminTooltip } from "../Overview/components/AdminTooltip";
 export const FlowDynamicsDashboard: FC = () => {
     const [remoteStats, setRemoteStats] = useState<OverviewStats | null>(null);
     const [initialLoading, setInitialLoading] = useState(true);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [lastSync, setLastSync] = useState<Date | null>(null);
+
+    const refresh = useCallback(async (signal?: AbortSignal) => {
+        setIsSyncing(true);
+        try {
+            const overviewData = await fetchOverviewStats(signal instanceof AbortSignal ? { signal } : undefined);
+            if (!signal || !signal.aborted) {
+                setRemoteStats(overviewData ?? null);
+                setInitialLoading(false);
+                setIsSyncing(false);
+                setLastSync(new Date());
+            }
+        } catch (err: any) {
+            if (err.name === 'AbortError') return;
+            setIsSyncing(false);
+            setInitialLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
-        let mounted = true;
-        const refresh = async () => {
-            try {
-                const overviewData = await fetchOverviewStats();
-                if (mounted) {
-                    setRemoteStats(overviewData ?? null);
-                    setInitialLoading(false);
-                }
-            } catch {
-                if (mounted) setInitialLoading(false);
+        const controller = new AbortController();
+        
+        // Initial load
+        refresh(controller.signal);
+
+        // Visibility handling
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                refresh(controller.signal);
             }
         };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
-        refresh();
-        const timer = window.setInterval(refresh, 60_000);
+        // Polling (only if visible)
+        const timer = window.setInterval(() => {
+            if (document.visibilityState === 'visible' && !isSyncing) {
+                refresh(controller.signal);
+            }
+        }, 60_000);
+
         return () => {
-            mounted = false;
+            controller.abort();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.clearInterval(timer);
         };
     }, []);
@@ -83,9 +108,18 @@ export const FlowDynamicsDashboard: FC = () => {
                             ديناميكية المسار والمحرك الموزع
                             <AdminTooltip content="مركز تحكم V2 Dynamic Routing. الذكاء الاصطناعي بيوزع الحمل النفسي على المستخدمين عشان ما يحبطوش، وبيدخل بقرارات لحظية." position="bottom" />
                         </h2>
-                        <div className="flex items-center gap-2 mt-2 bg-black/30 px-3 py-1.5 rounded-lg border border-white/5 w-fit">
-                            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-                            <p className="text-xs font-black uppercase tracking-widest text-cyan-400">تحليل قرارات التوجيه والتدخل اللحظي</p>
+                        <div className="flex items-center gap-4 mt-2">
+                            <div className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-lg border border-white/5 w-fit">
+                                <span className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'bg-slate-500'}`} />
+                                <p className="text-xs font-black uppercase tracking-widest text-cyan-400">
+                                    {isSyncing ? 'جاري المزامنة...' : 'تحليل قرارات التوجيه'}
+                                </p>
+                            </div>
+                            {lastSync && (
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                    آخر تحديث: {lastSync.toLocaleTimeString('ar-EG', { hour12: false })}
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>

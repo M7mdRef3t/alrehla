@@ -152,6 +152,18 @@ const LANDING_STYLES = `
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.2), transparent);
   }
+
+  @media (max-width: 1023px) {
+    .landing-weather-entry,
+    .landing-final-cta {
+      backdrop-filter: blur(4px) !important;
+      -webkit-backdrop-filter: blur(4px) !important;
+    }
+    .landing-root {
+      /* Prevent horizontal bounce which can look like jitter */
+      overflow-x: hidden;
+    }
+  }
 `;
 
 

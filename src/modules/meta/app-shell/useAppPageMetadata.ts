@@ -67,6 +67,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   kanz: "Kanz Wisdom Bank",
   qalb: "Qalb Heart Health",
   athar: "Athar Impact Log",
+  rafiq: "Rafiq Journey Companion",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -133,6 +134,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   kanz: { title: "كنز — بنك حكمتك الشخصي | Alrehla", description: "اجمع دروسك، اقتباساتك، ولحظاتك المهمة في مكان واحد." },
   qalb: { title: "قلب — صحة قلبك العاطفي | Alrehla", description: "مؤشر موحّد يقيس صحة قلبك عبر 9 أبعاد من أدوات الرحلة." },
   athar: { title: "أثر — سجل حياتك في الرحلة | Alrehla", description: "كل فعل في رحلتك يـُكتب هنا تلقائياً ليصبح قصة حياتك." },
+  rafiq: { title: "رفيق — مرافقك الذكي | Alrehla", description: "يقرأ رحلتك ويقترح الخطوة التالية دائماً." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };
