@@ -331,6 +331,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#fbbf24",
     url: "/#shahada"
+  },
+  {
+    id: "warsha",
+    name: "ورشة",
+    description: "تحديات 7 أيام لبناء مهارة",
+    icon: <Flame className="w-5 h-5" />,
+    status: "active",
+    color: "#f97316",
+    url: "/#warsha"
   }
 ];
 

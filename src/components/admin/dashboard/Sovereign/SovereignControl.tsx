@@ -11,6 +11,7 @@ import { IllusionRadar } from "./IllusionRadar";
 import { SovereignSpreadCommand } from "./SovereignSpreadCommand";
 import { SovereignOracle } from "./SovereignOracle";
 import { SovereignDecisionLog } from "./SovereignDecisionLog";
+import { WarRoomAlertsPanel } from "./WarRoomAlertsPanel";
 import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
 import { useLockdownState } from "@/domains/admin/store/lockdown.store";
 import { useThemeState } from "@/domains/consciousness/store/theme.store";
@@ -425,9 +426,14 @@ export const SovereignControl: FC = () => {
         <IllusionRadar scenarios={liveStats?.topScenarios ?? null} isLoading={isLoadingPulse} />
       </div>
 
-      {/* Sovereign AI Decision Log */}
-      <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden h-[400px]">
-        <SovereignDecisionLog />
+      {/* Sovereign AI Decision Log & War Room Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden h-[500px]">
+          <SovereignDecisionLog />
+        </div>
+        <div className="h-[500px]">
+          <WarRoomAlertsPanel />
+        </div>
       </div>
 
       {/* Secondary Controls Grid */}

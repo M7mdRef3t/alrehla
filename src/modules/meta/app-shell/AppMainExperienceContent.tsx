@@ -50,6 +50,7 @@ const TazkiyaScreen = lazy(() => import("../../tazkiya/TazkiyaScreen"));
 const JisrScreen = lazy(() => import("../../jisr/JisrScreen"));
 const RisalaScreen = lazy(() => import("../../risala/RisalaScreen"));
 const ShahadaScreen = lazy(() => import("../../shahada/ShahadaScreen"));
+const WarshaScreen = lazy(() => import("../../warsha/WarshaScreen"));
 
 
 
@@ -681,6 +682,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <ShahadaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "warsha") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" /></div>}>
+          <WarshaScreen />
         </Suspense>
       </PageShell>
     );
