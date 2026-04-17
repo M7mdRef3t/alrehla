@@ -50,6 +50,13 @@ const TazkiyaScreen = lazy(() => import("../../tazkiya/TazkiyaScreen"));
 const JisrScreen = lazy(() => import("../../jisr/JisrScreen"));
 const RisalaScreen = lazy(() => import("../../risala/RisalaScreen"));
 const ShahadaScreen = lazy(() => import("../../shahada/ShahadaScreen"));
+const WarshaScreen = lazy(() => import("../../warsha/WarshaScreen"));
+const KanzScreen = lazy(() => import("../../kanz/KanzScreen"));
+const QalbScreen = lazy(() => import("../../qalb/QalbScreen"));
+const AtharScreen = lazy(() => import("../../athar/AtharScreen"));
+const RafiqScreen = lazy(() => import("../../rafiq/RafiqScreen"));
+const RuyaScreen = lazy(() => import("../../ruya/RuyaScreen"));
+const NiyyaScreen = lazy(() => import("../../niyya/NiyyaScreen"));
 
 
 
@@ -681,6 +688,76 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <ShahadaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "warsha") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" /></div>}>
+          <WarshaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "kanz") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
+          <KanzScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "qalb") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" /></div>}>
+          <QalbScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "athar") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
+          <AtharScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "rafiq") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
+          <RafiqScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "ruya") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
+          <RuyaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "niyya") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
+          <NiyyaScreen />
         </Suspense>
       </PageShell>
     );

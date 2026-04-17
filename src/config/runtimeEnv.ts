@@ -33,6 +33,9 @@ type RuntimeKey =
   | "VITE_DAWAYIR_LIVE_API_KEY"
   | "VITE_DAWAYIR_LIVE_MODEL"
   | "VITE_DAWAYIR_LIVE_VOICE"
+  | "VITE_LOCAL_AI_ENABLED"
+  | "VITE_OLLAMA_BASE_URL"
+  | "VITE_LOCAL_AI_MODEL"
   | "VITE_USERBACK_ACCESS_TOKEN";
 
 type NextPublicKey =
@@ -70,6 +73,9 @@ type NextPublicKey =
   | "NEXT_PUBLIC_DAWAYIR_LIVE_API_KEY"
   | "NEXT_PUBLIC_DAWAYIR_LIVE_MODEL"
   | "NEXT_PUBLIC_DAWAYIR_LIVE_VOICE"
+  | "NEXT_PUBLIC_LOCAL_AI_ENABLED"
+  | "NEXT_PUBLIC_OLLAMA_BASE_URL"
+  | "NEXT_PUBLIC_LOCAL_AI_MODEL"
   | "NEXT_PUBLIC_USERBACK_ACCESS_TOKEN";
 
 /** Safe accessor for process.env that never throws in browser/Vite */
@@ -124,6 +130,9 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
     NEXT_PUBLIC_DAWAYIR_LIVE_API_KEY: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_API_KEY,
     NEXT_PUBLIC_DAWAYIR_LIVE_MODEL: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_MODEL,
     NEXT_PUBLIC_DAWAYIR_LIVE_VOICE: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_VOICE,
+    NEXT_PUBLIC_LOCAL_AI_ENABLED: process.env.NEXT_PUBLIC_LOCAL_AI_ENABLED,
+    NEXT_PUBLIC_OLLAMA_BASE_URL: process.env.NEXT_PUBLIC_OLLAMA_BASE_URL,
+    NEXT_PUBLIC_LOCAL_AI_MODEL: process.env.NEXT_PUBLIC_LOCAL_AI_MODEL,
     NEXT_PUBLIC_USERBACK_ACCESS_TOKEN: process.env.NEXT_PUBLIC_USERBACK_ACCESS_TOKEN
   };
   const value = candidates[key];
@@ -224,5 +233,8 @@ export const runtimeEnv = {
   dawayirLiveApiKey: readEnv("VITE_DAWAYIR_LIVE_API_KEY"),
   dawayirLiveModel: readEnv("VITE_DAWAYIR_LIVE_MODEL"),
   dawayirLiveVoice: readEnv("VITE_DAWAYIR_LIVE_VOICE"),
+  localAiEnabled: readEnv("VITE_LOCAL_AI_ENABLED") === "true",
+  ollamaBaseUrl: readEnv("VITE_OLLAMA_BASE_URL") ?? "http://localhost:11434",
+  localAiModel: readEnv("VITE_LOCAL_AI_MODEL") ?? "gemma3:4b",
   userbackToken: readEnv("VITE_USERBACK_ACCESS_TOKEN"),
 } as const;

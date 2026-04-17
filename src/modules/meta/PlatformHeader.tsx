@@ -26,6 +26,7 @@ import { useAchievementState } from "@/domains/gamification/store/achievement.st
 import { useThemeState } from "@/domains/consciousness/store/theme.store";
 import { signOut } from "@/services/authService";
 import { NotificationsPanel } from "./NotificationsPanel";
+import { InAppNotificationCenter } from "@/components/shared/InAppNotificationCenter";
 import { isPrivilegedRole } from "@/utils/featureFlags";
 import { assignUrl } from "@/services/navigation";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
@@ -408,6 +409,10 @@ export const PlatformHeader = memo(function PlatformHeader({
                 anchorRef={bellRef}
               />
             )}
+          </div>
+
+          <div className="relative">
+            {isLoggedIn && <InAppNotificationCenter />}
           </div>
 
         {status === "loading" ? (

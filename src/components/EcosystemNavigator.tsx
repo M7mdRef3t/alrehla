@@ -26,7 +26,8 @@ import {
   TrendingUp,
   Mail,
   Moon,
-  Handshake
+  Handshake,
+  Target
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -331,6 +332,69 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#fbbf24",
     url: "/#shahada"
+  },
+  {
+    id: "warsha",
+    name: "ورشة",
+    description: "تحديات 7 أيام لبناء مهارة",
+    icon: <Flame className="w-5 h-5" />,
+    status: "active",
+    color: "#f97316",
+    url: "/#warsha"
+  },
+  {
+    id: "kanz",
+    name: "كنز",
+    description: "بنك حكمتك الشخصي",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#f59e0b",
+    url: "/#kanz"
+  },
+  {
+    id: "qalb",
+    name: "قلب",
+    description: "صحة قلبك العاطفي — مؤشر موحّد",
+    icon: <Flame className="w-5 h-5" />,
+    status: "active",
+    color: "#ef4444",
+    url: "/#qalb"
+  },
+  {
+    id: "athar",
+    name: "أثر",
+    description: "سجل حياتك في الرحلة",
+    icon: <BookOpen className="w-5 h-5" />,
+    status: "active",
+    color: "#10b981",
+    url: "/#athar"
+  },
+  {
+    id: "rafiq",
+    name: "رفيق",
+    description: "مرافقك الذكي في الرحلة",
+    icon: <Compass className="w-5 h-5" />,
+    status: "active",
+    color: "#6366f1",
+    url: "/#rafiq"
+  },
+  {
+    id: "ruya",
+    name: "رؤيا",
+    description: "مفكرة الأحلام والتأملات الليلية",
+    icon: <Moon className="w-5 h-5" />,
+    status: "active",
+    color: "#8b5cf6",
+    url: "/#ruya"
+  },
+  {
+    id: "niyya",
+    name: "نية",
+    description: "نيتك تصنع يومك",
+    icon: <Target className="w-5 h-5" />,
+    status: "active",
+    color: "#10b981",
+    url: "/#niyya"
   }
 ];
 

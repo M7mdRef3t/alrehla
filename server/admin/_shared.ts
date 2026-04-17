@@ -64,7 +64,7 @@ export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promis
 
   const bearer = getBearerToken(req);
   if (!bearer) {
-    console.error("[verifyAdmin] No bearer token provided:", req.headers);
+    console.warn("[verifyAdmin] 401: No bearer token provided for path:", req.query?.path || "overview");
     res.status(401).json({ error: "Unauthorized: Missing Token" });
     return false;
   }
@@ -75,7 +75,10 @@ export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promis
 
   const { data, error } = await client.auth.getUser(bearer);
   if (error || !data?.user?.id) {
-    console.error("[verifyAdmin] Failed to getUser from token:", error?.message || "Missing user ID", "Token start:", bearer.slice(0, 10));
+    console.error("[verifyAdmin] 401: Failed to getUser from token:", {
+      error: error?.message || "Missing user ID",
+      tokenPreview: bearer.slice(0, 10) + "..."
+    });
     res.status(401).json({ error: "Unauthorized: Invalid Token" });
     return false;
   }
@@ -87,14 +90,18 @@ export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promis
     .maybeSingle();
 
   if (profileError || !profile?.role) {
-    console.error(`[verifyAdmin] Forbidden: User ${data.user.id} has no valid role or profile error`, profileError);
+    console.error(`[verifyAdmin] 403: Forbidden - User ${data.user.id} profile/role missing:`, profileError?.message || "No role in profile");
     res.status(403).json({ error: "Forbidden: No valid role" });
     return false;
   }
 
   const allowed = getAllowedRoles();
-  if (!allowed.includes(String(profile.role))) {
-    console.error(`[verifyAdmin] Forbidden: User ${data.user.id} has role '${profile.role}' which is not in allowed types: ${allowed.join(", ")}`);
+  if (!allowed.includes(String(profile.role).toLowerCase())) {
+    console.error(`[verifyAdmin] 403: Forbidden - Insufficient role:`, {
+      userId: data.user.id,
+      userRole: profile.role,
+      allowed: allowed
+    });
     res.status(403).json({ error: "Forbidden: Not allowed" });
     return false;
   }

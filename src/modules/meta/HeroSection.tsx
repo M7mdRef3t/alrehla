@@ -52,6 +52,9 @@ const HERO_STYLES = `
     overflow-x: hidden;
     overflow-y: clip;
     background: var(--void);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   .hero-layer {
@@ -67,6 +70,7 @@ const HERO_STYLES = `
     inset: 0;
     background: radial-gradient(ellipse 95% 85% at 50% 50%, transparent 35%, rgba(2,4,8,0.85) 100%);
     pointer-events: none;
+    will-change: opacity;
   }
 
   .hero-screen-glow {
@@ -131,6 +135,9 @@ const HERO_STYLES = `
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: transform 0.3s ease;
+    will-change: transform, opacity;
   }
 
   .hero-input {
@@ -265,6 +272,9 @@ const HERO_STYLES = `
     aspect-ratio: 1;
     max-width: 520px;
     perspective: 1200px;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    will-change: transform;
   }
 
   .sovereign-map__atmosphere {
@@ -323,11 +333,14 @@ const HERO_STYLES = `
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     padding: 16px;
     border-radius: 24px;
     min-width: 150px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     z-index: 10;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
   }
 
   .metric-card--health {
@@ -558,6 +571,8 @@ const HERO_STYLES = `
     width: 200%;
     height: 200%;
     perspective: 1000px;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
   }
 
   .hero-grid {
@@ -574,6 +589,8 @@ const HERO_STYLES = `
     opacity: 0.3;
     transform: rotateX(60deg) scale(1.5);
     transform-origin: center center;
+    will-change: transform;
+    backface-visibility: hidden;
   }
 
   .hero-nebula {
@@ -732,16 +749,20 @@ const HERO_STYLES = `
   @media (max-width: 1023px) {
     .hero-headline {
       font-size: clamp(1.6rem, 7.5vw, 2.4rem) !important;
-      align-items: center !important;
-      text-align: center !important;
+      align-items: flex-start !important;
+      text-align: right !important;
     }
     .headline-line {
-      text-align: center !important;
-      justify-content: center !important;
+      text-align: right !important;
+      justify-content: flex-start !important;
       width: 100% !important;
+      /* Prevent jitter by locking height */
+      min-height: 1.4em !important;
+      backface-visibility: hidden;
+      transform: translateZ(0);
     }
     .headline-subline-container {
-      align-items: center !important;
+      align-items: flex-start !important;
       width: 100% !important;
     }
     .hero-content-wrapper {
@@ -753,13 +774,14 @@ const HERO_STYLES = `
       order: -1 !important;
       width: min(85vw, 320px) !important;
       margin: 0 auto !important;
+      will-change: transform;
     }
     .hero-copy-column {
       max-width: 100% !important;
       align-items: center !important;
     }
     .hero-body {
-      text-align: center !important;
+      text-align: right !important;
     }
     .hero-action-row {
       align-items: center !important;
@@ -767,6 +789,14 @@ const HERO_STYLES = `
     .hero-input-wrapper, .cta-primary {
       width: 100% !important;
       max-width: 320px !important;
+      /* Reduce heavy blur effect on mobile to prevent shaking */
+      backdrop-filter: blur(4px) !important;
+      -webkit-backdrop-filter: blur(4px) !important;
+    }
+    .sovereign-map__atmosphere {
+      /* Reduce blur intensity for performance */
+      filter: blur(30px) !important;
+      opacity: 0.08 !important;
     }
     .hero-eyebrow-row {
       display: none !important;
@@ -821,8 +851,9 @@ const RotatingWord: FC = React.memo(() => {
 
   return (
     <span className="rotating-word-wrapper">
+      {/* 🛡️ Anchor with the widest possible word to keep the container stable */}
       <span className="invisible select-none block whitespace-nowrap font-extrabold" aria-hidden>
-        {ROTATING_WORDS[0]}
+        {ROTATING_WORDS.reduce((a, b) => (a.length > b.length ? a : b))}
       </span>
       <AnimatePresence mode="wait">
         {show && (
@@ -891,6 +922,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = React.memo(({ reduceM
                 stroke={ring.stroke}
                 strokeWidth="1"
                 fill="none"
+                style={{ transform: "translateZ(0)" }}
                 animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
                 transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
                 transformOrigin="190px 190px"
@@ -1018,7 +1050,10 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
   const globalMouseY = useMotionValue(0);
 
   const handleGlobalMouseMove = useCallback((e: React.MouseEvent) => {
-    if (reduceMotion) return;
+    // 🛡️ Guard: Parallax is too expensive and jittery on most mobile/touch devices
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (reduceMotion || isTouch) return;
+    
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
     globalMouseX.set((e.clientX - cx) / 20);
@@ -1047,15 +1082,19 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
     if (!node) return;
 
     const isMobile = window.innerWidth < 1024;
-    if (isMobile) {
-      setHeadlineMeasuredWidth(window.innerWidth - 32);
-      return;
-    }
-
+    
     const updateMeasuredWidth = () => {
-      if (window.innerWidth < 1024) return;
+      // On mobile, the width is usually predictable (screen width - padding).
+      // We lock it to avoid jitter from browser chrome toggling.
+      if (window.innerWidth < 1024) {
+        setHeadlineMeasuredWidth(window.innerWidth - 32);
+        return;
+      }
+      
+      if (!node) return;
       const nextWidth = Math.ceil(node.getBoundingClientRect().width);
-      setHeadlineMeasuredWidth(prev => (Math.abs(prev - nextWidth) < 2 ? prev : nextWidth));
+      // Only set if diff is significant to avoid sub-pixel jitter
+      setHeadlineMeasuredWidth(prev => (Math.abs(prev - nextWidth) < 1 ? prev : nextWidth));
     };
 
     updateMeasuredWidth();

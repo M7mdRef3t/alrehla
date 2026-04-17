@@ -56,6 +56,13 @@ export type AppScreen =
   | "jisr"
   | "risala"
   | "shahada"
+  | "warsha"
+  | "kanz"
+  | "qalb"
+  | "athar"
+  | "rafiq"
+  | "ruya"
+  | "niyya"
   | "protocol"
   | "diagnosis";
 

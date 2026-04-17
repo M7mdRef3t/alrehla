@@ -17,6 +17,10 @@ const overviewRuntimeStats = {
   latencyMs: [] as number[]
 };
 
+// --- Memory Cache for Overview ---
+let overviewCache: { data: any; expiry: number } | null = null;
+const OVERVIEW_CACHE_TTL_MS = 1000 * 60 * 5; // 5 minute cache to prevent server OOM
+
 type RequestLike = {
   query?: Record<string, unknown>;
   headers?: Record<string, unknown>;
@@ -296,6 +300,13 @@ function computeTopScenarios(maps: Array<{ session_id: string; nodes: unknown }>
 }
 
 async function handleOverview(client: SupabaseClient, res: JsonResponder) {
+  // 1. Check Cache
+  const nowTs = Date.now();
+  if (overviewCache && nowTs < overviewCache.expiry) {
+    res.status(200).json(overviewCache.data);
+    return;
+  }
+
   const now = new Date();
   const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
@@ -323,8 +334,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
     { data: routingOutcomesV2 },
     { data: topSwarmEdgesRaw },
     { data: routingCacheRows },
-    { data: routingOutcomeEvents },
-    { data: routingInterventionEvents },
+    { data: eventsPayloadOnly },
     { count: marketingLeadsTotalCount },
     { count: marketingLeadsLast24hCount },
     { data: marketingLeadsRows }
@@ -333,8 +343,8 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
     client.from("routing_events").select("id", { count: "exact", head: true }).gte("occurred_at", fiveMinAgo),
     client
       .from("routing_events")
-      .select("session_id,event_type,payload,occurred_at")
-      .in("event_type", ["path_started", "task_completed", "mood_logged", "node_added", "flow_event"])
+      .select("event_type,occurred_at")
+      .in("event_type", ["path_started", "node_added"])
       .gte("occurred_at", thirtyDaysAgo)
       .order("occurred_at", { ascending: true })
       .limit(5000),
@@ -348,7 +358,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
       .from("routing_events")
       .select("session_id")
       .eq("event_type", "flow_event")
-      .contains("payload", { step: "install_clicked" })
+      .filter("payload->>step", "eq", "install_clicked")
       .not("session_id", "is", null)
       .limit(5000),
     client
@@ -373,16 +383,10 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
       .limit(10000),
     client
       .from("routing_events")
-      .select("payload,created_at")
-      .eq("event_type", "outcome_reported")
-      .gte("created_at", thirtyDaysAgo)
-      .limit(5000),
-    client
-      .from("routing_events")
-      .select("payload,created_at")
-      .eq("event_type", "intervention_triggered")
-      .gte("created_at", thirtyDaysAgo)
-      .limit(5000),
+      .select("event_type,payload,session_id")
+      .in("event_type", ["task_completed", "mood_logged", "flow_event", "task_started"])
+      .gte("occurred_at", thirtyDaysAgo)
+      .limit(3000),
     client.from("marketing_leads").select("email", { count: "exact", head: true }),
     client.from("marketing_leads").select("email", { count: "exact", head: true }).gte("created_at", twentyFourHoursAgo),
     client
@@ -390,8 +394,10 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
       .select("source,utm,created_at")
       .gte("created_at", fourteenDaysAgo)
       .order("created_at", { ascending: true })
-      .limit(10000)
+      .limit(2000)
   ]);
+
+  const allEvents = [...(events ?? []), ...(eventsPayloadOnly ?? [])];
   const installedUsers = new Set(
     ((installedSessionsRows ?? []) as Array<{ session_id?: unknown }>)
       .map((row) => String(row.session_id ?? "").trim())
@@ -480,7 +486,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
   let activeElapsedSum = 0;
   let idleElapsedSum = 0;
   let hesitationSum = 0;
-  for (const row of (routingOutcomeEvents ?? []) as Array<Record<string, unknown>>) {
+  for (const row of (outcomesV2 ?? []) as Array<Record<string, unknown>>) {
     const payload = (row.payload ?? null) as Record<string, unknown> | null;
     const telemetry = (payload?.telemetry ?? null) as Record<string, unknown> | null;
     if (!telemetry) continue;
@@ -547,7 +553,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
     .sort((a, b) => b.decisions24h - a.decisions24h || a.activeCachedCandidates - b.activeCachedCandidates)
     .slice(0, 20);
   const interventionBySegment = new Map<string, number>();
-  for (const row of (routingInterventionEvents ?? []) as Array<Record<string, unknown>>) {
+  for (const row of ([] as Array<Record<string, unknown>>)) {
     const payload = (row.payload ?? null) as Record<string, unknown> | null;
     const segmentKey = String(payload?.segmentKey ?? "unknown");
     interventionBySegment.set(segmentKey, (interventionBySegment.get(segmentKey) ?? 0) + 1);
@@ -788,7 +794,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
   let moodSum = 0;
   let moodCount = 0;
 
-  for (const row of events as Array<Record<string, unknown>>) {
+  for (const row of allEvents as Array<Record<string, unknown>>) {
     const createdAt = String(row.occurred_at ?? row.created_at ?? "");
     const date = createdAt ? createdAt.slice(5, 10) : "--";
     if (!growthMap.has(date)) growthMap.set(date, { paths: 0, nodes: 0 });
@@ -822,7 +828,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
     path_started: new Set<string>(),
     task_completed: new Set<string>()
   };
-  for (const row of events as Array<Record<string, unknown>>) {
+  for (const row of allEvents as Array<Record<string, unknown>>) {
     const sid = String(row.session_id ?? "anonymous");
     const type = String(row.event_type ?? row.type ?? "");
     if (type === "node_added") sessionsByType.node_added.add(sid);
@@ -837,7 +843,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
     ]
   };
 
-  const emergencyLogs = (events as Array<Record<string, unknown>>)
+  const emergencyLogs = (allEvents as Array<Record<string, unknown>>)
     .filter((row) => String(row.type ?? "") === "node_added" && (row.payload as Record<string, unknown>)?.isEmergency === true)
     .map((row) => ({
       sessionId: String(row.session_id ?? ""),
@@ -848,7 +854,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
     .reverse();
 
   const taskByLabel = new Map<string, { started: number; completed: number }>();
-  for (const row of events as Array<Record<string, unknown>>) {
+  for (const row of allEvents as Array<Record<string, unknown>>) {
     const type = String(row.event_type ?? row.type ?? "");
     const p = row.payload as Record<string, unknown> | null;
     const label = String(p?.taskLabel ?? (p?.taskId ?? ""));
@@ -873,7 +879,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
   const pulseAbandonedByReason: Record<string, number> = {};
   let flowTimeToActionSum = 0;
   let flowTimeToActionCount = 0;
-  for (const row of events as Array<Record<string, unknown>>) {
+  for (const row of allEvents as Array<Record<string, unknown>>) {
     if (String(row.event_type ?? row.type ?? "") !== "flow_event") continue;
     const p = row.payload as Record<string, unknown> | null;
     const step = String(p?.step ?? "");
@@ -924,7 +930,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
     pulseAbandonedByReason
   };
 
-  res.status(200).json({
+  const finalResponse = {
     totalUsers: usersCount ?? null,
     activeNow: activeCount ?? null,
     avgMood: moodCount ? Math.round((moodSum / moodCount) * 10) / 10 : null,
@@ -1001,7 +1007,15 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
         bySegment: interventionBySegmentRows
       }
     }
-  });
+  };
+
+  // Update Cache
+  overviewCache = {
+    data: finalResponse,
+    expiry: Date.now() + OVERVIEW_CACHE_TTL_MS
+  };
+
+  res.status(200).json(finalResponse);
 }
 
 async function handleVisitorSessions(client: SupabaseClient, req: RequestLike, res: JsonResponder) {

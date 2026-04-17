@@ -1,6 +1,6 @@
 import { logger } from "@/services/logger";
 import type { FC, ReactNode } from "react";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
@@ -36,6 +36,7 @@ import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
 import { isPrivilegedRole } from "@/utils/featureFlags";
+import { sovereignAgent } from "@/services/LocalSovereignAgent";
 import {
   fetchAdminConfig,
   fetchAiLogs,
@@ -425,17 +426,45 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
   }, [resonanceScore]);
 
-  // 🔱 Sovereign Orchestrator Evaluator
+  // 🔱 Sovereign Intelligence Initialization
+  const agentStartedRef = useRef(false);
+
   useEffect(() => {
-    if (!adminAccess) return;
-    const interval = setInterval(() => {
+    if (!adminAccess || agentStartedRef.current) return;
+    
+    // Start Local Autonomous Agent
+    try {
+      if (sovereignAgent) {
+        sovereignAgent.start();
+        agentStartedRef.current = true;
+      }
+    } catch (e) {
+      console.error("[SovereignAgent] Failed to load agent logic:", e);
+    }
+
+    // Keep Cloud Orchestrator as observer/fallback
+    const initialTimer = setTimeout(() => {
       void SovereignOrchestrator.evaluateIntelligence();
-    }, 120_000); // evaluate every 120 seconds
+    }, 10_000);
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void SovereignOrchestrator.evaluateIntelligence();
+      }
+    }, 300_000); // 5 minutes
     
-    // Initial evaluation
-    void SovereignOrchestrator.evaluateIntelligence();
-    
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+      try {
+        if (sovereignAgent) {
+          sovereignAgent.stop();
+          agentStartedRef.current = false;
+        }
+      } catch (e) {
+        // Silently fail on unmount
+      }
+    };
   }, [adminAccess]);
 
   useEffect(() => {

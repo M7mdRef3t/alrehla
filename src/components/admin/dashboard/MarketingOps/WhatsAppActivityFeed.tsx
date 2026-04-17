@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, ArrowDownLeft, ArrowUpRight, Zap, Info, ShieldAlert, User, Clock, ExternalLink, Brain, Bot } from 'lucide-react';
+import { getAuthToken } from "@/domains/auth/store/auth.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 
 interface WhatsAppEvent {
   id: string;
@@ -38,9 +40,19 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
+    const authToken = getAuthToken();
+    const adminCode = useAdminState.getState().adminCode;
+    const bearer = authToken || adminCode;
+    
+    if (!bearer) return;
+
     try {
-      const res = await fetch('/api/admin/whatsapp-events');
+      const res = await fetch('/api/admin/whatsapp-events', {
+        headers: {
+          'Authorization': `Bearer ${bearer}`
+        }
+      });
       if (!res.ok) throw new Error('Failed to fetch events');
       const data = await res.json();
       setEvents(data.events || []);
@@ -50,7 +62,7 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchEvents();

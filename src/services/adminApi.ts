@@ -1448,8 +1448,8 @@ function normalizeOverviewApiData(raw: Record<string, unknown>): OverviewStats {
   };
 }
 
-export async function fetchOverviewStats(): Promise<OverviewStats | null> {
-  const apiData = await callAdminApi<Record<string, unknown>>("overview");
+export async function fetchOverviewStats(options?: RequestInit): Promise<OverviewStats | null> {
+  const apiData = await callAdminApi<Record<string, unknown>>("overview", options);
   if (apiData) return normalizeOverviewApiData(apiData);
   if (!isSupabaseReady || !supabase) return null;
   const now = new Date();
