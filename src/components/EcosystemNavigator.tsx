@@ -340,6 +340,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#f97316",
     url: "/#warsha"
+  },
+  {
+    id: "kanz",
+    name: "كنز",
+    description: "بنك حكمتك الشخصي",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#f59e0b",
+    url: "/#kanz"
   }
 ];
 

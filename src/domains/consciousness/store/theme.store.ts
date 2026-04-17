@@ -63,16 +63,29 @@ export function injectTokens(tokens: DesignTokens) {
   if (!documentRef) return;
   const root = documentRef.documentElement;
   
-  root.style.setProperty("--teal-400", tokens.primaryColor);
-  root.style.setProperty("--amber-500", tokens.accentColor);
-  root.style.setProperty("--space-void", tokens.spaceVoid);
-  root.style.setProperty("--consciousness-border-radius", tokens.borderRadius);
-  root.style.setProperty("--consciousness-blur", tokens.blur);
-  root.style.setProperty("--consciousness-spacing", tokens.spacing);
-  root.style.setProperty("--pulse-duration", tokens.pulseDuration);
-  root.style.setProperty("--atmosphere-vignette", tokens.vignetteStrength.toString());
-  root.style.setProperty("--atmosphere-grain", tokens.grainOpacity.toString());
-  root.style.setProperty("--atmosphere-aberration", tokens.chromaticAberration.toString());
+  // Safe extraction with fallbacks to prevent .toString() on undefined
+  const primary = tokens.primaryColor || DEFAULT_TOKENS.primaryColor;
+  const accent = tokens.accentColor || DEFAULT_TOKENS.accentColor;
+  const voidColor = tokens.spaceVoid || DEFAULT_TOKENS.spaceVoid;
+  const radius = tokens.borderRadius || DEFAULT_TOKENS.borderRadius;
+  const blurVal = tokens.blur || DEFAULT_TOKENS.blur;
+  const spacingVal = tokens.spacing || DEFAULT_TOKENS.spacing;
+  const pulse = tokens.pulseDuration || DEFAULT_TOKENS.pulseDuration;
+  
+  const vignette = tokens.vignetteStrength ?? DEFAULT_TOKENS.vignetteStrength;
+  const grain = tokens.grainOpacity ?? DEFAULT_TOKENS.grainOpacity;
+  const aberration = tokens.chromaticAberration ?? DEFAULT_TOKENS.chromaticAberration;
+
+  root.style.setProperty("--teal-400", primary);
+  root.style.setProperty("--amber-500", accent);
+  root.style.setProperty("--space-void", voidColor);
+  root.style.setProperty("--consciousness-border-radius", radius);
+  root.style.setProperty("--consciousness-blur", blurVal);
+  root.style.setProperty("--consciousness-spacing", spacingVal);
+  root.style.setProperty("--pulse-duration", pulse);
+  root.style.setProperty("--atmosphere-vignette", vignette.toString());
+  root.style.setProperty("--atmosphere-grain", grain.toString());
+  root.style.setProperty("--atmosphere-aberration", aberration.toString());
 }
 
 function applyTheme(resolvedTheme: "light" | "dark") {
@@ -148,10 +161,13 @@ export const useThemeState = create<ThemeState>()(
       name: "dawayir-theme",
       onRehydrateStorage: () => (state) => {
         if (state) {
+          // Heal state: merge with defaults to ensure new properties exist
+          state.customTokens = { ...DEFAULT_TOKENS, ...state.customTokens };
+          
           const resolvedTheme = state.theme === "system" ? getSystemTheme() : state.theme;
           applyTheme(resolvedTheme);
           state.resolvedTheme = resolvedTheme;
-          injectTokens(state.customTokens || DEFAULT_TOKENS);
+          injectTokens(state.customTokens);
         }
       }
     }

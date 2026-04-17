@@ -57,6 +57,7 @@ export type AppScreen =
   | "risala"
   | "shahada"
   | "warsha"
+  | "kanz"
   | "protocol"
   | "diagnosis";
 

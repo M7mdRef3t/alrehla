@@ -5,17 +5,46 @@ import { Terminal, Shield, Cpu, Activity } from 'lucide-react';
 const AgentCockpit: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [status, setStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting');
+  const [gatewayInfo, setGatewayInfo] = useState<any>(null);
+
+  const API_TOKEN = '20f061e2ee3eebdbd841ea576f0d503baf16380f2b2fd440';
+  const API_BASE = 'http://localhost:18789/api/v1';
 
   useEffect(() => {
-    // Simulated connection to OpenClaw Gateway
-    setStatus('connecting');
-    const timer = setTimeout(() => {
-      setStatus('connected');
-      setLogs(prev => [...prev, '[System] Local Gateway connected on ws://127.0.0.1:18789']);
-      setLogs(prev => [...prev, '[Agent] Rehla AI Bot is now active on Telegram']);
-    }, 2000);
+    let isMounted = true;
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/status`, {
+          headers: {
+            'Authorization': `Bearer ${API_TOKEN}`,
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (isMounted) {
+            setStatus('connected');
+            setGatewayInfo(data);
+            // Optionally fetch logs if available via API
+          }
+        } else {
+          if (isMounted) setStatus('disconnected');
+        }
+      } catch (error) {
+        if (isMounted) setStatus('disconnected');
+        console.error('Failed to fetch agent status:', error);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    setStatus('connecting');
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   return (
@@ -56,11 +85,16 @@ const AgentCockpit: React.FC = () => {
                   <Cpu className="w-6 h-6 text-blue-500" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">نموذج الذكاء</h3>
-                  <p className="text-xs text-zinc-500 uppercase">Provider Status</p>
+                  <h3 className="text-lg font-semibold">تكامل تليجرام</h3>
+                  <p className="text-xs text-zinc-500 uppercase">Bot Status</p>
                 </div>
               </div>
-              <div className="text-3xl font-bold font-mono text-blue-400">GEMINI 1.5</div>
+              <div className="text-2xl font-bold font-mono text-blue-400">
+                {gatewayInfo?.status?.channels?.telegram?.username || '@Morafeq_bot'}
+              </div>
+              <div className="mt-2 text-[10px] text-zinc-600 font-mono">
+                {gatewayInfo?.status?.channels?.telegram?.running ? 'ACTIVE & POLLING' : 'IDLE / RESTART REQUIRED'}
+              </div>
             </div>
           </div>
 
