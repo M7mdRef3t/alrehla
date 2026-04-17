@@ -70,6 +70,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   rafiq: "Rafiq Journey Companion",
   ruya: "Ruya Dream Journal",
   niyya: "Niyya Daily Intention",
+  samt: "Samt Mindful Breathing",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -139,6 +140,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   rafiq: { title: "رفيق — مرافقك الذكي | Alrehla", description: "يقرأ رحلتك ويقترح الخطوة التالية دائماً." },
   ruya: { title: "رؤيا — مفكرة أحلامك | Alrehla", description: "سجّل أحلامك وتأملاتك الليلية — رحلة الوعي تبدأ من الأحلام." },
   niyya: { title: "نية — نيتك تصنع يومك | Alrehla", description: "حدد نية واحدة واضحة كل صباح وتابع التزامك بها." },
+  samt: { title: "صمت — تنفس واعي | Alrehla", description: "تايمر تنفس دائري مع عدّاد دقائق الصمت الواعي." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };
