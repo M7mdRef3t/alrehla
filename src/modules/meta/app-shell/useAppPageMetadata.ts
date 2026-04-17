@@ -65,6 +65,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   shahada: "Shahada Certificates",
   warsha: "Warsha Challenges",
   kanz: "Kanz Wisdom Bank",
+  qalb: "Qalb Heart Health",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -129,6 +130,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   shahada: { title: "شهادة — إنجازات رحلتك | Alrehla", description: "شهادات بصرية تؤرخ إنجازاتك في رحلة النمو الشخصي." },
   warsha: { title: "ورشة — تحديات 7 أيام | Alrehla", description: "اختر تحدي مصغر، أنجز مهمة كل يوم لمدة 7 أيام، واكسب بادج إتمام." },
   kanz: { title: "كنز — بنك حكمتك الشخصي | Alrehla", description: "اجمع دروسك، اقتباساتك، ولحظاتك المهمة في مكان واحد." },
+  qalb: { title: "قلب — صحة قلبك العاطفي | Alrehla", description: "مؤشر موحّد يقيس صحة قلبك عبر 9 أبعاد من أدوات الرحلة." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

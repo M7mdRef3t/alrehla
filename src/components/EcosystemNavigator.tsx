@@ -349,6 +349,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#f59e0b",
     url: "/#kanz"
+  },
+  {
+    id: "qalb",
+    name: "قلب",
+    description: "صحة قلبك العاطفي — مؤشر موحّد",
+    icon: <Flame className="w-5 h-5" />,
+    status: "active",
+    color: "#ef4444",
+    url: "/#qalb"
   }
 ];
 
