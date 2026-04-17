@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, Save, Trash2, Loader2, Star, Plus, Minus } from "lucide-react";
-import { DiscoveryItem, DiscoveryStage } from "@/types/discovery";
+import { DiscoveryItem } from "@/types/discovery";
 import { runtimeEnv } from "@/config/runtimeEnv";
 
 type ItemDetailModalProps = {
@@ -15,17 +15,15 @@ type ItemDetailModalProps = {
 export default function ItemDetailModal({ item, onClose, onUpdate, onDelete }: ItemDetailModalProps) {
   const [form, setForm] = useState<DiscoveryItem>({ ...item });
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const set = <K extends keyof DiscoveryItem>(key: K, val: DiscoveryItem[K]) =>
     setForm((f) => ({ ...f, [key]: val }));
 
   const handleSave = async () => {
     setIsSaving(true);
-    setError(null);
     try {
       const adminCode = runtimeEnv.adminCode ?? "";
-      const { id, created_at, updated_at, ...updates } = form;
+      const { id, created_at: _, updated_at: __, ...updates } = form;
       
       const res = await fetch("/api/admin/discovery", {
         method: "PATCH",
@@ -41,7 +39,7 @@ export default function ItemDetailModal({ item, onClose, onUpdate, onDelete }: I
       onUpdate(id, updates);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error saving item.");
+      console.error("Error saving item:", err);
     } finally {
       setIsSaving(false);
     }
@@ -116,7 +114,7 @@ export default function ItemDetailModal({ item, onClose, onUpdate, onDelete }: I
                 <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-2">Priority</label>
                 <select 
                   value={form.priority}
-                  onChange={(e) => set("priority", e.target.value as any)}
+                  onChange={(e) => set("priority", e.target.value as DiscoveryItem["priority"])}
                   className="w-full bg-neutral-800/50 border border-white/5 rounded-2xl px-5 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500/50"
                   dir="ltr"
                 >

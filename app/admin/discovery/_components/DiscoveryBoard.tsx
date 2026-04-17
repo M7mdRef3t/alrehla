@@ -10,8 +10,7 @@ import {
   useSensor, 
   useSensors,
   DragStartEvent,
-  DragOverEvent,
-  DragEndEvent
+  DragOverEvent
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { DiscoveryItem, DiscoveryStage } from "@/types/discovery";

@@ -86,7 +86,7 @@ export default function ActivationPage() {
       setNotice("الصورة اترفعت بنجاح. كمل إرسال الإثبات.");
       setNoticeKind("success");
       recordFlowEvent("activation_proof_upload_completed");
-    } catch (err) {
+    } catch {
       setProofImage(null);
       setNotice("حدث خطأ أثناء تجهيز الصورة.");
       setNoticeKind("error");

@@ -55,7 +55,7 @@ export default function ItemCard({ item, isOverlay, onClick }: ItemCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      onClick={(e) => {
+      onClick={(_e) => {
         // Only trigger click if not an overlay and not dragging
         if (!isOverlay && onClick) {
           onClick(item);

@@ -7,8 +7,6 @@ import {
   ExternalLink, 
   Clock, 
   User, 
-  Phone, 
-  Mail, 
   CreditCard,
   Image as ImageIcon,
   AlertCircle,

@@ -665,6 +665,7 @@ const HERO_STYLES = `
     color: var(--text-muted);
     width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
     max-width: 100%;
+    text-align: right;
   }
 
   .cta-primary {

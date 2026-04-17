@@ -62,6 +62,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   tazkiya: "Tazkiya Purification",
   jisr: "Jisr Repair",
   risala: "Risala Messages",
+  shahada: "Shahada Certificates",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -123,6 +124,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   tazkiya: { title: "تزكية — تطهير يومي للقلب | Alrehla", description: "اعترف بما يثقلك، سامح، واترك — دورة تطهير عاطفي في دقيقتين." },
   jisr: { title: "جسر — إصلاح العلاقات | Alrehla", description: "حدّد الكسر، عبّر بصدق، وابنِ جسراً بخطوة واحدة." },
   risala: { title: "رسالة — كلمات بين مسافرين | Alrehla", description: "أرسل تشجيع لمسافر مجهول، استقبل رسالة، أو التقط زجاجة من البحر." },
+  shahada: { title: "شهادة — إنجازات رحلتك | Alrehla", description: "شهادات بصرية تؤرخ إنجازاتك في رحلة النمو الشخصي." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

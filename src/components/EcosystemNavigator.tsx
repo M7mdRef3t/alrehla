@@ -322,6 +322,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#06b6d4",
     url: "/#risala"
+  },
+  {
+    id: "shahada",
+    name: "شهادة",
+    description: "إنجازات رحلتك — شهادات بصرية",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#fbbf24",
+    url: "/#shahada"
   }
 ];
 
