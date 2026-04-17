@@ -358,6 +358,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#ef4444",
     url: "/#qalb"
+  },
+  {
+    id: "athar",
+    name: "أثر",
+    description: "سجل حياتك في الرحلة",
+    icon: <BookOpen className="w-5 h-5" />,
+    status: "active",
+    color: "#10b981",
+    url: "/#athar"
   }
 ];
 

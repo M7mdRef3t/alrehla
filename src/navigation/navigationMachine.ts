@@ -59,6 +59,7 @@ export type AppScreen =
   | "warsha"
   | "kanz"
   | "qalb"
+  | "athar"
   | "protocol"
   | "diagnosis";
 

@@ -125,7 +125,7 @@ const OWNER_EMAIL = "hello@alrehla.app";
 
 // --- Helpers ---
 
-import { getAuthToken } from "@/domains/auth/store/auth.store";
+import { useAuthState, getAuthToken } from "@/domains/auth/store/auth.store";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { CampaignLeadsModal } from "./CampaignLeadsModal";
 
@@ -441,9 +441,13 @@ export function MarketingOpsPanel() {
   const [tempBudget, setTempBudget] = useState<string>("");
 
   const fetchStats = async (force = false): Promise<OpsStats> => {
+    const bearer = getBearerToken();
+    if (!bearer) throw new Error("no_auth_token");
+
     const res = await fetch(`/api/admin/marketing-ops${force ? "?force=true" : ""}`, {
-      headers: { authorization: `Bearer ${getBearerToken()}` }
+      headers: { authorization: `Bearer ${bearer}` }
     });
+    if (!res.ok) throw new Error(`marketing_ops_failed:${res.status}`);
     return await res.json();
   };
 
@@ -454,6 +458,13 @@ export function MarketingOpsPanel() {
   };
 
   const load = useCallback(async (force = false) => {
+    // 🛡️ Security Guard: Don't fetch if auth is not ready or no bearer token
+    const authStatus = useAuthState.getState().status;
+    if (authStatus === 'loading') return;
+    
+    const bearer = getBearerToken();
+    if (!bearer) return;
+
     setLoading(true);
     try {
       const [data, metrics, budgets] = await Promise.all([
@@ -464,8 +475,10 @@ export function MarketingOpsPanel() {
       setStats(data);
       setGrowthMetrics(metrics);
       setCampaignBudgets(budgets);
-    } catch {
-      showToast("فشل تحميل البيانات", false);
+    } catch (err: any) {
+      if (err.message !== "no_auth_token") {
+        showToast("فشل تحميل البيانات", false);
+      }
     } finally {
       setLoading(false);
     }
@@ -492,7 +505,21 @@ export function MarketingOpsPanel() {
     }
   };
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { 
+    // 🛡️ Initial check: if already ready, load once.
+    if (useAuthState.getState().status === 'ready') {
+      void load();
+    }
+
+    // 👂 Subscribe to any future status changes (e.g. login)
+    const unsub = useAuthState.subscribe((state) => {
+      if (state.status === 'ready') {
+        void load();
+      }
+    });
+    
+    return () => unsub();
+  }, [load]);
 
   const handleAction = async (action: string, label: string, extra?: Record<string, unknown>) => {
     setActionLoading(action);
@@ -522,34 +549,38 @@ export function MarketingOpsPanel() {
     }
   };
 
-  const handleMarkContacted = (email: string) => {
+  const handleMarkContacted = useCallback((email: string) => {
     setContacted((prev) => new Set([...prev, email]));
     void postAction("mark_contacted", { leadEmail: email });
-  };
+  }, []);
 
-  const c = stats?.counts ?? {};
-  const channelBreakdown = stats?.channelBreakdown ?? {};
-  const uniqueEntities = stats?.uniqueEntitiesReached ?? 0;
-  const sent = (c["sent"] ?? 0) + (c["simulated"] ?? 0);
-  const pending = c["pending"] ?? 0;
-  const failed = (c["failed"] ?? 0);
-  const realStarts = stats?.realStarts ?? 0;
-  const convRate = uniqueEntities > 0 ? `${Math.round((realStarts / uniqueEntities) * 100)}%` : "—";
-  
-  // Verification Gap Index (VGI)
-  const totalLeadsCount = stats?.totalLeads ?? 0;
-  const vgiRate = totalLeadsCount > 0 ? Math.round((pending / totalLeadsCount) * 100) : 0;
+  const { c, channelBreakdown, uniqueEntities, sent, pending, failed, realStarts, convRate, vgiRate, totalLeadsCount } = useMemo(() => {
+    const c = stats?.counts ?? {};
+    const channelBreakdown = stats?.channelBreakdown ?? {};
+    const uniqueEntities = stats?.uniqueEntitiesReached ?? 0;
+    const sent = (c["sent"] ?? 0) + (c["simulated"] ?? 0);
+    const pending = c["pending"] ?? 0;
+    const failed = (c["failed"] ?? 0);
+    const realStarts = stats?.realStarts ?? 0;
+    const convRate = uniqueEntities > 0 ? `${Math.round((realStarts / uniqueEntities) * 100)}%` : "—";
+    const totalLeadsCount = stats?.totalLeads ?? 0;
+    const vgiRate = totalLeadsCount > 0 ? Math.round((pending / totalLeadsCount) * 100) : 0;
+    
+    return { c, channelBreakdown, uniqueEntities, sent, pending, failed, realStarts, convRate, vgiRate, totalLeadsCount };
+  }, [stats]);
 
-  const availableLeads = (stats?.quickSendLeads ?? []).filter((l) => {
-    const isNotContacted = !contacted.has(l.email);
-    if (!searchQuery) return isNotContacted;
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = 
-      l.name?.toLowerCase().includes(q) || 
-      l.email.toLowerCase().includes(q) || 
-      l.phone?.includes(q);
-    return isNotContacted && matchesSearch;
-  });
+  const availableLeads = useMemo(() => {
+    return (stats?.quickSendLeads ?? []).filter((l) => {
+      const isNotContacted = !contacted.has(l.email);
+      if (!searchQuery) return isNotContacted;
+      const q = searchQuery.toLowerCase();
+      const matchesSearch = 
+        l.name?.toLowerCase().includes(q) || 
+        l.email.toLowerCase().includes(q) || 
+        l.phone?.includes(q);
+      return isNotContacted && matchesSearch;
+    });
+  }, [stats, contacted, searchQuery]);
 
   const handleExportForGemini = () => {
     if (availableLeads.length === 0) {
