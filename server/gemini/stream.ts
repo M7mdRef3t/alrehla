@@ -1,14 +1,7 @@
-import {
-  DEFAULT_GENERATION_CONFIG,
-  DEFAULT_MODEL_ORDER,
-  canAcceptGeminiRequest,
-  getClient,
-  getModel,
-  isRetryableModelError,
-  markGeminiRequestEnd,
   markGeminiRequestStart,
   withTimeout
 } from "./_shared";
+import { braintrustService } from "../../src/services/braintrustService";
 import {
   applyCodingOutputContractToPrompt,
   buildOutputContractViolationResponse,
@@ -92,10 +85,23 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         res.setHeader("Content-Type", "text/plain; charset=utf-8");
         res.setHeader("Cache-Control", "no-store");
         const result = await withTimeout(model.generateContentStream(finalPrompt), 15_000);
+        let fullResponse = "";
         for await (const chunk of result.stream) {
           const text = chunk.text();
-          if (text) res.write(text);
+          if (text) {
+             res.write(text);
+             fullResponse += text;
+          }
         }
+        
+        // Log to Braintrust
+        braintrustService.logCall(
+          "gemini-stream",
+          { prompt: finalPrompt, model: models[i], config },
+          { text: fullResponse },
+          { success: true }
+        );
+
         res.end();
         return;
       } catch (error) {

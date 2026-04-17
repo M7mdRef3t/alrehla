@@ -676,6 +676,15 @@ const HERO_STYLES = `
     text-align: right;
   }
 
+  .rotating-word-mobile {
+    display: block;
+    width: 100%;
+    min-height: 1.3em;
+    white-space: nowrap;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
   .hero-body {
     font-size: 1rem;
     line-height: 1.9;
@@ -798,6 +807,25 @@ const HERO_STYLES = `
       filter: blur(30px) !important;
       opacity: 0.08 !important;
     }
+    .sovereign-map,
+    .sovereign-map__svg,
+    .metric-card,
+    .hero-layer--starfield,
+    .hero-layer--grid,
+    .rotating-word-wrapper,
+    .rotating-word-mobile {
+      will-change: auto !important;
+    }
+    .hero-grid,
+    .hero-grid-wrapper,
+    .hero-starfield {
+      transform: none !important;
+      backface-visibility: hidden;
+    }
+    .metric-card {
+      transform: none !important;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.28) !important;
+    }
     .hero-eyebrow-row {
       display: none !important;
     }
@@ -834,20 +862,23 @@ const stagger = {
 };
 
 /* ─── Rotating Headline Word ─────────────────────────────────────────────────── */
-const RotatingWord: FC = React.memo(() => {
+const RotatingWord: FC<{ isMobile: boolean }> = React.memo(({ isMobile }) => {
   const [index, setIndex] = useState(0);
-  const [show, setShow] = useState(true);
 
   useEffect(() => {
     const id = setInterval(() => {
-      setShow(false);
-      setTimeout(() => {
-        setIndex(i => (i + 1) % ROTATING_WORDS.length);
-        setShow(true);
-      }, 450);
+      setIndex(i => (i + 1) % ROTATING_WORDS.length);
     }, 5000);
     return () => clearInterval(id);
   }, []);
+
+  if (isMobile) {
+    return (
+      <span className="rotating-word-mobile headline-accent font-extrabold font-['Noto_Kufi_Arabic']">
+        {ROTATING_WORDS[index]}
+      </span>
+    );
+  }
 
   return (
     <span className="rotating-word-wrapper">
@@ -856,26 +887,24 @@ const RotatingWord: FC = React.memo(() => {
         {ROTATING_WORDS.reduce((a, b) => (a.length > b.length ? a : b))}
       </span>
       <AnimatePresence mode="wait">
-        {show && (
-          <motion.span
-            key={index}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            transition={{ duration: 0.45, ease: techEase }}
-            className="absolute top-0 flex items-center headline-accent h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content px-2 mt-0 mb-0 align-middle font-extrabold font-['Noto_Kufi_Arabic']"
-          >
-            {ROTATING_WORDS[index]}
-          </motion.span>
-        )}
+        <motion.span
+          key={index}
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          transition={{ duration: 0.45, ease: techEase }}
+          className="absolute top-0 flex items-center headline-accent h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content px-2 mt-0 mb-0 align-middle font-extrabold font-['Noto_Kufi_Arabic']"
+        >
+          {ROTATING_WORDS[index]}
+        </motion.span>
       </AnimatePresence>
     </span>
   );
 });
 
 /* ─── Sovereign Map (Right Panel) ───────────────────────────────────────────── */
-const SovereignMap: FC<{ reduceMotion: boolean | null }> = React.memo(({ reduceMotion }) => {
+const SovereignMap: FC<{ reduceMotion: boolean | null; isMobile: boolean }> = React.memo(({ reduceMotion, isMobile }) => {
   const rings = [
     { r: 68,  stroke: "rgba(0, 240, 255, 0.35)", dash: "none", dur: 22 },
     { r: 110, stroke: "rgba(245, 166, 35, 0.25)", dash: "4 14", dur: 38 },
@@ -923,7 +952,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = React.memo(({ reduceM
                 strokeWidth="1"
                 fill="none"
                 style={{ transform: "translateZ(0)" }}
-                animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
+                animate={reduceMotion || isMobile ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
                 transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
                 transformOrigin="190px 190px"
               />
@@ -972,7 +1001,11 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = React.memo(({ reduceM
           <span className="metric-card-text">/ ١٠٠</span>
         </div>
         <div className="metric-card-bar">
-          <motion.div className="metric-card-bar__fill" initial={{ width: "0%" }} animate={{ width: "78%" }} transition={{ duration: 1.2, delay: 0.6 }} />
+          {isMobile ? (
+            <div className="metric-card-bar__fill" style={{ width: "78%" }} />
+          ) : (
+            <motion.div className="metric-card-bar__fill" initial={{ width: "0%" }} animate={{ width: "78%" }} transition={{ duration: 1.2, delay: 0.6 }} />
+          )}
         </div>
       </div>
 
@@ -1043,6 +1076,7 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
 }) => {
   const reduceMotion = useReducedMotion();
   const [isWarping, setIsWarping] = useState(false);
+  const [isMobileHero, setIsMobileHero] = useState(false);
   const headlineLineRef = useRef<HTMLSpanElement | null>(null);
   const [headlineMeasuredWidth, setHeadlineMeasuredWidth] = useState<number>(0);
 
@@ -1076,6 +1110,16 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
       duration: 0.25 + Math.random() * 0.3,
     }))
   ), []);
+
+  useEffect(() => {
+    const updateIsMobileHero = () => {
+      setIsMobileHero(window.innerWidth < 768 || navigator.maxTouchPoints > 0);
+    };
+
+    updateIsMobileHero();
+    window.addEventListener("resize", updateIsMobileHero);
+    return () => window.removeEventListener("resize", updateIsMobileHero);
+  }, []);
 
   useLayoutEffect(() => {
     const node = headlineLineRef.current;
@@ -1148,7 +1192,7 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
                   <span className="word-ant">أنت</span>
                   <span className="word-faqat">فقط</span>
                 </div>
-                <RotatingWord />
+                <RotatingWord isMobile={isMobileHero} />
               </div>
             </motion.h1>
 
@@ -1176,8 +1220,8 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
             </motion.div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.2, delay: 0.4, ease: techEase }} className="map-area">
-            <SovereignMap reduceMotion={reduceMotion} />
+          <motion.div initial={isMobileHero ? { opacity: 0, x: 0 } : { opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: isMobileHero ? 0.7 : 1.2, delay: 0.4, ease: techEase }} className="map-area">
+            <SovereignMap reduceMotion={reduceMotion} isMobile={isMobileHero} />
           </motion.div>
         </div>
 

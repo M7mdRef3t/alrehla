@@ -58,6 +58,7 @@ const RafiqScreen = lazy(() => import("../../rafiq/RafiqScreen"));
 const RuyaScreen = lazy(() => import("../../ruya/RuyaScreen"));
 const NiyyaScreen = lazy(() => import("../../niyya/NiyyaScreen"));
 const SamtScreen = lazy(() => import("../../samt/SamtScreen"));
+const JathrScreen = lazy(() => import("../../jathr/JathrScreen"));
 
 
 
@@ -769,6 +770,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
           <SamtScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "jathr") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-green-500/30 border-t-green-500 rounded-full animate-spin" /></div>}>
+          <JathrScreen />
         </Suspense>
       </PageShell>
     );

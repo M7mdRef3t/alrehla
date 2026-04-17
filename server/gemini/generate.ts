@@ -10,6 +10,7 @@ import {
   withTimeout,
   logAiTelemetry
 } from "./_shared";
+import { braintrustService } from "../../src/services/braintrustService";
 import {
   applyCodingOutputContractToPrompt,
   buildPromptGuardResponse,
@@ -114,6 +115,18 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           success: true
         });
 
+        // Log to Braintrust
+        braintrustService.logCall(
+          `gemini-generate:${featureTag}`,
+          { prompt: finalPrompt, model: models[i], config },
+          { text, usage },
+          { 
+            success: true, 
+            latency_ms: Date.now() - startTime,
+            tokens: { prompt: promptTokens, completion: completionTokens, total: promptTokens + completionTokens }
+          }
+        );
+
         res.status(200).json({ text, usage });
         return;
       } catch (error) {
@@ -144,6 +157,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     failure_reason: errorMsg.includes("gemini_timeout") ? "timeout" : "provider_error",
     errorMessage: errorMsg
   });
+
+  // Log failure to Braintrust
+  braintrustService.logCall(
+    `gemini-generate:${featureTag}`,
+    { prompt: finalPrompt, models, config },
+    { error: errorMsg },
+    { success: false, latency_ms: latency }
+  );
 
   if (errorMsg.includes("gemini_timeout")) {
     res.status(200).json({ text: null, usage: null, fallback: true, reason: "generation_timeout" });

@@ -404,6 +404,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#06b6d4",
     url: "/#samt"
+  },
+  {
+    id: "jathr",
+    name: "جذر",
+    description: "القيم التي تدفعك حقاً",
+    icon: <Flame className="w-5 h-5" />,
+    status: "active",
+    color: "#22c55e",
+    url: "/#jathr"
   }
 ];
 

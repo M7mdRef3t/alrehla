@@ -71,6 +71,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   ruya: "Ruya Dream Journal",
   niyya: "Niyya Daily Intention",
   samt: "Samt Mindful Breathing",
+  jathr: "Jathr Core Values",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -141,6 +142,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   ruya: { title: "رؤيا — مفكرة أحلامك | Alrehla", description: "سجّل أحلامك وتأملاتك الليلية — رحلة الوعي تبدأ من الأحلام." },
   niyya: { title: "نية — نيتك تصنع يومك | Alrehla", description: "حدد نية واحدة واضحة كل صباح وتابع التزامك بها." },
   samt: { title: "صمت — تنفس واعي | Alrehla", description: "تايمر تنفس دائري مع عدّاد دقائق الصمت الواعي." },
+  jathr: { title: "جذر — قيمك الجذرية | Alrehla", description: "تتبع القيم التي تدفعك حقاً وقس توافقك معها يومياً." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

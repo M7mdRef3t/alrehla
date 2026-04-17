@@ -1,15 +1,7 @@
-import { FunctionCallingMode, type Tool, type ToolConfig } from "@google/generative-ai";
-import {
-  DEFAULT_GENERATION_CONFIG,
-  DEFAULT_MODEL_ORDER,
-  canAcceptGeminiRequest,
-  getClient,
-  getModel,
-  isRetryableModelError,
-  markGeminiRequestEnd,
   markGeminiRequestStart,
   withTimeout
 } from "./_shared";
+import { braintrustService } from "../../src/services/braintrustService";
 import {
   CODING_OUTPUT_CONTRACT,
   buildPromptGuardResponse,
@@ -95,6 +87,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         const functionCalls = response.functionCalls?.() ?? [];
         const modelContent = response.candidates?.[0]?.content ?? { role: "model", parts: [] };
         const usage = (response as GeminiResponseWithUsage)?.usageMetadata ?? null;
+
+        // Log to Braintrust
+        braintrustService.logCall(
+          "gemini-tool",
+          { contents, tools: safeTools, systemInstruction: finalSystemInstruction, model: models[i], config },
+          { functionCalls, modelContent, usage },
+          { success: true }
+        );
 
         if (functionCalls.length === 0) {
           const text = response.text();
