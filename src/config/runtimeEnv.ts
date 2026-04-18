@@ -37,7 +37,8 @@ type RuntimeKey =
   | "VITE_OLLAMA_BASE_URL"
   | "VITE_LOCAL_AI_MODEL"
   | "VITE_USERBACK_ACCESS_TOKEN"
-  | "VITE_BRAINTRUST_API_KEY";
+  | "VITE_BRAINTRUST_API_KEY"
+  | "VITE_BRAINTRUST_PROJECT_ID";
 
 type NextPublicKey =
   | "NEXT_PUBLIC_APP_ENV"
@@ -78,7 +79,8 @@ type NextPublicKey =
   | "NEXT_PUBLIC_OLLAMA_BASE_URL"
   | "NEXT_PUBLIC_LOCAL_AI_MODEL"
   | "NEXT_PUBLIC_USERBACK_ACCESS_TOKEN"
-  | "NEXT_PUBLIC_BRAINTRUST_API_KEY";
+  | "NEXT_PUBLIC_BRAINTRUST_API_KEY"
+  | "NEXT_PUBLIC_BRAINTRUST_PROJECT_ID";
 
 /** Safe accessor for process.env that never throws in browser/Vite */
 function safeProcessEnv(): Record<string, unknown> {
@@ -136,7 +138,8 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
     NEXT_PUBLIC_OLLAMA_BASE_URL: process.env.NEXT_PUBLIC_OLLAMA_BASE_URL,
     NEXT_PUBLIC_LOCAL_AI_MODEL: process.env.NEXT_PUBLIC_LOCAL_AI_MODEL,
     NEXT_PUBLIC_USERBACK_ACCESS_TOKEN: process.env.NEXT_PUBLIC_USERBACK_ACCESS_TOKEN,
-    NEXT_PUBLIC_BRAINTRUST_API_KEY: process.env.NEXT_PUBLIC_BRAINTRUST_API_KEY
+    NEXT_PUBLIC_BRAINTRUST_API_KEY: process.env.NEXT_PUBLIC_BRAINTRUST_API_KEY,
+    NEXT_PUBLIC_BRAINTRUST_PROJECT_ID: process.env.NEXT_PUBLIC_BRAINTRUST_PROJECT_ID
   };
   const value = candidates[key];
   return typeof value === "string" && value.length > 0 ? normalizeEnvValue(value) : undefined;
@@ -241,4 +244,5 @@ export const runtimeEnv = {
   localAiModel: readEnv("VITE_LOCAL_AI_MODEL") ?? "gemma3:4b",
   userbackToken: readEnv("VITE_USERBACK_ACCESS_TOKEN"),
   braintrustApiKey: readEnv("VITE_BRAINTRUST_API_KEY"),
+  braintrustProjectId: readEnv("VITE_BRAINTRUST_PROJECT_ID"),
 } as const;

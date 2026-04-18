@@ -9,20 +9,18 @@ import { initMonitoring } from "@/services/monitoring";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { applyDesignSystemTokens } from "@/services/designSystemTokens";
 import { PWAInstallProvider } from "@/contexts/PWAInstallContext";
-import { AnalyticsConsentBanner } from "@/modules/meta/AnalyticsConsentBanner";
-import { AnalyticsDiagnosticsOverlay } from "@/modules/meta/AnalyticsDiagnosticsOverlay";
-import { PlatformHeader } from "@/modules/meta/PlatformHeader";
 import type { PostAuthIntent } from "@/utils/postAuthIntent";
 import { hasRevenueAccess } from "@/services/revenueAccess";
 import type { Data } from "@measured/puck";
-import { useJourneyState } from "@/domains/journey/store/journey.store";
-import { useMapState } from "@/modules/map/store/map.store";
 
 const App = dynamic(() => import("@/App"), { ssr: false });
 const Landing = dynamic(() => import("@/modules/meta/Landing").then((m) => m.Landing), { ssr: false }) as typeof import("@/modules/meta/Landing").Landing;
+const PlatformHeader = dynamic(() => import("@/modules/meta/PlatformHeader").then((m) => m.PlatformHeader), { ssr: false });
 const GoogleAuthModal = dynamic(() => import("@/modules/exploration/GoogleAuthModal").then((m) => m.GoogleAuthModal), {
   ssr: false
 }) as typeof import("@/modules/exploration/GoogleAuthModal").GoogleAuthModal;
+const AnalyticsConsentBanner = dynamic(() => import("@/modules/meta/AnalyticsConsentBanner").then((m) => m.AnalyticsConsentBanner), { ssr: false });
+const AnalyticsDiagnosticsOverlay = dynamic(() => import("@/modules/meta/AnalyticsDiagnosticsOverlay").then((m) => m.AnalyticsDiagnosticsOverlay), { ssr: false });
 const Analytics = dynamic(() => import("@vercel/analytics/react").then((m) => m.Analytics), { ssr: false });
 const SpeedInsights = dynamic(() => import("@vercel/speed-insights/react").then((m) => m.SpeedInsights), { ssr: false });
 const PuckLandingAdapter = dynamic(() => import("./PuckLandingAdapter").then((m) => m.PuckLandingAdapter), { ssr: false });
@@ -146,6 +144,17 @@ interface ClientAppShellProps {
   puckData?: any;
 }
 
+async function getLandingAccessSnapshot() {
+  const [{ useJourneyState }, { useMapState }] = await Promise.all([
+    import("@/domains/journey/store/journey.store"),
+    import("@/modules/map/store/map.store")
+  ]);
+
+  const onboarded = !!useJourneyState.getState().baselineCompletedAt;
+  const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
+  return { onboarded, hasPeopleOnMap };
+}
+
 export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) {
   const [mounted, setMounted] = useState(false);
   const [shouldLoadFullApp, setShouldLoadFullApp] = useState(true);
@@ -199,10 +208,9 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
     setShouldLoadFullApp(false);
   }, [lockFullAppMode]);
 
-  const startRecoveryFromLanding = useCallback(() => {
+  const startRecoveryFromLanding = useCallback(async () => {
     if (!hasRevenueAccess()) {
-      const onboarded = !!useJourneyState.getState().baselineCompletedAt;
-      const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
+      const { onboarded, hasPeopleOnMap } = await getLandingAccessSnapshot();
       if (!onboarded || !hasPeopleOnMap) {
         window.location.href = "/onboarding?source=landing";
         return;
@@ -222,10 +230,9 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
     setLandingAuthIntent({ kind: "login", createdAt: Date.now() });
   }, []);
 
-  const openAppScreenFromLanding = useCallback((screen: string) => {
+  const openAppScreenFromLanding = useCallback(async (screen: string) => {
     if (!hasRevenueAccess()) {
-      const onboarded = !!useJourneyState.getState().baselineCompletedAt;
-      const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
+      const { onboarded, hasPeopleOnMap } = await getLandingAccessSnapshot();
       if (!onboarded || !hasPeopleOnMap) {
         window.location.href = "/onboarding?source=landing";
         return;
@@ -276,53 +283,64 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
   }, [openAppScreenFromLanding, startRecoveryFromLanding]);
 
   useEffect(() => {
-    setMounted(true);
+    let cancelled = false;
+
+    const boot = async () => {
+      setMounted(true);
 
     // ── Handle Query-based Boot Action ──
     // Useful for server-side redirects that can't set sessionStorage
     if (typeof window !== "undefined") {
-      const search = new URLSearchParams(window.location.search);
-      const bootActionParam = search.get("boot_action");
-      if (bootActionParam === "start_recovery") {
-        if (!hasRevenueAccess()) {
-          const onboarded = !!useJourneyState.getState().baselineCompletedAt;
-          const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
-          if (!onboarded || !hasPeopleOnMap) {
-            window.location.replace("/onboarding?source=url");
+        const search = new URLSearchParams(window.location.search);
+        const bootActionParam = search.get("boot_action");
+        if (bootActionParam === "start_recovery") {
+          if (!hasRevenueAccess()) {
+            const { onboarded, hasPeopleOnMap } = await getLandingAccessSnapshot();
+            if (cancelled) return;
+            if (!onboarded || !hasPeopleOnMap) {
+              window.location.replace("/onboarding?source=url");
+              return;
+            }
+            window.location.replace("/pricing?blocked=boot_action&source=url");
             return;
           }
-          window.location.replace("/pricing?blocked=boot_action&source=url");
-          return;
+
+          window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
+          setLockFullAppMode(true);
+          setShouldLoadFullApp(true);
+          // Clean URL
+          const newUrl = window.location.pathname + (window.location.hash || "");
+          window.history.replaceState({}, "", newUrl);
         }
-
-        window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
-        setLockFullAppMode(true);
-        setShouldLoadFullApp(true);
-        // Clean URL
-        const newUrl = window.location.pathname + (window.location.hash || "");
-        window.history.replaceState({}, "", newUrl);
       }
-    }
 
-    const bootIntoFullApp = shouldBootIntoFullApp();
-    setShouldLoadFullApp(bootIntoFullApp);
-    if (bootIntoFullApp) {
-      setLockFullAppMode(true);
-    }
-    applyDesignSystemTokens();
-    onBeforeInit?.();
-    
-    // P0 Trace: Ensure analytics are initialized to capture first touch
-    initAnalytics();
-    initMonitoring();
+      const bootIntoFullApp = shouldBootIntoFullApp();
+      if (cancelled) return;
+      setShouldLoadFullApp(bootIntoFullApp);
+      if (bootIntoFullApp) {
+        setLockFullAppMode(true);
+      }
+      applyDesignSystemTokens();
+      onBeforeInit?.();
+      
+      // P0 Trace: Ensure analytics are initialized to capture first touch
+      initAnalytics();
+      initMonitoring();
 
-    if (bootIntoFullApp) {
-      trackPageView("alrehla_app_root");
-    } else {
-      trackLandingView();
-    }
+      if (bootIntoFullApp) {
+        trackPageView("alrehla_app_root");
+      } else {
+        trackLandingView();
+      }
 
-    registerServiceWorker();
+      registerServiceWorker();
+    };
+
+    void boot();
+
+    return () => {
+      cancelled = true;
+    };
   }, [onBeforeInit]);
 
   if (!mounted) return null;

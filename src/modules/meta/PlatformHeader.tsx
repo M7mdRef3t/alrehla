@@ -137,8 +137,19 @@ export const PlatformHeader = memo(function PlatformHeader({
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
+      const isMobile = window.innerWidth < 768;
+      
       setScrolled(y > 20);
-      setHidden(y > lastScrollY.current && y > 120);
+      
+      // Only hide on desktop or if it's a significant down-scroll on mobile
+      // This prevents "jitter" from small up/down movements caused by address bar
+      const threshold = isMobile ? 300 : 120;
+      const diff = y - lastScrollY.current;
+      
+      if (Math.abs(diff) > (isMobile ? 10 : 5)) {
+        setHidden(y > lastScrollY.current && y > threshold);
+      }
+      
       lastScrollY.current = y;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -207,13 +218,13 @@ export const PlatformHeader = memo(function PlatformHeader({
     }
   }, [isLoggedIn, onLogin, onNavigate]);
 
-  const headerClassName = `fixed top-0 right-0 left-0 z-50 flex items-center justify-between px-4 md:px-6 lg:px-12 h-16 md:h-20 transition-all duration-500 transform ${
+  const headerClassName = `fixed top-0 right-0 left-0 z-[60] flex items-center justify-between px-4 md:px-6 lg:px-12 h-16 md:h-20 transition-[background-color,border-color,transform,height,backdrop-filter] duration-500 transform ${
     hidden ? "-translate-y-full" : "translate-y-0"
   } ${
     scrolled
-      ? "backdrop-blur-3xl border-b border-[color:var(--glass-border)] h-16 bg-[rgba(2,4,10,0.65)]"
+      ? "backdrop-blur-3xl border-b border-[color:var(--glass-border)] h-16 bg-[rgba(2,4,10,0.85)]"
       : "border-b border-transparent h-20 bg-transparent"
-  }`;
+  } active:translate-y-0`; // Safety for active interactions
 
   return (
     <header
@@ -606,13 +617,13 @@ export const PlatformHeader = memo(function PlatformHeader({
             type="button"
             id="header-landing-cta"
             onClick={handleLandingCta}
-            className="group relative flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold overflow-hidden"
+            className="group relative flex items-center gap-2 px-3 md:px-6 py-2 md:py-2.5 rounded-full text-sm font-bold overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-500 transition-transform group-hover:scale-110" />
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             
             <LogIn className="w-5 h-5 text-slate-900 relative z-10" />
-            <span className="text-slate-900 relative z-10">تسجيل الدخول</span>
+            <span className="hidden md:inline text-slate-900 relative z-10">تسجيل الدخول</span>
           </motion.button>
         )}
       </div>

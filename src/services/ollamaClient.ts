@@ -64,6 +64,7 @@ class OllamaClient {
       },
     };
 
+    const startTime = Date.now();
     try {
       const response = await fetch(`${this.baseUrl}/api/generate`, {
         method: "POST",
@@ -77,6 +78,19 @@ class OllamaClient {
       }
 
       const data: OllamaResponse = await response.json();
+      
+      // Log to Braintrust
+      const { braintrustService } = await import("./braintrustService");
+      braintrustService.logCall(
+        `ollama-generate:${payload.model}`,
+        { prompt, system: payload.system, options: payload.options },
+        { response: data.response },
+        { 
+          latency_ms: Date.now() - startTime,
+          tokens: { prompt: data.prompt_eval_count, completion: data.eval_count, total: (data.prompt_eval_count || 0) + (data.eval_count || 0) }
+        }
+      );
+
       return data.response;
     } catch (error) {
       console.error("[OllamaClient] Generation failed:", error);

@@ -1,7 +1,4 @@
 import { Suspense, lazy, type ComponentProps } from "react";
-import { Landing } from "./Landing";
-import { GoalPicker } from "./GoalPicker";
-import { OnboardingWelcomeBubble } from "./OnboardingWelcomeBubble";
 import { useJourneyProgress } from "@/domains/journey";
 import { trackingService } from "@/domains/journey";
 import { type AdviceCategory } from "@/data/adviceScripts";
@@ -11,17 +8,22 @@ import { type WelcomeSource } from "./OnboardingWelcomeBubble";
 import { type NextStepDecisionV1 } from "../recommendation";
 
 import { SafeCoreMapScreen } from "./WrappedComponents";
-import type { CoreMapScreen } from "@/modules/exploration/CoreMapScreen";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 
 import { PageShell } from "./app-shell/PageShell";
-import { AdaptiveIntake } from "./AdaptiveIntake";
-import { ReflectionOutput } from "./ReflectionOutput";
-import { ProtocolEngine } from "./ProtocolEngine";
 import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { useState } from "react";
-import { DiagnosisScreen } from "@/modules/diagnosis";
 import type { UserStateObject, RecommendedProduct } from "@/modules/diagnosis";
+
+const Landing = lazy(() => import("./Landing").then((m) => ({ default: m.Landing })));
+const GoalPicker = lazy(() => import("./GoalPicker").then((m) => ({ default: m.GoalPicker })));
+const OnboardingWelcomeBubble = lazy(() =>
+  import("./OnboardingWelcomeBubble").then((m) => ({ default: m.OnboardingWelcomeBubble }))
+);
+const AdaptiveIntake = lazy(() => import("./AdaptiveIntake").then((m) => ({ default: m.AdaptiveIntake })));
+const ReflectionOutput = lazy(() => import("./ReflectionOutput").then((m) => ({ default: m.ReflectionOutput })));
+const ProtocolEngine = lazy(() => import("./ProtocolEngine").then((m) => ({ default: m.ProtocolEngine })));
+const DiagnosisScreen = lazy(() => import("@/modules/diagnosis").then((m) => ({ default: m.DiagnosisScreen })));
 
 type StartScreen = "landing" | "goal" | "survey" | "map" | "protocol" | "diagnosis";
 
@@ -39,8 +41,8 @@ interface AppStartScreensProps {
   category: AdviceCategory;
   goalId: string;
   selectedNodeId: string | null;
-  pulseMode?: ComponentProps<typeof CoreMapScreen>["pulseMode"];
-  pulseInsight?: ComponentProps<typeof CoreMapScreen>["pulseInsight"];
+  pulseMode?: ComponentProps<typeof SafeCoreMapScreen>["pulseMode"];
+  pulseInsight?: ComponentProps<typeof SafeCoreMapScreen>["pulseInsight"];
   isLowPulseCocoonSuppressed: boolean;
   canUseBasicDiagnosis: boolean;
   challengeTarget: { nodeId: string } | null;
@@ -114,33 +116,35 @@ export function AppStartScreens({
   if (screen === "diagnosis") {
     return (
       <PageShell headerMode="none" tabBarVisible={false} disableAnimation maxWidth="max-w-none px-0 sm:px-0 lg:px-0">
-        <DiagnosisScreen
-          onComplete={(state: UserStateObject, product?: RecommendedProduct) => {
-            trackingService.recordFlow("diagnosis_completed", {
-              meta: {
-                type: state.type,
-                mainPain: state.mainPain,
-                readiness: state.readiness,
-                recommendedProduct: state.recommendedProduct,
-                score: state.diagnosisScore,
-                overrideProduct: product,
+        <Suspense fallback={null}>
+          <DiagnosisScreen
+            onComplete={(state: UserStateObject, product?: RecommendedProduct) => {
+              trackingService.recordFlow("diagnosis_completed", {
+                meta: {
+                  type: state.type,
+                  mainPain: state.mainPain,
+                  readiness: state.readiness,
+                  recommendedProduct: state.recommendedProduct,
+                  score: state.diagnosisScore,
+                  overrideProduct: product,
+                }
+              });
+              if (onDiagnosisComplete) {
+                onDiagnosisComplete(state);
+              } else {
+                const productScreenMap: Record<RecommendedProduct, string> = {
+                  dawayir: "map",
+                  masarat: "masarat",
+                  session: "session-intake",
+                  atmosfera: "atmosfera",
+                };
+                const finalProduct = product || state.recommendedProduct;
+                _onNavigate?.(productScreenMap[finalProduct] ?? "map");
               }
-            });
-            if (onDiagnosisComplete) {
-              onDiagnosisComplete(state);
-            } else {
-              const productScreenMap: Record<RecommendedProduct, string> = {
-                dawayir: "map",
-                masarat: "masarat",
-                session: "session-intake",
-                atmosfera: "atmosfera",
-              };
-              const finalProduct = product || state.recommendedProduct;
-              _onNavigate?.(productScreenMap[finalProduct] ?? "map");
-            }
-          }}
-          onSkip={() => _onNavigate?.("landing")}
-        />
+            }}
+            onSkip={() => _onNavigate?.("landing")}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -148,12 +152,14 @@ export function AppStartScreens({
   if (screen === "landing") {
     return (
       <PageShell headerMode="none" tabBarVisible={false} disableAnimation maxWidth="max-w-none px-0 sm:px-0 lg:px-0">
-        <Landing
-          onStartJourney={onStartJourney}
-          onOpenSurvey={onOpenSurvey}
-          ownerInstallRequestNonce={ownerInstallRequestNonce}
-          onOwnerInstallRequestHandled={onOwnerInstallRequestHandled}
-        />
+        <Suspense fallback={null}>
+          <Landing
+            onStartJourney={onStartJourney}
+            onOpenSurvey={onOpenSurvey}
+            ownerInstallRequestNonce={ownerInstallRequestNonce}
+            onOwnerInstallRequestHandled={onOwnerInstallRequestHandled}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -162,27 +168,31 @@ export function AppStartScreens({
     return (
       <PageShell headerMode="standard" tabBarVisible={false} maxWidth="max-w-4xl">
         {welcome && welcome.source !== "offline_intervention" && (
-          <OnboardingWelcomeBubble
-            message={welcome.message}
-            source={welcome.source}
-            onClose={onClearWelcome}
-          />
+          <Suspense fallback={null}>
+            <OnboardingWelcomeBubble
+              message={welcome.message}
+              source={welcome.source}
+              onClose={onClearWelcome}
+            />
+          </Suspense>
         )}
-        <GoalPicker
-          onBack={onGoalBack}
-          onContinue={(nextCategory, nextGoalId) => {
-            trackingService.recordFlow("goal_selected", {
-              meta: { goalId: nextGoalId, category: nextCategory }
-            });
-            analyticsService.goal({
-              goal_id: nextGoalId,
-              category: nextCategory
-            });
-            onClearWelcome();
-            journey.setLastGoal(nextGoalId, nextCategory);
-            onOpenSurvey(); // Open Adaptive Intake instead of direct map
-          }}
-        />
+        <Suspense fallback={null}>
+          <GoalPicker
+            onBack={onGoalBack}
+            onContinue={(nextCategory, nextGoalId) => {
+              trackingService.recordFlow("goal_selected", {
+                meta: { goalId: nextGoalId, category: nextCategory }
+              });
+              analyticsService.goal({
+                goal_id: nextGoalId,
+                category: nextCategory
+              });
+              onClearWelcome();
+              journey.setLastGoal(nextGoalId, nextCategory);
+              onOpenSurvey(); // Open Adaptive Intake instead of direct map
+            }}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -190,7 +200,9 @@ export function AppStartScreens({
   if (screen === "survey") {
     return (
       <PageShell headerMode="none" tabBarVisible={false}>
-        <AdaptiveIntake onComplete={onSurveyComplete} />
+        <Suspense fallback={null}>
+          <AdaptiveIntake onComplete={onSurveyComplete} />
+        </Suspense>
       </PageShell>
     );
   }
@@ -198,7 +210,9 @@ export function AppStartScreens({
   if (screen === "protocol") {
     return (
       <PageShell headerMode="none" tabBarVisible={false}>
+        <Suspense fallback={null}>
           <ProtocolEngine onFinish={() => _onNavigate?.("map")} />
+        </Suspense>
       </PageShell>
     );
   }
@@ -232,10 +246,12 @@ export function AppStartScreens({
       />
       
       {screen === "map" && detectedState && showReflection && (
+        <Suspense fallback={null}>
           <ReflectionOutput onStartProtocol={() => {
-              setShowReflection(false);
-              _onNavigate?.("protocol");
+            setShowReflection(false);
+            _onNavigate?.("protocol");
           }} />
+        </Suspense>
       )}
     </div>
   );

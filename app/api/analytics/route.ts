@@ -23,6 +23,10 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
     try {
+        if (process.env.NODE_ENV !== "production") {
+            return new NextResponse(null, { status: 204 });
+        }
+
         if (!supabase) {
             console.error("[Analytics Ingestion] Missing Supabase configuration.");
             return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
@@ -120,7 +124,7 @@ export async function POST(req: Request) {
             }, { status: 500 });
         }
 
-        if (process.env.NODE_ENV === "development") {
+        if ((process.env.NODE_ENV as string) === "development") {
             console.log(`[Analytics Ingestion] Received: ${data.event_type} | CID: ${data.client_event_id}`);
         }
 

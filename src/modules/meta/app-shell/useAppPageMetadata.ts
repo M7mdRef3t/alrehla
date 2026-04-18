@@ -72,6 +72,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   niyya: "Niyya Daily Intention",
   samt: "Samt Mindful Breathing",
   jathr: "Jathr Core Values",
+  kharita: "Kharita Ecosystem Map",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
 };
@@ -143,6 +144,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   niyya: { title: "نية — نيتك تصنع يومك | Alrehla", description: "حدد نية واحدة واضحة كل صباح وتابع التزامك بها." },
   samt: { title: "صمت — تنفس واعي | Alrehla", description: "تايمر تنفس دائري مع عدّاد دقائق الصمت الواعي." },
   jathr: { title: "جذر — قيمك الجذرية | Alrehla", description: "تتبع القيم التي تدفعك حقاً وقس توافقك معها يومياً." },
+  kharita: { title: "خريطة — منظومتك الكاملة | Alrehla", description: "خريطة بصرية لكل أدوات رحلتك في نظرة واحدة." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
 };

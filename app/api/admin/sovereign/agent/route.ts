@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
+import { braintrustService } from "@/services/braintrustService";
 
 const execAsync = promisify(exec);
 const ROOT = process.cwd();
@@ -29,6 +30,8 @@ export async function POST(req: Request) {
         return await handleRunDiagnostic(args.command);
       case "list_files":
         return await handleListFiles(args.dir);
+      case "log_activity":
+        return await handleLogActivity(args);
       default:
         return NextResponse.json({ error: "unknown_tool" }, { status: 400 });
     }
@@ -78,5 +81,22 @@ async function handleRunDiagnostic(command: string) {
     return NextResponse.json({ stdout, stderr });
   } catch (error: any) {
     return NextResponse.json({ error: error.message, stderr: error.stderr }, { status: 500 });
+  }
+}
+async function handleLogActivity(activity: any) {
+  try {
+    braintrustService.logCall(
+      `sovereign-agent:cycle`,
+      { input: activity.thought || "thinking" },
+      { output: activity },
+      { 
+        status: activity.status,
+        action: activity.action,
+        timestamp: activity.timestamp
+      }
+    );
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

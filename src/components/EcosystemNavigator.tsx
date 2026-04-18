@@ -413,6 +413,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#22c55e",
     url: "/#jathr"
+  },
+  {
+    id: "kharita",
+    name: "خريطة",
+    description: "منظومتك الكاملة",
+    icon: <Map className="w-5 h-5" />,
+    status: "active",
+    color: "#14b8a6",
+    url: "/#kharita"
   }
 ];
 

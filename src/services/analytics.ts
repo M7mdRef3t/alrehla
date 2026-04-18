@@ -25,6 +25,10 @@ function isAnalyticsEnabled(): boolean {
   return getFromLocalStorage("dawayir-analytics-consent") === "true";
 }
 
+function shouldSkipInternalAnalyticsNetwork(): boolean {
+  return runtimeEnv.isDev;
+}
+
 function getGAMeasurementId(): string | null {
   return runtimeEnv.gaMeasurementId || null;
 }
@@ -357,6 +361,7 @@ async function sendInternalAnalytics(
   params?: Record<string, AnalyticsValue | null | undefined>
 ): Promise<void> {
   if (!isClientRuntime()) return;
+  if (shouldSkipInternalAnalyticsNetwork()) return;
 
   const windowRef = getWindowOrNull();
   const documentRef = getDocumentOrNull();
@@ -419,6 +424,14 @@ let _analyticsEnvelopeQueue: any[] = [];
 let _analyticsEnvelopeTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function flushPendingAnalytics(): void {
+  if (shouldSkipInternalAnalyticsNetwork()) {
+    _analyticsEnvelopeQueue = [];
+    if (_analyticsEnvelopeTimer) {
+      clearTimeout(_analyticsEnvelopeTimer);
+      _analyticsEnvelopeTimer = null;
+    }
+    return;
+  }
   if (_analyticsEnvelopeQueue.length === 0) return;
   const batch = [..._analyticsEnvelopeQueue];
   _analyticsEnvelopeQueue = [];
@@ -448,6 +461,7 @@ if (isClientRuntime()) {
 }
 
 async function sendAnalyticsEnvelope(envelope: ReturnType<typeof buildAnalyticsEnvelope> extends infer T ? Exclude<T, null> : never): Promise<void> {
+  if (shouldSkipInternalAnalyticsNetwork()) return;
   // Instead of sending immediately, push to a batch queue to mitigate 429 Too Many Requests
   _analyticsEnvelopeQueue.push(envelope);
 

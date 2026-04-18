@@ -1,40 +1,7 @@
-import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEffect, useRef, Fragment } from "react";
+import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowLeft, Zap, Shield, Heart } from "lucide-react";
-
-/* ─── Types ──────────────────────────────────────────────────────────────────── */
-interface HeroSectionProps {
-  onStartJourney: () => void;
-  mirrorName: string;
-  setMirrorName: (name: string) => void;
-  pulseCount: number;
-  trustPoints: string[];
-  ctaJourney: string;
-  secondaryCta: string;
-}
-
-/* ─── Constants ──────────────────────────────────────────────────────────────── */
-const ROTATING_WORDS = [
-  "وقتك مش ليك",
-  "طاقتك لغيرك",
-  "حدودك مستباحة",
-  "صوتك مخنوق",
-  "همهم عليك",
-  "مكانك مش واضح",
-  "حياتك لغيرك",
-  "نفسك آخر همك"
-];
-
-/* ─── Styles ─────────────────────────────────────────────────────────────────── */
-const HERO_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;700;800;900&display=swap');
-
-  .hero-root {
-    --void: #02040a;
-    --cyan: #00f0ff;
-    --cyan-glow: rgba(0, 240, 255, 0.4);
-    --gold: #f5a623;
-    --gold-glow: rgba(245, 166, 35, 0.4);
+import { RotatingWord as HeroRotatingWord, SovereignMap as HeroSovereignMap } from "./HeroSectionVisuals";
     --crimson: #ff0055;
     --text-main: #ffffff;
     --text-muted: #8faab8;
@@ -261,7 +228,7 @@ const HERO_STYLES = `
   .warp-text {
     font-size: 14px;
     font-weight: 800;
-    color: rgba(255,255,255,0.7);
+    color: #ffffff;
     font-family: "Tajawal", sans-serif;
     letter-spacing: 0.2em;
   }
@@ -862,7 +829,7 @@ const stagger = {
 };
 
 /* ─── Rotating Headline Word ─────────────────────────────────────────────────── */
-const RotatingWord: FC<{ isMobile: boolean }> = React.memo(({ isMobile }) => {
+const LegacyRotatingWord: FC<{ isMobile: boolean }> = React.memo(({ isMobile }) => {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -904,7 +871,7 @@ const RotatingWord: FC<{ isMobile: boolean }> = React.memo(({ isMobile }) => {
 });
 
 /* ─── Sovereign Map (Right Panel) ───────────────────────────────────────────── */
-const SovereignMap: FC<{ reduceMotion: boolean | null; isMobile: boolean }> = React.memo(({ reduceMotion, isMobile }) => {
+const LegacySovereignMap: FC<{ reduceMotion: boolean | null; isMobile: boolean }> = React.memo(({ reduceMotion, isMobile }) => {
   const rings = [
     { r: 68,  stroke: "rgba(0, 240, 255, 0.35)", dash: "none", dur: 22 },
     { r: 110, stroke: "rgba(245, 166, 35, 0.25)", dash: "4 14", dur: 38 },
@@ -1192,7 +1159,7 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
                   <span className="word-ant">أنت</span>
                   <span className="word-faqat">فقط</span>
                 </div>
-                <RotatingWord isMobile={isMobileHero} />
+                <HeroRotatingWord isMobile={isMobileHero} />
               </div>
             </motion.h1>
 
@@ -1221,7 +1188,7 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
           </motion.div>
 
           <motion.div initial={isMobileHero ? { opacity: 0, x: 0 } : { opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: isMobileHero ? 0.7 : 1.2, delay: 0.4, ease: techEase }} className="map-area">
-            <SovereignMap reduceMotion={reduceMotion} isMobile={isMobileHero} />
+            <HeroSovereignMap reduceMotion={reduceMotion} isMobile={isMobileHero} />
           </motion.div>
         </div>
 

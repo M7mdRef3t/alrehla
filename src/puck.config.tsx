@@ -190,12 +190,12 @@ export const config: Config<Props> = {
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.4)_100%)]"></div>
               </div>
               <div className="relative z-10 flex flex-col items-center gap-8 text-center max-w-4xl px-4 py-16 backdrop-blur-sm rounded-3xl bg-background/30 border border-on-background/10 shadow-2xl">
-                <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-on-background drop-shadow-xl leading-tight">
+                <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter text-on-background drop-shadow-xl leading-tight [text-wrap:balance]">
                   {headline}
                 </h1>
                 {description && <p className="text-xl md:text-2xl text-on-surface-variant max-w-2xl">{description}</p>}
                 
-                <a href={ctaLink || "#"} className="px-8 py-4 bg-primary text-on-primary rounded-full font-bold text-xl hover:bg-primary-container hover:text-on-primary-container hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(79,219,200,0.3)] ring-1 ring-primary/50">
+                <a href={ctaLink || "#"} className="px-8 py-4 bg-primary text-on-primary rounded-full font-bold text-xl hover:bg-primary-container hover:text-on-primary-container [@media(hover:hover)]:hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(79,219,200,0.3)] ring-1 ring-primary/50">
                   {ctaText}
                 </a>
               </div>
@@ -428,9 +428,9 @@ export const config: Config<Props> = {
         visibility: "all",
       },
       render: ({ mapId, showLegend, particles, bgTheme, height, padding, visibility }) => {
-        let minHeight = "min-h-[400px]";
-        if (height === "compact") minHeight = "min-h-[250px]";
-        if (height === "tall") minHeight = "min-h-[600px] md:min-h-[800px]";
+        let minHeight = "min-h-[350px] md:min-h-[400px]";
+        if (height === "compact") minHeight = "min-h-[200px] md:min-h-[250px]";
+        if (height === "tall") minHeight = "min-h-[500px] md:min-h-[800px]";
 
         let bgClass = "bg-surface-container-low/50 backdrop-blur-xl border border-on-surface/5";
         let gradientClass = "from-tertiary/5 via-transparent to-primary/5";
@@ -452,7 +452,7 @@ export const config: Config<Props> = {
                   <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-tr z-0 pointer-events-none transition-colors duration-500 ${gradientClass}`}></div>
                   
                   {particles && (
-                    <div className="absolute inset-0 z-0 opacity-[0.15] mix-blend-screen bg-[url('/noise.svg')]"></div>
+                    <div className="absolute inset-0 z-0 opacity-[0.15] mix-blend-screen bg-[url('/noise.svg')] hidden md:block"></div>
                   )}
 
                   <div className="relative z-10 text-center flex flex-col items-center">

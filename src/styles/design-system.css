@@ -453,8 +453,35 @@ a,
 }
 
 /* ════════════════════════════════════════
-   ANIMATIONS & EFFECTS
+   MOBILE INTERFACE OPTIMIZATIONS
    ════════════════════════════════════════ */
+@media (max-width: 768px) {
+  html, body {
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    text-rendering: optimizeSpeed; /* Faster rendering for mobile */
+  }
+
+  /* Safe Area Padding for notch and home indicator */
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Stabilize Backdrop Blurs - reduce intensity for performance */
+  .backdrop-blur-3xl, 
+  .admin-glass-card, 
+  .ds-card {
+    backdrop-filter: blur(12px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(140%) !important;
+  }
+}
+
+/* Stabilize Text Rendering for RTL Arabic */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 @keyframes rotate-ring {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

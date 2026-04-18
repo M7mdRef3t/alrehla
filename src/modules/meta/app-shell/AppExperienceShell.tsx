@@ -1,9 +1,7 @@
 "use client";
 
-import { syncMemoryFromSupabase } from "@/services/userMemory";
-import { syncSubscription } from "@/services/subscriptionManager";
-import { syncLiveSessionsFromSupabase } from "@/modules/dawayir-live/utils/sessionHistory";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { isPhaseOneUserFlow, isUserMode, isRevenueMode } from "@/config/appEnv";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import {
@@ -31,13 +29,24 @@ import { useAppShellBootstrapState } from "./useAppShellBootstrapState";
 import { useAppExperienceSurfaceState } from "./useAppExperienceSurfaceState";
 import { SanctuaryLockdownExperience } from "@/modules/action/SanctuaryLockdownExperience";
 import type { AppShellScreen } from '@/modules/map/dawayirIndex';
-import { usePersonalizedBiometrics } from "@/hooks/usePersonalizedBiometrics";
-import { useWeatherFunnelBridge } from "@/hooks/useWeatherFunnelBridge";
-import { BoardingPassModal } from "../BoardingPassModal";
 import { useMapState } from "@/modules/map/store/map.store";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
-import { UserbackWidget } from "@/components/UserbackWidget";
 import { hasDiagnosisCompleted } from "@/modules/diagnosis";
+
+const DeferredExperienceEnhancers = dynamic(
+  () => import("./DeferredExperienceEnhancers").then((m) => ({ default: m.DeferredExperienceEnhancers })),
+  { ssr: false, loading: () => null }
+);
+
+const UserbackWidget = dynamic(
+  () => import("@/components/UserbackWidget").then((m) => ({ default: m.UserbackWidget })),
+  { ssr: false, loading: () => null }
+);
+
+const BoardingPassModal = dynamic(
+  () => import("../BoardingPassModal").then((m) => ({ default: m.BoardingPassModal })),
+  { ssr: false, loading: () => null }
+);
 
 function hasOAuthCallbackParams(): boolean {
   const search = new URLSearchParams(getSearch());
@@ -67,10 +76,8 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
   const skipExitToLandingOnceRef = useRef(false);
 
   // تفعيل التدخل الفيزيائي
-  usePersonalizedBiometrics();
 
   // تفعيل جسر طقس العلاقات
-  useWeatherFunnelBridge();
 
   useEffect(() => {
     // Keep language initialization inside the client lifecycle so importing this
@@ -800,6 +807,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       onExitAdminRoute={handleExitAdminRoute}
     >
       <>
+        <DeferredExperienceEnhancers />
         <AppRuntimeControllers
           screen={screen}
           isAdminRoute={isAdminRoute}

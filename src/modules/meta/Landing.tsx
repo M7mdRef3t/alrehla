@@ -1,18 +1,14 @@
 import type { FC } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Shield, Zap, Heart } from "lucide-react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
 import { trackingService } from "@/domains/journey";
 import { usePWAInstall } from "@/contexts/PWAInstallContext";
-import { getLivePulseCount } from "@/services/pulseEngagement";
 import { soundManager } from "@/services/soundManager";
-import { LandingSimulation } from "./LandingSimulation";
 import { useJourneyProgress } from "@/domains/journey";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
 import { getGoalMeta } from "@/data/goalMeta";
-import { LandingFooter } from "./landing/LandingFooter";
-import { AmbientBackground } from "./landing/AmbientBackground";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { isUserMode } from "@/config/appEnv";
 import { landingCopy } from "@/copy/landing";
@@ -22,6 +18,16 @@ import {
   getRelationshipWeatherEntryHref,
   getRelationshipWeatherPath
 } from "@/utils/relationshipWeatherJourney";
+
+const AmbientBackground = lazy(() =>
+  import("./landing/AmbientBackground").then((m) => ({ default: m.AmbientBackground }))
+);
+const LandingSimulation = lazy(() =>
+  import("./LandingSimulation").then((m) => ({ default: m.LandingSimulation }))
+);
+const LandingFooter = lazy(() =>
+  import("./landing/LandingFooter").then((m) => ({ default: m.LandingFooter }))
+);
 
 /* ─── Props ─────────────────────────────────────────────────────────── */
 
@@ -301,11 +307,13 @@ export const Landing: FC<LandingPropsExtended> = ({
       dir="rtl"
     >
       <style>{LANDING_STYLES}</style>
-      <AmbientBackground 
-        ambientBackground="var(--ds-color-space-void)" 
-        showHeavyAmbientLayers={true} 
-        reduceMotion={false} 
-      />
+      <Suspense fallback={null}>
+        <AmbientBackground 
+          ambientBackground="var(--ds-color-space-void)" 
+          showHeavyAmbientLayers={true} 
+          reduceMotion={false} 
+        />
+      </Suspense>
       {/* ════ NEW HERO SECTION ════ */}
       <HeroSection
         onStartJourney={handleStart}
@@ -379,7 +387,9 @@ export const Landing: FC<LandingPropsExtended> = ({
               ٣ أسئلة بسيطة — بدون تفكير — وهتكشف النمط اللي ماسك دماغك دلوقتي.
             </p>
           </div>
-          <LandingSimulation />
+          <Suspense fallback={<div className="min-h-[360px]" aria-hidden />}>
+            <LandingSimulation />
+          </Suspense>
           <motion.div variants={fadeUp} className="mt-10 flex justify-center">
             <a
               href={weatherEntryHref}
@@ -447,13 +457,15 @@ export const Landing: FC<LandingPropsExtended> = ({
         <div className="landing-divider" />
       </div>
 
-      <LandingFooter
-        trustPoints={landingCopy.trustPoints}
-        stagger={stagger}
-        onOpenLegal={(path) => {
-          if (typeof window !== "undefined") window.open(path, "_blank", "noopener,noreferrer");
-        }}
-      />
+      <Suspense fallback={<div className="h-24" aria-hidden />}>
+        <LandingFooter
+          trustPoints={landingCopy.trustPoints}
+          stagger={stagger}
+          onOpenLegal={(path) => {
+            if (typeof window !== "undefined") window.open(path, "_blank", "noopener,noreferrer");
+          }}
+        />
+      </Suspense>
     </div>
   );
 };

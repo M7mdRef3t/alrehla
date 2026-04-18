@@ -2,6 +2,7 @@ import { ollamaClient } from "./ollamaClient";
 import { AGENT_TOOLS, executeAgentTool } from "./agentTools";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { logger } from "./logger";
+import { braintrustService } from "./braintrustService";
 
 export interface AgentActivityStep {
     id: string;
@@ -121,11 +122,17 @@ class LocalSovereignAgent {
     }
 
     private reportActivity(activity: AgentActivityStep) {
-        // This will be connected to the Admin Store in the next step
+        // 1. Report to Local Admin UI (Zustand context)
         const addActivity = (useAdminState.getState() as any).addAgentActivity;
         if (addActivity) {
             addActivity(activity);
         }
+
+        // 2. Report to Braintrust (Cloud) automatically for evaluation
+        // This is done via our secure bridge to protect the API key
+        void executeAgentTool("log_activity", activity).catch(err => {
+            console.debug("[SovereignAgent] Cloud logging skipped (likely offline or unauthorized):", err.message);
+        });
     }
 }
 

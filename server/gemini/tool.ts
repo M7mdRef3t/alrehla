@@ -1,6 +1,16 @@
+import {
+  getClient,
+  getModel,
+  canAcceptGeminiRequest,
   markGeminiRequestStart,
+  markGeminiRequestEnd,
+  isRetryableModelError,
+  DEFAULT_GENERATION_CONFIG,
+  DEFAULT_MODEL_ORDER,
   withTimeout
 } from "./_shared";
+import type { Tool, ToolConfig } from "@google/generative-ai";
+import { FunctionCallingMode } from "@google/generative-ai";
 import { braintrustService } from "../../src/services/braintrustService";
 import {
   CODING_OUTPUT_CONTRACT,
