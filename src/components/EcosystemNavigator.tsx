@@ -376,6 +376,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#6366f1",
     url: "/#rafiq"
+  },
+  {
+    id: "wird",
+    name: "ورد",
+    description: "أذكارك وتسبيحاتك اليومية",
+    icon: <ScrollText className="w-5 h-5" />,
+    status: "active",
+    color: "#8b5cf6",
+    url: "/#wird"
   }
 ];
 
