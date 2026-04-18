@@ -385,6 +385,15 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     status: "active",
     color: "#8b5cf6",
     url: "/#wird"
+  },
+  {
+    id: "sada",
+    name: "صدى",
+    description: "تنبيهات ذكية من رحلتك",
+    icon: <Bell className="w-5 h-5" />,
+    status: "active",
+    color: "#6366f1",
+    url: "/#sada"
   }
 ];
 
