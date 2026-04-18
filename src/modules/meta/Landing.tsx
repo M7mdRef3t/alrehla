@@ -12,7 +12,7 @@ import { useMapState } from '@/modules/map/dawayirIndex';
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
 import { getGoalMeta } from "@/data/goalMeta";
 import { LandingFooter } from "./landing/LandingFooter";
-import { AmbientBackground } from "./landing/AmbientBackground";
+import { AppAtmosphere } from "@/components/shared/AppAtmosphere";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { isUserMode } from "@/config/appEnv";
 import { landingCopy } from "@/copy/landing";
@@ -301,10 +301,9 @@ export const Landing: FC<LandingPropsExtended> = ({
       dir="rtl"
     >
       <style>{LANDING_STYLES}</style>
-      <AmbientBackground 
-        ambientBackground="var(--ds-color-space-void)" 
-        showHeavyAmbientLayers={true} 
-        reduceMotion={false} 
+      <AppAtmosphere 
+        mode="default" 
+        intensity={1} 
       />
       {/* ════ NEW HERO SECTION ════ */}
       <HeroSection
