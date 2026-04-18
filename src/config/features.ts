@@ -208,7 +208,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, FeatureFlagMode> = {
   pulse_check: "on",
   pulse_weekly_recommendation: "on",
   pulse_immediate_action: "on",
-  dynamic_routing_v2: "on",
+  dynamic_routing_v2: "off",
   dynamic_routing_owner_observability: "on",
   golden_needle_enabled: "on",
   language_switcher: "on",

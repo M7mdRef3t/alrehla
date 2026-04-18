@@ -78,7 +78,9 @@ const ONBOARDING_STYLES = `
   border-radius: 50%;
   pointer-events: none;
   will-change: transform;
+  transform: translateZ(0); /* Force GPU acceleration */
   filter: blur(80px);
+  backface-visibility: hidden;
 }
 .ob-orb-1 {
   width: 750px; height: 750px;
@@ -108,6 +110,14 @@ const ONBOARDING_STYLES = `
   mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 25%, transparent 100%);
   opacity: 0.55;
   pointer-events: none;
+  will-change: opacity;
+  transform: translateZ(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ob-bg-orb, .ob-grid {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 @keyframes ob-orb-drift1 {
   0%   { transform: translate(0%, 0%)  scale(1);    }

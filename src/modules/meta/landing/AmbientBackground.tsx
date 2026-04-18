@@ -1,13 +1,37 @@
 import type { FC } from "react";
 
-export const FloatingParticles: FC = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-    <div className="absolute top-[20%] left-[30%] w-2 h-2 rounded-full bg-teal-300 shadow-[0_0_10px_rgba(45,212,191,0.6)] animate-pulse" style={{ animationDuration: "3s" }} />
-    <div className="absolute top-[60%] left-[80%] w-1.5 h-1.5 rounded-full bg-indigo-300 shadow-[0_0_8px_rgba(167,139,250,0.6)] animate-pulse" style={{ animationDuration: "4s" }} />
-    <div className="absolute top-[80%] left-[20%] w-2.5 h-2.5 rounded-full bg-sky-300 shadow-[0_0_12px_rgba(125,211,252,0.6)] animate-pulse" style={{ animationDuration: "5s" }} />
-    <div className="absolute top-[10%] left-[70%] w-1 h-1 rounded-full bg-teal-200 shadow-[0_0_6px_rgba(45,212,191,0.4)] animate-pulse" style={{ animationDuration: "2.5s" }} />
-  </div>
-);
+export const FloatingParticles: FC = () => {
+  const particles = Array.from({ length: 20 }).map((_, i) => ({
+    id: i,
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    size: Math.random() * 3 + 1,
+    duration: Math.random() * 4 + 2,
+    delay: Math.random() * 5,
+    color: i % 3 === 0 ? "bg-teal-400" : i % 3 === 1 ? "bg-indigo-400" : "bg-sky-400",
+    glow: i % 3 === 0 ? "rgba(45,212,191,0.5)" : i % 3 === 1 ? "rgba(167,139,250,0.5)" : "rgba(125,211,252,0.5)"
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+      {particles.map((p) => (
+        <div 
+          key={p.id}
+          className={`absolute rounded-full ${p.color} animate-pulse`}
+          style={{
+            top: p.top,
+            left: p.left,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            boxShadow: `0 0 ${p.size * 4}px ${p.glow}`,
+            animationDuration: `${p.duration}s`,
+            animationDelay: `${p.delay}s`
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 export const OrbitalRings: FC = () => (
   <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50">

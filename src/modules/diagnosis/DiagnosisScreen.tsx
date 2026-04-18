@@ -193,12 +193,12 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
   }, []);
 
   // Track initial view
-  useState(() => {
+  useEffect(() => {
     analyticsService.track(analyticsService.Events.DIAGNOSIS_VIEW);
     if (typeof window !== "undefined" && (window as any).clarity) {
       (window as any).clarity("set", "diagnosis_started", "true");
     }
-  });
+  }, []);
 
   const next = useCallback(() => {
     // Determine what was answered for tracking
@@ -256,7 +256,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
       dir="rtl"
     >
       {/* Background Orbs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ willChange: "transform" }}>
         <div
           className="absolute w-[600px] h-[600px] rounded-full opacity-20"
           style={{
@@ -264,6 +264,8 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
             top: "-10%", right: "-10%",
             filter: "blur(80px)",
             animation: "ob-orb-drift1 40s infinite alternate ease-in-out",
+            willChange: "transform",
+            transform: "translateZ(0)"
           }}
         />
         <div
@@ -273,6 +275,8 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
             bottom: "-15%", left: "-10%",
             filter: "blur(80px)",
             animation: "ob-orb-drift2 55s infinite alternate ease-in-out",
+            willChange: "transform",
+            transform: "translateZ(0)"
           }}
         />
       </div>

@@ -226,6 +226,11 @@ export function useNextStepRouting({
   }, [screen]);
 
   useEffect(() => {
+    // Early escape for discovery phases where routing is not applicable
+    if (screen === "landing" || screen === "diagnosis") {
+      setNextStepDecision(null);
+      return;
+    }
     const unsubscribe = subscribeToDawayirSignals(() => {
       setNextStepRefreshTick((tick) => tick + 1);
     });

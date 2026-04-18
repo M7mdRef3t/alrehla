@@ -218,11 +218,11 @@ export const PlatformHeader = memo(function PlatformHeader({
     }
   }, [isLoggedIn, onLogin, onNavigate]);
 
-  const headerClassName = `fixed top-0 right-0 left-0 z-[60] flex items-center justify-between px-4 md:px-6 lg:px-12 h-16 md:h-20 transition-[background-color,border-color,transform,height,backdrop-filter] duration-500 transform ${
+  const headerClassName = `fixed top-0 right-0 left-0 z-[60] flex items-center justify-between px-4 md:px-6 lg:px-12 h-16 md:h-20 transition-all duration-500 transform ${
     hidden ? "-translate-y-full" : "translate-y-0"
   } ${
     scrolled
-      ? "backdrop-blur-3xl border-b border-[color:var(--glass-border)] h-16 bg-[rgba(2,4,10,0.85)]"
+      ? "backdrop-blur-3xl border-b border-white/10 h-16 bg-[rgba(2,4,10,0.85)] shadow-[0_4px_30px_rgba(0,0,0,0.3)]"
       : "border-b border-transparent h-20 bg-transparent"
   } active:translate-y-0`; // Safety for active interactions
 
@@ -288,10 +288,10 @@ export const PlatformHeader = memo(function PlatformHeader({
                 handleNav(id);
               }}
               className={`
-                group relative px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200 flex items-center gap-2 cursor-pointer
+                group relative px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer
                 ${isActive 
-                  ? "text-zinc-950 dark:text-white" 
-                  : "text-zinc-100 hover:text-white dark:text-zinc-100 dark:hover:text-white"
+                  ? "text-white" 
+                  : "text-zinc-400 hover:text-[#00F0FF] dark:text-zinc-400 dark:hover:text-[#00F0FF]"
                 }
               `}
               aria-current={isActive ? "page" : undefined}
@@ -299,18 +299,18 @@ export const PlatformHeader = memo(function PlatformHeader({
               {isActive && (
                 <motion.div
                   layoutId="header-nav-indicator"
-                  className="absolute inset-0 rounded-full bg-slate-400/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/10"
+                  className="absolute inset-0 rounded-full bg-white/5 border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.1)]"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
               {isActive && (
-                <Icon className="w-4 h-4 text-[var(--teal)] relative z-10" />
+                <Icon className="w-4 h-4 text-[#00F0FF] relative z-10" />
               )}
-              <span className="relative z-10 text-white group-hover:text-[#00F0FF] transition-colors duration-200">{label}</span>
+              <span className="relative z-10 transition-colors duration-200">{label}</span>
               {isActive && (
                 <motion.div
                   layoutId="active-dot"
-                  className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] absolute -bottom-1.5 left-1/2 -translate-x-1/2"
+                  className="w-1.5 h-1.5 rounded-full bg-[#00F0FF] absolute -bottom-1.5 left-1/2 -translate-x-1/2 shadow-[0_0_8px_#00F0FF]"
                 />
               )}
             </button>

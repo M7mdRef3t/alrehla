@@ -86,7 +86,7 @@ export const SovereignMap: FC<{ reduceMotion: boolean | null; isMobile: boolean 
     typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
 
   return (
-    <motion.div className="sovereign-map">
+    <motion.div className="sovereign-map" style={{ willChange: "transform", transform: "translateZ(0)" }}>
       <div className="sovereign-map__atmosphere" aria-hidden />
       <svg viewBox="0 0 380 380" fill="none" className="sovereign-map__svg">
         {nodes.map((n, i) => (

@@ -129,7 +129,11 @@ export async function computeNextStepDecision(input: ComputeNextStepInput): Prom
   };
 
   const useDynamicRoutingV2 = Boolean(input.availableFeatures?.dynamic_routing_v2);
-  const ranked = useDynamicRoutingV2 ? await rankWithCloudV2(request) : await rankWithCloud(request);
+  
+  // Safety guard: if dynamic routing is off, skip cloud call entirely
+  const ranked = useDynamicRoutingV2 
+    ? await rankWithCloudV2(request) 
+    : await rankWithCloud(request);
   const now = Date.now();
 
   const decision: NextStepDecisionV1 =

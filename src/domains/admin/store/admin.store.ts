@@ -581,6 +581,15 @@ export const useAdminState = create<AdminState>()(
         return {
           ...currentState,
           ...typedPersistedState,
+          featureFlags: {
+            ...DEFAULT_FEATURE_FLAGS,
+            ...(typedPersistedState.featureFlags ?? {}),
+            // [HARD FIX] Force dynamic_routing_v2 to 'off' if the current default is 'off' 
+            // to prevent stale 'on' persistence from breaking the local dev experience.
+            dynamic_routing_v2: DEFAULT_FEATURE_FLAGS.dynamic_routing_v2 === "off" 
+              ? "off" 
+              : (typedPersistedState.featureFlags?.dynamic_routing_v2 ?? DEFAULT_FEATURE_FLAGS.dynamic_routing_v2)
+          },
           journeyPaths: mergeJourneyPathsWithDefaults(
             typedPersistedState.journeyPaths,
             currentState.journeyPaths

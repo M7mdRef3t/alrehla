@@ -23,7 +23,7 @@ const OnboardingWelcomeBubble = lazy(() =>
 const AdaptiveIntake = lazy(() => import("./AdaptiveIntake").then((m) => ({ default: m.AdaptiveIntake })));
 const ReflectionOutput = lazy(() => import("./ReflectionOutput").then((m) => ({ default: m.ReflectionOutput })));
 const ProtocolEngine = lazy(() => import("./ProtocolEngine").then((m) => ({ default: m.ProtocolEngine })));
-const DiagnosisScreen = lazy(() => import("@/modules/diagnosis").then((m) => ({ default: m.DiagnosisScreen })));
+import { DiagnosisScreen } from "@/modules/diagnosis";
 
 type StartScreen = "landing" | "goal" | "survey" | "map" | "protocol" | "diagnosis";
 

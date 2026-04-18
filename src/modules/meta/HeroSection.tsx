@@ -2,6 +2,30 @@ import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEff
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowLeft, Zap, Shield, Heart } from "lucide-react";
 import { RotatingWord as HeroRotatingWord, SovereignMap as HeroSovereignMap } from "./HeroSectionVisuals";
+
+/* ─── Types ──────────────────────────────────────────────────────────────────── */
+interface HeroSectionProps {
+  onStartJourney: () => void;
+  mirrorName: string;
+  setMirrorName: (name: string) => void;
+  pulseCount: number;
+  trustPoints: string[];
+  ctaJourney: string;
+  secondaryCta: string;
+}
+
+/* ─── Constants ──────────────────────────────────────────────────────────────── */
+
+/* ─── Styles ─────────────────────────────────────────────────────────────────── */
+const HERO_STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;700;800;900&display=swap');
+
+  .hero-root {
+    --void: #02040a;
+    --cyan: #00f0ff;
+    --cyan-glow: rgba(0, 240, 255, 0.4);
+    --gold: #f5a623;
+    --gold-glow: rgba(245, 166, 35, 0.4);
     --crimson: #ff0055;
     --text-main: #ffffff;
     --text-muted: #8faab8;
@@ -498,6 +522,9 @@ import { RotatingWord as HeroRotatingWord, SovereignMap as HeroSovereignMap } fr
     height: 100%;
     top: 0;
     left: 0;
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
   }
 
   .hero-cta-icon {
@@ -578,11 +605,24 @@ import { RotatingWord as HeroRotatingWord, SovereignMap as HeroSovereignMap } fr
     inset: -50%;
     width: 200%;
     height: 200%;
-    background-image: radial-gradient(2px 2px at 40px 60px, #ffffff 50%, rgba(0,0,0,0));
+    background-image: 
+      radial-gradient(1px 1px at 40px 60px, #ffffff 50%, rgba(0,0,0,0)),
+      radial-gradient(2px 2px at 150px 300px, #00f0ff 40%, rgba(0,0,0,0));
     background-repeat: repeat;
-    background-size: 200px 200px;
-    opacity: 0.08;
+    background-size: 300px 300px;
+    opacity: 0.12;
     mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 90%);
+  }
+
+  .hero-dust-field {
+    position: absolute;
+    inset: -20%;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0);
+    background-size: 120px 120px;
+    mask-image: radial-gradient(circle at 50% 50%, black 10%, transparent 80%);
+    opacity: 0.4;
+    will-change: transform;
+    backface-visibility: hidden;
   }
 
   .hero-grain {
@@ -684,18 +724,18 @@ import { RotatingWord as HeroRotatingWord, SovereignMap as HeroSovereignMap } fr
     position: relative;
     z-index: 2;
     width: 100%;
-    max-width: 1380px;
+    max-width: 1480px;
     margin: 0 auto;
-    padding: 7rem 2rem 6rem;
+    padding: 8rem 4rem 7rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 4rem;
+    gap: 6rem;
   }
 
   .map-area {
     flex: 0 0 auto;
-    width: min(46vw, 520px);
+    width: min(48vw, 620px);
     position: relative;
     padding-bottom: 56px;
   }
@@ -828,170 +868,6 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.15, delayChildren: 0.15 } },
 };
 
-/* ─── Rotating Headline Word ─────────────────────────────────────────────────── */
-const LegacyRotatingWord: FC<{ isMobile: boolean }> = React.memo(({ isMobile }) => {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setIndex(i => (i + 1) % ROTATING_WORDS.length);
-    }, 5000);
-    return () => clearInterval(id);
-  }, []);
-
-  if (isMobile) {
-    return (
-      <span className="rotating-word-mobile headline-accent font-extrabold font-['Noto_Kufi_Arabic']">
-        {ROTATING_WORDS[index]}
-      </span>
-    );
-  }
-
-  return (
-    <span className="rotating-word-wrapper">
-      {/* 🛡️ Anchor with the widest possible word to keep the container stable */}
-      <span className="invisible select-none block whitespace-nowrap font-extrabold" aria-hidden>
-        {ROTATING_WORDS.reduce((a, b) => (a.length > b.length ? a : b))}
-      </span>
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={index}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          exit="hidden"
-          transition={{ duration: 0.45, ease: techEase }}
-          className="absolute top-0 flex items-center headline-accent h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content px-2 mt-0 mb-0 align-middle font-extrabold font-['Noto_Kufi_Arabic']"
-        >
-          {ROTATING_WORDS[index]}
-        </motion.span>
-      </AnimatePresence>
-    </span>
-  );
-});
-
-/* ─── Sovereign Map (Right Panel) ───────────────────────────────────────────── */
-const LegacySovereignMap: FC<{ reduceMotion: boolean | null; isMobile: boolean }> = React.memo(({ reduceMotion, isMobile }) => {
-  const rings = [
-    { r: 68,  stroke: "rgba(0, 240, 255, 0.35)", dash: "none", dur: 22 },
-    { r: 110, stroke: "rgba(245, 166, 35, 0.25)", dash: "4 14", dur: 38 },
-    { r: 152, stroke: "rgba(239, 68, 68, 0.2)",   dash: "2 22", dur: 60 },
-    { r: 194, stroke: "rgba(0, 240, 255, 0.15)",  dash: "1 30", dur: 90 },
-  ];
-
-  const nodes = [
-    { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "علاقة بميزانها",  w: 1.2 },
-    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم خاص",    w: 0.8 },
-    { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "نبض متذبذب",  w: 1.5 },
-    { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "تشويش روح",   w: 0.9 },
-    { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "احتواء حقيقي",w: 1.1 },
-    { cx: 190 - 28, cy: 190 - 148, r: 12, color: "#ff0055", label: "نزيف طاقة",   w: 2.0 },
-    { cx: 190 + 118, cy: 190 - 100, r: 11, color: "#ff0044", label: "حدود مهدورة", w: 1.7 },
-  ];
-
-  const [hovered, setHovered] = useState<number | null>(null);
-  const toSafeRadius = (value: unknown, fallback: number) =>
-    typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
-
-  return (
-    <motion.div className="sovereign-map">
-      <div className="sovereign-map__atmosphere" aria-hidden />
-      <svg viewBox="0 0 380 380" fill="none" className="sovereign-map__svg">
-        {nodes.map((n, i) => (
-          <Fragment key={`nexus-${i}`}>
-            <motion.line
-              x1="190" y1="190" x2={n.cx} y2={n.cy}
-              stroke={n.color}
-              strokeWidth="0.5"
-              opacity={hovered === i ? 0.6 : 0.15}
-              className="orbit-line"
-            />
-          </Fragment>
-        ))}
-
-        {rings.map((ring, i) => {
-          const safeRingRadius = toSafeRadius(ring.r, 1);
-          return (
-            <g key={i}>
-              <motion.circle
-                cx="190" cy="190" r={safeRingRadius}
-                stroke={ring.stroke}
-                strokeWidth="1"
-                fill="none"
-                style={{ transform: "translateZ(0)" }}
-                animate={reduceMotion || isMobile ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
-                transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
-                transformOrigin="190px 190px"
-              />
-            </g>
-          );
-        })}
-
-        {nodes.map((node, i) => {
-          const safeNodeRadius = toSafeRadius(node.r, 1);
-          return (
-            <motion.g
-              key={i}
-              onMouseEnter={() => setHovered(i)}
-              onMouseLeave={() => setHovered(null)}
-              cursor="pointer"
-            >
-              <circle cx={node.cx} cy={node.cy} r={safeNodeRadius + 4} fill={node.color} opacity={0.1} />
-              <circle cx={node.cx} cy={node.cy} r={safeNodeRadius} fill={node.color} />
-              <AnimatePresence>
-                {hovered === i && (
-                  <motion.foreignObject
-                    x={node.cx - 75} y={node.cy - 16}
-                    width="150" height="36"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <div className="node-tooltip-body">{node.label}</div>
-                  </motion.foreignObject>
-                )}
-              </AnimatePresence>
-            </motion.g>
-          );
-        })}
-
-        <motion.g className="center-core" transformOrigin="190px 190px">
-          <circle cx="190" cy="190" r="14" fill="var(--cyan)" className="center-core__glow" />
-          <circle cx="190" cy="190" r="6" fill="#fff" />
-        </motion.g>
-      </svg>
-
-      <div className="metric-card metric-card--health">
-        <p className="metric-card-label">صحتك الداخلية</p>
-        <div className="metric-card-values">
-          <span className="metric-card-value">٧٨</span>
-          <span className="metric-card-text">/ ١٠٠</span>
-        </div>
-        <div className="metric-card-bar">
-          {isMobile ? (
-            <div className="metric-card-bar__fill" style={{ width: "78%" }} />
-          ) : (
-            <motion.div className="metric-card-bar__fill" initial={{ width: "0%" }} animate={{ width: "78%" }} transition={{ duration: 1.2, delay: 0.6 }} />
-          )}
-        </div>
-      </div>
-
-      <div className="legend">
-        {[
-          { label: "توازن", color: "var(--cyan)" },
-          { label: "تشتت", color: "var(--gold)" },
-          { label: "استنزاف", color: "var(--crimson)" },
-        ].map(({ label, color }) => (
-          <div key={label} className="legend-item">
-            <span className="legend-dot" style={{ color }} />
-            <span className="legend-label" style={{ color }}>{label}</span>
-          </div>
-        ))}
-      </div>
-    </motion.div>
-  );
-});
-
 /* ─── Pulse Badge ───────────────────────────────────────────────────────────── */
 const PulseBadge: FC<{ count?: number }> = React.memo(({ count: initialCount }) => {
   const [count, setCount] = useState(initialCount ?? 1947);
@@ -1051,7 +927,7 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
   const globalMouseY = useMotionValue(0);
 
   const handleGlobalMouseMove = useCallback((e: React.MouseEvent) => {
-    // 🛡️ Guard: Parallax is too expensive and jittery on most mobile/touch devices
+    // \uD83D\uDEE1\uFE0F Guard: Parallax is too expensive and jittery on most mobile/touch devices
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     if (reduceMotion || isTouch) return;
     
@@ -1061,11 +937,14 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
     globalMouseY.set((e.clientY - cy) / 20);
   }, [reduceMotion, globalMouseX, globalMouseY]);
 
-  const gridX = useSpring(useTransform(globalMouseX, x => -x * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
-  const gridY = useSpring(useTransform(globalMouseY, y => -y * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
+  const gridX = useSpring(useTransform(globalMouseX, x => -x * (reduceMotion ? 0.2 : 2.5)), { stiffness: 45, damping: 20, mass: 0.5 });
+  const gridY = useSpring(useTransform(globalMouseY, y => -y * (reduceMotion ? 0.2 : 2.5)), { stiffness: 45, damping: 20, mass: 0.5 });
 
-  const starX = useSpring(useTransform(globalMouseX, x => -x * 0.5), { stiffness: 20, damping: 30, mass: 1 });
-  const starY = useSpring(useTransform(globalMouseY, y => -y * 0.5), { stiffness: 20, damping: 30, mass: 1 });
+  const starX = useSpring(useTransform(globalMouseX, x => -x * (reduceMotion ? 0.1 : 0.8)), { stiffness: 20, damping: 30, mass: 1 });
+  const starY = useSpring(useTransform(globalMouseY, y => -y * (reduceMotion ? 0.1 : 0.8)), { stiffness: 20, damping: 30, mass: 1 });
+
+  const dustX = useSpring(useTransform(globalMouseX, x => -x * (reduceMotion ? 0.3 : 4)), { stiffness: 15, damping: 25, mass: 1 });
+  const dustY = useSpring(useTransform(globalMouseY, y => -y * (reduceMotion ? 0.3 : 4)), { stiffness: 15, damping: 25, mass: 1 });
 
   const warpLines = useMemo(() => (
     Array.from({ length: 40 }, (_, i) => ({
@@ -1130,6 +1009,9 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
 
       <section className="hero-root" dir="rtl" onMouseMove={handleGlobalMouseMove}>
         <div className="hero-canvas" aria-hidden>
+          <motion.div className="hero-layer hero-layer--dust" style={{ x: dustX, y: dustY }}>
+            <div className="hero-dust-field" />
+          </motion.div>
           <motion.div className="hero-layer hero-layer--starfield" style={{ x: starX, y: starY }}>
             <div className="hero-starfield" />
           </motion.div>

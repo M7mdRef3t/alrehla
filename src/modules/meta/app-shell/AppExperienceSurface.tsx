@@ -200,7 +200,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
           </button>
         )}
         <div className="nebula-bg" aria-hidden="true" />
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="fixed inset-0 bg-[#050A14] pointer-events-none" />}>
             <AtmosphereSensoryLayer />
         </Suspense>
         <AppTransientChromeHost {...transientChromeProps} />
