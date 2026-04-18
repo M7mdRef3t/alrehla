@@ -126,6 +126,7 @@
     "c8": "^11.0.0",
     "conventional-changelog-angular": "^8.3.0",
     "conventional-changelog-cli": "^5.0.0",
+    "dotenv": "^17.4.2",
     "dxf-writer": "^1.18.4",
     "eslint": "^9.0.0",
     "eslint-plugin-react-hooks": "^5.0.0",

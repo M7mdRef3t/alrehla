@@ -19,6 +19,7 @@ interface AppShellRouteGateProps {
   previewedFeature: string | null;
   goBackToFeatureFlags: () => void;
   onExitAdminRoute: () => void;
+  screen?: string;
   children: ReactNode;
 }
 
@@ -30,6 +31,7 @@ export function AppShellRouteGate({
   previewedFeature,
   goBackToFeatureFlags,
   onExitAdminRoute,
+  screen,
   children
 }: AppShellRouteGateProps) {
   const pathname = getPathname();
@@ -92,13 +94,25 @@ export function AppShellRouteGate({
     );
   }
 
-  if (isAdminRoute || isAdminPathname) {
-    return (
-      <Suspense fallback={<div className="min-h-screen bg-[var(--page-bg)]" />}>
-        <AdminDashboard onExit={onExitAdminRoute} />
-      </Suspense>
-    );
-  }
+  const isToolActive = isAdminRoute && screen && screen !== "landing" && screen !== "goal";
 
-  return <>{children}</>;
+  return (
+    <>
+      {/* Admin Layer - Only rendered if we're on an admin route or starting with /admin */}
+      {(isAdminRoute || isAdminPathname) && (
+        <div className={isToolActive ? "hidden opacity-0 pointer-events-none" : "block min-h-screen"}>
+          <Suspense fallback={<div className="min-h-screen bg-[var(--page-bg)]" />}>
+            <AdminDashboard onExit={onExitAdminRoute} />
+          </Suspense>
+        </div>
+      )}
+
+      {/* App / Tool Layer - Always mounted at / or when a tool is active over Admin */}
+      {(!isAdminRoute || isToolActive) && (
+        <div className={isToolActive ? "fixed inset-0 z-50 bg-[#0B0F19] overflow-y-auto" : "contents"}>
+          {children}
+        </div>
+      )}
+    </>
+  );
 }

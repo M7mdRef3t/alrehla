@@ -15,19 +15,12 @@ export interface BiometricPulse {
  * يحاكي استقبال بيانات حقيقية. في المستقبل، سيتم استخدام Web Bluetooth API 
  * للربط مع الساعات الذكية.
  */
-export function startBiometricStream(callback: (data: BiometricPulse) => void) {
-
-    // محاكاة إرسال بيانات كل 5 ثواني
-    const interval = setInterval(() => {
-        const mockData: BiometricPulse = {
-            heartRate: Math.floor(Math.random() * (110 - 60) + 60),
-            hrv: Math.floor(Math.random() * (100 - 20) + 20),
-            timestamp: Date.now(),
-        };
-        callback(mockData);
-    }, 5000);
-
-    return () => clearInterval(interval);
+/** 
+ * مراقبة النبض الحالية (محاكاة)
+ */
+export function startBiometricStream(callback: (pulse: BiometricPulse) => void) {
+    // تم تعطيل المحاكاة العشوائية لمنع التدخلات "الوهمية" المزعجة
+    return () => {}; 
 }
 
 /** 

@@ -10,6 +10,38 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 let cachedClient: SupabaseClient | null = null;
 
+// ── Verified-user cache (60s TTL) ──────────────────────────
+// Prevents repeated getUser() calls to Supabase for the same token
+// across concurrent admin API requests, avoiding ConnectTimeoutErrors.
+const VERIFIED_USER_TTL_MS = 60_000;
+interface CachedVerification {
+  userId: string;
+  role: string;
+  verifiedAt: number;
+}
+const verifiedTokenCache = new Map<string, CachedVerification>();
+
+function getCachedVerification(token: string): CachedVerification | null {
+  const cached = verifiedTokenCache.get(token);
+  if (!cached) return null;
+  if (Date.now() - cached.verifiedAt > VERIFIED_USER_TTL_MS) {
+    verifiedTokenCache.delete(token);
+    return null;
+  }
+  return cached;
+}
+
+function setCachedVerification(token: string, userId: string, role: string): void {
+  verifiedTokenCache.set(token, { userId, role, verifiedAt: Date.now() });
+  // Evict stale entries periodically (keep cache small)
+  if (verifiedTokenCache.size > 50) {
+    const now = Date.now();
+    for (const [k, v] of verifiedTokenCache) {
+      if (now - v.verifiedAt > VERIFIED_USER_TTL_MS) verifiedTokenCache.delete(k);
+    }
+  }
+}
+
 export type AdminRequest = {
   method?: string;
   url?: string;
@@ -48,10 +80,21 @@ function getBearerToken(req: AdminRequest): string | null {
 
 function isAdminSecretToken(token: string | null): boolean {
   if (!token) return false;
-  const allowedSecrets = [process.env.CRON_SECRET, process.env.ADMIN_API_SECRET]
-    .filter((value): value is string => Boolean(value && value.trim()))
-    .map((value) => value.trim());
-  return allowedSecrets.includes(token);
+  
+  const secrets: Record<string, string | undefined> = {
+    CRON_SECRET: process.env.CRON_SECRET,
+    ADMIN_API_SECRET: process.env.ADMIN_API_SECRET,
+    ADMIN_CODE: process.env.ADMIN_CODE,
+    VITE_ADMIN_CODE: process.env.VITE_ADMIN_CODE
+  };
+
+  const matched = Object.entries(secrets).find(([_, value]) => value?.trim() === token.trim());
+  
+  if (matched && process.env.NODE_ENV !== "production") {
+    console.debug(`[isAdminSecretToken] Match found: ${matched[0]}`);
+  }
+  
+  return Boolean(matched);
 }
 
 export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promise<boolean> {
@@ -69,28 +112,83 @@ export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promis
     return false;
   }
 
+  // Debug: Log environment status (Masked)
+  if (process.env.NODE_ENV !== "production") {
+    console.debug("[verifyAdmin] Env Audit:", {
+      ADMIN_CODE: process.env.ADMIN_CODE ? "LOADED" : "MISSING",
+      ADMIN_API_SECRET: process.env.ADMIN_API_SECRET ? "LOADED" : "MISSING",
+      VITE_ADMIN_CODE: process.env.VITE_ADMIN_CODE ? "LOADED" : "MISSING",
+      RECEIVED_TOKEN_PREVIEW: bearer.slice(0, 5) + "..."
+    });
+  }
+
   if (isAdminSecretToken(bearer)) {
     return true;
   }
 
-  const { data, error } = await client.auth.getUser(bearer);
-  if (error || !data?.user?.id) {
+  // ── Check cache first ──────────────────────────────────────
+  const cached = getCachedVerification(bearer);
+  if (cached) {
+    const allowed = getAllowedRoles();
+    if (allowed.includes(cached.role.toLowerCase())) {
+      return true;
+    }
+  }
+
+  // ── getUser with retry on network failure ───────────────────
+  let userData: { user: { id: string } } | null = null;
+  let lastError: string | null = null;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data, error } = await client.auth.getUser(bearer);
+    if (!error && data?.user?.id) {
+      userData = data as { user: { id: string } };
+      break;
+    }
+    lastError = error?.message || "Missing user ID";
+    // Only retry on network errors (fetch failed / timeout), not auth errors
+    const isNetworkError = lastError?.includes("fetch failed") || lastError?.includes("timeout") || lastError?.includes("ECONNREFUSED");
+    if (!isNetworkError) break;
+    if (attempt === 0) {
+      console.warn(`[verifyAdmin] Network error on getUser (attempt 1), retrying in 500ms...`);
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+
+  // ── Fallback: local JWT decode when auth API is unreachable ──
+  if (!userData && lastError?.includes("fetch failed")) {
+    try {
+      const parts = bearer.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+        if (payload.sub && typeof payload.sub === "string") {
+          userData = { user: { id: payload.sub } };
+          console.warn(`[verifyAdmin] Using local JWT decode fallback for user ${payload.sub.slice(0, 8)}... (auth API unreachable)`);
+        }
+      }
+    } catch {
+      // JWT decode failed — fall through to normal error
+    }
+  }
+
+  if (!userData) {
     console.error("[verifyAdmin] 401: Failed to getUser from token:", {
-      error: error?.message || "Missing user ID",
-      tokenPreview: bearer.slice(0, 10) + "..."
+      error: lastError,
+      tokenPreview: bearer.slice(0, 7) + "...",
+      path: req.query?.path || "unknown"
     });
-    res.status(401).json({ error: "Unauthorized: Invalid Token" });
+    res.status(401).json({ error: "Unauthorized: Invalid Token", message: lastError });
     return false;
   }
 
   const { data: profile, error: profileError } = await client
     .from("profiles")
     .select("role")
-    .eq("id", data.user.id)
+    .eq("id", userData.user.id)
     .maybeSingle();
 
   if (profileError || !profile?.role) {
-    console.error(`[verifyAdmin] 403: Forbidden - User ${data.user.id} profile/role missing:`, profileError?.message || "No role in profile");
+    console.error(`[verifyAdmin] 403: Forbidden - User ${userData.user.id} profile/role missing:`, profileError?.message || "No role in profile");
     res.status(403).json({ error: "Forbidden: No valid role" });
     return false;
   }
@@ -98,13 +196,16 @@ export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promis
   const allowed = getAllowedRoles();
   if (!allowed.includes(String(profile.role).toLowerCase())) {
     console.error(`[verifyAdmin] 403: Forbidden - Insufficient role:`, {
-      userId: data.user.id,
+      userId: userData.user.id,
       userRole: profile.role,
       allowed: allowed
     });
     res.status(403).json({ error: "Forbidden: Not allowed" });
     return false;
   }
+
+  // ── Cache successful verification ────────────────────────────
+  setCachedVerification(bearer, userData.user.id, String(profile.role).toLowerCase());
 
   return true;
 }

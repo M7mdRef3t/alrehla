@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation";
 import { createCurrentUrl } from "@/services/navigation";
 import type { RecommendedProduct, UserStateObject } from "@/modules/diagnosis/types";
 import { saveDiagnosisState } from "@/modules/diagnosis/types";
+import { EvolutionarySynapse } from "@/core/synapse/EvolutionarySynapse";
 
 const ONBOARDING_STYLES = `
 @keyframes ob-ring-pulse {
@@ -348,7 +349,12 @@ const SymptomTriggerModal: FC<{
           ))}
         </div>
 
-        <button onClick={onClose} className="text-[10px] text-slate-600 font-bold uppercase tracking-widest pt-2">تخطي التشخيص</button>
+        <button 
+          onClick={onClose} 
+          className="text-[11px] text-teal-400 font-bold uppercase tracking-widest pt-4 hover:text-white transition-colors"
+        >
+          مش وقته.. كمل الرسم ←
+        </button>
       </div>
     </motion.div>
   );
@@ -541,9 +547,9 @@ const StepMapping: FC<{
   return (
     <div className="flex flex-col gap-4 w-full text-center">
       <div className="space-y-1 mb-2">
-        <h2 className="text-[18px] font-extrabold text-white tracking-wide">ارسم الواقع بصدق</h2>
+        <h2 className="text-[18px] font-extrabold text-white tracking-wide">خريطة مداراتك</h2>
         <p className="text-[11px] text-slate-300 leading-relaxed px-1">
-          حط كل شخص في المكان اللي يمثل <span className="text-teal-400 font-bold">تأثيره على طاقتك دلوقتي</span>، مش المكان اللي بتتمناه. الخريطة دي عشان تشوف الحقيقة، مش عشان تجمّلها.
+          حط كل شخص في المدار اللي بيوصف <span className="text-teal-400 font-bold">تأثيره على طاقتك دلوقتي</span>.. دي مساحة صدق ليك لوحدك عشان نحدد هنبدأ منين.
         </p>
       </div>
 
@@ -728,8 +734,9 @@ const StepContactCapture: FC<{
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!whatsapp.trim()) {
-      setError("حط رقم الواتساب عشان نقدر نبعتلك خطة التعافي.");
+    if (!whatsapp.trim() && !email.trim()) {
+      // If nothing is provided, just proceed to complete
+      onComplete(name, "", "");
       return;
     }
     setLoading(true);
@@ -786,7 +793,7 @@ const StepContactCapture: FC<{
         {/* WhatsApp Input */}
         <div className="space-y-1.5 group">
           <label className="text-[10px] font-bold text-teal-400 mr-1 flex items-center gap-1.5 justify-start">
-            <Smartphone className="w-3 h-3"/> واتساب الأساسي (مهم جداً)
+            <Smartphone className="w-3 h-3"/> رقم الواتساب (عشان نبعتلك الخطة هناك)
           </label>
           <div className="relative">
              {/* Country Code Prefix Fake */}
@@ -859,8 +866,12 @@ const StepContactCapture: FC<{
         </button>
       </form>
 
-      <button onClick={onSkip} className="text-[10px] text-slate-500 mt-2 hover:text-slate-300 transition-colors uppercase font-bold tracking-widest inline-flex items-center justify-center gap-1 mx-auto">
-        تخطي وكمّل بدون بيانات <ArrowRight className="w-3 h-3 rotate-180"/>
+      <button 
+        onClick={onSkip} 
+        className="text-[11px] text-slate-400 mt-4 hover:text-teal-400 transition-all font-bold tracking-tight underline underline-offset-4 flex items-center justify-center gap-2 mx-auto"
+      >
+        مش حابب أسيب بيانات دلوقتي.. وريني النتائج 
+        <ArrowRight className="w-4 h-4 rotate-180"/>
       </button>
     </div>
   );
@@ -1143,7 +1154,7 @@ const StepSafetyTriage = () => (
 const ONBOARDING_STEP_NAMES = [
   "noise_check",   // 0: First Spark
   "pain_dump",     // 1
-  "inventory",     // 2
+  "landscape",     // 2
   "mapping",       // 3
   "insight",       // 4
   "contact",       // 5
@@ -1324,12 +1335,14 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   }, [goTo]);
 
   const handleRingSelected = useCallback((cardIdx: number, ring: Ring) => {
-    if (ring === "red") {
+    // 🎯 Unshackling: Mark the ring immediately so the UI represents the user's truth first
+    setCollectedItems((prev) =>
+      prev.map((c, i) => i === cardIdx ? { ...c, ring, placed: true, symptomIds: [] } : c)
+    );
+
+    // Only show the 'Deep Dive' modal for the first red-ring person as a helpful prompt, not a requirement
+    if (ring === "red" && !collectedItems.some(c => c.placed && c.ring === "red")) {
       setDiagnosticModal({ cardIdx, name: collectedItems[cardIdx].name });
-    } else {
-      setCollectedItems((prev) =>
-        prev.map((c, i) => i === cardIdx ? { ...c, ring, placed: true, symptomIds: [] } : c)
-      );
     }
   }, [collectedItems]);
 
@@ -1612,8 +1625,13 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
         <div className="px-8 py-6 pb-10 overflow-y-auto custom-scrollbar relative">
           {step === 0 && <FirstSparkOnboarding onComplete={handleNoiseNext} gateContext={gateContext} />}
           {step === 1 && <StepPainDump onNext={handlePainDumpNext} onSkip={() => goTo(2)} />}
-          {step === 2 && <StepInventory onNext={handleInventoryNext} onSkip={handleSkip} mirrorName={seededMirrorName} />}
-          {step === 3 && (
+          {step === 2 && (
+            <EvolutionarySynapse 
+              componentId="OnboardingFlow" 
+              DefaultComponent={StepInventory} 
+              componentProps={{ onNext: handleInventoryNext, onSkip: handleSkip, mirrorName: seededMirrorName }} 
+            />
+          )}          {step === 3 && (
             <StepMapping 
               items={collectedItems as any} 
               onNext={handleMappingNext} 

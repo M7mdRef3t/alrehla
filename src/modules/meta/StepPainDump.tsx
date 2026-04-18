@@ -34,9 +34,9 @@ export const StepPainDump: FC<StepPainDumpProps> = ({ onNext, onSkip }) => {
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-xl font-bold text-white tracking-wide">إيه اللي جابك هنا النهاردة؟</h2>
+        <h2 className="text-xl font-bold text-white tracking-wide">إيه اللي شاغل بالك دلوقتي؟</h2>
         <p className="text-sm text-slate-300 leading-relaxed px-4">
-          فضفض بكلمتين عن اللي شاغل بالك أو مأثّر على طاقتك دلوقتي.. كلامك مشفر وماحدش بيشوفه غيرك.
+          فضفض بكلمتين عن اللي شاغل بالك أو مأثّر على طاقتك دلوقتي.. كلامك بيفضل بينك وبين نفسك ومحدش بيشوفه غيرك.
         </p>
       </div>
 

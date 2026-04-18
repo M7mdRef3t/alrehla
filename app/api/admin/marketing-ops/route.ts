@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/server/requireAdmin";
 import { GET as runMarketingCron } from "../../cron/marketing-outreach/route";
+import { sendAdminTelegramNotice } from "@/server/telegramNotifier";
 
 export const dynamic = "force-dynamic";
 
@@ -594,6 +595,29 @@ export async function POST(req: Request) {
 
     console.log(`[ManualBounce] 🚫 Lead marked as bounced: ${leadRow.email || leadRow.id}`);
     return NextResponse.json({ ok: true, action: "mark_bounced" });
+  }
+
+  if (body.action === "push_to_telegram" && body.leadId) {
+    const supabase = buildClient();
+    const { data: lead } = await supabase
+      .from("marketing_leads")
+      .select("*")
+      .eq("id", body.leadId)
+      .single();
+
+    if (!lead) return NextResponse.json({ ok: false, error: "lead_not_found" }, { status: 404 });
+
+    const phone = (lead.phone_normalized || "").replace(/\+/g, "");
+    const cleanPhone = phone.startsWith("20") ? phone : (phone.startsWith("0") ? `20${phone.substring(1)}` : `20${phone}`);
+    const name = lead.name || "مسافر جديد";
+    const leadId = lead.id;
+    
+    const whatsappLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`أهلاً يا ${name.split(' ')[0]}، نورت الرحلة - خريطة وعيك جاهزة ومستنياك تبدأ أول خطوة من هنا: \n\nhttps://www.alrehla.app/go/${leadId}`)}`;
+
+    const telegramMsg = `🎯 <b>تنبيه يدوي: متابعة مسافر سابق</b>\n\n👤 <b>الاسم:</b> ${name}\n📱 <b>رقم الهاتف:</b> ${lead.phone_normalized || "غير متوفر"}\n📧 <b>الإيميل:</b> ${lead.email || "غير متوفر"}\n📅 <b>تاريخ التسجيل:</b> ${new Date(lead.created_at).toLocaleDateString("ar-EG")}\n\n🚀 <b>اضغط لمراسلته فوراً بلمسة واحدة:</b>\n<a href="${whatsappLink}">ارسل له الرسالة السحرية على واتساب</a>`;
+
+    const ok = await sendAdminTelegramNotice(telegramMsg);
+    return NextResponse.json({ ok });
   }
 
   return NextResponse.json({ ok: false, error: "unknown_action" }, { status: 400 });

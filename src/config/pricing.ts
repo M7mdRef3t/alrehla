@@ -5,8 +5,8 @@
  *
  * الباقات:
  *   - basic    (المستكشف) — مجاناً
- *   - premium  (القائد)   — $14.99/شهر (200 ج.م مصر)
- *   - coach    (الكوتش)   — $99/شهر (1,500 ج.م مصر) — B2B/معالجين
+ *   - premium  (القائد)   — $5.99/شهر (149 ج.م مصر) — عرض إطلاق: $2.99 (75 ج.م)
+ *   - coach    (الكوتش)   — $29.99/شهر (799 ج.م مصر) — B2B/معالجين
  *
  * تعديل السعر يتم هنا فقط وينعكس تلقائياً في كل الواجهات.
  */
@@ -22,8 +22,9 @@ export type PricingTier = "basic" | "premium" | "coach";
 // ═══════════════════════════════════════════════════════════════════
 
 export interface TierPrice {
-  monthly: number; // USD
-  label: string;   // human-readable
+  monthly: number;        // USD (Current)
+  originalMonthly?: number; // USD (Original before discount)
+  label: string;          // human-readable
 }
 
 export const TIER_PRICES_USD: Record<PricingTier, TierPrice> = {
@@ -32,12 +33,13 @@ export const TIER_PRICES_USD: Record<PricingTier, TierPrice> = {
     label: "مجاناً",
   },
   premium: {
-    monthly: 14.99,
-    label: "$14.99 / شهر",
+    monthly: 2.99,
+    originalMonthly: 5.99,
+    label: "$2.99 / شهر (خصم 50%)",
   },
   coach: {
-    monthly: 99,
-    label: "$99 / شهر",
+    monthly: 29.99,
+    label: "$29.99 / شهر",
   },
 };
 
@@ -154,16 +156,19 @@ export const REGIONAL_PRICING: Record<string, RegionalConfig> = {
 
 /**
  * السعر الأساسي بالجنيه المصري لباقة القائد
- * $14.99 × ~13.3 (سعر صرف تقريبي) ≈ 200 ج.م
+ * تسعير مبني على تحليل تكاليف حقيقي + مقارنة سوقية
  */
-const BASE_PRICE_EGP = 200;
+export const BASE_PRICE_EGP = 75;  // عرض إطلاق (خصم 50%)
+export const ORIGINAL_PRICE_EGP = 149; // السعر الأساسي
 
 export interface LocalizedPrice {
   id: PricingTier;
   name: string;
   price: number;
+  originalPrice?: number;
   currency: string;
   displayPrice: string;
+  isDiscounted?: boolean;
 }
 
 /**
@@ -186,15 +191,17 @@ export function getLocalizedPricing(countryCode: string | null): LocalizedPrice[
         id: "premium",
         name: TIER_LABELS.premium,
         price: BASE_PRICE_EGP,
+        originalPrice: ORIGINAL_PRICE_EGP,
         currency: "EGP",
         displayPrice: `${BASE_PRICE_EGP} ج.م / شهر`,
+        isDiscounted: true,
       },
       {
         id: "coach",
         name: TIER_LABELS.coach,
-        price: 1500,
+        price: 799,
         currency: "EGP",
-        displayPrice: "1,500 ج.م / شهر",
+        displayPrice: "799 ج.م / شهر",
       },
     ];
   }
@@ -212,8 +219,10 @@ export function getLocalizedPricing(countryCode: string | null): LocalizedPrice[
       id: "premium",
       name: TIER_LABELS.premium,
       price: Math.round(TIER_PRICES_USD.premium.monthly * region.multiplier * 100) / 100,
+      originalPrice: TIER_PRICES_USD.premium.originalMonthly ? Math.round(TIER_PRICES_USD.premium.originalMonthly * region.multiplier * 100) / 100 : undefined,
       currency: region.currency,
       displayPrice: `${Math.round(TIER_PRICES_USD.premium.monthly * region.multiplier)} ${region.symbol} / شهر`,
+      isDiscounted: true,
     },
     {
       id: "coach",

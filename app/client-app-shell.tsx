@@ -17,6 +17,8 @@ import { hasRevenueAccess } from "@/services/revenueAccess";
 import type { Data } from "@measured/puck";
 import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { useMapState } from "@/modules/map/store/map.store";
+import { useSwarmMutationStore } from "@/state/useSwarmMutationStore";
+import ConsciousnessArtist from "@/components/ConsciousnessArtist";
 
 const App = dynamic(() => import("@/App"), { ssr: false });
 const Landing = dynamic(() => import("@/modules/meta/Landing").then((m) => m.Landing), { ssr: false }) as typeof import("@/modules/meta/Landing").Landing;
@@ -152,6 +154,8 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
   const [lockFullAppMode, setLockFullAppMode] = useState(false);
   const [landingAuthIntent, setLandingAuthIntent] = useState<PostAuthIntent | null>(null);
 
+  const { isArtistOpen, setIsArtistOpen } = useSwarmMutationStore();
+
   useEffect(() => {
     if (!runtimeEnv.isDev || typeof window === "undefined") return;
 
@@ -200,17 +204,6 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
   }, [lockFullAppMode]);
 
   const startRecoveryFromLanding = useCallback(() => {
-    if (!hasRevenueAccess()) {
-      const onboarded = !!useJourneyState.getState().baselineCompletedAt;
-      const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
-      if (!onboarded || !hasPeopleOnMap) {
-        window.location.href = "/onboarding?source=landing";
-        return;
-      }
-      window.location.href = "/pricing?blocked=map&source=landing";
-      return;
-    }
-
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
     }
@@ -223,17 +216,6 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
   }, []);
 
   const openAppScreenFromLanding = useCallback((screen: string) => {
-    if (!hasRevenueAccess()) {
-      const onboarded = !!useJourneyState.getState().baselineCompletedAt;
-      const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
-      if (!onboarded || !hasPeopleOnMap) {
-        window.location.href = "/onboarding?source=landing";
-        return;
-      }
-      window.location.href = "/pricing?blocked=screen&source=landing";
-      return;
-    }
-
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, `${APP_SCREEN_BOOT_ACTION_PREFIX}${screen}`);
     }
@@ -268,6 +250,11 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
       case "resources":
       case "quizzes":
       case "behavioral-analysis":
+      case "bawsala":
+      case "maraya":
+      case "masarat":
+      case "atmosfera":
+      case "session-intake":
         openAppScreenFromLanding(screen);
         return;
       default:
@@ -283,19 +270,8 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
     if (typeof window !== "undefined") {
       const search = new URLSearchParams(window.location.search);
       const bootActionParam = search.get("boot_action");
-      if (bootActionParam === "start_recovery") {
-        if (!hasRevenueAccess()) {
-          const onboarded = !!useJourneyState.getState().baselineCompletedAt;
-          const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
-          if (!onboarded || !hasPeopleOnMap) {
-            window.location.replace("/onboarding?source=url");
-            return;
-          }
-          window.location.replace("/pricing?blocked=boot_action&source=url");
-          return;
-        }
-
-        window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
+      if (bootActionParam) {
+        window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, bootActionParam);
         setLockFullAppMode(true);
         setShouldLoadFullApp(true);
         // Clean URL
@@ -367,6 +343,11 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
         )}
         <AnalyticsConsentBanner />
         <AnalyticsDiagnosticsOverlay />
+        
+        {isArtistOpen && (
+          <ConsciousnessArtist onClose={() => setIsArtistOpen(false)} />
+        )}
+
         {runtimeEnv.isProd && (
           <Suspense fallback={<AwarenessSkeleton />}>
             <Analytics />

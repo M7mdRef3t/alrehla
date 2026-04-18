@@ -130,7 +130,7 @@ import { useAdminState } from "@/domains/admin/store/admin.store";
 import { CampaignLeadsModal } from "./CampaignLeadsModal";
 
 function getBearerToken(): string {
-  return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
+  return getAuthToken() ?? "";
 }
 
 async function fetchStats(force = false): Promise<OpsStats> {

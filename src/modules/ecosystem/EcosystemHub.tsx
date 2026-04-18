@@ -8,10 +8,7 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  Moon, Mail, Flame, TrendingUp, Eye, Brain, Compass,
-  BookOpen, AlertTriangle, LayoutGrid, Bell, ScrollText,
-  Droplets, Scale, Users, FileText, Sparkles, Gem,
-  Shield, Timer, Star, Zap, ArrowUpRight,
+  Shield, Timer, Star, Zap, ArrowUpRight, X, LayoutGrid
 } from "lucide-react";
 
 // Import stores to aggregate data
@@ -47,13 +44,14 @@ interface ProductPulse {
 
 interface EcosystemHubProps {
   onNavigate?: (screen: string) => void;
+  onClose?: () => void;
 }
 
 /* ═══════════════════════════════════════════ */
 /*           MAIN COMPONENT                   */
 /* ═══════════════════════════════════════════ */
 
-export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
+export default function EcosystemHub({ onNavigate, onClose }: EcosystemHubProps) {
   // Pull data from all stores
   const mapNodes = useMapState((s) => s.nodes);
   const pledges = useMithaqState((s) => s.pledges);
@@ -129,6 +127,15 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
             <p className="text-xs text-slate-500 font-medium mt-0.5">27 منتج — نظرة واحدة</p>
           </div>
         </div>
+
+        {onClose && (
+          <button 
+            onClick={onClose}
+            className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/5 transition-all"
+          >
+            <X className="w-6 h-6 text-white/40" />
+          </button>
+        )}
       </motion.div>
 
       {/* Ecosystem Health Ring */}

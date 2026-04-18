@@ -52,9 +52,9 @@ export const WirdScreen: FC = () => {
   const [gratitudeInput, setGratitudeInput] = useState("");
 
   const {
-    rituals, history, streak, bestStreak,
+    rituals, history, streak, bestStreak, dailyDirective,
     completeRitual, addRitual, removeRitual, toggleRitual,
-    setIntention, setGratitude, getTodayCompletion,
+    setIntention, setGratitude, getTodayCompletion, fetchAIGeneratedWird
   } = useWirdState();
 
   const today = useMemo(() => getTodayCompletion(), [getTodayCompletion]);
@@ -115,6 +115,11 @@ export const WirdScreen: FC = () => {
       new_mode: viewMode
     });
   }, [viewMode]);
+
+  useEffect(() => {
+    // Generate AI daily wird/directive automatically
+    void fetchAIGeneratedWird();
+  }, [fetchAIGeneratedWird]);
 
   const handleAddRitual = useCallback(() => {
     if (!newTitle.trim()) return;
@@ -247,6 +252,19 @@ export const WirdScreen: FC = () => {
             </button>
           ))}
         </div>
+
+        {/* AI Daily Directive */}
+        {dailyDirective && (
+           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-4 p-4 rounded-xl relative overflow-hidden"
+              style={{ background: "rgba(20,184,166,0.05)", border: "1px solid rgba(20,184,166,0.15)" }}
+           >
+              <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-teal-500/0 via-teal-500/50 to-teal-500/0" />
+              <p className="text-[10px] text-teal-500 font-bold flex items-center gap-1.5 mb-2">
+                 <Sparkles className="w-3 h-3" /> بوصلة اليوم المخصصة لك
+              </p>
+              <p className="text-sm font-bold text-white leading-relaxed">{dailyDirective}</p>
+           </motion.div>
+        )}
       </motion.div>
 
       {/* ═══ VIEW: Today ═══ */}

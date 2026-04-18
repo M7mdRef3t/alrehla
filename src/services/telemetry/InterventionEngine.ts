@@ -1,5 +1,5 @@
-
 import { useDigitalTwinState } from '@/domains/maraya/store/digitalTwin.store';
+import { useSwarmMutationStore } from '@/state/useSwarmMutationStore';
 
 export class InterventionEngine {
     private static lastUpdate: number = 0;
@@ -19,6 +19,23 @@ export class InterventionEngine {
             state.setInterventionMode(mode);
             this.applyFriction(mode);
             console.log(`[InterventionEngine] Mode Shift: ${mode}`);
+
+            if (mode === 'RECOVERY') {
+                // Auto-trigger the immersive Consciousness Artist!
+                useSwarmMutationStore.getState().setIsArtistOpen(true);
+
+                // Report High Rhythm/Chaos to Sovereign Engine Auto-Capture
+                fetch('/api/telemetry/report-anomaly', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'high_rhythm',
+                        message: 'System entered RECOVERY mode due to critical bio-telemetry/high interaction rhythm.',
+                        details: { stabilityScore: stability },
+                        sourcePath: typeof window !== 'undefined' ? window.location.pathname : 'Unknown'
+                    })
+                }).catch(() => {});
+            }
         }
     }
 

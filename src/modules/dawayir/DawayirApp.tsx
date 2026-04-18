@@ -9,7 +9,7 @@ import ChatInterface from '@/modules/action/Chat/ChatInterface';
 import CanvasComponent from '@/modules/exploration/Canvas/CanvasComponent';
 import FacilitatorChat from '@/modules/action/Chat/FacilitatorChat';
 import { useDawayirEngine, NodeData } from '@/hooks/useDawayirEngine';
-import { Sparkles, AlertCircle, Heart, ArrowLeft, Loader2, Save, Check, Share2, Activity, Zap, Shield, Clock, Terminal, Brain } from 'lucide-react';
+import { Sparkles, AlertCircle, Heart, ArrowLeft, Loader2, Save, Check, Share2, Activity, Zap, Shield, Clock, Terminal, Brain, Mic } from 'lucide-react';
 import { supabase } from '@/services/supabaseClient';
 import { AutomagicEventPopup } from '@/modules/exploration/Map/AutomagicEventPopup';
 import { AccessManager, SubscriptionInfo } from '../billing/AccessManager';
@@ -23,6 +23,8 @@ import { signInWithGoogleAtPath } from '@/services/authService';
 import { PaywallModal } from './components/PaywallModal';
 import { OracleModal, type OraclePrediction } from './components/OracleModal';
 import { TacticalHUD } from './components/TacticalHUD';
+import { MapArchitectChat } from './components/MapArchitectChat';
+import { LiveArtistSession } from '../action/Coaching/LiveArtistSession';
 
 export default function DawayirApp() {
     useAIOrchestration();
@@ -44,6 +46,8 @@ export default function DawayirApp() {
     const [oraclePrediction, setOraclePrediction] = useState<any>(null); // To store burnout_probability etc.
     const [showOracleModal, setShowOracleModal] = useState(false);
     const [showSimulation, setShowSimulation] = useState(false);
+    const [showMapArchitectChat, setShowMapArchitectChat] = useState(false);
+    const [showLiveArtist, setShowLiveArtist] = useState(false);
 
     // AI Facilitator State (Phase 3)
     const [focusedNode, setFocusedNode] = useState<NodeData | null>(null);
@@ -553,6 +557,23 @@ export default function DawayirApp() {
                                     </button>
                                 )}
                                 <button
+                                    onClick={() => setShowMapArchitectChat(true)}
+                                    className="px-6 py-3 bg-teal-600 text-white rounded-xl shadow-lg hover:bg-teal-700 transition-all duration-300 font-bold text-xs flex items-center justify-center gap-2 tracking-widest"
+                                >
+                                    <Terminal className="w-4 h-4" />
+                                    المهندس السيادي
+                                </button>
+                                <button
+                                    onClick={() => setShowLiveArtist(true)}
+                                    className="px-6 py-3 bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl shadow-lg hover:bg-amber-500/30 transition-all duration-300 font-bold text-xs flex items-center justify-center gap-2 tracking-widest relative overflow-hidden group"
+                                >
+                                    <div className="absolute inset-x-0 h-[2px] bottom-0 bg-amber-400 group-hover:h-full opacity-10 transition-all duration-300"></div>
+                                    <Mic className="w-4 h-4 group-hover:animate-pulse" />
+                                    فنان الوعي
+                                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-ping opacity-75"></span>
+                                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full"></span>
+                                </button>
+                                <button
                                     onClick={() => setShowPaywall(true)}
                                     className="px-8 py-3 bg-gray-900 text-white rounded-full shadow-lg shadow-gray-900/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-semibold"
                                 >
@@ -573,6 +594,17 @@ export default function DawayirApp() {
                         onClose={() => setShowPaywall(false)} 
                         onGoogleLogin={handleGoogleLogin} 
                     />
+                )}
+
+                {showMapArchitectChat && (
+                    <MapArchitectChat 
+                        onClose={() => setShowMapArchitectChat(false)}
+                        onMapSaved={() => window.location.reload()}
+                    />
+                )}
+
+                {showLiveArtist && (
+                    <LiveArtistSession onClose={() => setShowLiveArtist(false)} />
                 )}
 
             </div>

@@ -12,7 +12,7 @@ import { useAppOverlayState, useOverlayFlag } from "@/domains/consciousness/stor
 import { useGamification } from "@/domains/gamification";
 
 type AgentModule = typeof import('@/agent');
-const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
+const DEFAULT_WHATSAPP_CONTACT = "0201140111147";
 
 function normalizeArabicDigits(value: string) {
   return value

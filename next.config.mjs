@@ -86,6 +86,32 @@ const nextConfig = {
         destination: "/weather",
         permanent: true,
       },
+      // Vanity App Tools Redirects
+      {
+        source: "/bawsala",
+        destination: "/?boot_action=navigate:bawsala",
+        permanent: false,
+      },
+      {
+        source: "/maraya",
+        destination: "/?boot_action=navigate:maraya",
+        permanent: false,
+      },
+      {
+        source: "/masarat",
+        destination: "/?boot_action=navigate:masarat",
+        permanent: false,
+      },
+      {
+        source: "/session-intake",
+        destination: "/?boot_action=navigate:session-intake",
+        permanent: false,
+      },
+      {
+        source: "/atmosfera",
+        destination: "/?boot_action=navigate:atmosfera",
+        permanent: false,
+      },
     ];
   },
 };

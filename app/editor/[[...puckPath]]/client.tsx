@@ -193,7 +193,7 @@ export function EditorClient({ path, initialData }: { path: string, initialData:
   };
 
   return (
-    <div className="w-full h-screen relative bg-slate-950 font-sans">
+    <div className="w-full h-full relative bg-slate-950 font-sans">
       <style dangerouslySetInnerHTML={{__html: `
         :root {
           --puck-color-bg: #020617 !important;

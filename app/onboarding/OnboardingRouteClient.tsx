@@ -66,7 +66,7 @@ const WarpOverlay = () => (
            className="h-full bg-teal-400"
            initial={{ width: "0%" }}
            animate={{ width: "100%" }}
-           transition={{ duration: 2, ease: "easeInOut" }}
+           transition={{ duration: 1, ease: "easeInOut" }}
          />
        </div>
      </motion.div>
@@ -100,11 +100,7 @@ export default function OnboardingRouteClient() {
     const baselineCompletedAt = useJourneyState.getState().baselineCompletedAt;
     
     if (typeof window !== "undefined" && (nodesCount > 0 || baselineCompletedAt)) {
-      if (hasRevenueAccess()) {
-        window.location.replace("/?boot_action=start_recovery");
-      } else {
-        window.location.replace("/activation?resume=1&source=onboarding");
-      }
+      window.location.replace("/?boot_action=start_recovery");
     }
   }, []);
 
@@ -128,10 +124,11 @@ export default function OnboardingRouteClient() {
 
     const nextUrl = `/?${params.toString()}`;
 
-    // 2. Cinematic delay
+    // 🎯 Optimized Cinematic transition
+    // Reduced from 2200ms to allow for faster handoff while preserving the premium feel.
     setTimeout(() => {
       window.location.href = nextUrl;
-    }, 2200);
+    }, 1000);
   }, []);
 
   return (

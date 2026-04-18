@@ -24,7 +24,7 @@ interface OracleLead {
 }
 
 function getBearerToken(): string {
-  return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
+  return getAuthToken() ?? "";
 }
 
 export function OracleLeadsAnalysis({ onOpenWhatsapp }: { 

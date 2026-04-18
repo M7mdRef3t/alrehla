@@ -22,6 +22,8 @@ import {
   getRelationshipWeatherEntryHref,
   getRelationshipWeatherPath
 } from "@/utils/relationshipWeatherJourney";
+import { EvolutionarySynapse } from "@/core/synapse/EvolutionarySynapse";
+import { hasRevenueAccess } from "@/services/revenueAccess";
 
 /* ─── Props ─────────────────────────────────────────────────────────── */
 
@@ -54,7 +56,8 @@ const stagger = {
 const LANDING_STYLES = `
   .landing-root {
     font-family: var(--font-sans);
-    background: transparent;
+    background-color: #02040a;
+    background: #02040a;
   }
 
   .landing-principles-label {
@@ -286,11 +289,8 @@ export const Landing: FC<LandingPropsExtended> = ({
     
     setTimeout(() => {
       if (typeof window !== "undefined") {
-        if (hasExistingJourney) {
-          _onStartJourney();
-        } else {
-          window.location.assign("/onboarding");
-        }
+        // Always use internal SPA navigation to avoid 404 on /onboarding
+        _onStartJourney();
       }
     }, 1200);
   }, [mirrorName, hasExistingJourney, _onStartJourney]);
@@ -305,59 +305,126 @@ export const Landing: FC<LandingPropsExtended> = ({
         mode="default" 
         intensity={1} 
       />
-      {/* ════ NEW HERO SECTION ════ */}
-      <HeroSection
-        onStartJourney={handleStart}
-        mirrorName={mirrorName}
-        setMirrorName={setMirrorName}
-        pulseCount={1947}
-        trustPoints={["توازن", "تشتت", "استنزاف"]}
-        ctaJourney={landingCopy.ctaJourney}
-        secondaryCta={landingCopy.secondaryCta}
+      {/* ════ EVOLUTIONARY HERO SECTION ════ */}
+      <EvolutionarySynapse
+        componentId="HeroSection"
+        DefaultComponent={HeroSection}
+        componentProps={{
+          onStartJourney: handleStart,
+          mirrorName: mirrorName,
+          setMirrorName: setMirrorName,
+          pulseCount: 1947,
+          trustPoints: ["توازن", "تشتت", "استنزاف"],
+          ctaJourney: landingCopy.ctaJourney,
+          secondaryCta: landingCopy.secondaryCta
+        }}
       />
 
       <div className="landing-intrinsic-sentinel" />
 
-      <section className="relative py-28 px-4 max-w-5xl mx-auto">
+      <section className="relative py-24 sm:py-32 px-4 max-w-6xl mx-auto" dir="rtl">
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease }}
-          className="glass-premium rounded-[32px] overflow-hidden p-10 sm:p-20 text-center"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.9, ease }}
+          className="text-center mb-16 sm:mb-20"
         >
-          <div className="mb-12">
-            <p className="text-xs font-black tracking-[0.4em] uppercase mb-4 landing-principles-label">
-              المبادئ الأولى — First Principles
-            </p>
-            <h2 className="text-3xl sm:text-5xl font-black mb-6 landing-principles-title">
-              إحنا مش بنخمّن.<br />إحنا بنحلل الـ Logic.
-            </h2>
-            <p className="text-base sm:text-lg max-w-[50ch] mx-auto landing-principles-copy">
-              الرحلة بتستخدم "نظام تشغيل خاص" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات (Logic) بتساعدك تاخد قراراتك من مركز قوتك.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-right" dir="rtl" id="landing-principles-grid">
-            {[
-              { title: "رصد الاستنزاف", desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية.", icon: "⚡" },
-              { title: "خرائط النبض", desc: "رسم بياني حقيقي لمين بيزودك ومين بيسحب منك.", icon: "📈" },
-              { title: "تحصين الحدود", desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي.", icon: "🛡️" }
-            ].map((f, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + i * 0.1 }}
-                className="p-8 rounded-2xl border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)]"
-              >
-                <div className="text-3xl mb-4">{f.icon}</div>
-                <h3 className="text-xl font-black mb-2 landing-feature-title">{f.title}</h3>
-                <p className="text-sm opacity-70 leading-relaxed landing-feature-desc">{f.desc}</p>
-              </motion.div>
-            ))}
-          </div>
+          <p className="text-[11px] font-black tracking-[0.5em] uppercase mb-6 landing-principles-label" style={{ letterSpacing: '0.5em' }}>
+            نظام التشغيل — Operating System
+          </p>
+          <h2 className="text-3xl sm:text-5xl font-black mb-8 landing-principles-title" style={{ lineHeight: 1.15 }}>
+            مش بنخمّن.<br />
+            <span style={{ color: 'var(--ds-color-primary)' }}>بنحلل الـ Logic.</span>
+          </h2>
+          <p className="text-base sm:text-lg max-w-[52ch] mx-auto landing-principles-copy" style={{ textAlign: 'center' }}>
+            الرحلة بتشوف علاقاتك كدوائر طاقة ومسارات تدفق — مفيش أحكام، فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.
+          </p>
         </motion.div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6" id="landing-principles-grid">
+          {[
+            {
+              title: "رصد الاستنزاف",
+              desc: "تحديد النقط اللي طاقتك بتتسرب منها — مش بالإحساس، بالبيانات.",
+              icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 28, height: 28 }}>
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+              ),
+              accentColor: "rgba(245, 166, 35, 0.6)",
+              glowColor: "rgba(245, 166, 35, 0.08)"
+            },
+            {
+              title: "خرائط النبض",
+              desc: "رسم بياني حقيقي لمين بيزودك ومين بيسحب — وكل حاجة بينهم.",
+              icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 28, height: 28 }}>
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+              ),
+              accentColor: "rgba(0, 240, 255, 0.6)",
+              glowColor: "rgba(0, 240, 255, 0.08)"
+            },
+            {
+              title: "تحصين الحدود",
+              desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي — من غير ما تخسر حد.",
+              icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 28, height: 28 }}>
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              ),
+              accentColor: "rgba(139, 92, 246, 0.6)",
+              glowColor: "rgba(139, 92, 246, 0.08)"
+            }
+          ].map((f, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.15 + i * 0.12, duration: 0.7, ease }}
+              className="group relative p-8 sm:p-9 rounded-2xl text-right transition-all duration-500"
+              style={{
+                background: `radial-gradient(ellipse at 50% 0%, ${f.glowColor} 0%, transparent 70%), rgba(255,255,255,0.02)`,
+                border: `1px solid rgba(255,255,255,0.06)`,
+                backdropFilter: 'blur(12px)',
+              }}
+              whileHover={{
+                borderColor: f.accentColor,
+                y: -4,
+                transition: { duration: 0.3 }
+              }}
+            >
+              {/* Accent glow on hover */}
+              <div
+                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                style={{
+                  background: `radial-gradient(ellipse at 50% 0%, ${f.glowColor} 0%, transparent 60%)`,
+                }}
+              />
+
+              <div
+                className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-110"
+                style={{
+                  background: `linear-gradient(135deg, ${f.glowColor}, transparent)`,
+                  border: `1px solid ${f.accentColor}`,
+                  color: f.accentColor,
+                  boxShadow: `0 0 20px ${f.glowColor}`,
+                }}
+              >
+                {f.icon}
+              </div>
+
+              <h3 className="relative text-lg sm:text-xl font-black mb-3 landing-feature-title" style={{ color: '#ffffff' }}>
+                {f.title}
+              </h3>
+              <p className="relative text-sm leading-relaxed landing-feature-desc" style={{ color: 'rgba(148, 163, 184, 0.85)', textAlign: 'right' }}>
+                {f.desc}
+              </p>
+            </motion.div>
+          ))}
+        </div>
       </section>
 
       <section className="relative py-20 px-4 max-w-3xl mx-auto">

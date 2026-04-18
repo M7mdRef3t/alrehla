@@ -255,24 +255,25 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   // Implementation of Layer 3 (Execution): Overlay Mutex & Severity Index
   // Auto-trigger pulse check logic
   usePulseCheckLogic(canUsePulseCheck, screen, true);
+
   const activeFlags = (Object.keys(flags) as AppOverlayFlag[]).filter((f) => flags[f]);
   const activeOverlayItems: Array<{ id: VisibleOverlayId; severity: number }> = activeFlags.map((f) => ({
     id: f,
-    severity: OVERLAY_SEVERITY[f] ?? 0
+    severity: (OVERLAY_SEVERITY && OVERLAY_SEVERITY[f]) !== undefined ? OVERLAY_SEVERITY[f] : 0
   }));
 
-  if (isEmergencyOpen) {
+  if (isEmergencyOpen && OVERLAY_SEVERITY?.emergency !== undefined) {
     activeOverlayItems.push({ id: "emergency", severity: OVERLAY_SEVERITY.emergency });
   }
 
   // Also include Pulse Check if it's open (it has its own state)
-  if (pulseCheckState.isOpen) {
+  if (pulseCheckState.isOpen && OVERLAY_SEVERITY?.pulseCheck !== undefined) {
     activeOverlayItems.push({ id: "pulseCheck", severity: OVERLAY_SEVERITY.pulseCheck });
   }
 
-  activeOverlayItems.sort((a, b) => b.severity - a.severity);
+  activeOverlayItems.sort((a, b) => (b.severity || 0) - (a.severity || 0));
   const topOverlayId = activeOverlayItems[0]?.id;
-  const isLockedByCritical = (activeOverlayItems[0]?.severity ?? 0) >= CRITICAL_SEVERITY_THRESHOLD;
+  const isLockedByCritical = ((activeOverlayItems[0]?.severity ?? 0) >= (CRITICAL_SEVERITY_THRESHOLD ?? 9));
 
   const isLivePage = useMemo(() => {
     if (!hasHydrated) return false;

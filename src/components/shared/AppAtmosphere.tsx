@@ -30,7 +30,7 @@ export const AppAtmosphere: React.FC<AppAtmosphereProps> = ({
                 opacity: isMinimal ? 0.3 : 0.6 * intensity,
                 background: isRadar 
                     ? 'radial-gradient(circle at 50% 50%, rgba(13, 148, 136, 0.15) 0%, transparent 70%)'
-                    : 'radial-gradient(circle at 50% 50%, rgba(45, 27, 105, 0.4) 0%, rgba(10, 10, 18, 1) 100%)'
+                    : 'radial-gradient(circle at 50% 50%, rgba(45, 27, 105, 0.4) 0%, #02040a 100%)'
             }}
             transition={{ duration: 2 }}
         />

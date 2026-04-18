@@ -31,6 +31,7 @@ import { isPrivilegedRole } from "@/utils/featureFlags";
 import { assignUrl } from "@/services/navigation";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+import { Z_LAYERS } from "@/config/zIndices";
 
 // Re-importing missing icons correctly
 import { BookOpen, Info, Compass } from "lucide-react";
@@ -71,6 +72,20 @@ const SCREEN_LABELS: Record<string, string> = {
   resources: "مركز الموارد",
   settings: "الإعدادات",
   profile: "الملف الشخصي",
+  maraya: "المرايا",
+  masarat: "المسارات",
+  atmosfera: "أتموسفير",
+  "session-intake": "جلسة خاصة",
+  baseera: "بصيرة",
+  watheeqa: "الوثيقة",
+  mizan: "الميزان",
+  rifaq: "رفاق الطريق",
+  murshid: "المرشد",
+  taqrir: "التقرير",
+  riwaya: "الرواية",
+  markaz: "المركز",
+  sijil: "سجل الرحلة",
+  "ecosystem-hub": "المنظومة",
 };
 
 export interface PlatformHeaderProps {
@@ -207,7 +222,7 @@ export const PlatformHeader = memo(function PlatformHeader({
     }
   }, [isLoggedIn, onLogin, onNavigate]);
 
-  const headerClassName = `fixed top-0 right-0 left-0 z-50 flex items-center justify-between px-4 md:px-6 lg:px-12 h-16 md:h-20 transition-all duration-500 transform ${
+  const headerClassName = `fixed top-0 right-0 left-0 flex items-center justify-between px-4 md:px-6 lg:px-12 h-16 md:h-20 transition-all duration-500 transform ${
     hidden ? "-translate-y-full" : "translate-y-0"
   } ${
     scrolled
@@ -221,6 +236,7 @@ export const PlatformHeader = memo(function PlatformHeader({
       dir="rtl"
       aria-label="الشريط العلوي"
       className={headerClassName}
+      style={{ zIndex: Z_LAYERS.NAVIGATION_BARS }}
     >
       <button
         type="button"
@@ -606,13 +622,13 @@ export const PlatformHeader = memo(function PlatformHeader({
             type="button"
             id="header-landing-cta"
             onClick={handleLandingCta}
-            className="group relative flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold overflow-hidden"
+            className="group relative flex items-center gap-1.5 sm:gap-2 px-4 py-2 sm:px-6 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-500 transition-transform group-hover:scale-110" />
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             
-            <LogIn className="w-5 h-5 text-slate-900 relative z-10" />
-            <span className="text-slate-900 relative z-10">تسجيل الدخول</span>
+            <LogIn className="w-4 h-4 sm:w-5 sm:h-5 text-slate-900 relative z-10" />
+            <span className="text-slate-900 relative z-10 whitespace-nowrap">تسجيل الدخول</span>
           </motion.button>
         )}
       </div>
@@ -647,12 +663,13 @@ export const MobileNavBar = memo(function MobileNavBar({
     <nav
       dir="rtl"
       aria-label="التنقل السفلي"
-      className="fixed bottom-0 right-0 left-0 z-50 md:hidden
+      className="fixed bottom-0 right-0 left-0 md:hidden
         flex items-center justify-around
         backdrop-blur-2xl
         border-t
         pb-safe pt-2 px-4 h-20
         bg-[var(--glass-bg)] border-[color:var(--glass-border)]"
+      style={{ zIndex: Z_LAYERS.NAVIGATION_BARS }}
     >
       {MOBILE_NAV.map(({ id, label, icon: Icon }) => {
         const isActive = activeNavId === id;

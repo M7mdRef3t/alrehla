@@ -9,6 +9,7 @@ import { StatCard, formatNumber } from "./components/StatCard";
 import { PhaseOneGoal } from "../Overview/components/PhaseOneGoal";
 import { SuccessIndexCard } from "../Overview/components/SuccessIndexCard";
 import { ExecutiveReport } from "../Overview/components/ExecutiveReport";
+import { SovereignABTestRadar } from "../Analytics/SovereignABTestRadar";
 
 import {
     fetchOverviewStats,
@@ -219,7 +220,7 @@ export const ExecutiveDashboard: FC = () => {
                         title="نظرة عامة سريعة"
                         icon={<LayoutDashboard className="w-4 h-4" />}
                         subtitle="إحصائيات شاملة في الوقت الفعلي"
-                        defaultExpanded={true}
+                        defaultExpanded={false}
                         headerColors="border-indigo-500/20 bg-indigo-500/5 text-indigo-400"
                         headerAction={renderSectionLink("users-state", "رادار الأرواح")}
                     >
@@ -272,12 +273,14 @@ export const ExecutiveDashboard: FC = () => {
                         </div>
                     </CollapsibleSection>
 
+                    <SovereignABTestRadar />
+
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <CollapsibleSection
                             title="مؤشر نجاح المرحلة (Phase One)"
                             icon={<Target className="w-4 h-4" />}
                             subtitle="قياس وتقييم الفرضيات"
-                            defaultExpanded={true}
+                            defaultExpanded={false}
                             headerColors="border-amber-500/20 bg-amber-500/5 text-amber-500"
                             headerAction={renderSectionLink("growth-revenue", "لوحة الإيرادات")}
                         >
@@ -320,7 +323,7 @@ export const ExecutiveDashboard: FC = () => {
                             title="أهداف الرحلة الحالية"
                             icon={<Activity className="w-4 h-4" />}
                             subtitle="مؤشرات الأداء"
-                            defaultExpanded={true}
+                            defaultExpanded={false}
                             headerColors="border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
                             headerAction={renderSectionLink("flow-map", "تحليل المسارات")}
                         >
@@ -349,7 +352,7 @@ export const ExecutiveDashboard: FC = () => {
                         title="جاهزية التوسع التجاري"
                         icon={<Rocket className="w-4 h-4" />}
                         subtitle="تحليل فرصة النمو العالمي"
-                        defaultExpanded={successDecision === "scale"}
+                        defaultExpanded={false}
                         headerColors="border-rose-500/20 bg-rose-500/5 text-rose-400"
                         headerAction={renderSectionLink("expansion-hub", "بوابة التوسع")}
                     >

@@ -20,7 +20,12 @@ const LANDING_BOOT_SCREENS: AppScreen[] = [
   "resources",
   "quizzes",
   "behavioral-analysis",
-  "settings"
+  "settings",
+  "bawsala",
+  "maraya",
+  "masarat",
+  "atmosfera",
+  "session-intake"
 ];
 
 interface UseAppStartupOnboardingParams {

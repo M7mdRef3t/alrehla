@@ -15,7 +15,7 @@ import { getAuthToken } from "@/domains/auth/store/auth.store";
 import { buildMarketingEmail } from "../../../../lib/marketing/emailTemplate";
 
 function getBearerToken(): string {
-  return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
+  return getAuthToken() ?? "";
 }
 
 interface CampaignLeadsModalProps {
@@ -374,6 +374,25 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     }
   };
 
+  const handlePushToTelegram = async (id: string) => {
+    showMsg(id, "⏳ جاري إرسال التنبيه لهاتفك...");
+    try {
+      const res = await fetch("/api/admin/marketing-ops", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
+        body: JSON.stringify({ action: "push_to_telegram", leadId: id })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showMsg(id, "🚀 تم إرسال التنبيه لهاتفك بنجاح! راجع تيلجرام ✅");
+      } else {
+        showMsg(id, "⚠️ فشل إرسال التنبيه: " + (data.error || "تأكد من إعدادات الـ Bot"), true);
+      }
+    } catch {
+      showMsg(id, "⚠️ فشل الاتصال بالسيرفر", true);
+    }
+  };
+
 
   const copyProfessionalTemplate = async (lead: any) => {
     try {
@@ -678,6 +697,7 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
                     onValidateEmail={() => validateLeadEmail(lead)}
                     validationState={validationStates[lead.id]}
                     onSyncMeta={() => handleSyncMeta(lead.id)}
+                    onPushToTelegram={() => handlePushToTelegram(lead.id)}
                   />
                   ))}
                 </div>
@@ -730,7 +750,7 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
 }
 
 function LeadCommandCard({ 
-  lead, isEditing, isExpanded, history, editForm, setEditForm, onSave, onCancel, onStartEdit, onToggleExpand, onResend, onStatusChange, onSaveNotes, onLeadUpdated, resending, actionMessage, isSaving, aiSummary, onPulse, onTriggerBatch, onCopyTemplate, onMarkBounced, onValidateEmail, validationState, hasNext, hasPrev, onNext, onPrev, onSyncMeta
+  lead, isEditing, isExpanded, history, editForm, setEditForm, onSave, onCancel, onStartEdit, onToggleExpand, onResend, onStatusChange, onSaveNotes, onLeadUpdated, resending, actionMessage, isSaving, aiSummary, onPulse, onTriggerBatch, onCopyTemplate, onMarkBounced, onValidateEmail, validationState, hasNext, hasPrev, onNext, onPrev, onSyncMeta, onPushToTelegram
 }: any) {
 
   const getSourceLabel = (s: string) => {
@@ -973,6 +993,9 @@ function LeadCommandCard({
                   </button>
                   <button onClick={onStartEdit} className="p-2.5 rounded-xl text-slate-400 hover:bg-white/10 transition-all active:scale-90" title="تعديل بيانات الروح">
                       <Edit2 className="w-5 h-5" />
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); onPushToTelegram(); }} className="p-2.5 rounded-xl text-blue-400 hover:bg-blue-400/10 transition-all active:scale-90" title="إرسال بيانات المسافر إلى تيلجرام (متابعة يدوية)">
+                      <Send className="w-5 h-5 -rotate-45" />
                   </button>
                 </div>
                 

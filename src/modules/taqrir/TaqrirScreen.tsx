@@ -94,7 +94,6 @@ export const TaqrirScreen: FC = () => {
   const rawLogs = usePulseState((s) => s.logs);
   const logs = useMemo(() => rawLogs ?? [], [rawLogs]);
   const { xp, level, streak, badges } = useGamificationState();
-  const levelProgress = useGamificationState((s) => s.getLevelProgress());
   const rawNodes = useMapState((s) => s.nodes);
   const nodes = useMemo(() => rawNodes ?? [], [rawNodes]);
   const { crashProbability } = usePredictiveState();

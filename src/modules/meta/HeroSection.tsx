@@ -50,8 +50,9 @@ const HERO_STYLES = `
     display: flex;
     align-items: center;
     overflow-x: hidden;
-    overflow-y: clip;
-    background: var(--void);
+    overflow-y: visible;
+    background-color: var(--void);
+    background-image: radial-gradient(circle at 50% 45%, rgba(2, 4, 10, 0.98) 0%, rgba(2, 4, 10, 0.4) 45%, var(--void) 90%);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -142,7 +143,8 @@ const HERO_STYLES = `
 
   .hero-input {
     flex: 1;
-    background: transparent;
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
     border: none;
     outline: none;
     padding: 15px 20px;
@@ -162,14 +164,18 @@ const HERO_STYLES = `
   }
 
   .hero-input-greeting {
-    padding: 0 18px;
+    padding: 15px 18px;
     font-size: 13px;
-    color: var(--gold);
+    background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 40%, #5eead4 75%, #a7f3d0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 12px rgba(45,212,191,0.28));
     font-weight: 800;
     white-space: nowrap;
-    filter: drop-shadow(0 0 12px var(--gold-glow));
     position: relative;
     z-index: 1;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .hero-input-note {
@@ -180,16 +186,16 @@ const HERO_STYLES = `
   }
 
   .hero-headline {
-    font-size: clamp(2.4rem, 5.5vw, 4.4rem);
+    font-size: clamp(2.5rem, 5vw, 4.1rem);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 0;
     overflow: visible;
     font-family: "Alexandria", sans-serif;
-    line-height: 1.4;
-    padding-top: 0.2em;
-    padding-bottom: 0.2em;
+    line-height: 1.15;
+    padding-top: 0;
+    padding-bottom: 0.3em;
     color: var(--text-main);
   }
 
@@ -203,7 +209,8 @@ const HERO_STYLES = `
     display: flex;
     flex-direction: column;
     gap: 16px;
-    width: 100%;
+    width: fit-content;
+    align-items: center;
   }
 
   .hero-trust-row {
@@ -217,18 +224,25 @@ const HERO_STYLES = `
     font-weight: 700;
     color: rgba(45, 212, 191, 0.8);
     text-align: center;
-    margin-top: 8px;
+    width: 100%;
+    margin-top: 4px;
     letter-spacing: 0.03em;
   }
 
   .hero-bottom-fade {
     position: absolute;
-    bottom: 0;
+    bottom: -1px;
     left: 0;
     right: 0;
-    height: 160px;
+    height: 380px;
+    background: linear-gradient(to top, 
+      var(--void) 0%, 
+      var(--void) 15%, 
+      rgba(2, 4, 10, 0.8) 40%, 
+      transparent 100%
+    );
     pointer-events: none;
-    background: linear-gradient(to top, var(--void), transparent);
+    z-index: 5;
   }
 
   .warp-overlay {
@@ -561,8 +575,11 @@ const HERO_STYLES = `
   .hero-canvas {
     position: absolute;
     inset: 0;
-    overflow: visible;
     pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 98%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 98%);
   }
 
   .hero-grid-wrapper {
@@ -663,9 +680,9 @@ const HERO_STYLES = `
 
   .rotating-word-wrapper {
     position: relative;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    width: 100%;
+    width: auto;
     min-height: 1.3em;
     padding: 0;
     overflow: visible;
@@ -678,20 +695,23 @@ const HERO_STYLES = `
 
   .hero-body {
     font-size: 1rem;
-    line-height: 1.9;
+    line-height: 1.85;
     color: var(--text-muted);
-    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
-    max-width: 100%;
-    text-align: right;
+    max-width: 520px;
+    text-align: justify;
+    text-align-last: right;
+    margin-top: 0.5rem;
   }
 
   .cta-primary {
     position: relative;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    width: 100%;
     gap: 12px;
-    padding: 18px 36px;
-    border-radius: 20px;
+    padding: 16px 32px;
+    border-radius: 18px;
     background: rgba(0, 240, 255, 0.08);
     backdrop-filter: blur(20px) saturate(180%);
     font-size: 1.15rem;
@@ -699,38 +719,51 @@ const HERO_STYLES = `
     color: #fff;
     cursor: pointer;
     border: 1px solid rgba(0, 240, 255, 0.5);
-    box-shadow: 0 0 40px rgba(0, 240, 255, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.15);
-    transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.15);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
+  }
+
+  .cta-primary:hover {
+    transform: translateY(2px) scale(0.98);
+    background: rgba(0, 240, 255, 0.10);
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+  }
+
+  .cta-primary:active {
+    transform: translateY(4px) scale(0.96);
+    background: rgba(0, 240, 255, 0.15);
+    box-shadow: inset 0 6px 16px rgba(0,0,0,0.4), inset 0 0px 1px rgba(255, 255, 255, 0.05);
   }
 
   .hero-content-wrapper {
     position: relative;
-    z-index: 2;
+    z-index: 10;
     width: 100%;
-    max-width: 1380px;
+    max-width: 1320px;
     margin: 0 auto;
-    padding: 7rem 2rem 6rem;
+    padding: 6rem 2rem 5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 4rem;
+    gap: 2.5rem;
   }
 
   .map-area {
     flex: 0 0 auto;
-    width: min(46vw, 520px);
+    width: min(42vw, 460px);
     position: relative;
-    padding-bottom: 56px;
+    padding-bottom: 48px;
   }
 
   .headline-subline-container {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    font-size: 0.78em;
-    margin-top: 18px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    gap: 0.35em;
+    font-size: 0.65em;
+    margin-top: 0.3em;
     width: 100%;
   }
 
@@ -743,18 +776,19 @@ const HERO_STYLES = `
     line-height: 1;
     white-space: nowrap;
   }
-  .word-ant  { opacity: 0.98; font-size: 1.42em; }
-  .word-faqat { opacity: 0.95; }
+  .word-ant  { opacity: 0.85; font-size: 1em; }
+  .word-faqat { opacity: 0.85; }
 
   @media (max-width: 1023px) {
     .hero-headline {
-      font-size: clamp(1.6rem, 7.5vw, 2.4rem) !important;
-      align-items: flex-start !important;
-      text-align: right !important;
+      font-size: clamp(1.8rem, 9vw, 2.9rem) !important;
+      align-items: center !important;
+      text-align: center !important;
+      margin-top: -1.5rem !important;
     }
     .headline-line {
-      text-align: right !important;
-      justify-content: flex-start !important;
+      text-align: center !important;
+      justify-content: center !important;
       width: 100% !important;
       /* Prevent jitter by locking height */
       min-height: 1.4em !important;
@@ -762,12 +796,13 @@ const HERO_STYLES = `
       transform: translateZ(0);
     }
     .headline-subline-container {
-      align-items: flex-start !important;
+      align-items: center !important;
+      justify-content: center !important;
       width: 100% !important;
     }
     .hero-content-wrapper {
       flex-direction: column !important;
-      padding: 5.5rem 1rem 2rem !important;
+      padding: 7rem 1rem 2rem !important;
       gap: 2rem !important;
     }
     .map-area {
@@ -779,19 +814,30 @@ const HERO_STYLES = `
     .hero-copy-column {
       max-width: 100% !important;
       align-items: center !important;
+      text-align: center !important;
     }
     .hero-body {
-      text-align: right !important;
+      text-align: center !important;
+      text-align-last: center !important;
+      margin-top: -1rem !important;
     }
     .hero-action-row {
       align-items: center !important;
     }
-    .hero-input-wrapper, .cta-primary {
+    .hero-input-wrapper {
       width: 100% !important;
       max-width: 320px !important;
-      /* Reduce heavy blur effect on mobile to prevent shaking */
       backdrop-filter: blur(4px) !important;
       -webkit-backdrop-filter: blur(4px) !important;
+    }
+    .cta-primary {
+      backdrop-filter: blur(4px) !important;
+      -webkit-backdrop-filter: blur(4px) !important;
+      width: fit-content !important;
+      max-width: none !important;
+      padding: 14px 28px !important;
+      font-size: 1rem !important;
+      border-radius: 16px !important;
     }
     .sovereign-map__atmosphere {
       /* Reduce blur intensity for performance */
@@ -1130,6 +1176,8 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
           <div className="hero-screen-glow" />
         </div>
 
+        <div className="hero-bottom-fade" />
+
         <div className="hero-content-wrapper">
           <motion.div
             variants={stagger} initial="hidden" animate="visible"
@@ -1157,31 +1205,21 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
             </motion.p>
 
             <div className="hero-action-row">
-              <motion.div variants={fadeUp} className="hero-input-wrapper">
+              <motion.div variants={fadeUp} className="hero-input-wrapper w-full">
                 <div className="hero-input-greeting">يا مسافر،</div>
                 <input type="text" className="hero-input" placeholder="اسمك إيه؟" value={mirrorName} onChange={(e) => setMirrorName(e.target.value)} />
               </motion.div>
               <motion.button variants={fadeUp} onClick={handleStart} className="cta-primary">
                 <Zap className="hero-cta-icon" />{ctaJourney}<ArrowLeft className="hero-cta-icon--arrow" />
               </motion.button>
-              <motion.p variants={fadeUp} className="cta-free-badge">استكشاف مجاني ١٠٠٪ — لا يتطلب بطاقة ائتمان</motion.p>
+              <motion.p variants={fadeUp} className="cta-free-badge">بدون تسجيل، استكشاف سريع فقط</motion.p>
             </div>
-
-            <motion.div variants={stagger} className="hero-trust-row mt-4">
-              {trustPoints.map(point => (
-                <motion.div key={point} variants={fadeUp} className="trust-pill">
-                  <Shield className="trust-icon" /><span>{point}</span>
-                </motion.div>
-              ))}
-            </motion.div>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.2, delay: 0.4, ease: techEase }} className="map-area">
             <SovereignMap reduceMotion={reduceMotion} />
           </motion.div>
         </div>
-
-        <div className="hero-bottom-fade" />
       </section>
 
       <AnimatePresence>

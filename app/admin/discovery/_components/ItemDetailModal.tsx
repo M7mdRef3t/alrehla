@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { X, Save, Trash2, Loader2, Star, Plus, Minus } from "lucide-react";
+import { X, Save, Trash2, Loader2, Star, Plus, Minus, Target, Rocket, Code2, Link as LinkIcon } from "lucide-react";
 import { DiscoveryItem } from "@/types/discovery";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import { createMission } from "@/services/adminApi";
 
 type ItemDetailModalProps = {
   item: DiscoveryItem;
@@ -18,6 +19,102 @@ export default function ItemDetailModal({ item, onClose, onUpdate, onDelete }: I
 
   const set = <K extends keyof DiscoveryItem>(key: K, val: DiscoveryItem[K]) =>
     setForm((f) => ({ ...f, [key]: val }));
+
+  const handlePromoteToMission = async () => {
+    setIsSaving(true);
+    try {
+      // 1. Create the Mission
+      const mission = await createMission({
+        title: `M: ${form.title}`,
+        track: "تطوير المنصة",
+        difficulty: "متوسط"
+      });
+
+      if (!mission) throw new Error("Failed to create mission.");
+
+      // 2. Link it back to the Discovery Item
+      const execution_link = `mission:${mission.id}`;
+      const updates = { 
+        execution_link,
+        stage: "In Delivery" as const,
+        next_step: "Mission created and linked. Monitor execution in Governance Hub."
+      };
+      
+      const adminCode = runtimeEnv.adminCode ?? "";
+      const res = await fetch("/api/admin/discovery", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminCode}`,
+        },
+        body: JSON.stringify({ id: form.id, updates }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update signal with execution link.");
+
+      onUpdate(form.id, updates);
+      setForm(f => ({ ...f, ...updates }));
+    } catch (err) {
+      console.error("Promotion failed:", err);
+      alert("Promotion failed. Check console for details.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePromoteToMutation = async () => {
+    setIsSaving(true);
+    try {
+      const adminCode = runtimeEnv.adminCode ?? "";
+      
+      // 1. Create the Mutation
+      const mutRes = await fetch("/api/admin/sovereign/mutations", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${adminCode}` 
+        },
+        body: JSON.stringify({
+          component_id: form.tags?.[0] || "global",
+          variant_name: `V: ${form.title}`,
+          variant_path: `/mutants/${form.id.slice(0,8)}`,
+          hypothesis: form.hypothesis || form.description,
+          resonance_score_delta: 0.1,
+          friction_events_count: 0
+        })
+      });
+
+      if (!mutRes.ok) throw new Error("Failed to create mutation hypothesis.");
+      const { data: mutation } = await mutRes.json();
+
+      // 2. Link it back
+      const execution_link = `mutation:${mutation.id}`;
+      const updates = { 
+        execution_link,
+        stage: "In Delivery" as const,
+        next_step: "UI Mutation proposed. Pending autonomous agent generation / refinement."
+      };
+      
+      const res = await fetch("/api/admin/discovery", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminCode}`,
+        },
+        body: JSON.stringify({ id: form.id, updates }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update signal with mutation link.");
+
+      onUpdate(form.id, updates);
+      setForm(f => ({ ...f, ...updates }));
+    } catch (err) {
+      console.error("Mutation promotion failed:", err);
+      alert("Mutation promotion failed. Check console.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -124,6 +221,24 @@ export default function ItemDetailModal({ item, onClose, onUpdate, onDelete }: I
                   <option value="critical">Critical</option>
                 </select>
               </div>
+              <div className="col-span-2">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-2">Funnel Stage</label>
+                <div className="flex flex-wrap gap-2">
+                  {["onboarding", "awareness", "conversion", "retention", "expansion"].map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => set("funnel_stage", st)}
+                      className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                        form.funnel_stage === st 
+                          ? "bg-blue-500/20 border-blue-500/40 text-blue-400" 
+                          : "bg-neutral-800 border-white/5 text-neutral-500 hover:text-neutral-300"
+                      }`}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </section>
 
@@ -164,6 +279,57 @@ export default function ItemDetailModal({ item, onClose, onUpdate, onDelete }: I
                 rows={2}
               />
             </div>
+
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-600 mb-2">Primary Risk / Assumption</label>
+              <textarea 
+                value={form.risk || ""} 
+                onChange={(e) => set("risk", e.target.value)}
+                placeholder="What could go wrong? What are we assuming?"
+                className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-sm text-neutral-300 focus:outline-none focus:border-rose-500/30 resize-none"
+                rows={2}
+              />
+            </div>
+          </section>
+
+          {/* Execution Layer */}
+          <section className="bg-indigo-500/5 border border-indigo-500/20 rounded-3xl p-6 space-y-4">
+             <div className="flex items-center gap-2 text-indigo-400">
+                <Rocket className="w-4 h-4" />
+                <h4 className="text-xs font-black uppercase tracking-[0.2em]">Execution Layer</h4>
+             </div>
+             
+             {form.execution_link ? (
+               <div className="flex items-center justify-between p-4 bg-black/40 border border-indigo-500/20 rounded-2xl">
+                  <div className="flex items-center gap-3">
+                    <LinkIcon className="w-4 h-4 text-indigo-400" />
+                    <div>
+                      <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Linked Task</p>
+                      <p className="text-sm font-bold text-white">{form.execution_link}</p>
+                    </div>
+                  </div>
+                  <button className="text-[10px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest">View Details</button>
+               </div>
+             ) : (
+               <div className="grid grid-cols-2 gap-4">
+                  <button 
+                    onClick={handlePromoteToMission}
+                    disabled={isSaving}
+                    className="flex flex-col items-center gap-2 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl hover:bg-indigo-500/20 transition-all group disabled:opacity-50"
+                  >
+                    <Target className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Promote to Mission</span>
+                  </button>
+                  <button 
+                    onClick={handlePromoteToMutation}
+                    disabled={isSaving}
+                    className="flex flex-col items-center gap-2 p-4 bg-purple-500/10 border border-purple-500/20 rounded-2xl hover:bg-purple-500/20 transition-all group disabled:opacity-50"
+                  >
+                    <Code2 className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Generate Mutation</span>
+                  </button>
+               </div>
+             )}
           </section>
 
           {/* Evidence List */}

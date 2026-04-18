@@ -43,6 +43,6 @@ export const opsLinks = [
  */
 export const revenueConfig = {
   currentMethod: "Vodafone Cash",
-  number: "01023050092"
+  number: "01140111147"
 };
 

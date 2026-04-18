@@ -80,6 +80,7 @@ import { SovereignActionBar } from '@/modules/action/SovereignActionBar';
 import { getJourneyPathBySlug } from "@/utils/journeyPaths";
 import { PROTOCOLS } from "./ProtocolEngine";
 import { EcosystemNavigator } from "@/components/EcosystemNavigator";
+import { Z_LAYERS } from "@/config/zIndices";
 
 
 const NotificationSettings = lazy(() =>
@@ -138,6 +139,7 @@ const InsightsLibrary = lazy(() =>
 const Goals2025Dashboard = lazy(() =>
   import("@/modules/growth/Goals2025Dashboard").then((m) => ({ default: m.Goals2025Dashboard }))
 );
+const EcosystemHub = lazy(() => import("@/modules/ecosystem/EcosystemHub"));
 const PersonalProgressDashboard = lazy(() =>
   import("@/modules/exploration/PersonalProgressDashboard").then((m) => ({ default: m.PersonalProgressDashboard }))
 );
@@ -171,9 +173,12 @@ const ManualPlacementModal = lazy(() =>
 const FeedbackModal = lazy(() =>
   import("./FeedbackModal").then((m) => ({ default: m.FeedbackModal }))
 );
+const InsightsVaultScreen = lazy(() =>
+  import("@/modules/baseera/InsightsVaultScreen").then((m) => ({ default: m.InsightsVaultScreen }))
+);
 
 
-const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
+const DEFAULT_WHATSAPP_CONTACT = "0201140111147";
 
 function normalizeArabicDigits(value: string): string {
   return value
@@ -336,6 +341,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showClassicRecovery, setShowClassicRecovery] = useState(false);
   const [showManualPlacement, setShowManualPlacement] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showEcosystemHub, setShowEcosystemHub] = useState(false);
+  const [showInsightsVault, setShowInsightsVault] = useState(false);
   const activeProtocolId = useJourneyStore((s) => s.activeProtocol);
   const activeProtocolInfo: { label: string; color: string } | null = (() => {
     if (!activeProtocolId) return null;
@@ -529,32 +536,63 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* ───── DESKTOP SIDEBAR ───── */}
       <div
-        className="fixed top-0 right-0 z-40 h-full hidden md:flex flex-row-reverse group/sidebar"
+        className="fixed top-0 right-0 h-full hidden md:flex flex-row-reverse group/sidebar"
+        style={{ zIndex: Z_LAYERS.SIDEBAR }}
         aria-label="القائمة الرئيسية"
       >
-        <div className={`h-full w-56 shrink-0 overflow-hidden border-l border-white/10 bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl transition-transform duration-300 ${isDesktopSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
-          <aside className="h-full w-full flex flex-col gap-3 py-6 px-4">
-            {viewingNode?.analysis && (
-              <div className="shrink-0 space-y-1 mb-1">
-                <RecoveryProgressBar node={viewingNode!} />
-                <p className="text-xs font-semibold text-slate-900 dark:text-white text-center truncate px-1" title={viewingNode?.label}>
-                  {viewingNode?.label}
-                </p>
+        <div 
+          className={`h-full w-64 shrink-0 overflow-hidden border-l border-white/5 bg-[#0B0F19] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+            isDesktopSidebarOpen ? "translate-x-0 opacity-100 shadow-[0_0_80px_rgba(0,0,0,0.8)]" : "translate-x-full opacity-0 pointer-events-none"
+          }`}
+        >
+          <aside className="h-full w-full flex flex-col gap-6 py-8 px-5">
+            {/* Header / Awareness Area */}
+            <div className="shrink-0 space-y-6 px-1">
+              {/* Health & Identity Status */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Activity className="w-3.5 h-3.5 text-teal-400" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.2em] text-teal-500/80">الوضع الراهن</span>
+                </div>
+                <HealthBar />
+                
+                {viewingNode?.analysis && (
+                  <div className="space-y-3 pt-2">
+                    <RecoveryProgressBar node={viewingNode!} isSidebar={true} />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 truncate text-center" title={viewingNode?.label}>
+                       التركيز حالياً: {viewingNode?.label}
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Energy Balance */}
+              <SovereignActionBar 
+                isSidebar={true}
+                viewingNodeId={viewingNode?.id} 
+                onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })} 
+              />
+
+              {/* Today's Mission / Call to Action */}
+              <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
+            </div>
             
-            <SovereignActionBar viewingNodeId={viewingNode?.id} onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })} className="mb-4" />
-            <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
-            
-            <div className="flex-1 overflow-y-auto no-scrollbar py-2 px-2 flex flex-col gap-4">
-              <EcosystemNavigator onNavigate={pushUrl} />
+            <div className="flex-1 overflow-y-auto custom-scrollbar py-2 px-1 flex flex-col gap-6">
+              <div className="flex items-center gap-2 px-1 mb-1">
+                <Wind className="w-3.5 h-3.5 text-slate-500" />
+                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-600">البوصلة</span>
+              </div>
+              <EcosystemNavigator 
+                onNavigate={pushUrl} 
+                onOpenHub={() => setShowEcosystemHub(true)}
+              />
               
               <SidebarSector title="الاستكشاف" icon={<Compass className="w-3.5 h-3.5" />} color="teal">
                 <SidebarItem
                   label="الخريطة (فهم الذات)"
                   icon={<Map className="w-3.5 h-3.5 outline-none" />}
-                  onClick={() => pushUrl("/")}
-                  active={window.location.pathname === "/"}
+                  onClick={() => pushUrl("/#map")}
+                  active={window.location.pathname === "/" || window.location.hash === "#map"}
                   color="#14b8a6"
                 />
                 <SidebarItem
@@ -563,37 +601,50 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => setShowGoals2025(true)}
                   color="#10b981"
                 />
+                <SidebarItem
+                  label="خزنة البصائر"
+                  icon={<BookOpen className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => setShowInsightsVault(true)}
+                  color="#a78bfa"
+                />
               </SidebarSector>
 
               {/* Missions Section */}
-              {activeMissions.length > 0 && (
-                <SidebarSector title="المهمات الحالية" icon={<Sparkles className="w-3.5 h-3.5" />} color="amber">
-                  {activeMissions.map((mission) => (
-                    <SidebarItem
-                      key={mission.node.id}
-                      label={mission.summary.missionLabel}
-                      icon={<Target className="w-3.5 h-3.5" />}
-                      onClick={() => onOpenMission?.(mission.node.id)}
-                      badge={mission.summary.completed + "/" + mission.summary.total}
-                      color="#f5a623"
-                    />
-                  ))}
-                </SidebarSector>
-              )}
+              <AnimatePresence>
+                {activeMissions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <SidebarSector title="المهمات الحالية" icon={<Sparkles className="w-3.5 h-3.5" />} color="amber">
+                      {activeMissions.map((mission) => (
+                        <SidebarItem
+                          key={mission.node.id}
+                          label={mission.summary.missionLabel}
+                          icon={<Target className="w-3.5 h-3.5" />}
+                          onClick={() => onOpenMission?.(mission.node.id)}
+                          badge={mission.summary.completed + "/" + mission.summary.total}
+                          color="#f5a623"
+                        />
+                      ))}
+                    </SidebarSector>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {completedMissions.length > 0 && (
                 <SidebarSector title="مهمات مكتملة" icon={<CheckCircle2 className="w-3.5 h-3.5" />} color="emerald">
                   {completedMissions.map((mission) => (
-                    <div key={mission.node.id} className="group flex items-center justify-between px-3 py-1.5 hover:bg-emerald-500/5 rounded-md transition-colors">
+                    <div key={mission.node.id} className="group flex items-center justify-between px-3 py-1.5 hover:bg-emerald-500/5 rounded-xl transition-colors">
                       <div className="flex items-center gap-3 overflow-hidden">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                        <span className="text-xs text-slate-400 group-hover:text-emerald-500 transition-colors truncate">
+                        <span className="text-xs text-slate-400 group-hover:text-emerald-300 transition-colors truncate">
                           {mission.summary.missionLabel}
                         </span>
                       </div>
                       <button
                         onClick={() => archiveMission(mission.node.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-emerald-500/10 rounded text-slate-400 hover:text-emerald-500 transition-all"
+                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-emerald-500/10 rounded-lg text-slate-400 hover:text-emerald-500 transition-all"
                         title="أرشفة"
                       >
                         <Archive className="w-3.5 h-3.5" />
@@ -607,14 +658,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               {(archivedMissions.length > 0 || archivedNodes.length > 0) && (
                 <SidebarSector title="الأرشيف" icon={<Archive className="w-3.5 h-3.5" />} color="slate">
                   {archivedMissions.map((mission) => (
-                    <div key={mission.node.id} className="group flex items-center justify-between px-3 py-1.5 hover:bg-slate-500/5 rounded-md transition-colors">
+                    <div key={mission.node.id} className="group flex items-center justify-between px-3 py-1.5 hover:bg-white/5 rounded-xl transition-colors">
                       <div className="flex items-center gap-3 overflow-hidden">
                         <History className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
                         <span className="text-xs text-slate-500 truncate">{mission.summary.missionLabel}</span>
                       </div>
                       <button
                         onClick={() => unarchiveMission(mission.node.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-500/10 rounded text-slate-400 hover:text-slate-200"
+                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white"
                         title="استعادة"
                       >
                         <Undo2 className="w-3.5 h-3.5" />
@@ -622,14 +673,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     </div>
                   ))}
                   {archivedNodes.map((node) => (
-                    <div key={node.id} className="group flex items-center justify-between px-3 py-1.5 hover:bg-slate-500/5 rounded-md transition-colors">
+                    <div key={node.id} className="group flex items-center justify-between px-3 py-1.5 hover:bg-white/5 rounded-xl transition-colors">
                       <div className="flex items-center gap-3 overflow-hidden">
                         <User className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
                         <span className="text-xs text-slate-500 truncate">{node.label}</span>
                       </div>
                       <button
                         onClick={() => unarchiveNode(node.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-500/10 rounded text-slate-400 hover:text-slate-200"
+                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white"
                         title="استعادة"
                       >
                         <Undo2 className="w-3.5 h-3.5" />
@@ -707,34 +758,30 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           </aside>
         </div>
 
-        {/* Desktop Handle */}
+        {/* Desktop Cinematic Handle */}
         <div
-          className={`h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600/40 backdrop-blur-xl text-white border-l border-white/10 cursor-pointer py-4 hover:bg-teal-600/60 transition-colors`}
+          className={`h-full w-4 shrink-0 flex flex-col justify-center items-center group/handle cursor-pointer transition-all duration-300 ${
+            isDesktopSidebarOpen ? "bg-black/20" : "bg-teal-500/10 hover:bg-teal-500/20"
+          }`}
           onClick={() => setIsDesktopSidebarOpen((current) => !current)}
           title={isDesktopSidebarOpen ? "أغلق محطة الانطلاق" : "افتح محطة الانطلاق"}
         >
-          <PanelRightOpen className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0 text-teal-400"}`} />
+          <div className="flex flex-col items-center gap-1 opacity-40 group-hover/handle:opacity-100 transition-opacity">
+            <div className="w-1 h-8 rounded-full bg-teal-500/50 group-hover/handle:bg-teal-400 group-hover/handle:h-12 transition-all duration-300" />
+            <PanelRightOpen className={`w-4 h-4 text-teal-500 transition-transform duration-500 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0"}`} />
+            <div className="w-1 h-8 rounded-full bg-teal-500/50 group-hover/handle:bg-teal-400 group-hover/handle:h-12 transition-all duration-300" />
+          </div>
         </div>
       </div>
 
-      {/* ───── FLOATING WHATSAPP ───── */}
-      {whatsAppLink && (
-        <button
-          type="button"
-          title="تواصل عبر واتساب"
-          onClick={() => openWhatsAppChat("floating_fab")}
-          className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md hover:bg-emerald-500 transition-colors duration-200"
-        >
-          <MessageCircle className="w-5 h-5 shrink-0" />
-        </button>
-      )}
+
 
       {/* ───── MOBILE MENU TRIGGER ───── */}
       <button
         type="button"
         title="افتح القائمة"
         onClick={handleOpen}
-        className="fixed top-4 right-4 z-40 md:hidden w-11 h-11 flex items-center justify-center rounded-full bg-slate-900/40 backdrop-blur-md border border-white/10 text-slate-400"
+        className="fixed top-4 right-4 z-40 md:hidden w-11 h-11 flex items-center justify-center rounded-full bg-slate-900 border border-white/20 text-teal-400 shadow-lg"
       >
         <PanelRightOpen className="w-5 h-5" />
       </button>
@@ -756,7 +803,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-[min(86vw,24rem)] bg-[#0B0F19]/80 backdrop-blur-3xl z-50 md:hidden flex flex-col border-l border-white/10 shadow-2xl"
+              className="fixed top-0 right-0 h-full w-[min(86vw,24rem)] bg-[#0B0F19] md:hidden flex flex-col border-l border-white/10 shadow-2xl"
+              style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
             >
               <div className="flex items-center justify-between p-5 border-b border-white/5">
                 <h2 className="text-lg font-bold text-white">محطة الانطلاق</h2>
@@ -770,8 +818,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                <EcosystemNavigator onNavigate={(url) => { pushUrl(url); handleClose(); }} />
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-6">
+              <EcosystemNavigator 
+                onNavigate={(url) => { pushUrl(url); handleClose(); }} 
+                onOpenHub={() => { setShowEcosystemHub(true); handleClose(); }}
+              />
                 
                 <SidebarSector title="الاستكشاف" icon={<Compass className="w-4 h-4" />} color="teal">
                   <SidebarItem
@@ -786,6 +837,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     icon={<Target className="w-5 h-5 outline-none" />}
                     onClick={() => { setShowGoals2025(true); handleClose(); }}
                     color="#10b981"
+                  />
+                  <SidebarItem
+                    label="خزنة البصائر"
+                    icon={<BookOpen className="w-5 h-5 outline-none" />}
+                    onClick={() => { setShowInsightsVault(true); handleClose(); }}
+                    color="#a78bfa"
                   />
                 </SidebarSector>
 
@@ -1106,6 +1163,21 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
             <InnerCourt isOpen={true} onClose={() => setShowInnerCourt(false)} />
           </Suspense>
         )}
+        {showEcosystemHub && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-3xl overflow-y-auto"
+          >
+            <Suspense fallback={<AwarenessSkeleton />}>
+              <EcosystemHub 
+                onNavigate={(url) => { pushUrl(url); setShowEcosystemHub(false); }}
+                onClose={() => setShowEcosystemHub(false)} 
+              />
+            </Suspense>
+          </motion.div>
+        )}
         {showAtlasDashboard && (
           <Suspense fallback={<AwarenessSkeleton />}>
             <AtlasDashboard isOpen={true} onClose={() => setShowAtlasDashboard(false)} />
@@ -1141,6 +1213,11 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
                 });
               }}
             />
+          </Suspense>
+        )}
+        {showInsightsVault && (
+          <Suspense fallback={<AwarenessSkeleton />}>
+            <InsightsVaultScreen onClose={() => setShowInsightsVault(false)} />
           </Suspense>
         )}
       </AnimatePresence>

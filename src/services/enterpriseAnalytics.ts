@@ -111,16 +111,13 @@ export const ENTERPRISE_FEATURES = [
     "دعم مخصص 24/7",
 ];
 
-/** يُنتج تقرير صحة مجمّع (محاكاة — سيُستبدل بـ Supabase) */
-export function generateMockMetrics(memberCount: number): AggregateMetrics {
+/** يُنتج تقرير صحة مجمّع (Truth-Only version) */
+export function generateMockMetrics(_memberCount: number): AggregateMetrics {
     return {
-        avgEnergyLevel: 6.2,
-        weeklyActiveRate: 0.73,
-        topBoundaryPatterns: ["ضغط الأهل", "ضغط العمل", "الشعور بالذنب"],
-        stressIndex: 5.8,
-        recommendation:
-            memberCount > 50
-                ? "نوصي بجلسة توعية جماعية عن الحدود الصحية هذا الشهر"
-                : "المجموعة في حالة جيدة — استمر في المتابعة الأسبوعية",
+        avgEnergyLevel: 0,
+        weeklyActiveRate: 0,
+        topBoundaryPatterns: [],
+        stressIndex: 0,
+        recommendation: "بانتظار تدفق بيانات حقيقية من الأعضاء لبناء التوصية الاستراتيجية.",
     };
 }

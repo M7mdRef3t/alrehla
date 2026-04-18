@@ -22,12 +22,13 @@ export const isDevMode = APP_ENV === "dev";
 /** 
  * Revenue Mode (وضع التركيز التجاري)
  * مفعل تلقائياً في وضع المستخدم، لإلغاء أي تشتت بصري.
+ * يمكن تفعيله يدوياً في وضع التطوير للاختبار.
  */
-export const isRevenueMode = isUserMode;
+export const isRevenueMode = isUserMode || runtimeEnv.publicPaymentsEnabled === "true";
 
 /**
  * Phase-1 flow lock:
- * DISABLED — all users now have full access to goals, guided, mission, tools.
- * Was: isUserMode && phaseOneRaw !== "false"
+ * يتحكم في ظهور الميزات الأساسية لرواد "الرحلة" الأوائل.
  */
-export const isPhaseOneUserFlow = false;
+const phaseOneRaw = runtimeEnv.phaseOneUserFlow;
+export const isPhaseOneUserFlow = phaseOneRaw === "true";

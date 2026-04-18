@@ -15,6 +15,7 @@ import type {
 } from "@/types/marketingLead";
 import { sendMetaCapiEvent } from "./metaCapi";
 import { WhatsAppCloudService } from "../services/whatsappCloudService";
+import { sendAdminTelegramNotice } from "./telegramNotifier";
 
 type OutreachQueueStatus = "pending" | "sent" | "failed" | "simulated";
 
@@ -221,12 +222,48 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     // Outreach Queue uses PUBLIC lead_id for FK constraints
     enqueueOutreachAsync(input.email || null, input.source, input.utm, publicLeadId, input.phoneNormalized);
 
-    // Validate WhatsApp if phone is present and it's a NEW lead
-    // WhatsApp events use INTERNAL id for FK constraints
-    if (input.phoneNormalized && isNew) {
-      void WhatsAppCloudService.validateNumber(input.phoneNormalized, internalId).catch((err) => {
-        console.error("[marketing/lead] whatsapp_validation_trigger_failed:", err);
-      });
+    // 🛰️ Automatic WhatsApp Engagement (Immediate)
+    if (input.phoneNormalized) {
+      if (input.source === "onboarding") {
+        // Immediate Results Template for Onboarding
+        const resultsTemplate = process.env.META_WA_RESULTS_TEMPLATE || "hello_world";
+        const userName = input.name || "عزيزي المسافر";
+        
+        void WhatsAppCloudService.sendTemplateMessage(
+          input.phoneNormalized, 
+          internalId, 
+          resultsTemplate,
+          [userName] // Pass name as first param if template supports it
+        ).catch((err) => {
+          console.error("[marketing/lead] whatsapp_results_trigger_failed:", err);
+        });
+
+        // 🔔 Admin Notification (Telegram) - Permanent fallback for Mohammed
+        const cleanPhone = input.phoneNormalized.replace(/\+/g, "");
+        const onboardingUrl = buildPersonalizedUrl(publicLeadId!, input.source);
+        const encodedMsg = encodeURIComponent(`أهلاً بك في الرحلة! 🧭 معك منصة الرحلة، نود إخبارك أن روشتة التعافي الخاصة بك جاهزة. يمكنك الاطلاع عليها من هنا:\n${onboardingUrl}`);
+        const waLink = `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
+
+        const adminMsg = [
+          `🚨 <b>مسافر جديد في الرحلة!</b>`,
+          `👤 <b>الاسم:</b> ${input.name || "غير معروف"}`,
+          `📱 <b>الموبايل:</b> ${input.phoneNormalized}`,
+          `📧 <b>البريد:</b> ${input.email || "غير متوفر"}`,
+          `🧭 <b>النية:</b> ${input.intent || "استكشاف عام"}`,
+          ``,
+          `🔗 <b>اضغط هنا لمراسلته بالروشتة فوراً:</b>`,
+          waLink
+        ].join("\n");
+
+        void sendAdminTelegramNotice(adminMsg).catch(err => {
+          console.error("[marketing/lead] admin_telegram_notice_failed:", err);
+        });
+      } else if (isNew) {
+        // Standard Handshake for other sources if it's a new lead
+        void WhatsAppCloudService.validateNumber(input.phoneNormalized, internalId).catch((err) => {
+          console.error("[marketing/lead] whatsapp_validation_trigger_failed:", err);
+        });
+      }
     }
   }
 

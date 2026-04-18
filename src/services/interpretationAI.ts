@@ -1,4 +1,5 @@
 import { geminiClient } from "./geminiClient";
+import { nexusService } from "./nexusService";
 import type { TransformationDiagnosis } from "@/modules/transformationEngine/interpretationEngine";
 
 export interface SovereignInsightRequest {
@@ -12,6 +13,14 @@ export interface SovereignInsightRequest {
     greenOrbits: number;
   };
 }
+
+const FALLBACK_INSIGHTS: Record<string, string> = {
+  "نزيف طاقة": "الحقيقة: أنت بتصرف طاقة في مطاريد مش شايلين همك، وده مأثر على سيادتك. \nالفعل: افصل موبايلك النهاردة ساعتين بس. \nالسؤال: ليه خايف تخرجهم من المدار مع إنهم عبء عليك؟",
+  "نبض مشحون": "الحقيقة: جواك غليان محتاج يخرج قبل ما ينفجر في الوقت الغلط. \nالفعل: اكتب كل اللي جواك في ورقة وقطعها. \nالسؤال: إمتى آخر مرة قولت للي واجعك إنك موجوع؟",
+  "توهة المدارات": "الحقيقة: الضبابة اللي أنت فيها سببها إنك مش مسمي الحاجات بأسمائها. \nالفعل: خد قرار واحد بسيط بقالك أسبوع بتأجله. \nالسؤال: إيه اللي هيحصل لو سميت العلاقة الرمادية دي باسمها الحقيقي؟",
+  "محطة انتظار": "الحقيقة: الحذر الزيادة بيخليك واقف مكانك، الرحلة محتاجة حركة. \nالفعل: ابعت رسالة دعم لشخص في النواة. \nالسؤال: أنت مستني إيه عشان تبدأ تعيش بجد؟",
+  "مستقر نسبياً": "الحقيقة: أنت في حالة توازن، ودي فرصة ممتازة للبنا. \nالفعل: حدد أهم قيمة محركة لرحلتك النهاردة. \nالسؤال: هل التوازن ده حقيقي ولا مجرد تعود على الوضع الحالي؟",
+};
 
 /**
  * محرك الرؤية السِيادية
@@ -55,9 +64,18 @@ export async function generateSovereignInsight(request: SovereignInsightRequest)
       throw new Error("Empty response from Gemini");
     }
 
+    // Save to Sovereign Vault in the background
+    nexusService.saveUserInsight({
+      content: response,
+      category: diagnosis.state,
+      energy_level: diagnosis.riskLevel === "low" ? 8 : (diagnosis.riskLevel === "medium" ? 5 : 3),
+      exercise_code: "SOVEREIGN_INSIGHT_V1"
+    }).catch(err => console.error("Failed background insight save:", err));
+
     return response;
   } catch (error) {
     console.error("Error generating sovereign insight:", error);
-    return "الرؤية لسه بتتكون في الضباب.. الأهم دلوقتي إنك بدأت الرحلة والبيانات محفوظة. خد نفس عميق وكمل، والوعي هييجي في وقته.";
+    // Fallback to rule-based engine
+    return FALLBACK_INSIGHTS[diagnosis.state] || FALLBACK_INSIGHTS["مستقر نسبياً"];
   }
 }

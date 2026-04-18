@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { requireAdmin } from "@/server/requireAdmin";
 import { revenueEngine } from "../../../../../src/ai/revenueAutomation";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const denied = await requireAdmin(req);
   if (denied) return denied;
 

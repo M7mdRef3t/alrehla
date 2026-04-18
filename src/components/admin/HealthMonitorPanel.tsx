@@ -1,10 +1,12 @@
 import { logger } from "@/services/logger";
 import { type FC, useEffect, useState } from "react";
-import { Activity, AlertTriangle, CheckCircle, Clock, TrendingUp } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle, Clock, TrendingUp, Cpu } from "lucide-react";
 import type { HealthCheckResult, HealthIssue } from "@/ai/autoHealthCheck";
 import type { ErrorAnalysisResult } from "@/ai/aiErrorAnalyzer";
+import { PerformanceRadarPanel } from "./dashboard/Analytics/PerformanceRadarPanel";
 
 export const HealthMonitorPanel: FC = () => {
+  const [activePanel, setActivePanel] = useState<"system" | "performance">("performance");
   const [healthHistory, setHealthHistory] = useState<HealthCheckResult[]>([]);
   const [errorHistory, setErrorHistory] = useState<ErrorAnalysisResult[]>([]);
   const [selectedCheck, setSelectedCheck] = useState<HealthCheckResult | null>(null);
@@ -71,6 +73,40 @@ export const HealthMonitorPanel: FC = () => {
 
   return (
     <div className="space-y-6 p-6" dir="rtl">
+      {/* ── Panel Switcher Tabs ── */}
+      <div className="flex items-center gap-2 p-1 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+        <button
+          onClick={() => setActivePanel("performance")}
+          className="flex items-center gap-2 flex-1 justify-center py-2.5 rounded-xl text-xs font-bold transition-all"
+          style={{
+            background: activePanel === "performance" ? "rgba(6,182,212,0.12)" : "transparent",
+            border: activePanel === "performance" ? "1px solid rgba(6,182,212,0.25)" : "1px solid transparent",
+            color: activePanel === "performance" ? "#06b6d4" : "#64748b",
+          }}
+        >
+          <Cpu className="w-4 h-4" />
+          رادار الأداء (Performance)
+        </button>
+        <button
+          onClick={() => setActivePanel("system")}
+          className="flex items-center gap-2 flex-1 justify-center py-2.5 rounded-xl text-xs font-bold transition-all"
+          style={{
+            background: activePanel === "system" ? "rgba(16,185,129,0.1)" : "transparent",
+            border: activePanel === "system" ? "1px solid rgba(16,185,129,0.2)" : "1px solid transparent",
+            color: activePanel === "system" ? "#10b981" : "#64748b",
+          }}
+        >
+          <Activity className="w-4 h-4" />
+          فحص صحة النظام (Health)
+        </button>
+      </div>
+
+      {/* ── Performance Radar Panel ── */}
+      {activePanel === "performance" && <PerformanceRadarPanel />}
+
+      {/* ── System Health Panel ── */}
+      {activePanel === "system" && (
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Activity className="w-6 h-6 text-cyan-400" />
@@ -189,6 +225,8 @@ export const HealthMonitorPanel: FC = () => {
           <p className="font-medium text-white mb-1">لا توجد بيانات صحية</p>
           <p className="text-sm">لم يجمع مراقب النبض أي قراءات بعد.</p>
         </div>
+      )}
+      </div>
       )}
     </div>
   );

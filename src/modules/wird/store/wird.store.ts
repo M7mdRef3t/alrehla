@@ -31,6 +31,7 @@ interface WirdState {
   streak: number;
   bestStreak: number;
   lastCompletedDate: string | null;
+  dailyDirective: string | null;
 
   addRitual: (r: Omit<Ritual, "id">) => void;
   removeRitual: (id: string) => void;
@@ -39,6 +40,7 @@ interface WirdState {
   setIntention: (text: string) => void;
   setGratitude: (text: string) => void;
   getTodayCompletion: () => DayCompletion;
+  fetchAIGeneratedWird: () => Promise<void>;
 }
 
 function todayKey(): string {
@@ -53,12 +55,10 @@ function yesterdayKey(): string {
 }
 
 const DEFAULT_RITUALS: Ritual[] = [
-  { id: "r1", title: "نبضة صباحية", emoji: "💓", time: "morning", type: "pulse", enabled: true },
-  { id: "r2", title: "نية اليوم", emoji: "🎯", time: "morning", type: "intention", enabled: true },
-  { id: "r3", title: "فعل صغير نحو هدفي", emoji: "⚡", time: "anytime", type: "action", enabled: true },
-  { id: "r4", title: "لحظة تأمل", emoji: "🧘", time: "anytime", type: "action", enabled: true },
-  { id: "r5", title: "تدوينة مسائية", emoji: "📝", time: "evening", type: "journal", enabled: true },
-  { id: "r6", title: "شكر اليوم", emoji: "🙏", time: "evening", type: "gratitude", enabled: true },
+  { id: "r_foundation_1", title: "نبضة الوعي", emoji: "💓", time: "morning", type: "pulse", enabled: true },
+  { id: "r_foundation_2", title: "نية اليوم", emoji: "🎯", time: "morning", type: "intention", enabled: true },
+  { id: "r_foundation_3", title: "التدوينة التأملية", emoji: "📝", time: "evening", type: "journal", enabled: true },
+  { id: "r_foundation_4", title: "حصاد الشكر", emoji: "🙏", time: "evening", type: "gratitude", enabled: true },
 ];
 
 export const useWirdState = create<WirdState>()(
@@ -69,6 +69,7 @@ export const useWirdState = create<WirdState>()(
       streak: 0,
       bestStreak: 0,
       lastCompletedDate: null,
+      dailyDirective: null,
 
       addRitual: (r) =>
         set((s) => ({
@@ -162,6 +163,47 @@ export const useWirdState = create<WirdState>()(
         const entry = get().history.find((h) => h.dateKey === key);
         return entry ?? { dateKey: key, completedRituals: [], morningDone: false, eveningDone: false, intention: "", gratitude: "" };
       },
+
+      fetchAIGeneratedWird: async () => {
+        const key = todayKey();
+        const state = get();
+        // If we already have a generated directive for today (assuming generating updates the date record)
+        // Wait, realistically we might just overwrite. But purely to prevent abuse:
+        if (state.dailyDirective && state.lastCompletedDate === key && state.rituals.length > DEFAULT_RITUALS.length) {
+          return; // Already generated today
+        }
+
+        try {
+           const res = await fetch("/api/swarm/daily-state", {
+             method: "POST",
+             headers: { "Content-Type": "application/json" },
+             body: JSON.stringify({
+                telemetry: {
+                   stability: 0.6, // Using defaults here. Ideally fetched from actual InterventionEngine/Analytics
+                   interactionCount: 5,
+                   recentErrors: 0
+                }
+             })
+           });
+
+           if (!res.ok) throw new Error("Network Response Error");
+           const data = await res.json();
+           
+           if (data.customRituals) {
+              const aiRituals = data.customRituals.map((r: any, idx: number) => ({
+                 id: `r_ai_${key}_${idx}`,
+                 ...r,
+                 enabled: true
+              }));
+              set({
+                 rituals: [...DEFAULT_RITUALS, ...aiRituals],
+                 dailyDirective: data.dailyDirective || null
+              });
+           }
+        } catch (err) {
+           console.error("[WirdStore] Failed to fetch AI state:", err);
+        }
+      }
     }),
     { name: "alrehla-wird" }
   )

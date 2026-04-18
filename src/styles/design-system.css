@@ -114,6 +114,9 @@
   --ds-color-primary-strong: #2dd4bf;
   --ds-color-primary-glow: var(--cyan-glow);
   --ds-color-accent-amber: var(--gold);
+  
+  --ds-sidebar-bg: rgba(5, 8, 20, 0.4);
+  --ds-sidebar-border: rgba(255, 255, 255, 0.04);
 }
 
 /* Kill white focus rectangle on SVG interactive elements (dnd-kit injects tabIndex) */
@@ -288,16 +291,23 @@ svg [role="button"]:focus-visible {
 
 .ds-sidebar-item:hover {
   color: var(--ds-theme-text-primary);
-  background: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 8%, transparent);
-  border-color: rgba(45, 212, 191, 0.25);
-  box-shadow: 0 4px 20px -5px color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 20%, transparent);
+  background: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 12%, transparent);
+  border-color: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 25%, transparent);
+  box-shadow: 0 4px 24px -8px color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 35%, transparent);
+  transform: translateX(-4px);
 }
 
 .ds-sidebar-item[data-active="true"] {
-  color: var(--ds-theme-text-primary);
-  background: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 12%, transparent);
-  border-color: rgba(45, 212, 191, 0.4);
-  box-shadow: 0 0 15px -2px color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 30%, transparent);
+  color: #ffffff;
+  background: linear-gradient(90deg, 
+    color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 20%, transparent), 
+    color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 8%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 40%, transparent);
+  box-shadow: 
+    0 0 20px -5px color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 40%, transparent),
+    inset 0 0 10px color-mix(in srgb, var(--ds-item-glow-color, var(--ds-color-primary)) 10%, transparent);
+  transform: translateX(-4px);
 }
 
 .ds-sidebar-item .ds-icon-box {

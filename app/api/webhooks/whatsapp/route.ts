@@ -1,117 +1,109 @@
-import { NextResponse } from 'next/server';
-import { whatsappAutomationService } from '@/services/whatsappAutomationService';
-import { verifyWhatsAppSignature } from './_security';
+import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseAdminClient } from "../../_lib/supabaseAdmin";
 
 /**
- * Unified WhatsApp Webhook
- * Handles Meta Cloud API challenge (GET) and incoming messages (POST)
+ * WhatsApp Meta Webhook 📲
+ * =======================
+ * GET: Verification for Meta configuration.
+ * POST: Receiving messages and status updates.
  */
 
-// GET: Handshake with Meta
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const mode = searchParams.get('hub.mode');
-  const token = searchParams.get('hub.verify_token');
-  const challenge = searchParams.get('hub.challenge');
+  const mode = searchParams.get("hub.mode");
+  const token = searchParams.get("hub.verify_token");
+  const challenge = searchParams.get("hub.challenge");
 
-  const VERIFY_TOKEN = process.env.META_WA_VERIFY_TOKEN;
+  const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || "alrehla_sovereign_2026";
 
-  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-    console.log('[WhatsAppWebhook] Verification successful');
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("[WhatsApp Webhook] Verification Successful.");
     return new Response(challenge, { status: 200 });
   }
 
-  return new Response('Verification failed', { status: 403 });
+  return new Response("Forbidden", { status: 403 });
 }
 
-// POST: Direct message processing
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const rawBody = await req.text();
-    const appSecret = process.env.META_APP_SECRET;
+    const body = await req.json();
 
-    // 1. Verify Signature
-    const isSecure = await verifyWhatsAppSignature(req, rawBody, appSecret);
-    if (!isSecure) {
-      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    // 1. Log the event for reliability/debugging
+    const supabase = getSupabaseAdminClient();
+    if (supabase) {
+      await supabase.from("whatsapp_message_events").insert([{
+        direction: "inbound",
+        raw_payload: body
+      }]);
     }
 
-    const body = JSON.parse(rawBody);
+    // 2. Triage Payload
+    const entry = body.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const value = changes?.value;
 
-    // 2. Detect source (Default to Meta)
-    if (body.object === 'whatsapp_business_account') {
-      const entries = body.entry || [];
-      
-      // Meta sends messages in a nested structure
-      // We process them in the background to return 200 fast
-      processMetaMessages(entries).catch(err => {
-        console.error('[WhatsAppWebhook] Background processing error:', err);
-      });
-
-      return NextResponse.json({ status: 'queued', source: 'meta' });
+    if (!value || !value.messages) {
+      return NextResponse.json({ ok: true }); // Acknowledge status updates
     }
 
-    // 2. Fallback for other gateways (like UltraMsg if needed)
-    if (body.instance_id && body.data) {
-       // Example UltraMsg structure
-       processGenericMessage({
-         from: body.data.from,
-         text: body.data.body,
-         timestamp: body.data.time,
-         messageId: body.data.id,
-         gateway: 'ultramsg',
-         metadata: { instance_id: body.instance_id }
-       }).catch(err => console.error(err));
-       
-       return NextResponse.json({ status: 'queued', source: 'ultramsg' });
+    const message = value.messages[0];
+    const from = message.from; // Sender's phone
+    const text = message.text?.body?.trim();
+
+    if (!text) return NextResponse.json({ ok: true });
+
+    console.log(`[WhatsApp Webhook] Incoming from ${from}: ${text}`);
+
+    // 3. Logic: Check for Activation (Pattern Match)
+    // Looking for receipt numbers or standard VC patterns
+    const receiptMatch = text.match(/\d{10,}/); // Simple heuristic for receipt numbers
+    if (receiptMatch) {
+       const receiptNumber = receiptMatch[0];
+       await handleAutoActivation(from, receiptNumber);
     }
 
-    return NextResponse.json({ status: 'ignored', reason: 'unknown_source' });
-  } catch (error) {
-    console.error('[WhatsAppWebhook] Request error:', error);
-    return NextResponse.json({ status: 'error', message: 'Invalid payload' }, { status: 400 });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[WhatsApp Webhook Error]:", err);
+    return NextResponse.json({ error: "internal_failure" }, { status: 500 });
   }
 }
 
-/**
- * Meta specific parser
- */
-async function processMetaMessages(entries: any[]) {
-  for (const entry of entries) {
-    for (const change of entry.changes || []) {
-      const value = change.value;
-      if (!value || !value.messages) continue;
+async function handleAutoActivation(phone: string, receipt: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
 
-      const metadata = {
-        display_phone_number: value.metadata?.display_phone_number,
-        phone_number_id: value.metadata?.phone_number_id
-      };
+  // 1. Find user by phone (Normalization)
+  let searchPhone = phone;
+  if (searchPhone.startsWith("20")) searchPhone = "0" + searchPhone.slice(2); // +201... -> 01...
 
-      for (const msg of value.messages) {
-        // Only process text or button messages for intent detection
-        const text = msg.text?.body || msg.button?.text || '';
-        if (!text) continue;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .or(`phone.eq.${phone},phone.eq.${searchPhone}`)
+    .single();
 
-        const contact = value.contacts?.find((c: any) => c.wa_id === msg.from);
-        const senderName = contact?.profile?.name;
-
-        await whatsappAutomationService.processInboundMessage({
-          from: msg.from,
-          name: senderName,
-          text: text,
-          timestamp: msg.timestamp,
-          messageId: msg.id,
-          gateway: 'meta',
-          metadata: { ...metadata, raw: msg }
-        });
-      }
-    }
+  if (!profile) {
+    console.log(`[WhatsApp Auth] No profile found for ${phone}`);
+    return;
   }
-}
 
-/**
- * Generic handler for non-Meta sources
- */
-async function processGenericMessage(payload: any) {
-  await whatsappAutomationService.processInboundMessage(payload);
+  // 2. Trigger Activation Engine
+  const { data: result, error } = await supabase.rpc("activate_founding_cohort_seat", {
+    p_user_id: profile.id,
+    p_provider: "whatsapp_auto",
+    p_payment_ref: receipt
+  });
+
+  if (error) {
+    console.error("[WhatsApp Auth] RPC Failed:", error);
+    return;
+  }
+
+  // 3. Notify Success back to WhatsApp
+  if (result?.activated) {
+     const { WhatsAppCloudService } = await import("@/services/whatsappCloudService");
+     const msg = `تم تفعيل رحلتك بنجاح يا ${profile.full_name}! 🌊✨\nأهلاً بك في الفوج التأسيسي. يمكنك الآن الدخول للمنصة واستكشاف خريطتك.`;
+     await WhatsAppCloudService.sendFreeText(phone, profile.id, msg);
+  }
 }

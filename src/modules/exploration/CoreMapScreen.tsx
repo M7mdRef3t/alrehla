@@ -58,6 +58,8 @@ import { ContextNotePanel } from "./ContextNotePanel";
 import { MapAnalyticalPanel, MapOperationalStrip, MapSupportPanel } from "./Map/CoreMapPanels";
 import { LanternSwarm } from "./LanternSwarm";
 import { LanternInsightModal } from "./LanternInsightModal";
+import { EvolutionarySynapse } from "@/core/synapse/EvolutionarySynapse";
+
 
 const DawayirCanvas = lazy(() => import("@/modules/dawayir/DawayirCanvas").then(m => ({ default: m.DawayirCanvas })));
 const FeelingCheckModal = lazy(() => import("@/modules/dawayir/FeelingCheckModal").then(m => ({ default: m.FeelingCheckModal })));
@@ -1008,6 +1010,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       <DailyJournalArchive isOpen={showJournalArchive} onClose={() => setShowJournalArchive(false)} />
       <GoogleAuthModal isOpen={isCloudAuthOpen} onClose={() => setIsCloudAuthOpen(false)} onGuestMode={() => setIsCloudAuthOpen(false)} onNotNow={() => setIsCloudAuthOpen(false)} intent={{ kind: "ai_focus", createdAt: Date.now() }} />
 
+      {/* Sovereign Machine Intelligence: Adaptive UI Mutation Point */}
+      <EvolutionarySynapse
+        componentId="CoreMapScreen"
+        DefaultComponent={() => null}
+        componentProps={{ onOpenNoise, pulseMode }}
+      />
     </motion.main>
   );
 };

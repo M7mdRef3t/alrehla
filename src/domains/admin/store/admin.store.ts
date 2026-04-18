@@ -386,7 +386,6 @@ const DEFAULT_JOURNEY_PATHS: JourneyPath[] = [
 interface AdminState {
   adminAccess: boolean;
   isContentEditingEnabled: boolean;
-  adminCode: string | null;
   featureFlags: Record<FeatureFlagKey, FeatureFlagMode>;
   betaAccess: boolean;
   systemPrompt: string;
@@ -399,6 +398,7 @@ interface AdminState {
   hasSovereignAlert: boolean;
   sovereignInsights: SovereignInsight[];
   sovereignStats: SovereignStats | null;
+  insightResolutions: Record<string, { status: 'pending' | 'working' | 'fixed'; comment?: string; isSent?: boolean; updatedAt: number }>;
   journeyPaths: JourneyPath[];
   
   // Smart Caching Layer
@@ -416,7 +416,6 @@ interface AdminState {
 
   setAdminAccess: (value: boolean) => void;
   toggleContentEditing: (value: boolean) => void;
-  setAdminCode: (value: string | null) => void;
   setFeatureFlags: (flags: Record<FeatureFlagKey, FeatureFlagMode>) => void;
   updateFeatureFlag: (key: FeatureFlagKey, mode: FeatureFlagMode) => void;
   setBetaAccess: (value: boolean) => void;
@@ -436,6 +435,7 @@ interface AdminState {
   setPulseCopyOverrides: (overrides: PulseCopyOverrides) => void;
   setHasSovereignAlert: (value: boolean) => void;
   setSovereignInsights: (insights: SovereignInsight[]) => void;
+  updateInsightResolution: (id: string, resolution: { status: 'pending' | 'working' | 'fixed'; comment?: string; isSent?: boolean }) => void;
   setSovereignStats: (stats: SovereignStats) => void;
   setJourneyPaths: (paths: JourneyPath[]) => void;
   
@@ -494,7 +494,6 @@ export const useAdminState = create<AdminState>()(
     (set) => ({
       adminAccess: false,
       isContentEditingEnabled: false,
-      adminCode: null,
       featureFlags: DEFAULT_FEATURE_FLAGS,
       betaAccess: false,
       systemPrompt: DEFAULT_PROMPT,
@@ -507,6 +506,7 @@ export const useAdminState = create<AdminState>()(
       hasSovereignAlert: false,
       sovereignInsights: [],
       sovereignStats: null,
+      insightResolutions: {},
       journeyPaths: DEFAULT_JOURNEY_PATHS,
       opsStatsCache: null,
       liveStatsCache: null,
@@ -518,7 +518,6 @@ export const useAdminState = create<AdminState>()(
 
       setAdminAccess: (value) => set({ adminAccess: value }),
       toggleContentEditing: (value) => set({ isContentEditingEnabled: value }),
-      setAdminCode: (value) => set({ adminCode: value }),
       setFeatureFlags: (flags) =>
         set({
           featureFlags: {
@@ -557,6 +556,12 @@ export const useAdminState = create<AdminState>()(
       setPulseCopyOverrides: (overrides) => set({ pulseCopyOverrides: overrides }),
       setHasSovereignAlert: (value) => set({ hasSovereignAlert: value }),
       setSovereignInsights: (insights) => set({ sovereignInsights: insights }),
+      updateInsightResolution: (id, res) => set((state) => ({
+        insightResolutions: {
+          ...state.insightResolutions,
+          [id]: { ...res, updatedAt: Date.now() }
+        }
+      })),
       setSovereignStats: (stats) => set({ sovereignStats: stats }),
       setJourneyPaths: (journeyPaths) => set({ journeyPaths }),
       setOpsStatsCache: (data) => 

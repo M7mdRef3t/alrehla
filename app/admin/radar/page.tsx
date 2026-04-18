@@ -178,6 +178,25 @@ type SupportTicketResponse = {
   error?: string;
 };
 
+type TravelerTelemetry = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  role: string;
+  tokens: number;
+  isPremium: boolean;
+  status: string;
+  joinedAt: string;
+  expiresAt: string | null;
+  churnRisk: boolean;
+};
+
+type TravelerResponse = {
+  travelers: TravelerTelemetry[];
+  total: number;
+};
+
 type SupportTicket = {
   id: string;
   title: string;
@@ -677,6 +696,73 @@ const AiStabilityRadar: React.FC<{ failures: AiFailure[] }> = ({ failures }) => 
   );
 };
 
+const TravelerPulseRadar: React.FC<{ travelers: TravelerTelemetry[] }> = ({ travelers }) => {
+  if (travelers.length === 0) return <p className="text-sm text-[var(--color-text-muted)]">No active travelers in this cycle.</p>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[10px] uppercase tracking-widest text-[var(--color-text-muted)] font-bold">Live Traveler Flux</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-neutral-400">{travelers.length} Active</span>
+      </div>
+
+      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+        {travelers.map((t) => (
+          <div key={t.id} className="p-4 rounded-3xl bg-white/5 border border-white/5 hover:border-vibrant-blue/20 transition-all group relative overflow-hidden">
+            {t.isPremium && (
+              <div className="absolute top-0 right-0 px-3 py-1 bg-amber-500/10 border-b border-l border-amber-500/20 rounded-bl-xl">
+                 <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Premium Traveler</span>
+              </div>
+            )}
+            
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <h4 className="text-sm font-black text-white">{t.name}</h4>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-medium text-[var(--color-text-muted)]">{t.phone}</span>
+                  <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${
+                    t.status === 'activated' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                    t.status === 'reserved' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                    'bg-white/5 text-neutral-500 border border-white/5'
+                  }`}>
+                    {t.status}
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                 <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Joined</p>
+                 <p className="text-[10px] font-bold text-neutral-300">{new Date(t.joinedAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+               <div className="flex items-center gap-4">
+                  <div>
+                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Tokens</p>
+                    <p className="text-xs font-black text-vibrant-blue">{t.tokens}</p>
+                  </div>
+                  {t.expiresAt && (
+                    <div>
+                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Access Until</p>
+                      <p className="text-xs font-black text-emerald-400">{new Date(t.expiresAt).toLocaleDateString()}</p>
+                    </div>
+                  )}
+               </div>
+               
+               {t.churnRisk && (
+                 <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                    <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest">Churn Risk</span>
+                 </div>
+               )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const SystemHealthRadar: React.FC<{
   api: SystemHealthResponse["api"] | null;
   probe: SystemHealthResponse["probe"] | null;
@@ -744,7 +830,6 @@ const SystemHealthRadar: React.FC<{
 };
 
 export default function AdminRadarPage() {
-  const adminCode = useAdminState((s) => s.adminCode);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pulse, setPulse] = useState<RadarPulse | null>(null);
@@ -773,6 +858,8 @@ export default function AdminRadarPage() {
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [gateFunnel, setGateFunnel] = useState<GateFunnelStats | null>(null);
   const [observability, setObservability] = useState<SystemHealthResponse["observability"] | null>(null);
+  const [travelers, setTravelers] = useState<TravelerTelemetry[]>([]);
+  const [travelersLoading, setTravelersLoading] = useState(false);
 
   const getSecureProofUrl = async (path: string) => {
     if (!supabase) return;
@@ -796,11 +883,9 @@ export default function AdminRadarPage() {
   const getAdminAccessToken = useCallback(async (): Promise<string> => {
     const session = await safeGetSession();
     const accessToken = session?.access_token;
-    const fallbackToken = typeof adminCode === "string" ? adminCode.trim() : "";
-    const effectiveToken = accessToken || fallbackToken;
-    if (!effectiveToken) throw new Error("Unauthorized");
-    return effectiveToken;
-  }, [adminCode]);
+    if (!accessToken) throw new Error("Unauthorized");
+    return accessToken;
+  }, []);
 
   const loadRadar = useCallback(async (isInitial = false) => {
     try {
@@ -808,7 +893,7 @@ export default function AdminRadarPage() {
       setError(null);
       const accessToken = await getAdminAccessToken();
 
-      const [radarResponse, weeklyResponse, healthResponse, supportResponse, gateResponse] = await Promise.all([
+      const [radarResponse, weeklyResponse, healthResponse, supportResponse, gateResponse, travelersResponse] = await Promise.all([
         fetch("/api/admin?path=radar", {
           method: "GET",
           headers: { Authorization: `Bearer ${accessToken}` },
@@ -833,6 +918,11 @@ export default function AdminRadarPage() {
           method: "GET",
           headers: { Authorization: `Bearer ${accessToken}` },
           cache: "no-store"
+        }),
+        fetch("/api/admin?path=travelers&limit=50", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store"
         })
       ]);
       const radarBody = (await radarResponse.json()) as RadarResponse;
@@ -840,6 +930,7 @@ export default function AdminRadarPage() {
       const healthBody = (await healthResponse.json()) as SystemHealthResponse;
       const supportBody = (await supportResponse.json()) as SupportTicketResponse;
       const gateBody = (await gateResponse.json()) as GateFunnelStats;
+      const travelersBody = (await travelersResponse.json()) as TravelerResponse;
 
       if (!radarResponse.ok || radarBody?.is_live !== true || !radarBody?.pulse) {
         throw new Error(radarBody?.error || "Failed to load radar pulse");
@@ -871,6 +962,9 @@ export default function AdminRadarPage() {
       );
       if (gateBody?.summary) {
         setGateFunnel(gateBody);
+      }
+      if (Array.isArray(travelersBody?.travelers)) {
+        setTravelers(travelersBody.travelers);
       }
     } catch (err: unknown) {
       setError(toErrorMessage(err, "Failed to load radar pulse"));
@@ -1598,6 +1692,19 @@ export default function AdminRadarPage() {
                 <OnboardingFunnelRadar stats={gateFunnel} />
               </div>
             </article>
+
+            {/* Sovereign Traveler Flux */}
+            <div className="p-8 rounded-[3rem] bg-[#0B0F19]/40 backdrop-blur-3xl border border-white/5 shadow-2xl space-y-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-vibrant-blue/10 rounded-xl">
+                  <svg className="w-4 h-4 text-vibrant-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">Traveler Pulse</h3>
+              </div>
+              <TravelerPulseRadar travelers={travelers} />
+            </div>
 
             <article className="rounded-2xl border border-white/10 bg-black/20 p-5">
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Deep Engagement</p>

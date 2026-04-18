@@ -10,16 +10,22 @@ export async function handleAiLogs(req: AdminRequest, res: AdminResponse) {
   }
 
   if (req.method === "GET") {
-    const { data, error } = await client
-      .from("admin_ai_logs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-    if (error || !data) {
-      res.status(500).json({ error: "Failed to fetch AI logs" });
-      return;
+    try {
+      const { data, error } = await client
+        .from("admin_ai_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error || !data) {
+        console.error("[handleAiLogs] GET error:", error);
+        res.status(500).json({ error: "Failed to fetch AI logs", message: error?.message });
+        return;
+      }
+      res.status(200).json({ logs: data });
+    } catch (err) {
+      console.error("[handleAiLogs] GET Exception:", err);
+      res.status(500).json({ error: "Internal Server Error" });
     }
-    res.status(200).json({ logs: data });
     return;
   }
 

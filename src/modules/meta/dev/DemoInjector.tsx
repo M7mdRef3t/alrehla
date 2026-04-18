@@ -5,9 +5,12 @@ import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { DatabaseZap, Loader2, CheckCircle2 } from "lucide-react";
 import type { Ring } from "@/modules/map/mapTypes";
+import { isDevMode } from "@/config/appEnv";
 
 export const DemoInjector: FC = () => {
     const [status, setStatus] = useState<"idle" | "injecting" | "success" | "error">("idle");
+
+    if (!isDevMode) return null; // Hide in production/user mode
 
     const handleInjectData = async () => {
         setStatus("injecting");

@@ -8,19 +8,22 @@ interface UseAppBiometricCrisisMonitorParams {
   showCocoon: boolean;
   showBreathing: boolean;
   openCocoonModal: (source?: "auto" | "manual") => void;
+  enabled?: boolean;
 }
 
 export function useAppBiometricCrisisMonitor({
   screen,
   showCocoon,
   showBreathing,
-  openCocoonModal
+  openCocoonModal,
+  enabled = true
 }: UseAppBiometricCrisisMonitorParams) {
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (screen === "landing") return;
+    if (typeof window === "undefined" || !enabled) return;
+    if (screen === "landing" || screen === "onboarding") return;
 
-    let stopStream: (() => void) | null = null;
+    let stopStream: (() => void) | void;
+    // We expect startBiometricHeartbeat to return a cleanup function, or void in mock mode
     const idleHandle = requestIdleCallback(() => {
       stopStream = startBiometricStream((pulse: BiometricPulse) => {
         const result = analyzeStressLevels(pulse);

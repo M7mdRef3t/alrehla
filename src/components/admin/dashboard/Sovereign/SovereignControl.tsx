@@ -212,6 +212,7 @@ export const SovereignControl: FC = () => {
     setIsTakeoverModalOpen(true);
   };
 
+  // --- Main Sovereign Interface Render ---
   return (
     <div className="space-y-12 max-w-[1600px] mx-auto px-4 pb-24">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
@@ -250,12 +251,14 @@ export const SovereignControl: FC = () => {
            </div>
 
            {/* Tactical Presets */}
-           <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-6 rounded-3xl shadow-2xl">
-              <div className="flex items-center gap-2 mb-6 text-rose-500">
-                 <Target className="w-4 h-4" />
-                 <h3 className="text-xs font-black uppercase tracking-widest">التدخلات التكتيكية (Tactical Presets)</h3>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+           <CollapsibleSection
+             title="التدخلات التكتيكية"
+             subtitle="Tactical Presets"
+             icon={<Target className="w-4 h-4 text-rose-500" />}
+             defaultExpanded={false}
+             headerColors="bg-[#0B0F19]/60 backdrop-blur-xl border-white/5"
+           >
+              <div className="grid grid-cols-2 gap-3 p-4">
                  {TACTICAL_PRESETS.map((preset) => (
                     <button
                       key={preset.id}
@@ -271,7 +274,7 @@ export const SovereignControl: FC = () => {
                     </button>
                  ))}
               </div>
-           </div>
+           </CollapsibleSection>
         </div>
 
         {/* Right Column: Pulse & Controls */}
@@ -307,19 +310,14 @@ export const SovereignControl: FC = () => {
           )}
 
           {/* Sanctuary Pulse - Real-time Snapshot */}
-          <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
-            
-            <div className="flex items-center justify-between mb-8">
-               <div className="flex items-center gap-3">
-                  <div className="p-3 bg-emerald-500/10 rounded-2xl">
-                     <Activity className="w-6 h-6 text-emerald-500" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-black text-white uppercase tracking-tight">نبض الملاذ LIVE</h2>
-                    <p className="text-emerald-500/60 text-[10px] font-black uppercase tracking-widest">Sanctuary Pulse Analysis</p>
-                  </div>
-               </div>
+          <CollapsibleSection
+            title="نبض الملاذ LIVE"
+            subtitle="Sanctuary Pulse Analysis"
+            icon={<Activity className="w-5 h-5 text-emerald-500" />}
+            defaultExpanded={false}
+            headerColors="bg-[#0B0F19]/60 backdrop-blur-xl border-white/5"
+            headerAction={
+              <div className="flex items-center gap-2">
                <button 
                  onClick={() => {
                    setIsLoadingPulse(true);
@@ -338,9 +336,12 @@ export const SovereignControl: FC = () => {
                  <ShieldAlert className="w-3 h-3" />
                  Sovereign Takeover
                </button>
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-12 items-center">
+              </div>
+            }
+          >
+            <div className="relative p-6 pt-8 overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+              <div className="flex flex-col md:flex-row gap-12 items-center relative z-10">
               {/* Main Sovereign Orb */}
               <div className="flex flex-col items-center justify-center group relative">
                 <div className="relative">
@@ -413,48 +414,65 @@ export const SovereignControl: FC = () => {
                 </div>
               </div>
             </div>
-          </div>
+            </div>
+          </CollapsibleSection>
         </div>
       </div>
 
       {/* Illusion Radar - Full Width Focus */}
-      <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
-        <header className="flex items-center gap-3 mb-8 text-amber-500">
-           <Eye className="w-5 h-5 animate-pulse" />
-           <h2 className="text-xl font-black uppercase tracking-widest">رادار الأوهام والدجل (Dajjal Collision Map)</h2>
-        </header>
+      <CollapsibleSection
+        title="رادار الأوهام والدجل"
+        subtitle="Dajjal Collision Map"
+        icon={<Eye className="w-5 h-5 text-amber-500 animate-pulse" />}
+        defaultExpanded={false}
+        headerColors="bg-[#0B0F19]/60 backdrop-blur-xl border-white/5 text-amber-500"
+      >
+        <div className="p-6 relative overflow-hidden">
         <IllusionRadar scenarios={liveStats?.topScenarios ?? null} isLoading={isLoadingPulse} />
-      </div>
+        </div>
+      </CollapsibleSection>
 
       {/* Sovereign AI Decision Log & War Room Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden h-[500px]">
-          <SovereignDecisionLog />
-        </div>
-        <div className="h-[500px]">
-          <WarRoomAlertsPanel />
-        </div>
+        <CollapsibleSection
+          title="سجل قرارات السيادة"
+          icon={<History className="w-4 h-4 text-emerald-400" />}
+          defaultExpanded={false}
+          headerColors="bg-[#0B0F19]/60 backdrop-blur-xl border-white/5"
+        >
+          <div className="relative overflow-hidden h-[500px] p-2">
+            <SovereignDecisionLog />
+          </div>
+        </CollapsibleSection>
+        <CollapsibleSection
+          title="تنبيهات المراقبة المباشرة"
+          icon={<ShieldAlert className="w-4 h-4 text-rose-400" />}
+          defaultExpanded={false}
+          headerColors="bg-[#0B0F19]/60 backdrop-blur-xl border-white/5"
+        >
+          <div className="relative overflow-hidden h-[500px] p-2">
+            <WarRoomAlertsPanel />
+          </div>
+        </CollapsibleSection>
       </div>
 
       {/* Sovereign Neural Trace - Local Agent Activity */}
-      <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
-        <header className="flex items-center justify-between mb-8">
-           <div className="flex items-center gap-3 text-teal-400">
-             <Terminal className="w-6 h-6" />
-             <div>
-               <h2 className="text-xl font-black uppercase tracking-widest">التتبع العصبي السيادي (Neural Trace)</h2>
-               <p className="text-[10px] text-teal-500/60 font-black uppercase tracking-[0.2em]">Autonomous Agent Activity Log</p>
-             </div>
-           </div>
+      <CollapsibleSection
+        title="التتبع العصبي السيادي"
+        subtitle="Autonomous Agent Activity Log"
+        icon={<Terminal className="w-5 h-5 text-teal-400" />}
+        defaultExpanded={false}
+        headerColors="bg-[#0B0F19]/60 backdrop-blur-xl border-white/5 text-teal-400"
+        headerAction={
            <button 
              onClick={() => useAdminState.getState().clearAgentActivity()}
              className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black text-slate-400 hover:text-white hover:bg-rose-500/20 transition-all uppercase tracking-widest"
            >
              Clear Trace
            </button>
-        </header>
-
-        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
+        }
+      >
+        <div className="p-6 space-y-4 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar relative overflow-hidden">
           {useAdminState.getState().agentActivity.length > 0 ? (
             useAdminState.getState().agentActivity.map((step, idx) => (
               <motion.div 
@@ -516,21 +534,20 @@ export const SovereignControl: FC = () => {
             </div>
           )}
         </div>
-      </div>
+      </CollapsibleSection>
 
       {/* Secondary Controls Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Harmony Faders */}
-          <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl">
-            <div className="flex items-center justify-between mb-8">
-               <div className="flex items-center gap-3 text-teal-400">
-                  <Wind className="w-5 h-5 font-black uppercase" />
-                  <h3 className="text-sm font-black uppercase tracking-widest">توازن التناغم (Universal Breath)</h3>
-               </div>
-               <span className="text-[10px] text-slate-500 font-mono tracking-widest">MOD: {harmonyOverride.toFixed(2)}</span>
-            </div>
-            
-            <div className="space-y-6">
+          <CollapsibleSection
+            title="توازن التناغم"
+            subtitle="Universal Breath"
+            icon={<Wind className="w-4 h-4 text-teal-400" />}
+            defaultExpanded={false}
+            headerColors="bg-[#0B0F19]/60 backdrop-blur-xl border-white/5 text-teal-400"
+            headerAction={<span className="text-[10px] text-slate-500 font-mono tracking-widest px-2">MOD: {harmonyOverride.toFixed(2)}</span>}
+          >
+            <div className="p-6 space-y-6">
               <div className="relative h-2 bg-slate-900 rounded-full overflow-hidden border border-white/5">
                 <motion.div 
                    className="absolute top-0 right-0 h-full bg-teal-500 shadow-[0_0_15px_rgba(20,184,166,0.5)]"
@@ -566,24 +583,21 @@ export const SovereignControl: FC = () => {
                 </div>
               )}
             </div>
-          </div>
+          </CollapsibleSection>
 
           <SovereignSpreadCommand />
       </div>
 
       {/* Global Broadcast Console */}
-      <div id="broadcast-area" className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
-        
-        <div className="flex items-center gap-3 mb-8 text-purple-400">
-           <Sparkles className="w-6 h-6" />
-           <div>
-             <h2 className="text-xl font-black uppercase tracking-widest">قنصلية البث الكوني (Sovereign Broadcast)</h2>
-             <p className="text-[10px] text-purple-500/60 font-black uppercase tracking-[0.2em]">Quantum Diffusion Channel</p>
-           </div>
-        </div>
-
-        <div className="space-y-6">
+      <CollapsibleSection
+        title="قنصلية البث الكوني"
+        subtitle="Quantum Diffusion Channel"
+        icon={<Sparkles className="w-5 h-5 text-purple-400" />}
+        defaultExpanded={false}
+        headerColors="bg-[#0B0F19]/60 backdrop-blur-xl border-white/5 text-purple-400"
+      >
+        <div id="broadcast-area" className="p-6 space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
           <div className="relative group">
             <textarea
               value={broadcastMessage}
@@ -652,14 +666,14 @@ export const SovereignControl: FC = () => {
             </AnimatePresence>
           </div>
         </div>
-      </div>
+      </CollapsibleSection>
 
       {/* Sovereign Atmosphere Lab (Sensory Control) */}
       <CollapsibleSection
         title="مختبر الأثير الحسي (Atmosphere Lab)"
         icon={<Wind className="w-4 h-4" />}
         subtitle="التحكم بالمؤثرات البصرية للبيئة الواعية"
-        defaultExpanded={true}
+        defaultExpanded={false}
         headerColors="border-indigo-800 bg-indigo-900/40 text-indigo-400"
       >
         <div className="p-6 space-y-8 bg-slate-950/30 rounded-3xl border border-indigo-500/20">

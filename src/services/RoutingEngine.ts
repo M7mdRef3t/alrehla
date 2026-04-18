@@ -33,7 +33,7 @@ export class RoutingEngine {
       title: 'استكشف البوصلة',
       description: 'راجع مستوى وعيك وتقدمك الشامل عبر المنظومة.',
       ctaText: 'اكتشف البوصلة',
-      targetPath: '/dashboard',
+      targetPath: '/#bawsala',
       reasoning: 'Default state. No acute pain or specific lack of clarity detected.'
     };
 

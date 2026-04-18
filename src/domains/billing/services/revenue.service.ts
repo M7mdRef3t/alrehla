@@ -27,35 +27,43 @@ class RevenueService {
       const { supabase } = await import("@/infrastructure/database");
       if (!supabase) return MOCK_SNAPSHOT;
 
-      const { data: customers } = await supabase
-        .from("marketing_leads")
-        .select("status, metadata")
-        .in("status", ["activated", "converted", "proof_received"]);
+      // 1. Total Revenue from completed transactions
+      const { data: transactions } = await supabase
+        .from("transactions")
+        .select("amount, currency, status")
+        .eq("status", "completed");
 
       let totalRevenueEgp = 0;
-      const activeSubs = customers?.length ?? 0;
-
-      (customers as any[])?.forEach((row) => {
-        const amt = typeof row.metadata?.amount === 'number' ? row.metadata.amount : 0;
-        totalRevenueEgp += amt;
+      (transactions || [])?.forEach((row) => {
+        // Simple conversion if needed, assuming everything is logged in EGP or USD for now
+        totalRevenueEgp += Number(row.amount);
       });
 
-      const { data: allLeads } = await supabase
-        .from("marketing_leads")
+      // 2. Active Count (Unique users with completed transactions)
+      const { data: uniqueUsers } = await supabase
+        .from("transactions")
+        .select("user_id")
+        .eq("status", "completed");
+      
+      const activeSubs = new Set(uniqueUsers?.map(u => u.user_id)).size;
+
+      // 3. Regional Resonance (Still from leads if needed, or from transactions metadata)
+      const { data: allTransactions } = await supabase
+        .from("transactions")
         .select("metadata");
 
-      const totalLeads = allLeads?.length || 1;
+      const totalTx = allTransactions?.length || 1;
       const resonanceMap: Record<string, number> = {};
-      (allLeads as any[])?.forEach((row) => {
-        const m = row.metadata?.market || "Global";
+      (allTransactions || [])?.forEach((row) => {
+        const m = (row.metadata as any)?.market || "Global";
         resonanceMap[m] = (resonanceMap[m] ?? 0) + 1;
       });
       Object.keys(resonanceMap).forEach((k) => {
-        resonanceMap[k] = Number((resonanceMap[k] / totalLeads).toFixed(2));
+        resonanceMap[k] = Number((resonanceMap[k] / totalTx).toFixed(2));
       });
 
       return {
-        mrr: totalRevenueEgp, // Treated as accumulated real EGP for backwards compatibility
+        mrr: totalRevenueEgp, 
         arr: totalRevenueEgp * 12, 
         totalRevenue: totalRevenueEgp,
         activeSubscriptions: activeSubs,
@@ -75,21 +83,20 @@ class RevenueService {
       if (!supabase) return [];
 
       const { data } = await supabase
-        .from("marketing_leads")
-        .select("id, source_type, status, created_at, metadata")
-        .in("status", ["activated", "converted", "proof_received"])
+        .from("transactions")
+        .select("id, provider, status, created_at, amount, currency, metadata")
         .order("created_at", { ascending: false })
         .limit(limit);
 
-      return (data || []).map((lead) => ({
-        id: lead.id,
-        gateway: this.mapGateway(lead.source_type),
-        amount: lead.metadata?.amount || 0,
-        currency: lead.metadata?.currency || "EGP",
-        usdEquivalent: lead.metadata?.amount || 0,
-        status: "confirmed" as const,
-        timestamp: lead.created_at,
-        market: lead.metadata?.market || "Unknown",
+      return (data || []).map((tx) => ({
+        id: tx.id,
+        gateway: this.mapGateway(tx.provider),
+        amount: tx.amount,
+        currency: tx.currency,
+        usdEquivalent: tx.amount, // conversion logic could go here
+        status: tx.status === 'completed' ? 'confirmed' : 'pending',
+        timestamp: tx.created_at,
+        market: (tx.metadata as any)?.market || "Unknown",
       }));
     } catch (e) {
       console.error("[Revenue] Failed to fetch transactions:", e);
@@ -97,9 +104,10 @@ class RevenueService {
     }
   }
 
-  private mapGateway(source: string): PaymentGateway {
-    if (source?.includes("stripe")) return "stripe";
-    if (source?.includes("gumroad")) return "gumroad";
+  private mapGateway(provider: string): PaymentGateway {
+    if (provider?.includes("stripe")) return "stripe";
+    if (provider?.includes("gumroad")) return "gumroad";
+    if (provider?.includes("manual") || provider?.includes("vodafone")) return "manual";
     return "direct";
   }
 
