@@ -24,9 +24,10 @@ const nextConfig = {
         headers: [
           // Security
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" }, // Changed from DENY to allow safe self-embedding
           { key: "X-XSS-Protection", value: "1; mode=block" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Robots-Tag", value: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" },
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(self), geolocation=(), interest-cohort=()"
@@ -51,12 +52,6 @@ const nextConfig = {
         ],
       },
       {
-        source: "/og-home.png",
-        headers: [
-          { key: "Cache-Control", value: "public, max-age=2592000" },
-        ],
-      },
-      {
         source: "/manifest.json",
         headers: [
           { key: "Cache-Control", value: "public, max-age=86400" },
@@ -74,10 +69,21 @@ const nextConfig = {
         destination: "/",
         permanent: true,
       },
+      // App Access Normalize
+      {
+        source: "/application",
+        destination: "/app",
+        permanent: true,
+      },
       // Common Arabic/English mistyped routes
       {
         source: "/الرحلة",
         destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/التحليل",
+        destination: "/weather",
         permanent: true,
       },
     ];
