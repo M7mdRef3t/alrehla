@@ -51,8 +51,7 @@ const HERO_STYLES = `
     align-items: center;
     overflow-x: hidden;
     overflow-y: visible;
-    background-color: var(--void);
-    background-image: radial-gradient(circle at 50% 45%, rgba(2, 4, 10, 0.98) 0%, rgba(2, 4, 10, 0.4) 45%, var(--void) 90%);
+    background-color: transparent;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -231,14 +230,14 @@ const HERO_STYLES = `
 
   .hero-bottom-fade {
     position: absolute;
-    bottom: -1px;
+    bottom: -2px;
     left: 0;
     right: 0;
-    height: 380px;
+    height: 450px;
     background: linear-gradient(to top, 
       var(--void) 0%, 
-      var(--void) 15%, 
-      rgba(2, 4, 10, 0.8) 40%, 
+      var(--void) 20%, 
+      rgba(2, 4, 10, 0.5) 50%, 
       transparent 100%
     );
     pointer-events: none;
@@ -578,8 +577,8 @@ const HERO_STYLES = `
     pointer-events: none;
     z-index: 1;
     overflow: hidden;
-    mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 98%);
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 98%);
+    mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 95%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 95%);
   }
 
   .hero-grid-wrapper {
@@ -633,15 +632,6 @@ const HERO_STYLES = `
     background-size: 200px 200px;
     opacity: 0.08;
     mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 90%);
-  }
-
-  .hero-grain {
-    position: absolute;
-    inset: 0;
-    opacity: 0.02;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 50;
   }
 
   .hero-badge {
@@ -709,31 +699,122 @@ const HERO_STYLES = `
     align-items: center;
     justify-content: center;
     width: 100%;
-    gap: 12px;
-    padding: 16px 32px;
-    border-radius: 18px;
-    background: rgba(0, 240, 255, 0.08);
-    backdrop-filter: blur(20px) saturate(180%);
-    font-size: 1.15rem;
-    font-weight: 950;
-    color: #fff;
+    padding: 2px; /* For the gradient border effect */
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.3) 0%, transparent 50%, rgba(0, 240, 255, 0.2) 100%);
     cursor: pointer;
-    border: 1px solid rgba(0, 240, 255, 0.5);
-    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.15);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    white-space: nowrap;
+    border: none;
+    transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+    overflow: hidden;
+    z-index: 5;
   }
 
   .cta-primary:hover {
-    transform: translateY(2px) scale(0.98);
-    background: rgba(0, 240, 255, 0.10);
-    box-shadow: inset 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px) scale(1.01);
   }
 
   .cta-primary:active {
-    transform: translateY(4px) scale(0.96);
-    background: rgba(0, 240, 255, 0.15);
-    box-shadow: inset 0 6px 16px rgba(0,0,0,0.4), inset 0 0px 1px rgba(255, 255, 255, 0.05);
+    transform: translateY(1px) scale(0.98);
+  }
+
+  .cta-surface {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 16px 36px;
+    background: #02040a;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 2;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  }
+
+  .cta-liquid {
+    position: absolute;
+    inset: -100%;
+    background: radial-gradient(circle at center, rgba(0, 240, 255, 0.1) 0%, transparent 70%);
+    animation: cta-liquid-flow 6s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  @keyframes cta-liquid-flow {
+    0% { transform: translate(-10%, -10%) rotate(0deg); }
+    50% { transform: translate(10%, 10%) rotate(180deg); }
+    100% { transform: translate(-10%, -10%) rotate(360deg); }
+  }
+
+  .cta-shimmer {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0) 60%,
+      transparent 100%
+    );
+    transform: translateX(-100%) skewX(-15deg);
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .cta-primary:hover .cta-shimmer {
+    animation: cta-shimmer-sweep 1.2s infinite;
+  }
+
+  @keyframes cta-shimmer-sweep {
+    0% { transform: translateX(-150%) skewX(-15deg); }
+    100% { transform: translateX(150%) skewX(-15deg); }
+  }
+
+  .cta-aura {
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.15) 0%, transparent 70%);
+    opacity: 0;
+    filter: blur(15px);
+    transition: opacity 0.4s ease;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .cta-primary:hover .cta-aura {
+    opacity: 1;
+  }
+
+  .hero-cta-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--cyan);
+    filter: drop-shadow(0 0 8px var(--cyan-glow));
+    transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+  }
+
+  .hero-cta-icon--arrow {
+    width: 18px;
+    height: 18px;
+    color: white;
+    transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+  }
+
+  .cta-primary:hover .hero-cta-icon--arrow {
+    transform: translateX(-6px);
+  }
+
+  .cta-label {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #fff;
+    font-family: 'Tajawal', sans-serif;
+    letter-spacing: 0.01em;
+    z-index: 5;
   }
 
   .hero-content-wrapper {
@@ -1171,7 +1252,7 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
           <motion.div className="hero-layer hero-layer--grid" style={{ x: gridX, y: gridY }}>
             <div className="hero-grid-wrapper"><div className="hero-grid" /></div>
           </motion.div>
-          <div className="hero-grain" />
+
           <div className="hero-screen-vignette" />
           <div className="hero-screen-glow" />
         </div>
@@ -1210,13 +1291,19 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
                 <input type="text" className="hero-input" placeholder="اسمك إيه؟" value={mirrorName} onChange={(e) => setMirrorName(e.target.value)} />
               </motion.div>
               <motion.button variants={fadeUp} onClick={handleStart} className="cta-primary">
-                <Zap className="hero-cta-icon" />{ctaJourney}<ArrowLeft className="hero-cta-icon--arrow" />
+                <div className="cta-aura" />
+                <div className="cta-surface">
+                  <div className="cta-liquid" />
+                  <div className="cta-shimmer" />
+                  <Zap className="hero-cta-icon" />
+                  <span className="cta-label">{ctaJourney}</span>
+                  <ArrowLeft className="hero-cta-icon--arrow" />
+                </div>
               </motion.button>
               <motion.p variants={fadeUp} className="cta-free-badge">بدون تسجيل، استكشاف سريع فقط</motion.p>
             </div>
           </motion.div>
-
-          <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.2, delay: 0.4, ease: techEase }} className="map-area">
+          <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }} className="map-area">
             <SovereignMap reduceMotion={reduceMotion} />
           </motion.div>
         </div>

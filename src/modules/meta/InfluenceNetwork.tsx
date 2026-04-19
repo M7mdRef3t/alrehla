@@ -248,9 +248,6 @@ export const InfluenceNetwork: FC = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Noise effect */}
-            <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.05] pointer-events-none" />
         </div>
     );
 };

@@ -311,13 +311,11 @@ button:not(.unstyled) {
 }
 
 .atmosphere-grain {
+  display: none;
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  opacity: var(--atmosphere-grain, 0.06);
+  opacity: 0;
   pointer-events: none;
-  mix-blend-mode: overlay;
-  transition: opacity 2s ease-in-out;
 }
 
 .atmosphere-aberration {
@@ -341,7 +339,7 @@ button:not(.unstyled) {
   --consciousness-primary: #818cf8;
   --consciousness-accent:  #c084fc;
   --atmosphere-vignette:   0.4;
-  --atmosphere-grain:      0.08;
+  --atmosphere-grain:      0;
 }
 
 /* --- Solar Awareness (Light/Clear) --- */
@@ -355,7 +353,7 @@ button:not(.unstyled) {
   --glass-bg:      rgba(255, 255, 255, 0.4);
   --glass-border:  rgba(13, 148, 136, 0.1);
   --atmosphere-vignette: 0.1;
-  --atmosphere-grain:    0.02;
+  --atmosphere-grain:    0;
 }
 
 /* --- Binary Void (Minimalist Matrix) --- */
@@ -367,6 +365,6 @@ button:not(.unstyled) {
   --consciousness-accent:  #16a34a;
   --consciousness-text:    #4ade80;
   --font-sans:     monospace;
-  --atmosphere-grain:      0.15;
+  --atmosphere-grain:      0;
   --atmosphere-aberration: 0.2;
 }

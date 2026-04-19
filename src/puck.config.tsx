@@ -452,7 +452,7 @@ export const config: Config<Props> = {
                   <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-tr z-0 pointer-events-none transition-colors duration-500 ${gradientClass}`}></div>
                   
                   {particles && (
-                    <div className="absolute inset-0 z-0 opacity-[0.15] mix-blend-screen bg-[url('/noise.svg')]"></div>
+                    <div className="absolute inset-0 z-0 opacity-0 pointer-events-none"></div>
                   )}
 
                   <div className="relative z-10 text-center flex flex-col items-center">

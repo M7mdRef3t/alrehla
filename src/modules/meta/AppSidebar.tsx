@@ -182,6 +182,9 @@ const UpgradeScreen = lazy(() =>
 const SovereignControl = lazy(() =>
   import("@/components/admin/dashboard/Sovereign/SovereignControl").then((m) => ({ default: m.SovereignControl }))
 );
+const ArtistChat = lazy(() =>
+  import("@/modules/action/Coaching/ArtistChat").then((m) => ({ default: m.ArtistChat }))
+);
 
 
 const DEFAULT_WHATSAPP_CONTACT = "201110795932";
@@ -351,6 +354,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showInsightsVault, setShowInsightsVault] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showSovereignControl, setShowSovereignControl] = useState(false);
+  const [showArtistChat, setShowArtistChat] = useState(false);
   const activeProtocolId = useJourneyStore((s) => s.activeProtocol);
   const activeProtocolInfo: { label: string; color: string } | null = (() => {
     if (!activeProtocolId) return null;
@@ -616,6 +620,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   color="#a78bfa"
                 />
                 <SidebarItem
+                  label="فنان الوعي (Artist)"
+                  icon={<Sparkles className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => setShowArtistChat(true)}
+                  color="#2dd4bf"
+                />
+                <SidebarItem
                   label="الارتقاء (Upgrade)"
                   icon={<Sparkles className="w-3.5 h-3.5 outline-none" />}
                   onClick={() => setShowUpgrade(true)}
@@ -874,6 +884,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     icon={<BookOpen className="w-5 h-5 outline-none" />}
                     onClick={() => { setShowInsightsVault(true); handleClose(); }}
                     color="#a78bfa"
+                  />
+                  <SidebarItem
+                    label="فنان الوعي (Artist)"
+                    icon={<Sparkles className="w-5 h-5 outline-none" />}
+                    onClick={() => { setShowArtistChat(true); handleClose(); }}
+                    color="#2dd4bf"
                   />
                   <SidebarItem
                     label="الارتقاء (Upgrade)"
@@ -1297,6 +1313,11 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
               <SovereignControl />
             </Suspense>
           </motion.div>
+        )}
+        {showArtistChat && (
+          <Suspense fallback={<AwarenessSkeleton />}>
+            <ArtistChat onClose={() => setShowArtistChat(false)} />
+          </Suspense>
         )}
       </AnimatePresence>
     </>

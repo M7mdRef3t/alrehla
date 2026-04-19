@@ -12,7 +12,7 @@ export const LanternSwarm: React.FC = () => {
       return (
         <button 
           onClick={() => useLanternsState.getState().spawnLanternsForTopic("relationship-withdrawal")}
-          className="fixed bottom-24 left-4 z-50 pointer-events-auto bg-amber-600/80 hover:bg-amber-500 text-white text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg"
+          className="fixed top-24 left-4 z-50 pointer-events-auto bg-amber-600/80 hover:bg-amber-500 text-white text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg"
         >
           ✨ Test Lanterns
         </button>
