@@ -3,25 +3,18 @@ from .models import UserInsight
 from .serializers import UserInsightSerializer
 
 class InsightViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows UserInsights to be viewed or edited.
-    Strictly restricted to the owner of the data.
-    """
     serializer_class = UserInsightSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         """
-        Return insights for the currently authenticated user only.
-        This ensures strict data isolation.
+        عزل البيانات بشكل صارم: المستخدم لا يرى إلا بصائره الخاصة.
         """
-        user = self.request.user
-        if user.is_anonymous:
-            return UserInsight.objects.none()
-        return UserInsight.objects.filter(user=user)
+        user_id = self.request.user.id
+        return UserInsight.get_queryset().filter(user_id=user_id).order_by('-created_at')
 
     def perform_create(self, serializer):
         """
-        Attach the authenticated user to the new insight.
+        ربط البصيرة بالمستخدم اللي باعت الـ JWT آلياً.
         """
-        serializer.save(user=self.request.user)
+        serializer.save(user_id=self.request.user.id)

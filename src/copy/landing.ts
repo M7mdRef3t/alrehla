@@ -88,7 +88,7 @@ export const landingCopy = {
     }
   ],
   cta: "اسمح للرحلة بالبدء",
-  ctaJourney: "اكتشف خريطتك في دقيقتين",
+  ctaJourney: "شغّل مرآة الوعي",
   description: "Dawayir — نظام تشغيل لوعيك، فهم طقسك الداخلي واستعادة خصوصيتك"
 };
 

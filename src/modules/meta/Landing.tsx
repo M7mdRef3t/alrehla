@@ -1,9 +1,16 @@
 import type { FC } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, 
-  MessageCircle 
+  Shield, 
+  Zap, 
+  Heart, 
+  Fingerprint, 
+  Activity, 
+  ShieldCheck, 
+  MessageCircle,
+  Sparkles
 } from "lucide-react";
 import { trackingService } from "@/domains/journey";
 import { usePWAInstall } from "@/contexts/PWAInstallContext";
@@ -17,9 +24,16 @@ import { AmbientBackground } from "./landing/AmbientBackground";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { landingCopy } from "@/copy/landing";
 import { HeroSection } from "./HeroSection";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import {
+  getRelationshipWeatherEntryHref,
+  getRelationshipWeatherPath
+} from "@/utils/relationshipWeatherJourney";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { normalizeWhatsAppPhone } from "@/utils/phoneNumber";
 import { openInNewTab } from "@/services/clientDom";
+
+const DEFAULT_WHATSAPP_CONTACT = "201062635923";
 
 // Modular Sections
 import { 
@@ -31,39 +45,29 @@ import {
   FinalReadinessSection
 } from "./landing/LandingSections";
 
-const DEFAULT_WHATSAPP_CONTACT = "201110795932";
-
 /* ─── Animation Variants ─────────────────────────────────────────────────── */
 
-const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
+const ease = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 40, filter: "blur(10px)" },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    filter: "blur(0px)", 
-    transition: { duration: 0.8, ease } 
-  }
+  hidden: { opacity: 0, y: 28, filter: "blur(6px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.65, ease } }
+};
+
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.5, ease } }
 };
 
 const stagger = {
   hidden: {},
-  visible: { 
-    transition: { 
-      staggerChildren: 0.2, 
-      delayChildren: 0.1 
-    } 
-  }
+  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } }
 };
 
 const LANDING_STYLES = `
-  .phi-section {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 6rem 1.5rem;
-    position: relative;
-    z-index: 10;
+  .landing-root {
+    font-family: var(--font-sans);
+    background: transparent;
   }
 
   .glass-premium {
@@ -73,15 +77,64 @@ const LANDING_STYLES = `
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   }
 
-  .organic-tap:active {
-    transform: scale(0.96);
+  .phi-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 1.5rem;
+    position: relative;
+    z-index: 10;
   }
 
-  /* Fix for smooth scrolling on all devices */
-  html {
-    scroll-behavior: smooth;
+  .landing-principles-title,
+  .landing-simulation-title {
+    font-family: var(--ds-font-display);
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  .landing-simulation-label {
+    font-family: var(--ds-font-prestige);
+    color: var(--ds-color-accent-indigo);
+  }
+
+  .landing-weather-entry {
+    border: 1px solid rgba(20,184,166,0.25);
+    background: rgba(20,184,166,0.06);
+    color: #2dd4bf;
+    backdrop-filter: blur(12px);
+  }
+
+  .landing-weather-entry:hover {
+    background: rgba(20,184,166,0.12);
+    border-color: rgba(20,184,166,0.45);
+  }
+
+  .landing-weather-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #14b8a6;
+    box-shadow: 0 0 8px #14b8a6;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  .landing-card-panel {
+    border: 1px solid rgba(20,184,166,0.18);
+    background: radial-gradient(ellipse at 50% 0%, rgba(20,184,166,0.07) 0%, transparent 65%);
+  }
+
+  @media (max-width: 1023px) {
+    .landing-weather-entry {
+      backdrop-filter: blur(4px) !important;
+      -webkit-backdrop-filter: blur(4px) !important;
+    }
+    .landing-root {
+      overflow-x: hidden;
+    }
   }
 `;
+
 
 /* ─── Main Component ─────────────────────────────────────────────────────────── */
 
@@ -114,6 +167,8 @@ export const Landing: FC<LandingProps> = ({
     if (!normalized) return null;
     return `https://wa.me/${normalized}`;
   }, [whatsAppNumber]);
+
+  const weatherEntryHref = getRelationshipWeatherEntryHref();
 
   const openWhatsAppChat = (placement: "landing_floating_fab") => {
     if (!whatsAppLink) return;
@@ -177,15 +232,8 @@ export const Landing: FC<LandingProps> = ({
         if (hasExistingJourney) {
           _onStartJourney();
         } else {
-          void trackingService.recordFlow("journey_started_frictionless" as any);
-          try {
-            const nextUrl = new URL(getHref());
-            nextUrl.pathname = "/onboarding";
-            nextUrl.search = "";
-            pushUrl(nextUrl);
-          } catch {
-            window.location.assign("/onboarding");
-          }
+          void trackingService.recordFlow("journey_started_frictionless");
+          window.location.assign("/sanctuary");
         }
       }
     }, 1200);
@@ -215,75 +263,125 @@ export const Landing: FC<LandingProps> = ({
         reduceMotion={false}
       />
 
-      {/* 1. HERO SECTION — The Cinematic Sovereignty Entry */}
+      {/* 1. HERO SECTION */}
       <HeroSection
         onStartJourney={handleStart}
         mirrorName={mirrorName}
         setMirrorName={setMirrorName}
-        pulseCount={2147}
-        trustPoints={["تحليل منطقي", "خصوصية كاملة", "بدون تسجيل"]}
+        pulseCount={1947}
+        trustPoints={["توازن", "تشتت", "استنزاف"]}
         ctaJourney={landingCopy.ctaJourney}
-        secondaryCta="استكشف الأدوات"
+        secondaryCta={landingCopy.secondaryCta}
       />
 
       <div className="landing-intrinsic-sentinel" />
 
-      {/* 2. PROBLEM SECTION — Why are you here? */}
-      <ProblemFirstSection 
-        stagger={stagger} 
-        item={fadeUp} 
-        data={landingCopy.problemSection}
-        onShowExample={() => document.getElementById("simulation")?.scrollIntoView({ behavior: "smooth" })}
-      />
-
-      {/* 3. FEATURE SHOWCASE — The Radar and Tools */}
-      <FeatureShowcaseSection 
-        stagger={stagger} 
-        item={fadeUp} 
-        onOpenRadar={handleStart}
-        onOpenCourt={handleStart}
-      />
-
-      {/* 4. SIMULATION — The Interactive Heart */}
-      <section id="simulation" className="phi-section">
+      {/* 2. OPERATING SYSTEM SECTION (Hardened Pitch) */}
+      <section className="relative py-28 px-4 max-w-6xl mx-auto">
         <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease }}
+          className="glass-premium rounded-[48px] overflow-hidden p-10 sm:p-20 text-center relative"
         >
-          <div className="text-center mb-12">
-            <motion.p variants={fadeUp} className="text-xs font-black tracking-[0.4em] uppercase mb-4 text-indigo-400">
-              المُحاكي — The Simulation
-            </motion.p>
-            <motion.h2 variants={fadeUp} className="text-3xl sm:text-5xl font-black mb-6 text-white leading-tight">
-              صمم مسارك <span className="text-indigo-400">الداخلي</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} className="text-base sm:text-lg max-w-[42ch] mx-auto text-slate-400 leading-relaxed">
-              ٣ أسئلة بسيطة — بدون تفكير — وهتكشف النمط اللي ماسك دماغك دلوقتي وتجسده في خوارزمية بصرية.
-            </motion.p>
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/2 bg-teal-500/10 blur-[120px] pointer-events-none" />
+
+          <div className="mb-16 relative z-10">
+            <p className="text-[10px] font-black tracking-[0.5em] uppercase mb-6 text-teal-500 opacity-80">
+              نظام التشغيل — Operating System
+            </p>
+            <h2 className="text-4xl sm:text-6xl font-black mb-8 landing-principles-title tracking-tight text-white">
+              إحنا مش بنخمّن.<br /><span className="text-teal-400">إحنا بنحلل الـ Logic.</span>
+            </h2>
+            <p className="text-base sm:text-xl max-w-[55ch] mx-auto text-slate-400 leading-relaxed font-medium">
+              "الرحلة" بتوفرلك نظام تشغيل لوعيك بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام عاطفية، فيه بيانات منطقية بتساعدك تسترد سيادتك على حياتك.
+            </p>
           </div>
-          
-          <div className="glass-premium rounded-[40px] p-6 sm:p-12 border-indigo-500/10">
-            <LandingSimulation />
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-right relative z-10" dir="rtl">
+            {[
+              { 
+                title: "رصد الاستنزاف", 
+                desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية وتوقف النزيف فوراً.", 
+                icon: <Fingerprint className="w-8 h-8 text-teal-400" />,
+                accent: "rgba(45, 212, 191, 0.15)"
+              },
+              { 
+                title: "خرائط النبض", 
+                desc: "رسم بياني حي لتدفق الطاقة في كل دائرة؛ مين بيزودك ومين بيسحب منك.", 
+                icon: <Activity className="w-8 h-8 text-sky-400" />,
+                accent: "rgba(56, 189, 248, 0.15)"
+              },
+              { 
+                title: "تحصين الحدود", 
+                desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي وسيادتك على قرارك.", 
+                icon: <ShieldCheck className="w-8 h-8 text-indigo-400" />,
+                accent: "rgba(129, 140, 248, 0.15)"
+              }
+            ].map((f, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                className="group p-10 rounded-[32px] border border-white/5 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
+              >
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg"
+                  style={{ backgroundColor: f.accent }}
+                >
+                  {f.icon}
+                </div>
+                <h3 className="text-2xl font-black mb-4 text-white group-hover:text-teal-300 transition-colors">{f.title}</h3>
+                <p className="text-base text-slate-500 leading-relaxed font-medium group-hover:text-slate-400 transition-colors">{f.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
       </section>
 
-      {/* 5. SYSTEM OVERCLOCK — Under the Hood for System Architects */}
+      {/* 3. SIMULATION SECTION */}
+      <section className="relative py-20 px-4 max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.7, ease }}
+        >
+          <div className="text-center mb-8">
+            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3 landing-simulation-label">
+              المُحاكي — Simulation
+            </p>
+            <h2 className="text-2xl sm:text-4xl font-black mb-3 landing-simulation-title">
+              صمم مسارك الداخلي
+            </h2>
+            <p className="text-sm sm:text-base max-w-[38ch] mx-auto text-slate-400 leading-relaxed">
+              ٣ أسئلة بسيطة — بدون تفكير — وهتكشف النمط اللي ماسك دماغك دلوقتي.
+            </p>
+          </div>
+          <LandingSimulation />
+          <motion.div variants={fadeUp} className="mt-10 flex justify-center">
+            <a
+              href={weatherEntryHref}
+              className="landing-weather-entry group inline-flex items-center gap-3 px-6 py-3 rounded-full text-sm font-bold transition-all duration-300"
+            >
+              <span className="landing-weather-dot" />
+              قيّم طقس علاقاتك (Weather Check)
+              <span className="transition-transform duration-300 group-hover:translate-x-[-4px]">←</span>
+            </a>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* 4. SYSTEM OVERCLOCK — Restored for System Architects */}
       <SystemOverclockSection 
         stagger={stagger} 
         item={fadeUp} 
       />
 
-      {/* 6. HOW IT WORKS — The Practical Path */}
-      <HowItWorksSection
-        stagger={stagger}
-        item={fadeUp}
-        data={landingCopy.howItWorks}
-      />
-
-      {/* 7. METRICS — Proof of Traction */}
+      {/* 5. METRICS — Proof of Traction */}
       <MetricsSection 
         stagger={stagger} 
         item={fadeUp} 
@@ -300,7 +398,14 @@ export const Landing: FC<LandingProps> = ({
         liveEnabled={false}
       />
 
-      {/* 8. FINAL READINESS — The Departure Gate */}
+      {/* 6. HOW IT WORKS */}
+      <HowItWorksSection
+        stagger={stagger}
+        item={fadeUp}
+        data={landingCopy.howItWorks}
+      />
+
+      {/* 7. FINAL READINESS */}
       <FinalReadinessSection 
         stagger={stagger} 
         item={fadeUp}
@@ -340,7 +445,7 @@ export const Landing: FC<LandingProps> = ({
         }}
       />
 
-      {/* ───── FLOATING WHATSAPP ───── */}
+      {/* FLOATING WHATSAPP */}
       {whatsAppLink && (
         <motion.button
           type="button"

@@ -1,8 +1,8 @@
-import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEffect, useRef, Fragment } from "react";
+import React, { type FC, useEffect, useState, useCallback, useRef, Fragment } from "react";
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { ArrowLeft, Zap, Shield, Heart } from "lucide-react";
+import { ArrowLeft, Zap, Shield, Heart, ShieldCheck } from "lucide-react";
 
-/* ─── Types ──────────────────────────────────────────────────────────────────── */
+/* ——— Types ———————————————————————————————————————————————————————————— */
 interface HeroSectionProps {
   onStartJourney: () => void;
   mirrorName: string;
@@ -13,19 +13,19 @@ interface HeroSectionProps {
   secondaryCta: string;
 }
 
-/* ─── Constants ──────────────────────────────────────────────────────────────── */
+/* ——— Constants —————————————————————————————————————————————————————————— */
 const ROTATING_WORDS = [
-  "وقتك مش ليك",
-  "طاقتك لغيرك",
+  "دوايرك ملخبطة",
+  "طاقتك بتتسرب",
   "حدودك مستباحة",
-  "صوتك مخنوق",
-  "همهم عليك",
-  "مكانك مش واضح",
-  "حياتك لغيرك",
-  "نفسك آخر همك"
+  "خايف تقول لأ",
+  "مراية لزعل غيرك",
+  "تايه في خوارزمياتهم",
+  "نبضك مربوط بغيرك",
+  "سايب بابك موارب"
 ];
 
-/* ─── Styles ─────────────────────────────────────────────────────────────────── */
+/* ——— Styles ————————————————————————————————————————————————————————————— */
 const HERO_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;700;800;900&display=swap');
 
@@ -40,18 +40,13 @@ const HERO_STYLES = `
     --text-muted: #8faab8;
     --hero-copy-measure: 46ch;
     
-    /* Glassmorphism 3.0 Tokens */
-    --glass-bg: rgba(5, 8, 20, 0.75);
-    --glass-border: rgba(0, 240, 255, 0.25);
-    --glass-reflection: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
-    
     position: relative;
     min-height: 100svh;
     display: flex;
     align-items: center;
-    overflow-x: hidden;
-    overflow-y: visible;
-    background-color: transparent;
+    overflow: hidden;
+    background: var(--void);
+    font-family: 'Alexandria', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -808,358 +803,158 @@ const HERO_STYLES = `
     transform: translateX(-6px);
   }
 
-  .cta-label {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 800;
     color: #fff;
     font-family: 'Tajawal', sans-serif;
     letter-spacing: 0.01em;
     z-index: 5;
   }
+  }
 
   .hero-content-wrapper {
     position: relative;
-    z-index: 10;
+    z-index: 2;
     width: 100%;
-    max-width: 1320px;
+    max-width: 1380px;
     margin: 0 auto;
-    padding: 6rem 2rem 5rem;
+    padding: 7rem 2rem 6rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 2.5rem;
+    gap: 4rem;
   }
 
   .map-area {
     flex: 0 0 auto;
-    width: min(42vw, 460px);
+    width: min(46vw, 520px);
     position: relative;
-    padding-bottom: 48px;
   }
 
-  .headline-subline-container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: baseline;
-    gap: 0.35em;
-    font-size: 0.65em;
-    margin-top: 0.3em;
-    width: 100%;
+  .metric-card {
+    position: absolute;
+    backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 18px;
+    padding: 16px 20px;
+    background: rgba(8, 12, 22, 0.7);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+    min-width: 130px;
   }
 
-  .headline-fixed-subline {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.28em;
-    font-size: 1.1em;
-    font-weight: 800;
-    line-height: 1;
-    white-space: nowrap;
+  .hero-scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.2), transparent);
+    animation: scan 8s linear infinite;
+    pointer-events: none;
   }
-  .word-ant  { opacity: 0.85; font-size: 1em; }
-  .word-faqat { opacity: 0.85; }
+
+  @keyframes scan {
+    0% { top: -4%; }
+    100% { top: 104%; }
+  }
 
   @media (max-width: 1023px) {
-    .hero-headline {
-      font-size: clamp(1.8rem, 9vw, 2.9rem) !important;
-      align-items: center !important;
-      text-align: center !important;
-      margin-top: -1.5rem !important;
-    }
-    .headline-line {
-      text-align: center !important;
-      justify-content: center !important;
-      width: 100% !important;
-      /* Prevent jitter by locking height */
-      min-height: 1.4em !important;
-      backface-visibility: hidden;
-      transform: translateZ(0);
-    }
-    .headline-subline-container {
-      align-items: center !important;
-      justify-content: center !important;
-      width: 100% !important;
-    }
     .hero-content-wrapper {
-      flex-direction: column !important;
-      padding: 7rem 1rem 2rem !important;
-      gap: 2rem !important;
+      flex-direction: column;
+      text-align: center;
+      padding: 5rem 1.25rem;
     }
     .map-area {
-      order: -1 !important;
-      width: min(85vw, 320px) !important;
-      margin: 0 auto !important;
-      will-change: transform;
-    }
-    .hero-copy-column {
-      max-width: 100% !important;
-      align-items: center !important;
-      text-align: center !important;
-    }
-    .hero-body {
-      text-align: center !important;
-      text-align-last: center !important;
-      margin-top: -1rem !important;
-    }
-    .hero-action-row {
-      align-items: center !important;
-    }
-    .hero-input-wrapper {
-      width: 100% !important;
-      max-width: 320px !important;
-      backdrop-filter: blur(4px) !important;
-      -webkit-backdrop-filter: blur(4px) !important;
-    }
-    .cta-primary {
-      backdrop-filter: blur(4px) !important;
-      -webkit-backdrop-filter: blur(4px) !important;
-      width: fit-content !important;
-      max-width: none !important;
-      padding: 14px 28px !important;
-      font-size: 1rem !important;
-      border-radius: 16px !important;
-    }
-    .sovereign-map__atmosphere {
-      /* Reduce blur intensity for performance */
-      filter: blur(30px) !important;
-      opacity: 0.08 !important;
-    }
-    .hero-eyebrow-row {
-      display: none !important;
-    }
-    .legend {
-      bottom: -10px !important;
+      width: min(90vw, 400px);
+      margin-top: 2rem;
     }
   }
 `;
 
-/* ─── Helpers ────────────────────────────────────────────────────────────────── */
-const techEase = [0, 0.7, 0.1, 1] as [number, number, number, number];
+const techEase = [0.16, 1, 0.3, 1];
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 15 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { duration: 0.65, ease: techEase } 
-  },
-};
-
-const fadeUpWithClip = {
-  hidden: { opacity: 0, y: 15 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { duration: 0.65, ease: techEase } 
-  },
-};
-
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.15, delayChildren: 0.15 } },
-};
-
-/* ─── Rotating Headline Word ─────────────────────────────────────────────────── */
-const RotatingWord: FC = React.memo(() => {
+/* ——— Rotating Headline Word ————————————————————————————————————————————— */
+const RotatingWord: FC = () => {
   const [index, setIndex] = useState(0);
-  const [show, setShow] = useState(true);
 
   useEffect(() => {
     const id = setInterval(() => {
-      setShow(false);
-      setTimeout(() => {
-        setIndex(i => (i + 1) % ROTATING_WORDS.length);
-        setShow(true);
-      }, 450);
-    }, 5000);
+      setIndex(i => (i + 1) % ROTATING_WORDS.length);
+    }, 4000);
     return () => clearInterval(id);
   }, []);
 
   return (
-    <span className="rotating-word-wrapper">
-      {/* 🛡️ Anchor with the widest possible word to keep the container stable */}
-      <span className="invisible select-none block whitespace-nowrap font-extrabold" aria-hidden>
-        {ROTATING_WORDS.reduce((a, b) => (a.length > b.length ? a : b))}
-      </span>
+    <div className="relative h-[1.2em] overflow-hidden">
       <AnimatePresence mode="wait">
-        {show && (
-          <motion.span
-            key={index}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            transition={{ duration: 0.45, ease: techEase }}
-            className="absolute top-0 flex items-center headline-accent h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content px-2 mt-0 mb-0 align-middle font-extrabold font-['Noto_Kufi_Arabic']"
-          >
-            {ROTATING_WORDS[index]}
-          </motion.span>
-        )}
+        <motion.span
+          key={index}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -20, opacity: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="absolute right-0 left-0 text-cyan-400 font-bold"
+        >
+          {ROTATING_WORDS[index]}
+        </motion.span>
       </AnimatePresence>
-    </span>
+    </div>
   );
-});
+};
 
-/* ─── Sovereign Map (Right Panel) ───────────────────────────────────────────── */
-const SovereignMap: FC<{ reduceMotion: boolean | null }> = React.memo(({ reduceMotion }) => {
-  const rings = [
-    { r: 68,  stroke: "rgba(0, 240, 255, 0.35)", dash: "none", dur: 22 },
-    { r: 110, stroke: "rgba(245, 166, 35, 0.25)", dash: "4 14", dur: 38 },
-    { r: 152, stroke: "rgba(239, 68, 68, 0.2)",   dash: "2 22", dur: 60 },
-    { r: 194, stroke: "rgba(0, 240, 255, 0.15)",  dash: "1 30", dur: 90 },
-  ];
-
-  const nodes = [
-    { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "علاقة بميزانها",  w: 1.2 },
-    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم خاص",    w: 0.8 },
-    { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "نبض متذبذب",  w: 1.5 },
-    { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "تشويش روح",   w: 0.9 },
-    { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "احتواء حقيقي",w: 1.1 },
-    { cx: 190 - 28, cy: 190 - 148, r: 12, color: "#ff0055", label: "نزيف طاقة",   w: 2.0 },
-    { cx: 190 + 118, cy: 190 - 100, r: 11, color: "#ff0044", label: "حدود مهدورة", w: 1.7 },
-  ];
-
-  const [hovered, setHovered] = useState<number | null>(null);
-  const toSafeRadius = (value: unknown, fallback: number) =>
-    typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
-
+/* ——— Sovereign Map (Simplified Restored Version) ————————————————————————— */
+const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
   return (
-    <motion.div className="sovereign-map">
-      <div className="sovereign-map__atmosphere" aria-hidden />
-      <svg viewBox="0 0 380 380" fill="none" className="sovereign-map__svg">
-        {nodes.map((n, i) => (
-          <Fragment key={`nexus-${i}`}>
-            <motion.line
-              x1="190" y1="190" x2={n.cx} y2={n.cy}
-              stroke={n.color}
-              strokeWidth="0.5"
-              opacity={hovered === i ? 0.6 : 0.15}
-              className="orbit-line"
-            />
-          </Fragment>
-        ))}
+    <div className="relative aspect-square w-full max-w-[520px] mx-auto">
+      <div className="hero-scan-line" />
+      <svg viewBox="0 0 400 400" className="w-full h-full drop-shadow-[0_0_30px_rgba(0,240,255,0.2)]">
+        <circle cx="200" cy="200" r="180" stroke="rgba(0,240,255,0.1)" strokeWidth="1" fill="none" />
+        <circle cx="200" cy="200" r="120" stroke="rgba(0,240,255,0.15)" strokeWidth="1" fill="none" />
+        <circle cx="200" cy="200" r="60" stroke="rgba(0,240,255,0.2)" strokeWidth="1" fill="none" />
+        
+        <motion.circle 
+          cx="200" cy="200" r="20" fill="#00f0ff" 
+          animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
 
-        {rings.map((ring, i) => {
-          const safeRingRadius = toSafeRadius(ring.r, 1);
-          return (
-            <g key={i}>
-              <motion.circle
-                cx="190" cy="190" r={safeRingRadius}
-                stroke={ring.stroke}
-                strokeWidth="1"
-                fill="none"
-                style={{ transform: "translateZ(0)" }}
-                animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
-                transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
-                transformOrigin="190px 190px"
-              />
-            </g>
-          );
-        })}
-
-        {nodes.map((node, i) => {
-          const safeNodeRadius = toSafeRadius(node.r, 1);
-          return (
-            <motion.g
-              key={i}
-              onMouseEnter={() => setHovered(i)}
-              onMouseLeave={() => setHovered(null)}
-              cursor="pointer"
-            >
-              <circle cx={node.cx} cy={node.cy} r={safeNodeRadius + 4} fill={node.color} opacity={0.1} />
-              <circle cx={node.cx} cy={node.cy} r={safeNodeRadius} fill={node.color} />
-              <AnimatePresence>
-                {hovered === i && (
-                  <motion.foreignObject
-                    x={node.cx - 75} y={node.cy - 16}
-                    width="150" height="36"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <div className="node-tooltip-body">{node.label}</div>
-                  </motion.foreignObject>
-                )}
-              </AnimatePresence>
-            </motion.g>
-          );
-        })}
-
-        <motion.g className="center-core" transformOrigin="190px 190px">
-          <circle cx="190" cy="190" r="14" fill="var(--cyan)" className="center-core__glow" />
-          <circle cx="190" cy="190" r="6" fill="#fff" />
-        </motion.g>
-      </svg>
-
-      <div className="metric-card metric-card--health">
-        <p className="metric-card-label">صحتك الداخلية</p>
-        <div className="metric-card-values">
-          <span className="metric-card-value">٧٨</span>
-          <span className="metric-card-text">/ ١٠٠</span>
-        </div>
-        <div className="metric-card-bar">
-          <motion.div className="metric-card-bar__fill" initial={{ width: "0%" }} animate={{ width: "78%" }} transition={{ duration: 1.2, delay: 0.6 }} />
-        </div>
-      </div>
-
-      <div className="legend">
+        {/* Nodes */}
         {[
-          { label: "توازن", color: "var(--cyan)" },
-          { label: "تشتت", color: "var(--gold)" },
-          { label: "استنزاف", color: "var(--crimson)" },
-        ].map(({ label, color }) => (
-          <div key={label} className="legend-item">
-            <span className="legend-dot" style={{ color }} />
-            <span className="legend-label" style={{ color }}>{label}</span>
-          </div>
+          { cx: 200, cy: 80, color: "#00f0ff", label: "ميزان" },
+          { cx: 320, cy: 200, color: "#f5a623", label: "نبض" },
+          { cx: 200, cy: 320, color: "#ff0055", label: "نزيف" },
+          { cx: 80, cy: 200, color: "#00f0ff", label: "دواير" },
+        ].map((node, i) => (
+          <motion.g key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 + i * 0.2 }}>
+            <line x1="200" y1="200" x2={node.cx} y2={node.cy} stroke={node.color} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+            <circle cx={node.cx} cy={node.cy} r="8" fill={node.color} />
+          </motion.g>
         ))}
-      </div>
-    </motion.div>
+      </svg>
+      
+      {/* Metrics */}
+      <motion.div 
+        className="metric-card top-[5%] -right-[5%]"
+        initial={{ x: 20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: 1 }}
+      >
+        <span className="text-[10px] text-slate-400 block mb-1">صحتك الداخلية</span>
+        <span className="text-xl font-black text-cyan-400">٩٨٪</span>
+      </motion.div>
+
+      <motion.div 
+        className="metric-card bottom-[10%] -left-[5%]"
+        initial={{ x: -20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: 1.2 }}
+      >
+        <span className="text-[10px] text-red-400 block mb-1">نزيف طاقة</span>
+        <span className="text-lg font-bold text-white">٣ مصادر</span>
+      </motion.div>
+    </div>
   );
-});
+};
 
-/* ─── Pulse Badge ───────────────────────────────────────────────────────────── */
-const PulseBadge: FC<{ count?: number }> = React.memo(({ count: initialCount }) => {
-  const [count, setCount] = useState(initialCount ?? 1947);
-
-  useEffect(() => {
-    if (initialCount !== undefined) {
-      setCount(initialCount);
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setCount(prev => {
-        const fluctuation = Math.floor(Math.random() * 5) - 2;
-        return Math.max(5, prev + fluctuation);
-      });
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [initialCount]);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.85 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 1.4, duration: 0.6, ease: techEase }}
-      className="pulse-badge"
-    >
-      <motion.span
-        className="pulse-badge__dot"
-        animate={{ opacity: [1, 0.3, 1] }}
-        transition={{ duration: 1.6, repeat: Infinity }}
-      />
-      <span className="pulse-badge__text">
-        {count.toLocaleString("en-US")} يستعيدون نبضهم الآن
-      </span>
-    </motion.div>
-  );
-});
-
-/* ─── Main Hero Component ────────────────────────────────────────────────────── */
-export const HeroSection: FC<HeroSectionProps> = React.memo(({
+export const HeroSection: FC<HeroSectionProps> = ({
   onStartJourney,
   mirrorName,
   setMirrorName,
@@ -1170,158 +965,126 @@ export const HeroSection: FC<HeroSectionProps> = React.memo(({
 }) => {
   const reduceMotion = useReducedMotion();
   const [isWarping, setIsWarping] = useState(false);
-  const headlineLineRef = useRef<HTMLSpanElement | null>(null);
-  const [headlineMeasuredWidth, setHeadlineMeasuredWidth] = useState<number>(0);
 
-  const globalMouseX = useMotionValue(0);
-  const globalMouseY = useMotionValue(0);
+  // 3D Tilt Logic
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const rotateX = useSpring(useTransform(mouseY, [-300, 300], [10, -10]), { stiffness: 100, damping: 30 });
+  const rotateY = useSpring(useTransform(mouseX, [-300, 300], [-10, 10]), { stiffness: 100, damping: 30 });
 
-  const handleGlobalMouseMove = useCallback((e: React.MouseEvent) => {
-    // 🛡️ Guard: Parallax is too expensive and jittery on most mobile/touch devices
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if (reduceMotion || isTouch) return;
-    
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    globalMouseX.set((e.clientX - cx) / 20);
-    globalMouseY.set((e.clientY - cy) / 20);
-  }, [reduceMotion, globalMouseX, globalMouseY]);
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    mouseX.set(x);
+    mouseY.set(y);
+  }, [mouseX, mouseY]);
 
-  const gridX = useSpring(useTransform(globalMouseX, x => -x * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
-  const gridY = useSpring(useTransform(globalMouseY, y => -y * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
-
-  const starX = useSpring(useTransform(globalMouseX, x => -x * 0.5), { stiffness: 20, damping: 30, mass: 1 });
-  const starY = useSpring(useTransform(globalMouseY, y => -y * 0.5), { stiffness: 20, damping: 30, mass: 1 });
-
-  const warpLines = useMemo(() => (
-    Array.from({ length: 40 }, (_, i) => ({
-      id: `warp-line-${i}`,
-      top: `${(i / 40) * 110 - 5}%`,
-      width: `${15 + Math.random() * 45}%`,
-      opacity: 0.15 + Math.random() * 0.55,
-      delay: Math.random() * 0.4,
-      duration: 0.25 + Math.random() * 0.3,
-    }))
-  ), []);
-
-  useLayoutEffect(() => {
-    const node = headlineLineRef.current;
-    if (!node) return;
-
-    const isMobile = window.innerWidth < 1024;
-    
-    const updateMeasuredWidth = () => {
-      // On mobile, the width is usually predictable (screen width - padding).
-      // We lock it to avoid jitter from browser chrome toggling.
-      if (window.innerWidth < 1024) {
-        setHeadlineMeasuredWidth(window.innerWidth - 32);
-        return;
-      }
-      
-      if (!node) return;
-      const nextWidth = Math.ceil(node.getBoundingClientRect().width);
-      // Only set if diff is significant to avoid sub-pixel jitter
-      setHeadlineMeasuredWidth(prev => (Math.abs(prev - nextWidth) < 1 ? prev : nextWidth));
-    };
-
-    updateMeasuredWidth();
-    const observer = new ResizeObserver(updateMeasuredWidth);
-    observer.observe(node);
-    window.addEventListener("resize", updateMeasuredWidth);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", updateMeasuredWidth);
-    };
-  }, []);
-
-  const handleStart = useCallback(() => {
+  const handleStart = () => {
     setIsWarping(true);
-    setTimeout(onStartJourney, 1200);
-  }, [onStartJourney]);
+    setTimeout(onStartJourney, 1000);
+  };
 
   return (
     <>
       <style>{HERO_STYLES}</style>
-
-      <section className="hero-root" dir="rtl" onMouseMove={handleGlobalMouseMove}>
+      <section className="hero-root" dir="rtl" onMouseMove={handleMouseMove}>
         <div className="hero-canvas" aria-hidden>
-          <motion.div className="hero-layer hero-layer--starfield" style={{ x: starX, y: starY }}>
+          <motion.div className="hero-layer hero-layer--starfield">
             <div className="hero-starfield" />
           </motion.div>
-          <motion.div className="hero-layer hero-layer--grid" style={{ x: gridX, y: gridY }}>
+          <motion.div className="hero-layer hero-layer--grid">
             <div className="hero-grid-wrapper"><div className="hero-grid" /></div>
           </motion.div>
-
           <div className="hero-screen-vignette" />
           <div className="hero-screen-glow" />
         </div>
-
         <div className="hero-bottom-fade" />
-
         <div className="hero-content-wrapper">
           <motion.div
-            variants={stagger} initial="hidden" animate="visible"
-            className="hero-copy-column"
-            style={{ ["--headline-measured-width" as any]: headlineMeasuredWidth > 0 ? `${headlineMeasuredWidth}px` : undefined }}
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: techEase }}
+            className="flex-1 max-w-[640px]"
           >
-            <motion.div variants={fadeUp} className="hero-eyebrow-row">
-              <span className="hero-badge"><span className="hero-badge__dot" />الرحلة</span>
-              <PulseBadge count={pulseCount} />
-            </motion.div>
-
-            <motion.h1 variants={fadeUpWithClip} className="headline-static hero-headline">
-              <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
-              <div className="headline-subline-container">
-                <div className="headline-fixed-subline">
-                  <span className="word-ant">أنت</span>
-                  <span className="word-faqat">فقط</span>
-                </div>
-                <RotatingWord />
+            <div className="flex items-center gap-3 mb-6">
+              <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Dawayir — السيادة الشخصية</span>
+              <div className="px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+                <span className="text-[10px] font-bold text-cyan-400">{pulseCount.toLocaleString()} يستعيدون نبضهم</span>
               </div>
-            </motion.h1>
+            </div>
 
-            <motion.p variants={fadeUp} className="hero-body">
-              قف خذ نفساً عميقاً أنت مش محتاج مهام أكتر أنت محتاج تشوف نفسك خريطة تترجم فوضى أفكارك لإحداثيات بصرية وترصد نزيف طاقتك فوراً
-            </motion.p>
+            <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-4">
+              أنت لست مرهقاً <br />
+              <span className="text-slate-400 font-light text-4xl md:text-5xl">أنت فقط</span>
+              <RotatingWord />
+            </h1>
 
-            <div className="hero-action-row">
-              <motion.div variants={fadeUp} className="hero-input-wrapper w-full">
-                <div className="hero-input-greeting">يا مسافر،</div>
-                <input type="text" className="hero-input" placeholder="اسمك إيه؟" value={mirrorName} onChange={(e) => setMirrorName(e.target.value)} />
-              </motion.div>
-              <motion.button variants={fadeUp} onClick={handleStart} className="cta-primary">
-                <div className="cta-aura" />
-                <div className="cta-surface">
-                  <div className="cta-liquid" />
-                  <div className="cta-shimmer" />
-                  <Zap className="hero-cta-icon" />
-                  <span className="cta-label">{ctaJourney}</span>
-                  <ArrowLeft className="hero-cta-icon--arrow" />
-                </div>
+            <div className="flex flex-col md:flex-row gap-4 mb-10">
+              <input
+                type="text"
+                placeholder="ماذا تحب أن نناديك؟"
+                value={mirrorName}
+                onChange={(e) => setMirrorName(e.target.value)}
+                className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white outline-none focus:border-cyan-500/50 transition-colors w-full md:w-[260px]"
+              />
+              <motion.button
+                onClick={handleStart}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-cyan-500 text-black px-8 py-4 rounded-xl font-black flex items-center justify-center gap-3 hover:bg-cyan-400 transition-colors"
+              >
+                <Zap size={18} fill="currentColor" />
+                <span>{ctaJourney}</span>
+                <ArrowLeft size={18} />
               </motion.button>
-              <motion.p variants={fadeUp} className="cta-free-badge">بدون تسجيل، استكشاف سريع فقط</motion.p>
+            </div>
+              </motion.button>
+            </div>
+
+            <div className="flex flex-wrap gap-6">
+              {trustPoints.map((point, i) => (
+                <div key={i} className="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
+                  <ShieldCheck size={14} className="text-cyan-500/50" />
+                  {point}
+                </div>
+              ))}
             </div>
           </motion.div>
-          <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }} className="map-area">
+          <motion.div
+            style={{ rotateX, rotateY, perspective: 1000 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, ease: techEase, delay: 0.2 }}
+            className="map-area"
+          >
             <SovereignMap reduceMotion={reduceMotion} />
           </motion.div>
         </div>
-      </section>
 
-      <AnimatePresence>
-        {isWarping && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="warp-overlay">
-            <div className="warp-overlay__content">
-              <div className="warp-icon-shell"><Zap className="warp-icon" /></div>
-              <div className="warp-text">جاري تحليل وعيك...</div>
-            </div>
-            {warpLines.map(line => (
-              <motion.div key={line.id} className={`warp-line ${line.id}`} initial={{ left: "-100%" }} animate={{ left: "200%" }} transition={{ duration: line.duration, repeat: Infinity, delay: line.delay, ease: "linear" }} style={{ top: line.top, width: line.width, opacity: line.opacity }} />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <AnimatePresence>
+          {isWarping && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+            >
+              <div className="text-center">
+                <motion.div 
+                  animate={{ rotate: 360 }} 
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="mb-6 inline-block"
+                >
+                  <Zap size={48} className="text-cyan-400" />
+                </motion.div>
+                <p className="text-2xl font-black text-white tracking-widest animate-pulse">جاري فحص إحداثيات وعيك...</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
     </>
   );
-});
+};

@@ -120,7 +120,7 @@ interface OpsStats {
 }
 
 // --- Constants ---
-const OWNER_PHONE = "+201110795932";
+const OWNER_PHONE = "+201140111147";
 const OWNER_EMAIL = "hello@alrehla.app";
 
 // --- Helpers ---
@@ -130,7 +130,7 @@ import { useAdminState } from "@/domains/admin/store/admin.store";
 import { CampaignLeadsModal } from "./CampaignLeadsModal";
 
 function getBearerToken(): string {
-  return getAuthToken() ?? "";
+  return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
 }
 
 async function fetchStats(force = false): Promise<OpsStats> {

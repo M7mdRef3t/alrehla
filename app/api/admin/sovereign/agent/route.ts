@@ -191,6 +191,16 @@ async function handleMutateUIComponent(args: any) {
   try {
     const { componentId, variantName, code, hypothesis } = args;
     
+    // 🛡️ Security: Path Sanitization
+    // Ensure componentId and variantName only contain alphanumeric characters, hyphens, and underscores.
+    // This blocks Path Traversal (e.g., ../../../etc/passwd)
+    const isValidId = /^[a-zA-Z0-9-_]+$/.test(componentId);
+    const isValidVariant = /^[a-zA-Z0-9-_]+$/.test(variantName);
+
+    if (!isValidId || !isValidVariant) {
+      throw new Error("Security Violation: Invalid character in componentId or variantName. Only alphanumeric, hyphen and underscore allowed.");
+    }
+
     // 1. Create directory if not exists
     const evolDir = path.join(ROOT, "src", "evolution", componentId);
     await fs.mkdir(evolDir, { recursive: true });
@@ -198,6 +208,13 @@ async function handleMutateUIComponent(args: any) {
     // 2. Write the component file
     const fileName = `${variantName}.tsx`;
     const filePath = path.join(evolDir, fileName);
+
+    // Final check: Ensure the resolved path is still within our evolution root
+    const evolutionRoot = path.join(ROOT, "src", "evolution");
+    if (!filePath.startsWith(evolutionRoot)) {
+       throw new Error("Security Violation: Target path is outside the evolution boundary.");
+    }
+
     await fs.writeFile(filePath, code, "utf8");
     
     // 3. Register in DB

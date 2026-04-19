@@ -197,11 +197,7 @@ class GeminiClient {
     }
     if (!data) {
       // No response at all = network/server error → mark unavailable
-      if (feature === 'sovereign_intervention') {
-        console.debug(`[GeminiClient] Background fallback null for ${feature} (Offline or config missing)`);
-      } else {
-        console.warn(`[GeminiClient] Browser fetch returned null (network/server error). Feature: ${feature}`);
-      }
+      console.warn(`[GeminiClient] Browser fetch returned null (network/server error). Feature: ${feature}`);
       this.markServerUnavailable();
       recordAIFallback();
       return null;

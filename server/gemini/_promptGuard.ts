@@ -1,4 +1,4 @@
-const CODE_HINTS = [
+﻿const CODE_HINTS = [
   "code", "algorithm", "function", "class", "optimize", "complexity", "memory leak",
   "typescript", "javascript", "python", "java", "c++", "sql", "api", "implement", "debug",
   "اكتب كود", "خوارزمية", "تعقيد", "دالة", "حل برمجي", "تحسين الأداء", "تسريب ذاكرة", "اختبار"
@@ -43,15 +43,10 @@ function hasTests(text: unknown): boolean {
   return /test|unit test|integration test|benchmark|perf/.test(lower) || /اختبار|تيست|قياس أداء|بنشمارك/.test(source);
 }
 
-export function evaluatePrompt(text: unknown, feature?: string): { coding: boolean; missing: string[]; ok: boolean } {
+export function evaluatePrompt(text: unknown): { coding: boolean; missing: string[]; ok: boolean } {
   const source = String(text ?? "");
   const coding = isCodingLike(source);
   const missing: string[] = [];
-
-  // Exemption: Sovereign Interventions are NOT coding tasks even if they contain technical terms
-  if (feature === "sovereign_intervention") {
-    return { coding: false, missing: [], ok: true };
-  }
 
   if (coding && !hasComplexity(source)) missing.push("Specify required complexity (example: O(n)).");
   if (coding && !hasMemoryConstraint(source)) missing.push("Specify memory constraints (example: zero memory leaks).");

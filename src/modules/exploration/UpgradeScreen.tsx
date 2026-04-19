@@ -14,30 +14,17 @@ interface UpgradeScreenProps {
 
 export function UpgradeScreen({ isOpen, onClose }: UpgradeScreenProps) {
   const { tier } = useAuthState();
-  const [isUpgrading] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [testVariant, setTestVariant] = useState<"A" | "B">("A");
+  const [testVariant] = useState(() => Math.random() > 0.5 ? 'os' : 'shield');
 
   useEffect(() => {
-    if (!isOpen) return;
-    
-    let stored = localStorage.getItem("dawayir-upgrade-cta-variant") as "A" | "B" | null;
-    if (stored !== "A" && stored !== "B") {
-      stored = Math.random() > 0.5 ? "A" : "B";
-      localStorage.setItem("dawayir-upgrade-cta-variant", stored);
+    if (isOpen) {
+      analyticsService.track(AnalyticsEvents.CONVERSION_OFFER_VIEW, {
+        variant: testVariant,
+        source: 'upgrade_trigger'
+      });
     }
-    setTestVariant(stored);
-
-    analyticsService.track(AnalyticsEvents.CONVERSION_OFFER_VIEW, { variant: stored });
-  }, [isOpen]);
-
-  // scroll lock
-  useEffect(() => {
-    if (!isOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, [isOpen]);
+  }, [isOpen, testVariant]);
 
   const handleUpgrade = () => {
     analyticsService.track(AnalyticsEvents.CONVERSION_OFFER_CLICKED, {
@@ -179,19 +166,10 @@ export function UpgradeScreen({ isOpen, onClose }: UpgradeScreenProps) {
                       {tier !== "pro" ? (
                         <button
                           onClick={handleUpgrade}
-                          disabled={isUpgrading}
-                          className={testVariant === "B" 
-                            ? "w-full py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white rounded-xl text-[13px] font-black transition-all shadow-lg shadow-indigo-900/40 flex items-center justify-center gap-2 mt-auto"
-                            : "w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black rounded-xl text-[13px] font-black transition-all shadow-lg shadow-amber-900/40 flex items-center justify-center gap-2 mt-auto"
-                          }
+                          className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black rounded-xl text-[13px] font-black transition-all shadow-lg shadow-amber-900/40 flex items-center justify-center gap-2 mt-auto"
                         >
-                          {isUpgrading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
-                          {isUpgrading 
-                            ? "جاري تجهيز الدرع..." 
-                            : testVariant === "B" 
-                              ? "فعّل درع السيادة الآن (أماكن محدودة)"
-                              : "انضم للدفعة التأسيسية وأوقف النزيف"
-                          }
+                          <Zap className="w-5 h-5" />
+                          انضم للدفعة التأسيسية وأوقف النزيف
                         </button>
                       ) : (
                         <button className="w-full py-3.5 bg-amber-500/20 border border-amber-500/50 text-amber-400 rounded-xl text-[13px] font-black cursor-default mt-auto">
@@ -212,4 +190,7 @@ export function UpgradeScreen({ isOpen, onClose }: UpgradeScreenProps) {
       )}
     </AnimatePresence>
   );
-}
+};
+
+
+

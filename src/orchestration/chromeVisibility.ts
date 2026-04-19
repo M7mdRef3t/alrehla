@@ -28,16 +28,9 @@ export function resolveLandingChromeVisibility(input: LandingChromeInput): Landi
     !input.showPulseCheck &&
     !input.isSanctuaryActive;
 
-  // WhatsApp FAB: يظهر دايماً ما دام مفيش modal أو admin أو sanctuary
-  const showWhatsApp =
-    !input.isAdminRoute &&
-    !input.showAuthModal &&
-    !input.isSanctuaryActive &&
-    input.hasWhatsAppLink;
-
   return {
     showFloatingProfile: showBasicChrome,
-    showFloatingWhatsApp: showWhatsApp,
+    showFloatingWhatsApp: showAppChrome && input.hasWhatsAppLink,
     showMobileBottomNav: showAppChrome,
     showNudgeToast: !input.isLandingScreen && !input.isSanctuaryActive,
     showConsentBanner: !(input.isLandingScreen || input.showPulseCheck || input.showAuthModal || input.isSanctuaryActive)

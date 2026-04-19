@@ -52,14 +52,8 @@ export function useAppShellAccessState({
   const isPrivilegedUser = isPrivilegedRole(rawRole) || isPrivilegedRole(role);
   const normalizedRole = typeof role === "string" ? role.trim().toLowerCase() : "";
   const normalizedRawRole = typeof rawRole === "string" ? rawRole.trim().toLowerCase() : "";
-  
-  // Hardened Owner Identification (including local override for development/debug)
-  const isOwnerBypassActive = typeof window !== "undefined" && window.localStorage.getItem("dawayir-owner-bypass") === "true";
-  
   const isOwnerWatcher = normalizedRole === "owner" || normalizedRole === "superadmin" || normalizedRole === "admin" || normalizedRole === "developer" ||
-    normalizedRawRole === "owner" || normalizedRawRole === "superadmin" || normalizedRawRole === "admin" || normalizedRawRole === "developer" || 
-    adminAccess || isOwnerBypassActive;
-
+    normalizedRawRole === "owner" || normalizedRawRole === "superadmin" || normalizedRawRole === "admin" || normalizedRawRole === "developer" || adminAccess;
   const canPollOwnerAlerts = Boolean(authUser) && (normalizedRole === "owner" || normalizedRole === "superadmin" || normalizedRawRole === "owner" || normalizedRawRole === "superadmin");
   const isLockedPhaseOne = isPhaseOneUserFlow && !isOwnerWatcher;
 

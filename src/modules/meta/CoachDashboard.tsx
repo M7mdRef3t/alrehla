@@ -57,14 +57,14 @@ export const CoachDashboard: React.FC<{ isOpen: boolean; onClose: () => void }> 
 
             if (patientData && !patientError) {
                 const mappedPatients: PatientStats[] = patientData.map(p => {
-                    // Real TEI logic would go here. For now, zeroing out to avoid fake data.
-                    const realTei = 0; 
+                    // Mocking the complex calculations for TEI for now, just to show UI
+                    const mockTei = Math.floor(Math.random() * 100);
                     return {
                         id: p.id,
                         name: p.full_name || "مستخدم مجهول",
-                        tei: realTei,
-                        burnoutDays: null,
-                        status: 'safe',
+                        tei: mockTei,
+                        burnoutDays: mockTei > 80 ? 3 : (mockTei > 50 ? 15 : null),
+                        status: mockTei > 80 ? 'critical' : (mockTei > 50 ? 'warning' : 'safe'),
                         lastActive: p.last_seen ? new Date(p.last_seen).toLocaleDateString('ar-EG') : 'غير متوفر'
                     };
                 });

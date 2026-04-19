@@ -56,59 +56,41 @@ export default function ItemCard({ item, isOverlay, onClick }: ItemCardProps) {
       {...attributes}
       {...listeners}
       onClick={(_e) => {
+        // Only trigger click if not an overlay and not dragging
         if (!isOverlay && onClick) {
           onClick(item);
         }
       }}
-      className={`bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-2xl p-4 cursor-grab active:cursor-grabbing hover:border-purple-500/30 hover:bg-white/[0.05] transition-all duration-300 shadow-xl group relative overflow-hidden ${
-        isOverlay ? "rotate-2 scale-105 shadow-2xl border-purple-500/50 bg-neutral-900" : ""
+      className={`bg-neutral-800 border border-white/10 rounded-xl p-4 cursor-grab active:cursor-grabbing hover:border-white/20 transition-colors shadow-sm group ${
+        isOverlay ? "rotate-2 scale-105 shadow-xl border-emerald-500/50" : ""
       }`}
     >
-      <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 pointer-events-none transition-opacity bg-gradient-to-br ${
-         item.priority === 'critical' ? 'from-rose-500' : 
-         item.priority === 'high' ? 'from-orange-500' : 
-         'from-purple-500'
-      }`} />
-
-      <div className="flex justify-between items-center mb-3 relative z-10">
-        <span className={`text-[9px] uppercase font-black tracking-widest px-2.5 py-1 rounded-lg border ${
-            item.priority === 'critical' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
-            item.priority === 'high' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' :
-            item.priority === 'medium' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
-            'bg-neutral-500/10 border-white/5 text-neutral-400'
-        }`}>
+      <div className="flex justify-between items-start mb-2">
+        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${priorityColors[item.priority as keyof typeof priorityColors]}`}>
           {item.priority}
         </span>
-        <span className="text-[9px] text-neutral-500 font-black uppercase tracking-widest">
-          {item.source.replace('_', ' ')}
+        <span className="text-[10px] text-neutral-500 font-mono">
+          {item.source}
         </span>
       </div>
       
-      <h4 className="text-[13px] font-bold text-white leading-snug mb-2 group-hover:text-purple-300 transition-colors relative z-10">
+      <h4 className="text-sm font-semibold text-white leading-tight mb-2">
         {item.title}
       </h4>
       
-      <p className="text-[11px] text-neutral-400 leading-relaxed line-clamp-2 mb-4 relative z-10">
+      <p className="text-xs text-neutral-400 line-clamp-2 mb-3">
         {item.description}
       </p>
 
-      <div className="flex items-center justify-between mt-auto relative z-10">
-        <div className="flex items-center gap-3">
-            <span title="Facts" className="flex items-center gap-1.5 text-[10px] text-neutral-500">
-                <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]"></div>
-                {item.facts.length}
-            </span>
-            <span title="Interpretations" className="flex items-center gap-1.5 text-[10px] text-neutral-500">
-                <div className="w-1 h-1 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.5)]"></div>
-                {item.interpretations.length}
-            </span>
-        </div>
-        
-        {item.execution_link && (
-            <div className="px-2 py-1 bg-emerald-500/10 rounded-lg text-emerald-400">
-                <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></div>
-            </div>
-        )}
+      <div className="flex items-center gap-2 mt-auto text-xs text-neutral-500">
+        <span title="Facts" className="flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+          {item.facts.length}
+        </span>
+        <span title="Interpretations" className="flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+          {item.interpretations.length}
+        </span>
       </div>
     </div>
   );

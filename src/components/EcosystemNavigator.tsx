@@ -26,8 +26,7 @@ import {
   TrendingUp,
   Mail,
   Moon,
-  Handshake,
-  Target
+  Handshake
 } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { RoutingEngine } from "@/services/RoutingEngine";
@@ -379,51 +378,54 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     url: "/#rafiq"
   },
   {
-    id: "ruya",
-    name: "رؤيا",
-    description: "مفكرة الأحلام والتأملات الليلية",
-    icon: <Moon className="w-5 h-5" />,
+    id: "wird",
+    name: "ورد",
+    description: "أذكارك وتسبيحاتك اليومية",
+    icon: <ScrollText className="w-5 h-5" />,
     status: "active",
     color: "#8b5cf6",
-    url: "/#ruya"
+    url: "/#wird"
   },
   {
-    id: "niyya",
-    name: "نية",
-    description: "نيتك تصنع يومك",
-    icon: <Target className="w-5 h-5" />,
+    id: "sada",
+    name: "صدى",
+    description: "تنبيهات ذكية من رحلتك",
+    icon: <Bell className="w-5 h-5" />,
     status: "active",
-    color: "#10b981",
-    url: "/#niyya"
+    color: "#6366f1",
+    url: "/#sada"
+  },
+  {
+    id: "shahada",
+    name: "شهادة",
+    description: "إنجازات رحلتك وشهاداتك",
+    icon: <Gem className="w-5 h-5" />,
+    status: "active",
+    color: "#ffd700",
+    url: "/#shahada"
   }
 ];
 
 export const EcosystemNavigator: React.FC<{
   onNavigate?: (url: string) => void;
-  onOpenHub?: () => void;
-}> = ({ onNavigate, onOpenHub }) => {
+}> = ({ onNavigate }) => {
   const { ecosystemData } = useAuthState();
   const nextAction = React.useMemo(() => {
     return RoutingEngine.getNextBestAction(ecosystemData || undefined);
   }, [ecosystemData]);
 
   return (
-    <div className="flex flex-col gap-2 p-3 bg-white/5 dark:bg-[#0B0F19]/40 rounded-2xl border border-white/10 backdrop-blur-md relative group">
+    <div className="flex flex-col gap-2 p-3 bg-white/5 dark:bg-[#0B0F19]/40 rounded-2xl border border-white/10 backdrop-blur-md relative overflow-hidden group">
       
-      {/* Premium Glass reflection — overflow-hidden scoped here only */}
-      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      </div>
+      {/* Premium Glass reflection */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-      <button 
-        onClick={onOpenHub}
-        className="relative w-full h-10 flex items-center justify-start gap-2 mb-2 px-3 hover:bg-white/10 rounded-lg border border-white/5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-      >
-        <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse shrink-0" />
-        <span className="text-xs font-black uppercase tracking-widest whitespace-nowrap" style={{ color: "#2dd4bf" }}>
-          THE HUB - المنظومة
+      <div className="flex items-center gap-2 mb-2 px-1">
+        <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600 dark:text-teal-400/80">
+          The Hub - المنظومة
         </span>
-      </button>
+      </div>
 
       {nextAction && (
         <div className="mb-3 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border border-indigo-500/20 rounded-xl p-3 relative overflow-hidden">

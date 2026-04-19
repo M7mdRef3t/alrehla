@@ -19,7 +19,9 @@ export interface VercelPulse {
 export const vercelService = {
   getPulse: async (): Promise<VercelPulse> => {
     try {
-      const bearer = getAuthToken();
+      const authToken = getAuthToken();
+      const adminCode = useAdminState.getState().adminCode;
+      const bearer = authToken ?? adminCode;
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json"

@@ -1,168 +1,111 @@
 /**
  * شهادة — Shahada Screen
- * Journey Certificates: unlock, view, and share visual badges
+ * Achievement Certificates & Journey Badges
  */
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   useShahadaState,
   TIER_META,
+  CATEGORY_META,
+  type CertTier,
+  type CertCategory,
   type Certificate,
-  type CertificateTier,
 } from "./store/shahada.store";
-import { useTazkiyaState } from "@/modules/tazkiya/store/tazkiya.store";
-import { useJisrState } from "@/modules/jisr/store/jisr.store";
-import { useRisalaState } from "@/modules/risala/store/risala.store";
-import { useKhalwaState } from "@/modules/khalwa/store/khalwa.store";
-import { useBathraState } from "@/modules/bathra/store/bathra.store";
-import { useMithaqState } from "@/modules/mithaq/store/mithaq.store";
-import {
-  Award,
-  Lock,
-  Sparkles,
-  Trophy,
-  Share2,
-  ChevronLeft,
-} from "lucide-react";
+import { X, Lock, Trophy } from "lucide-react";
 
 /* ═══════════════════════════════════════════ */
-/*        CERTIFICATE CARD                    */
+/*         CERTIFICATE DETAIL MODAL           */
 /* ═══════════════════════════════════════════ */
 
-function CertCard({ cert, userName, onView }: {
-  cert: Certificate;
-  userName: string;
-  onView: () => void;
-}) {
-  const tierMeta = TIER_META[cert.tier];
-
-  if (!cert.isUnlocked) {
-    return (
-      <div className="rounded-2xl p-4 text-center opacity-40"
-        style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(51,65,85,0.2)" }}>
-        <Lock className="w-6 h-6 text-slate-600 mx-auto mb-2" />
-        <span className="text-3xl block mb-1 grayscale">{ cert.emoji }</span>
-        <h3 className="text-xs font-bold text-slate-500">{cert.title}</h3>
-        <p className="text-[9px] text-slate-600 mt-0.5">{cert.requirement}</p>
-      </div>
-    );
-  }
+function CertModal({ cert, onClose }: { cert: Certificate; onClose: () => void }) {
+  const tier = TIER_META[cert.tier];
+  const cat = CATEGORY_META[cert.category];
+  const pct = cert.maxProgress > 0 ? Math.round((cert.progress / cert.maxProgress) * 100) : 0;
 
   return (
-    <motion.button
-      whileTap={{ scale: 0.97 }}
-      onClick={onView}
-      className="rounded-2xl p-4 text-center relative overflow-hidden group"
-      style={{ background: cert.bgGradient, border: `1px solid ${cert.color}30` }}>
-      {/* Glow */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{ background: `radial-gradient(circle at center, ${tierMeta.glow}, transparent 70%)` }} />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.9)" }} onClick={onClose}>
+      <motion.div initial={{ scale: 0.85, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.85, y: 20 }}
+        className="w-full max-w-sm rounded-3xl p-6 relative overflow-hidden"
+        style={{ background: "#0a0f1f", border: `1px solid ${tier.color}25` }}
+        onClick={(e) => e.stopPropagation()}>
 
-      <div className="relative z-10">
-        <span className="text-3xl block mb-1">{cert.emoji}</span>
-        <h3 className="text-xs font-black text-white">{cert.title}</h3>
-        <p className="text-[9px] mt-0.5" style={{ color: `${cert.color}cc` }}>{cert.subtitle}</p>
-        <div className="flex items-center justify-center gap-1 mt-2">
-          <div className="w-2 h-2 rounded-full" style={{ background: tierMeta.color }} />
-          <span className="text-[8px] font-bold" style={{ color: tierMeta.color }}>{tierMeta.label}</span>
-        </div>
-      </div>
-    </motion.button>
-  );
-}
+        {/* Glow */}
+        {cert.unlocked && (
+          <div className="absolute inset-0 pointer-events-none"
+            style={{ background: `radial-gradient(circle at 50% 30%, ${tier.glow}, transparent 70%)` }} />
+        )}
 
-/* ═══════════════════════════════════════════ */
-/*       FULL CERTIFICATE VIEW                */
-/* ═══════════════════════════════════════════ */
+        {/* Close */}
+        <button onClick={onClose} className="absolute top-4 left-4 w-7 h-7 rounded-lg flex items-center justify-center bg-slate-800/40 text-slate-500 z-10">
+          <X className="w-3.5 h-3.5" />
+        </button>
 
-function CertificateFullView({ cert, userName, onClose }: {
-  cert: Certificate;
-  userName: string;
-  onClose: () => void;
-}) {
-  const tierMeta = TIER_META[cert.tier];
-  const date = cert.unlockedAt ? new Date(cert.unlockedAt).toLocaleDateString("ar-EG", {
-    year: "numeric", month: "long", day: "numeric"
-  }) : "";
+        {/* Badge */}
+        <div className="text-center relative z-10 mb-4">
+          <motion.div
+            animate={cert.unlocked ? { rotate: [0, -5, 5, 0], scale: [1, 1.05, 1] } : {}}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            className="w-24 h-24 mx-auto rounded-3xl flex items-center justify-center mb-3 relative"
+            style={{
+              background: cert.unlocked ? `${tier.color}12` : "rgba(30,41,59,0.4)",
+              border: `2px solid ${cert.unlocked ? `${tier.color}30` : "rgba(51,65,85,0.3)"}`,
+              boxShadow: cert.unlocked ? `0 0 30px ${tier.glow}` : "none",
+            }}>
+            {cert.unlocked ? (
+              <span className="text-5xl">{cert.emoji}</span>
+            ) : (
+              <Lock className="w-8 h-8 text-slate-600" />
+            )}
+          </motion.div>
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center px-6"
-      style={{ background: "rgba(0,0,0,0.85)" }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.8, y: 30 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.8, y: 30 }}
-        className="w-full max-w-sm rounded-3xl p-8 text-center relative overflow-hidden"
-        style={{ background: cert.bgGradient, border: `2px solid ${cert.color}40` }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Decorative corners */}
-        <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 rounded-tr-xl" style={{ borderColor: `${cert.color}30` }} />
-        <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 rounded-tl-xl" style={{ borderColor: `${cert.color}30` }} />
-        <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 rounded-br-xl" style={{ borderColor: `${cert.color}30` }} />
-        <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 rounded-bl-xl" style={{ borderColor: `${cert.color}30` }} />
+          <h2 className="text-lg font-black text-white mb-1">{cert.title}</h2>
+          <p className="text-[11px] text-slate-400 mb-2">{cert.description}</p>
 
-        {/* Content */}
-        <div className="relative z-10 space-y-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: `${cert.color}80` }}>
-            شهادة الرحلة
-          </p>
-
-          <motion.span
-            className="text-6xl block"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1, rotate: [0, -10, 10, 0] }}
-            transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-          >
-            {cert.emoji}
-          </motion.span>
-
-          <div>
-            <h2 className="text-xl font-black text-white mb-1">{cert.title}</h2>
-            <p className="text-xs text-slate-400">{cert.subtitle}</p>
-          </div>
-
-          {/* Tier */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full"
-            style={{ background: `${tierMeta.color}15`, border: `1px solid ${tierMeta.color}30` }}>
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: tierMeta.color }} />
-            <span className="text-[10px] font-bold" style={{ color: tierMeta.color }}>{tierMeta.label}</span>
-          </div>
-
-          {/* Traveler name */}
-          <div className="pt-2">
-            <p className="text-[10px] text-slate-500">مُنحت إلى المسافر</p>
-            <p className="text-base font-black text-white mt-1">{userName || "مسافر مجهول"}</p>
-          </div>
-
-          {/* Date */}
-          <p className="text-[9px] text-slate-600">{date}</p>
-
-          {/* Sparkle particles */}
-          {[...Array(6)].map((_, i) => (
-            <motion.div key={i}
-              className="absolute w-1 h-1 rounded-full"
-              style={{ background: cert.color, top: `${20 + Math.random() * 60}%`, left: `${10 + Math.random() * 80}%` }}
-              animate={{ opacity: [0, 1, 0], scale: [0, 1.5, 0] }}
-              transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
-            />
-          ))}
-
-          {/* Footer */}
-          <div className="pt-4 flex gap-2">
-            <button onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-400 bg-slate-800/40 border border-slate-700/30">
-              إغلاق
-            </button>
+          {/* Tier + Category */}
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-[8px] font-bold px-2 py-0.5 rounded-full"
+              style={{ background: `${tier.color}15`, color: tier.color, border: `1px solid ${tier.color}25` }}>
+              {tier.label}
+            </span>
+            <span className="text-[8px] font-bold px-2 py-0.5 rounded-full"
+              style={{ background: `${cat.color}10`, color: cat.color, border: `1px solid ${cat.color}20` }}>
+              {cat.emoji} {cat.label}
+            </span>
           </div>
         </div>
+
+        {/* Progress */}
+        <div className="relative z-10 rounded-xl p-3"
+          style={{ background: "rgba(15,23,42,0.5)", border: "1px solid rgba(51,65,85,0.2)" }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[9px] text-slate-500 font-bold">التقدم</span>
+            <span className="text-xs font-black" style={{ color: cert.unlocked ? "#22c55e" : tier.color }}>
+              {pct}%
+            </span>
+          </div>
+          <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${pct}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="h-full rounded-full"
+              style={{ background: cert.unlocked ? "#22c55e" : tier.color }} />
+          </div>
+          <p className="text-[8px] text-slate-600 mt-1.5">{cert.requirement} ({cert.progress}/{cert.maxProgress})</p>
+        </div>
+
+        {/* Unlock date */}
+        {cert.unlocked && cert.unlockedAt && (
+          <div className="text-center mt-3 relative z-10">
+            <span className="text-[9px] text-green-500/70">
+              ✅ تحققت في {new Date(cert.unlockedAt).toLocaleDateString("ar-EG", { month: "short", day: "numeric", year: "numeric" })}
+            </span>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
@@ -173,62 +116,27 @@ function CertificateFullView({ cert, userName, onClose }: {
 /* ═══════════════════════════════════════════ */
 
 export default function ShahadaScreen() {
-  const {
-    certificates,
-    userName,
-    setUserName,
-    checkAndUnlock,
-    getUnlocked,
-    getLocked,
-    getProgress,
-  } = useShahadaState();
+  const { certificates, getTotalUnlocked, getCompletionPct } = useShahadaState();
+  const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
+  const [filter, setFilter] = useState<CertCategory | CertTier | "all" | "unlocked">("all");
 
-  const [viewingCert, setViewingCert] = useState<Certificate | null>(null);
-  const [showNameInput, setShowNameInput] = useState(!userName);
-  const [nameInput, setNameInput] = useState(userName);
+  const totalUnlocked = useMemo(() => getTotalUnlocked(), [getTotalUnlocked]);
+  const completionPct = useMemo(() => getCompletionPct(), [getCompletionPct]);
+  const totalCerts = certificates.length;
 
-  // Gather ecosystem stats
-  const tazkiyaCycles = useTazkiyaState((s) => s.cycles.filter((c) => c.isComplete).length);
-  const bridgesBuilt = useJisrState((s) => s.bridges.length);
-  const bottlesSent = useRisalaState((s) => s.bottlesSent);
-  const messagesReceived = useRisalaState((s) => s.receivedMessages.length);
-  const khalwaMinutes = useKhalwaState((s) => s.getTotalMinutes());
-  const seedsPlanted = useBathraState((s) => s.seeds.length);
-  const pledgesKept = useMithaqState((s) => s.pledges.filter((p) => p.status === "completed").length);
-
-  // Check for new unlocks on mount
-  useEffect(() => {
-    const totalActions = tazkiyaCycles + bridgesBuilt + bottlesSent + seedsPlanted + pledgesKept;
-    checkAndUnlock({
-      daysActive: Math.max(1, Math.floor(totalActions / 2)), // rough estimate
-      tazkiyaCycles,
-      bridgesBuilt,
-      bottlesSent,
-      khalwaMinutes,
-      seedsPlanted,
-      pledgesKept,
-      messagesReceived,
-      productsExplored: Math.min(12, Math.ceil(totalActions / 3)),
-      totalActions,
-    });
-  }, [tazkiyaCycles, bridgesBuilt, bottlesSent, khalwaMinutes, seedsPlanted, pledgesKept, messagesReceived]);
-
-  const unlocked = useMemo(() => getUnlocked(), [certificates]);
-  const locked = useMemo(() => getLocked(), [certificates]);
-  const progress = useMemo(() => getProgress(), [certificates]);
-
-  const handleSaveName = () => {
-    if (nameInput.trim()) {
-      setUserName(nameInput.trim());
-      setShowNameInput(false);
-    }
-  };
+  const filtered = useMemo(() => {
+    if (filter === "all") return certificates;
+    if (filter === "unlocked") return certificates.filter((c) => c.unlocked);
+    if (filter in TIER_META) return certificates.filter((c) => c.tier === filter);
+    if (filter in CATEGORY_META) return certificates.filter((c) => c.category === filter);
+    return certificates;
+  }, [certificates, filter]);
 
   return (
     <div className="min-h-screen bg-slate-950 font-sans pb-32" dir="rtl">
       {/* Ambient */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-[400px] h-[400px] rounded-full top-[-10%] right-[-5%]"
+        <div className="absolute w-[500px] h-[500px] rounded-full top-[-15%] left-[50%] -translate-x-1/2"
           style={{ background: "radial-gradient(circle, rgba(255,215,0,0.05), transparent 65%)" }} />
       </div>
 
@@ -240,58 +148,18 @@ export default function ShahadaScreen() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-white tracking-tight">شهادة</h1>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">إنجازات رحلتك</p>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">إنجازات رحلتك وشهاداتك</p>
           </div>
         </div>
       </motion.div>
 
-      {/* Name input */}
-      {showNameInput && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 px-5 mb-5">
-          <div className="rounded-2xl p-4 space-y-3"
-            style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(51,65,85,0.3)" }}>
-            <p className="text-xs text-slate-400 text-center">ما اسمك يا مسافر؟ (سيظهر على شهاداتك)</p>
-            <div className="flex gap-2">
-              <input value={nameInput} onChange={(e) => setNameInput(e.target.value)}
-                placeholder="اسمك..."
-                className="flex-1 bg-slate-800/40 border border-slate-700/40 rounded-xl px-3 py-2 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-amber-500/50"
-                dir="rtl" />
-              <button onClick={handleSaveName}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-900/20 border border-amber-800/30 text-amber-400">
-                حفظ
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Progress */}
-      <div className="relative z-10 px-5 mb-5">
-        <div className="rounded-2xl p-4"
-          style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(51,65,85,0.3)" }}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-slate-400 font-bold">تقدّم الشهادات</span>
-            <span className="text-sm font-black text-amber-400">{unlocked.length}/{certificates.length}</span>
-          </div>
-          <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-            <motion.div className="h-full rounded-full"
-              style={{ background: "linear-gradient(90deg, #cd7f32, #ffd700, #e879f9)" }}
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
-            />
-          </div>
-          <p className="text-[9px] text-slate-600 mt-1.5 text-center">{progress}% مكتمل</p>
-        </div>
-      </div>
-
-      {/* Stats row */}
+      {/* Stats */}
       <div className="relative z-10 px-5 mb-5">
         <div className="flex gap-3">
           {[
-            { label: "مفتوحة", value: unlocked.length, color: "#ffd700" },
-            { label: "مقفلة", value: locked.length, color: "#64748b" },
-            { label: "مستوى", value: unlocked.length >= 10 ? "أسطوري" : unlocked.length >= 6 ? "ذهبي" : unlocked.length >= 3 ? "فضي" : "برونزي", color: unlocked.length >= 10 ? "#e879f9" : unlocked.length >= 6 ? "#ffd700" : unlocked.length >= 3 ? "#c0c0c0" : "#cd7f32" },
+            { label: "مُحققة", value: totalUnlocked, color: "#22c55e" },
+            { label: "المجموع", value: totalCerts, color: "#6366f1" },
+            { label: "الإتمام", value: `${completionPct}%`, color: "#ffd700" },
           ].map((s) => (
             <div key={s.label} className="flex-1 rounded-xl p-3 text-center"
               style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(51,65,85,0.3)" }}>
@@ -300,54 +168,139 @@ export default function ShahadaScreen() {
             </div>
           ))}
         </div>
-      </div>
 
-      {/* Unlocked */}
-      {unlocked.length > 0 && (
-        <div className="relative z-10 px-5 mb-5">
-          <h3 className="text-[10px] text-slate-500 font-bold mb-3 uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3 text-amber-400" /> شهادات مفتوحة
-          </h3>
-          <div className="grid grid-cols-2 gap-2.5">
-            {unlocked.map((cert, i) => (
-              <motion.div key={cert.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}>
-                <CertCard cert={cert} userName={userName} onView={() => setViewingCert(cert)} />
-              </motion.div>
-            ))}
+        {/* Overall progress */}
+        <div className="mt-3 rounded-xl p-3"
+          style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(51,65,85,0.2)" }}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[9px] text-slate-500 font-bold">تقدم الرحلة الكلي</span>
+            <span className="text-xs font-black text-amber-400">{completionPct}%</span>
+          </div>
+          <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+            <motion.div initial={{ width: 0 }} animate={{ width: `${completionPct}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="h-full rounded-full"
+              style={{ background: "linear-gradient(90deg, #ffd700, #f59e0b)" }} />
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Locked */}
-      <div className="relative z-10 px-5">
-        <h3 className="text-[10px] text-slate-500 font-bold mb-3 uppercase tracking-wider flex items-center gap-1.5">
-          <Lock className="w-3 h-3 text-slate-600" /> لم تُفتح بعد
-        </h3>
-        <div className="grid grid-cols-2 gap-2.5">
-          {locked.map((cert, i) => (
-            <motion.div key={cert.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.04 }}>
-              <CertCard cert={cert} userName={userName} onView={() => {}} />
-            </motion.div>
-          ))}
+      {/* Filters */}
+      <div className="relative z-10 px-5 mb-4">
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {[
+            { key: "all", label: "الكل" },
+            { key: "unlocked", label: "✅ محققة" },
+            ...Object.entries(TIER_META).map(([k, v]) => ({ key: k, label: `${v.label}` })),
+            ...Object.entries(CATEGORY_META).map(([k, v]) => ({ key: k, label: `${v.emoji} ${v.label}` })),
+          ].map(({ key, label }) => {
+            const active = filter === key;
+            const color = key in TIER_META ? TIER_META[key as CertTier].color
+              : key in CATEGORY_META ? CATEGORY_META[key as CertCategory].color
+              : "#6366f1";
+            return (
+              <button key={key} onClick={() => setFilter(key as any)}
+                className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all"
+                style={{
+                  background: active ? `${color}15` : "rgba(30,41,59,0.4)",
+                  border: `1px solid ${active ? `${color}30` : "rgba(51,65,85,0.3)"}`,
+                  color: active ? color : "#64748b",
+                }}>
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
+
+      {/* Certificates Grid */}
+      <div className="relative z-10 px-5 grid grid-cols-2 gap-2.5">
+        {filtered.map((cert, idx) => {
+          const tier = TIER_META[cert.tier];
+          const pct = cert.maxProgress > 0 ? Math.round((cert.progress / cert.maxProgress) * 100) : 0;
+
+          return (
+            <motion.button key={cert.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.03 }}
+              onClick={() => setSelectedCert(cert)}
+              className="rounded-xl p-3 text-center relative overflow-hidden group transition-all active:scale-[0.97]"
+              style={{
+                background: cert.unlocked ? `${tier.color}04` : "rgba(15,23,42,0.4)",
+                border: `1px solid ${cert.unlocked ? `${tier.color}15` : "rgba(51,65,85,0.2)"}`,
+              }}>
+
+              {/* Glow for unlocked */}
+              {cert.unlocked && (
+                <div className="absolute inset-0 pointer-events-none opacity-50"
+                  style={{ background: `radial-gradient(circle at 50% 20%, ${tier.glow}, transparent 70%)` }} />
+              )}
+
+              {/* Badge */}
+              <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-2 relative z-10"
+                style={{
+                  background: cert.unlocked ? `${tier.color}10` : "rgba(30,41,59,0.4)",
+                  border: `1.5px solid ${cert.unlocked ? `${tier.color}25` : "rgba(51,65,85,0.3)"}`,
+                }}>
+                {cert.unlocked ? (
+                  <span className="text-3xl">{cert.emoji}</span>
+                ) : (
+                  <Lock className="w-5 h-5 text-slate-600" />
+                )}
+              </div>
+
+              {/* Title */}
+              <p className="text-[11px] font-bold text-white truncate relative z-10 mb-0.5">{cert.title}</p>
+
+              {/* Tier */}
+              <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full inline-block relative z-10"
+                style={{ background: `${tier.color}12`, color: tier.color }}>
+                {tier.label}
+              </span>
+
+              {/* Progress bar */}
+              {!cert.unlocked && (
+                <div className="w-full h-1 mt-2 rounded-full bg-slate-800 overflow-hidden relative z-10">
+                  <div className="h-full rounded-full transition-all"
+                    style={{ width: `${pct}%`, background: tier.color }} />
+                </div>
+              )}
+
+              {/* Checkmark */}
+              {cert.unlocked && (
+                <div className="absolute top-2 left-2 w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <span className="text-[8px]">✅</span>
+                </div>
+              )}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* Empty state */}
+      {filtered.length === 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="relative z-10 mx-5 rounded-2xl p-8 text-center mt-4"
+          style={{ background: "rgba(255,215,0,0.03)", border: "1px dashed rgba(255,215,0,0.15)" }}>
+          <span className="text-4xl block mb-3">🏆</span>
+          <p className="text-sm text-white/80 font-bold mb-1">لا شهادات في هذا التصنيف</p>
+          <p className="text-[10px] text-slate-500">جرّب فلتر آخر لاستعراض شهاداتك</p>
+        </motion.div>
+      )}
 
       {/* Footer */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-        className="relative z-10 mx-5 mt-8 p-4 rounded-2xl text-center"
+        className="relative z-10 mx-5 mt-6 p-4 rounded-2xl text-center"
         style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(51,65,85,0.2)" }}>
         <p className="text-[10px] text-slate-600 leading-relaxed">
-          🏆 شهادة — كل إنجاز في رحلتك يُتوّج هنا
+          🏅 شهادة — كل إنجاز في رحلتك يُسجّل ويُحتفل به — استمر في النمو
         </p>
       </motion.div>
 
-      {/* Full View Modal */}
+      {/* Detail Modal */}
       <AnimatePresence>
-        {viewingCert && (
-          <CertificateFullView cert={viewingCert} userName={userName} onClose={() => setViewingCert(null)} />
-        )}
+        {selectedCert && <CertModal cert={selectedCert} onClose={() => setSelectedCert(null)} />}
       </AnimatePresence>
     </div>
   );

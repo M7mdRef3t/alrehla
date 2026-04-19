@@ -55,8 +55,6 @@ const KanzScreen = lazy(() => import("../../kanz/KanzScreen"));
 const QalbScreen = lazy(() => import("../../qalb/QalbScreen"));
 const AtharScreen = lazy(() => import("../../athar/AtharScreen"));
 const RafiqScreen = lazy(() => import("../../rafiq/RafiqScreen"));
-const RuyaScreen = lazy(() => import("../../ruya/RuyaScreen"));
-const NiyyaScreen = lazy(() => import("../../niyya/NiyyaScreen"));
 
 
 
@@ -738,26 +736,6 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <RafiqScreen />
-        </Suspense>
-      </PageShell>
-    );
-  }
-
-  if (screen === "ruya") {
-    return (
-      <PageShell headerMode="none" tabBarVisible={true}>
-        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
-          <RuyaScreen />
-        </Suspense>
-      </PageShell>
-    );
-  }
-
-  if (screen === "niyya") {
-    return (
-      <PageShell headerMode="none" tabBarVisible={true}>
-        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
-          <NiyyaScreen />
         </Suspense>
       </PageShell>
     );

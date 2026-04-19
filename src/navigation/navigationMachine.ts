@@ -61,8 +61,6 @@ export type AppScreen =
   | "qalb"
   | "athar"
   | "rafiq"
-  | "ruya"
-  | "niyya"
   | "protocol"
   | "diagnosis";
 

@@ -94,7 +94,7 @@ export function AppShellRouteGate({
     );
   }
 
-  const isToolActive = isAdminRoute && screen && (screen as unknown as string) !== "landing" && (screen as unknown as string) !== "goal";
+  const isToolActive = isAdminRoute && screen && (screen as string) !== "landing" && (screen as string) !== "goal";
 
   return (
     <>

@@ -17,7 +17,7 @@ export const paymentConfig = {
     "",
   instapayAlias: process.env.NEXT_PUBLIC_PAYMENT_INSTAPAY_ALIAS || "",
   instapayNumber: process.env.NEXT_PUBLIC_PAYMENT_INSTAPAY_NUMBER || "",
-  vodafoneCashNumber: process.env.NEXT_PUBLIC_PAYMENT_VODAFONE_CASH_NUMBER || "01023050092",
+  vodafoneCashNumber: process.env.NEXT_PUBLIC_PAYMENT_VODAFONE_CASH_NUMBER || "",
   etisalatCashNumber: process.env.NEXT_PUBLIC_PAYMENT_ETISALAT_CASH_NUMBER || "",
   bankName: process.env.NEXT_PUBLIC_PAYMENT_BANK_NAME || "",
   bankBeneficiary: process.env.NEXT_PUBLIC_PAYMENT_BANK_BENEFICIARY || "",

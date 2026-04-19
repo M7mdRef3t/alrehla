@@ -1,10 +1,13 @@
 import psycopg2
 import os
 
-# Database URL from .env.local (manual copy for now or parsed)
-DB_URL = "postgresql://postgres:mm2JMw1iyQiP1l0O@db.acvcnktpsbayowhurcmn.supabase.co:5432/postgres"
+# Database URL from environment
+DB_URL = os.getenv("SOVEREIGN_DB_URL")
 
 def setup_schema():
+    if not DB_URL:
+        print("❌ Error: SOVEREIGN_DB_URL environment variable is not set.")
+        return
     try:
         conn = psycopg2.connect(DB_URL)
         cur = conn.cursor()

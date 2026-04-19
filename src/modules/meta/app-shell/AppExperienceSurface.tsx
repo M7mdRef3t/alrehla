@@ -29,15 +29,8 @@ const KNOWN_SCREENS = new Set<AppScreen>([
   "settings", "enterprise", "guilt-court", "diplomacy",
   "oracle-dashboard", "armory", "survey", "exit-scripts",
   "grounding", "stories", "about", "insights", "quizzes",
-  "behavioral-analysis", "resources", "profile", "sanctuary",
-  "life-os", "dawayir", "maraya", "session-intake", "session-console",
-  "atmosfera", "masarat", "baseera", "watheeqa", "mizan", "rifaq",
-  "murshid", "taqrir", "bawsala", "riwaya", "nadhir", "wird",
-  "markaz", "sada", "hafiz", "mirah", "sijil", "naba", "mithaq",
-  "sullam", "bathra", "observatory", "wasiyya", "khalwa",
-  "ecosystem-hub", "tazkiya", "jisr", "risala", "shahada",
-  "warsha", "kanz", "qalb", "athar", "rafiq", "ruya", "niyya",
-  "protocol", "diagnosis"
+  "behavioral-analysis", "resources",
+  "profile", "sanctuary", "protocol", "dawayir"
 ]);
 
 /** Type guard: narrows `string` â†’ `AppScreen` safely */
@@ -86,7 +79,6 @@ interface AppExperienceSurfaceProps {
   onOpenOracleDashboard: () => void;
   onNavigateToMap: () => void;
   onOpenLogin: () => void;
-  isGated?: boolean;
 }
 
 export const AppExperienceSurface = memo(function AppExperienceSurface({
@@ -110,8 +102,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   onOpenTimeCapsuleVault,
   onOpenOracleDashboard,
   onNavigateToMap,
-  onOpenLogin,
-  isGated = false
+  onOpenLogin
 }: AppExperienceSurfaceProps) {
   const isLivePage = typeof window !== "undefined" && window.location.pathname.includes("dawayir-live");
   const actuallyShowingPulse = showPulseCheck && !isLivePage && !isLandingScreen;
@@ -216,9 +207,9 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         <AppChromeShell {...chromeShellProps}>
           <main
             className={`flex-1 min-w-0 flex flex-col ${
-              actuallyShowingPulse || isGated ? "opacity-0 pointer-events-none select-none" : ""
+              actuallyShowingPulse ? "opacity-0 pointer-events-none select-none" : ""
             } overflow-visible`}
-            {...(actuallyShowingPulse || isGated ? { "aria-hidden": true } : {})}
+            {...(actuallyShowingPulse ? { "aria-hidden": true } : {})}
           >
 
             <InstallHintBanner />
@@ -289,28 +280,28 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                       </motion.button>
                     </div>
                   )}
-      {!isGated && <AppMainExperienceContent {...mainContentProps} />}
+      <AppMainExperienceContent {...mainContentProps} />
                 </div>
               </ErrorBoundary>
             </Suspense>
           </main>
+          <AppOverlayHost {...overlayHostProps} />
         </AppChromeShell>
+        <AppSidebar
+          onOpenGym={() => mainContentProps.onNavigate?.("tools")}
+          onStartJourney={mainContentProps.onStartJourney}
+          onOpenBaseline={() => mainContentProps.onNavigate?.("baseline")}
+          onOpenGuidedJourney={() => mainContentProps.onNavigate?.("guided")}
+          onOpenDawayir={() => mainContentProps.onNavigate?.("dawayir")}
+          onOpenProtocol={() => mainContentProps.onNavigate?.("protocol")}
+          onFeatureLocked={mainContentProps.onFeatureLocked}
+          onOpenMission={mainContentProps.onOpenMission}
+        />
+        <AscensionRitual />
       </div>
-      <AppOverlayHost {...overlayHostProps} />
-      <AppSidebar
-        onOpenGym={() => mainContentProps.onNavigate?.("tools")}
-        onStartJourney={mainContentProps.onStartJourney}
-        onOpenBaseline={() => mainContentProps.onNavigate?.("baseline")}
-        onOpenGuidedJourney={() => mainContentProps.onNavigate?.("guided")}
-        onOpenDawayir={() => mainContentProps.onNavigate?.("dawayir")}
-        onOpenProtocol={() => mainContentProps.onNavigate?.("protocol")}
-        onFeatureLocked={mainContentProps.onFeatureLocked}
-        onOpenMission={mainContentProps.onOpenMission}
-      />
-      <AscensionRitual />
       <GlobalToast />
-      <GraphEventToast />
-    </div>
+        <GraphEventToast />
+      </div>
     </>
   );
 });

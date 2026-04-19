@@ -199,25 +199,6 @@ export async function POST(req: NextRequest) {
     }
   });
 
-  // Record as a structured transaction
-  await admin.from("transactions").insert({
-    user_id: authUserId,
-    email: hasEmail ? email : null,
-    phone: hasPhone ? phone : null,
-    amount: amount ? parseFloat(amount.replace(/[^0-9.]/g, '')) : 0,
-    currency: "EGP",
-    provider: `manual_${method}`,
-    status: "pending",
-    item_type: "subscription",
-    item_id: "premium",
-    metadata: {
-      note,
-      reference,
-      method_label: methodLabel,
-      source: "activation_manual_proof"
-    }
-  });
-
   if (error) {
     return NextResponse.json({ error: "Failed to submit payment proof." }, { status: 500 });
   }

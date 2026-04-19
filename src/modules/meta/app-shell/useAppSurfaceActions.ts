@@ -204,7 +204,8 @@ export function useAppSurfaceActions({
 
   const handleChromeWhatsAppOpen = useCallback(() => {
     analyticsService.whatsapp({ placement: "app_floating" });
-  }, []);
+    if (whatsAppLink) openInNewTab(whatsAppLink);
+  }, [whatsAppLink]);
 
   const handleChromeNavigate = useCallback((nextScreen: AppScreen) => {
     void navigateToScreen(nextScreen);

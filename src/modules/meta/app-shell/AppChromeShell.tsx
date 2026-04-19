@@ -37,14 +37,12 @@ export function AppChromeShell({
 
   return (
     <>
-      {children}
-
       {chromeVisibility.showFloatingProfile && (
         <div className="fixed z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4 md:hidden" dir="ltr">
           <button
             type="button"
             onClick={onOpenProfile}
-            className="group w-11 h-11 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 cursor-pointer relative pointer-events-auto"
+            className="group w-11 h-11 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 cursor-pointer relative"
             style={{ color: "var(--text-secondary)" }}
             aria-label={authUser ? "حسابي" : "تسجيل الدخول"}
           >
@@ -66,18 +64,18 @@ export function AppChromeShell({
       )}
 
       {chromeVisibility.showFloatingWhatsApp && whatsAppLink && (
-        <a
-          href={whatsAppLink}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
           onClick={onOpenWhatsApp}
-          className="fixed z-[99999] left-4 md:left-6 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-6 p-4 rounded-full bg-emerald-500/90 text-white shadow-[0_8px_32px_rgba(16,185,129,0.3)] hover:bg-emerald-400 hover:scale-110 active:scale-95 transition-all duration-300 backdrop-blur-md border border-white/20 pointer-events-auto"
+          className="fixed z-40 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
           title="تواصل واتساب"
           aria-label="تواصل واتساب"
         >
           <MessageCircle className="w-5 h-5 shrink-0" />
-        </a>
+        </button>
       )}
+
+      {children}
 
       {chromeVisibility.showMobileBottomNav && (
         <nav

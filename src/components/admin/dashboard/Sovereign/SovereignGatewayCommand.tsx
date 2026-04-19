@@ -11,7 +11,7 @@ import { useAdminState } from "@/domains/admin/store/admin.store";
 import { useToastState } from '@/modules/map/dawayirIndex';
 
 function getBearerToken(): string {
-  return getAuthToken() ?? "";
+  return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
 }
 
 export const AVAILABLE_GATEWAYS = [

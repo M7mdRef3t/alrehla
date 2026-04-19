@@ -97,30 +97,27 @@ export async function POST(req: Request) {
         // Standard column is occurred_at, but we fallback to created_at if insertion fails
         eventData.occurred_at = new Date().toISOString();
 
-        // 🛡️ [Hardening] Database ingestion should not 500 the whole request if possible.
-        // We attempt to insert, but catch errors to avoid UX blocking.
         const { error: insertError } = await supabase.from("routing_events").insert(eventData);
 
         if (insertError) {
             if (insertError.code === "23505") {
-                // Duplicate IGNORED
                 return NextResponse.json({ status: "success", duplicate: true });
             }
             
-            // Handle missing columns or table errors gracefully
-            if (insertError.code === "42703" || insertError.code === "42P01") {
-                console.warn(`[Analytics Ingestion] Schema/Table Issue [${insertError.code}]:`, insertError.message);
-                // Return success anyway to unblock client, but log it
-                return NextResponse.json({ 
-                    status: "partial_success", 
-                    warning: "Database schema mismatch. Event logged to console only." 
-                });
+            if (insertError.code === "42703" && insertError.message.includes("occurred_at")) {
+                console.warn("[Analytics Ingestion] occurred_at missing, retrying with created_at fallback");
+                delete eventData.occurred_at;
+                eventData.created_at = new Date().toISOString();
+                const { error: retryError } = await supabase.from("routing_events").insert(eventData);
+                if (!retryError) return NextResponse.json({ status: "success", fallback: true });
             }
 
             console.error(`[Analytics Ingestion] Database Error [${insertError.code}]:`, insertError.message);
-            // Still don't 500 unless it's a critical logic failure. 
-            // Better to lose one event than to freeze the user's UI.
-            return NextResponse.json({ status: "accepted_with_db_error" }, { status: 202 });
+            return NextResponse.json({ 
+                error: "Ingestion failed", 
+                code: insertError.code,
+                message: insertError.message
+            }, { status: 500 });
         }
 
         if (process.env.NODE_ENV === "development") {

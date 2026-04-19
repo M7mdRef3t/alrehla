@@ -18,8 +18,6 @@ import BoardColumn from "./BoardColumn";
 import ItemCard from "./ItemCard";
 import ItemDetailModal from "./ItemDetailModal";
 import { runtimeEnv } from "@/config/runtimeEnv";
-import { supabase } from "@/infrastructure/database/client";
-import { Brain, Sparkles } from "lucide-react";
 
 const STAGES: DiscoveryStage[] = [
   "Inbox",
@@ -34,27 +32,17 @@ const STAGES: DiscoveryStage[] = [
 type DiscoveryBoardProps = {
   searchQuery?: string;
   latestItem?: DiscoveryItem | null;
-  filters: {
-    priority: string;
-    source: string;
-    funnel_stage: string;
-  };
 };
 
-export default function DiscoveryBoard({ searchQuery = "", latestItem, filters }: DiscoveryBoardProps) {
+export default function DiscoveryBoard({ searchQuery = "", latestItem }: DiscoveryBoardProps) {
   const [items, setItems] = useState<DiscoveryItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<DiscoveryItem | null>(null);
-  
-  // Triage state
-  const [triageData, setTriageData] = useState<{ summary: string; suggestions: any[] } | null>(null);
-  const [triageLoading, setTriageLoading] = useState(false);
 
   const adminCode = runtimeEnv.adminCode ?? "";
 
   useEffect(() => {
-    // 1. Initial Fetch
     fetch("/api/admin/discovery", {
       headers: { Authorization: `Bearer ${adminCode}` },
     })
@@ -64,37 +52,6 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem, filters }
         setLoading(false);
       })
       .catch(console.error);
-
-    // 2. Post-fetch Realtime Subscription
-    if (!supabase) return;
-
-    const channel = supabase.channel('discovery_items_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'discovery_items' },
-        (payload) => {
-          console.log('[Discovery] Realtime Sync Event:', payload);
-          setItems(current => {
-            if (payload.eventType === 'INSERT') {
-               const exists = current.some(i => i.id === payload.new.id);
-               return exists ? current : [payload.new as DiscoveryItem, ...current];
-            }
-            if (payload.eventType === 'UPDATE') {
-               // Merge with existing to preserve local optimistic states if needed, though override is safer.
-               return current.map(item => item.id === payload.new.id ? { ...item, ...payload.new } : item);
-            }
-            if (payload.eventType === 'DELETE') {
-               return current.filter(item => item.id !== payload.old?.id);
-            }
-            return current;
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase?.removeChannel(channel);
-    };
   }, [adminCode]);
 
   // Prepend newly captured signal optimistically
@@ -107,17 +64,13 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem, filters }
     }
   }, [latestItem]);
 
-  const filtered = items.filter((i) => {
-    const matchesSearch = !searchQuery.trim() || 
-      i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      i.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesPriority = filters.priority === "all" || i.priority === filters.priority;
-    const matchesSource = filters.source === "all" || i.source === filters.source;
-    const matchesFunnel = filters.funnel_stage === "all" || i.funnel_stage === filters.funnel_stage;
-
-    return matchesSearch && matchesPriority && matchesSource && matchesFunnel;
-  });
+  const filtered = searchQuery.trim()
+    ? items.filter(
+        (i) =>
+          i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          i.description.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : items;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -218,26 +171,6 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem, filters }
     }
   };
 
-  const runTriage = async () => {
-    setTriageLoading(true);
-    try {
-      const res = await fetch("/api/admin/discovery/triage", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${adminCode}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setTriageData(data);
-      } else {
-        console.error("Triage Error", await res.text());
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setTriageLoading(false);
-    }
-  };
-
   const activeItem = activeId ? items.find((i) => i.id === activeId) : null;
 
   if (loading) {
@@ -282,39 +215,6 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem, filters }
             </div>
           </div>
         </div>
-
-        <div className="mb-4">
-          <button
-            onClick={runTriage}
-            disabled={triageLoading}
-            className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 transition-all font-bold text-sm tracking-wide disabled:opacity-50"
-          >
-            {triageLoading ? <Sparkles className="w-5 h-5 animate-pulse" /> : <Brain className="w-5 h-5" />}
-            Cognitive Triage (Analyze Inbox)
-          </button>
-        </div>
-
-        {triageData && (
-          <div className="mb-4 bg-indigo-950/30 border border-indigo-500/30 rounded-xl p-4 text-sm text-indigo-200">
-            <div className="flex items-start gap-3">
-              <Brain className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-indigo-100 block mb-1">Crucible Synthesis:</strong>
-                <p>{triageData.summary}</p>
-                {triageData.suggestions?.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {triageData.suggestions.map((s: any, idx: number) => (
-                      <div key={idx} className="bg-indigo-900/40 p-2 rounded border border-indigo-500/20">
-                        <span className="text-[10px] uppercase font-bold text-indigo-400 bg-indigo-950 px-2 py-0.5 rounded mr-2">{s.type}</span>
-                        <span>{s.reason}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="flex gap-4 px-6 pb-6 h-[calc(100vh-14rem)] overflow-x-auto overflow-y-hidden">
