@@ -4,11 +4,21 @@ import base64
 
 def get_fernet():
     """
-    Initialize Fernet with the Django SECRET_KEY (properly padded/hashed for Fernet)
+    Initialize Fernet with an environment secret or fallback to Django SECRET_KEY
     """
-    # Fernet requires a 32-bit URL-safe base64-encoded key.
-    # We'll use the first 32 chars of SECRET_KEY and encode it.
-    key = settings.SECRET_KEY[:32].encode()
+    # Prefer a dedicated environment key for the Sovereign Engine
+    env_key = os.getenv("SOVEREIGN_ENGINE_SECRET")
+    if env_key:
+        # If it's already a valid Fernet key (32 bytes base64), use it directly
+        try:
+            return Fernet(env_key.encode())
+        except Exception:
+            # Fallback to derivation if it's just a raw secret string
+            key = env_key[:32].ljust(32, '0').encode()
+    else:
+        # Fallback to Django SECRET_KEY (properly padded/hashed for Fernet)
+        key = settings.SECRET_KEY[:32].ljust(32, '0').encode()
+    
     return Fernet(base64.urlsafe_b64encode(key))
 
 def encrypt_value(value: str) -> str:

@@ -14,7 +14,11 @@ export async function GET(req: NextRequest) {
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
-  const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || "alrehla_sovereign_2026";
+  const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
+
+  if (!VERIFY_TOKEN) {
+    console.error("[WhatsApp Webhook] Error: WHATSAPP_VERIFY_TOKEN environment variable is not set.");
+  }
 
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
     console.log("[WhatsApp Webhook] Verification Successful.");
