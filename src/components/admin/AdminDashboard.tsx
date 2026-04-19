@@ -35,6 +35,7 @@ import { runtimeEnv } from "@/config/runtimeEnv";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
+import { sovereignAgent } from "@/services/LocalSovereignAgent";
 import { isPrivilegedRole } from "@/utils/featureFlags";
 import {
   fetchAdminConfig,
@@ -428,9 +429,8 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   // 🔱 Sovereign Orchestrator Evaluator — runs lazily after mount
   useEffect(() => {
     if (!adminAccess) return;
-    
+
     // Start Local Autonomous Agent
-    const { sovereignAgent } = require("@/services/LocalSovereignAgent");
     sovereignAgent.start();
 
     // Keep Cloud Orchestrator as observer/fallback
