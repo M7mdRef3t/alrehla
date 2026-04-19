@@ -255,7 +255,6 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   // Implementation of Layer 3 (Execution): Overlay Mutex & Severity Index
   // Auto-trigger pulse check logic
   usePulseCheckLogic(canUsePulseCheck, screen, true);
-
   const activeFlags = (Object.keys(flags) as AppOverlayFlag[]).filter((f) => flags[f]);
   const activeOverlayItems: Array<{ id: VisibleOverlayId; severity: number }> = activeFlags.map((f) => ({
     id: f,

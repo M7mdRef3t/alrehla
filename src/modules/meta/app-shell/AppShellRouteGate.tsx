@@ -1,6 +1,7 @@
 import { Suspense, lazy, type ReactNode } from "react"; // Cache buster to clear stale LogoLab.tsx import
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { getHref, getPathname, pushUrl } from "@/services/navigation";
+import type { AppScreen } from "@/navigation/navigationMachine";
 
 const LegalPage = lazy(() => import("../LegalPage").then((m) => ({ default: m.LegalPage })));
 const AdminDashboard = lazy(() => import('@/components/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
@@ -19,7 +20,7 @@ interface AppShellRouteGateProps {
   previewedFeature: string | null;
   goBackToFeatureFlags: () => void;
   onExitAdminRoute: () => void;
-  screen?: string;
+  screen?: AppScreen;
   children: ReactNode;
 }
 
@@ -31,7 +32,6 @@ export function AppShellRouteGate({
   previewedFeature,
   goBackToFeatureFlags,
   onExitAdminRoute,
-  screen,
   children
 }: AppShellRouteGateProps) {
   const pathname = getPathname();
@@ -94,7 +94,7 @@ export function AppShellRouteGate({
     );
   }
 
-  const isToolActive = isAdminRoute && screen && screen !== "landing" && screen !== "goal";
+  const isToolActive = isAdminRoute && screen && (screen as string) !== "landing" && (screen as string) !== "goal";
 
   return (
     <>

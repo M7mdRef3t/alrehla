@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, startTransition } from "react";
+import { useEffect, useRef, useState, startTransition } from "react";
 import type { FeatureFlagKey } from "@/config/features";
 import { resolveNavigation, type AppScreen } from "@/navigation/navigationMachine";
 import {
@@ -107,14 +107,12 @@ export function useAppRouteSync({
         isLockedPhaseOne
       });
       fromPopStateRef.current = true;
-      if (result.kind === "blocked") {
-        React.startTransition(() => {
+      startTransition(() => {
+        if (result.kind === "blocked") {
           setLockedFeature(result.feature);
           setScreen("landing");
-        });
-        return;
-      }
-      React.startTransition(() => {
+          return;
+        }
         setScreen(result.screen);
       });
     };
