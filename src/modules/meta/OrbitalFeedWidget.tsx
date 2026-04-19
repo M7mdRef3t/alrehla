@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Globe2, ShieldCheck, Zap, Heart, Share2, Sparkles, TrendingUp, Users } from "lucide-react";
 import { useMapState } from '@/modules/map/dawayirIndex';
-import { isDevMode } from "@/config/appEnv";
 
 interface FeedItem {
     id: string;
@@ -18,35 +17,63 @@ interface FeedItem {
 const ORBIT_NAMES = ["زحل", "المريخ", "نبتون", "أندروميدا", "درب التبانة", "الجدي"];
 
 const generateMockFeed = (): FeedItem[] => {
-    // Zeroing out to avoid fake data
-    return [];
+    return [
+        {
+            id: "f1",
+            orbitName: "مدار زحل",
+            action: "حافظ على حدوده ورفض استنزاف طاقته",
+            value: "+150 طاقة",
+            icon: <ShieldCheck className="w-4 h-4" />,
+            colorClass: "text-emerald-400 bg-emerald-400/10 border-emerald-500/20",
+            timestamp: new Date(Date.now() - 1000 * 60 * 5),
+            likes: 12
+        },
+        {
+            id: "f2",
+            orbitName: "مدار المريخ",
+            action: "تخلص من علاقة سامة (Vampire) بنجاح",
+            value: "درع التيتانيوم",
+            icon: <Zap className="w-4 h-4" />,
+            colorClass: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-500/20",
+            timestamp: new Date(Date.now() - 1000 * 60 * 25),
+            likes: 45
+        },
+        {
+            id: "f3",
+            orbitName: "مدار أندروميدا",
+            action: "أتم جلسة تفريغ ناجحة مع المعالج الذكي",
+            value: "استقرار نفسي",
+            icon: <Heart className="w-4 h-4" />,
+            colorClass: "text-rose-400 bg-rose-400/10 border-rose-500/20",
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
+            likes: 8
+        }
+    ];
 };
 
 export const OrbitalFeedWidget: React.FC = () => {
-    const [feed, setFeed] = useState<FeedItem[]>([]);
+    const [feed, setFeed] = useState<FeedItem[]>(generateMockFeed());
     const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
     const nodes = useMapState((s) => s.nodes);
 
-    // No simulation in production/user mode
+    // Simulate real-time mock incoming events
     useEffect(() => {
-        if (!isDevMode) return; 
-
         const interval = setInterval(() => {
-            if (Math.random() > 0.8) {
+            if (Math.random() > 0.6) {
                 const newOrbit = ORBIT_NAMES[Math.floor(Math.random() * ORBIT_NAMES.length)];
                 const newItem: FeedItem = {
                     id: Math.random().toString(36).substr(2, 9),
                     orbitName: `مدار ${newOrbit}`,
-                    action: "أتم جلسة تفريغ ناجحة",
-                    value: "+100 XP",
+                    action: "أكمل تمرين رسم الحدود (Boundaries Simulator)",
+                    value: "+200 XP",
                     icon: <Sparkles className="w-4 h-4" />,
                     colorClass: "text-violet-400 bg-violet-400/10 border-violet-500/20",
                     timestamp: new Date(),
                     likes: 0
                 };
-                setFeed(prev => [newItem, ...prev].slice(0, 10));
+                setFeed(prev => [newItem, ...prev].slice(0, 10)); // Keep only max 10
             }
-        }, 30000); 
+        }, 15000); // Check every 15 seconds
 
         return () => clearInterval(interval);
     }, []);
@@ -119,12 +146,6 @@ export const OrbitalFeedWidget: React.FC = () => {
 
             {/* Feed Scroll Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                {feed.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-center opacity-30 select-none">
-                        <Users className="w-10 h-10 mb-2" />
-                        <p className="text-[10px] font-black uppercase tracking-widest">بانتظار ظهور أولى إشارات الوعي...</p>
-                    </div>
-                )}
                 <AnimatePresence initial={false}>
                     {feed.map((item) => (
                         <motion.div

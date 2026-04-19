@@ -20,14 +20,12 @@ import {
   Loader2,
   Sparkles,
   ChevronDown,
-  UploadCloud,
-  ImageIcon
 } from "lucide-react";
 import {
   normalizeWhatsappNumber,
   paymentConfig,
 } from "@/config/paymentConfig";
-import { TIER_PRICES_USD, TIER_LABELS, BASE_PRICE_EGP, ORIGINAL_PRICE_EGP } from "@/config/pricing";
+import { TIER_PRICES_USD, TIER_LABELS } from "@/config/pricing";
 import { telegramBot } from "@/services/telegramBot";
 import { supabase } from "@/services/supabaseClient";
 import * as analyticsService from "@/services/analytics";
@@ -37,7 +35,7 @@ import { useEffect } from "react";
 // Types
 // ═══════════════════════════════════════════════════════════════════
 
-type PaymentMethod = "vodafone_cash" | "instapay" | "paypal" | "gumroad" | "etisalat_cash" | "bank_transfer";
+type PaymentMethod = "vodafone_cash" | "instapay" | "paypal" | "gumroad";
 
 interface PaymentCheckoutProps {
   onClose: () => void;
@@ -70,15 +68,11 @@ async function getUserInfo() {
 export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: _onSuccess }) => {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
-  const [requestSent, setRequestSent] = useState(false);
-  const [receiptNumber, setReceiptNumber] = useState("");
-  const [contactInfo, setContactInfo] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
-  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
 
   const price = TIER_PRICES_USD.premium;
-  const localPriceLabel = paymentConfig.localMonthlyPriceLabel || `${BASE_PRICE_EGP} ج.م / شهر`;
+  const localPriceLabel = paymentConfig.localMonthlyPriceLabel || "200 ج.م / شهر";
   const whatsappNumber = normalizeWhatsappNumber(paymentConfig.whatsappNumberRaw);
 
   useEffect(() => {
@@ -110,31 +104,9 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
     setTimeout(() => setCopied(null), 2000);
   }, []);
 
-  // ── Telegram & DB notification ────────────────────────────────────────
-  const notifyOwner = useCallback(async (method: PaymentMethod, overrideReceipt?: string) => {
+  // ── Telegram notification ────────────────────────────────────────
+  const notifyOwner = useCallback(async (method: PaymentMethod) => {
     setIsSending(true);
-    const finalReceipt = overrideReceipt || receiptNumber;
-
-    // Record in DB and trigger server-side Telegram notification
-    try {
-      const user = await getUserInfo();
-      const finalEmail = user.email !== "غير معروف" ? user.email : (contactInfo || "غير معروف");
-
-      await fetch("/api/payments/record", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: finalEmail,
-          amount: BASE_PRICE_EGP,
-          provider: method,
-          itemType: "subscription",
-          metadata: { market: "Local", receipt: finalReceipt },
-          receiptUrl
-        })
-      });
-    } catch (e) {
-      console.error("Failed to record transaction start:", e);
-    }
 
     // P0: Critical funnel event - User committed to paying/sent proof
     analyticsService.trackPaymentProofSubmitted({
@@ -153,48 +125,39 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
     });
 
     try {
+      const user = await getUserInfo();
+      const methodLabels: Record<PaymentMethod, string> = {
+        vodafone_cash: "فودافون كاش",
+        instapay:      "InstaPay",
+        paypal:        "PayPal (دولي)",
+        gumroad:       "بطاقة ائتمان / Gumroad",
+      };
+
+      await telegramBot.sendMessage({
+        type: "emotional_pricing_notification",
+        text: [
+          "💳 *طلب ترقية جديد!*",
+          "",
+          `👤 *المستخدم:* ${user.name}`,
+          `📧 *الإيميل:* ${user.email}`,
+          `💰 *الباقة:* ${TIER_LABELS.premium}`,
+          `💵 *السعر:* ${price.label} (أو ${localPriceLabel})`,
+          `📱 *طريقة الدفع:* ${methodLabels[method]}`,
+          "",
+          `⏰ ${new Date().toLocaleString("en-US")}`,
+          "",
+          "👇 *المطلوب:* تأكيد استلام الفلوس ثم تفعيل الحساب",
+        ].join("\n"),
+        parseMode: "Markdown",
+      });
+
       setRequestSent(true);
-    } catch (error) {
-      console.error("Post-payment error:", error);
+    } catch {
+      setRequestSent(true); // أظهر success حتى لو Telegram failed
     } finally {
       setIsSending(false);
     }
-  }, [price, receiptNumber, receiptUrl, contactInfo]);
-
-  // ── Image Upload ──────────────────────────────────────────────────
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !supabase) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("حجم الصورة كبير جداً. الحد الأقصى 5 ميجابايت.");
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `payments/${fileName}`; // Folder inside receipts
-
-      const { data, error } = await supabase.storage
-        .from('receipts')
-        .upload(filePath, file, { cacheControl: '3600', upsert: false });
-
-      if (error) throw error;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('receipts')
-        .getPublicUrl(filePath);
-
-      setReceiptUrl(publicUrl);
-    } catch (err) {
-      console.error("Upload error:", err);
-      alert("حدث خطأ أثناء رفع الصورة. يرجى المحاولة مرة أخرى.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  }, [localPriceLabel, price]);
 
   // ── Open WhatsApp ─────────────────────────────────────────────────
   const openWhatsApp = useCallback((extraText = "") => {
@@ -236,7 +199,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
         </button>
 
         <button
-          onClick={_onSuccess || onClose}
+          onClick={onClose}
           className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
         >
           رجوع لرحلتك
@@ -264,25 +227,10 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center mx-auto mb-3 shadow-md shadow-teal-500/10">
             <ShieldCheck className="w-7 h-7 text-slate-950" />
           </div>
-          
-          <div className="flex flex-col items-center gap-1">
-            <h3 className="text-lg font-black text-white">اختر طريقة الدفع</h3>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold mx-auto">
-              <Sparkles className="w-3 h-3" />
-              خصم 50% للدفعة الأولى لفترة محدودة
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-col items-center">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500 line-through decoration-red-500/50">{ORIGINAL_PRICE_EGP} ج.م</span>
-              <span className="text-xl font-black text-white">{BASE_PRICE_EGP} ج.م</span>
-              <span className="text-xs text-slate-400">/ شهر</span>
-            </div>
-            <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">
-              أو ${price.monthly} <span className="line-through decoration-slate-600 opacity-60">${price.originalMonthly}</span> دولياً
-            </p>
-          </div>
+          <h3 className="text-lg font-black text-white mb-1">اختر طريقة الدفع</h3>
+          <p className="text-xs text-slate-400">
+            {TIER_LABELS.premium} — {localPriceLabel} أو ${price.monthly}/شهر
+          </p>
         </div>
 
         {/* Methods */}
@@ -292,7 +240,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             icon={<Smartphone className="w-5 h-5 text-red-400" />}
             iconBg="bg-red-500/15"
             label="فودافون كاش"
-            sub={`${BASE_PRICE_EGP} ج.م / شهر`}
+            sub={localPriceLabel}
             onClick={() => {
               analyticsService.trackPaymentMethodSelected({ method: "vodafone_cash" });
               analyticsService.trackInitiateCheckout({ method: "vodafone_cash" });
@@ -305,37 +253,11 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             icon={<Smartphone className="w-5 h-5 text-blue-400" />}
             iconBg="bg-blue-500/15"
             label="InstaPay"
-            sub={`${BASE_PRICE_EGP} ج.م / شهر`}
+            sub={localPriceLabel}
             onClick={() => {
               analyticsService.trackPaymentMethodSelected({ method: "instapay" });
               analyticsService.trackInitiateCheckout({ method: "instapay" });
               setSelectedMethod("instapay");
-            }}
-          />
-
-          {/* Etisalat Cash */}
-          <MethodButton
-            icon={<Smartphone className="w-5 h-5 text-emerald-400" />}
-            iconBg="bg-emerald-500/15"
-            label="اتصالات كاش"
-            sub={`${BASE_PRICE_EGP} ج.م / شهر`}
-            onClick={() => {
-              analyticsService.trackPaymentMethodSelected({ method: "etisalat_cash" });
-              analyticsService.trackInitiateCheckout({ method: "etisalat_cash" });
-              setSelectedMethod("etisalat_cash");
-            }}
-          />
-
-          {/* Bank Transfer */}
-          <MethodButton
-            icon={<CreditCard className="w-5 h-5 text-indigo-400" />}
-            iconBg="bg-indigo-500/15"
-            label="تحويل بنكي"
-            sub={localPriceLabel}
-            onClick={() => {
-              analyticsService.trackPaymentMethodSelected({ method: "bank_transfer" });
-              analyticsService.trackInitiateCheckout({ method: "bank_transfer" });
-              setSelectedMethod("bank_transfer");
             }}
           />
 
@@ -467,94 +389,18 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // Bank Transfer flow
-  // ═══════════════════════════════════════════════════════════════════
-
-  if (selectedMethod === "bank_transfer") {
-    const bankConfigured = Boolean(paymentConfig.bankAccountNumber && paymentConfig.bankName);
-
-    if (!bankConfigured) {
-      return (
-        <FlowWrapper onBack={() => setSelectedMethod(null)}>
-          <div className="text-center mb-6">
-            <CreditCard className="w-10 h-10 text-indigo-400 mx-auto mb-3" />
-            <h3 className="text-lg font-black text-white mb-1">بيانات البنك غير متاحة</h3>
-            <p className="text-xs text-slate-400">يرجى التواصل معنا مباشرة للتفعيل.</p>
-          </div>
-        </FlowWrapper>
-      );
-    }
-
-    return (
-      <FlowWrapper onBack={() => setSelectedMethod(null)}>
-        <div className="text-center mb-5">
-          <CreditCard className="w-10 h-10 text-indigo-400 mx-auto mb-3" />
-          <h3 className="text-lg font-black text-white mb-1">تحويل بنكي</h3>
-          <p className="text-xs text-slate-400">قم بالتحويل للملف البنكي التالي:</p>
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-4 mb-5">
-          <Step n="١" title="بيانات الحساب:">
-            <div className="space-y-3">
-              <CopyField value={paymentConfig.bankName} fieldKey="bank_name" copied={copied} onCopy={copyText} label="البنك" />
-              <CopyField value={paymentConfig.bankBeneficiary} fieldKey="beneficiary" copied={copied} onCopy={copyText} label="المستفيد" />
-              <CopyField value={paymentConfig.bankAccountNumber} fieldKey="acc_num" copied={copied} onCopy={copyText} label="رقم الحساب" />
-              <CopyField value={paymentConfig.bankIban} fieldKey="iban" copied={copied} onCopy={copyText} label="IBAN" />
-            </div>
-          </Step>
-          <Step n="٢" title={`المبلغ: ${localPriceLabel}`}>
-            <p className="text-xs text-slate-500">باقة {TIER_LABELS.premium} — شهر واحد</p>
-          </Step>
-        </div>
-
-        <button
-          onClick={() => {
-            void notifyOwner("bank_transfer");
-            openWhatsApp("حوّلت المبلغ عبر البنك، محتاج تفعيل الحساب.");
-          }}
-          disabled={isSending}
-          className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition-all"
-        >
-          {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <MessageCircle className="w-5 h-5" />}
-          إرسال إثبات التحويل
-        </button>
-      </FlowWrapper>
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // Egyptian local flow (Vodafone Cash / InstaPay / Etisalat Cash)
+  // Egyptian local flow (Vodafone Cash / InstaPay)
   // ═══════════════════════════════════════════════════════════════════
 
   const isVodafone = selectedMethod === "vodafone_cash";
-  const isEtisalat = selectedMethod === "etisalat_cash";
-  const isInstapay = selectedMethod === "instapay";
-
-  let displayAlias = "";
-  let methodLabel = "";
-  let methodColor = "text-blue-400";
-  
-  if (isVodafone) {
-    displayAlias = paymentConfig.vodafoneCashNumber;
-    methodLabel = "فودافون كاش";
-    methodColor = "text-red-400";
-  } else if (isEtisalat) {
-    displayAlias = paymentConfig.etisalatCashNumber;
-    methodLabel = "اتصالات كاش";
-    methodColor = "text-emerald-400";
-  } else {
-    displayAlias = paymentConfig.instapayAlias;
-    methodLabel = "InstaPay";
-    methodColor = "text-blue-400";
-  }
-
+  const displayAlias  = isVodafone ? paymentConfig.vodafoneCashNumber : paymentConfig.instapayAlias;
   const localMethodConfigured = Boolean(displayAlias && whatsappNumber);
 
   if (!localMethodConfigured) {
     return (
       <FlowWrapper onBack={() => setSelectedMethod(null)}>
         <div className="text-center mb-6">
-          <Smartphone className={`w-10 h-10 mx-auto mb-3 ${methodColor}`} />
+          <Smartphone className={`w-10 h-10 mx-auto mb-3 ${isVodafone ? "text-red-400" : "text-blue-400"}`} />
           <h3 className="text-lg font-black text-white mb-1">وسيلة الدفع غير مهيأة بعد</h3>
           <p className="text-xs text-slate-400">بيانات هذه الوسيلة غير مكتملة حاليًا.</p>
         </div>
@@ -565,9 +411,9 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
   return (
     <FlowWrapper onBack={() => setSelectedMethod(null)}>
       <div className="text-center mb-5">
-        <Smartphone className={`w-10 h-10 mx-auto mb-3 ${methodColor}`} />
+        <Smartphone className={`w-10 h-10 mx-auto mb-3 ${isVodafone ? "text-red-400" : "text-blue-400"}`} />
         <h3 className="text-lg font-black text-white mb-1">
-          {methodLabel}
+          {isVodafone ? "فودافون كاش" : "InstaPay"}
         </h3>
         <p className="text-xs text-slate-400">حوّل {localPriceLabel} ثم ابعتلنا الإيصال</p>
       </div>
@@ -575,14 +421,14 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
       {/* Steps */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-4 mb-5">
         {/* Step 1 */}
-        <Step n="١" title={isInstapay ? "حوّل على الرمز ده (InstaPay):" : "حوّل على الرقم ده:"}>
+        <Step n="١" title={isVodafone ? "حوّل على الرقم ده:" : "حوّل على الرمز ده (InstaPay):"}>
           <CopyField
             value={displayAlias}
             fieldKey="alias"
             copied={copied}
             onCopy={copyText}
           />
-          {isInstapay && (
+          {!isVodafone && (
             <CopyField
               value={paymentConfig.instapayNumber}
               fieldKey="number"
@@ -600,71 +446,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
 
         {/* Step 3 */}
         <Step n="٣" title="ابعتلنا إيصال التحويل">
-          <div className="space-y-3">
-             <p className="text-[11px] text-slate-500">طالما إنت مش مسجل دخول، ابعتلنا رقم خطك أو إيميلك عشان نفعل لك بيه:</p>
-             <div className="relative group">
-               <input
-                 type="text"
-                 placeholder="رقم الواتس آب أو الإيميل الخاص بك"
-                 value={contactInfo}
-                 onChange={(e) => setContactInfo(e.target.value)}
-                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-mono mb-2"
-               />
-               <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500/30 group-focus-within:text-emerald-400 group-focus-within:animate-pulse pointer-events-none" />
-             </div>
-             
-             <p className="text-[11px] text-slate-500 mt-2">عشان نوصل للحوالة أسرع وتقدر تبدأ رحلتك فوراً:</p>
-             <div className="relative group">
-               <input
-                 type="text"
-                 placeholder="رقم الحوالة (اختياري)"
-                 value={receiptNumber}
-                 onChange={(e) => setReceiptNumber(e.target.value)}
-                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-teal-500/50 focus:bg-white/10 transition-all text-center font-mono"
-               />
-               <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-teal-500/30 group-focus-within:text-teal-400 group-focus-within:animate-pulse pointer-events-none" />
-             </div>
-             
-             {/* Upload Field */}
-             <div className="mt-3">
-               {receiptUrl ? (
-                 <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-xl">
-                   <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                     <ImageIcon className="w-4 h-4" />
-                   </div>
-                   <div className="flex-1 min-w-0 flex flex-col text-right">
-                     <span className="text-sm font-bold">تم إرفاق الإيصال بنجاح</span>
-                     <span className="text-[10px] opacity-70">هيتبعت مع طلب الترقية</span>
-                   </div>
-                   <Check className="w-5 h-5" />
-                 </div>
-               ) : (
-                 <label className={`flex gap-3 px-4 py-3 rounded-xl border border-dashed transition-all cursor-pointer items-center justify-center
-                   ${isUploading ? "bg-white/5 border-white/10 opacity-70 pointer-events-none" : "bg-white/[0.02] border-white/20 hover:bg-white/5 hover:border-teal-500/50"}
-                 `}>
-                   <input 
-                     type="file" 
-                     className="hidden" 
-                     accept="image/*" 
-                     onChange={handleImageUpload}
-                     disabled={isUploading}
-                   />
-                   {isUploading ? (
-                     <>
-                       <Loader2 className="w-4 h-4 text-teal-400 animate-spin" />
-                       <span className="text-xs text-slate-300">جاري الرفع...</span>
-                     </>
-                   ) : (
-                     <>
-                       <UploadCloud className="w-5 h-5 text-slate-500" />
-                       <span className="text-xs font-bold text-slate-300">ارفع صورة الإيصال (اختياري)</span>
-                     </>
-                   )}
-                 </label>
-               )}
-             </div>
-
-          </div>
+          <p className="text-xs text-slate-500">على WhatsApp وهنفعّلك خلال دقائق</p>
         </Step>
       </div>
 
@@ -673,11 +455,9 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
         <button
           onClick={() => {
             void notifyOwner(selectedMethod);
-            const receiptTxt = receiptNumber ? `رقم الحوالة: ${receiptNumber}` : "بعتلك إيصال التحويل";
-            const imgTxt = receiptUrl ? " (ورفعت الصورة على المنصة)" : "";
-            openWhatsApp(`حوّلت ${isVodafone ? "فودافون كاش" : methodLabel} — ${receiptTxt}${imgTxt}`);
+            openWhatsApp(`بعتلك إيصال تحويل ${isVodafone ? "فودافون كاش" : "InstaPay"} — رقم الحوالة: [ضع رقم الإيصال هنا]`);
           }}
-          disabled={isSending || isUploading}
+          disabled={isSending}
           className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition-all disabled:opacity-50"
         >
           {isSending

@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, ShieldCheck, Sparkles, Lock, CheckCircle2 } from "lucide-react";
+import { ChevronRight, ShieldCheck, Sparkles, Lock } from "lucide-react";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { useEffect, useState } from "react";
@@ -53,7 +53,7 @@ export const PremiumBridgeModal: FC = () => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 40 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-[2.5rem] border border-white/10 bg-slate-900 shadow-2xl custom-scrollbar"
+          className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-white/10 bg-slate-900 shadow-2xl"
           style={{
             background: "radial-gradient(circle at top right, rgba(20,184,166,0.15), transparent 40%), #0f172a"
           }}
@@ -63,9 +63,9 @@ export const PremiumBridgeModal: FC = () => {
           {showCheckout ? (
             <PaymentCheckout onClose={() => setShowCheckout(false)} onSuccess={() => setOverlay("premiumBridge", false)} />
           ) : (
-            <div className="p-6 md:p-8 pt-8">
+            <div className="p-8 pt-10">
             <div className="flex flex-col items-center text-center">
-              <div className="relative mb-5">
+              <div className="relative mb-6">
                 <div className="absolute inset-0 bg-teal-400/20 blur-2xl rounded-full" />
                 <div className="relative w-20 h-20 rounded-3xl bg-linear-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-md shadow-teal-500/10 rotate-3">
                   <ShieldCheck className="w-10 h-10 text-slate-950 -rotate-3" />
@@ -79,13 +79,14 @@ export const PremiumBridgeModal: FC = () => {
                 </motion.div>
               </div>
 
-              <h2 className="text-2xl font-black text-white leading-tight">
-                رسمت الصورة..
-                <span className="text-teal-400"> دلوقتي جاي وقت الفهم والعلاج</span>
+              <h2 className="text-3xl font-black text-white leading-tight">
+                خريطتك بقت أوضح.. <br />
+                وده وقت تكمل من جوه
               </h2>
 
-              <p className="mt-3 text-slate-400 text-sm leading-relaxed max-w-xs">
-                المجاني كشف اللي بيحصل. المسار المتقدم هو اللي بيغيّره — بتحليل ذكاء اصطناعي، وأدوات يومية، ودعم مستمر.
+              <p className="mt-4 text-slate-300 text-lg leading-relaxed max-w-xs">
+                انتهت المرحلة الأولى بنجاح. رصدنا <span className="text-white font-bold">{stats.total} علاقة</span>،
+                واللي جاي بيتبني من نفس الخريطة.
               </p>
             </div>
 
@@ -106,36 +107,7 @@ export const PremiumBridgeModal: FC = () => {
               </div>
             </div>
 
-            <div className="mt-6">
-              <p className="text-xs font-black text-teal-400 uppercase tracking-widest mb-3">ماذا يُفتح لك في المسار المتقدم؟</p>
-              <div className="space-y-2.5">
-                {[
-                  { icon: "🧠", title: "تحليل عميق للدوائر الحمراء", desc: `تقرير مفصّل لكل واحدة من الـ ${stats.red > 0 ? stats.red : ""} علاقات المستنزفة مع خطة للتعامل.` },
-                  { icon: "🛡️", title: "أدوات الملاذ اليومي", desc: "تمارين سريعة ومخصصة لتحصين مساحتك النفسية كل يوم." },
-                  { icon: "🧭", title: "بوصلة القرارات (Bawsala)", desc: "قبل أي موقف صعب، استشر البوصلة: هل تقترب أو تبتعد؟" },
-                  { icon: "📈", title: "رادار التطور والتحرر", desc: "شاهد تحسّن علاقاتك بمرور الوقت — بالأرقام والرسوم." },
-                  { icon: "🤖", title: "المعالج الذكي (AI Coach)", desc: "محادثة خاصة مع AI فاهم خريطتك يساعدك تتخد قرارات بوعي." },
-                  { icon: "🔒", title: "مساحتك الخاصة تماماً", desc: "بياناتك محمية، مش بتتشارك مع أي أحد — حياتك لك." },
-                ].map((feature, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.07 * idx }}
-                    className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.025] border border-white/[0.06] hover:border-teal-500/25 transition-colors"
-                  >
-                    <div className="text-base mt-0.5 flex-shrink-0">{feature.icon}</div>
-                    <div className="text-right flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-200 leading-snug">{feature.title}</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{feature.desc}</p>
-                    </div>
-                    <CheckCircle2 className="w-4 h-4 text-teal-500/60 flex-shrink-0 mt-1" />
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-8 space-y-3">
+            <div className="mt-10 space-y-3">
               <button
                 onClick={handleStartRecovery}
                 className="group relative w-full flex items-center justify-between p-5 rounded-[2rem] bg-teal-400 hover:bg-teal-300 transition-all active:scale-[0.98]"

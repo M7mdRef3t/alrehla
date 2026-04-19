@@ -1,7 +1,7 @@
 import type { FC } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Shield, Zap, Heart } from "lucide-react";
+import { ArrowLeft, Shield, Zap, Heart, Fingerprint, Activity, ShieldCheck, MessageCircle } from "lucide-react";
 import { trackingService } from "@/domains/journey";
 import { usePWAInstall } from "@/contexts/PWAInstallContext";
 import { getLivePulseCount } from "@/services/pulseEngagement";
@@ -12,7 +12,7 @@ import { useMapState } from '@/modules/map/dawayirIndex';
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
 import { getGoalMeta } from "@/data/goalMeta";
 import { LandingFooter } from "./landing/LandingFooter";
-import { AppAtmosphere } from "@/components/shared/AppAtmosphere";
+import { AmbientBackground } from "./landing/AmbientBackground";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { isUserMode } from "@/config/appEnv";
 import { landingCopy } from "@/copy/landing";
@@ -22,8 +22,11 @@ import {
   getRelationshipWeatherEntryHref,
   getRelationshipWeatherPath
 } from "@/utils/relationshipWeatherJourney";
-import { EvolutionarySynapse } from "@/core/synapse/EvolutionarySynapse";
-import { hasRevenueAccess } from "@/services/revenueAccess";
+import { runtimeEnv } from "@/config/runtimeEnv";
+import { normalizeWhatsAppPhone } from "@/utils/phoneNumber";
+import { openInNewTab } from "@/services/clientDom";
+
+const DEFAULT_WHATSAPP_CONTACT = "201062635923";
 
 /* ─── Props ─────────────────────────────────────────────────────────── */
 
@@ -56,8 +59,7 @@ const stagger = {
 const LANDING_STYLES = `
   .landing-root {
     font-family: var(--font-sans);
-    background-color: #02040a;
-    background: #02040a;
+    background: transparent;
   }
 
   .landing-principles-label {
@@ -201,6 +203,19 @@ export const Landing: FC<LandingPropsExtended> = ({
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
   const weatherEntryHref = getRelationshipWeatherEntryHref(weatherPath);
 
+  const whatsAppNumber = runtimeEnv.whatsappContactNumber || DEFAULT_WHATSAPP_CONTACT;
+  const whatsAppLink = useMemo(() => {
+    const normalized = normalizeWhatsAppPhone(whatsAppNumber);
+    if (!normalized) return null;
+    return `https://wa.me/${normalized}`;
+  }, [whatsAppNumber]);
+
+  const openWhatsAppChat = (placement: "landing_floating_fab") => {
+    if (!whatsAppLink) return;
+    analyticsService.whatsapp({ placement });
+    openInNewTab(whatsAppLink);
+  };
+
 
   const pwaInstall = usePWAInstall();
   const [showDesktopInstallFallback, setShowDesktopInstallFallback] = useState(false);
@@ -289,8 +304,11 @@ export const Landing: FC<LandingPropsExtended> = ({
     
     setTimeout(() => {
       if (typeof window !== "undefined") {
-        // Always use internal SPA navigation to avoid 404 on /onboarding
-        _onStartJourney();
+        if (hasExistingJourney) {
+          _onStartJourney();
+        } else {
+          window.location.assign("/onboarding");
+        }
       }
     }, 1200);
   }, [mirrorName, hasExistingJourney, _onStartJourney]);
@@ -301,130 +319,88 @@ export const Landing: FC<LandingPropsExtended> = ({
       dir="rtl"
     >
       <style>{LANDING_STYLES}</style>
-      <AppAtmosphere 
-        mode="default" 
-        intensity={1} 
+      <AmbientBackground 
+        ambientBackground="var(--ds-color-space-void)" 
+        showHeavyAmbientLayers={true} 
+        reduceMotion={false} 
       />
-      {/* ════ EVOLUTIONARY HERO SECTION ════ */}
-      <EvolutionarySynapse
-        componentId="HeroSection"
-        DefaultComponent={HeroSection}
-        componentProps={{
-          onStartJourney: handleStart,
-          mirrorName: mirrorName,
-          setMirrorName: setMirrorName,
-          pulseCount: 1947,
-          trustPoints: ["توازن", "تشتت", "استنزاف"],
-          ctaJourney: landingCopy.ctaJourney,
-          secondaryCta: landingCopy.secondaryCta
-        }}
+      {/* ════ NEW HERO SECTION ════ */}
+      <HeroSection
+        onStartJourney={handleStart}
+        mirrorName={mirrorName}
+        setMirrorName={setMirrorName}
+        pulseCount={1947}
+        trustPoints={["توازن", "تشتت", "استنزاف"]}
+        ctaJourney={landingCopy.ctaJourney}
+        secondaryCta={landingCopy.secondaryCta}
       />
 
       <div className="landing-intrinsic-sentinel" />
 
-      <section className="relative py-24 sm:py-32 px-4 max-w-6xl mx-auto" dir="rtl">
+      <section className="relative py-28 px-4 max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.9, ease }}
-          className="text-center mb-16 sm:mb-20"
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease }}
+          className="glass-premium rounded-[48px] overflow-hidden p-10 sm:p-20 text-center relative"
         >
-          <p className="text-[11px] font-black tracking-[0.5em] uppercase mb-6 landing-principles-label" style={{ letterSpacing: '0.5em' }}>
-            نظام التشغيل — Operating System
-          </p>
-          <h2 className="text-3xl sm:text-5xl font-black mb-8 landing-principles-title" style={{ lineHeight: 1.15 }}>
-            مش بنخمّن.<br />
-            <span style={{ color: 'var(--ds-color-primary)' }}>بنحلل الـ Logic.</span>
-          </h2>
-          <p className="text-base sm:text-lg max-w-[52ch] mx-auto landing-principles-copy" style={{ textAlign: 'center' }}>
-            الرحلة بتشوف علاقاتك كدوائر طاقة ومسارات تدفق — مفيش أحكام، فيه بيانات بتساعدك تاخد قراراتك من مركز قوتك.
-          </p>
-        </motion.div>
+          {/* Ambient section glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/2 bg-teal-500/10 blur-[120px] pointer-events-none" />
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6" id="landing-principles-grid">
-          {[
-            {
-              title: "رصد الاستنزاف",
-              desc: "تحديد النقط اللي طاقتك بتتسرب منها — مش بالإحساس، بالبيانات.",
-              icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 28, height: 28 }}>
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                </svg>
-              ),
-              accentColor: "rgba(245, 166, 35, 0.6)",
-              glowColor: "rgba(245, 166, 35, 0.08)"
-            },
-            {
-              title: "خرائط النبض",
-              desc: "رسم بياني حقيقي لمين بيزودك ومين بيسحب — وكل حاجة بينهم.",
-              icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 28, height: 28 }}>
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
-              ),
-              accentColor: "rgba(0, 240, 255, 0.6)",
-              glowColor: "rgba(0, 240, 255, 0.08)"
-            },
-            {
-              title: "تحصين الحدود",
-              desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي — من غير ما تخسر حد.",
-              icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 28, height: 28 }}>
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              ),
-              accentColor: "rgba(139, 92, 246, 0.6)",
-              glowColor: "rgba(139, 92, 246, 0.08)"
-            }
-          ].map((f, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.15 + i * 0.12, duration: 0.7, ease }}
-              className="group relative p-8 sm:p-9 rounded-2xl text-right transition-all duration-500"
-              style={{
-                background: `radial-gradient(ellipse at 50% 0%, ${f.glowColor} 0%, transparent 70%), rgba(255,255,255,0.02)`,
-                border: `1px solid rgba(255,255,255,0.06)`,
-                backdropFilter: 'blur(12px)',
-              }}
-              whileHover={{
-                borderColor: f.accentColor,
-                y: -4,
-                transition: { duration: 0.3 }
-              }}
-            >
-              {/* Accent glow on hover */}
-              <div
-                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                style={{
-                  background: `radial-gradient(ellipse at 50% 0%, ${f.glowColor} 0%, transparent 60%)`,
-                }}
-              />
+          <div className="mb-16 relative z-10">
+            <p className="text-[10px] font-black tracking-[0.5em] uppercase mb-6 text-teal-500 opacity-80">
+              نظام التشغيل — Operating System
+            </p>
+            <h2 className="text-4xl sm:text-6xl font-black mb-8 landing-principles-title tracking-tight text-white">
+              إحنا مش بنخمّن.<br /><span className="text-teal-400">إحنا بنحلل الـ Logic.</span>
+            </h2>
+            <p className="text-base sm:text-xl max-w-[55ch] mx-auto text-slate-400 leading-relaxed font-medium">
+              "الرحلة" بتوفرلك نظام تشغيل لوعيك بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام عاطفية، فيه بيانات منطقية بتساعدك تسترد سيادتك على حياتك.
+            </p>
+          </div>
 
-              <div
-                className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-110"
-                style={{
-                  background: `linear-gradient(135deg, ${f.glowColor}, transparent)`,
-                  border: `1px solid ${f.accentColor}`,
-                  color: f.accentColor,
-                  boxShadow: `0 0 20px ${f.glowColor}`,
-                }}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-right relative z-10" dir="rtl">
+            {[
+              { 
+                title: "رصد الاستنزاف", 
+                desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية وتوقف النزيف فوراً.", 
+                icon: <Fingerprint className="w-8 h-8 text-teal-400" />,
+                accent: "rgba(45, 212, 191, 0.15)"
+              },
+              { 
+                title: "خرائط النبض", 
+                desc: "رسم بياني حي لتدفق الطاقة في كل دائرة؛ مين بيزودك ومين بيسحب منك.", 
+                icon: <Activity className="w-8 h-8 text-sky-400" />,
+                accent: "rgba(56, 189, 248, 0.15)"
+              },
+              { 
+                title: "تحصين الحدود", 
+                desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي وسيادتك على قرارك.", 
+                icon: <ShieldCheck className="w-8 h-8 text-indigo-400" />,
+                accent: "rgba(129, 140, 248, 0.15)"
+              }
+            ].map((f, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                className="group p-10 rounded-[32px] border border-white/5 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
               >
-                {f.icon}
-              </div>
-
-              <h3 className="relative text-lg sm:text-xl font-black mb-3 landing-feature-title" style={{ color: '#ffffff' }}>
-                {f.title}
-              </h3>
-              <p className="relative text-sm leading-relaxed landing-feature-desc" style={{ color: 'rgba(148, 163, 184, 0.85)', textAlign: 'right' }}>
-                {f.desc}
-              </p>
-            </motion.div>
-          ))}
-        </div>
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg"
+                  style={{ backgroundColor: f.accent }}
+                >
+                  {f.icon}
+                </div>
+                <h3 className="text-2xl font-black mb-4 text-white group-hover:text-teal-300 transition-colors">{f.title}</h3>
+                <p className="text-base text-slate-500 leading-relaxed font-medium group-hover:text-slate-400 transition-colors">{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </section>
 
       <section className="relative py-20 px-4 max-w-3xl mx-auto">
@@ -520,6 +496,26 @@ export const Landing: FC<LandingPropsExtended> = ({
           if (typeof window !== "undefined") window.open(path, "_blank", "noopener,noreferrer");
         }}
       />
+
+      {/* ───── FLOATING WHATSAPP ───── */}
+      {whatsAppLink && (
+        <motion.button
+          type="button"
+          title="تواصل عبر واتساب"
+          onClick={() => openWhatsAppChat("landing_floating_fab")}
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          whileHover={{ scale: 1.1, y: -4 }}
+          whileTap={{ scale: 0.9 }}
+          className="fixed z-[100] left-6 bottom-8 w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/10 hover:bg-emerald-500 transition-colors"
+        >
+          <MessageCircle className="w-6 h-6 shrink-0" />
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </span>
+        </motion.button>
+      )}
     </div>
   );
 };

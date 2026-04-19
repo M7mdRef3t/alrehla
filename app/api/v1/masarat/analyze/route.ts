@@ -47,7 +47,6 @@ export async function POST(request: Request) {
 
     let engineResponse: any = null;
     let engineRaw: any = null;
-    let patterns: string[] = [];
     const startTime = Date.now();
 
     // 2. Controlled Execution Loop
@@ -55,17 +54,16 @@ export async function POST(request: Request) {
       if (expectedOutput === "full_plan") {
         const analysis = quickAnalyze ? (quickAnalyze(input) as any) : null;
         engineRaw = analysis;
-        patterns = Array.isArray(analysis?.patterns) ? analysis.patterns : [];
+        const patterns = Array.isArray(analysis?.patterns) ? analysis.patterns : [];
         
         if (generateDynamicPlan) {
-          engineResponse = generateDynamicPlan("العميل", ring as any, patterns as any, ["Generated via MaaS API"]);
+          engineResponse = generateDynamicPlan("العميل", ring as any, patterns, ["Generated via MaaS API"]);
         } else {
           engineResponse = { status: "Maintenance", detail: "Dynamic planning module currently unavailable" };
         }
       } else {
         engineResponse = quickAnalyze ? quickAnalyze(input) : { patterns: [], error: "Engine logic missing" };
         engineRaw = engineResponse;
-        patterns = Array.isArray(engineResponse?.patterns) ? engineResponse.patterns : [];
       }
     } catch (engineError: any) {
       console.error("[MaaS Gateway] Engine Core Crash:", engineError);
@@ -94,29 +92,14 @@ export async function POST(request: Request) {
       console.error("[MaaS Gateway] Non-blocking logging failure:", logError);
     }
 
-    // 4. Archetype Induction (ADK Feature)
-    const patternsLower = patterns.map(p => p.toLowerCase());
-    let archetype = "The Deep Reflector"; // Default
-    if (patternsLower.some(p => p.includes("rush") || p.includes("fast") || p.includes("skip"))) {
-      archetype = "The Analytical Rusher";
-    } else if (patternsLower.some(p => p.includes("peace") || p.includes("spiritual") || p.includes("reflect"))) {
-      archetype = "The Spiritual Wanderer";
-    } else if (patternsLower.some(p => p.includes("hesitant") || p.includes("confused") || p.includes("missing"))) {
-      archetype = "The Hesitant Seeker";
-    }
-
     return NextResponse.json({
       meta: {
         platform: "Masarat Engine (MaaS)",
-        version: "1.2 (Sovereign Evolution)",
+        version: "1.1", // Bumped version for hardening
         compute_ms: computeTimeMs,
         platform_name: keyRecord.platform_name
       },
-      data: {
-        ...engineResponse,
-        archetype, // Injected Archetype
-        resonance_score: Math.min(100, 70 + (patterns.length * 5)) // Dynamic Resonance Calculation
-      },
+      data: engineResponse,
       engine_raw: process.env.NODE_ENV === "development" ? engineRaw : undefined
     }, { status: 200 });
   } catch (err: any) {

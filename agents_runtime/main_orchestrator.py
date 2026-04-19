@@ -49,7 +49,11 @@ def main():
             print(json.dumps({"error": f"Failed to read context file: {str(e)}"}))
             return
     else:
-        context = json.loads(args.context)
+        try:
+            context = json.loads(args.context)
+        except json.JSONDecodeError as e:
+            print(json.dumps({"error": f"Invalid JSON context: {str(e)}"}))
+            return
     
     task = args.task
 

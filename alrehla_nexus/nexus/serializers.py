@@ -8,6 +8,5 @@ class UserInsightSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
     def create(self, validated_data):
-        # The user is already attached to the request by our middleware
-        validated_data['user'] = self.context['request'].user
+        # المستخدم بيتبعت آلياً من الـ View
         return super().create(validated_data)

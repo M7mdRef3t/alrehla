@@ -60,10 +60,9 @@ function getCompletedCount(status: Record<string, boolean>): number {
 
 interface RecoveryProgressBarProps {
   node: MapNode;
-  isSidebar?: boolean;
 }
 
-export const RecoveryProgressBar: FC<RecoveryProgressBarProps> = ({ node, isSidebar = false }) => {
+export const RecoveryProgressBar: FC<RecoveryProgressBarProps> = ({ node }) => {
   const status = getMilestoneStatus(node);
   const completed = getCompletedCount(status);
   const total = MILESTONES.length;
@@ -72,7 +71,7 @@ export const RecoveryProgressBar: FC<RecoveryProgressBarProps> = ({ node, isSide
   const toLabel = GOAL_LABELS[node.ring];
 
   return (
-    <div className={`mb-4 text-right ${isSidebar ? "bg-transparent border-none p-0" : "rounded-xl bg-linear-to-br from-slate-50 to-teal-50/30 border border-slate-200/80 p-3"}`}>
+    <div className="mb-4 rounded-xl bg-linear-to-br from-slate-50 to-teal-50/30 border border-slate-200/80 p-3 text-right">
       {/* من [الوضع الحالي] → إلى [الهدف] */}
       <p className="text-xs text-slate-600 mb-2 text-center" dir="rtl">
         من <span className="font-bold text-slate-800">{fromLabel}</span>

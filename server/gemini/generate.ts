@@ -51,7 +51,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     res.status(400).json({ error: "Missing prompt" });
     return;
   }
-  const guard = evaluatePrompt(prompt, featureTag);
+  const guard = evaluatePrompt(prompt);
   if (!guard.ok) {
     const errorMsg = "Prompt guard blocked request";
     await logAiTelemetry({

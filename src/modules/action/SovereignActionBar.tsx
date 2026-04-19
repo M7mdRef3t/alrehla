@@ -183,7 +183,6 @@ export const SovereignActionBar: FC<SovereignActionBarProps> = ({
   }
 
   return content;
-
 };
 
 interface LogEnergyModalProps {
@@ -209,9 +208,9 @@ const LogEnergyModal: FC<LogEnergyModalProps> = ({ type, nodes, defaultNodeId, o
       className="absolute inset-0 z-20 rounded-2xl bg-slate-900/95 backdrop-blur-3xl border border-white/10 p-4 flex flex-col"
     >
       <div className="flex items-center justify-between mb-4">
-        <h4 className={`text-xs font-bold flex items-center gap-2 ${isCharge ? "text-emerald-400" : "text-rose-400"}`}>
+        <h4 className={`text-sm font-bold flex items-center gap-2 ${isCharge ? "text-emerald-400" : "text-rose-400"}`}>
           {isCharge ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-          {isCharge ? "إيه اللي شحن طاقتك؟" : "إيه اللي استنزف طاقتك؟"}
+          {isCharge ? "تسجيل مكسب طاقة" : "تسجيل خسارة طاقة"}
         </h4>
         <button onClick={onClose} className="text-slate-400 hover:text-white">
           <X className="w-4 h-4" />

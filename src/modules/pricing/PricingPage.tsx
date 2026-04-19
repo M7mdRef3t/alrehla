@@ -13,8 +13,6 @@ import {
   TIER_PRICES_USD,
   TIER_LABELS,
   PREMIUM_FEATURES_LIST,
-  BASE_PRICE_EGP,
-  ORIGINAL_PRICE_EGP,
 } from "@/config/pricing";
 import { markRevenueAccessUnlocked } from "@/services/revenueAccess";
 
@@ -25,8 +23,7 @@ export default function PricingPage() {
   const [offerConsumed, setOfferConsumed] = useState(false);
   const [emotionalOffer, setEmotionalOffer] = useState(() => null as ReturnType<typeof getEmotionalOffer>);
   const globalPrice = TIER_PRICES_USD.premium.label;
-  const localPrice = `${BASE_PRICE_EGP} ج.م`;
-  const originalLocalPrice = `${ORIGINAL_PRICE_EGP} ج.م`;
+  const localPrice = "200 ج.م";
   const viewTrackedRef = useRef(false);
 
   const [vipCode, setVipCode] = useState("");
@@ -237,17 +234,10 @@ export default function PricingPage() {
 
             {/* Price */}
             <div className="mb-8 rounded-2xl border border-teal-500/10 bg-teal-500/[0.03] p-6 text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold mb-3">
-                <Sparkles className="w-3 h-3" />
-                خصم 50% للدفعة الأولى
-              </div>
               <div className="flex items-center justify-center gap-2">
                 <span className="text-5xl font-black text-app-foreground">{globalPrice}</span>
               </div>
-              <p className="mt-2 text-xs text-app-muted-foreground">
-                أو <span className="line-through text-slate-500 decoration-red-500/50">{originalLocalPrice}</span>{" "}
-                <span className="text-teal-600 dark:text-teal-400 font-bold">{localPrice}</span> / شهر للمصريين
-              </p>
+              <p className="mt-2 text-xs text-app-muted-foreground">أو <span className="text-teal-600 dark:text-teal-400 font-bold">{localPrice}</span> / شهر للمصريين</p>
             </div>
 
             {/* Features */}

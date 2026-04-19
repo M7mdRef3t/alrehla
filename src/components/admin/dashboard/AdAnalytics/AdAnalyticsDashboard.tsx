@@ -150,33 +150,12 @@ const KPICard: React.FC<{
 
 // ─── Chart Area ──────────────────────────────────────────
 
-const PerformanceChart: React.FC<{ data: any[]; metric: string; setMetric: (m: any) => void }> = ({ data, metric, setMetric }) => {
-  if (!data || data.length === 0) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-slate-900/40 border border-white/5 rounded-3xl p-12 col-span-full flex flex-col items-center justify-center text-center space-y-4"
-      >
-        <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center border border-white/5">
-          <BarChart3 className="w-8 h-8 text-slate-600" />
-        </div>
-        <div>
-          <h3 className="text-white font-bold mb-1">لا توجد بيانات نبض حالياً</h3>
-          <p className="text-xs text-slate-500 max-w-xs uppercase tracking-widest leading-relaxed">
-            المنصات الإعلانية غير مرتبطة تقنياً حتى الآن. قم بربط الحسابات لبدء تتبع الأداء.
-          </p>
-        </div>
-        <button className="px-6 py-2 bg-indigo-600/20 hover:bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-indigo-500/30">
-          ربط المنصات الآن
-        </button>
-      </motion.div>
-    );
-  }
-
-  const values = data.map(d => d[metric as keyof typeof d] as number || 0);
-  const maxVal = Math.max(...values, 1);
-  const minVal = Math.min(...values, 0);
+const PerformanceChart: React.FC = () => {
+  const [metric, setMetric] = useState<'spend' | 'conversions' | 'cac' | 'roas'>('spend');
+  const data = mockDailyPerformance;
+  const values = data.map(d => d[metric]);
+  const maxVal = Math.max(...values);
+  const minVal = Math.min(...values);
   const range = maxVal - minVal || 1;
 
   const metricConfig = {
@@ -186,7 +165,7 @@ const PerformanceChart: React.FC<{ data: any[]; metric: string; setMetric: (m: a
     roas: { label: 'ROAS', color: '#34D399', format: (v: number) => `${v.toFixed(1)}x` },
   };
 
-  const cfg = metricConfig[metric as keyof typeof metricConfig];
+  const cfg = metricConfig[metric];
 
   // Build SVG path
   const width = 100;
@@ -278,120 +257,90 @@ const PerformanceChart: React.FC<{ data: any[]; metric: string; setMetric: (m: a
 
 // ─── Platform Breakdown Table ────────────────────────────
 
-const PlatformTable: React.FC = () => {
-  if (mockPlatformBreakdown.length === 0) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-slate-900/40 border border-white/5 rounded-3xl p-8 col-span-full border-dashed flex flex-col items-center justify-center text-slate-600"
-      >
-        <Zap className="w-6 h-6 mb-2 opacity-20" />
-        <p className="text-[10px] font-black uppercase tracking-widest">لا يوجد ربط مع المنصات حالياً</p>
-      </motion.div>
-    );
-  }
+const PlatformTable: React.FC = () => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.4, duration: 0.4 }}
+    className="bg-slate-900/40 border border-white/5 rounded-3xl p-6 col-span-full"
+  >
+    <div className="flex items-center gap-2 mb-6">
+      <h3 className="text-sm font-black text-white flex items-center gap-2">
+        <BarChart3 className="w-4 h-4 text-indigo-400" />
+        أداء المنصات (Platform Breakdown)
+      </h3>
+      <AdminTooltip content="تفصيل لأداء كل منصة إعلانية (ميتا، جوجل، إلخ) لمعرفة الأفضل في جلب التحويلات الموثوقة." position="left" />
+    </div>
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.4, duration: 0.4 }}
-      className="bg-slate-900/40 border border-white/5 rounded-3xl p-6 col-span-full"
-    >
-      <div className="flex items-center gap-2 mb-6">
-        <h3 className="text-sm font-black text-white flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-indigo-400" />
-          أداء المنصات (Platform Breakdown)
-        </h3>
-        <AdminTooltip content="تفصيل لأداء كل منصة إعلانية (ميتا، جوجل، إلخ) لمعرفة الأفضل في جلب التحويلات الموثوقة." position="left" />
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-white/5">
-              {['Platform', 'Spend', 'Impressions', 'Clicks', 'CTR', 'Conversions', 'CAC', 'ROAS', 'Trend'].map(h => (
-                <th key={h} className="text-[9px] font-black text-slate-500 uppercase tracking-widest pb-4 pr-4">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {mockPlatformBreakdown.map((row: PlatformBreakdown, i: number) => (
-              <tr key={row.platform} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
-                <td className="py-4 pr-4"><PlatformBadge platform={row.platform} size="md" /></td>
-                <td className="py-4 pr-4 text-sm font-bold text-white">{formatCurrency(row.spend)}</td>
-                <td className="py-4 pr-4 text-sm text-slate-400">{formatNumber(row.impressions)}</td>
-                <td className="py-4 pr-4 text-sm text-slate-400">{formatNumber(row.clicks)}</td>
-                <td className="py-4 pr-4 text-sm text-slate-400">{row.ctr.toFixed(2)}%</td>
-                <td className="py-4 pr-4 text-sm font-bold text-white">{formatNumber(row.conversions)}</td>
-                <td className="py-4 pr-4 text-sm font-bold text-amber-400">${row.cac.toFixed(2)}</td>
-                <td className="py-4 pr-4 text-sm font-bold text-emerald-400">{row.roas.toFixed(1)}x</td>
-                <td className="py-4 pr-4">
-                  {row.trend === 'up' && <TrendingUp className="w-4 h-4 text-emerald-400" />}
-                  {row.trend === 'down' && <TrendingDown className="w-4 h-4 text-rose-400" />}
-                  {row.trend === 'stable' && <Minus className="w-4 h-4 text-slate-500" />}
-                </td>
-              </tr>
+    <div className="overflow-x-auto">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="border-b border-white/5">
+            {['Platform', 'Spend', 'Impressions', 'Clicks', 'CTR', 'Conversions', 'CAC', 'ROAS', 'Trend'].map(h => (
+              <th key={h} className="text-[9px] font-black text-slate-500 uppercase tracking-widest pb-4 pr-4">{h}</th>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </motion.div>
-  );
-};
+          </tr>
+        </thead>
+        <tbody>
+          {mockPlatformBreakdown.map((row: PlatformBreakdown, i: number) => (
+            <tr key={row.platform} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
+              <td className="py-4 pr-4"><PlatformBadge platform={row.platform} size="md" /></td>
+              <td className="py-4 pr-4 text-sm font-bold text-white">{formatCurrency(row.spend)}</td>
+              <td className="py-4 pr-4 text-sm text-slate-400">{formatNumber(row.impressions)}</td>
+              <td className="py-4 pr-4 text-sm text-slate-400">{formatNumber(row.clicks)}</td>
+              <td className="py-4 pr-4 text-sm text-slate-400">{row.ctr.toFixed(2)}%</td>
+              <td className="py-4 pr-4 text-sm font-bold text-white">{formatNumber(row.conversions)}</td>
+              <td className="py-4 pr-4 text-sm font-bold text-amber-400">${row.cac.toFixed(2)}</td>
+              <td className="py-4 pr-4 text-sm font-bold text-emerald-400">{row.roas.toFixed(1)}x</td>
+              <td className="py-4 pr-4">
+                {row.trend === 'up' && <TrendingUp className="w-4 h-4 text-emerald-400" />}
+                {row.trend === 'down' && <TrendingDown className="w-4 h-4 text-rose-400" />}
+                {row.trend === 'stable' && <Minus className="w-4 h-4 text-slate-500" />}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </motion.div>
+);
 
 
 // ─── CAC Root Cause Analysis ─────────────────────────────
 
-const CACAnalysisSection: React.FC = () => {
-  if (mockCACAnalysis.length === 0) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-slate-900/40 border border-white/5 rounded-3xl p-10 flex flex-col items-center justify-center text-center space-y-3"
-      >
-        <BrainCircuit className="w-10 h-10 text-slate-700 opacity-20" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 italic">بانتظار تدفق بيانات الاحتكاك...</p>
-      </motion.div>
-    );
-  }
+const CACAnalysisSection: React.FC = () => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.5, duration: 0.4 }}
+    className="bg-slate-900/40 border border-white/5 rounded-3xl p-6"
+  >
+    <div className="flex items-center justify-between mb-6">
+      <h3 className="text-sm font-black text-white flex items-center gap-2">
+        <BrainCircuit className="w-4 h-4 text-amber-400" />
+        تحليل أسباب التكلفة (CAC Root Cause)
+        <AdminTooltip content="تحليل يعتمد على الذكاء الاصطناعي لفهم التغيرات في تكلفة اكتساب العميل (CAC)." position="right" />
+      </h3>
+      <span className="text-[9px] text-slate-500 font-mono">AI-powered</span>
+    </div>
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5, duration: 0.4 }}
-      className="bg-slate-900/40 border border-white/5 rounded-3xl p-6"
-    >
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-sm font-black text-white flex items-center gap-2">
-          <BrainCircuit className="w-4 h-4 text-amber-400" />
-          تحليل أسباب التكلفة (CAC Root Cause)
-          <AdminTooltip content="تحليل يعتمد على الذكاء الاصطناعي لفهم التغيرات في تكلفة اكتساب العميل (CAC)." position="right" />
-        </h3>
-        <span className="text-[9px] text-slate-500 font-mono">AI-powered</span>
-      </div>
-
-      <div className="space-y-4">
-        {mockCACAnalysis.map((item: CACAnalysis, i: number) => (
-          <div key={i} className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.03] hover:border-white/[0.06] transition-all">
-            <div className="flex items-start justify-between gap-3 mb-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <ImpactBadge impact={item.impact} />
-                <PlatformBadge platform={item.platform} />
-              </div>
-              <ChangeIndicator value={item.change} invert />
+    <div className="space-y-4">
+      {mockCACAnalysis.map((item: CACAnalysis, i: number) => (
+        <div key={i} className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.03] hover:border-white/[0.06] transition-all">
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <ImpactBadge impact={item.impact} />
+              <PlatformBadge platform={item.platform} />
             </div>
-            <h4 className="text-sm font-bold text-white mb-1" dir="rtl">{item.title}</h4>
-            <p className="text-xs text-slate-500 leading-relaxed" dir="rtl">{item.description}</p>
+            <ChangeIndicator value={item.change} invert />
           </div>
-        ))}
-      </div>
-    </motion.div>
-  );
-};
+          <h4 className="text-sm font-bold text-white mb-1" dir="rtl">{item.title}</h4>
+          <p className="text-xs text-slate-500 leading-relaxed" dir="rtl">{item.description}</p>
+        </div>
+      ))}
+    </div>
+  </motion.div>
+);
 
 
 // ─── AI Recommendations ──────────────────────────────────
@@ -474,73 +423,69 @@ const RecommendationsSection: React.FC = () => {
 
 // ─── Top Ads ─────────────────────────────────────────────
 
-const TopAdsSection: React.FC = () => {
-  if (mockTopAds.length === 0) return null;
+const TopAdsSection: React.FC = () => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.6, duration: 0.4 }}
+    className="bg-slate-900/40 border border-white/5 rounded-3xl p-6 col-span-full"
+  >
+    <div className="flex items-center justify-between mb-6">
+      <h3 className="text-sm font-black text-white flex items-center gap-2">
+        <Target className="w-4 h-4 text-rose-400" />
+        أفضل الإعلانات هذا الأسبوع (Top Ads)
+        <AdminTooltip content="أعلى الإعلانات أداءً لمعرفة المضمون (Creative) الذي يتردد صداه مع الجمهور الآن." position="right" />
+      </h3>
+      <span className="text-[9px] text-slate-500 font-mono">Analyze & Iterate</span>
+    </div>
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.6, duration: 0.4 }}
-      className="bg-slate-900/40 border border-white/5 rounded-3xl p-6 col-span-full"
-    >
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-sm font-black text-white flex items-center gap-2">
-          <Target className="w-4 h-4 text-rose-400" />
-          أفضل الإعلانات هذا الأسبوع (Top Ads)
-          <AdminTooltip content="أعلى الإعلانات أداءً لمعرفة المضمون (Creative) الذي يتردد صداه مع الجمهور الآن." position="right" />
-        </h3>
-        <span className="text-[9px] text-slate-500 font-mono">Analyze & Iterate</span>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {mockTopAds.map((ad: TopAd) => (
-          <div key={ad.id} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.03] hover:border-white/[0.06] transition-all group">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h4 className="text-sm font-bold text-white mb-1" dir="rtl">{ad.name}</h4>
-                <PlatformBadge platform={ad.platform} />
-              </div>
-              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                ad.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'
-              }`}>
-                {ad.status}
-              </span>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {mockTopAds.map((ad: TopAd) => (
+        <div key={ad.id} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.03] hover:border-white/[0.06] transition-all group">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h4 className="text-sm font-bold text-white mb-1" dir="rtl">{ad.name}</h4>
+              <PlatformBadge platform={ad.platform} />
             </div>
+            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+              ad.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'
+            }`}>
+              {ad.status}
+            </span>
+          </div>
 
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-4 gap-3 mb-4">
-              <div>
-                <span className="text-[8px] text-slate-600 uppercase font-bold">Spend</span>
-                <p className="text-xs font-bold text-white">{formatCurrency(ad.spend)}</p>
-              </div>
-              <div>
-                <span className="text-[8px] text-slate-600 uppercase font-bold">Conv.</span>
-                <p className="text-xs font-bold text-white">{ad.conversions}</p>
-              </div>
-              <div>
-                <span className="text-[8px] text-slate-600 uppercase font-bold">CAC</span>
-                <p className="text-xs font-bold text-amber-400">${ad.cac.toFixed(2)}</p>
-              </div>
-              <div>
-                <span className="text-[8px] text-slate-600 uppercase font-bold">ROAS</span>
-                <p className="text-xs font-bold text-emerald-400">{ad.roas.toFixed(1)}x</p>
-              </div>
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-4 gap-3 mb-4">
+            <div>
+              <span className="text-[8px] text-slate-600 uppercase font-bold">Spend</span>
+              <p className="text-xs font-bold text-white">{formatCurrency(ad.spend)}</p>
             </div>
-
-            {/* AI Suggestion */}
-            <div className="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
-              <div className="flex items-start gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-indigo-300 leading-relaxed" dir="rtl">{ad.suggestion}</p>
-              </div>
+            <div>
+              <span className="text-[8px] text-slate-600 uppercase font-bold">Conv.</span>
+              <p className="text-xs font-bold text-white">{ad.conversions}</p>
+            </div>
+            <div>
+              <span className="text-[8px] text-slate-600 uppercase font-bold">CAC</span>
+              <p className="text-xs font-bold text-amber-400">${ad.cac.toFixed(2)}</p>
+            </div>
+            <div>
+              <span className="text-[8px] text-slate-600 uppercase font-bold">ROAS</span>
+              <p className="text-xs font-bold text-emerald-400">{ad.roas.toFixed(1)}x</p>
             </div>
           </div>
-        ))}
-      </div>
-    </motion.div>
-  );
-};
+
+          {/* AI Suggestion */}
+          <div className="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
+            <div className="flex items-start gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-indigo-300 leading-relaxed" dir="rtl">{ad.suggestion}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </motion.div>
+);
 
 
 // ─── Connected Accounts ──────────────────────────────────
@@ -580,7 +525,6 @@ const ConnectedAccountsBar: React.FC = () => (
 
 export const AdAnalyticsDashboard: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [metric, setMetric] = useState<'spend' | 'conversions' | 'cac' | 'roas'>('spend');
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -662,11 +606,7 @@ export const AdAnalyticsDashboard: React.FC = () => {
       </div>
 
       {/* ── Performance Chart ─── */}
-      <PerformanceChart 
-        data={mockDailyPerformance} 
-        metric={metric} 
-        setMetric={(m) => setMetric(m as any)} 
-      />
+      <PerformanceChart />
 
       {/* ── Platform Table ─── */}
       <PlatformTable />

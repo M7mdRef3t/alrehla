@@ -12,12 +12,6 @@ import { runtimeEnv } from "@/config/runtimeEnv";
 const LOCAL_STORAGE_KEY = "dawayir-error-log";
 const MAX_LOCAL_ERRORS = 50;
 
-declare global {
-  interface Window {
-    __dawayirErrorCooldown?: boolean;
-  }
-}
-
 export const logger = {
   error: (messageOrError: string | unknown, error?: unknown, ...args: unknown[]) => {
     let message = "";
@@ -75,26 +69,6 @@ export const logger = {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(errorLog));
       } catch {
         // Ignore storage errors
-      }
-    }
-
-    // 4. Auto-Genesis Discovery Engine Hook (Technical Errors)
-    if (actualError instanceof Error && typeof window !== "undefined") {
-      // Throttle or limit sending to avoid loop, simple check:
-      if (!window.__dawayirErrorCooldown) {
-         window.__dawayirErrorCooldown = true;
-         setTimeout(() => { window.__dawayirErrorCooldown = false; }, 5000); // 5 sec cooldown
-         
-         fetch('/api/telemetry/report-anomaly', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({
-             type: 'error',
-             message: actualError.message,
-             details: { stack: actualError.stack, params: args },
-             sourcePath: window.location.pathname
-           })
-         }).catch(() => {}); // silent fail to not cause infinite loops
       }
     }
   },

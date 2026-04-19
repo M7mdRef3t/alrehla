@@ -17,34 +17,35 @@ export function UserbackWidget() {
   const { user, displayName, status } = useAuthState();
 
   useEffect(() => {
-    // لو مفيش token أو بيئة dev والتوكن مش production — لا تشغل الـ Widget
-    if (!token) return;
-
-    // في بيئة الـ localhost، الـ Userback بيرجع server error عادي
-    // نشغله بس في Production لتجنب الضجيج في الـ console
-    if (runtimeEnv.isDev) return;
+    if (!token) {
+      if (runtimeEnv.isDev) {
+        console.warn('[Userback] Access token is missing. Feedback widget will not be initialized.');
+      }
+      return;
+    }
 
     async function initUserback() {
       try {
         const result = Userback(token as string, {
           autohide: false,
           on_load: () => {
-            console.log('[Userback] Widget loaded successfully.');
+            if (runtimeEnv.isDev) console.log('[Userback] Widget loaded successfully.');
           }
         });
 
         if (result && typeof (result as Promise<unknown>).catch === 'function') {
           await result;
         }
-      } catch {
-        // Silently ignore — Userback fails on localhost by design (traffic permission)
+      } catch (error) {
+        console.error('[Userback] Failed to initialize feedback widget.', error);
       }
     }
 
-    void initUserback();
+    initUserback();
 
     return () => {
-      // No destroy API available for Userback
+      // Userback widget doesn't have a standard `destroy` API.
+      // Let it remain at the app root, or call a hide method here once available.
     };
   }, [token]);
 

@@ -2,7 +2,6 @@ import { useEffect, useCallback } from 'react';
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { trackEvent } from '@/services/analytics';
 import { getWindowOrNull } from '@/services/clientRuntime';
-import { saveDiagnosisState, UserStateObject } from '@/modules/diagnosis/types';
 
 /**
  * useWeatherFunnelBridge — جسر طقس العلاقات
@@ -69,21 +68,7 @@ export function useWeatherFunnelBridge() {
                     addNode(node.label, node.color === 'danger' ? 'red' : node.color === 'core' ? 'green' : 'yellow');
                 });
 
-                // 🌈 [Bridge to Diagnosis] تحويل نتائج الطقس إلى حالة تشخيص عالمية لفك حظر المسار
-                const diagnosisState: UserStateObject = {
-                    type: weatherCtx.weatherLevel === 'sunny' ? 'ready' : weatherCtx.weatherLevel === 'cloudy' ? 'stuck' : 'overwhelmed',
-                    mainPain: 'relationship',
-                    readiness: weatherCtx.weatherLevel === 'sunny' ? 'high' : weatherCtx.weatherLevel === 'cloudy' ? 'medium' : 'low',
-                    journeyPhase: 'mapping',
-                    recommendedProduct: 'dawayir',
-                    diagnosisScore: weatherCtx.weatherLevel === 'sunny' ? 80 : weatherCtx.weatherLevel === 'cloudy' ? 50 : 20,
-                    completedAt: Date.now()
-                };
-                
-                // حفظ الحالة في الـ Storage ليتعامل معها الـ AppShell كحالة تشخيص مكتملة
-                saveDiagnosisState(diagnosisState);
-
-                trackEvent("weather_bridge_success", { nodeCount: result.nodes.length, isDiagnosed: true });
+                trackEvent("weather_bridge_success", { nodeCount: result.nodes.length });
             }
 
         } catch (error) {

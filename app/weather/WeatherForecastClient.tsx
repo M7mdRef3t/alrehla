@@ -522,7 +522,6 @@ export default function WeatherForecastClient() {
   const handleShare = useCallback(async () => {
     if (!result || !resultRef.current || isCapturing) return;
     setIsCapturing(true);
-    console.log("[WeatherDiagnostic] Share Clicked. Capturing DOM...");
     trackEvent(AnalyticsEvents.WEATHER_SHARE_CLICKED, { 
       client_event_id: clientEventIdRef.current!,
       lead_id: leadAttributionRef.current.lead_id ?? null,
@@ -542,7 +541,6 @@ export default function WeatherForecastClient() {
             await navigator.share({ files: [file], text: result.shareText });
             
             // Internal Telemetry
-            console.log("[WeatherDiagnostic] Native Share Triggered Successfully.");
             trackEvent(AnalyticsEvents.WEATHER_SHARE_COMPLETED, { type: "native", client_event_id: clientEventIdRef.current! });
             
             // Meta Pixel (Viral Loop)
@@ -559,7 +557,6 @@ export default function WeatherForecastClient() {
               error: String(shareErr), 
               client_event_id: clientEventIdRef.current! 
             });
-            console.error("[WeatherDiagnostic] Native Share Failed/Canceled:", shareErr);
           } finally {
             setIsCapturing(false);
           }
@@ -569,7 +566,6 @@ export default function WeatherForecastClient() {
             const a = document.createElement("a");
             a.href = url; a.download = "weather-report.png"; a.click();
             
-            console.log("[WeatherDiagnostic] Falling back to manual download.");
             trackEvent(AnalyticsEvents.WEATHER_SHARE_COMPLETED, { type: "download", client_event_id: clientEventIdRef.current! });
             
             // Meta Pixel (Viral Loop)

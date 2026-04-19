@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Filter, Users, Target, CheckCircle2, AlertCircle, ArrowRight, Activity, Percent } from 'lucide-react';
 import { useAdminState } from '@/domains/admin/store/admin.store';
-import { getAuthToken } from "@/domains/auth/store/auth.store";
 
 interface FunnelData {
   landing_views: number;
@@ -12,11 +11,8 @@ interface FunnelData {
   total_active_sessions: number;
 }
 
-function getBearerToken(): string {
-  return getAuthToken() ?? "";
-}
-
 export const SovereignFunnel: React.FC = () => {
+    const adminCode = useAdminState((s) => s.adminCode);
     const [data, setData] = useState<FunnelData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -27,7 +23,7 @@ export const SovereignFunnel: React.FC = () => {
             try {
                 const response = await fetch('/api/admin/analytics/funnel', {
                     headers: {
-                        'Authorization': `Bearer ${getBearerToken()}`
+                        'Authorization': `Bearer ${adminCode}`
                     }
                 });
                 if (!response.ok) throw new Error('فشل جلب بيانات القمع (Funnel)');
@@ -41,7 +37,7 @@ export const SovereignFunnel: React.FC = () => {
         };
 
         void fetchFunnel();
-    }, []);
+    }, [adminCode]);
 
     if (loading) {
         return (

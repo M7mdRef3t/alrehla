@@ -30,8 +30,8 @@ export const guardianCopy = {
   noEntryWithoutPermission: "أول خطوة.. بداية الحكاية.",
   threatLevel: "مستوى التعب",
   /** لوحة الرحلة */
-  dashboardTitle: "بوصلة رحلتك",
-  whatYouDoHere: "محطاتك في المشوار",
-  landscape: "تضاريس الرحلة",
+  dashboardTitle: "بداية الرحلة",
+  whatYouDoHere: "خطواتك في المشوار",
+  inventory: "أدواتي",
 };
 

@@ -12,7 +12,7 @@ import { useAppOverlayState, useOverlayFlag } from "@/domains/consciousness/stor
 import { useGamification } from "@/domains/gamification";
 
 type AgentModule = typeof import('@/agent');
-const DEFAULT_WHATSAPP_CONTACT = "201110795932";
+const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
 
 function normalizeArabicDigits(value: string) {
   return value
@@ -23,21 +23,11 @@ function normalizeArabicDigits(value: string) {
 function normalizeWhatsAppPhone(rawPhone: string) {
   let digits = normalizeArabicDigits(rawPhone).replace(/\D/g, "");
   if (!digits) return "";
-  
-  // Clean prefixes
   if (digits.startsWith("00")) digits = digits.slice(2);
-  
-  // Egyptian logic: if starts with 0 and length is 11, it's a local number -> add 20
-  if (digits.startsWith("0") && digits.length === 11) {
-    digits = `20${digits.slice(1)}`;
-  }
-  
-  // If already starts with 20 and is 12 digits, it's perfect
-  if (digits.startsWith("20") && digits.length === 12) return digits;
-  
-  // If starts with 20 but longer (maybe 200..), let it be
+  if (digits.startsWith("020")) digits = digits.slice(1);
+  if (digits.startsWith("0") && digits.length === 11) digits = `20${digits.slice(1)}`;
+  if (digits.startsWith("2") && digits.length === 12) return digits;
   if (digits.startsWith("20")) return digits;
-
   return digits;
 }
 

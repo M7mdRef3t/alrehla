@@ -37,7 +37,7 @@ interface WhatsAppThreadModalProps {
 }
 
 function getBearerToken(): string {
-  return getAuthToken() ?? "";
+  return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
 }
 
 const QUICK_REPLIES = [

@@ -127,8 +127,8 @@ function ensureMetaPixel(): void {
   // Script loaded check
   if (windowRef.__dawayirMetaPixelScriptLoaded) return;
 
-  // Prevent Meta Pixel from firing on localhost to avoid console error spam
-  if (windowRef.location.hostname === "localhost" || windowRef.location.hostname === "127.0.0.1") {
+  // Prevent Meta Pixel from firing on localhost in production to avoid console error spam
+  if (runtimeEnv.isProd && (windowRef.location.hostname === "localhost" || windowRef.location.hostname === "127.0.0.1")) {
     return;
   }
 
@@ -522,33 +522,6 @@ export function trackEvent(
           last_activity_event: eventName,
           last_activity_time: new Date().toISOString()
       });
-  }
-
-  // --- 4) Auto-Genesis Sovereign Reporting (High Rhythm/Emergency) ---
-  const highRhythmEvents = [
-    AnalyticsEvents.EMERGENCY_OPENED,
-    AnalyticsEvents.SHIELD_SELECTOR_OPENED,
-    AnalyticsEvents.NOISE_SILENCING_OPENED,
-    AnalyticsEvents.INNER_COURT_OPENED
-  ];
-  if (highRhythmEvents.includes(eventName as any)) {
-    // Only fire if haven't fired very recently
-    const windowRef = getWindowOrNull() as any;
-    if (windowRef && !windowRef.__dawayirRhythmCooldown) {
-      windowRef.__dawayirRhythmCooldown = true;
-      setTimeout(() => { windowRef.__dawayirRhythmCooldown = false; }, 5000);
-      
-      fetch('/api/telemetry/report-anomaly', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'high_rhythm',
-          message: `User triggered high-rhythm state: ${eventName}`,
-          details: { eventParams: safeParams },
-          sourcePath: windowRef.location?.pathname || "Unknown"
-        })
-      }).catch(() => {});
-    }
   }
 }
 

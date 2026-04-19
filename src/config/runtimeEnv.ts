@@ -205,7 +205,7 @@ export const runtimeEnv = {
   supabaseAnonKey: readEnv("VITE_SUPABASE_ANON_KEY"),
   whatsappContactNumber: readEnv("VITE_WHATSAPP_CONTACT_NUMBER"),
   adminAllowedRoles: readEnv("VITE_ADMIN_ALLOWED_ROLES"),
-  adminCode: readServerOnlyEnv("ADMIN_CODE"),
+  adminCode: readEnv("VITE_ADMIN_CODE"),
   adminApiBase: readEnv("VITE_ADMIN_API_BASE") ?? "",
   gaMeasurementId: readEnv("VITE_GA_MEASUREMENT_ID"),
   webVitalsEndpoint: readEnv("VITE_WEB_VITALS_ENDPOINT"),

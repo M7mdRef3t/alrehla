@@ -31,7 +31,7 @@ export const SovereignABTestRadar: FC = () => {
 
       if (viewErr || clickErr) throw new Error("Failed to fetch analytics");
 
-      const rawStats: Record<'A' | 'B', VariantStats> = {
+      const rawStats = {
         A: { views: 0, clicks: 0, ctr: 0 },
         B: { views: 0, clicks: 0, ctr: 0 },
       };

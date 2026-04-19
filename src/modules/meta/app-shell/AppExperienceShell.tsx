@@ -35,7 +35,6 @@ import { usePersonalizedBiometrics } from "@/hooks/usePersonalizedBiometrics";
 import { useWeatherFunnelBridge } from "@/hooks/useWeatherFunnelBridge";
 import { BoardingPassModal } from "../BoardingPassModal";
 import { useMapState } from "@/modules/map/store/map.store";
-import { getStoredLeadEmail, setStoredLeadEmail, hasRevenueAccess } from "@/services/revenueAccess";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { UserbackWidget } from "@/components/UserbackWidget";
 import { hasDiagnosisCompleted } from "@/modules/diagnosis";
@@ -186,9 +185,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
 
   const tier = useAuthState((s) => s.tier);
   const transformationDiagnosis = useMapState((s) => s.transformationDiagnosis);
-  const nodesCount = useMapState((s) => s.nodes.length);
   const [isBoardingPassOpen, setIsBoardingPassOpen] = useState(false);
-  const gracePeriodUsedRef = useRef(false);
 
   // Goal Guard moved below authStatus declaration to avoid Temporal Dead Zone.
 
@@ -278,12 +275,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       screen === "behavioral-analysis" ||
       screen === "resources" ||
       screen === "settings" ||
-      screen === "life-os" ||
-      screen === "bawsala" ||
-      screen === "maraya" ||
-      screen === "masarat" ||
-      screen === "atmosfera" ||
-      screen === "session-intake";
+      screen === "life-os";
 
     if (isRevenueMode && !isWhitelisted && !goalId && !storedGoalId) {
       void setScreen("goal");
@@ -291,17 +283,33 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
   }, [screen, goalId, storedGoalId, setScreen, authStatus]);
 
   // ── DIAGNOSIS GATE (Conversion Engine) ──
-  // First-time visitors are NO LONGER auto-gated into Diagnosis.
-  // Routing now depends on Action, not questions (Direct to Sanctuary).
+  // First-time visitors who are anonymous go through diagnosis before anything else.
+  useEffect(() => {
+    if (authStatus === "loading") return;
+    if (screen !== "landing") return;
+    if (hasDiagnosisCompleted()) return;
+    // Don't gate returning authenticated users
+    if (authStatus === "ready" && authUser?.id) return;
+    void setScreen("diagnosis" as typeof screen);
+  }, [screen, authStatus, authUser, setScreen]);
 
-  // Zero-Flicker Gating Protection: Hide the map/content if we ARE gated or STILL loading auth on a protected screen
-  const isLockedByGate = useMemo(() => {
-    // 1. If we are still loading, and it's a protected screen, assume locked to prevent flicker
-    if (authStatus === "loading" && (screen === "map" || screen === "guided")) return true;
+  // STRICT CHECKOUT GATE: Guard map access for free tier
+  useEffect(() => {
+    if (authStatus !== "ready" || !authUser || tier !== "free" || isOwnerWatcher) return;
     
-    // The Map is now accessible for Free users. We do not hide the screen.
-    return false;
-  }, [authStatus, screen]);
+    // First Sight Grace: If user just finished onboarding, let them see their sanctuary once.
+    const justFinishedOnboarding = typeof window !== "undefined" && window.sessionStorage.getItem("dawayir-onboarding-just-finished") === "true";
+    if (justFinishedOnboarding && screen === "map") {
+      // Consume the flag so the next time it's gated
+      window.sessionStorage.removeItem("dawayir-onboarding-just-finished");
+      return;
+    }
+
+    // If user tries to access map or guided flow while being free, show the mandatory checkout
+    if (screen === "map" || screen === "guided") {
+      setAppOverlay("premiumBridge", true);
+    }
+  }, [authStatus, authUser, tier, screen, setAppOverlay, isOwnerWatcher]);
 
   const {
     activeBroadcast,
@@ -521,8 +529,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     screen,
     showCocoon,
     showBreathing,
-    openCocoonModal,
-    enabled: screen !== "diagnosis" && screen !== "goal" && screen !== "survey" && (screen as string) !== "premiumBridge"
+    openCocoonModal
   });
 
   const ownerActionContext = useAppOwnerActionContext({
@@ -824,7 +831,6 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
           onOpenOracleDashboard={openOracleDashboard}
           onNavigateToMap={navigateToMap}
           onOpenLogin={handleHeaderLogin}
-          isGated={isLockedByGate}
         />
         <UserbackWidget />
         <SanctuaryLockdownExperience />

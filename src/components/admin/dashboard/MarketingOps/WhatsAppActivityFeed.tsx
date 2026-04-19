@@ -35,17 +35,15 @@ interface WhatsAppActivityFeedProps {
   ) => void;
 }
 
-function getBearerToken(): string {
-  return getAuthToken() ?? "";
-}
-
 export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOpenWhatsapp }) => {
   const [events, setEvents] = useState<WhatsAppEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchEvents = useCallback(async () => {
-    const bearer = getBearerToken();
+    const authToken = getAuthToken();
+    const adminCode = useAdminState.getState().adminCode;
+    const bearer = authToken || adminCode;
     
     if (!bearer) return;
 

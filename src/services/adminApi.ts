@@ -92,41 +92,22 @@ export async function callAdminApi<T>(path: string, options?: RequestInit): Prom
   // to prevent CORS console noise and fallback to local sources gracefully.
   if (isCrossOriginDevAdminApi()) return null;
   const authToken = getAuthToken();
-  const bearer = authToken;
+  const adminCode = useAdminState.getState().adminCode;
+  const bearer = authToken ?? adminCode;
   if (!bearer) return null;
   const query = buildAdminQuery(path);
-  
-  if (runtimeEnv.isDev) {
-    console.debug(`[Admin API] Calling ${path}. Token Type: AuthSession. Preview: ${bearer.slice(0, 5)}...`);
-  }
-
-  try {
-    const response = await fetch(`${ADMIN_API_PATH}?${query}`, {
+  return fetchJsonWithResilience<T>(
+    `${ADMIN_API_PATH}?${query}`,
+    {
       ...options,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${bearer}`,
         ...(options?.headers ?? {})
       }
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[Admin API] Error ${response.status}: ${errorText || response.statusText}`);
-      if (response.status === 401) {
-        console.warn("[Admin API] 401 Unauthorized - Check ADMIN_CODE or Auth Session.");
-      }
-      if (response.status === 429) {
-        console.warn("[Admin API] 429 Too Many Requests - Rate limit hit.");
-      }
-      return null;
-    }
-
-    return (await response.json()) as T;
-  } catch (err) {
-    console.error("[Admin API] Network or Parsing Error:", err);
-    return null;
-  }
+    },
+    { retries: 1, breaker: adminApiBreaker, timeoutMs: runtimeEnv.isDev ? 25000 : 8000 }
+  );
 }
 
 export interface AlertIncident {

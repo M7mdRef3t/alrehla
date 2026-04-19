@@ -85,11 +85,9 @@ export async function middleware(request: NextRequest) {
             const isUiRoute = pathname.startsWith('/admin') && !pathname.startsWith('/api/admin');
 
             if (!hasSupabaseSession && !isUiRoute) {
-                const hasBearer = authHeader.toLowerCase().startsWith('bearer ') && authHeader.length > 10;
+                const hasBearer = authHeader.startsWith('Bearer ') && authHeader.length > 7;
                 if (!hasBearer) {
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn(`[Security Alert] 401 Blocked on ${pathname}. AuthHeader: ${authHeader ? 'Exists (Redacted)' : 'Missing'}`);
-                    }
+                    console.warn(`[Security Alert] Unauthorized Admin access attempt from IP: ${ip} on path: ${pathname}`);
                     return NextResponse.json({ error: 'Unauthorized Access' }, { status: 401 });
                 }
             }

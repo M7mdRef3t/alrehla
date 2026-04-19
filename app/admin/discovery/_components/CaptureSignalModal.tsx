@@ -13,7 +13,6 @@ type FormState = {
   priority: Priority;
   signal_source: string;
   business_goal: string;
-  funnel_stage: string;
 };
 
 const INITIAL: FormState = {
@@ -23,7 +22,6 @@ const INITIAL: FormState = {
   priority: "medium",
   signal_source: "",
   business_goal: "",
-  funnel_stage: "onboarding",
 };
 
 type CaptureSignalModalProps = {
@@ -163,39 +161,18 @@ export default function CaptureSignalModal({ onClose, onSuccess }: CaptureSignal
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Signal Source */}
-            <div>
-              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
-                Signal Source (اختياري)
-              </label>
-              <input
-                type="text"
-                value={form.signal_source}
-                onChange={(e) => set("signal_source", e.target.value)}
-                placeholder="مثال: NPS comment"
-                className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500/60 transition-colors"
-              />
-            </div>
-
-            {/* Funnel Stage */}
-            <div>
-              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
-                Funnel Stage
-              </label>
-              <select
-                value={form.funnel_stage}
-                onChange={(e) => set("funnel_stage", e.target.value)}
-                className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500/60 transition-colors"
-                dir="ltr"
-              >
-                <option value="onboarding">Onboarding</option>
-                <option value="awareness">Awareness</option>
-                <option value="conversion">Conversion</option>
-                <option value="retention">Retention</option>
-                <option value="expansion">Expansion</option>
-              </select>
-            </div>
+          {/* Signal Source */}
+          <div>
+            <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
+              Signal Source (اختياري)
+            </label>
+            <input
+              type="text"
+              value={form.signal_source}
+              onChange={(e) => set("signal_source", e.target.value)}
+              placeholder="مثال: مستخدم A، Hotjar session، NPS comment"
+              className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500/60 transition-colors"
+            />
           </div>
 
           {/* Business Goal */}

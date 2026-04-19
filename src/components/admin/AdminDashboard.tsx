@@ -1,6 +1,6 @@
 import { logger } from "@/services/logger";
 import type { FC, ReactNode } from "react";
-import { useEffect, useState, useRef, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
@@ -34,10 +34,9 @@ import {
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { useAdminState } from "@/domains/admin/store/admin.store";
-import { useSwarmMutationStore } from "@/state/useSwarmMutationStore";
 import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
-import { isPrivilegedRole } from "@/utils/featureFlags";
 import { sovereignAgent } from "@/services/LocalSovereignAgent";
+import { isPrivilegedRole } from "@/utils/featureFlags";
 import {
   fetchAdminConfig,
   fetchAiLogs,
@@ -104,7 +103,6 @@ const SeoGeoAuditorPanel = lazy(() => import("./dashboard/SEO/SeoGeoAuditorPanel
 const AlertsPanel = lazy(() => import("./WarRoom/AlertsPanel"));
 const LiveAdminPanel = lazy(() => import("@/modules/dawayir-live/pages/LiveAdminPanel").then(m => ({ default: m.default })));
 const AdAnalyticsDashboard = lazy(() => import("./dashboard/AdAnalytics/AdAnalyticsDashboard").then(m => ({ default: m.AdAnalyticsDashboard })));
-const DawayirAdsDashboard = lazy(() => import("./dashboard/Marketing/DawayirAdsDashboard").then(m => ({ default: m.DawayirAdsDashboard })));
 const SurveyResultsPanel = lazy(() => import("./dashboard/Data/SurveyResultsPanel").then(m => ({ default: m.SurveyResultsPanel })));
 const MarketingOpsPanel = lazy(() => import("./dashboard/MarketingOps/MarketingOpsPanel").then(m => ({ default: m.MarketingOpsPanel })));
 const SovereignPanel = lazy(() => import("./dashboard/Sovereign/SovereignControl").then(m => ({ default: m.SovereignControl })));
@@ -117,10 +115,6 @@ const DesignLab = lazy(() => import("./dashboard/Sovereign/DesignLab"));
 const GovernanceHub = lazy(() => import("./dashboard/Sovereign/GovernanceHub").then(m => ({ default: m.GovernanceHub })));
 const SessionOSPanel = lazy(() => import("./dashboard/Sovereign/SessionOSPanel").then(m => ({ default: m.SessionOSPanel })));
 const SovereignFunnel = lazy(() => import("./dashboard/Analytics/SovereignFunnel").then(m => ({ default: m.SovereignFunnel })));
-const PageEditorPanel = lazy(() => import("./dashboard/Content/PageEditorPanel").then(m => ({ default: m.PageEditorPanel })));
-const CognitiveAuditorPanel = lazy(() => import("./dashboard/Intelligence/CognitiveAuditorPanel").then(m => ({ default: m.CognitiveAuditorPanel })));
-const ResonanceDashboard = lazy(() => import("./dashboard/Sovereign/ResonanceDashboard").then(m => ({ default: m.ResonanceDashboard })));
-const EvolutionarySynapse = lazy(() => import("./dashboard/Sovereign/EvolutionarySynapse").then(m => ({ default: m.EvolutionarySynapse })));
 
 const DataManagementModal = lazy(() => Promise.resolve({ default: DataManagement }));
 
@@ -153,6 +147,7 @@ const isTypingTarget = (target: EventTarget | null): boolean => {
 const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   const adminAccess = useAdminState((s) => s.adminAccess);
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
+  const setAdminCode = useAdminState((s) => s.setAdminCode);
   const authUser = useAuthState((s) => s.user);
   const roleOverride = useAuthState((s) => s.roleOverride);
   const authRole = useAuthState(getEffectiveRoleFromState);
@@ -178,6 +173,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
     if (roleOverride) {
       if (adminAccess) {
         setAdminAccess(false);
+        setAdminCode(null);
       }
       return;
     }
@@ -198,7 +194,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
     })();
 
     return () => { mounted = false; };
-  }, [adminAccess, authRole, authUser, roleOverride, setAdminAccess]);
+  }, [adminAccess, authRole, authUser, roleOverride, setAdminAccess, setAdminCode]);
 
   const handleLogin = async () => {
     const normalizedCode = code.trim();
@@ -222,6 +218,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
       }
 
       setAdminAccess(true);
+      setAdminCode(normalizedCode);
       setError("");
     } catch {
       setError("تعذر التحقق من الرمز حاليًا.");
@@ -378,6 +375,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const authUser = useAuthState((s) => s.user);
   const adminAccess = useAdminState((s) => s.adminAccess);
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
+  const setAdminCode = useAdminState((s) => s.setAdminCode);
   const isContentEditingEnabled = useAdminState((s) => s.isContentEditingEnabled);
   const toggleContentEditing = useAdminState((s) => s.toggleContentEditing);
   const setFeatureFlags = useAdminState((s) => s.setFeatureFlags);
@@ -428,21 +426,12 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
   }, [resonanceScore]);
 
-  // 🔱 Sovereign Intelligence Initialization
-  const agentStartedRef = useRef(false);
-
+  // 🔱 Sovereign Orchestrator Evaluator — runs lazily after mount
   useEffect(() => {
-    if (!adminAccess || agentStartedRef.current) return;
-    
+    if (!adminAccess) return;
+
     // Start Local Autonomous Agent
-    try {
-      if (sovereignAgent) {
-        sovereignAgent.start();
-        agentStartedRef.current = true;
-      }
-    } catch (e) {
-      console.error("[SovereignAgent] Failed to load agent logic:", e);
-    }
+    sovereignAgent.start();
 
     // Keep Cloud Orchestrator as observer/fallback
     const initialTimer = setTimeout(() => {
@@ -458,14 +447,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     return () => {
       clearTimeout(initialTimer);
       clearInterval(interval);
-      try {
-        if (sovereignAgent) {
-          sovereignAgent.stop();
-          agentStartedRef.current = false;
-        }
-      } catch (e) {
-        // Silently fail on unmount
-      }
+      sovereignAgent.stop();
     };
   }, [adminAccess]);
 
@@ -648,6 +630,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
             <button
               onClick={() => {
                 setAdminAccess(false);
+                setAdminCode(null);
                 onExit?.();
               }}
               className="w-full flex items-center gap-3 justify-center bg-slate-900 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-900/50 rounded-xl px-4 py-3 text-xs font-black text-slate-400 hover:text-rose-400 transition-all uppercase tracking-widest group shadow-sm"
@@ -676,7 +659,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           }`}
         >
           <header
-            className={`h-16 lg:h-28 border-b bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl flex items-center justify-between px-4 lg:px-12 flex-shrink-0 z-10 transition-[border-color,background-color,box-shadow] duration-500 shadow-sm ${
+            className={`h-20 lg:h-28 border-b bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl flex items-center justify-between px-6 lg:px-12 flex-shrink-0 z-10 transition-[border-color,background-color,box-shadow] duration-500 shadow-sm ${
               isDesktopSidebarHidden
                 ? "border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.3)]"
                 : "border-white/5"
@@ -712,10 +695,8 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 lg:gap-6">
-              <div className="hidden sm:block">
-                <SovereignHUD />
-              </div>
+            <div className="flex items-center gap-4 lg:gap-6">
+              <SovereignHUD />
 
               <div className="h-8 w-px bg-slate-800 hidden lg:block mx-2" />
 
@@ -728,40 +709,30 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                       window.open("/", "_blank");
                     }
                   }}
-                  className={`p-2 sm:p-2.5 lg:p-4 rounded-lg lg:rounded-2xl border transition-all active:scale-95 group shadow-lg ${isContentEditingEnabled
+                  className={`p-3 lg:p-4 rounded-xl lg:rounded-2xl border transition-all active:scale-95 group shadow-lg ${isContentEditingEnabled
                     ? "bg-teal-500/20 border-teal-500/50 text-teal-600 dark:text-teal-300 ring-1 ring-teal-500/30"
                     : "bg-slate-100 dark:bg-[#111827] border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600"
                     }`}
                 >
-                  <Pencil className="w-4 h-4 lg:w-5 lg:h-5 group-hover:-rotate-12 transition-transform" />
+                  <Pencil className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
                 </button>
               </AdminTooltip>
 
               <AdminTooltip content="المساعد الإداري (Copilot): استعلم سريعًا عن حالة المنصة والأرقام والشكاوى." position="bottom">
                 <button
                   onClick={() => useAdminState.getState().setCopilotOpen(true)}
-                  className="p-2 sm:p-2.5 lg:p-4 rounded-lg lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-teal-300 dark:hover:border-teal-500/50 transition-all active:scale-95 group shadow-lg"
+                  className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-teal-300 dark:hover:border-teal-500/50 transition-all active:scale-95 group shadow-lg"
                 >
-                  <Bot className="w-4 h-4 lg:w-5 lg:h-5 group-hover:scale-110 transition-transform" />
-                </button>
-              </AdminTooltip>
-
-              <AdminTooltip content="الفنان الحي (Live Artist): محادثة صوتية مع الذكاء السيادي لتوجيه حالتك والمنصة." position="bottom">
-                <button
-                  onClick={() => useSwarmMutationStore.getState().setIsArtistOpen(true)}
-                  className="p-2 sm:p-2.5 lg:p-4 rounded-lg lg:rounded-2xl bg-white dark:bg-[#111827] border border-rose-200 dark:border-rose-900/50 text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:border-rose-300 dark:hover:border-rose-500/60 transition-all active:scale-95 group shadow-[0_0_15px_rgba(244,63,94,0.15)] relative overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-rose-500/10 animate-pulse" />
-                  <Sparkles className="w-4 h-4 lg:w-5 lg:h-5 group-hover:scale-110 group-hover:rotate-12 transition-transform relative z-10" />
+                  <Bot className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 </button>
               </AdminTooltip>
 
               <AdminTooltip content="إدارة بيانات النظام (Data Management): لوحة للنسخ الاحتياطي (JSON/PDF) ومزامنة البيانات محليًا أو سحابيًا." position="bottom">
                 <button
                   onClick={() => setShowAccount(true)}
-                  className="p-2 sm:p-2.5 lg:p-4 rounded-lg lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all active:scale-95 group shadow-lg"
+                  className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all active:scale-95 group shadow-lg"
                 >
-                  <Database className="w-4 h-4 lg:w-5 lg:h-5 group-hover:rotate-12 transition-transform" />
+                  <Database className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                 </button>
               </AdminTooltip>
 
@@ -788,33 +759,14 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "war-room" && <AlertsPanel />}
                 {effectiveTab === "design-lab" && <DesignLab />}
                 {effectiveTab === "content" && <ContentPanel />}
-                {effectiveTab === "page-editor" && <PageEditorPanel />}
                 {effectiveTab === "ops-docs" && <OpsDocsPanel />}
-                {effectiveTab === "cognitive-auditor" && <CognitiveAuditorPanel />}
-                {effectiveTab === "resonance-pulse" && (
-                  <Suspense fallback={<div className="p-20 text-center animate-pulse text-teal-500 font-black">CONNECTING RESONANCE...</div>}>
-                    <ResonanceDashboard />
-                  </Suspense>
-                )}
-
-                {effectiveTab === "evolution-genes" && (
-                  <Suspense fallback={<div className="p-20 text-center animate-pulse text-indigo-500 font-black">MAPPING GENOME...</div>}>
-                    <EvolutionarySynapse />
-                  </Suspense>
-                )}
-
-                {effectiveTab === "path-optimizer" && (
-                  <Suspense fallback={<div className="p-20 text-center animate-pulse text-blue-500 font-black">OPTIMIZING PATHS...</div>}>
-                    <JourneyPathsPanel />
-                  </Suspense>
-                )}
 
                 {effectiveTab === "growth-revenue" && (
                   <div className="space-y-12">
                     <GrowthRevenueDashboard />
                     <SalesEnablementPanel />
                     <B2BAnalytics />
-                    <DawayirAdsDashboard />
+                    <AdAnalyticsDashboard />
                   </div>
                 )}
                 
@@ -880,7 +832,6 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "marketing-ops" && (
                   <div className="space-y-12">
                     <MarketingOpsPanel />
-                    <DawayirAdsDashboard />
                     <MailCommandCenter />
                     <CreativeDashboard />
                   </div>

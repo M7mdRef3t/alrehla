@@ -8,7 +8,6 @@ import { marketingLeadService } from "../../src/services/marketingLeadService";
 import { recordFlowEvent } from "../../src/services/journeyTracking";
 import { safeGetSession } from "../../src/services/supabaseClient";
 import { revenueConfig } from "../../src/config/opsLinks";
-import { AppAtmosphere } from "../../src/components/shared/AppAtmosphere";
 
 // We now use revenueConfig.number from src/config/opsLinks.ts
 const VODAFONE_CASH_NUMBER = revenueConfig.number;
@@ -151,8 +150,12 @@ export default function ActivationPage() {
   };
 
   return (
-    <main className="min-h-screen bg-transparent text-white selection:bg-teal-500/30 relative flex flex-col items-center py-10 px-4 md:px-0" dir="rtl">
-      <AppAtmosphere mode="default" intensity={1} />
+    <main className="min-h-screen bg-[#020408] text-white selection:bg-teal-500/30 relative flex flex-col items-center py-10 px-4 md:px-0" dir="rtl">
+      {/* Background cinematic elements */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-teal-500/10 blur-[100px]" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/10 blur-[100px]" />
+      </div>
 
       <div className="relative z-10 w-full max-w-lg mt-8">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
@@ -160,10 +163,10 @@ export default function ActivationPage() {
             مرحلة التفعيل
           </span>
           <h1 className="mt-6 text-3xl font-black text-white drop-shadow-md">
-            تفعيل إحداثياتك (درع الحماية)
+            تأكيد إثبات الدفع
           </h1>
           <p className="mt-3 text-sm text-slate-400 max-w-sm mx-auto leading-relaxed">
-            الرحلة تعتمد على نظام تفعيل دقيق. لاستلام خريطتك الشاملة وروشتة العلاج، قم بتأكيد العبور.
+            الرحلة تعتمد على نظام إثبات دقيق. حول المبلغ المطلوب للرقم بالأسفل، وارفع التأكيد المباشر لتفعيل ملفك.
           </p>
         </motion.div>
 
@@ -179,7 +182,7 @@ export default function ActivationPage() {
             >
               
               {/* Payment Number Card */}
-              <div className="overflow-hidden rounded-3xl border border-[rgba(0,240,255,0.25)] bg-[rgba(5,8,20,0.75)] backdrop-blur-xl transition hover:border-[rgba(0,240,255,0.4)] shadow-[0_0_40px_rgba(0,240,255,0.05)]">
+              <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 transition hover:border-white/20 shadow-lg">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
                   <p className="text-xs font-black uppercase tracking-wider text-slate-400">فودافون كاش</p>
                   <button
@@ -237,7 +240,7 @@ export default function ActivationPage() {
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="01xxxxxxxxx"
                     dir="ltr"
-                    className="w-full text-left rounded-2xl border border-[rgba(0,240,255,0.2)] bg-[rgba(5,8,20,0.5)] px-5 py-4 text-sm font-mono text-white outline-none placeholder:text-[rgba(255,255,255,0.3)] transition-all focus:border-[rgba(0,240,255,0.5)] focus:bg-[rgba(5,8,20,0.8)] shadow-inner"
+                    className="w-full text-left rounded-2xl border border-white/5 bg-slate-900/60 px-5 py-4 text-sm font-mono text-white outline-none placeholder:text-slate-600 transition-all focus:border-teal-500/50 focus:bg-slate-900/80 focus:ring-1 focus:ring-teal-500/20"
                   />
                 </div>
 
@@ -272,7 +275,7 @@ export default function ActivationPage() {
                       <motion.label
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
-                        className="group flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed border-[rgba(0,240,255,0.25)] bg-[rgba(5,8,20,0.4)] px-6 py-10 text-center shadow-inner transition-all hover:border-[rgba(0,240,255,0.5)] hover:bg-[rgba(5,8,20,0.6)] backdrop-blur-md"
+                        className="group flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed border-white/10 bg-slate-900/40 px-6 py-10 text-center shadow-inner transition-all hover:border-teal-500/40 hover:bg-slate-900/60"
                       >
                         <Upload className="h-8 w-8 text-slate-500 transition-colors group-hover:text-teal-400" />
                         <p className="text-sm font-black text-slate-300">أرفق لقطة الشاشة (Screenshot)</p>
@@ -295,7 +298,7 @@ export default function ActivationPage() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="أي ملاحظة أو اسم إضافي لتسريع المراجعة"
-                    className="w-full resize-none rounded-2xl border border-[rgba(0,240,255,0.2)] bg-[rgba(5,8,20,0.5)] px-5 py-4 text-sm text-white outline-none placeholder:text-[rgba(255,255,255,0.3)] transition-all focus:border-[rgba(0,240,255,0.5)] focus:bg-[rgba(5,8,20,0.8)] shadow-inner"
+                    className="w-full resize-none rounded-2xl border border-white/5 bg-slate-900/60 px-5 py-4 text-sm text-white outline-none placeholder:text-slate-600 transition-all focus:border-teal-500/50 focus:bg-slate-900/80"
                   />
                 </div>
               </div>
@@ -312,7 +315,7 @@ export default function ActivationPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="group flex flex-1 items-center justify-center gap-3 rounded-2xl bg-[#00f0ff] py-4 text-sm font-black text-[#020408] shadow-[0_0_24px_rgba(0,240,255,0.3)] transition-all hover:bg-[#2dd4bf] hover:shadow-[0_0_36px_rgba(0,240,255,0.4)] disabled:opacity-40"
+                  className="group flex flex-1 items-center justify-center gap-3 rounded-2xl bg-teal-500 py-4 text-sm font-black text-slate-950 shadow-[0_0_24px_rgba(20,184,166,0.3)] transition-all hover:bg-teal-400 hover:shadow-[0_0_36px_rgba(20,184,166,0.4)] disabled:opacity-40"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">

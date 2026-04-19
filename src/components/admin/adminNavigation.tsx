@@ -18,10 +18,6 @@ import {
   Gavel,
   LibraryBig,
   Filter,
-  Layers,
-  Dna,
-  Compass,
-  TrendingUp,
 } from "lucide-react";
 
 export type AdminTab =
@@ -52,19 +48,16 @@ export type AdminTab =
   | "ops-docs"
   | "session-os"
   | "support-tickets"
-  | "page-editor"
-  | "sovereign-funnel"
-  | "resonance-pulse"
-  | "evolution-genes"
-  | "path-optimizer"
-  | "cognitive-auditor";
+  | "sovereign-funnel";
 
 export type NavGroup = {
   title: string;
   items: Array<{ id: AdminTab; label: string; icon: React.ReactNode }>;
 };
 
-
+function TrendingUpFallback() {
+  return <Activity className="h-4 w-4 text-amber-400" />;
+}
 
 export const NAV_GROUPS: NavGroup[] = [
   {
@@ -84,7 +77,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: "session-os", label: "غرفة الجلسات", icon: <MessageSquare className="h-4 w-4 text-teal-300" /> },
       { id: "flow-map", label: "الخرائط والمسارات", icon: <MapPin className="h-4 w-4 text-cyan-300" /> },
       { id: "content", label: "مخزن المحتوى", icon: <Database className="h-4 w-4 text-amber-300" /> },
-      { id: "page-editor", label: "باني الصفحات", icon: <Layers className="h-4 w-4 text-indigo-400" /> },
       { id: "ops-docs", label: "مكتبة التشغيل", icon: <LibraryBig className="h-4 w-4 text-slate-300" /> },
     ],
   },
@@ -93,11 +85,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "consciousness-atlas", label: "رادار الإدراك", icon: <Workflow className="h-4 w-4 text-teal-400" /> },
       { id: "ai-studio", label: "مختبر الذكاء (AI Lab)", icon: <Brain className="h-4 w-4 text-purple-400" /> },
-      { id: "cognitive-auditor", label: "مفتش الوعي (Auditor)", icon: <Sparkles className="h-4 w-4 text-indigo-400" /> },
       { id: "consciousness", label: "أرشيف الوعي", icon: <History className="h-4 w-4 text-slate-400" /> },
-      { id: "resonance-pulse", label: "نبض الرنين (Resonance)", icon: <Activity className="h-4 w-4 text-teal-400" /> },
-      { id: "evolution-genes", label: "التطور الجيني", icon: <Dna className="h-4 w-4 text-emerald-400" /> },
-      { id: "path-optimizer", label: "محسن المسارات", icon: <Compass className="h-4 w-4 text-blue-400" /> },
       { id: "dreams-matrix", label: "مصفوفة الأحلام", icon: <Target className="h-4 w-4 text-teal-400" /> },
     ],
   },
@@ -113,7 +101,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "محركات التوسع",
     items: [
-      { id: "growth-revenue", label: "ديناميكية التوسع المالي", icon: <TrendingUp className="h-4 w-4 text-emerald-400" /> },
+      { id: "growth-revenue", label: "ديناميكية التوسع المالي", icon: <TrendingUpFallback /> },
       { id: "marketing-ops", label: "رحلة الانتشار", icon: <Rocket className="h-4 w-4 text-rose-400" /> },
       { id: "sovereign-funnel", label: "مسار التحويل (Funnel)", icon: <Filter className="h-4 w-4 text-emerald-400" /> },
       { id: "seo-geo", label: "رادار الوصول العالمي", icon: <Target className="h-4 w-4 text-emerald-400" /> },
@@ -162,12 +150,7 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "expansion-hub": "إستراتيجية الأسواق",
   "session-os": "غرفة الجلسات",
   "support-tickets": "بوابات العبور (الدعم)",
-  "page-editor": "باني الصفحات الإدراكية",
   "sovereign-funnel": "مسار التحويل المتقدم (Funnel)",
-  "resonance-pulse": "نبض الرنين السيادي (Resonance)",
-  "evolution-genes": "التطور الجيني",
-  "path-optimizer": "محسن المسارات",
-  "cognitive-auditor": "مفتش الوعي (Auditor)",
 };
 
 export const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "users-state"];
@@ -200,10 +183,5 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "expansion-hub": "إستراتيجية الأسواق: تحليل فرص التوسع التجاري والأسواق المحتملة.",
   "session-os": "غرفة الجلسات: تتبع الجلسات النفسية والكوتشينج من الطلب حتى التوثيق.",
   "support-tickets": "بوابات العبور: مراجعة التحويلات اليدوية وتذاكر الدعم والتفعيل.",
-  "page-editor": "باني الصفحات: تعديل محتوى المنصة بصرياً باستخدام نظام المسارات والوحدات السيادية.",
   "sovereign-funnel": "مسار التحويل المتقدم: تحليل السقوط والنجاح داخل Funnel المنصة.",
-  "resonance-pulse": "نبض الرنين: مراقبة طفرات الذكاء الاصطناعي وتفاعل المسافرين لحظياً بصورة بيانية عميقة.",
-  "cognitive-auditor": "مفتش الوعي: أداة لتحليل الكود وتحديد نقاط الاحتكاك المعرفي والتصميمي في الواجهات عبر الذكاء الاصطناعي.",
-  "evolution-genes": "جينات التطور: استكشاف البذور النامية لأفكار المنصة.",
-  "path-optimizer": "محسّن المسارات: تحليل وتصحيح انحرافات مسارات تدفق المستخدمين."
 };
