@@ -62,7 +62,12 @@ export type AppScreen =
   | "athar"
   | "rafiq"
   | "protocol"
-  | "diagnosis";
+  | "diagnosis"
+  | "niyya"
+  | "samt"
+  | "jathr"
+  | "kharita"
+  | "ruya";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

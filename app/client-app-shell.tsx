@@ -99,6 +99,7 @@ function shouldSilenceAiLog(args: unknown[]): boolean {
 
 function shouldBootIntoFullApp(): boolean {
   if (typeof window === "undefined") return true;
+  if (runtimeEnv.isDev && window.location.pathname === "/") return false;
   const { pathname, hash, search } = window.location;
   const hasBootAction = Boolean(window.sessionStorage.getItem(APP_BOOT_ACTION_KEY));
   if (hasBootAction) return true;
@@ -144,12 +145,13 @@ function registerServiceWorker() {
 interface ClientAppShellProps {
   onBeforeInit?: () => void;
   puckData?: any;
+  forceLanding?: boolean;
 }
 
-export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) {
+export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }: ClientAppShellProps) {
   const [mounted, setMounted] = useState(false);
-  const [shouldLoadFullApp, setShouldLoadFullApp] = useState(true);
-  const [lockFullAppMode, setLockFullAppMode] = useState(false);
+  const [shouldLoadFullApp, setShouldLoadFullApp] = useState(!forceLanding);
+  const [lockFullAppMode, setLockFullAppMode] = useState(!forceLanding);
   const [landingAuthIntent, setLandingAuthIntent] = useState<PostAuthIntent | null>(null);
 
   useEffect(() => {
@@ -281,6 +283,10 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
     // ── Handle Query-based Boot Action ──
     // Useful for server-side redirects that can't set sessionStorage
     if (typeof window !== "undefined") {
+      if (runtimeEnv.isDev && window.location.pathname === "/") {
+        window.sessionStorage.removeItem(APP_BOOT_ACTION_KEY);
+      }
+
       const search = new URLSearchParams(window.location.search);
       const bootActionParam = search.get("boot_action");
       if (bootActionParam === "start_recovery") {
@@ -304,7 +310,7 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
       }
     }
 
-    const bootIntoFullApp = shouldBootIntoFullApp();
+    const bootIntoFullApp = forceLanding ? false : shouldBootIntoFullApp();
     setShouldLoadFullApp(bootIntoFullApp);
     if (bootIntoFullApp) {
       setLockFullAppMode(true);
@@ -323,7 +329,7 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
     }
 
     registerServiceWorker();
-  }, [onBeforeInit]);
+  }, [forceLanding, onBeforeInit]);
 
   if (!mounted) return null;
 
@@ -364,6 +370,11 @@ export function ClientAppShell({ onBeforeInit, puckData }: ClientAppShellProps) 
               />
             )}
           </PWAInstallProvider>
+        )}
+        {runtimeEnv.isDev && !shouldLoadFullApp && (
+          <div className="fixed left-4 top-4 z-[200] rounded-full border border-emerald-400/40 bg-black/80 px-4 py-2 text-[11px] font-black tracking-[0.2em] text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.25)] backdrop-blur-md">
+            DEV LATEST LOCAL
+          </div>
         )}
         <AnalyticsConsentBanner />
         <AnalyticsDiagnosticsOverlay />

@@ -378,31 +378,49 @@ const ECOSYSTEM_PRODUCTS: EcosystemProduct[] = [
     url: "/#rafiq"
   },
   {
-    id: "wird",
-    name: "ورد",
-    description: "أذكارك وتسبيحاتك اليومية",
-    icon: <ScrollText className="w-5 h-5" />,
-    status: "active",
-    color: "#8b5cf6",
-    url: "/#wird"
-  },
-  {
-    id: "sada",
-    name: "صدى",
-    description: "تنبيهات ذكية من رحلتك",
-    icon: <Bell className="w-5 h-5" />,
+    id: "niyya",
+    name: "نية",
+    description: "نيتك اليومية — حدّد واعِش",
+    icon: <Compass className="w-5 h-5" />,
     status: "active",
     color: "#6366f1",
-    url: "/#sada"
+    url: "/#niyya"
   },
   {
-    id: "shahada",
-    name: "شهادة",
-    description: "إنجازات رحلتك وشهاداتك",
+    id: "samt",
+    name: "صمت",
+    description: "تنفس واعي — هدوء في دقائق",
+    icon: <Wind className="w-5 h-5" />,
+    status: "active",
+    color: "#14b8a6",
+    url: "/#samt"
+  },
+  {
+    id: "jathr",
+    name: "جذر",
+    description: "قيمك الجذرية — اكتشف وعِش بتوافق",
     icon: <Gem className="w-5 h-5" />,
     status: "active",
-    color: "#ffd700",
-    url: "/#shahada"
+    color: "#10b981",
+    url: "/#jathr"
+  },
+  {
+    id: "kharita",
+    name: "خريطة",
+    description: "خريطة المنظومة البصرية",
+    icon: <Map className="w-5 h-5" />,
+    status: "active",
+    color: "#06b6d4",
+    url: "/#kharita"
+  },
+  {
+    id: "ruya",
+    name: "رؤيا",
+    description: "سجّل أحلامك — رسائل من لاوعيك",
+    icon: <Moon className="w-5 h-5" />,
+    status: "active",
+    color: "#a855f7",
+    url: "/#ruya"
   }
 ];
 

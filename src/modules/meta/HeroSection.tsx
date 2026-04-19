@@ -1040,8 +1040,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
                 <ArrowLeft size={18} />
               </motion.button>
             </div>
-              </motion.button>
-            </div>
 
             <div className="flex flex-wrap gap-6">
               {trustPoints.map((point, i) => (

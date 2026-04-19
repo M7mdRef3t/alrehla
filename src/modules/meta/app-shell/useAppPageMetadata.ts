@@ -70,6 +70,11 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   rafiq: "Rafiq Journey Companion",
   protocol: "Action Protocol",
   diagnosis: "Diagnosis OS",
+  niyya: "Niyya Daily Intention",
+  samt: "Samt Mindful Breathing",
+  jathr: "Jathr Core Values",
+  kharita: "Kharita Ecosystem Map",
+  ruya: "Ruya Dream Journal",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -137,6 +142,11 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   rafiq: { title: "رفيق — مرافقك الذكي | Alrehla", description: "يقرأ رحلتك ويقترح الخطوة التالية دائماً." },
   protocol: { title: "Action Protocol | Alrehla", description: "Your active transformation protocol." },
   diagnosis: { title: "Diagnosis | Alrehla", description: "Understand your relationship diagnosis." },
+  niyya: { title: "نية — نيتك اليومية | Alrehla", description: "حدّد نية واحدة واضحة لكل يوم — واعِش بوعي." },
+  samt: { title: "صمت — تنفس واعي | Alrehla", description: "تنفس عميق بأنماط مختلفة — هدوء في دقائق." },
+  jathr: { title: "جذر — قيمك الجذرية | Alrehla", description: "اكتشف وتتبع قيمك الأساسية — وعِش بتوافق." },
+  kharita: { title: "خريطة — خريطة المنظومة | Alrehla", description: "نظرة بصرية شاملة لكل أدوات رحلتك." },
+  ruya: { title: "رؤيا — سجّل أحلامك | Alrehla", description: "سجّل أحلامك وفسّرها — رسائل من لاوعيك." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {
