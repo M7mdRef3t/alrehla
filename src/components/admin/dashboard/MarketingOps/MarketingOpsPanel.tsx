@@ -120,7 +120,7 @@ interface OpsStats {
 }
 
 // --- Constants ---
-const OWNER_PHONE = "+201140111147";
+const OWNER_PHONE = "+201110795932";
 const OWNER_EMAIL = "hello@alrehla.app";
 
 // --- Helpers ---

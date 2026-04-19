@@ -71,7 +71,7 @@ export function AppChromeShell({
           target="_blank"
           rel="noopener noreferrer"
           onClick={onOpenWhatsApp}
-          className="fixed z-[9999] right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all pointer-events-auto"
+          className="fixed z-[99999] left-4 md:left-6 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-6 p-4 rounded-full bg-emerald-500/90 text-white shadow-[0_8px_32px_rgba(16,185,129,0.3)] hover:bg-emerald-400 hover:scale-110 active:scale-95 transition-all duration-300 backdrop-blur-md border border-white/20 pointer-events-auto"
           title="تواصل واتساب"
           aria-label="تواصل واتساب"
         >

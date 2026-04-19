@@ -176,9 +176,15 @@ const FeedbackModal = lazy(() =>
 const InsightsVaultScreen = lazy(() =>
   import("@/modules/baseera/InsightsVaultScreen").then((m) => ({ default: m.InsightsVaultScreen }))
 );
+const UpgradeScreen = lazy(() =>
+  import("@/modules/exploration/UpgradeScreen").then((m) => ({ default: m.UpgradeScreen }))
+);
+const SovereignControl = lazy(() =>
+  import("@/components/admin/dashboard/Sovereign/SovereignControl").then((m) => ({ default: m.SovereignControl }))
+);
 
 
-const DEFAULT_WHATSAPP_CONTACT = "0201140111147";
+const DEFAULT_WHATSAPP_CONTACT = "201110795932";
 
 function normalizeArabicDigits(value: string): string {
   return value
@@ -343,6 +349,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showFeedback, setShowFeedback] = useState(false);
   const [showEcosystemHub, setShowEcosystemHub] = useState(false);
   const [showInsightsVault, setShowInsightsVault] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showSovereignControl, setShowSovereignControl] = useState(false);
   const activeProtocolId = useJourneyStore((s) => s.activeProtocol);
   const activeProtocolInfo: { label: string; color: string } | null = (() => {
     if (!activeProtocolId) return null;
@@ -607,7 +615,30 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => setShowInsightsVault(true)}
                   color="#a78bfa"
                 />
+                <SidebarItem
+                  label="الارتقاء (Upgrade)"
+                  icon={<Sparkles className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => setShowUpgrade(true)}
+                  color="#fbbf24"
+                />
               </SidebarSector>
+
+              {isOwner && (
+                <SidebarSector title="السيادة (Owner)" icon={<ShieldCheck className="w-3.5 h-3.5" />} color="crimson">
+                  <SidebarItem
+                    label="لوحة التحكم السيادية"
+                    icon={<Settings className="w-3.5 h-3.5" />}
+                    onClick={() => setShowSovereignControl(true)}
+                    color="#ff0055"
+                  />
+                  <SidebarItem
+                    label="الـ Dashboard القديم"
+                    icon={<BarChart3 className="w-3.5 h-3.5" />}
+                    onClick={openAdminDashboard}
+                    color="#64748b"
+                  />
+                </SidebarSector>
+              )}
 
               {/* Missions Section */}
               <AnimatePresence>
@@ -828,8 +859,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <SidebarItem
                     label="الخريطة (فهم الذات)"
                     icon={<Map className="w-5 h-5 outline-none" />}
-                    onClick={() => { pushUrl("/"); handleClose(); }}
-                    active={window.location.pathname === "/"}
+                    onClick={() => { pushUrl("/#map"); handleClose(); }}
+                    active={window.location.pathname === "/" || window.location.hash === "#map"}
                     color="#14b8a6"
                   />
                   <SidebarItem
@@ -844,7 +875,30 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     onClick={() => { setShowInsightsVault(true); handleClose(); }}
                     color="#a78bfa"
                   />
+                  <SidebarItem
+                    label="الارتقاء (Upgrade)"
+                    icon={<Sparkles className="w-5 h-5 outline-none" />}
+                    onClick={() => { setShowUpgrade(true); handleClose(); }}
+                    color="#fbbf24"
+                  />
                 </SidebarSector>
+
+                {isOwner && (
+                  <SidebarSector title="السيادة (Owner)" icon={<ShieldCheck className="w-4 h-4" />} color="crimson">
+                    <SidebarItem
+                      label="لوحة التحكم السيادية"
+                      icon={<Settings className="w-5 h-5" />}
+                      onClick={() => { setShowSovereignControl(true); handleClose(); }}
+                      color="#ff0055"
+                    />
+                    <SidebarItem
+                      label="الـ Dashboard القديم"
+                      icon={<BarChart3 className="w-5 h-5" />}
+                      onClick={() => { openAdminDashboard(); handleClose(); }}
+                      color="#64748b"
+                    />
+                  </SidebarSector>
+                )}
 
                 {/* Missions Section (Mobile) */}
                 {activeMissions.length > 0 && (
@@ -985,7 +1039,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     color="#14b8a6"
                   />
                   <SidebarItem
-                    label="أدوات متدرفة"
+                    label="أدوات متقدمة"
                     icon={<Sparkles className="w-5 h-5" />}
                     onClick={() => { setShowAdvancedTools(true); handleClose(); }}
                     color="#a78bfa"
@@ -1219,6 +1273,30 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
           <Suspense fallback={<AwarenessSkeleton />}>
             <InsightsVaultScreen onClose={() => setShowInsightsVault(false)} />
           </Suspense>
+        )}
+        {showUpgrade && (
+          <Suspense fallback={<AwarenessSkeleton />}>
+            <UpgradeScreen isOpen={true} onClose={() => setShowUpgrade(false)} />
+          </Suspense>
+        )}
+        {showSovereignControl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-3xl overflow-y-auto"
+          >
+            <button
+              onClick={() => setShowSovereignControl(false)}
+              className="fixed top-6 left-6 z-[101] w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+              title="إغلاق"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <Suspense fallback={<AwarenessSkeleton />}>
+              <SovereignControl />
+            </Suspense>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

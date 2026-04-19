@@ -3,12 +3,12 @@ import { whatsappAutomationService } from "@/services/whatsappAutomationService"
 
 /**
  * Debug Endpoint to Mock WhatsApp Inbound Messages
- * Usage: /api/debug/whatsapp-mock?type=inquiry&phone=201140111147
+ * Usage: /api/debug/whatsapp-mock?type=inquiry&phone=201110795932
  */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type") || "inquiry"; // inquiry | payment
-  const phone = searchParams.get("phone") || "201140111147";
+  const phone = searchParams.get("phone") || "201110795932";
 
   const payloads = {
     inquiry: {
