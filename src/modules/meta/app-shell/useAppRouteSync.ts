@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, startTransition } from "react";
 import type { FeatureFlagKey } from "@/config/features";
 import { resolveNavigation, type AppScreen } from "@/navigation/navigationMachine";
 import {
@@ -28,7 +28,24 @@ function resolveScreenFromHash(): AppScreen | null {
   const rawHash = getHash();
   const hash = rawHash.startsWith("#") ? rawHash.slice(1) : rawHash;
 
-  if (hash === "sanctuary") return "sanctuary";
+  const validHashScreens: string[] = [
+    "landing", "goal", "map", "guided", "mission", "tools", "settings",
+    "enterprise", "guilt-court", "diplomacy", "oracle-dashboard", "armory",
+    "survey", "exit-scripts", "grounding", "stories", "about", "insights",
+    "quizzes", "behavioral-analysis", "resources", "profile", "sanctuary",
+    "life-os", "dawayir", "maraya", "session-intake", "session-console",
+    "atmosfera", "masarat", "baseera", "watheeqa", "mizan", "rifaq",
+    "murshid", "taqrir", "bawsala", "riwaya", "nadhir", "wird", "markaz",
+    "sada", "hafiz", "mirah", "sijil", "naba", "mithaq", "sullam", "bathra",
+    "observatory", "wasiyya", "khalwa", "ecosystem-hub", "tazkiya", "jisr",
+    "risala", "shahada", "warsha", "kanz", "qalb", "athar", "rafiq", "ruya",
+    "niyya", "protocol", "diagnosis"
+  ];
+
+  if (validHashScreens.includes(hash)) {
+    return hash as AppScreen;
+  }
+
   return null;
 }
 
@@ -76,7 +93,8 @@ export function useAppRouteSync({
   }, [authStatus, hasOAuthCallbackParams, screen]);
 
   useEffect(() => {
-    if (isAdminPath()) return;
+    // We subscribe to popstate even on admin paths so we can detect 
+    // when a user clicks a tool (hash change) that leads away from or overlays the admin.
     const handler = (event: PopStateEvent) => {
       const next =
         (event.state as { screen?: AppScreen } | null)?.screen ??
@@ -89,12 +107,14 @@ export function useAppRouteSync({
         isLockedPhaseOne
       });
       fromPopStateRef.current = true;
-      if (result.kind === "blocked") {
-        setLockedFeature(result.feature);
-        setScreen("landing");
-        return;
-      }
-      setScreen(result.screen);
+      startTransition(() => {
+        if (result.kind === "blocked") {
+          setLockedFeature(result.feature);
+          setScreen("landing");
+          return;
+        }
+        setScreen(result.screen);
+      });
     };
     return subscribePopstate(handler);
   }, [canUseJourneyTools, canUseMap, isLockedPhaseOne, setLockedFeature, setScreen]);

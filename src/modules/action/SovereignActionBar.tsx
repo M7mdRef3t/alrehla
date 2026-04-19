@@ -9,19 +9,32 @@ interface SovereignActionBarProps {
   onOpenRecoveryPlan?: (nodeId: string) => void;
   className?: string;
   isFloatingMobile?: boolean;
+  isSidebar?: boolean;
 }
 
 export const SovereignActionBar: FC<SovereignActionBarProps> = ({ 
   viewingNodeId, 
   onOpenRecoveryPlan, 
   className = "",
-  isFloatingMobile = false
+  isFloatingMobile = false,
+  isSidebar = false
 }) => {
   const nodes = useMapState((s) => s.nodes);
   const addEnergyTransaction = useMapState((s) => s.addEnergyTransaction);
   
   const [showLogModal, setShowLogModal] = useState(false);
   const [logType, setLogType] = useState<"charge" | "drain">("charge");
+
+  const [isDismissed, setIsDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('dawayir_energy_bar_dismissed') === 'true';
+  });
+
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDismissed(true);
+    localStorage.setItem('dawayir_energy_bar_dismissed', 'true');
+  };
 
   const pnl = useMemo(() => {
     let charge = 0;
@@ -52,76 +65,113 @@ export const SovereignActionBar: FC<SovereignActionBarProps> = ({
   const glowColor = isHealthy ? "shadow-emerald-500/20" : "shadow-rose-500/20";
   
   const content = (
-    <div className={`w-full relative overflow-hidden rounded-2xl border border-white/20 backdrop-blur-xl bg-slate-900/60 p-4 shadow-xl ${glowColor} ${className}`}>
-      {/* Background ambient glow */}
-      <div className={`absolute -top-10 -right-10 w-24 h-24 rounded-full blur-3xl opacity-20 ${isHealthy ? "bg-emerald-500" : "bg-rose-500"}`} />
-      
-      <div className="flex items-center justify-between mb-3 relative z-10">
-        <div className="flex items-center gap-2">
-          {isHealthy ? (
-            <Activity className="w-5 h-5 text-emerald-400" />
-          ) : (
-            <HeartPulse className="w-5 h-5 text-rose-400" />
-          )}
-          <h3 className="text-sm font-bold text-white">رصيد الطاقة المعنوي</h3>
-        </div>
-        <div className="text-left font-mono">
-          <span className={`text-lg font-black tracking-tighter ${isHealthy ? "text-emerald-400" : "text-rose-400"}`}>
-            {isHealthy ? "+" : ""}{pnl.net}
-          </span>
-          <span className="text-[10px] text-slate-400 ml-1">XP</span>
-        </div>
-      </div>
-
-      {/* P&L Ledger Bar */}
-      <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden mb-4 flex">
-        <motion.div
-          className={`h-full ${barColor}`}
-          initial={{ width: "50%" }}
-          animate={{ width: `${netPct}%` }}
-          transition={{ type: "spring", stiffness: 100, damping: 20 }}
-        />
-      </div>
-
-      <div className="flex items-center justify-between gap-3 relative z-10">
-        <button
-          onClick={() => { setLogType("charge"); setShowLogModal(true); }}
-          className="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-xl py-2 px-2 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+    <AnimatePresence>
+      {!isDismissed && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className={`w-full relative overflow-hidden transition-all duration-300 ${isSidebar ? "bg-transparent border-none p-0 shadow-none" : `rounded-2xl border border-white/20 backdrop-blur-xl bg-slate-900/60 p-4 shadow-xl ${glowColor}`} ${className}`}
         >
-          <TrendingUp className="w-3.5 h-3.5" />
-          مكسب (+)
-        </button>
-        <button
-          onClick={() => { setLogType("drain"); setShowLogModal(true); }}
-          className="flex-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 rounded-xl py-2 px-2 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
-        >
-          <TrendingDown className="w-3.5 h-3.5" />
-          خسارة (-)
-        </button>
-        
-        {viewingNodeId && onOpenRecoveryPlan && (
-          <button
-            onClick={() => onOpenRecoveryPlan(viewingNodeId)}
-            className="w-10 h-10 flex shrink-0 items-center justify-center bg-teal-600 hover:bg-teal-500 text-white rounded-xl shadow-lg shadow-teal-900/30 transition-all"
-            title="برامج الحماية الذاتية"
+          {/* Background ambient glow */}
+          {!isSidebar && <div className={`absolute -top-10 -right-10 w-24 h-24 rounded-full blur-3xl opacity-20 ${isHealthy ? "bg-emerald-500" : "bg-rose-500"}`} />}
+          
+          {/* Close Button */}
+          <button 
+            onClick={handleDismiss}
+            className="absolute top-2 left-2 z-20 p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white transition-all"
+            title="إخفاء الرصيد"
           >
-            <ShieldAlert className="w-4 h-4" />
+            <X className="w-3 h-3" />
           </button>
-        )}
-      </div>
 
-      <AnimatePresence>
-        {showLogModal && (
-          <LogEnergyModal
-            type={logType}
-            nodes={nodes}
-            defaultNodeId={viewingNodeId}
-            onClose={() => setShowLogModal(false)}
-            onSubmit={handleLogEnergy}
-          />
-        )}
-      </AnimatePresence>
-    </div>
+          {!isSidebar && (
+            <div className="flex items-center justify-between mb-3 relative z-10 pl-6">
+              <div className="flex items-center gap-2">
+                {isHealthy ? (
+                  <Activity className="w-5 h-5 text-emerald-400" />
+                ) : (
+                  <HeartPulse className="w-5 h-5 text-rose-400" />
+                )}
+                <h3 className="text-sm font-bold text-white">رصيد طاقتك المعنوي</h3>
+              </div>
+              <div className="text-left font-mono">
+                <span className={`text-lg font-black tracking-tighter ${isHealthy ? "text-emerald-400" : "text-rose-400"}`}>
+                  {isHealthy ? "+" : ""}{pnl.net}
+                </span>
+                <span className="text-[10px] text-slate-400 ml-1">XP</span>
+              </div>
+            </div>
+          )}
+
+          {isSidebar && (
+            <div className="flex items-center justify-between mb-3 pl-6">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">رصيد طاقتك المعنوي</span>
+              <div className="text-left font-mono flex items-baseline gap-1">
+                <span className={`text-sm font-black ${isHealthy ? "text-emerald-400" : "text-rose-400"}`}>
+                    {isHealthy ? "+" : ""}{pnl.net}
+                </span>
+                <span className="text-[8px] text-slate-500">XP</span>
+              </div>
+            </div>
+          )}
+
+          {/* P&L Ledger Bar */}
+          <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden mb-4 flex">
+            <motion.div
+              className={`h-full ${barColor}`}
+              initial={{ width: "50%" }}
+              animate={{ width: `${netPct}%` }}
+              transition={{ type: "spring", stiffness: 100, damping: 20 }}
+            />
+          </div>
+
+          {/* نص توضيحي للمستخدم */}
+          <p className="text-[9px] text-slate-500 mb-3 leading-relaxed opacity-80">
+            سجّل أي مواقف النهاردة شحنت طاقتك (+) أو استنزفتها (-) في دوائرك.
+          </p>
+
+          <div className="flex items-center justify-between gap-3 relative z-10">
+            <button
+              onClick={() => { setLogType("charge"); setShowLogModal(true); }}
+              className="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-xl py-2 px-2 text-[10px] font-black uppercase transition-all flex items-center justify-center gap-1.5"
+            >
+              <TrendingUp className="w-3.5 h-3.5" />
+              شحن (+)
+            </button>
+            <button
+              onClick={() => { setLogType("drain"); setShowLogModal(true); }}
+              className="flex-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 rounded-xl py-2 px-2 text-[10px] font-black uppercase transition-all flex items-center justify-center gap-1.5"
+            >
+              <TrendingDown className="w-3.5 h-3.5" />
+              استنزاف (-)
+            </button>
+            
+            {viewingNodeId && onOpenRecoveryPlan && (
+              <button
+                onClick={() => onOpenRecoveryPlan(viewingNodeId)}
+                className="w-10 h-10 flex shrink-0 items-center justify-center bg-teal-600 hover:bg-teal-500 text-white rounded-xl shadow-lg shadow-teal-900/30 transition-all"
+                title="برامج الحماية الذاتية"
+              >
+                <ShieldAlert className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          <AnimatePresence>
+            {showLogModal && (
+              <LogEnergyModal
+                type={logType}
+                nodes={nodes}
+                defaultNodeId={viewingNodeId}
+                onClose={() => setShowLogModal(false)}
+                onSubmit={handleLogEnergy}
+              />
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 
   if (isFloatingMobile) {

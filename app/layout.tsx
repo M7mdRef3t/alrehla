@@ -121,21 +121,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             strategy="beforeInteractive"
             dangerouslySetInnerHTML={{
               __html: `
-                (function () {
+                (function() {
                   try {
-                    var originalInfo = console.info ? console.info.bind(console) : null;
+                    const originalInfo = console.info;
                     if (!originalInfo) return;
-                    console.info = function () {
-                      var text = Array.prototype.map.call(arguments, function (item) {
-                        if (typeof item === "string") return item;
-                        try { return JSON.stringify(item); } catch (_) { return String(item); }
-                      }).join(" ");
-                      if (text.indexOf("Download the React DevTools for a better development experience") !== -1) {
-                        return;
-                      }
-                      return originalInfo.apply(console, arguments);
+                    console.info = function(...args) {
+                      const text = args.map(arg => String(arg)).join(" ");
+                      if (text.includes("Download the React DevTools")) return;
+                      originalInfo.apply(console, args);
                     };
-                  } catch (_) {}
+                  } catch (e) {}
                 })();
               `
             }}

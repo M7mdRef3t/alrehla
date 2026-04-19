@@ -1,7 +1,7 @@
 import type { FC } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Shield, Zap, Heart } from "lucide-react";
+import { ArrowLeft, Shield, Zap, Heart, Fingerprint, Activity, ShieldCheck, MessageCircle } from "lucide-react";
 import { trackingService } from "@/domains/journey";
 import { usePWAInstall } from "@/contexts/PWAInstallContext";
 import { getLivePulseCount } from "@/services/pulseEngagement";
@@ -22,6 +22,11 @@ import {
   getRelationshipWeatherEntryHref,
   getRelationshipWeatherPath
 } from "@/utils/relationshipWeatherJourney";
+import { runtimeEnv } from "@/config/runtimeEnv";
+import { normalizeWhatsAppPhone } from "@/utils/phoneNumber";
+import { openInNewTab } from "@/services/clientDom";
+
+const DEFAULT_WHATSAPP_CONTACT = "201062635923";
 
 /* ─── Props ─────────────────────────────────────────────────────────── */
 
@@ -198,6 +203,19 @@ export const Landing: FC<LandingPropsExtended> = ({
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
   const weatherEntryHref = getRelationshipWeatherEntryHref(weatherPath);
 
+  const whatsAppNumber = runtimeEnv.whatsappContactNumber || DEFAULT_WHATSAPP_CONTACT;
+  const whatsAppLink = useMemo(() => {
+    const normalized = normalizeWhatsAppPhone(whatsAppNumber);
+    if (!normalized) return null;
+    return `https://wa.me/${normalized}`;
+  }, [whatsAppNumber]);
+
+  const openWhatsAppChat = (placement: "landing_floating_fab") => {
+    if (!whatsAppLink) return;
+    analyticsService.whatsapp({ placement });
+    openInNewTab(whatsAppLink);
+  };
+
 
   const pwaInstall = usePWAInstall();
   const [showDesktopInstallFallback, setShowDesktopInstallFallback] = useState(false);
@@ -319,42 +337,66 @@ export const Landing: FC<LandingPropsExtended> = ({
 
       <div className="landing-intrinsic-sentinel" />
 
-      <section className="relative py-28 px-4 max-w-5xl mx-auto">
+      <section className="relative py-28 px-4 max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease }}
-          className="glass-premium rounded-[32px] overflow-hidden p-10 sm:p-20 text-center"
+          className="glass-premium rounded-[48px] overflow-hidden p-10 sm:p-20 text-center relative"
         >
-          <div className="mb-12">
-            <p className="text-xs font-black tracking-[0.4em] uppercase mb-4 landing-principles-label">
-              المبادئ الأولى — First Principles
+          {/* Ambient section glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/2 bg-teal-500/10 blur-[120px] pointer-events-none" />
+
+          <div className="mb-16 relative z-10">
+            <p className="text-[10px] font-black tracking-[0.5em] uppercase mb-6 text-teal-500 opacity-80">
+              نظام التشغيل — Operating System
             </p>
-            <h2 className="text-3xl sm:text-5xl font-black mb-6 landing-principles-title">
-              إحنا مش بنخمّن.<br />إحنا بنحلل الـ Logic.
+            <h2 className="text-4xl sm:text-6xl font-black mb-8 landing-principles-title tracking-tight text-white">
+              إحنا مش بنخمّن.<br /><span className="text-teal-400">إحنا بنحلل الـ Logic.</span>
             </h2>
-            <p className="text-base sm:text-lg max-w-[50ch] mx-auto landing-principles-copy">
-              الرحلة بتستخدم "نظام تشغيل خاص" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات (Logic) بتساعدك تاخد قراراتك من مركز قوتك.
+            <p className="text-base sm:text-xl max-w-[55ch] mx-auto text-slate-400 leading-relaxed font-medium">
+              "الرحلة" بتوفرلك نظام تشغيل لوعيك بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام عاطفية، فيه بيانات منطقية بتساعدك تسترد سيادتك على حياتك.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-right" dir="rtl" id="landing-principles-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-right relative z-10" dir="rtl">
             {[
-              { title: "رصد الاستنزاف", desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية.", icon: "⚡" },
-              { title: "خرائط النبض", desc: "رسم بياني حقيقي لمين بيزودك ومين بيسحب منك.", icon: "📈" },
-              { title: "تحصين الحدود", desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي.", icon: "🛡️" }
+              { 
+                title: "رصد الاستنزاف", 
+                desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية وتوقف النزيف فوراً.", 
+                icon: <Fingerprint className="w-8 h-8 text-teal-400" />,
+                accent: "rgba(45, 212, 191, 0.15)"
+              },
+              { 
+                title: "خرائط النبض", 
+                desc: "رسم بياني حي لتدفق الطاقة في كل دائرة؛ مين بيزودك ومين بيسحب منك.", 
+                icon: <Activity className="w-8 h-8 text-sky-400" />,
+                accent: "rgba(56, 189, 248, 0.15)"
+              },
+              { 
+                title: "تحصين الحدود", 
+                desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي وسيادتك على قرارك.", 
+                icon: <ShieldCheck className="w-8 h-8 text-indigo-400" />,
+                accent: "rgba(129, 140, 248, 0.15)"
+              }
             ].map((f, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + i * 0.1 }}
-                className="p-8 rounded-2xl border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)]"
+                transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                className="group p-10 rounded-[32px] border border-white/5 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
               >
-                <div className="text-3xl mb-4">{f.icon}</div>
-                <h3 className="text-xl font-black mb-2 landing-feature-title">{f.title}</h3>
-                <p className="text-sm opacity-70 leading-relaxed landing-feature-desc">{f.desc}</p>
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg"
+                  style={{ backgroundColor: f.accent }}
+                >
+                  {f.icon}
+                </div>
+                <h3 className="text-2xl font-black mb-4 text-white group-hover:text-teal-300 transition-colors">{f.title}</h3>
+                <p className="text-base text-slate-500 leading-relaxed font-medium group-hover:text-slate-400 transition-colors">{f.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -454,6 +496,26 @@ export const Landing: FC<LandingPropsExtended> = ({
           if (typeof window !== "undefined") window.open(path, "_blank", "noopener,noreferrer");
         }}
       />
+
+      {/* ───── FLOATING WHATSAPP ───── */}
+      {whatsAppLink && (
+        <motion.button
+          type="button"
+          title="تواصل عبر واتساب"
+          onClick={() => openWhatsAppChat("landing_floating_fab")}
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          whileHover={{ scale: 1.1, y: -4 }}
+          whileTap={{ scale: 0.9 }}
+          className="fixed z-[100] left-6 bottom-8 w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/10 hover:bg-emerald-500 transition-colors"
+        >
+          <MessageCircle className="w-6 h-6 shrink-0" />
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </span>
+        </motion.button>
+      )}
     </div>
   );
 };

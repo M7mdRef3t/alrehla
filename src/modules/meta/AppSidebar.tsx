@@ -171,6 +171,15 @@ const ManualPlacementModal = lazy(() =>
 const FeedbackModal = lazy(() =>
   import("./FeedbackModal").then((m) => ({ default: m.FeedbackModal }))
 );
+const InsightsVaultScreen = lazy(() =>
+  import("@/modules/baseera/InsightsVaultScreen").then((m) => ({ default: m.InsightsVaultScreen }))
+);
+const UpgradeScreen = lazy(() =>
+  import("@/modules/exploration/UpgradeScreen").then((m) => ({ default: m.UpgradeScreen }))
+);
+const SovereignControl = lazy(() =>
+  import("@/components/admin/dashboard/Sovereign/SovereignControl").then((m) => ({ default: m.SovereignControl }))
+);
 
 
 const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
@@ -307,9 +316,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [showSovereignControl, setShowSovereignControl] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showEcosystemHub, setShowEcosystemHub] = useState(false);
+  const [showInsightsVault, setShowInsightsVault] = useState(false);
+  const [showInsightsLibrary, setShowInsightsLibrary] = useState(false);
   const [showShareStats, setShowShareStats] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
-  const [showInsightsLibrary, setShowInsightsLibrary] = useState(false);
   const [showGoals2025, setShowGoals2025] = useState(false);
   const [showPersonalProgress, setShowPersonalProgress] = useState(false);
   const [showWeeklyActionPlan, setShowWeeklyActionPlan] = useState(false);
@@ -335,7 +349,6 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [showClassicRecovery, setShowClassicRecovery] = useState(false);
   const [showManualPlacement, setShowManualPlacement] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
   const activeProtocolId = useJourneyStore((s) => s.activeProtocol);
   const activeProtocolInfo: { label: string; color: string } | null = (() => {
     if (!activeProtocolId) return null;
@@ -543,7 +556,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               </div>
             )}
             
-            <SovereignActionBar viewingNodeId={viewingNode?.id} onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })} className="mb-4" />
+            <SovereignActionBar isSidebar={true} viewingNodeId={viewingNode?.id} onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })} className="mb-4" />
             <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
             
             <div className="flex-1 overflow-y-auto no-scrollbar py-2 px-2 flex flex-col gap-4">
@@ -553,8 +566,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <SidebarItem
                   label="الخريطة (فهم الذات)"
                   icon={<Map className="w-3.5 h-3.5 outline-none" />}
-                  onClick={() => pushUrl("/")}
-                  active={window.location.pathname === "/"}
+                  onClick={() => pushUrl("/#map")}
+                  active={window.location.pathname === "/" && window.location.hash === "#map"}
                   color="#14b8a6"
                 />
                 <SidebarItem
@@ -563,7 +576,36 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => setShowGoals2025(true)}
                   color="#10b981"
                 />
+                <SidebarItem
+                  label="خزنة البصائر"
+                  icon={<BookOpen className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => setShowInsightsVault(true)}
+                  color="#a78bfa"
+                />
+                <SidebarItem
+                  label="الارتقاء (Upgrade)"
+                  icon={<Sparkles className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => setShowUpgrade(true)}
+                  color="#fbbf24"
+                />
               </SidebarSector>
+
+              {isOwner && (
+                <SidebarSector title="السيادة (Owner)" icon={<ShieldCheck className="w-3.5 h-3.5" />} color="crimson">
+                  <SidebarItem
+                    label="لوحة التحكم السيادية"
+                    icon={<Settings className="w-3.5 h-3.5" />}
+                    onClick={() => setShowSovereignControl(true)}
+                    color="#ff0055"
+                  />
+                  <SidebarItem
+                    label="الـ Dashboard القديم"
+                    icon={<BarChart3 className="w-3.5 h-3.5" />}
+                    onClick={openAdminDashboard}
+                    color="#64748b"
+                  />
+                </SidebarSector>
+              )}
 
               {/* Missions Section */}
               {activeMissions.length > 0 && (
@@ -679,6 +721,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   color="#a78bfa"
                 />
                 <SidebarItem
+                  label="خزانة البصائر"
+                  icon={<BookOpen className="w-4 h-4" />}
+                  onClick={() => setOverlay("pastSessionsLog", true)}
+                  color="#a78bfa"
+                />
+                <SidebarItem
                   label="جلسة خاصة"
                   icon={<CalendarDays className="w-4 h-4" />}
                   onClick={() => pushUrl("/#session-intake", { screen: "session-intake" })}
@@ -787,6 +835,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     onClick={() => { setShowGoals2025(true); handleClose(); }}
                     color="#10b981"
                   />
+                  <SidebarItem
+                    label="خزنة البصائر"
+                    icon={<BookOpen className="w-5 h-5 outline-none" />}
+                    onClick={() => { setShowInsightsVault(true); handleClose(); }}
+                    color="#a78bfa"
+                  />
                 </SidebarSector>
 
                 {/* Missions Section (Mobile) */}
@@ -893,6 +947,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     icon={<CalendarDays className="w-5 h-5" />}
                     onClick={() => { pushUrl("/#session-intake", { screen: "session-intake" }); handleClose(); }}
                     color="#60a5fa"
+                  />
+                  <SidebarItem
+                    label="خزانة البصائر"
+                    icon={<BookOpen className="w-5 h-5" />}
+                    onClick={() => { setOverlay("pastSessionsLog", true); handleClose(); }}
+                    color="#a78bfa"
                   />
                   <SidebarItem
                     label="لوحة الكوتش"
@@ -1141,6 +1201,21 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
                 });
               }}
             />
+          </Suspense>
+        )}
+        {showInsightsVault && (
+          <Suspense fallback={<AwarenessSkeleton />}>
+            <InsightsVaultScreen onClose={() => setShowInsightsVault(false)} />
+          </Suspense>
+        )}
+        {showUpgrade && (
+          <Suspense fallback={<AwarenessSkeleton />}>
+            <UpgradeScreen onClose={() => setShowUpgrade(false)} />
+          </Suspense>
+        )}
+        {showSovereignControl && (
+          <Suspense fallback={<AwarenessSkeleton />}>
+            <SovereignControl isOpen={true} onClose={() => setShowSovereignControl(false)} />
           </Suspense>
         )}
       </AnimatePresence>

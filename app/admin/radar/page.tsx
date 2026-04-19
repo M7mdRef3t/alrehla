@@ -123,7 +123,12 @@ type GateFunnelStats = {
     offer_view: number;
     offer_click: number;
   };
-  sources: Record<string, unknown>;
+  sources: Record<string, {
+    total: number;
+    leads: number;
+    qualified: number;
+    activated: number;
+  }>;
   timestamp: string;
 };
 
@@ -599,25 +604,50 @@ const EngagementRadar: React.FC<{ stats: GateFunnelStats | null }> = ({ stats })
   const e = stats.engagement_telemetry_last_7d;
 
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <div className="p-3 rounded-2xl bg-white/5 border border-emerald-500/10">
-        <p className="text-[10px] uppercase text-[var(--color-text-muted)]">Mizan Views</p>
-        <p className="text-lg font-black text-emerald-400 mt-1">{e.mizan_view}</p>
+    <div className="grid grid-cols-2 gap-2">
+      <div className="p-3 rounded-2xl bg-white/5 border border-white/5 text-center">
+        <p className="text-[10px] uppercase text-[var(--color-text-muted)]">Mizan Awareness</p>
+        <p className="text-xl font-black text-violet-400">{e.mizan_view}</p>
       </div>
-      <div className="p-3 rounded-2xl bg-white/5 border border-vibrant-blue/10">
-        <p className="text-[10px] uppercase text-[var(--color-text-muted)]">Wird Views</p>
-        <p className="text-lg font-black text-vibrant-blue mt-1">{e.wird_view}</p>
+      <div className="p-3 rounded-2xl bg-white/5 border border-white/5 text-center">
+        <p className="text-[10px] uppercase text-[var(--color-text-muted)]">Rituals Completed</p>
+        <p className="text-xl font-black text-teal-400">{e.ritual_complete}</p>
       </div>
-      <div className="p-3 rounded-2xl bg-white/5 border border-amber-500/10 col-span-2 flex justify-between items-center">
-        <div>
-          <p className="text-[10px] uppercase text-[var(--color-text-muted)]">Rituals Completed</p>
-          <p className="text-lg font-black text-amber-400">{e.ritual_complete}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] uppercase text-[var(--color-text-muted)]">Offer Clicks</p>
-          <p className="text-sm font-bold text-rose-400">{e.offer_click} / {e.offer_view}</p>
-        </div>
-      </div>
+    </div>
+  );
+};
+
+const VariantPerformanceRadar: React.FC<{ stats: GateFunnelStats | null }> = ({ stats }) => {
+  if (!stats?.sources) return <p className="text-sm text-[var(--color-text-muted)]">A/B data warming up...</p>;
+
+  return (
+    <div className="space-y-3">
+      {Object.entries(stats.sources).sort((a, b) => b[1].total - a[1].total).map(([source, s]) => {
+        const conv = s.total > 0 ? (s.activated / s.total) * 100 : 0;
+        const ctr = s.total > 0 ? (s.leads / s.total) * 100 : 0;
+        const isWinning = conv > 1.5; // Example threshold
+
+        return (
+          <div key={source} className="p-3 rounded-2xl bg-white/5 border border-white/5">
+            <div className="flex items-center justify-between mb-2">
+              <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isWinning ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-slate-400"}`}>
+                {source}
+              </span>
+              <span className="text-[10px] font-bold text-slate-500">{s.total} users</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[8px] uppercase text-slate-500">Funnel Entry (CTR)</p>
+                <p className="text-sm font-black text-sky-400">{ctr.toFixed(1)}%</p>
+              </div>
+              <div>
+                <p className="text-[8px] uppercase text-slate-500">Conv (ROAS Focus)</p>
+                <p className="text-sm font-black text-amber-400">{conv.toFixed(2)}%</p>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -1603,6 +1633,13 @@ export default function AdminRadarPage() {
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Deep Engagement</p>
               <div className="mt-4">
                 <EngagementRadar stats={gateFunnel} />
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-[var(--soft-teal)]/20 bg-[var(--soft-teal)]/5 p-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--soft-teal)] font-bold">A/B Variant Comparison</p>
+              <div className="mt-4">
+                <VariantPerformanceRadar stats={gateFunnel} />
               </div>
             </article>
 
