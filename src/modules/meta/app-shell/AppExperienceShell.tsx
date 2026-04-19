@@ -798,6 +798,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       previewedFeature={previewedFeature}
       goBackToFeatureFlags={goBackToFeatureFlags}
       onExitAdminRoute={handleExitAdminRoute}
+      screen={screen}
     >
       <>
         <AppRuntimeControllers

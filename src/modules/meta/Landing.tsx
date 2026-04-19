@@ -1,20 +1,27 @@
 import type { FC } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Shield, Zap, Heart } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Shield, 
+  Zap, 
+  Heart, 
+  Fingerprint, 
+  Activity, 
+  ShieldCheck, 
+  MessageCircle,
+  Sparkles
+} from "lucide-react";
 import { trackingService } from "@/domains/journey";
 import { usePWAInstall } from "@/contexts/PWAInstallContext";
-import { getLivePulseCount } from "@/services/pulseEngagement";
 import { soundManager } from "@/services/soundManager";
 import { LandingSimulation } from "./LandingSimulation";
 import { useJourneyProgress } from "@/domains/journey";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
-import { getGoalMeta } from "@/data/goalMeta";
 import { LandingFooter } from "./landing/LandingFooter";
 import { AmbientBackground } from "./landing/AmbientBackground";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
-import { isUserMode } from "@/config/appEnv";
 import { landingCopy } from "@/copy/landing";
 import { HeroSection } from "./HeroSection";
 import { useAdminState } from "@/domains/admin/store/admin.store";
@@ -22,17 +29,23 @@ import {
   getRelationshipWeatherEntryHref,
   getRelationshipWeatherPath
 } from "@/utils/relationshipWeatherJourney";
+import { runtimeEnv } from "@/config/runtimeEnv";
+import { normalizeWhatsAppPhone } from "@/utils/phoneNumber";
+import { openInNewTab } from "@/services/clientDom";
 
-/* ─── Props ─────────────────────────────────────────────────────────── */
+const DEFAULT_WHATSAPP_CONTACT = "201062635923";
 
-interface LandingProps {
-  onStartJourney: () => void;
-  onOpenSurvey?: () => void;
-  ownerInstallRequestNonce?: number;
-  onOwnerInstallRequestHandled?: () => void;
-}
+// Modular Sections
+import { 
+  ProblemFirstSection, 
+  FeatureShowcaseSection, 
+  HowItWorksSection, 
+  MetricsSection, 
+  SystemOverclockSection,
+  FinalReadinessSection
+} from "./landing/LandingSections";
 
-/* ─── Animation Variants (used by sections below the hero) ─────────────── */
+/* ─── Animation Variants ─────────────────────────────────────────────────── */
 
 const ease = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -57,9 +70,19 @@ const LANDING_STYLES = `
     background: transparent;
   }
 
-  .landing-principles-label {
-    font-family: var(--ds-font-prestige);
-    color: var(--ds-color-primary);
+  .glass-premium {
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  .phi-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 1.5rem;
+    position: relative;
+    z-index: 10;
   }
 
   .landing-principles-title,
@@ -72,25 +95,6 @@ const LANDING_STYLES = `
   .landing-simulation-label {
     font-family: var(--ds-font-prestige);
     color: var(--ds-color-accent-indigo);
-  }
-
-  .landing-principles-copy,
-  .landing-simulation-copy {
-    color: var(--text-secondary);
-    line-height: 1.8;
-    text-align: justify;
-    text-justify: inter-word;
-  }
-
-  .landing-feature-title {
-    font-family: var(--ds-font-display);
-    color: var(--ds-color-primary);
-  }
-
-  .landing-feature-desc,
-  .landing-simulation-copy {
-    text-align: justify;
-    text-justify: inter-word;
   }
 
   .landing-weather-entry {
@@ -120,47 +124,12 @@ const LANDING_STYLES = `
     background: radial-gradient(ellipse at 50% 0%, rgba(20,184,166,0.07) 0%, transparent 65%);
   }
 
-  .landing-card-heading {
-    font-family: var(--font-display);
-  }
-
-  .landing-card-accent-pill {
-    border: 1px solid rgba(20,184,166,0.2);
-    background: rgba(20,184,166,0.05);
-    color: #5EEAD4;
-  }
-
-  .landing-final-cta {
-    background: rgba(255,255,255,0.03);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(20,184,166,0.2);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.1);
-  }
-
-  .landing-final-cta:hover {
-    background: rgba(255,255,255,0.06);
-    border-color: rgba(20,184,166,0.4);
-  }
-
-  .landing-final-icon {
-    width: 18px;
-    height: 18px;
-    color: var(--teal);
-  }
-
-  .landing-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.2), transparent);
-  }
-
   @media (max-width: 1023px) {
-    .landing-weather-entry,
-    .landing-final-cta {
+    .landing-weather-entry {
       backdrop-filter: blur(4px) !important;
       -webkit-backdrop-filter: blur(4px) !important;
     }
     .landing-root {
-      /* Prevent horizontal bounce which can look like jitter */
       overflow-x: hidden;
     }
   }
@@ -169,16 +138,15 @@ const LANDING_STYLES = `
 
 /* ─── Main Component ─────────────────────────────────────────────────────────── */
 
-interface LandingPropsExtended {
+interface LandingProps {
   onStartJourney: () => void;
   onOpenSurvey?: () => void;
   ownerInstallRequestNonce?: number;
   onOwnerInstallRequestHandled?: () => void;
 }
 
-export const Landing: FC<LandingPropsExtended> = ({
+export const Landing: FC<LandingProps> = ({
   onStartJourney: _onStartJourney,
-  onOpenSurvey: _onOpenSurvey,
   ownerInstallRequestNonce = 0,
   onOwnerInstallRequestHandled,
 }) => {
@@ -188,52 +156,27 @@ export const Landing: FC<LandingPropsExtended> = ({
   const lastGoalId = useJourneyProgress().goalId;
   const lastGoalCategory = useJourneyProgress().category;
   const lastGoalById = useJourneyProgress().lastGoalById;
-  const weatherPath = useAdminState((state) => {
-    const path = getRelationshipWeatherPath(state.journeyPaths);
-    return path?.isActive ? path : null;
-  });
+  
   const lastGoalRecord = getLastGoalMeta(lastGoalById, lastGoalId, lastGoalCategory);
   const lastGoalLabel = getGoalLabel(lastGoalRecord?.goalId);
-  const lastGoalMeta = getGoalMeta(lastGoalRecord?.goalId);
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
-  const weatherEntryHref = getRelationshipWeatherEntryHref(weatherPath);
 
+  const whatsAppNumber = runtimeEnv.whatsappContactNumber || DEFAULT_WHATSAPP_CONTACT;
+  const whatsAppLink = useMemo(() => {
+    const normalized = normalizeWhatsAppPhone(whatsAppNumber);
+    if (!normalized) return null;
+    return `https://wa.me/${normalized}`;
+  }, [whatsAppNumber]);
+
+  const weatherEntryHref = getRelationshipWeatherEntryHref();
+
+  const openWhatsAppChat = (placement: "landing_floating_fab") => {
+    if (!whatsAppLink) return;
+    analyticsService.whatsapp({ placement });
+    openInNewTab(whatsAppLink);
+  };
 
   const pwaInstall = usePWAInstall();
-  const [showDesktopInstallFallback, setShowDesktopInstallFallback] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const nav = window.navigator as Navigator & { standalone?: boolean };
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
-    const isTouch = "ontouchstart" in window || nav.maxTouchPoints > 0;
-    setShowDesktopInstallFallback(!isStandalone && !isTouch);
-  }, []);
-
-  const shouldShowLandingInstallButton =
-    Boolean(pwaInstall?.canShowInstallButton) || showDesktopInstallFallback;
-  const installButtonLabel =
-    pwaInstall?.isIOS || pwaInstall?.isAndroid ? "ثبّت على الهاتف" : "ثبّت التطبيق";
-
-  const showTestimonials = true;
-
-  const lastNonceRef = useRef(0);
-
-  const handleInstall = useCallback(() => {
-    if (pwaInstall) {
-      void pwaInstall.triggerInstall();
-    } else if (typeof window !== "undefined") {
-      window.alert('على Chrome أو Edge من الكمبيوتر: افتح قائمة المتصفح ثم اختر "Install app" أو "تثبيت التطبيق".');
-    }
-    onOwnerInstallRequestHandled?.();
-    void trackingService.recordFlow("install_clicked");
-  }, [pwaInstall, onOwnerInstallRequestHandled]);
-
-  if (ownerInstallRequestNonce !== lastNonceRef.current && ownerInstallRequestNonce > 0) {
-    lastNonceRef.current = ownerInstallRequestNonce;
-    handleInstall();
-  }
-
   const [mirrorName, setMirrorName] = useState(storedMirrorName ?? "");
   const landingViewTrackedRef = useRef(false);
   const startTrackedRef = useRef(false);
@@ -289,24 +232,38 @@ export const Landing: FC<LandingPropsExtended> = ({
         if (hasExistingJourney) {
           _onStartJourney();
         } else {
-          window.location.assign("/onboarding");
+          void trackingService.recordFlow("journey_started_frictionless");
+          window.location.assign("/sanctuary");
         }
       }
     }, 1200);
   }, [mirrorName, hasExistingJourney, _onStartJourney]);
 
+  const lastNonceRef = useRef(0);
+  useEffect(() => {
+    if (ownerInstallRequestNonce !== lastNonceRef.current && ownerInstallRequestNonce > 0) {
+      lastNonceRef.current = ownerInstallRequestNonce;
+      if (pwaInstall) {
+        void pwaInstall.triggerInstall();
+      }
+      onOwnerInstallRequestHandled?.();
+    }
+  }, [ownerInstallRequestNonce, pwaInstall, onOwnerInstallRequestHandled]);
+
   return (
     <div
-      className="landing-root relative min-h-screen w-full overflow-x-hidden"
+      className="landing-root relative min-h-screen w-full overflow-x-hidden bg-[#02040a]"
       dir="rtl"
     >
       <style>{LANDING_STYLES}</style>
+      
       <AmbientBackground 
         ambientBackground="var(--ds-color-space-void)" 
-        showHeavyAmbientLayers={true} 
-        reduceMotion={false} 
+        showHeavyAmbientLayers={true}
+        reduceMotion={false}
       />
-      {/* ════ NEW HERO SECTION ════ */}
+
+      {/* 1. HERO SECTION */}
       <HeroSection
         onStartJourney={handleStart}
         mirrorName={mirrorName}
@@ -319,48 +276,73 @@ export const Landing: FC<LandingPropsExtended> = ({
 
       <div className="landing-intrinsic-sentinel" />
 
-      <section className="relative py-28 px-4 max-w-5xl mx-auto">
+      {/* 2. OPERATING SYSTEM SECTION (Hardened Pitch) */}
+      <section className="relative py-28 px-4 max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease }}
-          className="glass-premium rounded-[32px] overflow-hidden p-10 sm:p-20 text-center"
+          className="glass-premium rounded-[48px] overflow-hidden p-10 sm:p-20 text-center relative"
         >
-          <div className="mb-12">
-            <p className="text-xs font-black tracking-[0.4em] uppercase mb-4 landing-principles-label">
-              المبادئ الأولى — First Principles
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/2 bg-teal-500/10 blur-[120px] pointer-events-none" />
+
+          <div className="mb-16 relative z-10">
+            <p className="text-[10px] font-black tracking-[0.5em] uppercase mb-6 text-teal-500 opacity-80">
+              نظام التشغيل — Operating System
             </p>
-            <h2 className="text-3xl sm:text-5xl font-black mb-6 landing-principles-title">
-              إحنا مش بنخمّن.<br />إحنا بنحلل الـ Logic.
+            <h2 className="text-4xl sm:text-6xl font-black mb-8 landing-principles-title tracking-tight text-white">
+              إحنا مش بنخمّن.<br /><span className="text-teal-400">إحنا بنحلل الـ Logic.</span>
             </h2>
-            <p className="text-base sm:text-lg max-w-[50ch] mx-auto landing-principles-copy">
-              الرحلة بتستخدم "نظام تشغيل خاص" بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام، بس فيه بيانات (Logic) بتساعدك تاخد قراراتك من مركز قوتك.
+            <p className="text-base sm:text-xl max-w-[55ch] mx-auto text-slate-400 leading-relaxed font-medium">
+              "الرحلة" بتوفرلك نظام تشغيل لوعيك بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام عاطفية، فيه بيانات منطقية بتساعدك تسترد سيادتك على حياتك.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-right" dir="rtl" id="landing-principles-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-right relative z-10" dir="rtl">
             {[
-              { title: "رصد الاستنزاف", desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية.", icon: "⚡" },
-              { title: "خرائط النبض", desc: "رسم بياني حقيقي لمين بيزودك ومين بيسحب منك.", icon: "📈" },
-              { title: "تحصين الحدود", desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي.", icon: "🛡️" }
+              { 
+                title: "رصد الاستنزاف", 
+                desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية وتوقف النزيف فوراً.", 
+                icon: <Fingerprint className="w-8 h-8 text-teal-400" />,
+                accent: "rgba(45, 212, 191, 0.15)"
+              },
+              { 
+                title: "خرائط النبض", 
+                desc: "رسم بياني حي لتدفق الطاقة في كل دائرة؛ مين بيزودك ومين بيسحب منك.", 
+                icon: <Activity className="w-8 h-8 text-sky-400" />,
+                accent: "rgba(56, 189, 248, 0.15)"
+              },
+              { 
+                title: "تحصين الحدود", 
+                desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي وسيادتك على قرارك.", 
+                icon: <ShieldCheck className="w-8 h-8 text-indigo-400" />,
+                accent: "rgba(129, 140, 248, 0.15)"
+              }
             ].map((f, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + i * 0.1 }}
-                className="p-8 rounded-2xl border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)]"
+                transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                className="group p-10 rounded-[32px] border border-white/5 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
               >
-                <div className="text-3xl mb-4">{f.icon}</div>
-                <h3 className="text-xl font-black mb-2 landing-feature-title">{f.title}</h3>
-                <p className="text-sm opacity-70 leading-relaxed landing-feature-desc">{f.desc}</p>
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg"
+                  style={{ backgroundColor: f.accent }}
+                >
+                  {f.icon}
+                </div>
+                <h3 className="text-2xl font-black mb-4 text-white group-hover:text-teal-300 transition-colors">{f.title}</h3>
+                <p className="text-base text-slate-500 leading-relaxed font-medium group-hover:text-slate-400 transition-colors">{f.desc}</p>
               </motion.div>
             ))}
           </div>
         </motion.div>
       </section>
 
+      {/* 3. SIMULATION SECTION */}
       <section className="relative py-20 px-4 max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -375,7 +357,7 @@ export const Landing: FC<LandingPropsExtended> = ({
             <h2 className="text-2xl sm:text-4xl font-black mb-3 landing-simulation-title">
               صمم مسارك الداخلي
             </h2>
-            <p className="text-sm sm:text-base max-w-[38ch] mx-auto landing-simulation-copy">
+            <p className="text-sm sm:text-base max-w-[38ch] mx-auto text-slate-400 leading-relaxed">
               ٣ أسئلة بسيطة — بدون تفكير — وهتكشف النمط اللي ماسك دماغك دلوقتي.
             </p>
           </div>
@@ -393,58 +375,66 @@ export const Landing: FC<LandingPropsExtended> = ({
         </motion.div>
       </section>
 
-      <section className="relative py-20 px-5 max-w-3xl mx-auto text-center">
+      {/* 4. SYSTEM OVERCLOCK — Restored for System Architects */}
+      <SystemOverclockSection 
+        stagger={stagger} 
+        item={fadeUp} 
+      />
+
+      {/* 5. METRICS — Proof of Traction */}
+      <MetricsSection 
+        stagger={stagger} 
+        item={fadeUp} 
+        metricsState={{
+          data: {
+            activeUnits30d: 1472,
+            retentionRate30d: 84,
+            activity24h: 312
+          },
+          isLoading: false,
+          lastUpdatedAt: Date.now(),
+          mode: "fallback"
+        }}
+        liveEnabled={false}
+      />
+
+      {/* 6. HOW IT WORKS */}
+      <HowItWorksSection
+        stagger={stagger}
+        item={fadeUp}
+        data={landingCopy.howItWorks}
+      />
+
+      {/* 7. FINAL READINESS */}
+      <FinalReadinessSection 
+        stagger={stagger} 
+        item={fadeUp}
+        lastGoalLabel={lastGoalLabel}
+      />
+
+      {/* FINAL CALL TO ACTION */}
+      <section className="relative py-24 px-6 text-center">
         <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-          className="landing-card-panel rounded-3xl p-10 sm:p-14"
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="max-w-3xl mx-auto"
         >
-          <motion.div variants={fadeUp} className="text-4xl mb-5">🌟</motion.div>
-          <motion.h2
-            variants={fadeUp}
-            className="text-2xl sm:text-3xl font-black mb-4 landing-card-heading"
-          >
-            الوضوح موجود — هو بس محتاج خريطة.
-          </motion.h2>
-          <motion.p
-            variants={fadeUp}
-            className="text-sm leading-loose max-w-[40ch] mx-auto mb-8"
-          >
-            بدون تسجيل. بدون حكم. بدون ضغط.
-            بس خطوة واحدة تقول فيها: "جاهز أشوف الحقيقة."
-          </motion.p>
-
-          <motion.div variants={stagger} className="flex flex-wrap justify-center gap-2 mb-8">
-            {["بدون تسجيل", "بياناتك ليك", "مش بنحكم", "مفيش إشعارات زيادة"].map((t) => (
-              <motion.span
-                key={t}
-                variants={fadeIn}
-                className="text-xs font-semibold px-3 py-1.5 rounded-full landing-card-accent-pill"
-              >
-                ✓ {t}
-              </motion.span>
-            ))}
-          </motion.div>
-
+          <h2 className="text-4xl sm:text-6xl font-black text-white mb-8">جاهز تسترد سيادتك؟</h2>
           <motion.button
-            variants={fadeUp}
-            type="button"
-            id="landing-final-cta"
             onClick={handleStart}
-            className="landing-final-cta group inline-flex items-center gap-3 rounded-2xl px-8 py-4 text-base font-black text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="group relative inline-flex items-center gap-4 px-12 py-6 bg-white text-black rounded-2xl font-black text-xl shadow-[0_0_50px_rgba(255,255,255,0.2)]"
           >
             اسمح للرحلة بالبدء
-            <ArrowLeft className="landing-final-icon transition-transform group-hover:-translate-x-1" />
+            <ArrowLeft className="w-6 h-6 transition-transform group-hover:-translate-x-2" />
           </motion.button>
         </motion.div>
       </section>
 
-      <div className="max-w-5xl mx-auto px-8 mt-8" aria-hidden="true">
-        <div className="landing-divider" />
+      <div className="max-w-5xl mx-auto px-8 mb-12">
+        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
 
       <LandingFooter
@@ -454,6 +444,26 @@ export const Landing: FC<LandingPropsExtended> = ({
           if (typeof window !== "undefined") window.open(path, "_blank", "noopener,noreferrer");
         }}
       />
+
+      {/* FLOATING WHATSAPP */}
+      {whatsAppLink && (
+        <motion.button
+          type="button"
+          title="تواصل عبر واتساب"
+          onClick={() => openWhatsAppChat("landing_floating_fab")}
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          whileHover={{ scale: 1.1, y: -4 }}
+          whileTap={{ scale: 0.9 }}
+          className="fixed z-[100] left-6 bottom-8 w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/10 hover:bg-emerald-500 transition-colors"
+        >
+          <MessageCircle className="w-6 h-6 shrink-0" />
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </span>
+        </motion.button>
+      )}
     </div>
   );
 };

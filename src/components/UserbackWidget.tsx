@@ -51,6 +51,9 @@ export function UserbackWidget() {
 
   // Identify the user whenever auth state changes
   useEffect(() => {
+    // Skip in development to avoid noise
+    if (runtimeEnv.isDev) return;
+
     if (status === 'ready' && user && token) {
       Userback(token)
         .then((instance) => {

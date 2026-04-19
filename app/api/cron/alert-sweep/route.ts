@@ -23,6 +23,26 @@ type AlertRule = {
     window_minutes: number;
 };
 
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+async function sendTelegramMessage(text: string) {
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
+    try {
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text,
+                parse_mode: 'HTML'
+            })
+        });
+    } catch (err) {
+        console.error('[Telegram] Failed to send alert:', err);
+    }
+}
+
 function createSweepClient(url: string, key: string) {
     return createClient(url, key, { auth: { persistSession: false } });
 }
@@ -221,6 +241,17 @@ async function evaluateRule(supabase: SweepClient, rule: AlertRule) {
                 .select()
                 .single();
             if (insertError) throw insertError;
+            
+            // Dispatch Sovereign Alert
+            await sendTelegramMessage(
+                `<b>🚨 SOVEREIGN DISPATCH: ANOMALY DETECTED</b>\n\n` +
+                `<b>Rule:</b> <code>${rule.rule_key}</code>\n` +
+                `<b>Segment:</b> <code>${rule.segment}</code>\n` +
+                `<b>Evidence:</b> ${currentMetric.value.toFixed(3)} (Threshold: ${rule.threshold})\n` +
+                `<b>Samples:</b> ${currentMetric.samples}\n\n` +
+                `<i>Log: Incident ID ${newInc?.id} opened by Architect Radar nodes.</i>`
+            );
+
             await logIncidentHistoryEntry(supabase, newInc?.id, null, 'open', 'Incident opened by alert sweep');
             return { rule_key: rule.rule_key, status: 'incident_opened', id: newInc?.id };
         } else {

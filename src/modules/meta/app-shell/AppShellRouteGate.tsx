@@ -1,6 +1,7 @@
 import { Suspense, lazy, type ReactNode } from "react"; // Cache buster to clear stale LogoLab.tsx import
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { getHref, getPathname, pushUrl } from "@/services/navigation";
+import type { AppScreen } from "@/navigation/navigationMachine";
 
 const LegalPage = lazy(() => import("../LegalPage").then((m) => ({ default: m.LegalPage })));
 const AdminDashboard = lazy(() => import('@/components/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
@@ -19,6 +20,7 @@ interface AppShellRouteGateProps {
   previewedFeature: string | null;
   goBackToFeatureFlags: () => void;
   onExitAdminRoute: () => void;
+  screen?: AppScreen;
   children: ReactNode;
 }
 
@@ -92,13 +94,25 @@ export function AppShellRouteGate({
     );
   }
 
-  if (isAdminRoute || isAdminPathname) {
-    return (
-      <Suspense fallback={<div className="min-h-screen bg-[var(--page-bg)]" />}>
-        <AdminDashboard onExit={onExitAdminRoute} />
-      </Suspense>
-    );
-  }
+  const isToolActive = isAdminRoute && screen && (screen as string) !== "landing" && (screen as string) !== "goal";
 
-  return <>{children}</>;
+  return (
+    <>
+      {/* Admin Layer - Only rendered if we're on an admin route or starting with /admin */}
+      {(isAdminRoute || isAdminPathname) && (
+        <div className={isToolActive ? "hidden opacity-0 pointer-events-none" : "block min-h-screen"}>
+          <Suspense fallback={<div className="min-h-screen bg-[var(--page-bg)]" />}>
+            <AdminDashboard onExit={onExitAdminRoute} />
+          </Suspense>
+        </div>
+      )}
+
+      {/* App / Tool Layer - Always mounted at / or when a tool is active over Admin */}
+      {(!isAdminRoute || isToolActive) && (
+        <div className={isToolActive ? "fixed inset-0 z-50 bg-[#0B0F19] overflow-y-auto" : "contents"}>
+          {children}
+        </div>
+      )}
+    </>
+  );
 }

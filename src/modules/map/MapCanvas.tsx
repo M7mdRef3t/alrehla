@@ -1685,37 +1685,31 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   <feComposite in="SourceGraphic" in2="goo" operator="atop" />
                 </filter>
 
-                {/* Vampire Corruption / Distortion Filter */}
+                {/* Simplified Clean Distortion Filter */}
                 <filter id="vampireDistortion" x="-200%" y="-200%" width="500%" height="500%">
-                  <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" result="noise" />
-                  <feColorMatrix type="matrix" values="1 0 0 0 0  0 0.1 0 0 0  0 0.1 0 0 0  0 0 0 1.5 0" in="noise" result="coloredNoise" />
-                  <feDisplacementMap in="SourceGraphic" in2="coloredNoise" scale="12" xChannelSelector="R" yChannelSelector="B" result="displaced" />
-                  <feGaussianBlur stdDeviation="1.5" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feColorMatrix type="matrix" values="1 0 0 0 0  0 0.1 0 0 0  0 0.1 0 0 0  0 0 0 0.8 0" in="blur" result="coloredBlur" />
+                  <feComposite in="SourceGraphic" in2="coloredBlur" operator="over" />
                 </filter>
 
-                {/* ── Enhanced Organic Neon Glows ── */}
+                {/* ── Simplified Clean Glows ── */}
                 <filter id="neonGlowRed" x="-100%" y="-100%" width="300%" height="300%">
-                  <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" result="smoke" />
-                  <feDisplacementMap in="SourceGraphic" in2="smoke" scale="5" xChannelSelector="R" yChannelSelector="G" result="wobbly" />
                   <feGaussianBlur stdDeviation="5" result="coloredBlur" />
                   <feFlood floodColor="#E11D48" floodOpacity="0.8" result="glowColor" />
                   <feComposite in="glowColor" in2="coloredBlur" operator="in" result="glow" />
                   <feMerge>
                     <feMergeNode in="glow" />
-                    <feMergeNode in="wobbly" />
+                    <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
                 
                 <filter id="neonGlowWarning" x="-100%" y="-100%" width="300%" height="300%">
-                  <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="2" result="smoke" />
-                  <feDisplacementMap in="SourceGraphic" in2="smoke" scale="3" xChannelSelector="R" yChannelSelector="G" result="wobbly" />
                   <feGaussianBlur stdDeviation="4.5" result="coloredBlur" />
                   <feFlood floodColor="#F59E0B" floodOpacity="0.75" result="glowColor" />
                   <feComposite in="glowColor" in2="coloredBlur" operator="in" result="glow" />
                   <feMerge>
                     <feMergeNode in="glow" />
-                    <feMergeNode in="wobbly" />
+                    <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
                 

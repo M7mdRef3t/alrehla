@@ -932,7 +932,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {!journeyMode && (
         <motion.button
           type="button"
-          className="fixed z-40 right-5 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] w-14 h-14 rounded-2xl flex items-center justify-center pointer-events-auto"
+          className="fixed z-40 right-5 md:right-auto md:left-6 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-[6rem] w-14 h-14 rounded-2xl flex items-center justify-center pointer-events-auto"
           style={{
             background: "linear-gradient(135deg, #2DD4BF 0%, #0D9488 100%)",
             boxShadow: "0 4px 20px rgba(45,212,191,0.4)"

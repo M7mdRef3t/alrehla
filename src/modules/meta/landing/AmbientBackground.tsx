@@ -56,9 +56,8 @@ export const AmbientBackground: FC<AmbientBackgroundProps> = ({
 }) => (
   <div className="fixed inset-0 pointer-events-none z-0" aria-hidden="true">
     <div className="absolute inset-0" style={{ background: ambientBackground }} />
-    {showHeavyAmbientLayers && <NebulaLayer />}
+    {/* Clean up: Removed heavy blur layers (Nebula/Radar) to achieve maximum clarity */}
     {showHeavyAmbientLayers && <FloatingParticles />}
     {!reduceMotion && <OrbitalRings />}
-    {showHeavyAmbientLayers && <RadarSweep />}
   </div>
 );

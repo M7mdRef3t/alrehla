@@ -1,5 +1,6 @@
 import { geminiClient } from "./geminiClient";
 import type { TransformationDiagnosis } from "@/modules/transformationEngine/interpretationEngine";
+import { nexusService } from "./nexusService";
 
 export interface SovereignInsightRequest {
   diagnosis: TransformationDiagnosis;
@@ -54,6 +55,14 @@ export async function generateSovereignInsight(request: SovereignInsightRequest)
     if (!response) {
       throw new Error("Empty response from Gemini");
     }
+
+    // [SOVEREIGN SYNC] حفظ البصيرة في الخزنة السيادية في الخلفية
+    void nexusService.saveUserInsight({
+      content: response,
+      category: diagnosis.state || "عام",
+      energy_level: diagnosis.riskLevel === "critical" ? 2 : diagnosis.riskLevel === "high" ? 4 : 7,
+      exercise_code: "BASEERA_GEN"
+    });
 
     return response;
   } catch (error) {

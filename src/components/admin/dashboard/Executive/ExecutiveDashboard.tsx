@@ -9,6 +9,7 @@ import { StatCard, formatNumber } from "./components/StatCard";
 import { PhaseOneGoal } from "../Overview/components/PhaseOneGoal";
 import { SuccessIndexCard } from "../Overview/components/SuccessIndexCard";
 import { ExecutiveReport } from "../Overview/components/ExecutiveReport";
+import { SovereignABTestRadar } from "../Analytics/SovereignABTestRadar";
 
 import {
     fetchOverviewStats,
@@ -271,6 +272,8 @@ export const ExecutiveDashboard: FC = () => {
                             />
                         </div>
                     </CollapsibleSection>
+
+                    <SovereignABTestRadar />
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <CollapsibleSection
