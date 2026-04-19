@@ -307,7 +307,8 @@ export const Landing: FC<LandingPropsExtended> = ({
         if (hasExistingJourney) {
           _onStartJourney();
         } else {
-          window.location.assign("/onboarding");
+          void trackingService.recordFlow("journey_started_frictionless");
+          window.location.assign("/sanctuary");
         }
       }
     }, 1200);
