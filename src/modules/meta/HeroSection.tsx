@@ -76,63 +76,54 @@ const HERO_STYLES = `
     z-index: 1;
   }
 
-  .hero-copy-column {
-    flex: 1 1 0;
-    max-width: 600px;
+  .hero-content-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 6rem 2rem;
     display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  .hero-eyebrow-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
+    gap: 5rem;
   }
 
-  .hero-badge__dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    background: var(--cyan);
-    box-shadow: 0 0 14px var(--cyan-glow);
-  }
-
-  .headline-line {
-    display: flex;
-    align-items: flex-start;
-    min-height: 70px;
-    height: auto;
-    line-height: 1.2;
-    overflow: visible;
-    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
-    max-width: 100%;
-    margin-bottom: 0.1em;
-    color: var(--amber-500);
-    font-family: "Noto Kufi Arabic";
-  }
-
-  .hero-input-group {
+  .hero-copy-column {
+    flex: 1 1 50%;
+    max-width: 700px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 2rem;
+    text-align: right;
+  }
+
+  .hero-headline {
+    font-size: clamp(3rem, 6vw, 5.2rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: #fff;
+    margin-bottom: 0.5rem;
   }
 
   .hero-input-wrapper {
     display: flex;
     align-items: center;
-    border-radius: 20px;
+    border-radius: 24px;
     overflow: hidden;
-    max-width: 420px;
-    position: relative;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: transform 0.3s ease;
-    will-change: transform, opacity;
+    max-width: 460px;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .hero-input-wrapper:focus-within {
+    border-color: rgba(0, 240, 255, 0.4);
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+    background: rgba(15, 23, 42, 0.6);
   }
 
   .hero-input {
@@ -193,10 +184,11 @@ const HERO_STYLES = `
     color: var(--text-main);
   }
 
-  .hero-copy-column .hero-body {
-    font-weight: 500;
-    font-size: 1.1rem;
-    color: rgba(255,255,255,0.85);
+  .hero-body {
+    font-size: 1.25rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 580px;
   }
 
   .hero-action-row {
@@ -826,9 +818,10 @@ const HERO_STYLES = `
   }
 
   .map-area {
-    flex: 0 0 auto;
-    width: min(46vw, 520px);
+    flex: 0 0 45%;
+    width: min(48vw, 620px);
     position: relative;
+    perspective: 1500px;
   }
 
   .metric-card {
@@ -1002,61 +995,73 @@ export const HeroSection: FC<HeroSectionProps> = ({
         <div className="hero-bottom-fade" />
         <div className="hero-content-wrapper">
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
+            initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: techEase }}
-            className="flex-1 max-w-[640px]"
+            transition={{ duration: 1, ease: techEase }}
+            className="hero-copy-column"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Dawayir — السيادة الشخصية</span>
-              <div className="px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
-                <span className="text-[10px] font-bold text-cyan-400">{pulseCount.toLocaleString()} يستعيدون نبضهم</span>
-              </div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-[10px] font-black tracking-[0.4em] text-cyan-400 uppercase">Dawayir — السيادة الشخصية</span>
+              <div className="h-px w-12 bg-cyan-500/30" />
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-4">
+            <h1 className="hero-headline">
               أنت لست مرهقاً <br />
-              <span className="text-slate-400 font-light text-4xl md:text-5xl">أنت فقط</span>
+              <span className="text-slate-500 font-light opacity-60 italic">أنت فقط</span>
               <RotatingWord />
             </h1>
 
-            <div className="flex flex-col md:flex-row gap-4 mb-10">
-              <input
-                type="text"
-                placeholder="ماذا تحب أن نناديك؟"
-                value={mirrorName}
-                onChange={(e) => setMirrorName(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white outline-none focus:border-cyan-500/50 transition-colors w-full md:w-[260px]"
-              />
+            <p className="hero-body">
+              "الرحلة" مش مجرد أداة، هي نظام تشغيل لوعيك بيشوف علاقاتك كداوئر طاقة. اعرف فين النزيف وابدأ تسترد سيادتك فوراً.
+            </p>
+
+            <div className="flex flex-col gap-6">
+              <div className="hero-input-wrapper">
+                <input
+                  type="text"
+                  placeholder="ماذا تحب أن نناديك؟"
+                  value={mirrorName}
+                  onChange={(e) => setMirrorName(e.target.value)}
+                  className="hero-input"
+                />
+                <div className="hero-input-greeting">أهلاً بك</div>
+              </div>
+
               <motion.button
                 onClick={handleStart}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-cyan-500 text-black px-8 py-4 rounded-xl font-black flex items-center justify-center gap-3 hover:bg-cyan-400 transition-colors"
+                whileHover={{ scale: 1.02, x: -5 }}
+                whileTap={{ scale: 0.98 }}
+                className="cta-primary"
               >
-                <Zap size={18} fill="currentColor" />
-                <span>{ctaJourney}</span>
-                <ArrowLeft size={18} />
+                <div className="cta-aura" />
+                <div className="cta-surface">
+                  <div className="cta-liquid" />
+                  <div className="cta-shimmer" />
+                  <Zap className="hero-cta-icon" fill="currentColor" />
+                  <span className="text-lg font-black text-white">{ctaJourney}</span>
+                  <ArrowLeft className="hero-cta-icon--arrow" />
+                </div>
               </motion.button>
             </div>
 
-            <div className="flex flex-wrap gap-6">
+            <div className="hero-trust-row">
               {trustPoints.map((point, i) => (
-                <div key={i} className="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
-                  <ShieldCheck size={14} className="text-cyan-500/50" />
+                <div key={i} className="trust-pill">
+                  <ShieldCheck className="trust-icon" />
                   {point}
                 </div>
               ))}
             </div>
           </motion.div>
+
           <motion.div
-            style={{ rotateX, rotateY, perspective: 1000 }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, ease: techEase, delay: 0.2 }}
+            style={{ rotateX, rotateY }}
+            initial={{ opacity: 0, scale: 0.8, rotateY: 20 }}
+            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+            transition={{ duration: 1.5, ease: techEase, delay: 0.3 }}
             className="map-area"
           >
+            <div className="sovereign-map__atmosphere" />
             <SovereignMap reduceMotion={reduceMotion} />
           </motion.div>
         </div>
