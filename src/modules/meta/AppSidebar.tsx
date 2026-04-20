@@ -45,7 +45,8 @@ import {
   Unlink,
   CheckCircle2,
   Archive,
-  Undo2
+  Undo2,
+  LayoutGrid
 } from "lucide-react";
 import { useJourneyProgress } from "@/domains/journey";
 import { useJourneyState as useJourneyStore } from "@/domains/journey/store/journey.store";
@@ -182,6 +183,9 @@ const SovereignControl = lazy(() =>
 );
 const ArtistChat = lazy(() =>
   import("@/modules/action/Coaching/ArtistChat").then((m) => ({ default: m.ArtistChat }))
+);
+const EcosystemHub = lazy(() =>
+  import("@/modules/ecosystem/EcosystemHub").then((m) => ({ default: m.EcosystemHub }))
 );
 
 
@@ -598,6 +602,48 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => setShowUpgrade(true)}
                   color="#fbbf24"
                 />
+                {isOwner && (
+                  <SidebarItem
+                    label="مختبر الهيرو (Lab)"
+                    icon={<BrainCircuit className="w-3.5 h-3.5 outline-none" />}
+                    onClick={() => pushUrl("/hero-lab")}
+                    active={window.location.pathname === "/hero-lab"}
+                    color="#f43f5e"
+                  />
+                )}
+              </SidebarSector>
+
+              <SidebarSector title="المنظومة (السيادة)" icon={<ShieldCheck className="w-3.5 h-3.5" />} color="indigo">
+                <SidebarItem
+                  label="حافظ (Memories)"
+                  icon={<History className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => pushUrl("/#hafiz")}
+                  color="#a855f7"
+                />
+                <SidebarItem
+                  label="الصدى (Insights)"
+                  icon={<Radar className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => pushUrl("/#sada")}
+                  color="#06b6d4"
+                />
+                <SidebarItem
+                  label="المركز (Command)"
+                  icon={<LayoutGrid className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => pushUrl("/#markaz")}
+                  color="#6366f1"
+                />
+                <SidebarItem
+                  label="النية (Intention)"
+                  icon={<Target className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => pushUrl("/#niyya")}
+                  color="#10b981"
+                />
+                <SidebarItem
+                  label="الصمت (Breathing)"
+                  icon={<Wind className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => pushUrl("/#samt")}
+                  color="#14b8a6"
+                />
               </SidebarSector>
 
               {isOwner && (
@@ -607,6 +653,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     icon={<Settings className="w-3.5 h-3.5" />}
                     onClick={() => setShowSovereignControl(true)}
                     color="#ff0055"
+                  />
+                   <SidebarItem
+                    label="مركز المنظومة (Hub)"
+                    icon={<Network className="w-3.5 h-3.5" />}
+                    onClick={() => setShowEcosystemHub(true)}
+                    color="#6366f1"
                   />
                   <SidebarItem
                     label="الـ Dashboard القديم"
@@ -862,6 +914,39 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     icon={<Sparkles className="w-5 h-5 outline-none" />}
                     onClick={() => { setShowUpgrade(true); handleClose(); }}
                     color="#fbbf24"
+                  />
+                </SidebarSector>
+
+                <SidebarSector title="المنظومة (السيادة)" icon={<ShieldCheck className="w-4 h-4" />} color="indigo">
+                  <SidebarItem
+                    label="حافظ (Memories)"
+                    icon={<History className="w-5 h-5 outline-none" />}
+                    onClick={() => { pushUrl("/#hafiz"); handleClose(); }}
+                    color="#a855f7"
+                  />
+                  <SidebarItem
+                    label="الصدى (Insights)"
+                    icon={<Radar className="w-5 h-5 outline-none" />}
+                    onClick={() => { pushUrl("/#sada"); handleClose(); }}
+                    color="#06b6d4"
+                  />
+                  <SidebarItem
+                    label="المركز (Command)"
+                    icon={<LayoutGrid className="w-5 h-5 outline-none" />}
+                    onClick={() => { pushUrl("/#markaz"); handleClose(); }}
+                    color="#6366f1"
+                  />
+                  <SidebarItem
+                    label="النية (Intention)"
+                    icon={<Target className="w-5 h-5 outline-none" />}
+                    onClick={() => { pushUrl("/#niyya"); handleClose(); }}
+                    color="#10b981"
+                  />
+                  <SidebarItem
+                    label="الصمت (Breathing)"
+                    icon={<Wind className="w-5 h-5 outline-none" />}
+                    onClick={() => { pushUrl("/#samt"); handleClose(); }}
+                    color="#14b8a6"
                   />
                 </SidebarSector>
 
@@ -1232,7 +1317,7 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
         )}
         {showUpgrade && (
           <Suspense fallback={<AwarenessSkeleton />}>
-            <UpgradeScreen onClose={() => setShowUpgrade(false)} />
+            <UpgradeScreen isOpen={true} onClose={() => setShowUpgrade(false)} />
           </Suspense>
         )}
         {showSovereignControl && (
@@ -1243,6 +1328,17 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
         {showArtistChat && (
           <Suspense fallback={<AwarenessSkeleton />}>
             <ArtistChat onClose={() => setShowArtistChat(false)} />
+          </Suspense>
+        )}
+        {showEcosystemHub && (
+          <Suspense fallback={<AwarenessSkeleton />}>
+            <EcosystemHub onNavigate={(url) => { pushUrl(url); setShowEcosystemHub(false); }} />
+            <button 
+              onClick={() => setShowEcosystemHub(false)}
+              className="fixed top-4 left-4 z-[100] p-3 rounded-full bg-slate-900/60 backdrop-blur-md border border-white/10 text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </Suspense>
         )}
       </AnimatePresence>

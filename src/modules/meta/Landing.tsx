@@ -168,7 +168,9 @@ export const Landing: FC<LandingProps> = ({
     return `https://wa.me/${normalized}`;
   }, [whatsAppNumber]);
 
-  const weatherEntryHref = getRelationshipWeatherEntryHref();
+  const journeyPaths = useAdminState((s) => s.journeyPaths);
+  const weatherPath = useMemo(() => getRelationshipWeatherPath(journeyPaths), [journeyPaths]);
+  const weatherEntryHref = getRelationshipWeatherEntryHref(weatherPath);
 
   const openWhatsAppChat = (placement: "landing_floating_fab") => {
     if (!whatsAppLink) return;

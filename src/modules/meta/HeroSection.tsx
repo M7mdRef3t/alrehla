@@ -1,4 +1,4 @@
-import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEffect, useRef, Fragment } from "react";
+﻿import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowLeft, Zap, Shield, Heart } from "lucide-react";
 
@@ -15,19 +15,19 @@ interface HeroSectionProps {
 
 /* ΓöÇΓöÇΓöÇ Constants ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 const ROTATING_WORDS = [
-  "دوايرك ملخبطة",
-  "طاقتك بتتسرب",
-  "حدودك مستباحة",
-  "خايف تقول لأ",
-  "مراية لزعل غيرك",
-  "تايه في خوارزمياتهم",
-  "نبضك مربوط بغيرك",
-  "سايب بابك موارب"
+  "╪»┘ê╪º┘è╪▒┘â ┘à┘ä╪«╪¿╪╖╪⌐",
+  "╪╖╪º┘é╪¬┘â ╪¿╪¬╪¬╪│╪▒╪¿",
+  "╪¡╪»┘ê╪»┘â ┘à┘Å╪│╪¬╪¿╪º╪¡╪⌐",
+  "╪«╪º┘è┘ü ╪¬┘é┘ê┘ä ┘ä╪ú",
+  "┘à╪▒╪º┘è╪⌐ ┘ä╪▓╪╣┘ä ╪║┘è╪▒┘â",
+  "╪¬╪º┘è┘ç ┘ü┘è ╪«┘ê╪º╪▒╪▓┘à┘è╪º╪¬┘ç┘à",
+  "┘å╪¿╪╢┘â ┘à╪▒╪¿┘ê╪╖ ╪¿╪║┘è╪▒┘â",
+  "╪│╪º┘è╪¿ ╪¿╪º╪¿┘â ┘à┘ê╪º╪▒╪¿"
 ];
 
 /* ΓöÇΓöÇΓöÇ Styles ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 const HERO_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;700;800;900&display=swap');
+  /* @import fonts removed */
 
   .hero-root {
     --void: #02040a;
@@ -1023,13 +1023,13 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   ];
 
   const nodes = [
-    { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "علاقة بميزانها",  w: 1.2 },
-    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم سيادي",    w: 0.8 },
-    { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "نبض متذبذب",  w: 1.5 },
-    { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "تشويش روح",   w: 0.9 },
-    { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "احتواء حقيقي",w: 1.1 },
-    { cx: 190 - 28, cy: 190 - 148, r: 12, color: "#ff0055", label: "نزيف طاقة",   w: 2.0 },
-    { cx: 190 + 118, cy: 190 - 100, r: 11, color: "#ff0044", label: "حدود مهدورة", w: 1.7 },
+    { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "╪╣┘ä╪º┘é╪⌐ ╪¿┘à┘è╪▓╪º┘å┘ç╪º",  w: 1.2 },
+    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "╪»╪╣┘à ╪│┘è╪º╪»┘è",    w: 0.8 },
+    { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "┘å╪¿╪╢ ┘à╪¬╪░╪¿╪░╪¿",  w: 1.5 },
+    { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "╪¬╪┤┘ê┘è╪┤ ╪▒┘ê╪¡",   w: 0.9 },
+    { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "╪º╪¡╪¬┘ê╪º╪í ╪¡┘é┘è┘é┘è",w: 1.1 },
+    { cx: 190 - 28, cy: 190 - 148, r: 12, color: "#ff0055", label: "┘å╪▓┘è┘ü ╪╖╪º┘é╪⌐",   w: 2.0 },
+    { cx: 190 + 118, cy: 190 - 100, r: 11, color: "#ff0044", label: "╪¡╪»┘ê╪» ┘à┘ç╪»┘ê╪▒╪⌐", w: 1.7 },
   ];
 
   const [hovered, setHovered] = useState<number | null>(null);
@@ -1187,10 +1187,10 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
       </svg>
 
       <div className="metric-card metric-card--health">
-        <p className="metric-card-label">صحتك الداخلية</p>
+        <p className="metric-card-label">╪╡╪¡╪¬┘â ╪º┘ä╪»╪º╪«┘ä┘è╪⌐</p>
         <div className="metric-card-values">
-          <span className="metric-card-value">%98</span>
-          <span className="metric-card-text"></span>
+          <span className="metric-card-value">┘º┘¿</span>
+          <span className="metric-card-text">/ ┘í┘á┘á</span>
         </div>
         <div className="metric-card-bar">
           <motion.div
@@ -1203,10 +1203,10 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
       </div>
 
       <div className="metric-card metric-card--drain">
-        <p className="metric-card-label metric-card-label--alert">نزيف طاقة</p>
+        <p className="metric-card-label metric-card-label--alert">┘å╪▓┘è┘ü ╪╖╪º┘é╪⌐</p>
         <div className="metric-card-values metric-card-values--inline">
-          <span className="metric-card-value metric-card-value--small">3</span>
-          <span className="metric-card-text">مصادر استنزاف</span>
+          <span className="metric-card-value metric-card-value--small">┘ú</span>
+          <span className="metric-card-text">┘à╪╡╪º╪»╪▒ ╪º┘ä╪º╪│╪¬┘å╪▓╪º┘ü</span>
         </div>
         <div className="metric-card-dots">
           {[1, 2, 3].map((dot) => (
@@ -1222,9 +1222,9 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
       <div className="legend">
         {[
-          { dotClass: "legend-dot legend-dot--teal", label: "توازن ذاتي" },
-          { dotClass: "legend-dot legend-dot--gold", label: "تشتت" },
-          { dotClass: "legend-dot legend-dot--crimson", label: "استنزاف" },
+          { dotClass: "legend-dot legend-dot--teal", label: "╪¬┘ê╪º╪▓┘å ╪░╪º╪¬┘è" },
+          { dotClass: "legend-dot legend-dot--gold", label: "╪¬╪┤╪¬╪¬" },
+          { dotClass: "legend-dot legend-dot--crimson", label: "╪º╪│╪¬┘å╪▓╪º┘ü" },
         ].map(({ dotClass, label }) => (
           <div key={label} className="legend-item">
             <span className={dotClass} />
@@ -1249,7 +1249,7 @@ const PulseBadge: FC<{ count: number }> = ({ count }) => (
       transition={{ duration: 1.6, repeat: Infinity }}
     />
     <span className="pulse-badge__text">
-      {count.toLocaleString("en-US")} يستعيدون نبضهم الآن
+      {count.toLocaleString("en-US")} ┘è╪│╪¬╪╣┘è╪»┘ê┘å ┘å╪¿╪╢┘ç┘à ╪º┘ä╪ó┘å
     </span>
   </motion.div>
 );
@@ -1349,8 +1349,8 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
   return (
     <>
-      <style>{HERO_STYLES}</style>
-      <style>{warpLineStyles}</style>
+      <style dangerouslySetInnerHTML={{ __html: HERO_STYLES }} />
+      <style dangerouslySetInnerHTML={{ __html: warpLineStyles }} />
 
       {/* ΓöÇΓöÇ Section wrapper ΓöÇΓöÇ */}
       <section
@@ -1408,23 +1408,23 @@ export const HeroSection: FC<HeroSectionProps> = ({
             <motion.div variants={fadeUp} className="hero-eyebrow-row">
               <span className="hero-badge">
                 <span className="hero-badge__dot" />
-                DAWAYIR — الرحلة
+                DAWAYIR ΓÇö ╪º┘ä╪▒╪¡┘ä╪⌐
               </span>
               <PulseBadge count={pulseCount} />
             </motion.div>
 
             <motion.h1 variants={fadeUp} className="headline-static hero-headline">
-              <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
-              <span className="headline-subline">أنت فقط</span>
+              <span ref={headlineLineRef} className="headline-line">╪ú┘å╪¬ ┘ä╪│╪¬ ┘à╪▒┘ç┘é╪º┘ï</span>
+              <span className="headline-subline">╪ú┘å╪¬ ┘ü┘é╪╖</span>
               <RotatingWord />
             </motion.h1>
 
             <motion.div variants={fadeUp} className="hero-divider" />
 
             <motion.p variants={fadeUp} className="hero-body">
-              قف. خذ نفساً عميقاً.
-              أنت لست بحاجة إلى المزيد من المهام. أنت بحاجة إلى <strong>خريطة تصبح فيها مرئياً لنفسك</strong>.
-              نترجم فوضى أفكارك فوراً لإحداثيات بصرية ترصد نزيف طاقتك.
+              ┘é┘ü. ╪«╪░ ┘å┘ü╪│╪º┘ï ╪╣┘à┘è┘é╪º┘ï.
+              ╪ú┘å╪¬ ┘ä╪│╪¬ ╪¿╪¡╪º╪¼╪⌐ ╪Ñ┘ä┘ë ╪º┘ä┘à╪▓┘è╪» ┘à┘å ╪º┘ä┘à┘ç╪º┘à. ╪ú┘å╪¬ ╪¿╪¡╪º╪¼╪⌐ ╪Ñ┘ä┘ë <strong>╪«╪▒┘è╪╖╪⌐ ╪¬╪╡╪¿╪¡ ┘ü┘è┘ç╪º ┘à╪▒╪ª┘è╪º┘ï ┘ä┘å┘ü╪│┘â</strong>.
+              ┘å╪¬╪▒╪¼┘à ┘ü┘ê╪╢┘ë ╪ú┘ü┘â╪º╪▒┘â ┘ü┘ê╪▒╪º┘ï ┘ä╪Ñ╪¡╪»╪º╪½┘è╪º╪¬ ╪¿╪╡╪▒┘è╪⌐ ╪¬╪▒╪╡╪» ┘å╪▓┘è┘ü ╪╖╪º┘é╪¬┘â.
             </motion.p>
 
             <motion.div variants={fadeUp} className="hero-input-group">
@@ -1433,7 +1433,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                   type="text"
                   id="mirror-name"
                   name="mirrorName"
-                  placeholder="اسمك (اختياري)"
+                  placeholder="╪º╪│┘à┘â (╪º╪«╪¬┘è╪º╪▒┘è)"
                   value={mirrorName}
                   onChange={e => setMirrorName(e.target.value)}
                   maxLength={24}
@@ -1442,13 +1442,13 @@ export const HeroSection: FC<HeroSectionProps> = ({
                 />
                 {mirrorName && (
                   <span className="hero-input-greeting">
-                    أهلاً بك {mirrorName} ✨
+                    ╪ú┘ç┘ä╪º┘ï {mirrorName} Γ£ª
                   </span>
                 )}
               </div>
               {!mirrorName && (
                 <p className="hero-input-note">
-                  أضف اسمك عشان تجربتك تبقى شخصية
+                  ╪º╪╢┘ü ╪º╪│┘à┘â ╪╣╪┤╪º┘å ╪¬╪¼╪▒╪¿╪¬┘â ╪¬╪¿┘é┘ë ╪┤╪«╪╡┘è╪⌐
                 </p>
               )}
             </motion.div>
@@ -1537,7 +1537,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                 <Zap className="warp-icon" />
               </div>
               <p className="warp-text">
-                جاري تحليل وعيك...
+                ╪¼╪º╪▒┘è ╪¬╪¡┘ä┘è┘ä ┘ê╪╣┘è┘â...
               </p>
             </motion.div>
           </motion.div>

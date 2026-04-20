@@ -32,8 +32,8 @@ const DEFAULT_TOKENS: DesignTokens = {
   spacing: "1rem",
   pulseDuration: "3s",
   voiceTone: "default",
-  vignetteStrength: 0.2,
-  grainOpacity: 0.1,
+  vignetteStrength: 0,
+  grainOpacity: 0,
   chromaticAberration: 0,
   ambientVolume: 0.5,
 };

@@ -37,6 +37,36 @@ const GUT_LABELS = ["❌", "😰", "😟", "🤔", "😐", "🙂", "😊", "😄
 /*             SUB COMPONENTS                 */
 /* ═══════════════════════════════════════════ */
 
+/* ── Broadcast Overlay ── */
+const BroadcastOverlay: FC<{ active?: boolean }> = ({ active }) => (
+  <AnimatePresence>
+    {active && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
+      >
+        {/* Pulsing ring */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.2, 0.1],
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(6,182,212,0.15)_0%,transparent_70%)]"
+        />
+        {/* Scan line */}
+        <motion.div
+          animate={{ y: ["-100%", "200%"] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent opacity-20"
+        />
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
 /* ── New Decision Creator ── */
 const NewDecisionForm: FC<{ onClose: () => void }> = ({ onClose }) => {
   const [question, setQuestion] = useState("");
@@ -462,49 +492,69 @@ export const BawsalaScreen: FC = () => {
   };
 
   return (
-    <div className="min-h-screen pb-32 select-none" dir="rtl"
-      style={{ background: "linear-gradient(180deg, #070b1a 0%, #0f1629 40%, #080c1a 100%)" }}
+    <div className="min-h-screen pb-32 select-none relative overflow-hidden" dir="rtl"
+      style={{ background: "#020617" }}
     >
-      {/* ═══ Header ═══ */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="px-5 pt-8 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center relative"
-              style={{ background: "rgba(6,182,212,0.12)", border: "1px solid rgba(6,182,212,0.25)" }}
-            >
-              <Compass className="w-6 h-6 text-cyan-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-white tracking-tight">بوصلة</h1>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">كل قرار صعب — عنده بوصلة</p>
-            </div>
-          </div>
+      {/* Sovereign Atmosphere */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-cyan-900/10 blur-[120px]" />
+        <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] rounded-full bg-indigo-900/10 blur-[100px]" />
+      </div>
 
-          <button onClick={() => { setShowNewForm(true); setSelectedDecisionId(null); setActiveTab("compass"); }}
-            className="p-2.5 rounded-xl transition-all active:scale-90"
-            style={{ background: "rgba(6,182,212,0.12)", border: "1px solid rgba(6,182,212,0.2)" }}
+      <BroadcastOverlay active={activeTab === "compass"} />
+      {/* ═══ Header ═══ */}
+      <motion.div initial={{ opacity: 0, y: -24 }} animate={{ opacity: 1, y: 0 }} className="px-5 pt-12 pb-6 flex flex-col items-center">
+        <div className="flex flex-col items-center gap-4 mb-6">
+          <motion.div 
+            whileHover={{ rotate: 360 }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            className="w-16 h-16 rounded-[2rem] flex items-center justify-center relative"
+            style={{ 
+              background: "rgba(6,182,212,0.12)", 
+              border: "1px solid rgba(6,182,212,0.25)",
+              boxShadow: "0 0 40px rgba(6,182,212,0.15)"
+            }}
           >
-            <Plus className="w-4 h-4 text-cyan-400" />
-          </button>
+            <Compass className="w-8 h-8 text-cyan-400" />
+            <motion.div 
+              className="absolute inset-0 bg-cyan-400/20 blur-2xl rounded-full -z-10"
+              animate={{ opacity: [0.1, 0.3, 0.1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            />
+          </motion.div>
+          <div className="text-center">
+            <h1 className="text-3xl font-black text-white tracking-tighter leading-tight">بوصلة القرارات</h1>
+            <p className="text-xs text-cyan-400/60 font-bold uppercase tracking-[0.2em] mt-2">The Sovereign Compass</p>
+          </div>
         </div>
 
-        {/* Tabs */}
+        <button onClick={() => { setShowNewForm(true); setSelectedDecisionId(null); setActiveTab("compass"); }}
+          className="group relative flex items-center gap-2 px-8 py-3 rounded-2xl bg-cyan-600/10 border border-cyan-500/30 hover:bg-cyan-500/20 transition-all text-cyan-400 font-black overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-cyan-400/5 translate-y-full group-hover:translate-y-0 transition-transform" />
+          <Plus className="w-4 h-4 relative z-10" />
+          <span className="text-sm relative z-10">تحليل قرار جديد</span>
+        </button>
+      </motion.div>
+
+      {/* Tabs */}
+      <div className="px-5 mb-8">
         <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
           {TABS.map((tab) => (
             <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSelectedDecisionId(null); }}
-              className="flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+              className="flex-1 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
               style={{
                 background: activeTab === tab.id ? "rgba(6,182,212,0.12)" : "transparent",
                 color: activeTab === tab.id ? "#06b6d4" : "rgba(148,163,184,0.4)",
                 border: activeTab === tab.id ? "1px solid rgba(6,182,212,0.2)" : "1px solid transparent",
               }}
             >
-              <tab.icon className="w-3.5 h-3.5" />
+              <tab.icon className="w-4 h-4" />
               {tab.label}
             </button>
           ))}
         </div>
-      </motion.div>
+      </div>
 
       {/* ═══ New Decision Form ═══ */}
       <AnimatePresence>
@@ -559,7 +609,7 @@ export const BawsalaScreen: FC = () => {
                     >
                       <Scale className="w-5 h-5 text-cyan-400/60" />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 text-right">
                       <p className="text-sm font-bold text-white truncate">{d.question}</p>
                       <p className="text-[10px] text-slate-500 mt-0.5">{d.options.length} خيارات · قيد التفكير</p>
                     </div>
@@ -567,6 +617,13 @@ export const BawsalaScreen: FC = () => {
                   </motion.button>
                 ))
               )}
+            </div>
+          )}
+          
+          {/* Shadow Glow for Selected Decision */}
+          {selectedDecision && (
+            <div className="absolute inset-0 pointer-events-none z-[-1]">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/5 blur-[80px] rounded-full" />
             </div>
           )}
         </motion.div>

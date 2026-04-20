@@ -154,7 +154,8 @@ export const HealingEchoModal: FC<HealingEchoModalProps> = ({
                     <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-white/5 rounded-full blur-3xl opacity-50 mix-blend-overlay" />
                     
                     {/* Noise texture overlay */}
-                    <div className="absolute inset-0 opacity-[0.2]" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }}></div>
+                    {/* Noise texture overlay removed for Crystal Clear aesthetic */}
+                    <div className="absolute inset-0 opacity-0 pointer-events-none"></div>
 
                     {/* Content */}
                     <div className="relative z-10 w-full text-center mt-4">

@@ -9,22 +9,6 @@ import { useThemeState } from "@/domains/consciousness/store/theme.store";
 export const AtmosphereSensoryLayer: React.FC = () => {
   const { liteMode } = useThemeState();
   
-  // No sensory effects in lite mode for performance
-  if (liteMode) return null;
-
-  return (
-    <div className="atmosphere-sensory-layer">
-      {/* 🌑 Focus Vignette */}
-      <div className="atmosphere-vignette" />
-      
-      {/* 🎞️ Cinematic Grain */}
-      <div className="atmosphere-grain" />
-      
-      {/* 🕶️ Lens Aberration / Glitch Layer */}
-      <div className="atmosphere-aberration" />
-      
-      {/* 📡 Radar Sweep (Subtle Background Pulse) */}
-      <div className="radar-sweep" />
-    </div>
-  );
+  // Force clear UI: No sensory effects allowed for absolute clarity (Crystal Clear v3)
+  return null;
 };

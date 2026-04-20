@@ -31,11 +31,11 @@ export function SovereignReceiver() {
           });
           consciousnessTheme.apply(fakeTheme, { smooth: true });
           
-          // Also explicitly update the Atmoshere Engine custom tokens
+          // Also explicitly update the Atmoshere Engine custom tokens to ZERO for absolute clarity
           useThemeState.getState().updateTokens({
-            vignetteStrength: parseFloat(fakeTheme.cssVariables["--atmosphere-vignette"] || "0.1"),
-            grainOpacity: parseFloat(fakeTheme.cssVariables["--atmosphere-grain"] || "0.05"),
-            chromaticAberration: parseFloat(fakeTheme.cssVariables["--atmosphere-aberration"] || "0")
+            vignetteStrength: 0,
+            grainOpacity: 0,
+            chromaticAberration: 0
           });
         } else if (cmd.type === 'INJECT_WHISPER') {
           injectWhisper(cmd.text);

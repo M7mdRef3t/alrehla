@@ -672,7 +672,18 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                Sovereign Radar
             </div>
 
-            {/* Main title and subtitle removed to prevent overlap with interactive circles as per user request */}
+            <motion.h1 
+              variants={cosmicFade}
+              className="text-2xl md:text-3xl font-black text-white tracking-tight leading-tight"
+            >
+              {pageTitle}
+            </motion.h1>
+            <motion.p 
+              variants={cosmicFade}
+              className="text-xs text-white/40 mt-1 font-medium tracking-wide"
+            >
+              {subtitle}
+            </motion.p>
 
           </motion.div>
         )}
@@ -932,10 +943,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {!journeyMode && (
         <motion.button
           type="button"
-          className="fixed z-40 right-5 md:right-auto md:left-6 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-[6rem] w-14 h-14 rounded-2xl flex items-center justify-center pointer-events-auto"
+          className="fixed z-40 right-6 bottom-[calc(7rem+env(safe-area-inset-bottom))] md:bottom-[7.5rem] w-14 h-14 rounded-full flex items-center justify-center shadow-2xl pointer-events-auto"
           style={{
             background: "linear-gradient(135deg, #2DD4BF 0%, #0D9488 100%)",
-            boxShadow: "0 4px 20px rgba(45,212,191,0.4)"
+            boxShadow: "0 0 30px rgba(45,212,191,0.3)"
           }}
           onClick={() => {
             onSelectNode(null);
@@ -943,7 +954,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             if (sub.tier === "basic" && activeNodes.length >= 3) setIsUpgradeOpen(true);
             else setShowAddPerson(true);
           }}
-          whileHover={{ scale: 1.1 }}
+          whileHover={{ scale: 1.1, rotate: 90 }}
           whileTap={{ scale: 0.9 }}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">

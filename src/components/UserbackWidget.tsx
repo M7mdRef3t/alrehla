@@ -17,10 +17,12 @@ export function UserbackWidget() {
   const { user, displayName, status } = useAuthState();
 
   useEffect(() => {
+    // Disable Userback in development to prevent console noise ("Invalid server response", etc)
+    if (runtimeEnv.isDev) {
+      return;
+    }
+
     if (!token) {
-      if (runtimeEnv.isDev) {
-        console.warn('[Userback] Access token is missing. Feedback widget will not be initialized.');
-      }
       return;
     }
 

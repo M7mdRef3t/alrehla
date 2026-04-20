@@ -329,6 +329,7 @@ export type FlowStep =
   | "landing_viewed"
   | "landing_ab_assigned"
   | "landing_clicked_start"
+  | "journey_started_frictionless"
   | "cta_free_clicked"
   | "cta_activation_clicked"
   | "activation_page_viewed"

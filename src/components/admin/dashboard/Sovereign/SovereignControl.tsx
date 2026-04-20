@@ -34,7 +34,12 @@ const CirclePulseIcon: FC<{ className?: string }> = ({ className }) => (
   </div>
 );
 
-export const SovereignControl: FC = () => {
+interface SovereignControlProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
   const [harmonyOverride, setHarmonyOverride] = useState<number>(0.8);
   const [isSaving, setIsSaving] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState("");
