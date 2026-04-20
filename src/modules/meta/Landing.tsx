@@ -9,7 +9,8 @@ import {
   Fingerprint, 
   Activity, 
   ShieldCheck, 
-  MessageCircle
+  MessageCircle,
+  Sparkles
 } from "lucide-react";
 import { trackingService } from "@/domains/journey";
 import { usePWAInstall } from "@/contexts/PWAInstallContext";
@@ -36,7 +37,12 @@ const DEFAULT_WHATSAPP_CONTACT = "201062635923";
 
 // Modular Sections
 import { 
-  HowItWorksSection 
+  ProblemFirstSection, 
+  FeatureShowcaseSection, 
+  HowItWorksSection, 
+  MetricsSection, 
+  SystemOverclockSection,
+  FinalReadinessSection
 } from "./landing/LandingSections";
 
 /* ─── Animation Variants ─────────────────────────────────────────────────── */
@@ -270,63 +276,70 @@ export const Landing: FC<LandingProps> = ({
 
       <div className="landing-intrinsic-sentinel" />
 
-      {/* 2. VALUE PROPOSITIONS — 3 Cards */}
-      <section className="relative py-24 px-4 max-w-5xl mx-auto">
+      {/* 2. OPERATING SYSTEM SECTION (Hardened Pitch) */}
+      <section className="relative py-28 px-4 max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, ease }}
-          className="text-center mb-16"
+          transition={{ duration: 0.8, ease }}
+          className="glass-premium rounded-[48px] overflow-hidden p-10 sm:p-20 text-center relative"
         >
-          <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 tracking-tight">
-            ليه <span className="text-teal-400">الرحلة</span> مختلفة؟
-          </h2>
-          <p className="text-base text-slate-500 max-w-[45ch] mx-auto">
-            مش نصايح عامة. بيانات حقيقية عن علاقاتك — تشوفها وتقرر.
-          </p>
-        </motion.div>
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/2 bg-teal-500/10 blur-[120px] pointer-events-none" />
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6" dir="rtl">
-          {[
-            { 
-              title: "شوف مين بيسحب طاقتك", 
-              desc: "خريطة بصرية توريك تدفق الطاقة في كل علاقة — مين بيزودك ومين بيستنزفك.", 
-              icon: <Fingerprint className="w-7 h-7 text-teal-400" />,
-              accent: "rgba(45, 212, 191, 0.12)"
-            },
-            { 
-              title: "افهم نمطك الحقيقي", 
-              desc: "تحليل ذكي لأنماطك المتكررة في العلاقات — والنقط العمياء اللي مش شايفها.", 
-              icon: <Activity className="w-7 h-7 text-sky-400" />,
-              accent: "rgba(56, 189, 248, 0.12)"
-            },
-            { 
-              title: "احمي حدودك بوضوح", 
-              desc: "أدوات عملية تساعدك تبني جدار حماية لسلامك النفسي وقراراتك.", 
-              icon: <ShieldCheck className="w-7 h-7 text-indigo-400" />,
-              accent: "rgba(129, 140, 248, 0.12)"
-            }
-          ].map((f, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.08 + i * 0.08, duration: 0.5 }}
-              whileHover={{ y: -6, transition: { duration: 0.2 } }}
-              className="group p-8 rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
-            >
-              <div 
-                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg"
-                style={{ backgroundColor: f.accent }}
+          <div className="mb-16 relative z-10">
+            <p className="text-[10px] font-black tracking-[0.5em] uppercase mb-6 text-teal-500 opacity-80">
+              نظام التشغيل — Operating System
+            </p>
+            <h2 className="text-4xl sm:text-6xl font-black mb-8 landing-principles-title tracking-tight text-white">
+              إحنا مش بنخمّن.<br /><span className="text-teal-400">إحنا بنحلل الـ Logic.</span>
+            </h2>
+            <p className="text-base sm:text-xl max-w-[55ch] mx-auto text-slate-400 leading-relaxed font-medium">
+              "الرحلة" بتوفرلك نظام تشغيل لوعيك بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام عاطفية، فيه بيانات منطقية بتساعدك تسترد سيادتك على حياتك.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-right relative z-10" dir="rtl">
+            {[
+              { 
+                title: "رصد الاستنزاف", 
+                desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية وتوقف النزيف فوراً.", 
+                icon: <Fingerprint className="w-8 h-8 text-teal-400" />,
+                accent: "rgba(45, 212, 191, 0.15)"
+              },
+              { 
+                title: "خرائط النبض", 
+                desc: "رسم بياني حي لتدفق الطاقة في كل دائرة؛ مين بيزودك ومين بيسحب منك.", 
+                icon: <Activity className="w-8 h-8 text-sky-400" />,
+                accent: "rgba(56, 189, 248, 0.15)"
+              },
+              { 
+                title: "تحصين الحدود", 
+                desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي وسيادتك على قرارك.", 
+                icon: <ShieldCheck className="w-8 h-8 text-indigo-400" />,
+                accent: "rgba(129, 140, 248, 0.15)"
+              }
+            ].map((f, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                className="group p-10 rounded-[32px] border border-white/5 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
               >
-                {f.icon}
-              </div>
-              <h3 className="text-xl font-black mb-3 text-white group-hover:text-teal-300 transition-colors">{f.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed font-medium group-hover:text-slate-400 transition-colors">{f.desc}</p>
-            </motion.div>
-          ))}
-        </div>
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg"
+                  style={{ backgroundColor: f.accent }}
+                >
+                  {f.icon}
+                </div>
+                <h3 className="text-2xl font-black mb-4 text-white group-hover:text-teal-300 transition-colors">{f.title}</h3>
+                <p className="text-base text-slate-500 leading-relaxed font-medium group-hover:text-slate-400 transition-colors">{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </section>
 
       {/* 3. SIMULATION SECTION */}
@@ -362,11 +375,41 @@ export const Landing: FC<LandingProps> = ({
         </motion.div>
       </section>
 
-      {/* 4. HOW IT WORKS */}
+      {/* 4. SYSTEM OVERCLOCK — Restored for System Architects */}
+      <SystemOverclockSection 
+        stagger={stagger} 
+        item={fadeUp} 
+      />
+
+      {/* 5. METRICS — Proof of Traction */}
+      <MetricsSection 
+        stagger={stagger} 
+        item={fadeUp} 
+        metricsState={{
+          data: {
+            activeUnits30d: 1472,
+            retentionRate30d: 84,
+            activity24h: 312
+          },
+          isLoading: false,
+          lastUpdatedAt: Date.now(),
+          mode: "fallback"
+        }}
+        liveEnabled={false}
+      />
+
+      {/* 6. HOW IT WORKS */}
       <HowItWorksSection
         stagger={stagger}
         item={fadeUp}
         data={landingCopy.howItWorks}
+      />
+
+      {/* 7. FINAL READINESS */}
+      <FinalReadinessSection 
+        stagger={stagger} 
+        item={fadeUp}
+        lastGoalLabel={lastGoalLabel}
       />
 
       {/* FINAL CALL TO ACTION */}
@@ -377,7 +420,7 @@ export const Landing: FC<LandingProps> = ({
           viewport={{ once: true }}
           className="max-w-3xl mx-auto"
         >
-          <h2 className="text-4xl sm:text-6xl font-black text-white mb-8">جاهز تشوف خريطتك؟</h2>
+          <h2 className="text-4xl sm:text-6xl font-black text-white mb-8">جاهز تسترد سيادتك؟</h2>
           <motion.button
             onClick={handleStart}
             whileHover={{ scale: 1.05 }}

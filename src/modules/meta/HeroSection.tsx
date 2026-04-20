@@ -1008,37 +1008,41 @@ export const HeroSection: FC<HeroSectionProps> = ({
             className="flex-1 max-w-[640px]"
           >
             <div className="flex items-center gap-3 mb-6">
-              <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Dawayir — بوصلة الوعي</span>
+              <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Dawayir — السيادة الشخصية</span>
+              <div className="px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+                <span className="text-[10px] font-bold text-cyan-400">{pulseCount.toLocaleString()} يستعيدون نبضهم</span>
+              </div>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-3">
-              مين بياخد<br />
-              <span className="text-cyan-400">من طاقتك؟</span>
+            <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-4">
+              أنت لست مرهقاً <br />
+              <span className="text-slate-400 font-light text-4xl md:text-5xl">أنت فقط</span>
+              <RotatingWord />
             </h1>
 
-            <p className="text-lg md:text-xl text-slate-400 leading-relaxed mb-10 max-w-[480px]">
-              خريطة بصرية تفاعلية لعلاقاتك — في دقيقتين هتعرف مين بيسندك ومين بيستنزفك. بدون نصايح، بيانات بس.
-            </p>
-
-            <div className="flex flex-col gap-4 mb-8">
+            <div className="flex flex-col md:flex-row gap-4 mb-10">
+              <input
+                type="text"
+                placeholder="ماذا تحب أن نناديك؟"
+                value={mirrorName}
+                onChange={(e) => setMirrorName(e.target.value)}
+                className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white outline-none focus:border-cyan-500/50 transition-colors w-full md:w-[260px]"
+              />
               <motion.button
                 onClick={handleStart}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-                className="cta-primary group relative overflow-hidden bg-cyan-500 text-black px-10 py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cyan-400 transition-all shadow-[0_0_40px_rgba(6,182,212,0.3)] hover:shadow-[0_0_60px_rgba(6,182,212,0.4)]"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-cyan-500 text-black px-8 py-4 rounded-xl font-black flex items-center justify-center gap-3 hover:bg-cyan-400 transition-colors"
               >
-                <div className="cta-shimmer" />
-                <Zap size={20} fill="currentColor" />
+                <Zap size={18} fill="currentColor" />
                 <span>{ctaJourney}</span>
-                <ArrowLeft size={20} className="transition-transform group-hover:-translate-x-2" />
+                <ArrowLeft size={18} />
               </motion.button>
-              {secondaryCta && (
-                <p className="text-[12px] text-slate-500 text-center font-medium tracking-wide">{secondaryCta}</p>
-              )}
             </div>
 
-            <div className="flex flex-wrap gap-5">
-              {["نتيجتك في ٣ دقائق", "مجاني بالكامل", "بياناتك محمية"].map((point, i) => (
+            <div className="flex flex-wrap gap-6">
+              {trustPoints.map((point, i) => (
                 <div key={i} className="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
                   <ShieldCheck size={14} className="text-cyan-500/50" />
                   {point}
