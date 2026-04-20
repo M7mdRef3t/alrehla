@@ -468,18 +468,52 @@ const HERO_STYLES = `
     gap: 6px;
   }
 
-  .trust-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    border-radius: 100px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(255,255,255,0.03);
-    backdrop-filter: blur(12px);
-    font-size: 11px;
-    font-weight: 700;
-    color: #8faab8;
+  .hero-grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  .ambient-orb {
+    position: absolute;
+    border-radius: 50%;
+    will-change: transform;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .ambient-orb-1 {
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, transparent 70%);
+    top: -10%; right: -5%;
+    animation: orb-drift1 40s infinite ease-in-out alternate;
+  }
+
+  @keyframes orb-drift1 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-5%, 5%) scale(1.1); }
+  }
+
+  .ambient-orb-2 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(245, 166, 35, 0.08) 0%, transparent 70%);
+    bottom: -20%; left: -5%;
+    animation: orb-drift2 50s infinite ease-in-out alternate;
+  }
+
+  @keyframes orb-drift2 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(5%, -5%) scale(1.1); }
+  }
+
+  .ambient-orb-3 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.05) 0%, transparent 70%);
+    top: 40%; left: 25%;
   }
 
   .trust-icon {
@@ -659,15 +693,12 @@ const HERO_STYLES = `
     position: relative;
     display: inline-flex;
     align-items: center;
-    width: auto;
-    min-height: 1.3em;
-    padding: 0;
-    overflow: visible;
-    white-space: nowrap;
-    font-family: "Noto Kufi Arabic";
-    line-height: 1.2;
     vertical-align: middle;
-    text-align: right;
+    width: fit-content;
+    height: 1.25em;
+    margin-right: 12px;
+    overflow: hidden;
+    color: var(--cyan);
   }
 
   .hero-body {
@@ -876,15 +907,15 @@ const RotatingWord: FC = () => {
   }, []);
 
   return (
-    <div className="relative h-[1.2em] overflow-hidden">
+    <div className="relative overflow-visible">
       <AnimatePresence mode="wait">
         <motion.span
           key={index}
-          initial={{ y: 20, opacity: 0 }}
+          initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -20, opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="absolute right-0 left-0 text-cyan-400 font-bold"
+          exit={{ y: -24, opacity: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="text-cyan-400 font-bold whitespace-nowrap block"
         >
           {ROTATING_WORDS[index]}
         </motion.span>
@@ -983,12 +1014,21 @@ export const HeroSection: FC<HeroSectionProps> = ({
       <style>{HERO_STYLES}</style>
       <section className="hero-root" dir="rtl" onMouseMove={handleMouseMove}>
         <div className="hero-canvas" aria-hidden>
+          <div className="hero-grain" />
+          <div className="ambient-orb ambient-orb-1" />
+          <div className="ambient-orb ambient-orb-2" />
+          <div className="ambient-orb ambient-orb-3" />
+          
           <motion.div className="hero-layer hero-layer--starfield">
             <div className="hero-starfield" />
           </motion.div>
+          
           <motion.div className="hero-layer hero-layer--grid">
-            <div className="hero-grid-wrapper"><div className="hero-grid" /></div>
+            <div className="hero-grid-wrapper">
+              <div className="hero-grid" />
+            </div>
           </motion.div>
+
           <div className="hero-screen-vignette" />
           <div className="hero-screen-glow" />
         </div>
@@ -1007,8 +1047,12 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
             <h1 className="hero-headline">
               أنت لست مرهقاً <br />
-              <span className="text-slate-500 font-light opacity-60 italic">أنت فقط</span>
-              <RotatingWord />
+              <div className="flex items-center flex-wrap">
+                <span className="text-slate-500 font-light opacity-60 italic ml-4">أنت فقط</span>
+                <div className="rotating-word-wrapper">
+                  <RotatingWord />
+                </div>
+              </div>
             </h1>
 
             <p className="hero-body">
