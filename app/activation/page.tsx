@@ -8,7 +8,7 @@ import { marketingLeadService } from "../../src/services/marketingLeadService";
 import { recordFlowEvent } from "../../src/services/journeyTracking";
 import { safeGetSession } from "../../src/services/supabaseClient";
 import { revenueConfig } from "../../src/config/opsLinks";
-import { AppAtmosphere } from "../../src/modules/meta/AppAtmosphere";
+import { AppAtmosphere } from "../../src/components/shared/AppAtmosphere";
 
 // We now use revenueConfig.number from src/config/opsLinks.ts
 const VODAFONE_CASH_NUMBER = revenueConfig.number;
