@@ -1,4 +1,4 @@
-﻿import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEffect, useRef, Fragment } from "react";
+import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowLeft, Zap, Shield, Heart } from "lucide-react";
 
@@ -1068,9 +1068,9 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
                 opacity: [0, 1, 0]
               }}
               transition={{ 
-                duration: 2 + Math.random() * 2, 
+                duration: 2 + ((i * 17) % 20) / 10, 
                 repeat: Infinity, 
-                delay: Math.random() * 3,
+                delay: ((i * 11) % 30) / 10,
                 ease: "easeInOut"
               }}
               style={{
@@ -1332,10 +1332,10 @@ export const HeroSection: FC<HeroSectionProps> = ({
     Array.from({ length: 40 }, (_, i) => ({
       id: `warp-line-${i}`,
       top: `${(i / 40) * 110 - 5}%`,
-      width: `${15 + Math.random() * 45}%`,
-      opacity: 0.15 + Math.random() * 0.55,
-      delay: Math.random() * 0.4,
-      duration: 0.25 + Math.random() * 0.3,
+      width: `${15 + ((i * 17) % 45)}%`,
+      opacity: 0.15 + ((i * 7) % 55) / 100,
+      delay: ((i * 13) % 40) / 100,
+      duration: 0.25 + ((i * 23) % 30) / 100,
     }))
   ), []);
 
