@@ -185,7 +185,7 @@ const ArtistChat = lazy(() =>
 );
 
 
-const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
+const DEFAULT_WHATSAPP_CONTACT = "0201110795932";
 
 function normalizeArabicDigits(value: string): string {
   return value

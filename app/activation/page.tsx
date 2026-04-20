@@ -8,6 +8,7 @@ import { marketingLeadService } from "../../src/services/marketingLeadService";
 import { recordFlowEvent } from "../../src/services/journeyTracking";
 import { safeGetSession } from "../../src/services/supabaseClient";
 import { revenueConfig } from "../../src/config/opsLinks";
+import { AppAtmosphere } from "../../src/modules/meta/AppAtmosphere";
 
 // We now use revenueConfig.number from src/config/opsLinks.ts
 const VODAFONE_CASH_NUMBER = revenueConfig.number;
@@ -150,7 +151,9 @@ export default function ActivationPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#020408] text-white selection:bg-teal-500/30 relative flex flex-col items-center py-10 px-4 md:px-0" dir="rtl">
+    <>
+      <AppAtmosphere />
+      <main className="min-h-screen bg-[#020408] text-white selection:bg-teal-500/30 relative flex flex-col items-center py-10 px-4 md:px-0" dir="rtl">
       {/* Background cinematic elements */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-teal-500/10 blur-[100px]" />
@@ -360,5 +363,6 @@ export default function ActivationPage() {
         </AnimatePresence>
       </div>
     </main>
+    </>
   );
 }

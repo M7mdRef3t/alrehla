@@ -54,7 +54,10 @@ export default async function Page() {
       console.warn("[Homepage] Supabase query error:", error.message || error);
     }
 
-    pageData = data?.data ?? null;
+    // FORCE SOVEREIGN OVERRIDE: 
+    // We intentionally bypass the CMS data to render our newly restored
+    // "Peak Sovereignty" local components (Hafiz, Sada, Markaz, Hero High-Fidelity).
+    pageData = null; 
   } catch (error) {
     console.warn("[Homepage] Supabase request failed:", error);
   }

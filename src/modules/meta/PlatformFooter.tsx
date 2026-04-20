@@ -87,7 +87,7 @@ export function PlatformFooter() {
             { label: "ابدأ رحلتك", href: "/onboarding" },
             { label: "سياسة الخصوصية", href: "/privacy" },
             { label: "شروط الاستخدام", href: "/terms" },
-            { label: "تواصل معنا", href: "https://wa.me/201023050092", external: true },
+            { label: "تواصل معنا", href: "https://wa.me/201110795932", external: true },
           ].map(({ label, href, external }) => (
             <a
               key={href}
