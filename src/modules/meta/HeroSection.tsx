@@ -889,22 +889,80 @@ const HERO_STYLES = `
 
   /* ΓöÇΓöÇ Mobile Layout ΓöÇΓöÇ */
   @media (max-width: 1023px) {
+    .hero-root {
+      overflow-x: hidden;
+      width: 100%;
+    }
+
     .hero-content-wrapper {
       flex-direction: column;
       gap: 2rem;
-      padding: 5rem 1.25rem 3rem;
+      padding: 5rem 1rem 3rem;
+      width: 100%;
+      max-width: 100vw;
+      box-sizing: border-box;
+      overflow-x: hidden;
+    }
+
+    .hero-copy-column {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
     }
     
-    .headline-static, 
-    .rotating-word-wrapper, 
+    .headline-static {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center !important;
+      width: 100%;
+      margin: 0 auto;
+      box-sizing: border-box;
+    }
+    
+    .headline-line {
+      font-size: clamp(2.2rem, 8vw, 3rem);
+      line-height: 1.2;
+      white-space: normal; /* Fix horizontal scaling issue */
+      text-align: center;
+    }
+    
+    .headline-subline {
+      text-align: center;
+      white-space: normal;
+      margin-top: 0.5rem;
+    }
+
+    .rotating-word-wrapper {
+      justify-content: center;
+      text-align: center !important;
+      margin-left: auto;
+      margin-right: auto;
+      display: flex !important;
+    }
+
     .hero-body {
       text-align: center !important;
       margin-left: auto;
       margin-right: auto;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      padding: 0;
     }
 
-    .rotating-word-wrapper {
-        justify-content: center;
+    .hero-input-group {
+      width: 100%;
+      max-width: 100vw;
+      box-sizing: border-box;
+    }
+
+    .hero-input-wrapper {
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .cta-group {
@@ -912,27 +970,46 @@ const HERO_STYLES = `
       width: 100%;
       flex-direction: column;
       gap: 16px;
+      box-sizing: border-box;
     }
 
     .cta-primary {
       width: 100%;
       justify-content: center;
-      padding: 22px 24px;
-      font-size: 1.2rem;
+      padding: 18px 20px;
+      font-size: 1.1rem;
       background: rgba(20,184,166,0.2);
       border: 1px solid rgba(20,184,166,0.8);
       box-shadow: 0 0 40px rgba(20,184,166,0.2), inset 0 1px rgba(255,255,255,0.1);
+      box-sizing: border-box;
+      white-space: normal; /* Allow text wrap instead of push */
     }
 
     .cta-secondary {
       width: 100%;
       justify-content: center;
+      box-sizing: border-box;
+      white-space: normal;
+    }
+
+    .hero-trust-row {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .trust-pill {
+      font-size: 0.75rem;
+      padding: 6px 10px;
     }
 
     .map-area {
-      width: min(95vw, 400px);
+      width: 100%;
+      max-width: min(95vw, 400px);
       margin: 0 auto;
       padding-bottom: 24px;
+      box-sizing: border-box;
+      overflow: visible;
     }
   }
 `;
@@ -1068,9 +1145,9 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
                 opacity: [0, 1, 0]
               }}
               transition={{ 
-                duration: 2 + ((i * 17) % 20) / 10, 
+                duration: 2 + Math.random() * 2, 
                 repeat: Infinity, 
-                delay: ((i * 11) % 30) / 10,
+                delay: Math.random() * 3,
                 ease: "easeInOut"
               }}
               style={{
@@ -1332,10 +1409,10 @@ export const HeroSection: FC<HeroSectionProps> = ({
     Array.from({ length: 40 }, (_, i) => ({
       id: `warp-line-${i}`,
       top: `${(i / 40) * 110 - 5}%`,
-      width: `${15 + ((i * 17) % 45)}%`,
-      opacity: 0.15 + ((i * 7) % 55) / 100,
-      delay: ((i * 13) % 40) / 100,
-      duration: 0.25 + ((i * 23) % 30) / 100,
+      width: `${15 + Math.random() * 45}%`,
+      opacity: 0.15 + Math.random() * 0.55,
+      delay: Math.random() * 0.4,
+      duration: 0.25 + Math.random() * 0.3,
     }))
   ), []);
 
