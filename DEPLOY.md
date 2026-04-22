@@ -28,6 +28,15 @@ The project is optimized for **Vercel**. All routing and API handlers are within
 3. Configure the env vars listed above.
 4. Deploy.
 
+### GitHub Actions deploy
+This repo also includes a direct deploy workflow on `push` to `main`:
+
+- Workflow: `.github/workflows/vercel-deploy.yml`
+- Required GitHub secret: `VERCEL_TOKEN`
+- Vercel project IDs are pinned from `.vercel/project.json`
+
+If the workflow says the token is missing, add `VERCEL_TOKEN` in GitHub repo settings under **Secrets and variables > Actions**.
+
 ---
 *Motto: Kill the Deceiver with Science.*
  🛡️ [ARCHITECTURE.md](./ARCHITECTURE.md) | 🧠 [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)
