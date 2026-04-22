@@ -68,16 +68,19 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
   // Build product pulses
   const products: ProductPulse[] = useMemo(() => [
     // Core Ecosystem
-    { id: "dawayir", name: "دوائر", emoji: "🔵", color: "#6366f1", stat: mapNodes?.length ?? 0, statLabel: "عقدة", hasActivity: (mapNodes?.length ?? 0) > 0, screen: "map" },
+    { id: "dawayir", name: "دوائر", emoji: "🔵", color: "#6366f1", stat: mapNodes?.length ?? 0, statLabel: "عقدة", hasActivity: (mapNodes?.length ?? 0) > 0, screen: "dawayir" },
     { id: "maraya", name: "مرايا", emoji: "🪞", color: "#a78bfa", stat: 0, statLabel: "انعكاس", hasActivity: false, screen: "maraya" },
     { id: "atmosfera", name: "أتموسفيرا", emoji: "🌤️", color: "#f472b6", stat: 0, statLabel: "حالة", hasActivity: false, screen: "atmosfera" },
     { id: "masarat", name: "مسارات", emoji: "🛤️", color: "#f59e0b", stat: 0, statLabel: "مسار", hasActivity: false, screen: "masarat" },
     { id: "baseera", name: "بصيرة", emoji: "👁️", color: "#14b8a6", stat: 0, statLabel: "رؤية", hasActivity: false, screen: "baseera" },
     { id: "watheeqa", name: "وثيقة", emoji: "📜", color: "#e879f9", stat: 0, statLabel: "وثيقة", hasActivity: false, screen: "watheeqa" },
+    { id: "kharita", name: "خريطة", emoji: "🗺️", color: "#06b6d4", stat: 0, statLabel: "أداة", hasActivity: false, screen: "kharita" },
     // Balance & Social
     { id: "mizan", name: "ميزان", emoji: "⚖️", color: "#f97316", stat: 0, statLabel: "تقييم", hasActivity: false, screen: "mizan" },
     { id: "rifaq", name: "رفاق", emoji: "👥", color: "#22c55e", stat: 0, statLabel: "رفيق", hasActivity: false, screen: "rifaq" },
     { id: "murshid", name: "مرشد", emoji: "🧠", color: "#8b5cf6", stat: 0, statLabel: "توجيه", hasActivity: false, screen: "murshid" },
+    { id: "jisr", name: "جسر", emoji: "🌉", color: "#ec4899", stat: 0, statLabel: "جسر", hasActivity: false, screen: "jisr" },
+    { id: "rafiq", name: "رفيق", emoji: "🧭", color: "#6366f1", stat: 0, statLabel: "رفيق", hasActivity: false, screen: "rafiq" },
     // Reports & Navigation
     { id: "taqrir", name: "تقرير", emoji: "📊", color: "#06b6d4", stat: 0, statLabel: "تقرير", hasActivity: false, screen: "taqrir" },
     { id: "bawsala", name: "بوصلة", emoji: "🧭", color: "#06b6d4", stat: 0, statLabel: "قرار", hasActivity: false, screen: "bawsala" },
@@ -86,9 +89,21 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
     { id: "nadhir", name: "نذير", emoji: "🛡️", color: "#ef4444", stat: 0, statLabel: "تنبيه", hasActivity: false, screen: "nadhir" },
     // Habits & Rituals
     { id: "wird", name: "وِرد", emoji: "🔥", color: "#fbbf24", stat: wirdStreak, statLabel: "يوم", hasActivity: wirdStreak > 0, screen: "wird" },
+    { id: "warsha", name: "ورشة", emoji: "⚡", color: "#f97316", stat: 0, statLabel: "تحدي", hasActivity: false, screen: "warsha" },
     { id: "mithaq", name: "ميثاق", emoji: "🤝", color: "#fbbf24", stat: pledges?.length ?? 0, statLabel: "عقد", hasActivity: (pledges?.length ?? 0) > 0, screen: "mithaq" },
     { id: "sullam", name: "سُلّم", emoji: "📈", color: "#84cc16", stat: goals?.length ?? 0, statLabel: "هدف", hasActivity: (goals?.length ?? 0) > 0, screen: "sullam" },
     { id: "bathra", name: "بذرة", emoji: "🌱", color: "#10b981", stat: seeds?.length ?? 0, statLabel: "بذرة", hasActivity: (seeds?.length ?? 0) > 0, screen: "bathra" },
+    { id: "session-intake", name: "جلسات", emoji: "📅", color: "#3b82f6", stat: 0, statLabel: "طلب", hasActivity: false, screen: "session-intake" },
+    { id: "session-console", name: "كونسول الجلسات", emoji: "🧩", color: "#3b82f6", stat: 0, statLabel: "جلسة", hasActivity: false, screen: "session-console" },
+    // Soul & Inner Work
+    { id: "samt", name: "صمت", emoji: "🤫", color: "#14b8a6", stat: 0, statLabel: "نَفَس", hasActivity: false, screen: "samt" },
+    { id: "qalb", name: "قلب", emoji: "❤️", color: "#ef4444", stat: 0, statLabel: "نبض", hasActivity: false, screen: "qalb" },
+    { id: "niyya", name: "نية", emoji: "🎯", color: "#10b981", stat: 0, statLabel: "نية", hasActivity: false, screen: "niyya" },
+    { id: "jathr", name: "جذر", emoji: "🧬", color: "#22c55e", stat: 0, statLabel: "قيمة", hasActivity: false, screen: "jathr" },
+    { id: "ruya", name: "رؤيا", emoji: "🔮", color: "#8b5cf6", stat: 0, statLabel: "حلم", hasActivity: false, screen: "ruya" },
+    { id: "kanz", name: "كنز", emoji: "🪙", color: "#f59e0b", stat: 0, statLabel: "حكمة", hasActivity: false, screen: "kanz" },
+    { id: "tazkiya", name: "تزكية", emoji: "🌿", color: "#a78bfa", stat: 0, statLabel: "تطهير", hasActivity: false, screen: "tazkiya" },
+    { id: "protocol", name: "بروتوكول", emoji: "⚡", color: "#f59e0b", stat: 0, statLabel: "خطة", hasActivity: false, screen: "protocol" },
     // Memory & Focus
     { id: "markaz", name: "مركز", emoji: "🏢", color: "#6366f1", stat: 0, statLabel: "أمر", hasActivity: false, screen: "markaz" },
     { id: "sada", name: "صدى", emoji: "🔔", color: "#06b6d4", stat: 0, statLabel: "تنبيه", hasActivity: false, screen: "sada" },
@@ -96,6 +111,9 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
     { id: "mirah", name: "مرآة", emoji: "🔮", color: "#c084fc", stat: 0, statLabel: "رؤية", hasActivity: false, screen: "mirah" },
     { id: "sijil", name: "سِجل", emoji: "📋", color: "#10b981", stat: 0, statLabel: "حدث", hasActivity: false, screen: "sijil" },
     { id: "naba", name: "نبع", emoji: "💧", color: "#06b6d4", stat: 0, statLabel: "رشفة", hasActivity: false, screen: "naba" },
+    { id: "athar", name: "أثر", emoji: "📜", color: "#f59e0b", stat: 0, statLabel: "أثر", hasActivity: false, screen: "athar" },
+    { id: "risala", name: "رسالة", emoji: "✉️", color: "#f59e0b", stat: 0, statLabel: "رسالة", hasActivity: false, screen: "risala" },
+    { id: "shahada", name: "شهادة", emoji: "📄", color: "#14b8a6", stat: 0, statLabel: "شهادة", hasActivity: false, screen: "shahada" },
     // New Modules
     { id: "observatory", name: "المرصد", emoji: "🕸️", color: "#818cf8", stat: 0, statLabel: "نمط", hasActivity: false, screen: "observatory" },
     { id: "wasiyya", name: "وصية", emoji: "✉️", color: "#fbbf24", stat: letters?.length ?? 0, statLabel: "رسالة", hasActivity: (letters?.length ?? 0) > 0, screen: "wasiyya" },

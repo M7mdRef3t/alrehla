@@ -30,7 +30,15 @@ const KNOWN_SCREENS = new Set<AppScreen>([
   "oracle-dashboard", "armory", "survey", "exit-scripts",
   "grounding", "stories", "about", "insights", "quizzes",
   "behavioral-analysis", "resources",
-  "profile", "sanctuary", "protocol", "dawayir"
+  "profile", "sanctuary", "protocol", "dawayir", "maraya",
+  "session-intake", "session-console", "atmosfera", "masarat",
+  "baseera", "watheeqa", "mizan", "rifaq", "murshid", "taqrir",
+  "bawsala", "riwaya", "nadhir", "wird", "markaz", "sada",
+  "hafiz", "mirah", "sijil", "naba", "mithaq", "sullam",
+  "bathra", "observatory", "wasiyya", "khalwa", "ecosystem-hub",
+  "tazkiya", "jisr", "risala", "shahada", "warsha", "kanz",
+  "qalb", "athar", "rafiq", "diagnosis", "niyya", "samt",
+  "jathr", "kharita", "ruya", "life-os"
 ]);
 
 /** Type guard: narrows `string` â†’ `AppScreen` safely */
@@ -171,7 +179,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
       {screen !== "landing" && (
         <>
           <div
-            className={`fixed right-0 left-0 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500 ${scrolled ? "top-16" : "top-20"}`}
+            className={`fixed right-0 md:right-72 left-0 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500 ${scrolled ? "top-16" : "top-20"}`}
             style={{ zIndex: Z_LAYERS.BREADCRUMBS }}
           >
             <PlatformBreadcrumb items={breadcrumbItems} onNavigate={handleHeaderNavigate} />
@@ -185,7 +193,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         </>
       )}
       <div
-        className={`min-h-screen flex flex-col transition-colors relative isolate ${screen !== "landing" ? "overflow-visible" : ""} bg-[var(--page-bg)]`}
+        className={`min-h-screen flex flex-col transition-colors relative isolate ${screen !== "landing" ? "overflow-visible md:pr-72" : ""} bg-[var(--page-bg)]`}
         dir="rtl"
       >
         {isFeaturePreviewSession && (
@@ -251,7 +259,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                 >
                   {screen !== "map" && showSystemOverclockControls && (
                     <div 
-                      className="fixed bottom-24 right-6 flex flex-col items-end gap-3 pointer-events-auto"
+                      className="fixed bottom-24 right-6 md:right-80 flex flex-col items-end gap-3 pointer-events-auto"
                       style={{ zIndex: Z_LAYERS.SYSTEM_WHISPER }}
                     >
                       <AnimatePresence>
@@ -287,18 +295,19 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
           </main>
           <AppOverlayHost {...overlayHostProps} />
         </AppChromeShell>
-        <AppSidebar
-          onOpenGym={() => mainContentProps.onNavigate?.("tools")}
-          onStartJourney={mainContentProps.onStartJourney}
-          onOpenBaseline={() => mainContentProps.onNavigate?.("baseline")}
-          onOpenGuidedJourney={() => mainContentProps.onNavigate?.("guided")}
-          onOpenDawayir={() => mainContentProps.onNavigate?.("dawayir")}
-          onOpenProtocol={() => mainContentProps.onNavigate?.("protocol")}
-          onFeatureLocked={mainContentProps.onFeatureLocked}
-          onOpenMission={mainContentProps.onOpenMission}
-        />
         <AscensionRitual />
       </div>
+      <AppSidebar
+        onOpenGym={() => mainContentProps.onNavigate?.("tools")}
+        onStartJourney={mainContentProps.onStartJourney}
+        onOpenBaseline={() => mainContentProps.onNavigate?.("baseline")}
+        onOpenGuidedJourney={() => mainContentProps.onNavigate?.("guided")}
+        onOpenDawayir={() => mainContentProps.onNavigate?.("dawayir")}
+        onOpenProtocol={() => mainContentProps.onNavigate?.("protocol")}
+        onFeatureLocked={mainContentProps.onFeatureLocked}
+        onOpenMission={mainContentProps.onOpenMission}
+        onNavigateAppScreen={mainContentProps.onNavigate}
+      />
       <GlobalToast />
         <GraphEventToast />
       </div>

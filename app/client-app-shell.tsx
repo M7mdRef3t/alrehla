@@ -91,7 +91,7 @@ function shouldSilenceAiLog(args: unknown[]): boolean {
     text.includes("[ORCHESTRATOR] Sanctuary Mode deactivated") ||
     text.includes("[Decision]") ||
     text.includes("Question generation requires approval") ||
-    (lowerMsg.includes("[meta pixel] unavailable") && lowerMsg.includes("traffic permission")) ||
+    (lowerMsg.includes("[meta pixel]") && lowerMsg.includes("unavailable") && lowerMsg.includes("traffic permission")) ||
     lowerMsg.includes("skipping auto-scroll behavior") ||
     lowerMsg.includes("pulse anchored to reality")
   );
@@ -243,6 +243,15 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
     setShouldLoadFullApp(true);
   }, []);
 
+  // Screens that are accessible without revenue gate (open/compass screens)
+  const openPublicScreenFromLanding = useCallback((screen: string) => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, `${APP_SCREEN_BOOT_ACTION_PREFIX}${screen}`);
+    }
+    setLockFullAppMode(true);
+    setShouldLoadFullApp(true);
+  }, []);
+
   const handleLandingNavigate = useCallback((screen: string) => {
     switch (screen) {
       case "home":
@@ -270,12 +279,24 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
       case "resources":
       case "quizzes":
       case "behavioral-analysis":
+      case "maraya":
+      case "masarat":
+      case "atmosfera":
+      case "baseera":
+      case "mizan":
+      case "rifaq":
+      case "murshid":
+      case "ecosystem-hub":
         openAppScreenFromLanding(screen);
+        return;
+      // Public screens: accessible without subscription or onboarding
+      case "bawsala":
+        openPublicScreenFromLanding(screen);
         return;
       default:
         startRecoveryFromLanding();
     }
-  }, [openAppScreenFromLanding, startRecoveryFromLanding]);
+  }, [openAppScreenFromLanding, openPublicScreenFromLanding, startRecoveryFromLanding]);
 
   useEffect(() => {
     setMounted(true);
@@ -370,11 +391,6 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
               />
             )}
           </PWAInstallProvider>
-        )}
-        {runtimeEnv.isDev && !shouldLoadFullApp && (
-          <div className="fixed left-4 top-4 z-[200] rounded-full border border-emerald-400/40 bg-black/80 px-4 py-2 text-[11px] font-black tracking-[0.2em] text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.25)] backdrop-blur-md">
-            DEV LATEST LOCAL
-          </div>
         )}
         <AnalyticsConsentBanner />
         <AnalyticsDiagnosticsOverlay />

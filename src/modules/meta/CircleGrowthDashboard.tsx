@@ -258,7 +258,7 @@ export const CircleGrowthDashboard: FC<CircleGrowthDashboardProps> = ({
                           <div className="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl border border-slate-700 relative overflow-hidden">
                              <div className="absolute bottom-0 right-0 h-1 bg-amber-500 w-[90%]" />
                              <span className="text-sm font-medium text-slate-400">Elite Harmony</span>
-                             <span className="text-[10px] font-bold text-amber-500">قريباً</span>
+                             <Lock className="w-4 h-4 text-slate-600" />
                           </div>
                        </div>
                     </div>

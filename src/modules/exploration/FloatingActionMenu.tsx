@@ -75,8 +75,8 @@ export const FloatingActionMenu: FC<FloatingActionMenuProps> = ({
 
   const positionStyles =
     fabState.position === "bottom-left"
-      ? { bottom: "1.5rem", left: "1.5rem" }
-      : { bottom: "1.5rem", right: "1.5rem" };
+      ? { bottom: "var(--fab-bottom-offset, 6.5rem)", left: "1.5rem" }
+      : { bottom: "var(--fab-bottom-offset, 6.5rem)", right: "1.5rem" };
 
   return (
     <div className="fixed z-50" style={positionStyles}>

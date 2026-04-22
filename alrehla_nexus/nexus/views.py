@@ -11,7 +11,7 @@ class InsightViewSet(viewsets.ModelViewSet):
         عزل البيانات بشكل صارم: المستخدم لا يرى إلا بصائره الخاصة.
         """
         user_id = self.request.user.id
-        return UserInsight.get_queryset().filter(user_id=user_id).order_by('-created_at')
+        return UserInsight.objects.filter(user_id=user_id).order_by('-created_at')
 
     def perform_create(self, serializer):
         """

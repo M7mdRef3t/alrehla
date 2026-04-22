@@ -111,7 +111,7 @@ function getGreeting() {
   return { text: "مساء الخير 🌆", color: "#60A5FA" };
 }
 
-function HeroSection({ xp, level, moodToday }: { xp: number; level: number; moodToday: PulseEntry | null }) {
+function DashboardGreeting({ xp, level, moodToday }: { xp: number; level: number; moodToday: PulseEntry | null }) {
   const { text, color } = getGreeting();
   const mood = moodToday ? MOODS.find((m) => m.v === moodToday.mood) : null;
 
@@ -1164,8 +1164,8 @@ export function InteractiveDashboard({ onBack }: InteractiveDashboardProps) {
         {/* ════ Main Content ════ */}
         <div style={{ flex: 1, minWidth: 0 }}>
 
-          {/* ① Hero */}
-          <HeroSection xp={xp} level={level} moodToday={moodToday} />
+          {/* ① Greeting */}
+          <DashboardGreeting xp={xp} level={level} moodToday={moodToday} />
 
           {isProfileTab && <UserProfile onBack={onBack} />}
 

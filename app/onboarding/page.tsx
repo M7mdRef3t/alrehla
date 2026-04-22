@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { Metadata } from "next";
-
+import { Suspense } from "react";
 import OnboardingRouteClient from "./OnboardingRouteClient";
 
 export const dynamic = "force-dynamic";
@@ -36,5 +36,13 @@ export const metadata: Metadata = {
 };
 
 export default function OnboardingPage() {
-  return <OnboardingRouteClient />;
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <OnboardingRouteClient />
+    </Suspense>
+  );
 }

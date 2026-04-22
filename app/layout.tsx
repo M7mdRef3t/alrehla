@@ -2,6 +2,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import Script from "next/script";
+import { Cairo, Noto_Kufi_Arabic, Alexandria, Tajawal } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ConsciousnessSensoryProvider } from "@/components/providers/ConsciousnessSensoryProvider";
@@ -9,6 +10,34 @@ import { WhisperOverlay } from "@/components/ui/WhisperOverlay";
 import { SovereignReceiver } from "@/components/providers/SovereignReceiver";
 import { SovereignThemeSync } from "@/components/providers/SovereignThemeSync";
 import ClarityInit from "@/components/analytics/ClarityInit";
+
+const cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  weight: ["200", "300", "400", "500", "600", "700", "800", "900", "1000"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const notoKufi = Noto_Kufi_Arabic({
+  subsets: ["arabic", "latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const alexandria = Alexandria({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-alexandria",
+  display: "swap",
+});
+
+const tajawal = Tajawal({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "700", "800", "900"],
+  variable: "--font-tajawal",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.alrehla.app"),
@@ -113,7 +142,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning>
+    <html 
+      lang="ar" 
+      dir="rtl" 
+      suppressHydrationWarning 
+      className={`${cairo.variable} ${notoKufi.variable} ${alexandria.variable} ${tajawal.variable}`}
+    >
       <head>
         {process.env.NODE_ENV !== "production" && (
           <Script
@@ -138,16 +172,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         )}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="facebook-domain-verification" content="kpz27jh9kfbty91d4ob1g1r3jtfyzo" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Noto+Kufi+Arabic:wght@100..900&display=swap"
-        />
         <Script
           id="jsonld-website"
           type="application/ld+json"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",

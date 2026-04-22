@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { v4 as uuid } from "uuid";
-import { verifyAdmin, type AdminRequest, type AdminResponse } from "../../../../../server/admin/_shared";
+import { verifyAppRouterAdmin } from "../../../../../server/admin/_shared";
 import { injectOpenTracker, injectClickTracker } from "../../email/engine";
 import { buildMarketingEmail } from "@/lib/marketing/emailTemplate";
 
@@ -20,13 +20,7 @@ async function checkAuth(req: Request): Promise<boolean> {
   const auth = req.headers.get("authorization");
   if (secret && auth === `Bearer ${secret}`) return true;
 
-  const mockReq: AdminRequest = {
-    method: req.method,
-    url: req.url,
-    headers: Object.fromEntries(req.headers.entries()),
-  };
-  const mockRes: AdminResponse = { status: () => mockRes, json: () => mockRes };
-  return verifyAdmin(mockReq, mockRes);
+  return await verifyAppRouterAdmin(req);
 }
 
 /**

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Suspense } from "react";
 import { applyReferralCode } from "@/services/referralEngine";
+import { initAnalytics, trackLandingView } from "@/services/analytics";
 
 /* ══════════════════════════════════════════
    صفحة الهبوط للإحالة — Referral Landing Page
@@ -19,6 +20,20 @@ function ReferralContent() {
 
   useEffect(() => {
     setMounted(true);
+    
+    // 1. Initialize Analytics to ensure Meta Pixel is loaded
+    initAnalytics();
+    
+    const params: Record<string, string> = { content_name: "referral_landing" };
+    searchParams?.forEach((value, key) => {
+      if (key.startsWith('utm_') || key === 'fbclid' || key === 'ref') {
+        params[key] = value;
+      }
+    });
+
+    // 2. Track Landing Page View immediately for higher fidelity conversion tracking
+    trackLandingView(params);
+
     const ref = searchParams?.get("ref");
     if (ref) {
       setRefCode(ref);
@@ -31,11 +46,13 @@ function ReferralContent() {
   }, [searchParams]);
 
   const handleStart = () => {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams?.toString() || "");
+    
     if (refCode) params.set("ref", refCode);
-    params.set("utm_source", searchParams?.get("utm_source") || "referral");
-    params.set("utm_medium", searchParams?.get("utm_medium") || "share");
-    params.set("utm_campaign", searchParams?.get("utm_campaign") || "viral");
+    if (!params.has("utm_source")) params.set("utm_source", "referral");
+    if (!params.has("utm_medium")) params.set("utm_medium", "share");
+    if (!params.has("utm_campaign")) params.set("utm_campaign", "viral");
+    
     router.push(`/gate?${params.toString()}`);
   };
 

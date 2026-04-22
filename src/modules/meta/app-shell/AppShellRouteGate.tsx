@@ -11,7 +11,7 @@ const AdminOverviewPanel = lazy(() =>
 );
 const DawayirApp = lazy(() => import("@/modules/dawayir/DawayirApp").then((m) => ({ default: m.default })));
 const DebugLogoLab = lazy(() => import("../debug/DebugLogoLab"));
-const HeroExhibition = lazy(() => import("../HeroExhibition").then((m) => ({ default: m.HeroExhibition })));
+
 
 interface AppShellRouteGateProps {
   isAdminRoute: boolean;
@@ -46,13 +46,7 @@ export function AppShellRouteGate({
     return <LegalPage type={pathname === "/privacy" ? "privacy" : "terms"} />;
   }
 
-  if (pathname === "/hero-lab") {
-    return (
-      <Suspense fallback={<div className="min-h-screen bg-[#02040a]" />}>
-        <HeroExhibition />
-      </Suspense>
-    );
-  }
+
 
   if (isDawayirRoute) {
     return (

@@ -22,11 +22,14 @@ export interface WhatsAppMessagePayload {
   gateway?: 'meta' | 'ultramsg' | 'other';
 }
 
-export type WhatsAppIntent = 'payment_requested' | 'info_requested' | 'support_needed' | 'generic' | 'spam';
+export type WhatsAppIntent = 'payment_requested' | 'info_requested' | 'support_needed' | 'frustrated' | 'appreciation' | 'generic' | 'spam';
 
 class WhatsAppAutomationService {
-  private readonly paymentKeywords = ['اشتراك', 'اشترك', 'سعر', 'سعر الاشتراك', 'بكام', 'ادفع', 'دفع', 'تحويل', 'فودافون كاش', 'باقة', 'سعر الرحلة', 'حجز'];
-  private readonly infoKeywords = ['تفاصيل', 'معلومات', 'ايه ده', 'بتعملوا ايه', 'ازاي', 'شرح', 'فهموني'];
+  private readonly paymentKeywords = ['اشتراك', 'اشترك', 'سعر', 'سعر الاشتراك', 'بكام', 'ادفع', 'دفع', 'تحويل', 'فودافون كاش', 'باقة', 'سعر الرحلة', 'حجز', 'تفاصيل الدفع'];
+  private readonly infoKeywords = ['تفاصيل', 'معلومات', 'ايه ده', 'بتعملوا ايه', 'ازاي', 'شرح', 'فهموني', 'يعني ايه', 'منصة', 'ممكن افهم'];
+  private readonly supportKeywords = ['مشكلة', 'مش عارف', 'مش شغال', 'يوزر', 'باسورد', 'دخول', 'مش بيفتح', 'مساعدة', 'علق', 'وقفت', 'مش بيدخل', 'نسيت'];
+  private readonly frustratedKeywords = ['نصب', 'زهقت', 'مش معقول', 'بطيء', 'نصيحة', 'تعبت', 'مخنوق', 'قرف', 'مش فاهم حاجة', 'مفيش فايدة', 'غالي'];
+  private readonly appreciationKeywords = ['شكرا', 'تسلم', 'عاش', 'الله ينور', 'حلو جدا', 'مبسوط', 'رائعة', 'ممتاز', 'شكراً', 'طاقة', 'تغيير'];
 
   /**
    * Normalize phone number to E.164 format or similar consistent format
@@ -58,8 +61,20 @@ class WhatsAppAutomationService {
       return 'payment_requested';
     }
     
+    if (this.frustratedKeywords.some(keyword => lowerText.includes(keyword))) {
+      return 'support_needed'; // Or a separate frustrated intent, but we group it
+    }
+
+    if (this.supportKeywords.some(keyword => lowerText.includes(keyword))) {
+      return 'support_needed';
+    }
+    
     if (this.infoKeywords.some(keyword => lowerText.includes(keyword))) {
       return 'info_requested';
+    }
+
+    if (this.appreciationKeywords.some(keyword => lowerText.includes(keyword))) {
+      return 'generic'; // We can handle it uniquely in Oracle strategy
     }
     
     return 'generic';
@@ -85,6 +100,13 @@ class WhatsAppAutomationService {
     console.log(`[WhatsAppAutomation] Processing message from ${phoneNormalized}. Intent: ${intent}. Strategy: ${oracleStrategy.suggestion}`);
 
     try {
+      // 0. Auto-Activation check
+      const receiptMatch = payload.text.match(/\d{10,}/); // Heuristic for receipt strings
+      let activated = false;
+      if (receiptMatch) {
+        activated = await this.handleAutoActivation(phoneNormalized, receiptMatch[0], supabase);
+      }
+
       // 1. Extract Referral Data (Attribution)
       const referral = payload.metadata?.raw?.referral;
       const attributionData: any = {};
@@ -187,7 +209,9 @@ class WhatsAppAutomationService {
       }
 
       // 4. Automated Responses with Link Chaining
-      await this.handleAutoReply(phoneNormalized, leadId, intent, payload.name, attributionData.utm?.ctwa_clid);
+      if (!activated) {
+        await this.handleAutoReply(phoneNormalized, leadId, intent, payload.name, attributionData.utm?.ctwa_clid);
+      }
 
       return { success: true, intent, leadId };
     } catch (err) {
@@ -200,10 +224,27 @@ class WhatsAppAutomationService {
    * Generates a "Sovereign" response strategy based on intent and content
    */
   private generateOracleStrategy(text: string, intent: WhatsAppIntent): { reasoning: string; suggestion: string } {
+    const lowerText = text.toLowerCase();
+
     if (intent === 'payment_requested') {
       return {
         reasoning: "المستخدم في مرحلة 'الالتزام'. يحتاج إلى تأكيد الأمان والسرعة.",
         suggestion: "وجهه فوراً للتحويل البنكي أو فودافون كاش، وأكد إن العملية بتخلص في دقيقة."
+      };
+    }
+
+    // Detecting implicit frustration or complaints mapped to support_needed
+    if (this.frustratedKeywords.some(keyword => lowerText.includes(keyword))) {
+      return {
+        reasoning: "نبض المستخدم به شحنة غضب أو إحباط (Frustration). قد يكون ناتج عن مقاومة للرحلة أو تسرب طاقة.",
+        suggestion: "رد باحتواء وهدوء شديد (Sovereign Neutrality)، لا تُجادله بل أسحب التوتر باعتراف صريح بمشكلته، واعرض حلاً فورياً دون تعقيد."
+      };
+    }
+    
+    if (intent === 'support_needed') {
+      return {
+        reasoning: "المستخدم يواجه حائط سد تقني يمنع تدفق التجربة.",
+        suggestion: "أرسل خطوات واضحة (مُرقّمة)، أو اطلب سكرين شوت بأدب. الحلول التقنية يجب أن تكون باردة وعملية."
       };
     }
     
@@ -211,6 +252,13 @@ class WhatsAppAutomationService {
       return {
         reasoning: "المستخدم في مرحلة 'الاستكشاف'. يحتاج إلى فهم القيمة (First Principles).",
         suggestion: "ابعتله فيديو 'ليه الرحلة؟' ووضحه إننا بنبني وعي مش مجرد كورس."
+      };
+    }
+
+    if (this.appreciationKeywords.some(keyword => lowerText.includes(keyword))) {
+      return {
+        reasoning: "تفاعل إيجابي عالي التردد (Resonance).",
+        suggestion: "اشكره بثبات سيادي دون مبالغة. ذكّره أن التقدم في الرحلة هو انتصار له أولاً."
       };
     }
 
@@ -256,6 +304,43 @@ class WhatsAppAutomationService {
         console.error('[WhatsAppAutomation] Failed to send auto-reply:', err);
       }
     }
+  }
+
+  private async handleAutoActivation(phone: string, receipt: string, supabase: any): Promise<boolean> {
+    // 1. Find user by phone (Normalization)
+    let searchPhone = phone;
+    if (searchPhone.startsWith("20")) searchPhone = "0" + searchPhone.slice(2); // +201... -> 01...
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .or(`phone.eq.${phone},phone.eq.${searchPhone}`)
+      .single();
+
+    if (!profile) {
+      console.log(`[WhatsAppAutomation] No profile found for ${phone} for auto-activation`);
+      return false;
+    }
+
+    // 2. Trigger Activation Engine
+    const { data: result, error } = await supabase.rpc("activate_founding_cohort_seat", {
+      p_user_id: profile.id,
+      p_provider: "whatsapp_auto",
+      p_payment_ref: receipt
+    });
+
+    if (error) {
+      console.error("[WhatsAppAutomation] RPC Failed for auto-activation:", error);
+      return false;
+    }
+
+    // 3. Notify Success back to WhatsApp
+    if (result?.activated) {
+       const msg = `تم تفعيل رحلتك بنجاح يا ${profile.full_name}! 🌊✨\nأهلاً بك في الفوج التأسيسي. يمكنك الآن الدخول للمنصة واستكشاف خريطتك.`;
+       await WhatsAppCloudService.sendFreeText(phone, profile.id, msg);
+       return true;
+    }
+    return false;
   }
 }
 

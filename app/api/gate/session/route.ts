@@ -37,34 +37,33 @@ export async function POST(req: Request) {
       .from('gate_sessions')
       .select('id, email, lead_submitted_at, qualified_at')
       .eq('id', sessionId)
-      .single();
+      .maybeSingle();
 
     const timestamp = new Date().toISOString();
 
     if (step === 'layer1') {
-      const { data: rpcData, error: rpcError } = await db.rpc('rpc_submit_gate_lead', {
-        p_id: sessionId,
-        p_email: payload.email,
-        p_source_area: payload.sourceArea,
-        p_timestamp: timestamp,
-        p_utm_source: utm_source,
-        p_utm_medium: utm_medium,
-        p_utm_campaign: utm_campaign,
-        p_utm_content: utm_content,
-        p_utm_term: utm_term,
-        p_fbclid: fbclid,
-        p_fbp: fbp,
-        p_fbc: fbc
+      const { error: insertError } = await db.from('gate_sessions').insert({
+        id: sessionId,
+        email: payload.email,
+        source_area: payload.sourceArea,
+        lead_submitted_at: timestamp,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_content,
+        utm_term,
+        fbclid,
+        fbp,
+        fbc,
+        updated_at: timestamp
       });
 
-      if (rpcError) {
-        console.error('[Gate API] Supabase Layer 1 DB Error', rpcError);
+      if (insertError) {
+        if (insertError.code === '23505') { // Unique violation
+          return NextResponse.json({ status: 'already_recorded', reason: 'idempotency_duplicate' });
+        }
+        console.error('[Gate API] Supabase Layer 1 DB Error', insertError);
         return NextResponse.json({ error: 'Failed DB insertion' }, { status: 500 });
-      }
-
-      // If no ID returned, it means the update was rejected by the WHERE clause (already submitted)
-      if (!rpcData || rpcData.length === 0) {
-        return NextResponse.json({ status: 'already_recorded', reason: 'idempotency_rpc_reject' });
       }
 
       // Trigger CAPI only on successful atomic write

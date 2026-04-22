@@ -81,11 +81,20 @@ function loadScriptOnce(scriptId: string, src: string): void {
   if (!documentRef) return;
   if (documentRef.getElementById(scriptId)) return;
 
-  const script = documentRef.createElement("script");
-  script.id = scriptId;
-  script.async = true;
-  script.src = src;
-  documentRef.head.appendChild(script);
+  // Defer slightly to ensure it doesn't block the critical rendering path
+  const inject = () => {
+    const script = documentRef.createElement("script");
+    script.id = scriptId;
+    script.async = true;
+    script.src = src;
+    documentRef.head.appendChild(script);
+  };
+
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+    (window as any).requestIdleCallback(() => inject());
+  } else {
+    setTimeout(inject, 2000); // 2s delay for older browsers or simple fallbacks
+  }
 }
 
 function ensureGtag(): void {
@@ -123,14 +132,14 @@ function ensureMetaPixel(): void {
   const windowRef = getWindowOrNull();
   const pixelId = getMetaPixelId();
   if (!windowRef || !pixelId || !areMetaEventsEnabled()) return;
-  
-  // Script loaded check
-  if (windowRef.__dawayirMetaPixelScriptLoaded) return;
 
-  // Prevent Meta Pixel from firing on localhost in production to avoid console error spam
-  if (runtimeEnv.isProd && (windowRef.location.hostname === "localhost" || windowRef.location.hostname === "127.0.0.1")) {
+  const hostname = windowRef.location.hostname;
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
     return;
   }
+
+  // Script loaded check
+  if (windowRef.__dawayirMetaPixelScriptLoaded) return;
 
   if (!windowRef.fbq) {
     /**

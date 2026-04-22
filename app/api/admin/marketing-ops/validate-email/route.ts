@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifyAdmin, type AdminRequest, type AdminResponse } from "../../../../../server/admin/_shared";
+import { verifyAppRouterAdmin } from "../../../../../server/admin/_shared";
 import { validateEmailDomain } from "../../../../../src/lib/utils/emailValidator";
 
 export const dynamic = "force-dynamic";
@@ -10,17 +10,7 @@ async function checkAuth(req: Request): Promise<boolean> {
 
   if (secret && auth === `Bearer ${secret}`) return true;
 
-  const mockReq: AdminRequest = {
-    method: req.method,
-    url: req.url,
-    headers: Object.fromEntries(req.headers.entries()),
-  };
-  const mockRes: AdminResponse = {
-    status: () => mockRes,
-    json: () => mockRes,
-  };
-  
-  return await verifyAdmin(mockReq, mockRes);
+  return await verifyAppRouterAdmin(req);
 }
 
 /**

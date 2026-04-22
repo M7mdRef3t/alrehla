@@ -60,7 +60,7 @@ export async function generateSovereignInsight(request: SovereignInsightRequest)
     void nexusService.saveUserInsight({
       content: response,
       category: diagnosis.state || "عام",
-      energy_level: diagnosis.riskLevel === "critical" ? 2 : diagnosis.riskLevel === "high" ? 4 : 7,
+      energy_level: diagnosis.riskLevel === "emergency" ? 2 : diagnosis.riskLevel === "high" ? 4 : 7,
       exercise_code: "BASEERA_GEN"
     });
 

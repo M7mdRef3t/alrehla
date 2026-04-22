@@ -76,14 +76,16 @@ export const SovereignActionBar: FC<SovereignActionBarProps> = ({
           {/* Background ambient glow */}
           {!isSidebar && <div className={`absolute -top-10 -right-10 w-24 h-24 rounded-full blur-3xl opacity-20 ${isHealthy ? "bg-emerald-500" : "bg-rose-500"}`} />}
           
-          {/* Close Button */}
-          <button 
-            onClick={handleDismiss}
-            className="absolute top-2 left-2 z-20 p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white transition-all"
-            title="إخفاء الرصيد"
-          >
-            <X className="w-3 h-3" />
-          </button>
+          {/* Close Button - Only show if NOT in sidebar mode */}
+          {!isSidebar && (
+            <button 
+              onClick={handleDismiss}
+              className="absolute top-2 left-2 z-20 p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white transition-all"
+              title="إخفاء الرصيد"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
 
           {!isSidebar && (
             <div className="flex items-center justify-between mb-3 relative z-10 pl-6">
@@ -105,13 +107,13 @@ export const SovereignActionBar: FC<SovereignActionBarProps> = ({
           )}
 
           {isSidebar && (
-            <div className="flex items-center justify-between mb-3 pl-6">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">رصيد طاقتك المعنوي</span>
-              <div className="text-left font-mono flex items-baseline gap-1">
-                <span className={`text-sm font-black ${isHealthy ? "text-emerald-400" : "text-rose-400"}`}>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">رصيد طاقتك المعنوي</span>
+              <div className="flex items-baseline gap-1 bg-white/5 px-2 py-0.5 rounded-lg border border-white/5">
+                <span className={`text-[11px] font-black ${isHealthy ? "text-emerald-400" : "text-rose-400"}`}>
                     {isHealthy ? "+" : ""}{pnl.net}
                 </span>
-                <span className="text-[8px] text-slate-500">XP</span>
+                <span className="text-[8px] font-bold text-indigo-400/80">XP</span>
               </div>
             </div>
           )}
@@ -134,17 +136,17 @@ export const SovereignActionBar: FC<SovereignActionBarProps> = ({
           <div className="flex items-center justify-between gap-3 relative z-10">
             <button
               onClick={() => { setLogType("charge"); setShowLogModal(true); }}
-              className="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-xl py-2 px-2 text-[10px] font-black uppercase transition-all flex items-center justify-center gap-1.5"
+              className="flex-1 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl py-2 px-2 text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1.5 group"
             >
-              <TrendingUp className="w-3.5 h-3.5" />
-              شحن (+)
+              <TrendingUp className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+              <span>شحن (+)</span>
             </button>
             <button
               onClick={() => { setLogType("drain"); setShowLogModal(true); }}
-              className="flex-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 rounded-xl py-2 px-2 text-[10px] font-black uppercase transition-all flex items-center justify-center gap-1.5"
+              className="flex-1 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl py-2 px-2 text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1.5 group"
             >
-              <TrendingDown className="w-3.5 h-3.5" />
-              استنزاف (-)
+              <TrendingDown className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+              <span>استنزاف (-)</span>
             </button>
             
             {viewingNodeId && onOpenRecoveryPlan && (

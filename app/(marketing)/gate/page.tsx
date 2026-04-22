@@ -10,6 +10,7 @@ import LayerTwoQualifier from '@/modules/meta/gate/LayerTwoQualifier';
 import { trackGateEventPixelOnly } from '@/lib/analytics/eventTracker';
 import type { GateState } from '@/lib/gate/types';
 import { setStoredLeadEmail } from '@/services/revenueAccess';
+import { initAnalytics } from '@/services/analytics';
 
 function MarketingGateContent() {
   const router = useRouter();
@@ -30,6 +31,8 @@ function MarketingGateContent() {
   useEffect(() => {
     setMounted(true);
     if (!initialized.current) {
+      initAnalytics(); // Initialize tracking scripts like Meta Pixel
+      
       const newSessionId = uuidv4();
       setState(s => ({ ...s, sessionId: newSessionId }));
       

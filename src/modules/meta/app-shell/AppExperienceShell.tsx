@@ -39,6 +39,10 @@ import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorag
 import { UserbackWidget } from "@/components/UserbackWidget";
 import { hasDiagnosisCompleted } from "@/modules/diagnosis";
 
+const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
+const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
+const APP_LOGIN_BOOT_ACTION = "open_login";
+
 function hasOAuthCallbackParams(): boolean {
   const search = new URLSearchParams(getSearch());
   if (search.has("code") || search.has("state") || search.has("error") || search.has("error_description")) {
@@ -132,10 +136,6 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
   // ── CONSUME LANDING INTENT (Cross-Shell Navigation) ──
   useEffect(() => {
     if (typeof window === "undefined") return;
-    
-    const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
-    const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
-    const APP_LOGIN_BOOT_ACTION = "open_login";
     
     let action = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
     
@@ -268,6 +268,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       screen === "landing" ||
       screen === "goal" ||
       screen === "tools" ||
+      screen === "bawsala" ||
       screen === "insights" ||
       screen === "stories" ||
       screen === "about" ||
@@ -275,6 +276,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       screen === "behavioral-analysis" ||
       screen === "resources" ||
       screen === "settings" ||
+      screen === "diagnosis" ||
       screen === "life-os";
 
     if (isRevenueMode && !isWhitelisted && !goalId && !storedGoalId) {
@@ -290,6 +292,13 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     if (hasDiagnosisCompleted()) return;
     // Don't gate returning authenticated users
     if (authStatus === "ready" && authUser?.id) return;
+
+    // IMPORTANT: Wait for any boot actions to be consumed first to avoid race conditions.
+    // If the boot effect processed an action, it sets this ref and queues a different `setScreen`.
+    // We must abort here so we don't accidentally overwrite the target screen.
+    const pendingAction = typeof window !== "undefined" ? window.sessionStorage.getItem(APP_BOOT_ACTION_KEY) : null;
+    if (pendingAction || skipExitToLandingOnceRef.current) return;
+
     void setScreen("diagnosis" as typeof screen);
   }, [screen, authStatus, authUser, setScreen]);
 

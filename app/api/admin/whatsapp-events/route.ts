@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { verifyAdmin, type AdminRequest, type AdminResponse } from "../../../../server/admin/_shared";
+import { verifyAppRouterAdmin } from "../../../../server/admin/_shared";
 
 export const dynamic = "force-dynamic";
 
@@ -13,17 +13,7 @@ function buildClient() {
 }
 
 async function checkAuth(req: Request): Promise<boolean> {
-  const mockReq: AdminRequest = {
-    method: req.method,
-    url: req.url,
-    headers: Object.fromEntries(req.headers.entries()),
-  };
-  const mockRes: AdminResponse = {
-    status: () => mockRes,
-    json: () => mockRes,
-  };
-  
-  return await verifyAdmin(mockReq, mockRes);
+  return await verifyAppRouterAdmin(req);
 }
 
 export async function GET(req: Request) {

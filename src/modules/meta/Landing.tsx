@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { 
   ArrowLeft, 
   Shield, 
@@ -12,19 +13,29 @@ import {
   MessageCircle,
   Sparkles
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { trackingService } from "@/domains/journey";
 import { usePWAInstall } from "@/contexts/PWAInstallContext";
 import { soundManager } from "@/services/soundManager";
-import { LandingSimulation } from "./LandingSimulation";
 import { useJourneyProgress } from "@/domains/journey";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
-import { LandingFooter } from "./landing/LandingFooter";
-import { AmbientBackground } from "./landing/AmbientBackground";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { landingCopy } from "@/copy/landing";
 import { HeroSection } from "./HeroSection";
 import { useAdminState } from "@/domains/admin/store/admin.store";
+
+// Dynamic Imports for Performance
+const LandingSimulation = dynamic(() => import("./LandingSimulation").then(mod => mod.LandingSimulation), { ssr: false });
+const LandingFooter = dynamic(() => import("./landing/LandingFooter").then(mod => mod.LandingFooter), { ssr: true });
+const AmbientBackground = dynamic(() => import("./landing/AmbientBackground").then(mod => mod.AmbientBackground), { ssr: false });
+
+const ProblemFirstSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.ProblemFirstSection), { ssr: true });
+const FeatureShowcaseSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.FeatureShowcaseSection), { ssr: true });
+const HowItWorksSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.HowItWorksSection), { ssr: true });
+const MetricsSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.MetricsSection), { ssr: false });
+const SystemOverclockSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.SystemOverclockSection), { ssr: true });
+const FinalReadinessSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.FinalReadinessSection), { ssr: true });
 import {
   getRelationshipWeatherEntryHref,
   getRelationshipWeatherPath
@@ -35,15 +46,7 @@ import { openInNewTab } from "@/services/clientDom";
 
 const DEFAULT_WHATSAPP_CONTACT = "201062635923";
 
-// Modular Sections
-import { 
-  ProblemFirstSection, 
-  FeatureShowcaseSection, 
-  HowItWorksSection, 
-  MetricsSection, 
-  SystemOverclockSection,
-  FinalReadinessSection
-} from "./landing/LandingSections";
+// ... existing utility imports ...
 
 /* ─── Animation Variants ─────────────────────────────────────────────────── */
 
@@ -174,8 +177,15 @@ export const Landing: FC<LandingProps> = ({
 
   const openWhatsAppChat = (placement: "landing_floating_fab") => {
     if (!whatsAppLink) return;
+    
+    let finalLink = whatsAppLink;
+    if (mirrorName) {
+      const message = encodeURIComponent(`أهلاً، أنا ${mirrorName}. كنت بمر في الرحلة ومحتاج مساعدة...`);
+      finalLink = `${whatsAppLink}?text=${message}`;
+    }
+
     analyticsService.whatsapp({ placement });
-    openInNewTab(whatsAppLink);
+    openInNewTab(finalLink);
   };
 
   const pwaInstall = usePWAInstall();
@@ -241,6 +251,9 @@ export const Landing: FC<LandingProps> = ({
     }, 1200);
   }, [mirrorName, hasExistingJourney, _onStartJourney]);
 
+  const isMobile = useIsMobile();
+
+
   const lastNonceRef = useRef(0);
   useEffect(() => {
     if (ownerInstallRequestNonce !== lastNonceRef.current && ownerInstallRequestNonce > 0) {
@@ -261,8 +274,8 @@ export const Landing: FC<LandingProps> = ({
       
       <AmbientBackground 
         ambientBackground="var(--ds-color-space-void)" 
-        showHeavyAmbientLayers={true}
-        reduceMotion={false}
+        showHeavyAmbientLayers={!isMobile}
+        reduceMotion={isMobile}
       />
 
       {/* 1. HERO SECTION */}

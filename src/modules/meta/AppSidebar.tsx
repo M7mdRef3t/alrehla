@@ -46,7 +46,8 @@ import {
   CheckCircle2,
   Archive,
   Undo2,
-  LayoutGrid
+  LayoutGrid,
+  ChevronDown
 } from "lucide-react";
 import { useJourneyProgress } from "@/domains/journey";
 import { useJourneyState as useJourneyStore } from "@/domains/journey/store/journey.store";
@@ -58,6 +59,8 @@ import { useAchievementState } from "@/domains/gamification/store/achievement.st
 import { useMapState } from '@/modules/map/dawayirIndex';
 import type { RecoveryPlanOpenWith } from '@/modules/map/dawayirIndex';
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
+import { AlrehlaIcon } from "./logo/AlrehlaIcon";
+import { Z_LAYERS } from "@/config/zIndices";
 import { trackingService } from "@/domains/journey";
 import { HealthBar } from "./HealthBar";
 import { TodayTaskStrip } from "@/modules/action/TodayTaskStrip";
@@ -81,7 +84,83 @@ import { SovereignActionBar } from '@/modules/action/SovereignActionBar';
 import { getJourneyPathBySlug } from "@/utils/journeyPaths";
 import { PROTOCOLS } from "./ProtocolEngine";
 import { EcosystemNavigator } from "@/components/EcosystemNavigator";
+import type { AppScreen } from "@/navigation/navigationMachine";
 
+
+/**
+ * smartNavigate — للتمييز بين:
+ * - روابط الـ Hash فقط (/#section): pushUrl عادي (بدون reload)
+ * - صفحات مستقلة (/onboarding, /activation...): window.location.assign (تحميل حقيقي)
+ */
+const ECOSYSTEM_APP_SCREENS = new Set<AppScreen>([
+  "map",
+  "dawayir",
+  "maraya",
+  "ecosystem-hub",
+  "bawsala",
+  "observatory",
+  "kharita",
+  "mirah",
+  "baseera",
+  "taqrir",
+  "masarat",
+  "wird",
+  "warsha",
+  "jisr",
+  "rifaq",
+  "murshid",
+  "rafiq",
+  "mithaq",
+  "sullam",
+  "bathra",
+  "session-intake",
+  "session-console",
+  "atmosfera",
+  "samt",
+  "khalwa",
+  "nadhir",
+  "qalb",
+  "niyya",
+  "jathr",
+  "ruya",
+  "kanz",
+  "tazkiya",
+  "mizan",
+  "markaz",
+  "sada",
+  "hafiz",
+  "watheeqa",
+  "sijil",
+  "naba",
+  "riwaya",
+  "athar",
+  "wasiyya",
+  "risala",
+  "shahada",
+]);
+
+function smartNavigate(url: string, onNavigateAppScreen?: (screen: AppScreen) => void): void {
+  if (!url) return;
+  console.log("[AppSidebar] smartNavigate called with:", url);
+  // لو الرابط بيبدأ بـ /# أو # بس → navigation داخلي بدون reload
+  if (url.startsWith('/#') || url.startsWith('#')) {
+    const target = url.replace(/^\/?#/, "") as AppScreen;
+    if (ECOSYSTEM_APP_SCREENS.has(target) && onNavigateAppScreen) {
+      onNavigateAppScreen(target);
+      return;
+    }
+    pushUrl(url);
+    return;
+  }
+  // لو الرابط رابط خارجي كامل (http/https)
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    window.location.assign(url);
+    return;
+  }
+  // لو الرابط صفحة داخلية لكن مش بس hash (زي /onboarding, /activation...)
+  // → استخدم assign علشان Next.js يحمّل الصفحة فعلياً
+  window.location.assign(url);
+}
 
 const NotificationSettings = lazy(() =>
   import("./NotificationSettings").then((m) => ({ default: m.NotificationSettings }))
@@ -185,7 +264,7 @@ const ArtistChat = lazy(() =>
   import("@/modules/action/Coaching/ArtistChat").then((m) => ({ default: m.ArtistChat }))
 );
 const EcosystemHub = lazy(() =>
-  import("@/modules/ecosystem/EcosystemHub").then((m) => ({ default: m.EcosystemHub }))
+  import("@/modules/ecosystem/EcosystemHub")
 );
 
 
@@ -222,7 +301,44 @@ interface AppSidebarProps {
   viewingNodeId?: string | null;
   onNoiseSessionComplete?: () => void;
   onOpenProtocol?: () => void;
+  onNavigateAppScreen?: (screen: AppScreen) => void;
 }
+
+const SidebarSector: FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; color: string; defaultOpen?: boolean }> = ({ title, children, icon: _icon, color = "teal", defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="my-6 mb-8 group/sector">
+      <button 
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-3 pb-2 mb-3 border-b border-slate-800/50 hover:border-cyan-500/30 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <div className={`w-1.5 h-1.5 rounded-full bg-${color}-500/80 shadow-[0_0_8px_rgba(var(--color-${color}-500),0.6)] group-hover/sector:bg-${color}-400 transition-colors`} />
+          <span className="text-[13px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 group-hover/sector:text-cyan-500 dark:group-hover/sector:text-cyan-300 transition-colors drop-shadow-sm">
+            {title}
+          </span>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-cyan-600/50 dark:text-cyan-400/50 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-1">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 export const AppSidebar: FC<AppSidebarProps> = ({
   onOpenGym,
@@ -236,24 +352,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   onOpenMission,
   viewingNodeId = null,
   onNoiseSessionComplete,
-  onOpenProtocol
+  onOpenProtocol,
+  onNavigateAppScreen
 }) => {
   /**
-   * Sidebar Sector UI Component
+   * Sidebar Sector UI Component was moved outside to maintain state
    */
-   const SidebarSector: FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; color: string }> = ({ title, children, icon: _icon, color = "teal" }) => (
-    <div className="space-y-1 my-5">
-      <div className="flex items-center gap-2 px-3 mb-1.5 group/header">
-        <div className={`w-1 h-1 rounded-full bg-${color}-500/40 group-hover/header:bg-${color}-400 transition-colors`} />
-        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500/60 dark:text-white/10 group-hover/header:text-slate-400 dark:group-hover/header:text-white/30 transition-colors">
-          {title}
-        </span>
-      </div>
-      <div className="space-y-1">
-        {children}
-      </div>
-    </div>
-  );
 
   const getSidebarItemColorClass = (color?: string) => {
     switch (color?.toString().toLowerCase().trim()) {
@@ -533,6 +637,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     onAllowed();
   };
 
+  const navigateProductScreen = (screen: AppScreen) => {
+    if (onNavigateAppScreen) {
+      onNavigateAppScreen(screen);
+      return;
+    }
+    pushUrl(`/#${screen}`);
+  };
+
   const triggerPwaInstall = () => {
     if (!pwaInstall || !canShowInstallButton) return;
     trackingService.recordFlow("install_clicked");
@@ -550,10 +662,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* ───── DESKTOP SIDEBAR ───── */}
       <div
-        className="fixed top-0 right-0 z-40 h-full hidden md:flex flex-row-reverse group/sidebar"
+        className="fixed top-0 right-0 h-full hidden md:flex flex-row-reverse group/sidebar"
+        style={{ zIndex: Z_LAYERS.SIDEBAR }}
         aria-label="القائمة الرئيسية"
       >
-        <div className={`h-full w-56 shrink-0 overflow-hidden border-l border-white/10 bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl transition-transform duration-300 ${isDesktopSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className={`h-full w-72 shrink-0 overflow-hidden border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B0F19] transition-transform duration-300 ${isDesktopSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
           <aside className="h-full w-full flex flex-col gap-3 py-6 px-4">
             {viewingNode?.analysis && (
               <div className="shrink-0 space-y-1 mb-1">
@@ -567,8 +680,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             <SovereignActionBar isSidebar={true} viewingNodeId={viewingNode?.id} onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })} className="mb-4" />
             <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
             
-            <div className="flex-1 overflow-y-auto no-scrollbar py-2 px-2 flex flex-col gap-4">
-              <EcosystemNavigator onNavigate={pushUrl} />
+            <div className="flex-1 overflow-y-auto custom-scrollbar py-2 px-2 flex flex-col gap-4">
+              <EcosystemNavigator onNavigate={(url) => smartNavigate(url, onNavigateAppScreen)} />
               
               <SidebarSector title="الاستكشاف" icon={<Compass className="w-3.5 h-3.5" />} color="teal">
                 <SidebarItem
@@ -602,46 +715,38 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => setShowUpgrade(true)}
                   color="#fbbf24"
                 />
-                {isOwner && (
-                  <SidebarItem
-                    label="مختبر الهيرو (Lab)"
-                    icon={<BrainCircuit className="w-3.5 h-3.5 outline-none" />}
-                    onClick={() => pushUrl("/hero-lab")}
-                    active={window.location.pathname === "/hero-lab"}
-                    color="#f43f5e"
-                  />
-                )}
+
               </SidebarSector>
 
               <SidebarSector title="المنظومة (السيادة)" icon={<ShieldCheck className="w-3.5 h-3.5" />} color="indigo">
                 <SidebarItem
                   label="حافظ (Memories)"
                   icon={<History className="w-3.5 h-3.5 outline-none" />}
-                  onClick={() => pushUrl("/#hafiz")}
+                  onClick={() => navigateProductScreen("hafiz")}
                   color="#a855f7"
                 />
                 <SidebarItem
                   label="الصدى (Insights)"
                   icon={<Radar className="w-3.5 h-3.5 outline-none" />}
-                  onClick={() => pushUrl("/#sada")}
+                  onClick={() => navigateProductScreen("sada")}
                   color="#06b6d4"
                 />
                 <SidebarItem
                   label="المركز (Command)"
                   icon={<LayoutGrid className="w-3.5 h-3.5 outline-none" />}
-                  onClick={() => pushUrl("/#markaz")}
+                  onClick={() => navigateProductScreen("markaz")}
                   color="#6366f1"
                 />
                 <SidebarItem
                   label="النية (Intention)"
                   icon={<Target className="w-3.5 h-3.5 outline-none" />}
-                  onClick={() => pushUrl("/#niyya")}
+                  onClick={() => navigateProductScreen("niyya")}
                   color="#10b981"
                 />
                 <SidebarItem
                   label="الصمت (Breathing)"
                   icon={<Wind className="w-3.5 h-3.5 outline-none" />}
-                  onClick={() => pushUrl("/#samt")}
+                  onClick={() => navigateProductScreen("samt")}
                   color="#14b8a6"
                 />
               </SidebarSector>
@@ -814,16 +919,33 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 />
               </SidebarSector>
             </div>
+
+            {/* Logo Footer */}
+            <div className="mt-auto px-4 py-8 border-t border-slate-200 dark:border-white/5 flex flex-col items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => pushUrl("/")}
+                className="flex items-center gap-2 group transition-all"
+              >
+                <AlrehlaIcon size={32} className="group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-sky-500 dark:from-teal-400 dark:to-sky-400">
+                  الرحلة
+                </span>
+              </button>
+              <span className="text-[9px] text-slate-400 tracking-[0.2em] font-medium uppercase opacity-50">
+                Sovereign Intelligence
+              </span>
+            </div>
           </aside>
         </div>
 
         {/* Desktop Handle */}
         <div
-          className={`h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600/40 backdrop-blur-xl text-white border-l border-white/10 cursor-pointer py-4 hover:bg-teal-600/60 transition-colors`}
+          className={`h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-700 text-white border-l border-teal-900 cursor-pointer py-4 hover:bg-teal-600 transition-colors`}
           onClick={() => setIsDesktopSidebarOpen((current) => !current)}
           title={isDesktopSidebarOpen ? "أغلق محطة الانطلاق" : "افتح محطة الانطلاق"}
         >
-          <PanelRightOpen className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0 text-teal-400"}`} />
+          <PanelRightOpen className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0 text-white"}`} />
         </div>
       </div>
 
@@ -844,7 +966,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         type="button"
         title="افتح القائمة"
         onClick={handleOpen}
-        className="fixed top-4 right-4 z-40 md:hidden w-11 h-11 flex items-center justify-center rounded-full bg-slate-900/40 backdrop-blur-md border border-white/10 text-slate-400"
+        className="fixed top-4 right-4 md:hidden w-11 h-11 flex items-center justify-center rounded-full bg-[#0B0F19] border border-slate-700 text-slate-300 shadow-lg"
+        style={{ zIndex: Z_LAYERS.NAVIGATION_BARS + 1 }}
       >
         <PanelRightOpen className="w-5 h-5" />
       </button>
@@ -858,7 +981,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleClose}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm md:hidden"
+              style={{ zIndex: Z_LAYERS.NAVIGATION_BARS }}
             />
 
             <motion.aside
@@ -866,7 +990,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-[min(86vw,24rem)] bg-[#0B0F19]/80 backdrop-blur-3xl z-50 md:hidden flex flex-col border-l border-white/10 shadow-2xl"
+              className="fixed top-0 right-0 h-full w-[min(86vw,24rem)] bg-[#0B0F19] md:hidden flex flex-col border-l border-white/10 shadow-2xl"
+              style={{ zIndex: Z_LAYERS.SIDEBAR }}
             >
               <div className="flex items-center justify-between p-5 border-b border-white/5">
                 <h2 className="text-lg font-bold text-white">محطة الانطلاق</h2>
@@ -880,8 +1005,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                <EcosystemNavigator onNavigate={(url) => { pushUrl(url); handleClose(); }} />
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-6">
+                <EcosystemNavigator onNavigate={(url) => { smartNavigate(url, onNavigateAppScreen); handleClose(); }} />
                 
                 <SidebarSector title="الاستكشاف" icon={<Compass className="w-4 h-4" />} color="teal">
                   <SidebarItem
@@ -921,31 +1046,31 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <SidebarItem
                     label="حافظ (Memories)"
                     icon={<History className="w-5 h-5 outline-none" />}
-                    onClick={() => { pushUrl("/#hafiz"); handleClose(); }}
+                    onClick={() => { navigateProductScreen("hafiz"); handleClose(); }}
                     color="#a855f7"
                   />
                   <SidebarItem
                     label="الصدى (Insights)"
                     icon={<Radar className="w-5 h-5 outline-none" />}
-                    onClick={() => { pushUrl("/#sada"); handleClose(); }}
+                    onClick={() => { navigateProductScreen("sada"); handleClose(); }}
                     color="#06b6d4"
                   />
                   <SidebarItem
                     label="المركز (Command)"
                     icon={<LayoutGrid className="w-5 h-5 outline-none" />}
-                    onClick={() => { pushUrl("/#markaz"); handleClose(); }}
+                    onClick={() => { navigateProductScreen("markaz"); handleClose(); }}
                     color="#6366f1"
                   />
                   <SidebarItem
                     label="النية (Intention)"
                     icon={<Target className="w-5 h-5 outline-none" />}
-                    onClick={() => { pushUrl("/#niyya"); handleClose(); }}
+                    onClick={() => { navigateProductScreen("niyya"); handleClose(); }}
                     color="#10b981"
                   />
                   <SidebarItem
                     label="الصمت (Breathing)"
                     icon={<Wind className="w-5 h-5 outline-none" />}
-                    onClick={() => { pushUrl("/#samt"); handleClose(); }}
+                    onClick={() => { navigateProductScreen("samt"); handleClose(); }}
                     color="#14b8a6"
                   />
                 </SidebarSector>
@@ -1134,7 +1259,24 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
                   </button>
                 </div>
               </div>
-            </motion.aside>
+
+                {/* Mobile Logo Footer */}
+                <div className="mt-auto px-5 py-8 border-t border-white/5 flex flex-col items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => { pushUrl("/"); handleClose(); }}
+                    className="flex items-center gap-2 transition-all"
+                  >
+                    <AlrehlaIcon size={36} />
+                    <span className="text-base font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-sky-400">
+                      الرحلة
+                    </span>
+                  </button>
+                  <span className="text-[10px] text-slate-500 tracking-[0.25em] font-medium uppercase opacity-40">
+                    Sovereign Intelligence
+                  </span>
+                </div>
+              </motion.aside>
           </>
         )}
       </AnimatePresence>
@@ -1321,9 +1463,30 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
           </Suspense>
         )}
         {showSovereignControl && (
-          <Suspense fallback={<AwarenessSkeleton />}>
-            <SovereignControl isOpen={true} onClose={() => setShowSovereignControl(false)} />
-          </Suspense>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/95 backdrop-blur-xl overflow-y-auto custom-scrollbar"
+            style={{ zIndex: Z_LAYERS.TACTICAL_CONTENT }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="لوحة التحكم السيادية"
+          >
+            <button
+              type="button"
+              onClick={() => setShowSovereignControl(false)}
+              className="fixed top-4 left-4 z-[220] p-3 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors"
+              aria-label="إغلاق لوحة التحكم السيادية"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="min-h-screen px-4 py-16 md:px-8">
+              <Suspense fallback={<AwarenessSkeleton />}>
+                <SovereignControl isOpen={true} onClose={() => setShowSovereignControl(false)} />
+              </Suspense>
+            </div>
+          </motion.div>
         )}
         {showArtistChat && (
           <Suspense fallback={<AwarenessSkeleton />}>
@@ -1331,15 +1494,33 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
           </Suspense>
         )}
         {showEcosystemHub && (
-          <Suspense fallback={<AwarenessSkeleton />}>
-            <EcosystemHub onNavigate={(url) => { pushUrl(url); setShowEcosystemHub(false); }} />
-            <button 
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950 overflow-y-auto custom-scrollbar"
+            style={{ zIndex: Z_LAYERS.TACTICAL_CONTENT }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="مركز المنظومة"
+          >
+            <button
+              type="button"
               onClick={() => setShowEcosystemHub(false)}
-              className="fixed top-4 left-4 z-[100] p-3 rounded-full bg-slate-900/60 backdrop-blur-md border border-white/10 text-white"
+              className="fixed top-4 left-4 z-[220] p-3 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors"
+              aria-label="إغلاق مركز المنظومة"
             >
               <X className="w-5 h-5" />
             </button>
-          </Suspense>
+            <Suspense fallback={<AwarenessSkeleton />}>
+              <EcosystemHub
+                onNavigate={(screen) => {
+                  smartNavigate(`/#${screen}`, onNavigateAppScreen);
+                  setShowEcosystemHub(false);
+                }}
+              />
+            </Suspense>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

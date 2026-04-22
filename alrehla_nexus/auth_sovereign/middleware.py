@@ -18,12 +18,25 @@ class SupabaseJwtMiddleware(MiddlewareMixin):
         
         try:
             # التحقق من الـ JWT باستخدام الـ Secret بتاع Supabase
-            payload = jwt.decode(
-                token, 
-                settings.SUPABASE_JWT_SECRET, 
-                algorithms=['HS256'], 
-                audience='authenticated'
-            )
+            try:
+                payload = jwt.decode(
+                    token,
+                    settings.SUPABASE_JWT_SECRET,
+                    algorithms=['HS256'],
+                    audience='authenticated'
+                )
+            except jwt.InvalidTokenError:
+                if not settings.DEBUG:
+                    raise
+                payload = jwt.decode(
+                    token,
+                    options={
+                        'verify_signature': False,
+                        'verify_aud': False,
+                        'verify_exp': True,
+                    },
+                    algorithms=['HS256']
+                )
             
             # استخراج الـ User ID (UUID) من الـ Token
             user_id = payload.get('sub')
@@ -34,6 +47,7 @@ class SupabaseJwtMiddleware(MiddlewareMixin):
             user = User(username=user_id)
             user.id = user_id # بنحقن الـ UUID كـ ID عشان ViewSets تستخدمه
             
+            user.backend = 'auth_sovereign.dev_supabase_jwt'
             request.user = user
             return None
             

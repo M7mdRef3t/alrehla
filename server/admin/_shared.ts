@@ -193,3 +193,50 @@ export async function parseJsonBody(req: AdminRequest): Promise<Record<string, u
   return {};
 }
 
+export async function verifyAppRouterAdmin(req: Request): Promise<boolean> {
+  const client = getAdminSupabase();
+  if (!client) {
+    console.warn("[verifyAppRouterAdmin] Admin API not configured (client is null).");
+    return false;
+  }
+
+  const authHeader = req.headers.get("authorization") || req.headers.get("Authorization");
+  let bearer: string | null = null;
+  if (authHeader && authHeader.toLowerCase().startsWith("bearer ")) {
+    bearer = authHeader.slice(7).trim();
+  }
+
+  if (!bearer) {
+    console.warn("[verifyAppRouterAdmin] 401: No bearer token provided.");
+    return false;
+  }
+
+  if (isAdminSecretToken(bearer)) {
+    return true;
+  }
+
+  const { data, error } = await client.auth.getUser(bearer);
+  if (error || !data?.user?.id) {
+    console.error("[verifyAppRouterAdmin] 401: Failed to getUser from token:", error?.message);
+    return false;
+  }
+
+  const { data: profile, error: profileError } = await client
+    .from("profiles")
+    .select("role")
+    .eq("id", data.user.id)
+    .maybeSingle();
+
+  if (profileError || !profile?.role) {
+    console.error(`[verifyAppRouterAdmin] 403: Forbidden - User profile/role missing`);
+    return false;
+  }
+
+  const allowed = getAllowedRoles();
+  if (!allowed.includes(String(profile.role).toLowerCase())) {
+    console.error(`[verifyAppRouterAdmin] 403: Forbidden - Insufficient role`);
+    return false;
+  }
+
+  return true;
+}

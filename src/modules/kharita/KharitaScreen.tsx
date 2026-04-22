@@ -6,6 +6,7 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Map, Compass, Heart, BookOpen, Wind, Target, Moon, TreePine, Flame, Star, Zap, Shield, Eye, Users, Brain, Scale, Bell, Gem, ScrollText, Droplets, TrendingUp, Handshake } from "lucide-react";
+import type { AppScreen } from "@/navigation/navigationMachine";
 
 /* ═══════════════════════════════════════════ */
 /*              ECOSYSTEM DATA                */
@@ -21,6 +22,46 @@ interface EcoTool {
   screen: string;
 }
 
+interface KharitaScreenProps {
+  onNavigate?: (screen: AppScreen) => void;
+}
+
+const KHARITA_SCREEN_ROUTES: Record<string, AppScreen> = {
+  compass: "bawsala",
+  masarat: "masarat",
+  tazkiya: "tazkiya",
+  protocol: "protocol",
+  rafiq: "rafiq",
+  qalb: "qalb",
+  samt: "samt",
+  ruya: "ruya",
+  niyya: "niyya",
+  jathr: "jathr",
+  kanz: "kanz",
+  jisr: "jisr",
+  dawayir: "dawayir",
+  rifaq: "rifaq",
+  murshid: "murshid",
+  risala: "risala",
+  shahada: "shahada",
+  markaz: "markaz",
+  sada: "sada",
+  hafiz: "hafiz",
+  naba: "naba",
+  maraya: "maraya",
+  kharita: "kharita",
+  mizan: "mizan",
+  bathra: "bathra",
+  athar: "athar",
+  wird: "wird",
+  sanctuary: "sanctuary",
+  muhadatha: "rifaq",
+  dhakira: "hafiz",
+  mawazin: "mizan",
+  muraqaba: "observatory",
+  habits: "bathra",
+};
+
 const CATEGORY_META = {
   core:    { label: "الأساس",   color: "#14b8a6", emoji: "🏛️" },
   soul:    { label: "الروح",    color: "#8b5cf6", emoji: "✨" },
@@ -33,9 +74,12 @@ const ECOSYSTEM: EcoTool[] = [
   // Core
   { id: "bawsala",   name: "بوصلة",   emoji: "🧭", color: "#14b8a6", category: "core",    description: "البوصلة الداخلية",      screen: "compass" },
   { id: "masarat",   name: "مسارات",   emoji: "🗺️", color: "#6366f1", category: "core",    description: "خرائط التحول",          screen: "masarat" },
+  { id: "kharita",   name: "خريطة",    emoji: "🗺️", color: "#06b6d4", category: "core",    description: "خريطة المنظومة",        screen: "kharita" },
+  { id: "markaz",    name: "المركز",   emoji: "🏢", color: "#6366f1", category: "core",    description: "مركز القيادة",          screen: "markaz" },
   { id: "tazkiya",   name: "تزكية",    emoji: "🌿", color: "#10b981", category: "core",    description: "تطهير النفس",           screen: "tazkiya" },
   { id: "protocol",  name: "بروتوكول", emoji: "⚡", color: "#f59e0b", category: "core",    description: "خطة الفعل",             screen: "protocol" },
   { id: "rafiq",     name: "رفيق",     emoji: "🧭", color: "#6366f1", category: "core",    description: "المرافق الذكي",         screen: "rafiq" },
+  { id: "murshid",   name: "مرشد",     emoji: "🧠", color: "#8b5cf6", category: "core",    description: "توجيه ذكي",             screen: "murshid" },
   // Soul
   { id: "qalb",      name: "قلب",      emoji: "❤️", color: "#ef4444", category: "soul",    description: "صحة القلب العاطفي",     screen: "qalb" },
   { id: "samt",      name: "صمت",      emoji: "🤫", color: "#06b6d4", category: "soul",    description: "تنفس واعي",             screen: "samt" },
@@ -45,16 +89,21 @@ const ECOSYSTEM: EcoTool[] = [
   { id: "kanz",      name: "كنز",      emoji: "🪙", color: "#f59e0b", category: "soul",    description: "بنك الحكمة",            screen: "kanz" },
   // Social
   { id: "jisr",      name: "جسر",      emoji: "🌉", color: "#ec4899", category: "social",  description: "الجسور العلائقية",      screen: "jisr" },
+  { id: "rifaq",     name: "رفاق",     emoji: "👥", color: "#22c55e", category: "social",  description: "رفاق الطريق",           screen: "rifaq" },
   { id: "dawayir",   name: "دوائر",    emoji: "⭕", color: "#8b5cf6", category: "social",  description: "خريطة العلاقات",        screen: "dawayir" },
-  { id: "muhadatha", name: "محادثة",   emoji: "💬", color: "#06b6d4", category: "social",  description: "محادثات ذكية",          screen: "muhadatha" },
+  { id: "maraya",    name: "مرايا",    emoji: "🪞", color: "#a78bfa", category: "social",  description: "سرد يرى نمطك",          screen: "maraya" },
   // Insight
-  { id: "dhakira",   name: "ذاكرة",    emoji: "🧠", color: "#6366f1", category: "insight", description: "الذاكرة الجمعية",       screen: "dhakira" },
+  { id: "sada",      name: "الصدى",    emoji: "🔔", color: "#06b6d4", category: "insight", description: "الإشارات المتكررة",      screen: "sada" },
+  { id: "hafiz",     name: "حافظ",     emoji: "💎", color: "#a855f7", category: "insight", description: "خزنة الذكريات",         screen: "hafiz" },
   { id: "athar",     name: "أثر",      emoji: "📜", color: "#f59e0b", category: "insight", description: "سجل الحياة",           screen: "athar" },
-  { id: "mawazin",   name: "موازين",   emoji: "⚖️", color: "#64748b", category: "insight", description: "ميزان الحياة",         screen: "mawazin" },
-  { id: "muraqaba",  name: "مراقبة",   emoji: "👁️", color: "#14b8a6", category: "insight", description: "لوحة المراقبة",        screen: "muraqaba" },
+  { id: "mizan",     name: "ميزان",    emoji: "⚖️", color: "#64748b", category: "insight", description: "ميزان الحياة",         screen: "mizan" },
+  { id: "observatory", name: "المرصد", emoji: "👁️", color: "#14b8a6", category: "insight", description: "لوحة المراقبة",        screen: "observatory" },
+  { id: "risala",    name: "رسالة",    emoji: "✉️", color: "#f59e0b", category: "insight", description: "رسائل المعنى",         screen: "risala" },
+  { id: "shahada",   name: "شهادة",    emoji: "📄", color: "#14b8a6", category: "insight", description: "إثبات التحول",         screen: "shahada" },
   // Daily
   { id: "wird",      name: "ورد",      emoji: "📿", color: "#8b5cf6", category: "daily",   description: "الأذكار اليومية",      screen: "wird" },
-  { id: "habits",    name: "عادات",    emoji: "🔄", color: "#10b981", category: "daily",   description: "تتبع العادات",         screen: "habits" },
+  { id: "bathra",    name: "بذرة",     emoji: "🌱", color: "#10b981", category: "daily",   description: "بذور العادات",         screen: "bathra" },
+  { id: "naba",      name: "نبأ",      emoji: "💧", color: "#06b6d4", category: "daily",   description: "رشفة وعي يومية",       screen: "naba" },
   { id: "sanctuary", name: "ملاذ",     emoji: "🏔️", color: "#475569", category: "daily",   description: "الملاذ الآمن",          screen: "sanctuary" },
 ];
 
@@ -62,7 +111,7 @@ const ECOSYSTEM: EcoTool[] = [
 /*           MAIN SCREEN                      */
 /* ═══════════════════════════════════════════ */
 
-export default function KharitaScreen() {
+export default function KharitaScreen({ onNavigate }: KharitaScreenProps) {
   const categories = useMemo(() => {
     const cats = Object.keys(CATEGORY_META) as (keyof typeof CATEGORY_META)[];
     return cats.map((cat) => ({
@@ -73,6 +122,11 @@ export default function KharitaScreen() {
   }, []);
 
   const handleNavigate = (screen: string) => {
+    const appScreen = KHARITA_SCREEN_ROUTES[screen];
+    if (appScreen && onNavigate) {
+      onNavigate(appScreen);
+      return;
+    }
     window.location.hash = `#${screen}`;
   };
 

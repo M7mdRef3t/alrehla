@@ -653,7 +653,7 @@ export const MobileNavBar = memo(function MobileNavBar({
 
   const MOBILE_NAV = [
     { id: "home", label: "الأفق", icon: Home },
-    { id: "tools", label: "البوصلة", icon: Wrench },
+    { id: "bawsala", label: "البوصلة", icon: Compass },
     { id: "insights", label: "الرادار", icon: BarChart2 },
     { id: "stories", label: "قصص", icon: BookOpen },
     { id: "profile", label: "الملف", icon: User },

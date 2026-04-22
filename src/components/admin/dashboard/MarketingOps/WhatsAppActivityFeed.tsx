@@ -72,12 +72,14 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
 
   const getIntentColor = (intent: string) => {
     switch (intent) {
-      case 'payment_requested': return 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30 backdrop-blur-md shadow-[0_0_10px_rgba(16,185,129,0.2)]';
-      case 'info_requested': return 'text-sky-300 bg-sky-500/10 border-sky-500/30 backdrop-blur-md shadow-[0_0_10px_rgba(14,165,233,0.2)]';
-      case 'support_needed': return 'text-amber-300 bg-amber-500/10 border-amber-500/30 backdrop-blur-md shadow-[0_0_10px_rgba(245,158,11,0.2)]';
-      case 'generic': return 'text-slate-300 bg-slate-500/10 border-slate-500/30 backdrop-blur-md';
-      case 'spam': return 'text-rose-300 bg-rose-500/10 border-rose-500/30 backdrop-blur-md shadow-[0_0_10px_rgba(244,63,94,0.2)]';
-      default: return 'text-slate-400 bg-white/5 border-white/10 backdrop-blur-md';
+      case 'payment_requested': return 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]';
+      case 'info_requested': return 'text-sky-300 bg-sky-500/10 border-sky-500/30 shadow-[0_0_10px_rgba(14,165,233,0.2)]';
+      case 'support_needed': return 'text-amber-300 bg-amber-500/10 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)]';
+      case 'frustrated': return 'text-rose-400 bg-rose-500/15 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.4)] animate-pulse';
+      case 'appreciation': return 'text-fuchsia-300 bg-fuchsia-500/10 border-fuchsia-500/30 shadow-[0_0_10px_rgba(217,70,239,0.2)]';
+      case 'generic': return 'text-slate-300 bg-slate-500/10 border-slate-500/30';
+      case 'spam': return 'text-rose-300 bg-rose-500/10 border-rose-500/30 line-through opacity-50';
+      default: return 'text-slate-400 bg-white/5 border-white/10';
     }
   };
 
@@ -85,7 +87,9 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
     switch (intent) {
       case 'payment_requested': return 'طلب حجز/دفع';
       case 'info_requested': return 'استفسار عن الخدمة';
-      case 'support_needed': return 'دعم فني';
+      case 'support_needed': return 'دعم فني عاجل';
+      case 'frustrated': return 'إحباط شديد ⚠️';
+      case 'appreciation': return 'امتنان وشكر 🌟';
       case 'generic': return 'رسالة عامة';
       case 'spam': return 'سبام';
       default: return intent || 'غير معروف';

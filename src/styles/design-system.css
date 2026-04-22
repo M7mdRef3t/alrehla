@@ -75,6 +75,10 @@
   --text-primary:   var(--ds-theme-text-primary);
   --text-secondary: var(--ds-theme-text-secondary);
   --text-muted:     var(--ds-theme-text-muted);
+
+  /* 🧭 Layout Spacing */
+  --bottom-nav-height: 5rem; /* 80px */
+  --fab-bottom-offset: calc(var(--bottom-nav-height) + 1.5rem); /* Space above nav bar */
 }
 
 /* ════════════════════════════════════════

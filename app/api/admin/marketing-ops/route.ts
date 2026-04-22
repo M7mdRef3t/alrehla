@@ -187,6 +187,49 @@ export async function GET(req: Request) {
         totalRevenue += amount;
     }
   }
+
+  // ─── High-Value Prospect Rescue (Gate Session Dropouts) ───────────────────
+  const { data: gateSessions, error: gateError } = await supabase
+    .from("gate_sessions")
+    .select("id, email, utm_source, utm_campaign, lead_submitted_at")
+    .not("email", "is", null)
+    .order("lead_submitted_at", { ascending: false })
+    .limit(100);
+
+  if (gateError) {
+    console.error("[MarketingOps] gate_sessions fetch error:", gateError);
+  }
+
+  const existingEmails = new Set(rawLeads.map(l => l.email?.toLowerCase().trim()));
+  const prospectLeads: any[] = [];
+
+  for (const session of (gateSessions ?? [])) {
+    const email = session.email?.toLowerCase().trim();
+    if (email && !existingEmails.has(email)) {
+      // Create a "pseudo-lead" from the gate session
+      prospectLeads.push({
+        id: session.id,
+        email: session.email,
+        name: "زائر (بوابة)",
+        source_type: session.utm_source || "direct",
+        campaign: session.utm_campaign || "unattributed",
+        status: "prospect", // Special internal status
+        is_high_value_prospect: true,
+        created_at: session.lead_submitted_at,
+        metadata: {
+          gate_id: session.id,
+          is_prospect: true
+        }
+      });
+      // Avoid duplicates from multiple gate sessions
+      existingEmails.add(email);
+    }
+  }
+
+  // Merge prospects into rawLeads for the dashboard to render
+  const mergedLeads = [...prospectLeads, ...rawLeads].sort((a, b) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  ).slice(0, 50);
   const { data: recentErrors } = await supabase
     .from("marketing_lead_outreach_queue")
     .select("lead_email, channel, last_error, updated_at")
@@ -376,7 +419,7 @@ export async function GET(req: Request) {
     revenueByCampaign,
     revenueBySource,
     totalRevenue,
-    rawLeads,
+    rawLeads: mergedLeads,
     realStarts: realStarts ?? 0,
     recentErrors: recentErrors ?? [],
     recentSent: recentSent ?? [],

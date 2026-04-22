@@ -159,7 +159,7 @@ export const MarkazScreen: FC = () => {
     {
       id: "taqrir", name: "تقرير", emoji: "📊", icon: FileText,
       status: logs.length >= 5 ? "green" : "neutral",
-      metric: logs.length >= 5 ? "جاهز" : "قريباً",
+      metric: logs.length >= 5 ? "جاهز" : "—",
       detail: "التقرير الذكي",
       color: "#06b6d4", route: "/#taqrir",
     },

@@ -112,6 +112,11 @@ const LeadCard: FC<{ lead: any, onFilterSelect: any, onAward: (id: string) => vo
                       grade === 'B' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20' : 'bg-slate-500/20 text-slate-400 border border-slate-500/20'
                     }`}>GRADE {grade}</span>
                    )}
+                   {l.is_high_value_prospect && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] tracking-widest bg-amber-500/20 text-amber-400 border border-amber-500/20 flex items-center gap-1 shadow-[0_0_15px_rgba(245,158,11,0.1)] animate-pulse">
+                        <Sparkles className="w-3 h-3" /> ليد ثمين
+                      </span>
+                   )}
                    {points > 0 && (
                       <span className="px-2 py-0.5 rounded-md text-[10px] tracking-widest bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/20 flex items-center gap-1">
                         <Award className="w-3 h-3" /> {points} نقطة

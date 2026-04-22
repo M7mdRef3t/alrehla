@@ -73,12 +73,12 @@ export default function LayerTwoQualifier({ onComplete, sessionId }: Props) {
               exit={{ x: 20, opacity: 0 }}
               className="space-y-4"
             >
-              <h3 className="font-bold text-slate-200 mb-4">ما الذي يرهقك أكثر؟</h3>
+              <h3 className="font-black text-slate-100 mb-4 text-lg">إيه أكتر "حمل تقيل" شايله في دوائرك دلوقتي؟</h3>
               <div className="space-y-3">
-                <OptionBtn qKey="q1" value="compliments" label="المجاملة المستمرة" />
-                <OptionBtn qKey="q1" value="guilt" label="الذنب" />
-                <OptionBtn qKey="q1" value="confusion" label="الغموض" />
-                <OptionBtn qKey="q1" value="pattern" label="تكرار نفس النمط" />
+                <OptionBtn qKey="q1" value="compliments" label='تكلفة "المجاملة" اللي مابتخلصش' />
+                <OptionBtn qKey="q1" value="guilt" label="الإحساس الدائم بالذنب والتقصير" />
+                <OptionBtn qKey="q1" value="confusion" label="الغموض.. مابقتش عارف مين معايا ومين عليا" />
+                <OptionBtn qKey="q1" value="pattern" label="تكرار نفس خيبة الأمل مع ناس مختلفة" />
               </div>
             </motion.div>
           )}
@@ -91,12 +91,12 @@ export default function LayerTwoQualifier({ onComplete, sessionId }: Props) {
               exit={{ x: 20, opacity: 0 }}
               className="space-y-4"
             >
-              <h3 className="font-bold text-slate-200 mb-4">ما الذي تريده الآن؟</h3>
+              <h3 className="font-black text-slate-100 mb-4 text-lg">محتاج توصل لإيه في نهاية المسح ده؟</h3>
               <div className="space-y-3">
-                <OptionBtn qKey="q2" value="clarity" label="رؤية أوضح" />
-                <OptionBtn qKey="q2" value="sorting" label="ترتيب العلاقات" />
-                <OptionBtn qKey="q2" value="decision" label="قرار بخصوص شخص محدد" />
-                <OptionBtn qKey="q2" value="understand_drain" label="فهم سبب الاستنزاف" />
+                <OptionBtn qKey="q2" value="clarity" label="خريطة واضحة لكل اللي بيحصل حواليا" />
+                <OptionBtn qKey="q2" value="sorting" label="أعرف مين يستحق مكانه في دايرتي ومين لأ" />
+                <OptionBtn qKey="q2" value="decision" label='قرار شجاع بخصوص "شخص محدد" تعبني' />
+                <OptionBtn qKey="q2" value="understand_drain" label="أفهم ليه طاقتي بتخلص بمجرد ما بتعامل معاهم" />
               </div>
             </motion.div>
           )}
@@ -109,10 +109,10 @@ export default function LayerTwoQualifier({ onComplete, sessionId }: Props) {
               exit={{ x: 20, opacity: 0 }}
               className="space-y-4"
             >
-              <h3 className="font-bold text-slate-200 mb-4">هل أنت مستعد لرؤية قد لا تكون مريحة؟</h3>
+              <h3 className="font-black text-slate-100 mb-4 text-lg">الوضوح مش دايماً مريح.. هل أنت مستعد تواجه "الحقيقة"؟</h3>
               <div className="space-y-3">
-                <OptionBtn qKey="q3" value="yes" label="نعم" />
-                <OptionBtn qKey="q3" value="somewhat" label="إلى حد ما" />
+                <OptionBtn qKey="q3" value="yes" label="أيوة، أنا جاهز أشوف الصورة كاملة" />
+                <OptionBtn qKey="q3" value="somewhat" label="إلى حد ما.. بس محتاج حد يوجهني" />
               </div>
             </motion.div>
           )}

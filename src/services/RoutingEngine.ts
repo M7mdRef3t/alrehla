@@ -24,16 +24,19 @@ export interface EcosystemRecommendation {
  */
 export class RoutingEngine {
   
-  static getNextBestAction(data?: EcosystemData): EcosystemRecommendation {
+  static getNextBestAction(
+    data?: EcosystemData,
+    localContext?: { hasLocalMap?: boolean; hasCompletedBaseline?: boolean }
+  ): EcosystemRecommendation {
     // Default fallback (Reflection in Alrehla)
     const defaultAction: EcosystemRecommendation = {
       satellite: 'alrehla',
       actionType: 'reflect',
       priority: 'normal',
-      title: 'استكشف البوصلة',
+      title: 'استكشف خريطتك',
       description: 'راجع مستوى وعيك وتقدمك الشامل عبر المنظومة.',
-      ctaText: 'اكتشف البوصلة',
-      targetPath: '/dashboard',
+      ctaText: 'ارجع للخريطة',
+      targetPath: '/',
       reasoning: 'Default state. No acute pain or specific lack of clarity detected.'
     };
 
@@ -105,17 +108,25 @@ export class RoutingEngine {
     }
 
     // 4. Diagnosis (Dawayir)
-    // If Dawayir has 0 maps or no diagnosis yet (meaning they lack clarity)
-    if (!satellite_metrics?.dawayir || satellite_metrics.dawayir.map_count === 0) {
+    // If Dawayir has 0 maps on server AND 0 maps locally (meaning they lack clarity)
+    const hasMapOnServer = (satellite_metrics?.dawayir?.map_count || 0) > 0;
+    const hasMapLocally = (localContext?.hasLocalMap || false);
+    
+    if (!hasMapOnServer && !hasMapLocally) {
+      const isBaselineDone = localContext?.hasCompletedBaseline;
       return {
         satellite: 'dawayir',
         actionType: 'diagnose',
-        priority: 'normal',
-        title: 'اكتشف دوائرك',
-        description: 'لم ترسم أي خريطة لعلاقاتك بعد. ابدأ برسم وتصنيف دوائر تأثيرك لاكتشاف الأنماط الخفية.',
+        priority: isBaselineDone ? 'high' : 'normal', // Higher priority if baseline is already done
+        title: isBaselineDone ? 'ارسم خريطة وعيك' : 'اكتشف دوائرك',
+        description: isBaselineDone 
+          ? 'لقد انتهيت من التقييم، الآن حوّل البيانات لرؤية بصرية واضحة.'
+          : 'لم ترسم أي خريطة لعلاقاتك بعد. ابدأ برسم وتصنيف دوائر تأثيرك لاكتشاف الأنماط الخفية.',
         ctaText: 'ارسم أول خريطة',
-        targetPath: 'https://dawayir.alrehla.app/onboarding', // Or internal route
-        reasoning: 'Foundational step. Without a relational map, true self-awareness is incomplete.'
+        targetPath: '/onboarding?force=1',
+        reasoning: isBaselineDone 
+          ? 'Baseline finished. Natural next step is visual mapping.'
+          : 'Foundational step. Without a relational map, true self-awareness is incomplete.'
       };
     }
 

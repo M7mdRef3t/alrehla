@@ -7,7 +7,6 @@ import {
   type SubscriptionTier,
 } from "@/services/subscriptionManager";
 
-import { isPublicPaymentsEnabled } from "@/config/payments";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { useEffect } from "react";
 import * as analyticsService from "@/services/analytics";
@@ -54,7 +53,6 @@ export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose }) => {
   }, [reason]);
 
   const handleUpgrade = () => {
-    if (!isPublicPaymentsEnabled) return;
     onClose();
     openOverlay("premiumBridge");
   };
@@ -121,7 +119,6 @@ export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose }) => {
 
             <motion.button
               onClick={handleUpgrade}
-              disabled={!isPublicPaymentsEnabled}
               className="w-full py-4 rounded-xl font-black text-black flex items-center justify-center gap-2 text-sm"
               style={{
                 background: "linear-gradient(135deg, #f5a623, #d97706)",
@@ -131,7 +128,7 @@ export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose }) => {
               whileTap={{ scale: 0.98 }}
             >
               <Zap className="w-4 h-4" />
-              {isPublicPaymentsEnabled ? "انضم للدفعة التأسيسية الآن" : "التسجيل يُفتح قريبًا"}
+              انضم للدفعة التأسيسية الآن
             </motion.button>
           </div>
         </div>

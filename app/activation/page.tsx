@@ -113,8 +113,12 @@ export default function ActivationPage() {
 
     try {
       const session = await safeGetSession();
+      // Get stored email from Gate if exists
+      const storedEmail = typeof window !== 'undefined' ? localStorage.getItem('dawayir_lead_email') : null;
+
       const payload = {
         phone,
+        email: storedEmail,
         method: "vodafone_cash",
         proofImage,
         note: notes
@@ -166,10 +170,10 @@ export default function ActivationPage() {
             مرحلة التفعيل
           </span>
           <h1 className="mt-6 text-3xl font-black text-white drop-shadow-md">
-            تأكيد إثبات الدفع
+            بدأنا ترتيب الدوائر..
           </h1>
           <p className="mt-3 text-sm text-slate-400 max-w-sm mx-auto leading-relaxed">
-            الرحلة تعتمد على نظام إثبات دقيق. حول المبلغ المطلوب للرقم بالأسفل، وارفع التأكيد المباشر لتفعيل ملفك.
+            خطوة واحدة بتفصلك عن خريطة كاملة لوعيك وعلاقاتك. حول المبلغ المطلوب وفعل وصولك للملاذ الآن.
           </p>
         </motion.div>
 
@@ -236,7 +240,7 @@ export default function ActivationPage() {
               {/* Fields */}
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-[13px] font-black text-slate-300">رقم الهاتف <span className="font-normal text-slate-500">(الذي تم التحويل منه أو التواصل به)</span></label>
+                  <label className="mb-2 block text-[13px] font-black text-slate-300">رقم التواصل <span className="font-normal text-slate-500">(الرقم اللي عليه واتساب عشان نبعتلك الإشعار)</span></label>
                   <input
                     type="tel"
                     value={phone}
@@ -248,7 +252,7 @@ export default function ActivationPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[13px] font-black text-slate-300">لقطة شاشة التفعيل</label>
+                  <label className="mb-2 block text-[13px] font-black text-slate-300">إثبات التحويل (Screenshot)</label>
                   <AnimatePresence mode="wait">
                     {proofImage ? (
                       <motion.div

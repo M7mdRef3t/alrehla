@@ -2,7 +2,7 @@ import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEff
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowLeft, Zap, Shield, Heart } from "lucide-react";
 
-/* ΓöÇΓöÇΓöÇ Types ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* --- Types --- */
 interface HeroSectionProps {
   onStartJourney: () => void;
   mirrorName: string;
@@ -13,19 +13,19 @@ interface HeroSectionProps {
   secondaryCta: string;
 }
 
-/* ΓöÇΓöÇΓöÇ Constants ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* --- Constants --- */
 const ROTATING_WORDS = [
-  "╪»┘ê╪º┘è╪▒┘â ┘à┘ä╪«╪¿╪╖╪⌐",
-  "╪╖╪º┘é╪¬┘â ╪¿╪¬╪¬╪│╪▒╪¿",
-  "╪¡╪»┘ê╪»┘â ┘à┘Å╪│╪¬╪¿╪º╪¡╪⌐",
-  "╪«╪º┘è┘ü ╪¬┘é┘ê┘ä ┘ä╪ú",
-  "┘à╪▒╪º┘è╪⌐ ┘ä╪▓╪╣┘ä ╪║┘è╪▒┘â",
-  "╪¬╪º┘è┘ç ┘ü┘è ╪«┘ê╪º╪▒╪▓┘à┘è╪º╪¬┘ç┘à",
-  "┘å╪¿╪╢┘â ┘à╪▒╪¿┘ê╪╖ ╪¿╪║┘è╪▒┘â",
-  "╪│╪º┘è╪¿ ╪¿╪º╪¿┘â ┘à┘ê╪º╪▒╪¿"
+  "دوايرك ملخبطة",
+  "طاقتك بتتسرب",
+  "حدودك مُستباحة",
+  "خايف تقول لأ",
+  "مراية لزعل غيرك",
+  "تايه في خوارزمياتهم",
+  "نبضك مربوط بغيرك",
+  "سايب بابك موارب"
 ];
 
-/* ΓöÇΓöÇΓöÇ Styles ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* --- Styles --- */
 const HERO_STYLES = `
   /* @import fonts removed */
 
@@ -100,10 +100,9 @@ const HERO_STYLES = `
     box-shadow: 0 0 14px var(--cyan-glow);
   }
 
-  /* ┘ä┘è┘ç ┘à┘ê╪¼┘ê╪»╪ƒ ╪╣┘ä╪┤╪º┘å ╪º┘ä╪│╪╖╪▒ ╪º┘ä╪ú┘ê┘ä ┘à╪º┘è╪¬┘é╪╡╪┤ ┘à┘å ┘ü┘ê┘é/╪¬╪¡╪¬ ┘à╪╣ ╪ú╪¡╪¼╪º┘à ╪º┘ä╪«╪╖ ╪º┘ä┘â╪¿┘è╪▒╪⌐. Time Complexity: O(1) */
+  /* Time Complexity */
   .headline-line {
-    display: flex;
-    align-items: flex-start;
+    display: block;
     min-height: 70px;
     height: auto;
     line-height: 1.2;
@@ -112,16 +111,12 @@ const HERO_STYLES = `
     max-width: 100%;
     margin-bottom: 0.1em;
     color: var(--amber-500);
-    font-family: "Noto Kufi Arabic";
+    font-family: var(--font-display);
   }
 
-  /* ┘ä┘è┘ç ┘à┘ê╪¼┘ê╪»╪ƒ ╪╣┘ä╪┤╪º┘å ╪º┘ä╪│╪╖╪▒ ╪º┘ä╪¬╪º┘å┘è ┘è╪¬┘à╪»┘æ╪» ╪╖╪¿┘è╪╣┘è ╪¿╪»┘ä height ╪½╪º╪¿╪¬ ┘è╪│╪¿╪¿ clipping. Time Complexity: O(1) */
+  /* height  clipping Time Complexity */
   .headline-subline {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    gap: 0;
-    flex-wrap: wrap;
+    display: block;
     min-height: 45px;
     height: auto;
     line-height: 1.2;
@@ -132,7 +127,7 @@ const HERO_STYLES = `
     font-size: 0.78em;
     font-weight: 600;
     margin-bottom: 0.1em;
-    font-family: "Noto Kufi Arabic";
+    font-family: var(--font-display);
   }
 
   .hero-divider {
@@ -176,7 +171,7 @@ const HERO_STYLES = `
     font-size: 15px;
     font-weight: 600;
     color: #fff;
-    font-family: "Tajawal", sans-serif;
+    font-family: var(--font-tajawal), sans-serif;
     text-align: right;
     position: relative;
     z-index: 1;
@@ -200,7 +195,7 @@ const HERO_STYLES = `
     padding-right: 4px;
   }
 
-  /* ┘ä┘è┘ç ┘à┘ê╪¼┘ê╪»╪ƒ ╪╣┘ä╪┤╪º┘å container ╪º┘ä┘ç┘è╪»┘ä╪º┘è┘å ┘è╪│╪¬┘ê╪╣╪¿ 3 ╪│╪╖┘ê╪▒ ╪¿╪»┘ê┘å ┘é╪╡. Time Complexity: O(1) */
+  /* container  Time Complexity */
   .hero-headline {
     font-size: clamp(2.4rem, 5.5vw, 4.4rem);
     display: flex;
@@ -208,7 +203,7 @@ const HERO_STYLES = `
     align-items: flex-start;
     gap: 0;
     overflow: visible;
-    font-family: "Alexandria", sans-serif;
+    font-family: var(--font-alexandria), sans-serif;
     line-height: 1.4;
     padding-top: 0.2em;
     padding-bottom: 0.2em;
@@ -257,7 +252,7 @@ const HERO_STYLES = `
     font-size: 14px;
     font-weight: 800;
     color: rgba(255,255,255,0.7);
-    font-family: "Tajawal", sans-serif;
+    font-family: var(--font-tajawal), sans-serif;
     letter-spacing: 0.2em;
   }
 
@@ -354,7 +349,7 @@ const HERO_STYLES = `
     font-size: 26px;
     font-weight: 900;
     color: #fff;
-    font-family: "Tajawal", sans-serif;
+    font-family: var(--font-tajawal), sans-serif;
   }
 
   .metric-card-value--small {
@@ -426,7 +421,7 @@ const HERO_STYLES = `
     letter-spacing: 0.14em;
     color: #7a95a8;
     text-transform: uppercase;
-    font-family: "Tajawal", sans-serif;
+    font-family: var(--font-tajawal), sans-serif;
   }
 
   .node-tooltip-body {
@@ -440,7 +435,7 @@ const HERO_STYLES = `
     white-space: nowrap;
     backdrop-filter: blur(12px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 20px rgba(0, 240, 255, 0.14);
-    font-family: "Tajawal", sans-serif;
+    font-family: var(--font-tajawal), sans-serif;
   }
 
   .metric-card-values {
@@ -548,7 +543,7 @@ const HERO_STYLES = `
     pointer-events: none;
   }
 
-  /* ΓöÇΓöÇ Ambient Canvas ΓöÇΓöÇ */
+  /* --- Ambient Canvas --- */
   .hero-canvas {
     position: absolute;
     inset: 0;
@@ -600,7 +595,7 @@ const HERO_STYLES = `
     100% { transform: translate(10%, -15%) scale(1.2); }
   }
 
-  /* ΓöÇΓöÇ Grid ΓöÇΓöÇ */
+  /* --- Grid --- */
   .hero-grid-wrapper {
     position: absolute;
     inset: -50%;
@@ -654,7 +649,7 @@ const HERO_STYLES = `
     mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 90%);
   }
 
-  /* ΓöÇΓöÇ Noise grain ΓöÇΓöÇ */
+  /* --- Noise grain --- */
   .hero-grain {
     position: absolute;
     inset: 0;
@@ -665,7 +660,7 @@ const HERO_STYLES = `
     z-index: 50;
   }
 
-  /* ΓöÇΓöÇ Badge eyebrow ΓöÇΓöÇ */
+  /* --- Badge eyebrow --- */
   .hero-badge {
     display: inline-flex;
     align-items: center;
@@ -683,9 +678,9 @@ const HERO_STYLES = `
     box-shadow: inset 0 1px rgba(245, 166, 35, 0.1);
   }
 
-  /* ΓöÇΓöÇ Headline ΓöÇΓöÇ */
+  /* --- Headline --- */
   .headline-static {
-    font-family: "Alexandria", sans-serif;
+    font-family: var(--font-alexandria), sans-serif;
     font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.02em;
@@ -704,8 +699,8 @@ const HERO_STYLES = `
     width: 100%;
   }
 
-  /* ΓöÇΓöÇ Rotating word ΓöÇΓöÇ */
-  /* ┘ä┘è┘ç ┘à┘ê╪¼┘ê╪»╪ƒ ╪╣┘ä╪┤╪º┘å ┘â┘ä┘à╪⌐ ╪º┘ä┘Ç rotation ╪¬╪º╪«╪» ╪º╪▒╪¬┘ü╪º╪╣ ╪½╪º╪¿╪¬ ┘â╪º┘ü┘è ╪¿╪»┘ê┘å ┘é╪╡ ╪ú╪½┘å╪º╪í ╪º┘ä╪ú┘å┘è┘à┘è╪┤┘å. Time Complexity: O(1) */
+  /* --- Rotating word --- */
+  /* --- rotation  Time Complexity --- */
   .rotating-word-wrapper {
     position: relative;
     display: inline-block;
@@ -716,13 +711,13 @@ const HERO_STYLES = `
     overflow: visible;
     white-space: nowrap;
     box-sizing: content-box;
-    font-family: "Noto Kufi Arabic";
+    font-family: var(--font-display);
     line-height: 1.2;
     vertical-align: middle;
     text-align: right;
   }
 
-  /* ΓöÇΓöÇ Body copy ΓöÇΓöÇ */
+  /* --- Body copy --- */
   .hero-body {
     font-size: 1rem;
     line-height: 1.9;
@@ -731,7 +726,7 @@ const HERO_STYLES = `
     max-width: 100%;
   }
 
-  /* ΓöÇΓöÇ Primary CTA ΓöÇΓöÇ */
+  /* --- Primary CTA --- */
   .cta-primary {
     position: relative;
     overflow: hidden;
@@ -760,7 +755,7 @@ const HERO_STYLES = `
     transform: translateY(-4px) scale(1.02);
   }
 
-  /* ΓöÇΓöÇ Secondary CTA ΓöÇΓöÇ */
+  /* --- Secondary CTA --- */
   .cta-secondary {
     display: inline-flex;
     align-items: center;
@@ -783,7 +778,7 @@ const HERO_STYLES = `
     color: #e8f0f5;
   }
 
-  /* ΓöÇΓöÇ Trust pills ΓöÇΓöÇ */
+  /* --- Trust pills --- */
   .trust-pill {
     display: inline-flex;
     align-items: center;
@@ -798,7 +793,7 @@ const HERO_STYLES = `
     color: #8faab8;
   }
 
-  /* ΓöÇΓöÇ Right panel: The Sovereign Map ΓöÇΓöÇ */
+  /* --- Right panel The Sovereign Map --- */
   .sovereign-map {
     position: relative;
     width: 100%;
@@ -806,13 +801,13 @@ const HERO_STYLES = `
     max-width: 520px;
   }
 
-  /* ΓöÇΓöÇ Pulse ring ΓöÇΓöÇ */
+  /* --- Pulse ring --- */
   @keyframes pulse-ring {
     0%   { transform: scale(1);    opacity: 0.6; }
     100% { transform: scale(1.65); opacity: 0;   }
   }
 
-  /* ΓöÇΓöÇ Metric Card ΓöÇΓöÇ */
+  /* --- Metric Card --- */
   .metric-card {
     position: absolute;
     backdrop-filter: blur(20px) saturate(160%);
@@ -832,7 +827,7 @@ const HERO_STYLES = `
     100% { transform: translateY(-8px); }
   }
 
-  /* ΓöÇΓöÇ Warp transition ΓöÇΓöÇ */
+  /* --- Warp transition --- */
   .warp-overlay {
     position: fixed;
     inset: 0;
@@ -844,7 +839,7 @@ const HERO_STYLES = `
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
   }
 
-  /* ΓöÇΓöÇ Starfield dots ΓöÇΓöÇ */
+  /* --- Starfield dots --- */
   .starfield-dot {
     position: absolute;
     border-radius: 50%;
@@ -852,7 +847,7 @@ const HERO_STYLES = `
     pointer-events: none;
   }
 
-  /* ΓöÇΓöÇ Scan line ΓöÇΓöÇ */
+  /* --- Scan line --- */
   @keyframes scan {
     0%   { top: -4%; }
     100% { top: 104%; }
@@ -866,7 +861,7 @@ const HERO_STYLES = `
     pointer-events: none;
   }
 
-  /* ΓöÇΓöÇ Layout ΓöÇΓöÇ */
+  /* --- Layout --- */
   .hero-content-wrapper {
     position: relative;
     z-index: 2;
@@ -887,7 +882,7 @@ const HERO_STYLES = `
     padding-bottom: 56px;
   }
 
-  /* ΓöÇΓöÇ Mobile Layout ΓöÇΓöÇ */
+  /* --- Mobile Layout --- */
   @media (max-width: 1023px) {
     .hero-root {
       overflow-x: hidden;
@@ -1014,7 +1009,7 @@ const HERO_STYLES = `
   }
 `;
 
-/* ΓöÇΓöÇΓöÇ Helpers ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* --- Helpers --- */
 const techEase = [0, 0.7, 0.1, 1] as [number, number, number, number];
 
 const fadeUp = {
@@ -1027,7 +1022,7 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.15, delayChildren: 0.15 } },
 };
 
-/* ΓöÇΓöÇΓöÇ Rotating Headline Word ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* --- Rotating Headline Word --- */
 const RotatingWord: FC = () => {
   const [index, setIndex] = useState(0);
   const [show, setShow] = useState(true);
@@ -1045,7 +1040,7 @@ const RotatingWord: FC = () => {
 
   return (
     <span className="rotating-word-wrapper relative inline-block w-full max-w-full">
-      {/* ┘ä┘è┘ç ┘à┘ê╪¼┘ê╪»╪ƒ ╪╣┘ä╪┤╪º┘å wrapper ┘è╪º╪«╪» ╪╣╪▒╪╢ ┘â╪¬┘ä╪⌐ ╪º┘ä╪╣┘å┘ê╪º┘å ┘â╪º┘à┘ä ┘ê┘è╪¬╪¡╪º╪░┘ë ┘à╪╣╪º┘ç╪º ╪¿╪╡╪▒┘è┘ï╪º. Time Complexity: O(1) */}
+      {/* wrapper  Time Complexity */}
       <span className="invisible select-none block whitespace-nowrap" aria-hidden>
         {ROTATING_WORDS[5]}
       </span>
@@ -1057,8 +1052,8 @@ const RotatingWord: FC = () => {
             animate={{ opacity: 1, y: 0, clipPath: "polygon(0 -50%, 100% -50%, 100% 150%, 0% 150%)" }}
             exit={{ opacity: 0, y: -12, clipPath: "polygon(0 -50%, 100% -50%, 100% -50%, 0% -50%)" }}
             transition={{ duration: 0.45, ease: techEase }}
-            /* ┘ä┘è┘ç ┘à┘ê╪¼┘ê╪»╪ƒ ╪╣┘ä╪┤╪º┘å ╪º┘ä┘â┘ä┘à╪⌐ ╪º┘ä┘à╪¬╪¡╪▒┘â╪⌐ ╪¬╪¿┘é┘ë ┘à╪¬╪▒╪º┘â╪¿╪⌐ ┘ü┘ê┘é placeholder ╪¿╪»┘ê┘å ┘à╪º ╪¬╪▓┘ê╪» ╪º╪▒╪¬┘ü╪º╪╣ ╪º┘ä╪¡╪º┘ê┘è╪⌐. Time Complexity: O(1) */
-            className="absolute right-0 top-0 flex items-center headline-accent w-fit h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal font-['Noto_Kufi_Arabic']"
+            /* placeholder  Time Complexity */
+            className="absolute right-0 top-0 flex items-center headline-accent w-fit h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal" style={{ fontFamily: 'var(--font-display)' }}
           >
             {ROTATING_WORDS[index]}
           </motion.span>
@@ -1068,7 +1063,7 @@ const RotatingWord: FC = () => {
   );
 };
 
-/* ΓöÇΓöÇΓöÇ Sovereign Map (Right Panel) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* --- Sovereign Map  Right Panel --- */
 const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -1100,14 +1095,15 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   ];
 
   const nodes = [
-    { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "╪╣┘ä╪º┘é╪⌐ ╪¿┘à┘è╪▓╪º┘å┘ç╪º",  w: 1.2 },
-    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "╪»╪╣┘à ╪│┘è╪º╪»┘è",    w: 0.8 },
-    { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "┘å╪¿╪╢ ┘à╪¬╪░╪¿╪░╪¿",  w: 1.5 },
-    { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "╪¬╪┤┘ê┘è╪┤ ╪▒┘ê╪¡",   w: 0.9 },
-    { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "╪º╪¡╪¬┘ê╪º╪í ╪¡┘é┘è┘é┘è",w: 1.1 },
-    { cx: 190 - 28, cy: 190 - 148, r: 12, color: "#ff0055", label: "┘å╪▓┘è┘ü ╪╖╪º┘é╪⌐",   w: 2.0 },
-    { cx: 190 + 118, cy: 190 - 100, r: 11, color: "#ff0044", label: "╪¡╪»┘ê╪» ┘à┘ç╪»┘ê╪▒╪⌐", w: 1.7 },
+    { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "علاقة بموزانها",  w: 1.2 },
+    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم سيادي",    w: 0.8 },
+    { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "نبض متذبذب",  w: 1.5 },
+    { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "تشويش روح",   w: 0.9 },
+    { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "احتواء حقيقي",w: 1.1 },
+    { cx: 190 - 28, cy: 190 - 148, r: 12, color: "#ff0055", label: "نزيف طاقة",   w: 2.0 },
+    { cx: 190 + 118, cy: 190 - 100, r: 11, color: "#ff0044", label: "حدود مهدورة", w: 1.7 },
   ];
+
 
   const [hovered, setHovered] = useState<number | null>(null);
   const toSafeRadius = (value: unknown, fallback: number) =>
@@ -1264,10 +1260,10 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
       </svg>
 
       <div className="metric-card metric-card--health">
-        <p className="metric-card-label">╪╡╪¡╪¬┘â ╪º┘ä╪»╪º╪«┘ä┘è╪⌐</p>
+        <p className="metric-card-label">صحتك الداخلية</p>
         <div className="metric-card-values">
-          <span className="metric-card-value">┘º┘¿</span>
-          <span className="metric-card-text">/ ┘í┘á┘á</span>
+          <span className="metric-card-value">٧٨</span>
+          <span className="metric-card-text">/ ١٠٠</span>
         </div>
         <div className="metric-card-bar">
           <motion.div
@@ -1280,10 +1276,10 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
       </div>
 
       <div className="metric-card metric-card--drain">
-        <p className="metric-card-label metric-card-label--alert">┘å╪▓┘è┘ü ╪╖╪º┘é╪⌐</p>
+        <p className="metric-card-label metric-card-label--alert">نزيف طاقة</p>
         <div className="metric-card-values metric-card-values--inline">
-          <span className="metric-card-value metric-card-value--small">┘ú</span>
-          <span className="metric-card-text">┘à╪╡╪º╪»╪▒ ╪º┘ä╪º╪│╪¬┘å╪▓╪º┘ü</span>
+          <span className="metric-card-value metric-card-value--small">٣</span>
+          <span className="metric-card-text">مصادر الاستنزاف</span>
         </div>
         <div className="metric-card-dots">
           {[1, 2, 3].map((dot) => (
@@ -1299,9 +1295,9 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
       <div className="legend">
         {[
-          { dotClass: "legend-dot legend-dot--teal", label: "╪¬┘ê╪º╪▓┘å ╪░╪º╪¬┘è" },
-          { dotClass: "legend-dot legend-dot--gold", label: "╪¬╪┤╪¬╪¬" },
-          { dotClass: "legend-dot legend-dot--crimson", label: "╪º╪│╪¬┘å╪▓╪º┘ü" },
+          { dotClass: "legend-dot legend-dot--teal", label: "توازن ذاتي" },
+          { dotClass: "legend-dot legend-dot--gold", label: "تشتت" },
+          { dotClass: "legend-dot legend-dot--crimson", label: "استنزاف" },
         ].map(({ dotClass, label }) => (
           <div key={label} className="legend-item">
             <span className={dotClass} />
@@ -1326,12 +1322,12 @@ const PulseBadge: FC<{ count: number }> = ({ count }) => (
       transition={{ duration: 1.6, repeat: Infinity }}
     />
     <span className="pulse-badge__text">
-      {count.toLocaleString("en-US")} ┘è╪│╪¬╪╣┘è╪»┘ê┘å ┘å╪¿╪╢┘ç┘à ╪º┘ä╪ó┘å
+      {count.toLocaleString("en-US")} يستعيدون نبضهم الآن
     </span>
   </motion.div>
 );
 
-/* ΓöÇΓöÇΓöÇ Main Hero Component ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* --- Main Hero Component --- */
 export const HeroSection: FC<HeroSectionProps> = ({
   onStartJourney,
   mirrorName,
@@ -1384,7 +1380,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
     setTimeout(onStartJourney, 900);
   }, [onStartJourney]);
 
-  // ┘ä┘è┘ç ┘à┘ê╪¼┘ê╪»╪ƒ ╪╣┘ä╪┤╪º┘å ┘å╪½╪¿╪¬ ╪╣╪▒╪╢ ╪¿┘é┘è╪⌐ ╪╣┘å╪º╪╡╪▒ ╪º┘ä┘å╪╡ ╪╣┘ä┘ë ┘å┘ü╪│ ╪╣╪▒╪╢ ╪¼┘à┘ä╪⌐ "╪ú┘å╪¬ ┘ä╪│╪¬ ┘à╪▒┘ç┘é╪º┘ï" ╪¿╪º┘ä╪╕╪¿╪╖. Time Complexity: O(1) ┘ä┘â┘ä ╪¬╪¡╪»┘è╪½ ┘é┘è╪º╪│.
+  // Time Complexity
   useLayoutEffect(() => {
     const node = headlineLineRef.current;
     if (!node) return;
@@ -1429,13 +1425,13 @@ export const HeroSection: FC<HeroSectionProps> = ({
       <style dangerouslySetInnerHTML={{ __html: HERO_STYLES }} />
       <style dangerouslySetInnerHTML={{ __html: warpLineStyles }} />
 
-      {/* ΓöÇΓöÇ Section wrapper ΓöÇΓöÇ */}
+      {/* --- Section wrapper --- */}
       <section
         className="hero-root"
         dir="rtl"
         onMouseMove={handleGlobalMouseMove}
       >
-        {/* ΓöÇΓöÇ Ambient canvas ΓöÇΓöÇ */}
+        {/* --- Ambient canvas --- */}
         <div className="hero-canvas" aria-hidden>
           {/* Layer 3: Deep Nebula */}
           <motion.div className="hero-layer hero-layer--nebula" style={{ x: nebulaX, y: nebulaY }}>
@@ -1467,7 +1463,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
           <div className="hero-screen-glow" />
         </div>
 
-        {/* ΓöÇΓöÇ Content container ΓöÇΓöÇ */}
+        {/* --- Content container --- */}
         <div className="hero-content-wrapper">
           <motion.div
             variants={stagger}
@@ -1477,7 +1473,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             style={{
               rotateX: tiltX,
               rotateY: tiltY,
-              // ┘ä┘è┘ç ┘à┘ê╪¼┘ê╪»╪ƒ ╪╣┘ä╪┤╪º┘å ┘å╪«┘ä┘è ╪º┘ä╪╣┘å╪º╪╡╪▒ ╪º┘ä╪¬╪º┘å┘è╪⌐ ╪¬┘ä╪¬╪▓┘à ╪¿┘å┘ü╪│ ╪╣╪▒╪╢ ╪º┘ä╪╣┘å┘ê╪º┘å ╪º┘ä╪ú┘ê┘ä ┘ê┘é╪¬ ╪º┘ä╪▒┘å╪»╪▒. Time Complexity: O(1).
+              // Time Complexity
               ["--headline-measured-width" as any]:
                 headlineMeasuredWidth > 0 ? `${headlineMeasuredWidth}px` : undefined,
             }}
@@ -1485,23 +1481,23 @@ export const HeroSection: FC<HeroSectionProps> = ({
             <motion.div variants={fadeUp} className="hero-eyebrow-row">
               <span className="hero-badge">
                 <span className="hero-badge__dot" />
-                DAWAYIR ΓÇö ╪º┘ä╪▒╪¡┘ä╪⌐
+                DAWAYIR — الرحلة
               </span>
               <PulseBadge count={pulseCount} />
             </motion.div>
 
             <motion.h1 variants={fadeUp} className="headline-static hero-headline">
-              <span ref={headlineLineRef} className="headline-line">╪ú┘å╪¬ ┘ä╪│╪¬ ┘à╪▒┘ç┘é╪º┘ï</span>
-              <span className="headline-subline">╪ú┘å╪¬ ┘ü┘é╪╖</span>
+              <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
+              <span className="headline-subline">أنت فقط</span>
               <RotatingWord />
             </motion.h1>
 
             <motion.div variants={fadeUp} className="hero-divider" />
 
             <motion.p variants={fadeUp} className="hero-body">
-              ┘é┘ü. ╪«╪░ ┘å┘ü╪│╪º┘ï ╪╣┘à┘è┘é╪º┘ï.
-              ╪ú┘å╪¬ ┘ä╪│╪¬ ╪¿╪¡╪º╪¼╪⌐ ╪Ñ┘ä┘ë ╪º┘ä┘à╪▓┘è╪» ┘à┘å ╪º┘ä┘à┘ç╪º┘à. ╪ú┘å╪¬ ╪¿╪¡╪º╪¼╪⌐ ╪Ñ┘ä┘ë <strong>╪«╪▒┘è╪╖╪⌐ ╪¬╪╡╪¿╪¡ ┘ü┘è┘ç╪º ┘à╪▒╪ª┘è╪º┘ï ┘ä┘å┘ü╪│┘â</strong>.
-              ┘å╪¬╪▒╪¼┘à ┘ü┘ê╪╢┘ë ╪ú┘ü┘â╪º╪▒┘â ┘ü┘ê╪▒╪º┘ï ┘ä╪Ñ╪¡╪»╪º╪½┘è╪º╪¬ ╪¿╪╡╪▒┘è╪⌐ ╪¬╪▒╪╡╪» ┘å╪▓┘è┘ü ╪╖╪º┘é╪¬┘â.
+              قف. خذ نفساً عميقاً.
+              أنت لست بحاجة إلى المزيد من المهام. أنت بحاجة إلى <strong>خريطة تصبح فيها مرئياً لنفسك</strong>.
+              نترجم فوضى أفكارك فوراً لإحداثيات بصرية ترصد نزيف طاقتك.
             </motion.p>
 
             <motion.div variants={fadeUp} className="hero-input-group">
@@ -1510,7 +1506,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                   type="text"
                   id="mirror-name"
                   name="mirrorName"
-                  placeholder="╪º╪│┘à┘â (╪º╪«╪¬┘è╪º╪▒┘è)"
+                  placeholder="اسمك (اختياري)"
                   value={mirrorName}
                   onChange={e => setMirrorName(e.target.value)}
                   maxLength={24}
@@ -1519,13 +1515,13 @@ export const HeroSection: FC<HeroSectionProps> = ({
                 />
                 {mirrorName && (
                   <span className="hero-input-greeting">
-                    ╪ú┘ç┘ä╪º┘ï {mirrorName} Γ£ª
+                    أهلاً {mirrorName} ✪
                   </span>
                 )}
               </div>
               {!mirrorName && (
                 <p className="hero-input-note">
-                  ╪º╪╢┘ü ╪º╪│┘à┘â ╪╣╪┤╪º┘å ╪¬╪¼╪▒╪¿╪¬┘â ╪¬╪¿┘é┘ë ╪┤╪«╪╡┘è╪⌐
+                  اضف اسمك عشان تجربتك تبقى شخصية
                 </p>
               )}
             </motion.div>
@@ -1614,7 +1610,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                 <Zap className="warp-icon" />
               </div>
               <p className="warp-text">
-                ╪¼╪º╪▒┘è ╪¬╪¡┘ä┘è┘ä ┘ê╪╣┘è┘â...
+                جاري تحليل وعيك...
               </p>
             </motion.div>
           </motion.div>

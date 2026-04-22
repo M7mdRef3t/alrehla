@@ -13,10 +13,13 @@ interface WhatsAppEvent {
   message_body: string;
   message_type: string;
   direction: "inbound" | "outbound";
-  raw_payload: any;
+
   created_at: string;
   intent_detected?: string;
   metadata?: {
+    [key: string]: any;
+  };
+  raw_payload: {
     oracle_strategy?: {
       suggestion: string;
       reasoning: string;
@@ -209,7 +212,7 @@ export function WhatsAppThreadModal({
                       </div>
                     </div>
 
-                    {!isOutbound && ev.metadata?.oracle_strategy && (
+                    {!isOutbound && ev.raw_payload?.oracle_strategy && (
                       <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -222,7 +225,7 @@ export function WhatsAppThreadModal({
                             <div className="flex items-center justify-between">
                               <span className="text-[9px] font-black text-indigo-300 uppercase tracking-widest">تحليل الأوركال للرسالة</span>
                               <button 
-                                onClick={() => insertQuickReply(ev.metadata?.oracle_strategy?.suggestion || "")}
+                                onClick={() => insertQuickReply(ev.raw_payload?.oracle_strategy?.suggestion || "")}
                                 className="flex items-center gap-1.5 px-2 py-1 rounded bg-indigo-500/20 hover:bg-indigo-500/40 text-[9px] font-black text-indigo-200 transition-all border border-indigo-500/30"
                               >
                                 <Sparkles className="w-3 h-3" />
@@ -230,11 +233,11 @@ export function WhatsAppThreadModal({
                               </button>
                             </div>
                             <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
-                              <span className="text-indigo-400/80">التحليل:</span> {ev.metadata.oracle_strategy.reasoning}
+                              <span className="text-indigo-400/80">التحليل:</span> {ev.raw_payload.oracle_strategy.reasoning}
                             </p>
                             <div className="p-2 rounded-lg bg-black/40 border border-white/5">
                                <p className="text-[11px] text-emerald-400 leading-relaxed font-bold italic">
-                                 "{ev.metadata.oracle_strategy.suggestion}"
+                                 "{ev.raw_payload.oracle_strategy.suggestion}"
                                </p>
                             </div>
                           </div>

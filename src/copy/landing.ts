@@ -88,6 +88,7 @@ export const landingCopy = {
   ],
   cta: "اسمح للرحلة بالبدء",
   ctaJourney: "اكتشف خريطتك في دقيقتين",
-  description: "Dawayir — نظام تشغيل لوعيك، فهم طقسك الداخلي واستعادة خصوصيتك"
+  description: "Dawayir — نظام تشغيل لوعيك، فهم طقسك الداخلي واستعادة خصوصيتك",
+  secondaryCta: "تسجيل الدخول / استكمال الرحلة"
 };
 

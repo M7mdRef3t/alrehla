@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import {
   Briefcase, Home, Heart, Wallet, HelpCircle,
-  Users, UserCircle, Star, ArrowRight, Activity, Users2, PauseCircle, Compass
+  Users, UserCircle, Star, ArrowRight, Activity, Users2, PauseCircle, Compass, Lock
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { resolveAdviceCategory, type AdviceCategory } from "@/data/adviceScripts";
@@ -159,7 +159,7 @@ const GoalCard: FC<GoalCardProps> = ({ option, index, isEnabled, isSelected, isR
 
         {!isEnabled && (
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm rounded-[2.5rem] flex items-center justify-center text-xs font-bold text-slate-600">
-            قريباً
+            <Lock className="w-5 h-5 text-slate-500" />
           </div>
         )}
       </motion.button>

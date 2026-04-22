@@ -910,7 +910,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* Ring Legend */}
       {!journeyMode && activeNodes.length > 0 && (
         <motion.div
-          className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
+          className="fixed bottom-[calc(var(--bottom-nav-height,5rem)+0.75rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.4 }}
@@ -943,7 +943,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {!journeyMode && (
         <motion.button
           type="button"
-          className="fixed z-40 right-6 bottom-[calc(7rem+env(safe-area-inset-bottom))] md:bottom-[7.5rem] w-14 h-14 rounded-full flex items-center justify-center shadow-2xl pointer-events-auto"
+          className="fixed z-40 right-6 bottom-[calc(var(--bottom-nav-height,5rem)+2rem+env(safe-area-inset-bottom))] md:bottom-[7.5rem] w-14 h-14 rounded-full flex items-center justify-center shadow-2xl pointer-events-auto"
           style={{
             background: "linear-gradient(135deg, #2DD4BF 0%, #0D9488 100%)",
             boxShadow: "0 0 30px rgba(45,212,191,0.3)"
@@ -966,7 +966,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* Modals & Overlays */}
       <AnimatePresence>
         {selectedNodeId && (
-          <div className="fixed bottom-24 right-4 left-4 md:w-80 z-[60]">
+          <div className="fixed bottom-[calc(var(--bottom-nav-height,5rem)+1rem)] right-4 left-4 md:w-80 z-[60]">
             <ContextNotePanel
               nodeId={selectedNodeId}
               nodeLabel={nodes.find((n) => n.id === selectedNodeId)?.label ?? selectedNodeId}

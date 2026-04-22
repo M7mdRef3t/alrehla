@@ -83,41 +83,27 @@ export async function POST(req: Request) {
 
   // 2. Handle Inbound Messages
   if (messages && messages.length > 0) {
+    const { whatsappAutomationService } = await import("../../../../src/services/whatsappAutomationService");
+
     for (const msg of messages) {
       const fromPhoneRaw = msg.from;
-      const phoneNormalized = `+${fromPhoneRaw.replace(/\D/g, "")}`;
-      const messageBody = msg.text?.body || msg.button?.text || "";
+      const messageBody = msg.text?.body || msg.interactive?.button_reply?.title || msg.button?.text || "";
+      const senderName = value?.contacts?.[0]?.profile?.name || "";
 
-      // Map phone to lead
-      const { data: leads } = await supabaseAdmin
-        .from("marketing_leads")
-        .select("id")
-        .eq("phone_normalized", phoneNormalized)
-        .order("created_at", { ascending: false })
-        .limit(1);
+      const payload = {
+        from: fromPhoneRaw,
+        name: senderName,
+        text: messageBody,
+        timestamp: msg.timestamp || new Date().getTime().toString(),
+        messageId: msg.id,
+        metadata: {
+          raw: msg
+        },
+        gateway: 'meta' as const
+      };
 
-      const leadId = leads?.[0]?.id || null;
-
-      // Log the inbound message
-      const { error: insertError } = await supabaseAdmin
-        .from("whatsapp_message_events")
-        .insert([{
-          lead_id: leadId,
-          whatsapp_message_id: msg.id,
-          from_phone: phoneNormalized,
-          to_phone: process.env.META_WA_BUSINESS_PHONE_NUMBER || "system",
-          message_body: messageBody,
-          message_type: msg.type || "text",
-          direction: "inbound",
-          raw_payload: msg
-        }]);
-
-      if (insertError) {
-        console.error("[WhatsAppWebhook] Failed logging inbound message:", insertError);
-        continue;
-      }
-
-      console.log(`[WhatsAppWebhook] Inbound message from ${fromPhoneRaw} logged (Lead: ${leadId})`);
+      console.log(`[WhatsAppWebhook] Delegating message from ${fromPhoneRaw} to automation service`);
+      await whatsappAutomationService.processInboundMessage(payload);
     }
   }
 

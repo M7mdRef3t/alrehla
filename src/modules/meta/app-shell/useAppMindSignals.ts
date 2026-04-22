@@ -51,10 +51,14 @@ export function useAppMindSignals({
   const { sendNotification } = useNotifications();
 
   // Sovereign Chronicles Trigger
+  // We track the last-seen chronicle ID so the overlay only fires once
+  // per NEW chronicle, not on every boot (lastNewChronicle is persisted).
+  const lastSeenChronicleId = useRef<string | null>(null);
   useEffect(() => {
-    if (lastNewChronicle && !activeFlows) {
-      openChronicle();
-    }
+    if (!lastNewChronicle || activeFlows) return;
+    if (lastNewChronicle.id === lastSeenChronicleId.current) return;
+    lastSeenChronicleId.current = lastNewChronicle.id;
+    openChronicle();
   }, [lastNewChronicle, activeFlows, openChronicle]);
 
   useEffect(() => {

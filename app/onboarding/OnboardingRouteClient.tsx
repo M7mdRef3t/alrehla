@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { OnboardingFlow } from "@/modules/meta/OnboardingFlow";
 import { useJourneyState } from "@/domains/journey/store/journey.store";
@@ -9,6 +10,7 @@ import {
   captureUtmFromCurrentUrl,
 } from "../../src/services/marketingAttribution";
 import { useMapState } from "@/modules/map/store/map.store";
+import { useAuthState } from "@/domains/auth/store/auth.store";
 import { getStoredLeadEmail, setStoredLeadEmail, hasRevenueAccess } from "../../src/services/revenueAccess";
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
@@ -46,44 +48,69 @@ const WarpOverlay = () => (
            transition={{
              duration: 1.5,
              repeat: Infinity,
-             delay: Math.random() * 2,
-             ease: "easeIn"
+             delay: Math.random() * 2
            }}
          />
        ))}
      </div>
-     <motion.div 
-       initial={{ scale: 0.9, opacity: 0, filter: "blur(10px)" }}
-       animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
-       transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+     <motion.div
+       initial={{ scale: 0.8, opacity: 0 }}
+       animate={{ scale: 1, opacity: 1 }}
        className="relative z-10 text-center"
      >
-       <h1 className="text-2xl font-black tracking-[0.4em] text-teal-400 uppercase mb-4" dir="rtl">
-         جاري تهيئة الملاذ الآمن
-       </h1>
-       <div className="w-48 h-1 bg-white/10 rounded-full mx-auto overflow-hidden">
-         <motion.div 
-           className="h-full bg-teal-400"
-           initial={{ width: "0%" }}
-           animate={{ width: "100%" }}
-           transition={{ duration: 2, ease: "easeInOut" }}
-         />
-       </div>
+       <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto mb-6" />
+       <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">جاري تهيئة الرحلة...</h2>
+       <p className="text-indigo-300/60 text-sm">نحن نجهز لك فضاءً خاصاً لاستكشاف ذاتك</p>
      </motion.div>
   </motion.div>
 );
 
 export default function OnboardingRouteClient() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { status } = useAuthState();
+  const isReady = status === "ready";
+  
   const mirrorName = useJourneyState((s) => s.mirrorName);
+  const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
+  const nodesCount = useMapState((s) => s.nodes.length);
+  const isHydrated = useMapState((s) => s.isHydrated);
+
   const [isWarping, setIsWarping] = useState(false);
   const [gateContext, setGateContext] = useState<GateOnboardingPayload | null>(null);
 
+  // Robust force check
+  const forceOnboarding = useMemo(() => {
+    const hasForceParam = searchParams.get("force") === "1";
+    const hasForceInUrl = typeof window !== "undefined" && window.location.href.includes("force=1");
+    return hasForceParam || hasForceInUrl;
+  }, [searchParams]);
+
   useEffect(() => {
+    // 1. Initial attribution capture
     captureUtmFromCurrentUrl();
     captureLeadAttributionFromCurrentUrl();
 
-    const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-    const source = searchParams?.get("source");
+    console.log("[Onboarding] Guard Evaluation:", {
+      isReady,
+      status,
+      isHydrated,
+      forceOnboarding,
+      nodesCount,
+      baselineCompletedAt
+    });
+
+    if (!isReady) return;
+
+    // 2. Handle Unauthenticated users
+    if (status === "unauthenticated") {
+      console.log("[Onboarding] Unauthenticated user. Redirecting to home.");
+      window.location.replace("/");
+      return;
+    }
+
+    // 3. Process Gate context
+    const source = searchParams.get("source");
     if (typeof window !== "undefined" && source === "gate") {
       const rawPayload = window.sessionStorage.getItem(GATE_ONBOARDING_PAYLOAD_KEY);
       if (rawPayload) {
@@ -92,59 +119,52 @@ export default function OnboardingRouteClient() {
         } catch {
           setGateContext(null);
         }
-        window.sessionStorage.removeItem(GATE_ONBOARDING_PAYLOAD_KEY);
       }
     }
 
-    const nodesCount = useMapState.getState().nodes.length;
-    const baselineCompletedAt = useJourneyState.getState().baselineCompletedAt;
-    
-    if (typeof window !== "undefined" && (nodesCount > 0 || baselineCompletedAt)) {
-      if (hasRevenueAccess()) {
-        window.location.replace("/?boot_action=start_recovery");
-      } else {
-        window.location.replace("/activation?resume=1&source=onboarding");
+    // 4. Hydration-aware Guard
+    if (isHydrated) {
+      if (!forceOnboarding && (nodesCount > 0 || !!baselineCompletedAt)) {
+        console.log("[Onboarding] Guard: Data exists & force=1 is MISSING. Redirecting.");
+        if (hasRevenueAccess()) {
+          window.location.replace("/?boot_action=start_recovery&reason=already_onboarded");
+        } else {
+          window.location.replace("/activation?resume=1&source=onboarding&reason=already_onboarded");
+        }
+        return;
       }
+      
+      console.log("[Onboarding] Access Permitted:", forceOnboarding ? "Forced Bypass" : "New User");
     }
-  }, []);
+  }, [isReady, status, searchParams, forceOnboarding, nodesCount, baselineCompletedAt, isHydrated]);
 
-  const handleComplete = useCallback((skipped = false) => {
+  const handleComplete = useCallback(() => {
     setIsWarping(true);
-
-    const currentState = useJourneyState.getState();
-    const name = currentState.mirrorName || "";
-    const existingEmail = getStoredLeadEmail() || "";
-    if (existingEmail) setStoredLeadEmail(existingEmail);
-
-    const params = new URLSearchParams();
-    if (name) params.set("name", name);
-    if (existingEmail) params.set("email", existingEmail);
-    if (skipped) params.set("skipped", "1");
-    params.set("source", "onboarding");
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "navigate:map");
-      window.sessionStorage.setItem("dawayir-onboarding-just-finished", "true");
-    }
-
-    const nextUrl = `/?${params.toString()}`;
-
-    // 2. Cinematic delay
+    // Give time for animations to breathe
     setTimeout(() => {
-      window.location.href = nextUrl;
-    }, 2200);
+      window.location.assign("/?boot_action=start_recovery&source=onboarding_completion");
+    }, 2000);
   }, []);
 
   return (
-    <>
+    <div className="min-h-screen bg-slate-950 text-white selection:bg-indigo-500/30">
       <AnimatePresence>
         {isWarping && <WarpOverlay />}
       </AnimatePresence>
-      
-      <OnboardingFlow
-        initialMirrorName={mirrorName}
-        gateContext={gateContext}
-        onComplete={handleComplete}
-      />
-    </>
+
+      <div className="relative z-10">
+        <OnboardingFlow 
+          onComplete={handleComplete}
+          initialMirrorName={mirrorName || ""}
+          gateContext={gateContext || undefined}
+        />
+      </div>
+
+      {/* Atmospheric Background Components */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.05),transparent_70%)]" />
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent" />
+      </div>
+    </div>
   );
 }
