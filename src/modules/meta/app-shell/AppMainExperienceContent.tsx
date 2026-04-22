@@ -371,7 +371,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "dawayir") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="standard" tabBarVisible={true}>
         <DawayirPlayground
           onBack={() => onNavigate?.("landing" as AppScreen)}
         />

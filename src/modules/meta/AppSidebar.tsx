@@ -57,6 +57,7 @@ import { useEmergencyState } from "@/domains/admin/store/emergency.store";
 import { BreathingOverlay } from '@/modules/exploration/BreathingOverlay';
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useMapState } from '@/modules/map/dawayirIndex';
+import { useLayoutState } from "@/modules/map/store/layout.store";
 import type { RecoveryPlanOpenWith } from '@/modules/map/dawayirIndex';
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { AlrehlaIcon } from "./logo/AlrehlaIcon";
@@ -408,7 +409,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         </div>
       <span className="truncate flex-1">{label}</span>
       {badge && (
-        <span className="ds-badge !text-[10px] !px-1.5 !h-4 opacity-60">
+        <span className="ds-badge !text-[10px] !px-1.5 !h-4 text-slate-400">
           {badge}
         </span>
       )}
@@ -423,7 +424,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 };
 
   const setOverlay = useAppOverlayState((state) => state.setOverlay);
-  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+  const isDesktopSidebarOpen = useLayoutState((s) => s.sidebarExpanded);
+  const toggleSidebar = useLayoutState((s) => s.toggleSidebar);
+  const setSidebarExpanded = useLayoutState((s) => s.setSidebarExpanded);
+
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
@@ -584,8 +588,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     return map[lastGoalRecord.goalId] || "var(--ds-color-brand-teal-400)";
   }, [lastGoalRecord]);
 
-  const handleClose = () => setIsMobileSidebarOpen(false);
-  const handleOpen = () => setIsMobileSidebarOpen(true);
+  const handleClose = () => {
+    setIsMobileSidebarOpen(false);
+    setSidebarExpanded(false);
+  };
+  const handleOpen = () => {
+    setIsMobileSidebarOpen(true);
+    setSidebarExpanded(true);
+  };
 
   const openWhatsAppChat = (placement: "desktop_sidebar" | "mobile_sidebar" | "floating_fab") => {
     if (!whatsAppLink) return;
@@ -685,11 +695,18 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               
               <SidebarSector title="الاستكشاف" icon={<Compass className="w-3.5 h-3.5" />} color="teal">
                 <SidebarItem
-                  label="الخريطة (فهم الذات)"
+                  label="الخريطة"
                   icon={<Map className="w-3.5 h-3.5 outline-none" />}
-                  onClick={() => pushUrl("/#map")}
+                  onClick={() => navigateProductScreen("map")}
                   active={window.location.pathname === "/" && window.location.hash === "#map"}
                   color="#14b8a6"
+                />
+                <SidebarItem
+                  label="البوصلة"
+                  icon={<Compass className="w-3.5 h-3.5 outline-none" />}
+                  onClick={() => navigateProductScreen("bawsala")}
+                  active={window.location.hash === "#bawsala"}
+                  color="#2dd4bf"
                 />
                 <SidebarItem
                   label="الأهداف الذكية"
@@ -726,7 +743,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   color="#a855f7"
                 />
                 <SidebarItem
-                  label="الصدى (Insights)"
+                  label="الرادار"
                   icon={<Radar className="w-3.5 h-3.5 outline-none" />}
                   onClick={() => navigateProductScreen("sada")}
                   color="#06b6d4"
@@ -884,7 +901,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <SidebarItem
                   label="مرايا (التوأم الرقمي)"
                   icon={<Sparkles className="w-4 h-4" />}
-                  onClick={() => pushUrl("/#maraya", { screen: "maraya" })}
+                  onClick={() => navigateProductScreen("maraya")}
                   color="#a78bfa"
                 />
                 <SidebarItem
@@ -896,25 +913,25 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <SidebarItem
                   label="جلسة خاصة"
                   icon={<CalendarDays className="w-4 h-4" />}
-                  onClick={() => pushUrl("/#session-intake", { screen: "session-intake" })}
+                  onClick={() => navigateProductScreen("session-intake")}
                   color="#60a5fa"
                 />
                 <SidebarItem
                   label="لوحة الكوتش"
                   icon={<MessageCircle className="w-4 h-4" />}
-                  onClick={() => pushUrl("/#session-console", { screen: "session-console" })}
+                  onClick={() => navigateProductScreen("session-console")}
                   color="#14b8a6"
                 />
                 <SidebarItem
                   label="أجواء الرحلة"
                   icon={<Wind className="w-4 h-4" />}
-                  onClick={() => pushUrl("/#atmosfera", { screen: "atmosfera" })}
+                  onClick={() => navigateProductScreen("atmosfera")}
                   color="#2dd4bf"
                 />
                 <SidebarItem
                   label="مسارات"
                   icon={<Compass className="w-4 h-4" />}
-                  onClick={() => pushUrl("/#masarat", { screen: "masarat" })}
+                  onClick={() => navigateProductScreen("masarat")}
                   color="#f59e0b"
                 />
               </SidebarSector>
@@ -932,7 +949,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   الرحلة
                 </span>
               </button>
-              <span className="text-[9px] text-slate-400 tracking-[0.2em] font-medium uppercase opacity-50">
+              <span className="text-[9px] text-slate-500 tracking-[0.2em] font-medium uppercase">
                 Sovereign Intelligence
               </span>
             </div>
@@ -946,7 +963,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         >
           <div
             className={`absolute right-0 bottom-[calc(var(--bottom-nav-height,5rem)+10.5rem+env(safe-area-inset-bottom))] w-8 h-20 flex flex-col justify-center items-center bg-teal-700/90 backdrop-blur-md text-white border border-r-0 border-teal-900 cursor-pointer rounded-l-xl shadow-2xl hover:bg-teal-600 transition-all duration-300 pointer-events-auto`}
-            onClick={() => setIsDesktopSidebarOpen((current) => !current)}
+            onClick={toggleSidebar}
             title={isDesktopSidebarOpen ? "أغلق محطة الانطلاق" : "افتح محطة الانطلاق"}
           >
             <PanelRightOpen className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0 text-white"}`} />
@@ -1017,7 +1034,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <SidebarItem
                     label="الخريطة (فهم الذات)"
                     icon={<Map className="w-5 h-5 outline-none" />}
-                    onClick={() => { pushUrl("/"); handleClose(); }}
+                    onClick={() => { navigateProductScreen("map"); handleClose(); }}
                     active={window.location.pathname === "/"}
                     color="#14b8a6"
                   />
@@ -1176,13 +1193,13 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <SidebarItem
                     label="مرايا (التوأم الرقمي)"
                     icon={<Sparkles className="w-5 h-5" />}
-                    onClick={() => { pushUrl("/#maraya", { screen: "maraya" }); handleClose(); }}
+                    onClick={() => { navigateProductScreen("maraya"); handleClose(); }}
                     color="#a78bfa"
                   />
                   <SidebarItem
                     label="جلسة خاصة"
                     icon={<CalendarDays className="w-5 h-5" />}
-                    onClick={() => { pushUrl("/#session-intake", { screen: "session-intake" }); handleClose(); }}
+                    onClick={() => { navigateProductScreen("session-intake"); handleClose(); }}
                     color="#60a5fa"
                   />
                   <SidebarItem
@@ -1194,19 +1211,19 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <SidebarItem
                     label="لوحة الكوتش"
                     icon={<MessageCircle className="w-5 h-5" />}
-                    onClick={() => { pushUrl("/#session-console", { screen: "session-console" }); handleClose(); }}
+                    onClick={() => { navigateProductScreen("session-console"); handleClose(); }}
                     color="#14b8a6"
                   />
                   <SidebarItem
                     label="أجواء الرحلة"
                     icon={<Wind className="w-5 h-5" />}
-                    onClick={() => { pushUrl("/#atmosfera", { screen: "atmosfera" }); handleClose(); }}
+                    onClick={() => { navigateProductScreen("atmosfera"); handleClose(); }}
                     color="#2dd4bf"
                   />
                   <SidebarItem
                     label="مسارات"
                     icon={<Compass className="w-5 h-5" />}
-                    onClick={() => { pushUrl("/#masarat", { screen: "masarat" }); handleClose(); }}
+                    onClick={() => { navigateProductScreen("masarat"); handleClose(); }}
                     color="#f59e0b"
                   />
                 </SidebarSector>
@@ -1277,7 +1294,7 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
                       الرحلة
                     </span>
                   </button>
-                  <span className="text-[10px] text-slate-500 tracking-[0.25em] font-medium uppercase opacity-40">
+                  <span className="text-[10px] text-slate-600 tracking-[0.25em] font-medium uppercase">
                     Sovereign Intelligence
                   </span>
                 </div>

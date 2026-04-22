@@ -44,6 +44,8 @@ export async function POST(req: Request) {
     if (step === 'layer1') {
       const { error: insertError } = await db.from('gate_sessions').insert({
         id: sessionId,
+        name: payload.name,
+        phone: payload.phone,
         email: payload.email,
         source_area: payload.sourceArea,
         lead_submitted_at: timestamp,

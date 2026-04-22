@@ -31,7 +31,7 @@ export async function GET(req: Request) {
             .from('routing_events')
             .select('event_type, session_id')
             .gte('occurred_at', thirtyDaysAgo.toISOString())
-            .in('event_type', ['page_view', 'onboarding_started', 'activation_viewed', 'payment_proof_submitted', 'lead_form_submitted']);
+            .in('event_type', ['page_view', 'onboarding_started', 'journey_started_frictionless', 'activation_viewed', 'payment_proof_submitted', 'lead_form_submitted']);
 
         if (error) {
             console.error("Supabase Error:", error);
@@ -51,7 +51,7 @@ export async function GET(req: Request) {
             if (!e.session_id) return;
             funnel.total_sessions.add(e.session_id);
             if (e.event_type === 'page_view') funnel.landing_views.add(e.session_id);
-            if (e.event_type === 'onboarding_started') funnel.onboarding_starts.add(e.session_id);
+            if (e.event_type === 'onboarding_started' || e.event_type === 'journey_started_frictionless') funnel.onboarding_starts.add(e.session_id);
             if (e.event_type === 'activation_viewed' || e.event_type === 'lead_form_submitted') funnel.activation_views.add(e.session_id);
             if (e.event_type === 'payment_proof_submitted') funnel.successful_payments.add(e.session_id);
         });

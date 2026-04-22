@@ -88,7 +88,7 @@
   /* Text */
   --ds-theme-text-primary:   #ffffff;
   --ds-theme-text-secondary: #cbd5e1;
-  --ds-theme-text-muted:     rgba(148, 163, 184, 0.72);
+  --ds-theme-text-muted:     #94a3b8;
 
   /* Surfaces */
   --ds-theme-surface:       rgba(10, 17, 40, 0.5);
@@ -111,7 +111,7 @@
   /* ⚡ Short aliases for inline usage — dark overrides */
   --text-primary:   #ffffff;
   --text-secondary: #cbd5e1;
-  --text-muted:     rgba(148, 163, 184, 0.72);
+  --text-muted:     #94a3b8;
 
   /* Overwrite for Dark Sovereign Mode */
   --ds-color-primary: var(--teal);

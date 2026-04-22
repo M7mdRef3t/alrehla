@@ -1,6 +1,5 @@
-/* eslint-disable react-refresh/only-export-components */
 import type { Metadata } from "next";
-import { DawayirPlayground } from "@/modules/social/DawayirPlayground";
+import ClientAppEntry from "../client-app-entry";
 
 export const metadata: Metadata = {
   title: "الدوائر — ذكاء العلاقات",
@@ -33,9 +32,5 @@ export const metadata: Metadata = {
 };
 
 export default function DawayirPage() {
-  return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      <DawayirPlayground />
-    </div>
-  );
+  return <ClientAppEntry />;
 }

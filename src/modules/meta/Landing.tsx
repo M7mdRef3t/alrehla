@@ -287,6 +287,7 @@ export const Landing: FC<LandingProps> = ({
         trustPoints={["توازن", "تشتت", "استنزاف"]}
         ctaJourney={landingCopy.ctaJourney}
         secondaryCta={landingCopy.secondaryCta}
+        hideCta={hasExistingJourney}
       />
 
       <div className="landing-intrinsic-sentinel" />

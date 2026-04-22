@@ -11,6 +11,7 @@ interface HeroSectionProps {
   trustPoints: string[];
   ctaJourney: string;
   secondaryCta?: string;
+  hideCta?: boolean;
 }
 
 /* --- Constants --- */
@@ -175,7 +176,7 @@ const HERO_STYLES = `
   }
 
   .hero-command-input::placeholder {
-    color: rgba(255, 255, 255, 0.25);
+    color: #475569;
     transition: opacity 0.3s;
   }
 
@@ -227,6 +228,12 @@ const HERO_STYLES = `
   }
 
   @media (max-width: 640px) {
+    .hero-eyebrow-row {
+      gap: 6px;
+      justify-content: center;
+      position: relative;
+      top: -5px;
+    }
     .hero-command-bar {
       flex-direction: column;
       border-radius: 20px;
@@ -240,6 +247,11 @@ const HERO_STYLES = `
     }
     .hero-command-input {
       text-align: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      width: 100%;
+      padding: 14px;
     }
   }
 
@@ -270,7 +282,7 @@ const HERO_STYLES = `
     font-weight: 500;
     font-size: 1.15rem;
     line-height: 1.9;
-    color: rgba(255,255,255,0.85);
+    color: #e2e8f0;
     width: 100%;
     text-align: justify;
   }
@@ -310,7 +322,7 @@ const HERO_STYLES = `
   .warp-text {
     font-size: 14px;
     font-weight: 800;
-    color: rgba(255,255,255,0.7);
+    color: #94a3b8;
     font-family: var(--font-tajawal), sans-serif;
     letter-spacing: 0.2em;
   }
@@ -894,29 +906,35 @@ const HERO_STYLES = `
     .hero-root {
       overflow-x: hidden;
       width: 100%;
+      height: 100svh;
+      min-height: 100svh;
+      max-height: 100svh;
+      overflow-y: hidden;
     }
 
     .hero-content-wrapper {
       flex-direction: column;
       align-items: center;
-      gap: 2rem;
-      padding: 5rem 1rem 3rem;
+      gap: 1rem;
+      padding: 5rem 1rem 2rem;
       width: 100%;
+      height: 100%;
       max-width: 100vw;
       box-sizing: border-box;
       overflow-x: hidden;
+      justify-content: center;
     }
 
     .hero-copy-column {
       display: contents;
     }
 
-    .hero-eyebrow-row { order: 1; }
-    .hero-headline { order: 2; }
-    .hero-divider { order: 3; }
+    .hero-eyebrow-row { order: 1; margin-bottom: -0.25rem; }
+    .hero-headline { order: 2; margin-bottom: -0.25rem; }
+    .hero-divider { order: 3; margin: 0; }
     .map-area { order: 4; }
-    .hero-body { order: 5; }
-    .hero-cta-container { order: 6; }
+    .hero-cta-container { order: 5; margin-top: 0.5rem; margin-bottom: 0.5rem; width: 100%; z-index: 10; }
+    .hero-body { order: 6; }
     
     .headline-static {
       display: flex;
@@ -929,21 +947,24 @@ const HERO_STYLES = `
     }
     
     .headline-line {
-      font-size: clamp(2.2rem, 8vw, 3rem);
-      line-height: 1.2;
-      white-space: normal; /* Fix horizontal scaling issue */
+      font-size: clamp(2rem, 7vw, 2.6rem);
+      line-height: 1.1;
+      white-space: normal;
       text-align: center;
     }
     
     .headline-subline {
       text-align: center;
       white-space: normal;
-      margin-top: -0.25rem; /* Negative margin to pull it up */
+      margin-top: 0;
+      font-size: clamp(1.4rem, 5.5vw, 2rem);
     }
 
     .headline-inline-row {
       flex-direction: column;
+      align-items: center;
       gap: 0;
+      margin-top: 0.25rem;
     }
 
     .rotating-word-wrapper {
@@ -952,22 +973,35 @@ const HERO_STYLES = `
       text-align: center !important;
       margin-left: auto;
       margin-right: auto;
+      margin-top: 0.25rem;
       width: 100%;
     }
 
+    .rotating-word-wrapper > .headline-accent {
+      right: 0 !important;
+      left: 0 !important;
+      margin: 0 auto !important;
+      justify-content: center;
+    }
+
     .hero-body {
-      text-align: justify !important;
-      text-justify: inter-word;
+      text-align: center !important;
       text-align-last: center !important;
       margin-left: auto;
       margin-right: auto;
       width: 100%;
+      max-width: 95vw;
       box-sizing: border-box;
-      font-size: 1.05rem;
-      line-height: 1.8;
-      padding: 0 1.25rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      padding: 0 0.5rem;
     }
 
+    .hero-body--no-cta {
+      margin-top: 2.5rem;
+      position: relative;
+      z-index: 10;
+    }
 
     .hero-trust-row {
       flex-wrap: wrap;
@@ -980,15 +1014,20 @@ const HERO_STYLES = `
       padding: 6px 10px;
     }
 
+    .legend {
+      bottom: -15px; /* Lift the legend words up */
+    }
+
     .map-area {
       width: 100%;
-      max-width: min(95vw, 400px);
-      margin: 0 auto;
-      padding-bottom: 24px;
+      max-width: min(85vw, 320px);
+      margin: -4rem auto -2rem;
+      padding-bottom: 0;
       box-sizing: border-box;
       overflow: visible;
     }
   }
+
 `;
 
 /* --- Helpers --- */
@@ -1276,7 +1315,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
       <div className="legend">
         {[
-          { dotClass: "legend-dot legend-dot--teal", label: "توازن ذاتي" },
+          { dotClass: "legend-dot legend-dot--teal", label: "توازن" },
           { dotClass: "legend-dot legend-dot--gold", label: "تشتت" },
           { dotClass: "legend-dot legend-dot--crimson", label: "استنزاف" },
         ].map(({ dotClass, label }) => (
@@ -1316,6 +1355,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
   pulseCount,
   trustPoints,
   ctaJourney,
+  hideCta = false,
 }) => {
   const reduceMotion = useReducedMotion();
   const [isWarping, setIsWarping] = useState(false);
@@ -1471,37 +1511,38 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
             <motion.div variants={fadeUp} className="hero-divider" />
 
-            <motion.p variants={fadeUp} className="hero-body">
+            <motion.p variants={fadeUp} className={`hero-body ${hideCta ? 'hero-body--no-cta' : ''}`}>
               هدئ السرعة. لست بحاجة للركض والمزيد من السعي، بل إلى المزيد من الوضوح. مشكلتك ليست في كثرة المهام بل في ضبابية الطريق. نحول شتات ذهنك إلى لوحة بصرية واحدة تكشف لك جذور استنزافك، وترسم لك خريطة العودة لقلبك واستعادة السيطرة على طاقتك.
             </motion.p>
 
-            <motion.div variants={fadeUp} className="hero-cta-container">
-              <div className="hero-command-bar">
-                <input
-                  type="text"
-                  id="mirror-name"
-                  name="mirrorName"
-                  placeholder="اسمك (اختياري)"
-                  aria-label="اكتب اسمك"
-                  value={mirrorName}
-                  onChange={e => setMirrorName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleStart(); }}
-                  maxLength={24}
-                  dir="rtl"
-                  className="hero-command-input"
-                />
-                <button
-                  type="button"
-                  className="hero-command-btn"
-                  onClick={handleStart}
-                  id="hero-cta-start"
-                >
-                  <span>{ctaJourney}</span>
-                  <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
-                </button>
-              </div>
-
-            </motion.div>
+            {!hideCta && (
+              <motion.div variants={fadeUp} className="hero-cta-container">
+                <div className="hero-command-bar">
+                  <input
+                    type="text"
+                    id="mirror-name"
+                    name="mirrorName"
+                    placeholder="اسمك (اختياري)"
+                    aria-label="اكتب اسمك"
+                    value={mirrorName}
+                    onChange={e => setMirrorName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleStart(); }}
+                    maxLength={24}
+                    dir="rtl"
+                    className="hero-command-input"
+                  />
+                  <button
+                    type="button"
+                    className="hero-command-btn"
+                    onClick={handleStart}
+                    id="hero-cta-start"
+                  >
+                    <span>{ctaJourney}</span>
+                    <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
 
           <motion.div

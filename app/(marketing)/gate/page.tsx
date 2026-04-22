@@ -20,6 +20,8 @@ function MarketingGateContent() {
   const [state, setState] = useState<GateState>({
     sessionId: '',
     step: 'layer1',
+    name: '',
+    phone: '',
     sourceArea: '',
     email: '',
   });
@@ -62,7 +64,7 @@ function MarketingGateContent() {
   };
 
   const handleLayer1Submit = async () => {
-    if (!state.email || !state.sourceArea) return;
+    if (!state.email || !state.sourceArea || !state.name || !state.phone) return;
     
     // Pixel Fire
     const eventId = trackGateEventPixelOnly('Lead', { external_id: state.sessionId }, `${state.sessionId}-lead`);
@@ -75,6 +77,8 @@ function MarketingGateContent() {
         step: 'layer1',
         sessionId: state.sessionId,
         eventId,
+        name: state.name,
+        phone: state.phone,
         email: state.email,
         sourceArea: state.sourceArea,
         ...getUtmPayload()
@@ -118,7 +122,7 @@ function MarketingGateContent() {
     }
   };
 
-  const isLayer1Valid = !!(state.email && state.email.includes('@') && state.sourceArea);
+  const isLayer1Valid = !!(state.email && state.email.includes('@') && state.sourceArea && state.name && state.phone);
 
   if (!mounted) return null;
 
@@ -127,6 +131,8 @@ function MarketingGateContent() {
       <RadarBackground />
       {state.step === 'layer1' && (
         <LayerOneForm 
+          name={state.name || ''}
+          phone={state.phone || ''}
           sourceArea={state.sourceArea || ''}
           email={state.email || ''}
           onChange={handleLayer1Change}

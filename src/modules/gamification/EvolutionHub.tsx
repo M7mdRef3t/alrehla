@@ -8,13 +8,14 @@ import {
   LayoutGrid, ListTodo, 
   Coins, Sparkles, X,
   ArrowUpCircle, Award, ShoppingBag,
-  Snowflake, Swords
+  Snowflake, Swords, Info
 } from "lucide-react";
 import { useGamification } from "@/domains/gamification";
 import { QuestBoard } from "./QuestBoard";
 import { SovereigntyStore } from "./SovereigntyStore";
 import { FrostBoard } from "./FrostBoard";
 import { ChallengeBoard } from "./ChallengeBoard";
+import { LevelGuide } from "./LevelGuide";
 import { soundManager } from "@/services/soundManager";
 import { triggerConfetti } from "@/utils/confetti";
 
@@ -32,7 +33,7 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
     checkAndResetQuests();
   }, [checkAndResetQuests]);
 
-  const [activeTab, setActiveTab] = useState<'quests' | 'achievements' | 'frostboard' | 'challenges' | 'store'>('quests');
+  const [activeTab, setActiveTab] = useState<'quests' | 'achievements' | 'frostboard' | 'challenges' | 'store' | 'guide'>('quests');
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [lastLevel, setLastLevel] = useState(level);
 
@@ -54,7 +55,7 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-600/10 blur-[120px] rounded-full" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full" />
-        <div className="absolute inset-0 bg-[url('/assets/grid-white.svg')] opacity-[0.02]" />
+        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       </div>
 
       {/* Close Button */}
@@ -201,6 +202,14 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
            >
              <ShoppingBag className="w-4 h-4" /> المتجر
            </button>
+           <button 
+             onClick={() => setActiveTab('guide')}
+             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${
+               activeTab === 'guide' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-white/40 hover:text-white/60'
+             }`}
+           >
+             <Info className="w-4 h-4" /> دليل المستويات
+           </button>
         </div>
       </div>
 
@@ -234,8 +243,14 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
                     <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">وسام الاستحقاق</p>
                  </div>
                ))}
-
-             ) : activeTab === 'frostboard' ? (
+               {badges.length === 0 && (
+                 <div className="col-span-full h-full flex flex-col items-center justify-center text-center opacity-40 mt-10">
+                    <Award className="w-20 h-20 mb-4" />
+                    <p className="text-sm font-black uppercase tracking-widest text-white">لم يتم رصد إنجازات استثنائية بعد</p>
+                 </div>
+               )}
+             </motion.div>
+           ) : activeTab === 'frostboard' ? (
                <motion.div
                  key="frostboard"
                  initial={{ opacity: 0, y: 10 }}
@@ -255,14 +270,17 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
                >
                  <ChallengeBoard />
                </motion.div>
-               {badges.length === 0 && (
-                 <div className="col-span-full h-full flex flex-col items-center justify-center text-center opacity-40">
-                    <Award className="w-20 h-20 mb-4" />
-                    <p className="text-sm font-black uppercase tracking-widest text-white">لم يتم رصد إنجازات استثنائية بعد</p>
-                 </div>
-               )}
-             </motion.div>
-           ) : (
+             ) : activeTab === 'guide' ? (
+               <motion.div
+                 key="guide"
+                 initial={{ opacity: 0, y: 10 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -10 }}
+                 className="h-full"
+               >
+                 <LevelGuide />
+               </motion.div>
+             ) : (
              <motion.div 
                key="store"
                initial={{ opacity: 0, scale: 0.95 }}

@@ -18,12 +18,25 @@ import { User, Clock, Zap, Coins, Maximize, GripVertical, Plus, AlertCircle, Inf
 import { useMasafatyAnalysis, EntropyLevel } from "./hooks/useMasafatyAnalysis";
 import { Button } from '@/modules/meta/UI/Button';
 
+// Native SVG X Icon for better performance and consistency in SVG coordinate system
+const NativeX: FC<{ x: number; y: number; size: number }> = ({ x, y, size }) => (
+  <g transform={`translate(${x}, ${y})`}>
+    <line x1={-size/2} y1={-size/2} x2={size/2} y2={size/2} stroke="currentColor" strokeWidth={size/3} strokeLinecap="round" />
+    <line x1={size/2} y1={-size/2} x2={-size/2} y2={size/2} stroke="currentColor" strokeWidth={size/3} strokeLinecap="round" />
+  </g>
+);
+
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
 interface DawayirCanvasProps {
+  nodes?: MapNodeType[];
   onNodeClick: (node: MapNodeType) => void;
   onAddNode: () => void;
-  goalIdFilter?: string;
+  goalId?: string;
+  selectedNodeId?: string | null;
+  onSelectNode?: (id: string | null) => void;
+  onMoveNode?: (id: string, ring: Ring) => void;
+  isSelectionMode?: boolean;
 }
 
 /* ─── Components ───────────────────────────────────────────────────────────── */
@@ -221,18 +234,16 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
     <>
     <motion.g 
       ref={setNodeRef as any} 
+      className={`cursor-grab ${isDragging ? "cursor-grabbing" : ""}`}
       style={{ 
         ...style, 
         outline: "none", 
         WebkitTapHighlightColor: "transparent", 
         zIndex: isDragging ? 50 : "auto",
         willChange: "transform",
-        transform: style?.transform ? `${style.transform} translateZ(0)` : "translateZ(0)"
+        transform: style?.transform ? `${style.transform} translateZ(0)` : "translateZ(0)",
+        transformOrigin: "center"
       } as any}
-      {...attributes} 
-      {...listeners}
-      tabIndex={-1}
-      className={`cursor-grab ${isDragging ? "cursor-grabbing" : ""}`}
       whileHover={{ scale: 1.15, transition: { type: "spring", stiffness: 400, damping: 10 } }}
       whileTap={{ scale: 0.95 }}
       initial={{ scale: 0, opacity: 0, filter: "blur(10px)" }}
@@ -250,7 +261,19 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       onTap={() => {
         if (!isDragging && !deleteClickedRef.current && !showConfirmDelete) onClick(node);
       }}
+      {...attributes} 
+      {...listeners}
     >
+      {/* "Birth" Animation - A pulsing ring that appears only once on mount */}
+      <motion.circle
+        cx={baseX} cy={baseY} r="4"
+        fill="none"
+        stroke="var(--soft-teal)"
+        strokeWidth="1"
+        initial={{ scale: 1, opacity: 0.8 }}
+        animate={{ scale: 2.5, opacity: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      />
       {node.isMirrorNode && (
         <motion.circle
           cx={baseX} cy={baseY} r="7"
@@ -314,15 +337,14 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
         </>
       ) : (
         <g className="pointer-events-none">
-          {/* Native SVG Human Icon (to avoid square issues) */}
-          <circle cx={baseX} cy={baseY - 1} r="1.2" fill="currentColor" className={node.isAnalyzing ? "text-teal-500/50 animate-pulse" : "text-white"} />
+          {/* Native SVG Human Icon - High Contrast */}
+          <circle cx={baseX} cy={baseY - 1.2} r="1.4" fill="#ffffff" />
           <path 
-            d={`M ${baseX - 2} ${baseY + 2} Q ${baseX} ${baseY - 0.5} ${baseX + 2} ${baseY + 2}`} 
+            d={`M ${baseX - 2.2} ${baseY + 1.8} Q ${baseX} ${baseY - 0.2} ${baseX + 2.2} ${baseY + 1.8}`} 
             fill="none" 
-            stroke="currentColor" 
-            strokeWidth="0.6" 
+            stroke="#ffffff" 
+            strokeWidth="0.8" 
             strokeLinecap="round"
-            className={node.isAnalyzing ? "text-teal-500/50 animate-pulse" : "text-white"}
           />
         </g>
       )}
@@ -349,13 +371,13 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       {/* Delete Button */}
       <motion.g
         onTap={handleDeleteClick}
-        className=""
+        style={{ transformOrigin: `${baseX - 4}px ${baseY - 4}px` }}
         initial={{ opacity: 0, scale: 0 }}
         whileHover={{ scale: 1.2 }}
         animate={{ opacity: 1, scale: 1 }}
       >
         <circle cx={baseX - 4} cy={baseY - 4} r="2" fill="#64748b" stroke="white" strokeWidth="0.2" />
-        <X x={baseX - 5} y={baseY - 5} width={2} height={2} className="text-white" />
+        <NativeX x={baseX - 4} y={baseY - 4} size={1.2} />
       </motion.g>
     </motion.g>
 
@@ -457,25 +479,39 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   );
 });
 
-export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode, goalIdFilter }) => {
-  const allNodes = useMapState((s) => s.nodes);
+export const DawayirCanvas: FC<DawayirCanvasProps> = ({ 
+  nodes: passedNodes, 
+  onNodeClick, 
+  onAddNode, 
+  goalId = "all" 
+}) => {
+  const storeNodes = useMapState((s) => s.nodes);
+  const allNodes = passedNodes || storeNodes;
   
   const nodes = useMemo(() => {
-    console.log("[DawayirCanvas] allNodes:", allNodes.length, "goalIdFilter:", goalIdFilter);
-    // If filter is 'general' or not provided, we show all nodes EXCEPT those specifically marked for other contexts
-    // But usually, we want 'general' to show everything that isn't strictly hidden.
-    if (!goalIdFilter || goalIdFilter === "general") {
-      return allNodes;
-    }
-    
-    if (goalIdFilter === "family") {
-      return allNodes.filter(
-        (n) =>
-          n.goalId === "family" || n.goalId == null || n.treeRelation?.type === "family"
-      );
-    }
-    return allNodes.filter((n) => n.goalId === goalIdFilter);
-  }, [allNodes, goalIdFilter]);
+    // We want to show nodes that are NOT archived and match the current goal filter
+    return allNodes.filter((node) => {
+      if (node.isNodeArchived) return false;
+
+      // Handle 'all', 'general', or unspecified as "show everything"
+      if (!goalId || goalId === "all" || goalId === "general") {
+        return true;
+      }
+
+      // Handle 'unknown' specifically for nodes with no goalId
+      if (goalId === "unknown") {
+        return !node.goalId;
+      }
+
+      // Special case for family
+      if (goalId === "family") {
+        return node.goalId === "family" || node.treeRelation?.type === "family";
+      }
+
+      // Exact match for everything else
+      return node.goalId === goalId;
+    });
+  }, [allNodes, goalId]);
 
   const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
   const archiveNode = useMapState((s) => s.archiveNode);
@@ -590,6 +626,11 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode, 
             <RelationshipNode key={node.id} node={node} index={i} total={groupedNodes.green.length} onClick={onNodeClick} entropyLevel={entropyMap[node.id] || 0} />
           ))}
 
+          {/* Debug labels if nodes are missing but count is > 0 */}
+          {activeNodesCount > 0 && nodes.length === 0 && (
+             <text x="50" y="95" fontSize="3" fill="red" textAnchor="middle">خطأ في الفلترة - راجع الكونسول</text>
+          )}
+
           {onAddNode && ghostNodePosition && (
             <motion.g
               initial={{ opacity: 0, scale: 0.8 }}
@@ -597,7 +638,7 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode, 
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onTap={onAddNode}
-              style={{ pointerEvents: "all", cursor: "pointer" }}
+              style={{ pointerEvents: "all", cursor: "pointer", transformOrigin: `${ghostNodePosition.x}px ${ghostNodePosition.y}px` }}
             >
               {/* Pulsing Aura */}
               <motion.circle
@@ -629,18 +670,17 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode, 
                 cx={ghostNodePosition.x}
                 cy={ghostNodePosition.y}
                 r="4.5"
-                fill="rgba(15, 23, 42, 0.7)"
+                fill="rgba(45, 212, 191, 0.15)"
                 fillOpacity="1"
-                stroke="rgba(45, 212, 191, 0.8)"
+                stroke="rgba(45, 212, 191, 0.6)"
                 strokeOpacity="1"
-                strokeWidth="0.5"
-                strokeDasharray="1 1"
+                strokeWidth="0.4"
               />
               
-              {/* Plus Icon inside (Pure Native Paths) */}
+              {/* Plus Icon inside (Pure Native Paths) - Higher Visibility */}
               <g transform={`translate(${ghostNodePosition.x}, ${ghostNodePosition.y})`}>
-                <line x1="-1.8" y1="0" x2="1.8" y2="0" stroke="#2dd4bf" strokeWidth="0.8" strokeLinecap="round" />
-                <line x1="0" y1="-1.8" x2="0" y2="1.8" stroke="#2dd4bf" strokeWidth="0.8" strokeLinecap="round" />
+                <line x1="-2" y1="0" x2="2" y2="0" stroke="#2dd4bf" strokeWidth="1" strokeLinecap="round" />
+                <line x1="0" y1="-2" x2="0" y2="2" stroke="#2dd4bf" strokeWidth="1" strokeLinecap="round" />
               </g>
 
               {/* Label */}

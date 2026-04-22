@@ -64,17 +64,7 @@ export function DawayirPlayground({ onBack }: { onBack?: () => void }) {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 p-4 lg:p-8 min-h-[800px]">
-      {/* Back Button for Platform Integration */}
-      {onBack && (
-        <button
-          onClick={onBack}
-          className="fixed top-6 left-6 z-[60] w-12 h-12 rounded-full glass-heavy flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all active:scale-95 shadow-2xl"
-          title="رجوع"
-        >
-          <ArrowRight className="w-6 h-6" />
-        </button>
-      )}
+    <div className="flex flex-col lg:flex-row gap-8 p-4 lg:px-8 min-h-[800px]">
 
       {/* Sidebar / Controls */}
       <div className="w-full lg:w-80 flex flex-col gap-6">

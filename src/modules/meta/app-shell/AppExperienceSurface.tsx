@@ -18,12 +18,13 @@ import { signOut } from "@/services/authService";
 import { type AppScreen } from "@/navigation/navigationMachine";
 import { AppSidebar } from "../AppSidebar";
 import { Z_LAYERS } from "@/config/zIndices";
+import { useLayoutState } from "@/modules/map/store/layout.store";
 
 
 
-// â”€â”€ Module-level constants (created once, never re-allocated on render) â”€â”€
+// ─── Module-level constants (created once, never re-allocated on render) ───
 
-/** All valid AppScreen values â€” kept in sync with navigationMachine.ts */
+/** All valid AppScreen values — kept in sync with navigationMachine.ts */
 const KNOWN_SCREENS = new Set<AppScreen>([
   "landing", "goal", "map", "guided", "mission", "tools",
   "settings", "enterprise", "guilt-court", "diplomacy",
@@ -112,11 +113,12 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   onNavigateToMap,
   onOpenLogin
 }: AppExperienceSurfaceProps) {
+  const sidebarExpanded = useLayoutState((s) => s.sidebarExpanded);
   const isLivePage = typeof window !== "undefined" && window.location.pathname.includes("dawayir-live");
   const actuallyShowingPulse = showPulseCheck && !isLivePage && !isLandingScreen;
   const breadcrumbItems = useMemo(() => buildBreadcrumb(screen), [screen]);
 
-  // â”€â”€ Scroll state for header-breadcrumb sync â”€â”€
+  // ─── Scroll state for header-breadcrumb sync ───
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -156,30 +158,24 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   return (
     <>
       <div className="system-experience-surface" style={{ isolation: 'isolate' }}>
-      {screen !== "map" && screen !== "dawayir" && (
-        <PlatformHeader
-          activeScreen={screen}
-          onNavigate={handleHeaderNavigate}
-          onLogin={handleHeaderLogin}
-          onLogout={handleLogout}
-        />
-      )}
-      {screen !== "map" && screen !== "dawayir" && (
-        <PlatformTabBar
-          activeScreen={screen}
-          onNavigate={handleHeaderNavigate}
-          onLogin={handleHeaderLogin}
-        />
-      )}
-      {screen !== "map" && screen !== "dawayir" && (
-        <Suspense fallback={null}>
-          <NotificationEnableButton />
-        </Suspense>
-      )}
+      <PlatformHeader
+        activeScreen={screen}
+        onNavigate={handleHeaderNavigate}
+        onLogin={handleHeaderLogin}
+        onLogout={handleLogout}
+      />
+      <PlatformTabBar
+        activeScreen={screen}
+        onNavigate={handleHeaderNavigate}
+        onLogin={handleHeaderLogin}
+      />
+      <Suspense fallback={null}>
+        <NotificationEnableButton />
+      </Suspense>
       {screen !== "landing" && (
         <>
           <div
-            className={`fixed right-0 md:right-72 left-0 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500 ${scrolled ? "top-16" : "top-20"}`}
+            className={`fixed right-0 ${sidebarExpanded ? "md:right-72" : "md:right-0"} left-0 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500 ${scrolled ? "top-16" : "top-20"}`}
             style={{ zIndex: Z_LAYERS.BREADCRUMBS }}
           >
             <PlatformBreadcrumb items={breadcrumbItems} onNavigate={handleHeaderNavigate} />
@@ -193,7 +189,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         </>
       )}
       <div
-        className={`min-h-screen flex flex-col transition-colors relative isolate ${screen !== "landing" ? "overflow-visible md:pr-72" : ""} bg-[var(--page-bg)]`}
+        className={`min-h-screen flex flex-col transition-all duration-500 relative isolate ${screen !== "landing" ? (sidebarExpanded ? "overflow-visible md:pr-72" : "overflow-visible md:pr-0") : ""} bg-[var(--page-bg)]`}
         dir="rtl"
       >
         {isFeaturePreviewSession && (
@@ -259,7 +255,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                 >
                   {screen !== "map" && showSystemOverclockControls && (
                     <div 
-                      className="fixed bottom-24 right-6 md:right-80 flex flex-col items-end gap-3 pointer-events-auto"
+                      className={`fixed bottom-24 right-6 ${sidebarExpanded ? "md:right-80" : "md:right-6"} flex flex-col items-end gap-3 pointer-events-auto transition-all duration-500`}
                       style={{ zIndex: Z_LAYERS.SYSTEM_WHISPER }}
                     >
                       <AnimatePresence>

@@ -4,7 +4,7 @@
 import type { FC } from "react";
 import { useState, useCallback, useEffect, useRef, memo, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMapState } from '@/modules/map/dawayirIndex';
+import { useMapState, useToastState } from '@/modules/map/dawayirIndex';
 import { useJourneyProgress } from "@/domains/journey";
 import { setInLocalStorage, getFromLocalStorage, removeFromLocalStorage } from "@/services/browserStorage";
 import { trackingService } from "@/domains/journey";
@@ -1535,6 +1535,8 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
       "وضع أول علامة على خريطة حياته بشجاعة.", 
       "compass"
     );
+
+    useToastState.getState().showToast("بناءً على خريطتك الأولى.. تم توثيق بصيرة تأسيسية في خزينتك ✨", "success");
 
     markJourneyOnboardingDone();
 

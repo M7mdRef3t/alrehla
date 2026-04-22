@@ -656,7 +656,7 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
         title="مختبر الأثير الحسي (Atmosphere Lab)"
         icon={<Wind className="w-4 h-4" />}
         subtitle="التحكم بالمؤثرات البصرية للبيئة الواعية"
-        defaultExpanded={true}
+        defaultExpanded={false}
         headerColors="border-indigo-800 bg-indigo-900/40 text-indigo-400"
       >
         <div className="p-6 space-y-8 bg-slate-950/30 rounded-3xl border border-indigo-500/20">

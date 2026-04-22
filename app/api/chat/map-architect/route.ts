@@ -4,6 +4,7 @@ import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
 
 const SYSTEM_PROMPT = `أنت "مهندس الخرائط السيادي" (Map Architect) في منصة الرحلة.
 مهمتك: التحدث مع المستخدم لاستكشاف علاقاته، ثم استدعاء أداة (save_map_to_postgres) لرسم وحفظ خريطة العلاقات.
+كما يجب عليك استدعاء الأداة (log_sovereign_insight) تلقائياً وتسجيل البصيرة في خزنته، عندما تكتشف أن المستخدم قد أدرك شيئاً عميقاً عن نفسه أو علاقاته (Aha Moment).
 اسأل المستخدم من هي أهم الشخصيات في حياته الآن؟ وكيف تؤثر على طاقته؟
 اجمع ما يكفي من المعلومات لإنشاء (Nodes) و (Edges).
 الألوان المتاحة للـ nodes: core, danger, ignored, neutral
@@ -50,13 +51,26 @@ const saveMapTool = {
         },
         required: ["nodes", "edges", "insight_message"]
       }
+    },
+    {
+      name: "log_sovereign_insight",
+      description: "Logs a deep psychological realization or life lesson the user just discovered into their encrypted vault.",
+      parameters: {
+        type: "object",
+        properties: {
+          content: { type: "string", description: "البصيرة المستخلصة" },
+          category: { type: "string", enum: ["علاقات", "عمل", "ذات", "عام"], description: "تصنيف البصيرة" },
+          energy_level: { type: "number", description: "مستوى الطاقة من 1 إلى 10" }
+        },
+        required: ["content", "category", "energy_level"]
+      }
     }
   ]
 };
 
 export async function POST(req: Request) {
     try {
-        const { messages, userId } = await req.json();
+        const { messages, userId, accessToken } = await req.json();
         
         if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -88,6 +102,7 @@ export async function POST(req: Request) {
         
         if (functionCalls && functionCalls.length > 0) {
             const call = functionCalls[0];
+            
             if (call.name === "save_map_to_postgres") {
                 const args = call.args as any;
                 
@@ -121,6 +136,45 @@ export async function POST(req: Request) {
                 return NextResponse.json({
                     reply: followUpRes.response.text(),
                     saved_map: true
+                });
+            } else if (call.name === "log_sovereign_insight") {
+                const args = call.args as any;
+                
+                if (accessToken) {
+                    const response = await fetch("http://127.0.0.1:8000/insights/", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${accessToken}`,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            content: args.content,
+                            category: args.category,
+                            energy_level: args.energy_level
+                        })
+                    });
+
+                    if (!response.ok) {
+                        console.error("[Sovereign API] Error posting insight via auto-log:", response.status, response.statusText);
+                    }
+                } else {
+                    console.error("Missing accessToken for auto-logging insight");
+                }
+
+                // Send back a completion message
+                const followUpRes = await chat.sendMessage([
+                    {
+                        functionResponse: {
+                            name: "log_sovereign_insight",
+                            response: { status: "success" }
+                        }
+                    }
+                ]);
+
+                return NextResponse.json({
+                    reply: followUpRes.response.text(),
+                    saved_map: false,
+                    insight_logged: true
                 });
             }
         }

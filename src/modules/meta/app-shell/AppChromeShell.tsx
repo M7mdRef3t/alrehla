@@ -3,6 +3,7 @@ import { MessageCircle, User } from "lucide-react";
 import type { LandingChromeVisibility } from '@/orchestration/chromeVisibility';
 import type { AppShellScreen } from '@/modules/map/dawayirIndex';
 import { useMapState } from '@/modules/map/dawayirIndex';
+import { useLayoutState } from "@/modules/map/store/layout.store";
 
 interface AppChromeShellProps {
   chromeVisibility: LandingChromeVisibility;
@@ -31,6 +32,7 @@ export function AppChromeShell({
   libraryOpen,
   children
 }: AppChromeShellProps) {
+  const sidebarExpanded = useLayoutState((s) => s.sidebarExpanded);
   const nodes = useMapState((s) => s.nodes);
   const archivedNodesCount = nodes.filter((node) => node.isNodeArchived).length;
   const hasActiveNodes = nodes.some((node) => !node.isNodeArchived);
@@ -67,7 +69,7 @@ export function AppChromeShell({
         <button
           type="button"
           onClick={onOpenWhatsApp}
-          className="fixed z-40 right-4 md:right-80 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
+          className={`fixed z-40 right-4 ${sidebarExpanded ? "md:right-80" : "md:right-6"} bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all duration-500`}
           title="تواصل واتساب"
           aria-label="تواصل واتساب"
         >

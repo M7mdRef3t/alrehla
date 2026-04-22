@@ -104,6 +104,7 @@ const ALL_PRODUCTS: EcosystemProduct[] = [
   { id: "mizan",     name: "ميزان",     description: "قياس التقدم الحقيقي",                  icon: <Scale className="w-4 h-4" />,        status: "active",      color: "#10b981", url: "/#mizan" },
 
   // Memory & Documentation
+  { id: "history-insights", name: "خزنة البصائر", description: "تاريخ بصائرك المحفوظة", icon: <BookOpen className="w-4 h-4" />, status: "active", color: "#a855f7", url: "/history" },
   { id: "markaz",    name: "المركز",     description: "مركز الأمر والقيادة الشخصية",          icon: <LayoutGrid className="w-4 h-4" />,    status: "active",      color: "#6366f1", url: "/#markaz" },
   { id: "sada",      name: "الصدى",      description: "رصد الإشارات والرؤى المتكررة",          icon: <Bell className="w-4 h-4" />,          status: "active",      color: "#06b6d4", url: "/#sada" },
   { id: "hafiz",     name: "حافظ",      description: "خزنة الذكريات — لحظاتك المحفوظة",      icon: <Gem className="w-4 h-4" />,          status: "active",      color: "#a855f7", url: "/#hafiz" },
@@ -157,7 +158,7 @@ const CATEGORIES: ProductCategory[] = [
     color: "#a855f7",
     bgColor: "#2d1b4a",
     products: ALL_PRODUCTS.filter(p =>
-      ["markaz", "sada", "hafiz", "watheeqa", "sijil", "riwaya", "athar", "naba", "wasiyya", "risala", "shahada"].includes(p.id)
+      ["history-insights", "markaz", "sada", "hafiz", "watheeqa", "sijil", "riwaya", "athar", "naba", "wasiyya", "risala", "shahada"].includes(p.id)
     ),
   },
 ];

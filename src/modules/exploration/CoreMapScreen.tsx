@@ -58,6 +58,8 @@ import { ContextNotePanel } from "./ContextNotePanel";
 import { MapAnalyticalPanel, MapOperationalStrip, MapSupportPanel } from "./Map/CoreMapPanels";
 import { LanternSwarm } from "./LanternSwarm";
 import { LanternInsightModal } from "./LanternInsightModal";
+import { subscribeToDawayirSignals } from "@/modules/recommendation/recommendationBus";
+import { MapArchitectChat } from "@/modules/dawayir/components/MapArchitectChat";
 
 const DawayirCanvas = lazy(() => import("@/modules/dawayir/DawayirCanvas").then(m => ({ default: m.DawayirCanvas })));
 const FeelingCheckModal = lazy(() => import("@/modules/dawayir/FeelingCheckModal").then(m => ({ default: m.FeelingCheckModal })));
@@ -325,6 +327,29 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     return () => {
       if (supabase) void supabase.removeChannel(channel);
     };
+  }, []);
+
+  const [architectChatContext, setArchitectChatContext] = useState<{message: string} | null>(null);
+
+  useEffect(() => {
+    return subscribeToDawayirSignals((event) => {
+      if (event.type === "ring_changed" && event.payload) {
+        const { fromRing, toRing } = event.payload as any;
+        const ringAr = {
+          green: "الأخضر (القريب)",
+          yellow: "الأصفر (المحايد)",
+          red: "الأحمر (الخطر)"
+        };
+        const fromAr = ringAr[fromRing as keyof typeof ringAr] || fromRing;
+        const toAr = ringAr[toRing as keyof typeof ringAr] || toRing;
+        const node = useMapState.getState().nodes.find(n => n.id === event.nodeId);
+        const nodeName = node?.label || "هذا الشخص";
+
+        setArchitectChatContext({
+          message: `لحظت إنك نقلت "${nodeName}" من المدار ${fromAr} إلى المدار ${toAr}.. تحب نتكلم عن إيه اللي اتغير في طاقتك ناحيته؟`
+        });
+      }
+    });
   }, []);
 
   const isFamily = goalId === "family";
@@ -677,7 +702,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* Header */}
       <motion.header 
         variants={staggerContainer}
-        className="relative z-20 text-center px-4 sm:px-6 pt-4 pb-1 flex flex-col items-center gap-2 pointer-events-none"
+        className="relative z-20 text-center px-4 sm:px-6 pt-20 md:pt-24 pb-1 flex flex-col items-center gap-2 pointer-events-none"
       >
         {!isSacredIsolation && (
           <motion.div
@@ -832,9 +857,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 <Suspense fallback={null}>
                   {mapType === "masafaty" ? (
                     <DawayirCanvas 
+                      nodes={nodes}
                       onNodeClick={(node) => onSelectNode(node.id)}
-                      onAddNode={() => setShowAddPerson(true)}
-                      goalIdFilter={goalId}
+                      onAddNode={handleAddNodeClick}
+                      goalId={goalId}
                     />
                   ) : (
                     <MapCanvas
@@ -874,6 +900,16 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 <FamilyTreeView onNodeClick={handleNodeClick} />
               </motion.div>
             ) : null}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {architectChatContext && (
+              <MapArchitectChat 
+                initialMessage={architectChatContext.message}
+                onClose={() => setArchitectChatContext(null)}
+                onMapSaved={() => setArchitectChatContext(null)}
+              />
+            )}
           </AnimatePresence>
 
           {/* Empty State */}

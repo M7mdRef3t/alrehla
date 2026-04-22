@@ -186,11 +186,20 @@ class SovereignGrowthEngine {
     try {
       useToastState.getState().showToast(`استدعاء الذكاء الاصطناعي.. جاري تحضير حملة إشعال السوق في ${marketId}`, "info");
 
-      // 1. Simulate finding B2B Leads in this market
-      await new Promise(r => setTimeout(r, 1500));
-      const simulatedLeadsFound = Math.floor(Math.random() * 50) + 10;
+      // 1. Call the Ignition API
+      const res = await fetch('/api/admin/ignition', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ marketId })
+      });
+
+      if (!res.ok) {
+        throw new Error('API returned ' + res.status);
+      }
+
+      const data = await res.json();
+      const simulatedLeadsFound = data.count || 0;
       
-      // 2. Here we would theoretically integrate with an email service to dispatch a campaign
       useToastState.getState().showToast(`تم إطلاق الحملة التوعوية (${simulatedLeadsFound} مستهدف) لـ ${marketId}`, "success");
 
       // 3. Log to decisionEngine
@@ -216,6 +225,7 @@ class SovereignGrowthEngine {
       return true;
     } catch (error) {
       logger.error("Failed to deploy market ignition", error);
+      useToastState.getState().showToast("فشل في إطلاق الحملة", "error");
       return false;
     }
   }

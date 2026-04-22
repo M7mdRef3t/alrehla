@@ -24,6 +24,7 @@ import { AlrehlaIcon } from "./logo/AlrehlaIcon";
 import { useAuthState, getEffectiveRoleFromState } from "@/domains/auth/store/auth.store";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useThemeState } from "@/domains/consciousness/store/theme.store";
+import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { signOut } from "@/services/authService";
 import { NotificationsPanel } from "./NotificationsPanel";
 import { InAppNotificationCenter } from "@/components/shared/InAppNotificationCenter";
@@ -34,17 +35,23 @@ import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store"
 import { Z_LAYERS } from "@/config/zIndices";
 
 // Re-importing missing icons correctly
-import { BookOpen, Info, Compass } from "lucide-react";
+import { BookOpen, Info, Compass, Map as MapIcon, LayoutGrid } from "lucide-react";
 
-const NAV_LINKS_RESOLVED = [
+/** Navigation for visitors — conversion-focused */
+const VISITOR_NAV_LINKS = [
   { id: "home", label: "الأفق", icon: Home },
-  { id: "bawsala", label: "البوصلة", icon: Compass },
-  { id: "insights", label: "الرادار", icon: BarChart2 },
-  { id: "stories", label: "قصص", icon: BookOpen },
   { id: "about", label: "لماذا الرحلة؟", icon: Info },
-] as const;
+  { id: "stories", label: "قصص", icon: BookOpen },
+];
 
-type NavLinkId = (typeof NAV_LINKS_RESOLVED)[number]["id"];
+/** Navigation for travelers (logged in) — journey tools */
+const TRAVELER_NAV_LINKS = [
+  { id: "home", label: "الأفق", icon: Home },
+  { id: "map", label: "الخريطة", icon: MapIcon },
+  { id: "ecosystem-hub", label: "المنظومة", icon: LayoutGrid },
+];
+
+type NavLinkId = string;
 
 const SCREEN_MAP: Record<string, string> = {
   home: "landing",
@@ -59,6 +66,8 @@ const SCREEN_MAP: Record<string, string> = {
   resources: "resources",
   settings: "settings",
   profile: "profile",
+  map: "map",
+  "ecosystem-hub": "ecosystem-hub",
 };
 
 const SCREEN_LABELS: Record<string, string> = {
@@ -66,6 +75,7 @@ const SCREEN_LABELS: Record<string, string> = {
   bawsala: "البوصلة",
   insights: "تحليل العلاقات",
   stories: "قصص",
+  map: "الخريطة",
   about: "لماذا الرحلة؟",
   quizzes: "اختبارات الشخصية",
   "behavioral-analysis": "تحليل الأنماط",
@@ -133,6 +143,9 @@ export const PlatformHeader = memo(function PlatformHeader({
   const avatarUrl =
     (user as { user_metadata?: { avatar_url?: string } } | null)?.user_metadata?.avatar_url ?? null;
 
+  const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
+  const isNewUser = isLoggedIn && !baselineCompletedAt;
+
   const lastNewAchievementId = useAchievementState((s) => s.lastNewAchievementId);
   const hasUnread = isLoggedIn && Boolean(lastNewAchievementId);
 
@@ -141,9 +154,10 @@ export const PlatformHeader = memo(function PlatformHeader({
   const isDark = resolvedTheme === "dark";
 
   const activeNavId = getActiveNavId(activeScreen);
-  const visibleNavLinks = NAV_LINKS_RESOLVED;
+  const visibleNavLinks = isLoggedIn ? TRAVELER_NAV_LINKS : VISITOR_NAV_LINKS;
 
   const screenLabel = activeNavId !== "home" ? (SCREEN_LABELS[activeNavId] ?? null) : null;
+  const isMinimal = activeScreen === "map" || activeScreen === "dawayir";
 
   const handleThemeToggle = useCallback(() => {
     setTheme(isDark ? "light" : "dark");
@@ -153,7 +167,7 @@ export const PlatformHeader = memo(function PlatformHeader({
     const onScroll = () => {
       const y = window.scrollY;
       setScrolled(y > 20);
-      setHidden(y > lastScrollY.current && y > 120);
+      // setHidden(y > lastScrollY.current && y > 120); // Removed hiding logic to anchor the header
       lastScrollY.current = y;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -212,7 +226,7 @@ export const PlatformHeader = memo(function PlatformHeader({
   const handleLandingCta = useCallback(() => {
     if (isLoggedIn) {
       if (onNavigate) {
-        onNavigate("bawsala");
+        onNavigate("onboarding");
       }
       return;
     }
@@ -222,12 +236,14 @@ export const PlatformHeader = memo(function PlatformHeader({
     }
   }, [isLoggedIn, onLogin, onNavigate]);
 
-  const headerClassName = `fixed top-0 right-0 left-0 flex items-center justify-between px-4 md:px-6 lg:px-12 h-16 md:h-20 transition-all duration-500 transform ${
+  const headerClassName = `fixed top-0 right-0 left-0 flex items-center justify-between px-4 md:px-6 lg:px-12 transition-all duration-700 transform ${
     hidden ? "-translate-y-full" : "translate-y-0"
   } ${
-    scrolled
-      ? "backdrop-blur-3xl border-b border-white/5 h-16 bg-[rgba(11,15,25,0.7)]"
-      : "h-20 bg-transparent border-b border-transparent"
+    isMinimal 
+      ? "h-14 md:h-16 bg-[rgba(3,7,18,0.4)] border-b border-white/5 backdrop-blur-md" 
+      : scrolled
+        ? "backdrop-blur-3xl border-b border-white/[0.08] h-16 bg-[rgba(11,15,25,0.82)] shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+        : "h-20 bg-transparent border-b border-transparent"
   }`;
 
   return (
@@ -242,25 +258,41 @@ export const PlatformHeader = memo(function PlatformHeader({
         type="button"
         id="header-logo"
         onClick={() => handleNav("home")}
-        className="flex items-center gap-3 group relative"
+        className="flex items-center gap-3 group relative z-20"
         aria-label="الرحلة - الصفحة الرئيسية"
       >
         <motion.div
-          whileHover={{ scale: 1.05, rotate: [0, -5, 5, 0] }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.1, rotate: [0, -10, 10, 0] }}
+          whileTap={{ scale: 0.9 }}
           className="relative"
         >
-           <AlrehlaIcon size={scrolled ? 36 : 42} className="transition-all duration-500" />
+           <AlrehlaIcon size={isMinimal || scrolled ? 32 : 42} className="transition-all duration-700" />
            <motion.div 
-             className="absolute inset-0 bg-teal-400/20 blur-xl rounded-full -z-10"
-             animate={{ opacity: [0, 0.4, 0] }}
-             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+             className="absolute inset-0 bg-teal-400/30 blur-2xl rounded-full -z-10"
+             animate={{ 
+               opacity: [0.2, 0.6, 0.2],
+               scale: [1, 1.2, 1] 
+             }}
+             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
            />
         </motion.div>
-        <span className="font-black text-xl tracking-tight text-white group-hover:text-[#00F0FF] transition-colors duration-300" style={{ fontFamily: "var(--font-display)" }}>
+        <span className={`font-black tracking-tight text-white group-hover:text-[#00F0FF] transition-all duration-500 ${isMinimal || scrolled ? 'text-lg' : 'text-xl'}`} style={{ fontFamily: "var(--font-display)" }}>
           الرحلة
         </span>
       </button>
+
+      {/* Spirit Line - The Glowing Border */}
+      {(scrolled || isMinimal) && (
+        <motion.div 
+          layoutId="spirit-line"
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
+          className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-teal-500/50 to-transparent z-30"
+          style={{ 
+            boxShadow: "0 1px 15px rgba(20, 184, 166, 0.4), 0 0 30px rgba(20, 184, 166, 0.2)"
+          }}
+        />
+      )}
 
       <AnimatePresence>
         {scrolled && activeNavId !== "home" && screenLabel && (
@@ -277,10 +309,11 @@ export const PlatformHeader = memo(function PlatformHeader({
         )}
       </AnimatePresence>
 
-      <nav
-        aria-label="التنقل الرئيسي"
-        className="hidden md:flex items-center relative gap-2"
-      >
+      <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center z-10 pointer-events-auto">
+        <nav
+          aria-label="التنقل الرئيسي"
+          className="flex items-center relative gap-2"
+        >
         {visibleNavLinks.map(({ id, label, icon: Icon }) => {
           const isActive = activeNavId === id;
           return (
@@ -293,35 +326,41 @@ export const PlatformHeader = memo(function PlatformHeader({
                 handleNav(id);
               }}
               className={`
-                group relative px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200 flex items-center gap-2 cursor-pointer
+                group relative px-5 py-2.5 rounded-full text-xs lg:text-sm font-bold transition-all duration-300 flex items-center gap-2 cursor-pointer
                 ${isActive 
-                  ? "text-zinc-950 dark:text-white" 
-                  : "text-zinc-100 hover:text-white dark:text-zinc-100 dark:hover:text-white"
+                  ? "text-white" 
+                  : "text-zinc-400 hover:text-white"
                 }
               `}
               aria-current={isActive ? "page" : undefined}
             >
+              {/* Cinematic Hover Glow */}
+              <motion.div
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-500/0 via-teal-500/10 to-teal-500/0 opacity-0 group-hover:opacity-100 blur-xl transition-all duration-700 -z-10"
+              />
+              
               {isActive && (
                 <motion.div
                   layoutId="header-nav-indicator"
-                  className="absolute inset-0 rounded-full bg-slate-400/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/10"
-                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  className="absolute inset-0 rounded-full bg-white/[0.03] border border-white/10 shadow-[inset_0_0_20px_rgba(255,255,255,0.02)]"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
               {isActive && (
-                <Icon className="w-4 h-4 text-[var(--teal)] relative z-10" />
+                <Icon className="w-4 h-4 text-teal-400 relative z-10" />
               )}
-              <span className="relative z-10 text-white group-hover:text-[#00F0FF] transition-colors duration-200">{label}</span>
+              <span className="relative z-10 text-zinc-300 group-hover:text-[#00F0FF] transition-colors duration-300 font-bold">{label}</span>
               {isActive && (
                 <motion.div
                   layoutId="active-dot"
-                  className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] absolute -bottom-1.5 left-1/2 -translate-x-1/2"
+                  className="w-1 h-1 rounded-full bg-teal-400 absolute -bottom-1.5 left-1/2 -translate-x-1/2 shadow-[0_0_8px_rgba(45,212,191,0.8)]"
                 />
               )}
             </button>
           );
         })}
-      </nav>
+        </nav>
+      </div>
 
       <div className="flex items-center gap-3">
         {isLoggedIn && (
@@ -381,7 +420,7 @@ export const PlatformHeader = memo(function PlatformHeader({
                 className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all relative border border-slate-200/50 dark:border-white/10 ${
                   notifOpen
                     ? "text-teal-600 dark:text-teal-400 bg-slate-400/10 dark:bg-white/[0.14]"
-                    : "text-slate-600 dark:text-white/80 bg-slate-400/5 dark:bg-white/[0.05] hover:bg-slate-400/10 dark:hover:bg-white/[0.1]"
+                    : "text-slate-600 dark:text-zinc-300 bg-slate-400/5 dark:bg-white/[0.05] hover:bg-slate-400/10 dark:hover:bg-white/[0.1]"
                 }`}
               >
                 <Bell
@@ -416,7 +455,22 @@ export const PlatformHeader = memo(function PlatformHeader({
         {status === "loading" ? (
           <div className="w-9 h-9 rounded-full bg-white/10 animate-pulse" />
         ) : isLoggedIn ? (
-          <div ref={userMenuRef} className="relative" id="header-user-menu">
+          <div className="flex items-center gap-3">
+            {isNewUser && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                type="button"
+                onClick={handleLandingCta}
+                className="hidden sm:flex group relative items-center gap-1.5 sm:gap-2 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-xs sm:text-sm font-bold overflow-hidden border border-teal-500/30"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 transition-transform group-hover:scale-110" />
+                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Sparkles className="w-3.5 h-3.5 text-teal-400 relative z-10" />
+                <span className="text-teal-400 relative z-10 whitespace-nowrap">اكتشف خريطتك</span>
+              </motion.button>
+            )}
+            <div ref={userMenuRef} className="relative" id="header-user-menu">
             {userMenuOpen ? (
               <button
                 type="button"
@@ -525,7 +579,6 @@ export const PlatformHeader = memo(function PlatformHeader({
                       <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">التحكم</p>
                       <div className="flex flex-col gap-1">
                         {[
-                          { id: "insights", label: "الرادار", Icon: BarChart2 },
                           { id: "quizzes", label: "اختبارات الشخصية", Icon: Sparkles },
                           { id: "behavioral-analysis", label: "تحليل الأنماط", Icon: Brain },
                           { id: "resources", label: "مركز الموارد", Icon: BookOpen },
@@ -534,7 +587,7 @@ export const PlatformHeader = memo(function PlatformHeader({
                             key={id}
                             type="button"
                             onClick={() => handleNav(id)}
-                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-[var(--text-secondary)] hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
+                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
                             role="menuitem"
                           >
                             <Icon className="w-4 h-4 text-slate-500" />
@@ -607,6 +660,7 @@ export const PlatformHeader = memo(function PlatformHeader({
               )}
             </AnimatePresence>
           </div>
+          </div>
         ) : (
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -620,7 +674,7 @@ export const PlatformHeader = memo(function PlatformHeader({
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             
             <LogIn className="w-4 h-4 sm:w-5 sm:h-5 text-slate-900 relative z-10" />
-            <span className="text-slate-900 relative z-10 whitespace-nowrap">تسجيل الدخول</span>
+            <span className="text-slate-900 relative z-10 whitespace-nowrap">اكتشف خريطتك</span>
           </motion.button>
         )}
       </div>
@@ -634,6 +688,8 @@ export const MobileNavBar = memo(function MobileNavBar({
   onNavigate,
 }: Pick<PlatformHeaderProps, "activeScreen" | "onNavigate">) {
   const activeNavId = getActiveNavId(activeScreen);
+  const user = useAuthState((s) => s.user);
+  const isLoggedIn = Boolean(user);
 
   const handleNav = useCallback(
     (id: string) => {
@@ -643,13 +699,18 @@ export const MobileNavBar = memo(function MobileNavBar({
     [onNavigate]
   );
 
-  const MOBILE_NAV = [
-    { id: "home", label: "الأفق", icon: Home },
-    { id: "bawsala", label: "البوصلة", icon: Compass },
-    { id: "insights", label: "الرادار", icon: BarChart2 },
-    { id: "stories", label: "قصص", icon: BookOpen },
-    { id: "profile", label: "الملف", icon: User },
-  ] as const;
+  const MOBILE_NAV = isLoggedIn
+    ? [
+        { id: "home", label: "الأفق", icon: Home },
+        { id: "map", label: "الخريطة", icon: MapIcon },
+        { id: "ecosystem-hub", label: "المنظومة", icon: LayoutGrid },
+        { id: "profile", label: "الملف", icon: User },
+      ]
+    : [
+        { id: "home", label: "الأفق", icon: Home },
+        { id: "about", label: "لماذا الرحلة؟", icon: Info },
+        { id: "stories", label: "قصص", icon: BookOpen },
+      ];
 
   return (
     <nav
@@ -684,20 +745,22 @@ export const MobileNavBar = memo(function MobileNavBar({
         );
       })}
 
-      {/* Evolution Hub Access for Mobile */}
-      <div className="flex-1 flex flex-col items-center justify-center py-3">
-         <button
+      {/* Evolution Hub — travelers only */}
+      {isLoggedIn && (
+        <div className="flex-1 flex flex-col items-center justify-center py-3">
+          <button
             onClick={() => useAppOverlayState.getState().setOverlay("evolutionHub", true)}
             className="flex flex-col items-center justify-center gap-1 group"
           >
             <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center group-active:scale-90 transition-transform">
-               <Trophy className="w-5 h-5 text-amber-500" />
+              <Trophy className="w-5 h-5 text-amber-500" />
             </div>
             <span className="text-[10px] font-black text-amber-500 font-mono">
               Lvl {useGamificationState.getState().level}
             </span>
           </button>
-      </div>
+        </div>
+      )}
     </nav>
   );
 });

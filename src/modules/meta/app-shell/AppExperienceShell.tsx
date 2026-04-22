@@ -147,6 +147,11 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       if (product === "masarat") action = "navigate:masarat";
       if (product === "map") action = "navigate:map";
       if (product === "atmosfera") action = "navigate:atmosfera";
+
+      // Pathname-based detection for specific standalone routes being integrated into the shell
+      if (!action && window.location.pathname === "/dawayir") {
+        action = "navigate:dawayir";
+      }
     }
 
     if (!action) return;

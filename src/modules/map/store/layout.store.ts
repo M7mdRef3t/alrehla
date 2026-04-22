@@ -1,3 +1,6 @@
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
 /**
  * ════════════════════════════════════════════════════════════════════════════
  * 🎨 LAYOUT STATE — نظام التخطيط التكيفي الموحد
@@ -8,15 +11,6 @@
  * - Insights Mode: Sidebar مع الإحصائيات
  * - Conversation Mode: Tab الحوار مع Gemini
  * - Adaptive Mode: النظام يختار تلقائياً
- */
-
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════
- * TYPES
- * ═══════════════════════════════════════════════════════════════════════════
  */
 
 /**
@@ -88,6 +82,7 @@ interface LayoutState {
   // ─── Actions ──────────────────────────────────────────────────────────────
   setMode: (mode: LayoutMode) => void;
   setActiveTab: (tab: ActiveTab) => void;
+  setSidebarExpanded: (expanded: boolean) => void;
   toggleSidebar: () => void;
   setSidebarPosition: (position: SidebarPosition) => void;
   toggleFAB: () => void;
@@ -163,11 +158,16 @@ export const useLayoutState = create<LayoutState>()(
       setActiveTab: (tab) => {
         set({ activeTab: tab });
 
-        // لو فتح tab التحليل → فتح الـ sidebar لتجربة أغنى
+        // لو فتح tab التحليل → كنا بنفتح الـ sidebar تلقائياً، دلوقتي هنخليه مقفول كـ default
+        // والمسافر هو اللي يقرر يفتحه لو محتاج تفاصيل أكتر (First Principles: Control)
+        /* 
         if (tab === "analytical") {
           set({ sidebarExpanded: true });
         }
+        */
       },
+
+      setSidebarExpanded: (sidebarExpanded) => set({ sidebarExpanded }),
 
       toggleSidebar: () => {
         set((state) => ({ sidebarExpanded: !state.sidebarExpanded }));
@@ -258,7 +258,8 @@ export const useLayoutState = create<LayoutState>()(
         sidebarPosition: state.sidebarPosition,
         fabState: state.fabState,
         adaptiveRules: state.adaptiveRules
-      })
+      }),
+      version: 1, // تصفير الحالة القديمة لضمان البداية من وضع "الطيار الآلي" المقفول
     }
   )
 );
@@ -268,14 +269,16 @@ import { SynapseBus } from "@/core/synapse/SynapseBus";
 
 SynapseBus.subscribe((event) => {
   if (event.intensity >= 0.7) {
+    const store = useLayoutState.getState();
+    
     if (event.type === "VAMPIRE_DETECTED" || event.type === "NODE_SHIFTED_OUTWARD") {
-      // User might need insights when major changes or drain happen
-      useLayoutState.getState().setMode("insights");
-      useLayoutState.getState().setActiveTab("analytical");
+      // نكتفي بتغيير الوضع والـ tab بدون فرض فتح الـ sidebar
+      store.setMode("insights");
+      store.setActiveTab("analytical");
     } else if (event.type === "STRESS_SPIKED" || event.type === "LOCKDOWN_INITIATED") {
-      // User needs to talk to the AI
-      useLayoutState.getState().setMode("conversation");
-      useLayoutState.getState().setActiveTab("narrative");
+      // نكتفي بتغيير الوضع والـ tab بدون فرض فتح الـ sidebar
+      store.setMode("conversation");
+      store.setActiveTab("narrative");
     }
   }
 });

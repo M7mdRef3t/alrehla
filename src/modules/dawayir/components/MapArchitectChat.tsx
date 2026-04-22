@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Loader2 } from "lucide-react";
-import { getAuthUserId } from "@/domains/auth/store/auth.store";
+import { getAuthUserId, getAuthToken } from "@/domains/auth/store/auth.store";
+import { useToastState } from "@/modules/map/store/toast.store";
 
 interface Message {
   id: string;
@@ -11,14 +12,15 @@ interface Message {
 interface MapArchitectChatProps {
   onClose: () => void;
   onMapSaved: () => void;
+  initialMessage?: string;
 }
 
-export const MapArchitectChat: React.FC<MapArchitectChatProps> = ({ onClose, onMapSaved }) => {
+export const MapArchitectChat: React.FC<MapArchitectChatProps> = ({ onClose, onMapSaved, initialMessage }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
       role: "assistant",
-      content: "أهلًا بك يا قائد. أنا مهندس الخرائط. احكيلي عن الأشخاص الموجودين في مداراتك دلوقتي عشان أرسم خريطتك السيادية. مين أقرب حد؟ ومين بيستنزف طاقتك؟",
+      content: initialMessage || "أهلًا بك يا قائد. أنا مهندس الخرائط. احكيلي عن الأشخاص الموجودين في مداراتك دلوقتي عشان أرسم خريطتك السيادية. مين أقرب حد؟ ومين بيستنزف طاقتك؟",
     }
   ]);
   const [input, setInput] = useState("");
@@ -39,10 +41,11 @@ export const MapArchitectChat: React.FC<MapArchitectChatProps> = ({ onClose, onM
 
     try {
       const userId = getAuthUserId();
+      const accessToken = getAuthToken();
       const res = await fetch("/api/chat/map-architect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: [...messages, userMessage], userId })
+        body: JSON.stringify({ messages: [...messages, userMessage], userId, accessToken })
       });
 
       const data = await res.json();
@@ -56,6 +59,10 @@ export const MapArchitectChat: React.FC<MapArchitectChatProps> = ({ onClose, onM
           onMapSaved();
           onClose();
         }, 3000);
+      }
+
+      if (data.insight_logged) {
+        useToastState.getState().showToast("تم توثيق بصيرة جديدة في خزينتك ✨", "success");
       }
     } catch (e) {
       console.error(e);

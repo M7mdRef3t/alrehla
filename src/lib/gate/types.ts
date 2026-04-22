@@ -1,5 +1,7 @@
 export interface GateState {
   sessionId: string;
+  name?: string;
+  phone?: string;
   sourceArea?: string; // 'family' | 'partner' | 'work' | 'friend'
   email?: string;
   painPoint?: string;   // q1

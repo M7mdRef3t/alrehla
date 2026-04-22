@@ -7,6 +7,8 @@ import {
 } from "@/utils/relationshipWeatherJourney";
 
 interface Props {
+  name: string;
+  phone: string;
   sourceArea: string;
   email: string;
   onChange: (field: string, value: string) => void;
@@ -14,7 +16,7 @@ interface Props {
   isValid: boolean;
 }
 
-export default function LayerOneForm({ sourceArea, email, onChange, onSubmit, isValid }: Props) {
+export default function LayerOneForm({ name, phone, sourceArea, email, onChange, onSubmit, isValid }: Props) {
   const weatherPath = useAdminState((state) => {
     const path = getRelationshipWeatherPath(state.journeyPaths);
     return path?.isActive ? path : null;
@@ -40,6 +42,48 @@ export default function LayerOneForm({ sourceArea, email, onChange, onSubmit, is
       <div className="space-y-5 bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-sm shadow-xl">
         <div className="space-y-2">
           <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] block text-right">
+            الاسم (كيف نناديك؟)
+          </label>
+          <input 
+            type="text"
+            placeholder="مثال: أحمد"
+            value={name}
+            onChange={(e) => onChange('name', e.target.value)}
+            className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-4 text-slate-200 outline-none focus:border-emerald-500/50 transition-colors text-right"
+            dir="rtl"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] block text-right">
+            رقم الواتساب (للتواصل المباشر)
+          </label>
+          <input 
+            type="tel"
+            placeholder="مثال: +2010..."
+            value={phone}
+            onChange={(e) => onChange('phone', e.target.value)}
+            className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-4 text-slate-200 outline-none focus:border-emerald-500/50 transition-colors text-left font-mono"
+            dir="ltr"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] block text-right">
+            فين نقدر نبعتلك خريطة رحلتك؟ (الإيميل)
+          </label>
+          <input 
+            type="email"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(e) => onChange('email', e.target.value)}
+            className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-4 text-slate-200 outline-none focus:border-emerald-500/50 transition-colors text-left font-mono"
+            dir="ltr"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] block text-right">
             أنهي مكان في حياتك محتاج وضوح دلوقتي؟
           </label>
           <select 
@@ -54,20 +98,6 @@ export default function LayerOneForm({ sourceArea, email, onChange, onSubmit, is
             <option value="work">العمل / الزملاء (المسرح)</option>
             <option value="friend">صديق مقرب (المرآة)</option>
           </select>
-        </div>
-
-        <div className="space-y-2">
-           <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] block text-right">
-            فين نقدر نبعتلك خريطة رحلتك؟ (الإيميل)
-          </label>
-          <input 
-            type="email"
-            placeholder="name@example.com"
-            value={email}
-            onChange={(e) => onChange('email', e.target.value)}
-            className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-4 text-slate-200 outline-none focus:border-emerald-500/50 transition-colors text-left font-mono"
-            dir="ltr"
-          />
         </div>
 
         <div className="space-y-4">
