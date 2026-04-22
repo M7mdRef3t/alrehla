@@ -724,8 +724,8 @@ const HERO_STYLES = `
     background-clip: text;
     filter: drop-shadow(0 0 24px rgba(45,212,191,0.28));
     display: inline-block;
-    padding: 0 0.2em;
-    margin: 0 -0.2em;
+    padding: 0 0.5em;
+    margin: 0 -0.5em;
   }
 
   /* --- Rotating word --- */
@@ -990,8 +990,8 @@ const HERO_STYLES = `
 const techEase = [0, 0.7, 0.1, 1] as [number, number, number, number];
 
 const fadeUp = {
-  hidden: { opacity: 0, clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", y: 15 },
-  visible: { opacity: 1, clipPath: "polygon(0 0%, 100% 0%, 100% 100%, 0% 100%)", y: 0, transition: { duration: 0.65, ease: techEase } },
+  hidden: { opacity: 0, clipPath: "polygon(-100% 100%, 200% 100%, 200% 100%, -100% 100%)", y: 15 },
+  visible: { opacity: 1, clipPath: "polygon(-100% -100%, 200% -100%, 200% 200%, -100% 200%)", y: 0, transition: { duration: 0.65, ease: techEase } },
 };
 
 const stagger = {
@@ -1025,9 +1025,9 @@ const RotatingWord: FC = () => {
         {show && (
           <motion.span
             key={index}
-            initial={{ opacity: 0, y: 12, clipPath: "polygon(-10% 150%, 110% 150%, 110% 150%, -10% 150%)" }}
-            animate={{ opacity: 1, y: 0, clipPath: "polygon(-10% -50%, 110% -50%, 110% 150%, -10% 150%)" }}
-            exit={{ opacity: 0, y: -12, clipPath: "polygon(-10% -50%, 110% -50%, 110% -50%, -10% -50%)" }}
+            initial={{ opacity: 0, y: 12, clipPath: "polygon(-50% 150%, 150% 150%, 150% 150%, -50% 150%)" }}
+            animate={{ opacity: 1, y: 0, clipPath: "polygon(-50% -100%, 150% -100%, 150% 200%, -50% 200%)" }}
+            exit={{ opacity: 0, y: -12, clipPath: "polygon(-50% -100%, 150% -100%, 150% -100%, -50% -100%)" }}
             transition={{ duration: 0.45, ease: techEase }}
             /* placeholder  Time Complexity */
             className="absolute right-0 top-0 flex items-center headline-accent w-fit h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal" style={{ fontFamily: 'var(--font-display)' }}
