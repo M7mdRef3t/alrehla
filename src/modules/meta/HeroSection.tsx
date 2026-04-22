@@ -15,14 +15,13 @@ interface HeroSectionProps {
 
 /* --- Constants --- */
 const ROTATING_WORDS = [
-  "دوايرك ملخبطة",
-  "طاقتك بتتسرب",
-  "حدودك مُستباحة",
   "خايف تقول لأ",
+  "طاقتك بتتسرب",
   "مراية لزعل غيرك",
-  "تايه في خوارزمياتهم",
-  "نبضك مربوط بغيرك",
-  "سايب بابك موارب"
+  "سايب مفتاحك لغيرك",
+  "شايل شيلة مش شيلتك",
+  "عايش عشان ترضيهم",
+  "ماشي في طريق مش بتاعك"
 ];
 
 /* --- Styles --- */
@@ -107,11 +106,11 @@ const HERO_STYLES = `
     height: auto;
     line-height: 1.2;
     overflow: visible;
-    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
-    max-width: 100%;
+    width: 100%;
     margin-bottom: 0.1em;
     color: var(--amber-500);
     font-family: var(--font-display);
+    font-size: clamp(2.8rem, 6.5vw, 4.8rem);
   }
 
   /* height  clipping Time Complexity */
@@ -121,8 +120,7 @@ const HERO_STYLES = `
     height: auto;
     line-height: 1.2;
     overflow: visible;
-    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
-    max-width: 100%;
+    width: 100%;
     color: var(--color-amber-50);
     font-size: 0.78em;
     font-weight: 600;
@@ -136,63 +134,89 @@ const HERO_STYLES = `
     border-radius: 1px;
   }
 
-  .hero-input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .hero-input-wrapper {
+  .hero-command-bar {
     display: flex;
     align-items: center;
-    border-radius: 20px;
-    overflow: hidden;
-    max-width: 420px;
-    position: relative;
     background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    border-radius: 24px;
+    padding: 8px;
+    gap: 12px;
+    backdrop-filter: blur(24px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1);
+    width: 100%;
+    max-width: 520px;
+    margin-top: 10px;
   }
 
-  .hero-input-wrapper::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: var(--glass-reflection);
-    pointer-events: none;
-  }
-
-  .hero-input {
+  .hero-command-input {
     flex: 1;
     background: transparent;
     border: none;
     outline: none;
-    padding: 15px 20px;
-    font-size: 15px;
+    padding: 12px 16px;
+    font-size: 16px;
     font-weight: 600;
     color: #fff;
     font-family: var(--font-tajawal), sans-serif;
     text-align: right;
-    position: relative;
-    z-index: 1;
   }
 
-  .hero-input-greeting {
-    padding: 0 18px;
-    font-size: 13px;
-    color: var(--gold);
-    font-weight: 800;
+  .hero-command-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #00f0ff, #2dd4bf);
+    color: #02040a;
+    border: none;
+    border-radius: 18px;
+    padding: 14px 28px;
+    font-size: 1.15rem;
+    font-weight: 900;
+    font-family: var(--font-display);
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+    transition: all 0.3s ease;
     white-space: nowrap;
-    filter: drop-shadow(0 0 12px var(--gold-glow));
-    position: relative;
-    z-index: 1;
+  }
+  
+  .hero-command-btn:hover {
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.6);
+    filter: brightness(1.1);
   }
 
-  .hero-input-note {
-    font-size: 10.5px;
-    color: #627a8e;
+  .hero-command-secondary {
+    display: block;
+    margin-top: 12px;
+    font-size: 14px;
+    color: #8faab8;
+    text-align: right;
+    cursor: pointer;
     font-weight: 600;
-    padding-right: 4px;
+    transition: color 0.3s;
+  }
+  
+  .hero-command-secondary:hover {
+    color: #fff;
+  }
+  
+  @media (max-width: 640px) {
+    .hero-command-bar {
+      flex-direction: column;
+      border-radius: 20px;
+      padding: 12px;
+      gap: 16px;
+    }
+    .hero-command-btn {
+      width: 100%;
+      justify-content: center;
+    }
+    .hero-command-input {
+      text-align: center;
+    }
+    .hero-command-secondary {
+      text-align: center;
+    }
   }
 
   /* container  Time Complexity */
@@ -201,6 +225,7 @@ const HERO_STYLES = `
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    width: 100%;
     gap: 0;
     overflow: visible;
     font-family: var(--font-alexandria), sans-serif;
@@ -212,8 +237,11 @@ const HERO_STYLES = `
 
   .hero-copy-column .hero-body {
     font-weight: 500;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+    line-height: 1.9;
     color: rgba(255,255,255,0.85);
+    width: 100%;
+    text-align: justify;
   }
 
   .hero-trust-row {
@@ -405,15 +433,14 @@ const HERO_STYLES = `
   }
 
   .legend-dot {
-    width: 6px;
-    height: 6px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    box-shadow: 0 0 8px currentColor;
   }
 
-  .legend-dot--teal { color: var(--cyan); }
-  .legend-dot--gold { color: var(--gold); }
-  .legend-dot--crimson { color: var(--crimson); }
+  .legend-dot--teal { background: var(--cyan); }
+  .legend-dot--gold { background: var(--gold); }
+  .legend-dot--crimson { background: var(--crimson); }
 
   .legend-label {
     font-size: 10px;
@@ -704,8 +731,7 @@ const HERO_STYLES = `
   .rotating-word-wrapper {
     position: relative;
     display: inline-block;
-    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
-    max-width: 100%;
+    width: 100%;
     min-height: 1.3em;
     padding: 0;
     overflow: visible;
@@ -719,63 +745,12 @@ const HERO_STYLES = `
 
   /* --- Body copy --- */
   .hero-body {
-    font-size: 1rem;
+    font-size: 1.15rem;
     line-height: 1.9;
     color: var(--text-sub);
-    width: min(100%, var(--headline-measured-width, var(--hero-copy-measure)));
-    max-width: 100%;
-  }
-
-  /* --- Primary CTA --- */
-  .cta-primary {
-    position: relative;
-    overflow: hidden;
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    padding: 18px 36px;
-    border-radius: 20px;
-    background: rgba(0, 240, 255, 0.08);
-    backdrop-filter: blur(20px) saturate(180%);
-    font-family: var(--font-display);
-    font-size: 1.15rem;
-    font-weight: 950;
-    color: #fff;
-    cursor: pointer;
-    border: 1px solid rgba(0, 240, 255, 0.5);
-    box-shadow: 0 0 40px rgba(0, 240, 255, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.15);
-    transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
-    white-space: nowrap;
-    letter-spacing: -0.01em;
-  }
-  .cta-primary:hover {
-    box-shadow: 0 0 50px rgba(0,240,255,0.3), inset 0 2px 6px rgba(255,255,255,0.2);
-    border-color: rgba(0,240,255,0.8);
-    background: rgba(0,240,255,0.15);
-    transform: translateY(-4px) scale(1.02);
-  }
-
-  /* --- Secondary CTA --- */
-  .cta-secondary {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 16px 26px;
-    border-radius: 18px;
-    background: rgba(255,255,255,0.04);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.1);
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #a8bfcc;
-    cursor: pointer;
-    transition: background 0.3s, border-color 0.3s, color 0.3s;
-    white-space: nowrap;
-  }
-  .cta-secondary:hover {
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(255,255,255,0.2);
-    color: #e8f0f5;
+    width: 100%;
+    text-align: justify;
+    text-align-last: right;
   }
 
   /* --- Trust pills --- */
@@ -1112,7 +1087,6 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   return (
     <motion.div
       className="sovereign-map"
-      style={{ rotateX: springY, rotateY: springX }}
     >
       <div className="sovereign-map__atmosphere" aria-hidden />
       <div className="hero-scan-line" aria-hidden />
@@ -1350,9 +1324,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
     if (reduceMotion) return;
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
-    // 5x more sensitive for dramatic architectural tracking
-    globalMouseX.set((e.clientX - cx) / 20);
-    globalMouseY.set((e.clientY - cy) / 20);
+    // 5x more sensitive for dramatic architectural tracking -> now calmed down
+    globalMouseX.set((e.clientX - cx) / 80);
+    globalMouseY.set((e.clientY - cy) / 80);
   }, [reduceMotion, globalMouseX, globalMouseY]);
 
   // Layer 1: Foreground Grid (Fastest response, moves opposite to mouse context)
@@ -1495,13 +1469,11 @@ export const HeroSection: FC<HeroSectionProps> = ({
             <motion.div variants={fadeUp} className="hero-divider" />
 
             <motion.p variants={fadeUp} className="hero-body">
-              قف. خذ نفساً عميقاً.
-              أنت لست بحاجة إلى المزيد من المهام. أنت بحاجة إلى <strong>خريطة تصبح فيها مرئياً لنفسك</strong>.
-              نترجم فوضى أفكارك فوراً لإحداثيات بصرية ترصد نزيف طاقتك.
+              قف خذ نفساً عميقاً أنت لست بحاجة إلى المزيد من المهام أنت بحاجة إلى <strong>خريطة تصبح فيها مرئياً لنفسك</strong> نترجم فوضى أفكارك فوراً لإحداثيات بصرية ترصد نزيف طاقتك.
             </motion.p>
 
-            <motion.div variants={fadeUp} className="hero-input-group">
-              <div className="glass-premium hero-input-wrapper">
+            <motion.div variants={fadeUp}>
+              <div className="hero-command-bar">
                 <input
                   type="text"
                   id="mirror-name"
@@ -1511,58 +1483,24 @@ export const HeroSection: FC<HeroSectionProps> = ({
                   onChange={e => setMirrorName(e.target.value)}
                   maxLength={24}
                   dir="rtl"
-                  className="hero-input"
+                  className="hero-command-input"
                 />
-                {mirrorName && (
-                  <span className="hero-input-greeting">
-                    أهلاً {mirrorName} ✪
-                  </span>
-                )}
+                <button
+                  type="button"
+                  className="hero-command-btn"
+                  onClick={handleStart}
+                  id="hero-cta-start"
+                >
+                  <span>{ctaJourney}</span>
+                  <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
+                </button>
               </div>
-              {!mirrorName && (
-                <p className="hero-input-note">
-                  اضف اسمك عشان تجربتك تبقى شخصية
-                </p>
-              )}
-            </motion.div>
-
-            <motion.div variants={fadeUp} className="cta-group">
-              <motion.button
-                type="button"
-                className="cta-primary"
-                onClick={handleStart}
-                whileHover={{ scale: 1.04, y: -3 }}
-                whileTap={{ scale: 0.97 }}
-                id="hero-cta-start"
-              >
-                <Zap className="hero-cta-icon" />
-                <span>{ctaJourney}</span>
-                <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
-              </motion.button>
-
-              <motion.button
-                type="button"
-                className="cta-secondary"
+              <span
+                className="hero-command-secondary"
                 onClick={() => document.getElementById("simulation")?.scrollIntoView({ behavior: "smooth" })}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                id="hero-cta-explore"
               >
                 {secondaryCta}
-              </motion.button>
-            </motion.div>
-
-            <motion.div variants={fadeUp} className="hero-trust-row">
-              {[
-                { icon: <Zap className="trust-icon" />, label: trustPoints[0] },
-                { icon: <Heart className="trust-icon" />, label: trustPoints[1] },
-                { icon: <Shield className="trust-icon" />, label: trustPoints[2] },
-              ].map(({ icon, label }) => (
-                <span key={label} className="trust-pill">
-                  {icon}
-                  <span>{label}</span>
-                </span>
-              ))}
+              </span>
             </motion.div>
           </motion.div>
 
