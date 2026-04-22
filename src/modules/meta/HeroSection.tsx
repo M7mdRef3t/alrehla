@@ -10,7 +10,7 @@ interface HeroSectionProps {
   pulseCount: number;
   trustPoints: string[];
   ctaJourney: string;
-  secondaryCta: string;
+  secondaryCta?: string;
 }
 
 /* --- Constants --- */
@@ -18,10 +18,11 @@ const ROTATING_WORDS = [
   "خايف تقول لأ",
   "طاقتك بتتسرب",
   "مراية لزعل غيرك",
-  "سايب مفتاحك لغيرك",
-  "شايل شيلة مش شيلتك",
-  "عايش عشان ترضيهم",
-  "ماشي في طريق مش بتاعك"
+  "رهين الانتظار",
+  "مطفي من جوه",
+  "خايف تختار",
+  "شايل شيلة غيرك",
+  "عايش لرضاهم"
 ];
 
 /* --- Styles --- */
@@ -99,7 +100,6 @@ const HERO_STYLES = `
     box-shadow: 0 0 14px var(--cyan-glow);
   }
 
-  /* Time Complexity */
   .headline-line {
     display: block;
     min-height: 70px;
@@ -114,7 +114,7 @@ const HERO_STYLES = `
     white-space: nowrap;
   }
 
-  /* height  clipping Time Complexity */
+  /* Subline */
   .headline-subline {
     display: block;
     min-height: 45px;
@@ -131,6 +131,7 @@ const HERO_STYLES = `
 
   .hero-divider {
     height: 1px;
+    max-width: 60%;
     background: linear-gradient(90deg, var(--cyan-glow), var(--gold-glow), transparent);
     border-radius: 1px;
   }
@@ -138,16 +139,30 @@ const HERO_STYLES = `
   .hero-command-bar {
     display: flex;
     align-items: center;
-    background: var(--glass-bg);
-    border: 1px solid rgba(0, 240, 255, 0.3);
-    border-radius: 24px;
-    padding: 8px;
-    gap: 12px;
-    backdrop-filter: blur(24px);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1);
+    background: rgba(8, 12, 22, 0.45);
+    border: 1px solid rgba(45, 212, 191, 0.15);
+    border-radius: 20px;
+    padding: 6px;
+    gap: 8px;
+    backdrop-filter: blur(40px);
+    box-shadow: 
+      0 20px 50px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
     width: 100%;
-    max-width: 520px;
-    margin-top: 10px;
+    max-width: 580px;
+    margin-top: 32px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-command-bar:focus-within {
+    border-color: rgba(45, 212, 191, 0.5);
+    box-shadow: 
+      0 0 30px rgba(45, 212, 191, 0.12),
+      0 20px 50px rgba(0, 0, 0, 0.6);
+    transform: translateY(-2px);
+    background: rgba(8, 12, 22, 0.6);
   }
 
   .hero-command-input {
@@ -155,58 +170,74 @@ const HERO_STYLES = `
     background: transparent;
     border: none;
     outline: none;
-    padding: 12px 16px;
-    font-size: 16px;
-    font-weight: 600;
+    padding: 14px 24px;
+    font-size: 1.15rem;
+    font-weight: 500;
     color: #fff;
     font-family: var(--font-tajawal), sans-serif;
     text-align: right;
+    transition: all 0.3s ease;
+  }
+
+  .hero-command-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+    transition: opacity 0.3s;
   }
 
   .hero-command-btn {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, #00f0ff, #2dd4bf);
+    justify-content: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
     color: #02040a;
     border: none;
-    border-radius: 18px;
-    padding: 14px 28px;
-    font-size: 1.15rem;
-    font-weight: 900;
+    border-radius: 16px;
+    padding: 14px 36px;
+    font-size: 1.1rem;
+    font-weight: 850;
     font-family: var(--font-display);
     cursor: pointer;
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
-    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
+    position: relative;
+    overflow: hidden;
   }
-  
+
+  .hero-command-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      120deg,
+      transparent,
+      rgba(255, 255, 255, 0.35),
+      transparent
+    );
+    transition: all 0.6s;
+  }
+
+  .hero-command-btn:hover::before {
+    left: 100%;
+  }
+
   .hero-command-btn:hover {
-    box-shadow: 0 0 30px rgba(0, 240, 255, 0.6);
+    transform: scale(1.02) translateX(-2px);
+    box-shadow: 0 8px 25px rgba(20, 184, 166, 0.5);
     filter: brightness(1.1);
   }
 
-  .hero-command-secondary {
-    display: block;
-    margin-top: 12px;
-    font-size: 14px;
-    color: #8faab8;
-    text-align: right;
-    cursor: pointer;
-    font-weight: 600;
-    transition: color 0.3s;
-  }
-  
-  .hero-command-secondary:hover {
-    color: #fff;
-  }
-  
   @media (max-width: 640px) {
     .hero-command-bar {
       flex-direction: column;
       border-radius: 20px;
       padding: 12px;
-      gap: 16px;
+      gap: 12px;
+      margin-top: 20px;
     }
     .hero-command-btn {
       width: 100%;
@@ -215,12 +246,9 @@ const HERO_STYLES = `
     .hero-command-input {
       text-align: center;
     }
-    .hero-command-secondary {
-      text-align: center;
-    }
   }
 
-  /* container  Time Complexity */
+  /* Headline container */
   .hero-headline {
     font-size: clamp(2.4rem, 5.5vw, 4.4rem);
     display: flex;
@@ -926,43 +954,6 @@ const HERO_STYLES = `
       padding: 0;
     }
 
-    .hero-input-group {
-      width: 100%;
-      max-width: 100vw;
-      box-sizing: border-box;
-    }
-
-    .hero-input-wrapper {
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .cta-group {
-      justify-content: center;
-      width: 100%;
-      flex-direction: column;
-      gap: 16px;
-      box-sizing: border-box;
-    }
-
-    .cta-primary {
-      width: 100%;
-      justify-content: center;
-      padding: 18px 20px;
-      font-size: 1.1rem;
-      background: rgba(20,184,166,0.2);
-      border: 1px solid rgba(20,184,166,0.8);
-      box-shadow: 0 0 40px rgba(20,184,166,0.2), inset 0 1px rgba(255,255,255,0.1);
-      box-sizing: border-box;
-      white-space: normal; /* Allow text wrap instead of push */
-    }
-
-    .cta-secondary {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-      white-space: normal;
-    }
 
     .hero-trust-row {
       flex-wrap: wrap;
@@ -1311,7 +1302,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
   pulseCount,
   trustPoints,
   ctaJourney,
-  secondaryCta,
 }) => {
   const reduceMotion = useReducedMotion();
   const [isWarping, setIsWarping] = useState(false);
@@ -1347,9 +1337,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const dustX = useSpring(useTransform(globalMouseX, x => -x * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
   const dustY = useSpring(useTransform(globalMouseY, y => -y * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
 
-  // Tilt transforms for content
-  const tiltX = useSpring(useTransform(globalMouseY, y => y * 0.4), { stiffness: 45, damping: 25 });
-  const tiltY = useSpring(useTransform(globalMouseX, x => -x * 0.4), { stiffness: 45, damping: 25 });
+  // Tilt disabled on text column for readability — kept on map only
 
   const handleStart = useCallback(() => {
     setIsWarping(true);
@@ -1378,9 +1366,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
   }, []);
 
   const warpLines = useMemo(() => (
-    Array.from({ length: 40 }, (_, i) => ({
+    Array.from({ length: 20 }, (_, i) => ({
       id: `warp-line-${i}`,
-      top: `${(i / 40) * 110 - 5}%`,
+      top: `${(i / 20) * 110 - 5}%`,
       width: `${15 + Math.random() * 45}%`,
       opacity: 0.15 + Math.random() * 0.55,
       delay: Math.random() * 0.4,
@@ -1447,9 +1435,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
             animate="visible"
             className="hero-copy-column"
             style={{
-              rotateX: tiltX,
-              rotateY: tiltY,
-              // Time Complexity
               ["--headline-measured-width" as any]:
                 headlineMeasuredWidth > 0 ? `${headlineMeasuredWidth}px` : undefined,
             }}
@@ -1471,7 +1456,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             <motion.div variants={fadeUp} className="hero-divider" />
 
             <motion.p variants={fadeUp} className="hero-body">
-              قف خذ نفساً عميقاً أنت لست بحاجة إلى المزيد من المهام أنت بحاجة إلى <strong>خريطة تصبح فيها مرئياً لنفسك</strong> نترجم فوضى أفكارك فوراً لإحداثيات بصرية ترصد نزيف طاقتك.
+              هدئ السرعة. لست بحاجة للركض والمزيد من السعي، بل إلى المزيد من الوضوح. مشكلتك ليست في كثرة المهام بل في ضبابية الطريق. نحول شتات ذهنك إلى لوحة بصرية واحدة تكشف لك جذور استنزافك، وترسم لك خريطة العودة لقلبك واستعادة السيطرة على طاقتك.
             </motion.p>
 
             <motion.div variants={fadeUp}>
@@ -1481,8 +1466,10 @@ export const HeroSection: FC<HeroSectionProps> = ({
                   id="mirror-name"
                   name="mirrorName"
                   placeholder="اسمك (اختياري)"
+                  aria-label="اكتب اسمك"
                   value={mirrorName}
                   onChange={e => setMirrorName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleStart(); }}
                   maxLength={24}
                   dir="rtl"
                   className="hero-command-input"
@@ -1497,12 +1484,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                   <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
                 </button>
               </div>
-              <span
-                className="hero-command-secondary"
-                onClick={() => document.getElementById("simulation")?.scrollIntoView({ behavior: "smooth" })}
-              >
-                {secondaryCta}
-              </span>
+
             </motion.div>
           </motion.div>
 

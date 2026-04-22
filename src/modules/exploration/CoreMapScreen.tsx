@@ -951,7 +951,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           onClick={() => {
             onSelectNode(null);
             const sub = loadSubscription();
-            if (sub.tier === "basic" && activeNodes.length >= 3) setIsUpgradeOpen(true);
+            if (sub.tier === "basic" && activeNodes.length >= 4) setIsUpgradeOpen(true);
             else setShowAddPerson(true);
           }}
           whileHover={{ scale: 1.1, rotate: 90 }}

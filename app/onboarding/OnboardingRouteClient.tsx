@@ -126,11 +126,7 @@ export default function OnboardingRouteClient() {
     if (isHydrated) {
       if (!forceOnboarding && (nodesCount > 0 || !!baselineCompletedAt)) {
         console.log("[Onboarding] Guard: Data exists & force=1 is MISSING. Redirecting.");
-        if (hasRevenueAccess()) {
-          window.location.replace("/?boot_action=start_recovery&reason=already_onboarded");
-        } else {
-          window.location.replace("/activation?resume=1&source=onboarding&reason=already_onboarded");
-        }
+        window.location.replace("/?boot_action=start_recovery&reason=already_onboarded");
         return;
       }
       

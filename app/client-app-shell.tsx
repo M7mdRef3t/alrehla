@@ -202,14 +202,10 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
   }, [lockFullAppMode]);
 
   const startRecoveryFromLanding = useCallback(() => {
-    if (!hasRevenueAccess()) {
-      const onboarded = !!useJourneyState.getState().baselineCompletedAt;
-      const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
-      if (!onboarded || !hasPeopleOnMap) {
-        window.location.href = "/onboarding?source=landing";
-        return;
-      }
-      window.location.href = "/pricing?blocked=map&source=landing";
+    const onboarded = !!useJourneyState.getState().baselineCompletedAt;
+    const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
+    if (!onboarded && !hasPeopleOnMap) {
+      window.location.href = "/onboarding?source=landing";
       return;
     }
 
@@ -225,14 +221,10 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
   }, []);
 
   const openAppScreenFromLanding = useCallback((screen: string) => {
-    if (!hasRevenueAccess()) {
-      const onboarded = !!useJourneyState.getState().baselineCompletedAt;
-      const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
-      if (!onboarded || !hasPeopleOnMap) {
-        window.location.href = "/onboarding?source=landing";
-        return;
-      }
-      window.location.href = "/pricing?blocked=screen&source=landing";
+    const onboarded = !!useJourneyState.getState().baselineCompletedAt;
+    const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
+    if (!onboarded && !hasPeopleOnMap) {
+      window.location.href = "/onboarding?source=landing";
       return;
     }
 
@@ -311,16 +303,12 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
       const search = new URLSearchParams(window.location.search);
       const bootActionParam = search.get("boot_action");
       if (bootActionParam === "start_recovery") {
-        if (!hasRevenueAccess()) {
-          const onboarded = !!useJourneyState.getState().baselineCompletedAt;
+        const onboarded = !!useJourneyState.getState().baselineCompletedAt;
           const hasPeopleOnMap = useMapState.getState().nodes.length > 0;
-          if (!onboarded || !hasPeopleOnMap) {
+          if (!onboarded && !hasPeopleOnMap) {
             window.location.replace("/onboarding?source=url");
             return;
           }
-          window.location.replace("/pricing?blocked=boot_action&source=url");
-          return;
-        }
 
         window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
         setLockFullAppMode(true);
