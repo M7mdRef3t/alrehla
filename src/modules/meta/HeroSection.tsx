@@ -1531,15 +1531,19 @@ export const HeroSection: FC<HeroSectionProps> = ({
                     dir="rtl"
                     className="hero-command-input"
                   />
-                  <button
+                  <motion.button
                     type="button"
-                    className="hero-command-btn"
+                    className="hero-command-btn group"
                     onClick={handleStart}
                     id="hero-cta-start"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    animate={{ boxShadow: ["0 4px 15px rgba(20, 184, 166, 0.3)", "0 4px 30px rgba(20, 184, 166, 0.8)", "0 4px 15px rgba(20, 184, 166, 0.3)"] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <span>{ctaJourney}</span>
-                    <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow" />
-                  </button>
+                    <span className="relative z-10 font-black tracking-wide">{ctaJourney}</span>
+                    <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow relative z-10 transition-transform duration-300 group-hover:-translate-x-2" />
+                  </motion.button>
                 </div>
               </motion.div>
             )}

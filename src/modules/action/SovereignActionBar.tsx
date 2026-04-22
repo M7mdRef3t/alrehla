@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BatteryCharging, BatteryWarning, Zap, ShieldAlert, HeartPulse, Activity, Trophy, X, TrendingUp, TrendingDown } from "lucide-react";
 import { useMapState } from '@/modules/map/dawayirIndex';
+import { filterNodesByContext } from '@/modules/map/mapUtils';
+import { useParams } from 'next/navigation';
 
 interface SovereignActionBarProps {
   viewingNodeId?: string | null;
@@ -10,6 +12,7 @@ interface SovereignActionBarProps {
   className?: string;
   isFloatingMobile?: boolean;
   isSidebar?: boolean;
+  goalIdFilter?: string | null;
 }
 
 export const SovereignActionBar: FC<SovereignActionBarProps> = ({ 
@@ -17,8 +20,13 @@ export const SovereignActionBar: FC<SovereignActionBarProps> = ({
   onOpenRecoveryPlan, 
   className = "",
   isFloatingMobile = false,
-  isSidebar = false
+  isSidebar = false,
+  goalIdFilter: propGoalIdFilter
 }) => {
+  const params = useParams();
+  const goalIdFromUrl = params?.goalId as string;
+  const goalIdFilter = propGoalIdFilter ?? goalIdFromUrl;
+
   const nodes = useMapState((s) => s.nodes);
   const addEnergyTransaction = useMapState((s) => s.addEnergyTransaction);
   
@@ -39,7 +47,11 @@ export const SovereignActionBar: FC<SovereignActionBarProps> = ({
   const pnl = useMemo(() => {
     let charge = 0;
     let drain = 0;
-    nodes.forEach(n => {
+    
+    // Use shared utility to filter nodes by current context if applicable
+    const filteredNodes = filterNodesByContext(nodes, goalIdFilter, null);
+    
+    filteredNodes.forEach(n => {
       if (n.energyBalance) {
         charge += n.energyBalance.totalCharge;
         drain += n.energyBalance.totalDrain;
@@ -50,7 +62,7 @@ export const SovereignActionBar: FC<SovereignActionBarProps> = ({
       drain,
       net: charge - drain,
     };
-  }, [nodes]);
+  }, [nodes, goalIdFilter]);
 
   const handleLogEnergy = (amount: number, note: string, targetNodeId: string) => {
     addEnergyTransaction(targetNodeId, amount, note);

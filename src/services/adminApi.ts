@@ -1947,6 +1947,113 @@ export async function rejectActivationTicket(ticketId: string, reason?: string):
   return Boolean(apiData?.ok);
 }
 
+export interface PendingIntent {
+    id: string;
+    userId: string;
+    amount: number;
+    currency: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    userEmail?: string;
+    userName?: string;
+    userPhone?: string;
+}
+
+export const fetchPendingIntents = async (): Promise<PendingIntent[]> => {
+    if (!isSupabaseReady || !supabase) return [];
+    try {
+        const { data, error } = await supabase
+            .from('transactions')
+            .select('*, users!transactions_user_id_fkey(email, full_name, phone_number)')
+            .in('status', ['pending', 'pending_review'])
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) {
+            console.error('Error fetching pending intents:', error);
+            return [];
+        }
+
+        return (data || []).map((t: any) => ({
+            id: t.id,
+            userId: t.user_id,
+            amount: t.amount,
+            currency: t.currency,
+            status: t.status,
+            createdAt: t.created_at,
+            updatedAt: t.updated_at,
+            userEmail: t.users?.email,
+            userName: t.users?.full_name,
+            userPhone: t.users?.phone_number
+        }));
+    } catch (err) {
+        console.error('Exception fetching pending intents:', err);
+        return [];
+    }
+};
+
+export const approvePendingIntent = async (intentId: string, userId: string, adminId: string): Promise<boolean> => {
+    if (!isSupabaseReady || !supabase) return false;
+    try {
+        // 1. Trigger Activation Engine via RPC
+        const { data: result, error: rpcError } = await supabase.rpc("activate_founding_cohort_seat", {
+            p_user_id: userId,
+            p_provider: "oracle_dashboard",
+            p_payment_ref: `manual_approve_${adminId}_${Date.now()}`
+        });
+
+        if (rpcError) {
+            console.error('[AdminAPI] RPC Failed for intent approval:', rpcError);
+            return false;
+        }
+
+        // 2. Mark the transaction as completed
+        const { error: txError } = await supabase
+            .from("transactions")
+            .update({ 
+                status: "completed", 
+                metadata: { 
+                    verified_via: 'oracle_dashboard', 
+                    approved_by: adminId,
+                    verified_at: new Date().toISOString() 
+                } 
+            })
+            .eq("id", intentId);
+
+        if (txError) {
+            console.error('[AdminAPI] Failed to update transaction status:', txError);
+            return false;
+        }
+
+        return true;
+    } catch (err) {
+        console.error('Exception approving intent:', err);
+        return false;
+    }
+};
+
+export const flagPendingIntent = async (intentId: string, reason: string): Promise<boolean> => {
+    if (!isSupabaseReady || !supabase) return false;
+    try {
+        const { error } = await supabase
+            .from("transactions")
+            .update({ 
+                status: "flagged", 
+                metadata: { 
+                    flagged_reason: reason,
+                    flagged_at: new Date().toISOString() 
+                } 
+            })
+            .eq("id", intentId);
+
+        return !error;
+    } catch (err) {
+        console.error('Exception flagging intent:', err);
+        return false;
+    }
+};
+
 export const adminApi = {
   fetchMarketingSpend,
   updateMarketingSpend,
@@ -1954,6 +2061,8 @@ export const adminApi = {
   updateCampaignBudget,
   fetchOverviewStats,
   fetchOwnerAlerts,
+  fetchPendingIntents,
+  approvePendingIntent,
   callAdminApi,
   upsertMarketingLead: async (lead: any) => {
     if (!isSupabaseReady || !supabase) return { success: false, error: 'Supabase not ready' };

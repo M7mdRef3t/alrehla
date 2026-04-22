@@ -219,9 +219,9 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
 
   return (
     <div className="space-y-12 max-w-[1600px] mx-auto px-4 pb-24">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
-        <div>
-          <div className="flex items-center gap-3 text-amber-500">
+      <header className="flex flex-col md:flex-row-reverse justify-between items-start md:items-center gap-4 mb-12">
+        <div className="flex flex-col items-end">
+          <div className="flex items-center gap-3 text-amber-500 flex-row-reverse text-right">
             <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/20">
               <Shield className="w-8 h-8" />
             </div>
@@ -250,17 +250,25 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
         {/* Left Column: Oracle & Presets */}
         <div className="lg:col-span-4 space-y-8 flex flex-col">
-           <div className="flex-1 min-h-[400px]">
-             <SovereignOracle />
-           </div>
+            <CollapsibleSection
+              title="توجيهات الأوراكل"
+              subtitle="Sovereign AI Insights"
+              icon={<Brain className="w-4 h-4" />}
+              defaultExpanded={false}
+            >
+              <div className="flex-1 min-h-[400px] mt-4">
+                <SovereignOracle minimal={true} />
+              </div>
+            </CollapsibleSection>
 
            {/* Tactical Presets */}
-           <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-6 rounded-3xl shadow-2xl">
-              <div className="flex items-center gap-2 mb-6 text-rose-500">
-                 <Target className="w-4 h-4" />
-                 <h3 className="text-xs font-black uppercase tracking-widest">التدخلات التكتيكية (Tactical Presets)</h3>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+           <CollapsibleSection
+             title="التدخلات التكتيكية"
+             subtitle="Tactical Presets"
+             icon={<Target className="w-4 h-4" />}
+             defaultExpanded={false}
+           >
+              <div className="grid grid-cols-2 gap-3 mt-4">
                  {TACTICAL_PRESETS.map((preset) => (
                     <button
                       key={preset.id}
@@ -269,14 +277,14 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
                         setBroadcastMessage(preset.message);
                         setBroadcastAudienceType("all");
                       }}
-                      className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all group text-right flex flex-col items-start gap-2"
+                      className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all group text-right flex flex-col items-end gap-2"
                     >
                        <preset.icon className={`w-5 h-5 ${preset.color} group-hover:scale-110 transition-transform`} />
                        <span className="text-[10px] font-black text-white uppercase tracking-wider">{preset.label}</span>
                     </button>
                  ))}
               </div>
-           </div>
+           </CollapsibleSection>
         </div>
 
         {/* Right Column: Pulse & Controls */}
@@ -376,10 +384,10 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
 
               {/* Stats Grid */}
               <div className="flex-1 grid grid-cols-2 gap-4 w-full">
-                <div className="bg-white/2 border border-white/5 p-6 rounded-3xl relative overflow-hidden group/card hover:bg-white/5 transition-all">
+                <div className="bg-white/2 border border-white/5 p-6 rounded-3xl relative overflow-hidden group/card hover:bg-white/5 transition-all text-right">
                   <Users className="w-12 h-12 text-teal-500 opacity-5 absolute -bottom-2 -left-2 group-hover/card:scale-110 transition-transform" />
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">أرواح متصلة</p>
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-baseline gap-2 justify-end">
                     <span className="text-4xl font-black text-white tabular-nums drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
                       {isLoadingPulse ? "..." : (liveStats?.activeConsciousnessNow ?? 0).toLocaleString("en-US")}
                     </span>
@@ -387,10 +395,10 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
                   </div>
                 </div>
 
-                <div className="bg-white/2 border border-white/5 p-6 rounded-3xl relative overflow-hidden group/card hover:bg-white/5 transition-all">
+                <div className="bg-white/2 border border-white/5 p-6 rounded-3xl relative overflow-hidden group/card hover:bg-white/5 transition-all text-right">
                   <Activity className="w-12 h-12 text-amber-500 opacity-5 absolute -bottom-2 -left-2 group-hover/card:scale-110 transition-transform" />
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">الصفاء الجماعي</p>
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-baseline gap-2 justify-end">
                     <span className="text-4xl font-black text-white tabular-nums">
                       {isLoadingPulse ? "..." : (liveStats?.avgMood ?? 0).toFixed(1)}
                     </span>
@@ -398,7 +406,7 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
                   </div>
                 </div>
 
-                <div className={`bg-white/2 border p-6 rounded-3xl relative overflow-hidden group/card hover:bg-white/5 transition-all ${incidents && incidents.length > 0 ? "border-rose-500/20" : "border-white/5"}`}>
+                <div className={`bg-white/2 border p-6 rounded-3xl relative overflow-hidden group/card hover:bg-white/5 transition-all text-right ${incidents && incidents.length > 0 ? "border-rose-500/20" : "border-white/5"}`}>
                   <ShieldAlert className={`w-12 h-12 ${incidents && incidents.length > 0 ? "text-rose-500" : "text-emerald-500"} opacity-5 absolute -bottom-2 -left-2 group-hover/card:scale-110 transition-transform`} />
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">الاستقرار</p>
                   <span className={`text-lg font-black uppercase ${incidents && incidents.length > 0 ? "text-rose-400" : "text-emerald-400"}`}>
@@ -406,7 +414,7 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
                   </span>
                 </div>
 
-                <div className="bg-indigo-500/5 border border-indigo-500/10 p-6 rounded-3xl relative overflow-hidden group/card hover:bg-indigo-500/10 transition-all">
+                <div className="bg-indigo-500/5 border border-indigo-500/10 p-6 rounded-3xl relative overflow-hidden group/card hover:bg-indigo-500/10 transition-all text-right">
                   <Sparkles className="w-12 h-12 text-indigo-500 opacity-5 absolute -bottom-2 -left-2 group-hover/card:scale-110 transition-transform" />
                   <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">كفاءة الرنين</p>
                   <span className="text-lg font-black text-indigo-300 uppercase tracking-tighter">HD Resonance</span>
@@ -418,22 +426,40 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
       </div>
 
       {/* Illusion Radar - Full Width Focus */}
-      <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
-        <header className="flex items-center gap-3 mb-8 text-amber-500">
-           <Eye className="w-5 h-5 animate-pulse" />
-           <h2 className="text-xl font-black uppercase tracking-widest">رادار الأوهام والدجل (Dajjal Collision Map)</h2>
-        </header>
-        <IllusionRadar scenarios={liveStats?.topScenarios ?? null} isLoading={isLoadingPulse} />
-      </div>
+      <CollapsibleSection
+        title="رادار الأوهام والدجل"
+        subtitle="Dajjal Collision Map"
+        icon={<Eye className="w-4 h-4" />}
+        defaultExpanded={false}
+      >
+        <div className="mt-4">
+          <IllusionRadar scenarios={liveStats?.topScenarios ?? null} isLoading={isLoadingPulse} />
+        </div>
+      </CollapsibleSection>
 
       {/* Sovereign AI Decision Log & War Room Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden h-[500px]">
-          <SovereignDecisionLog />
-        </div>
-        <div className="h-[500px]">
-          <WarRoomAlertsPanel />
-        </div>
+        <CollapsibleSection
+          title="سجل قرارات الذكاء الاصطناعي"
+          subtitle="Sovereign AI Decision Log"
+          icon={<Brain className="w-4 h-4" />}
+          defaultExpanded={false}
+        >
+          <div className="h-[500px] mt-4">
+            <SovereignDecisionLog minimal={true} />
+          </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="War Room Alerts"
+          subtitle="Critical System Incidents"
+          icon={<ShieldAlert className="w-4 h-4" />}
+          defaultExpanded={false}
+        >
+          <div className="h-[500px] mt-4">
+            <WarRoomAlertsPanel minimal={true} />
+          </div>
+        </CollapsibleSection>
       </div>
 
       {/* Sovereign Neural Trace - Local Agent Activity */}
@@ -479,7 +505,7 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
                   )}
                 </div>
 
-                <p className="text-sm font-bold text-slate-200 leading-relaxed pr-4 border-r-2 border-teal-500/30">
+                <p className="text-sm font-bold text-slate-200 leading-relaxed pl-4 border-l-2 border-teal-500/30 text-right">
                   {step.thought}
                 </p>
 
@@ -568,7 +594,16 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
             </div>
           </CollapsibleSection>
 
-          <SovereignSpreadCommand />
+          <CollapsibleSection
+            title="Spread Command"
+            subtitle="Quantum Diffusion Control"
+            icon={<Send className="w-4 h-4" />}
+            defaultExpanded={false}
+          >
+            <div className="mt-4">
+              <SovereignSpreadCommand minimal={true} />
+            </div>
+          </CollapsibleSection>
       </div>
 
       {/* Global Broadcast Console */}

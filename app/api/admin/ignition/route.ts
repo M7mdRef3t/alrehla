@@ -6,7 +6,8 @@ import { requireLiveAuth } from '@/modules/dawayir-live/server/auth';
 export async function POST(req: Request) {
   try {
     // Ensure sovereign authentication
-    await requireLiveAuth();
+    const authResult = await requireLiveAuth(req as any);
+    if (authResult instanceof NextResponse) return authResult;
 
     const { marketId } = await req.json();
 

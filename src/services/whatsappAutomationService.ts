@@ -7,6 +7,8 @@ export interface WhatsAppMessagePayload {
   text: string;
   timestamp: string;
   messageId: string;
+  hasImage?: boolean;
+  imageId?: string;
   metadata?: {
     raw?: {
       referral?: {
@@ -54,7 +56,11 @@ class WhatsAppAutomationService {
   /**
    * Detect intent based on keywords (Egyptian Arabic focus)
    */
-  detectIntent(text: string): WhatsAppIntent {
+  detectIntent(text: string, hasImage?: boolean): WhatsAppIntent {
+    if (hasImage) {
+      return 'payment_requested'; // Images sent to this number are highly likely payment screenshots
+    }
+
     const lowerText = text.toLowerCase();
     
     if (this.paymentKeywords.some(keyword => lowerText.includes(keyword))) {
@@ -92,7 +98,7 @@ class WhatsAppAutomationService {
 
     const phone = payload.from;
     const phoneNormalized = this.normalizePhoneNumber(phone);
-    const intent = this.detectIntent(payload.text);
+    const intent = this.detectIntent(payload.text, payload.hasImage);
     
     // Generate AI Strategy (Oracle Insight)
     const oracleStrategy = this.generateOracleStrategy(payload.text, intent);
@@ -103,7 +109,11 @@ class WhatsAppAutomationService {
       // 0. Auto-Activation check
       const receiptMatch = payload.text.match(/\d{10,}/); // Heuristic for receipt strings
       let activated = false;
-      if (receiptMatch) {
+      
+      if (payload.hasImage) {
+        console.log(`[WhatsAppAutomation] Received image proof from ${phoneNormalized}`);
+        activated = await this.handleAutoActivation(phoneNormalized, payload.imageId || 'image_proof', supabase);
+      } else if (receiptMatch) {
         activated = await this.handleAutoActivation(phoneNormalized, receiptMatch[0], supabase);
       }
 
@@ -322,6 +332,24 @@ class WhatsAppAutomationService {
       return false;
     }
 
+    // 1.5. Verify there is a pending transaction for this user before activating
+    const { data: pendingTx } = await supabase
+      .from("transactions")
+      .select("id")
+      .eq("user_id", profile.id)
+      .eq("status", "pending")
+      .single();
+
+    if (!pendingTx) {
+      console.log(`[WhatsAppAutomation] No pending transaction found for user ${profile.id}. Will not auto-activate.`);
+      // Send a fallback message indicating we got the image but don't see a transaction
+      const msg = `أهلاً يا ${profile.full_name}! استلمنا رسالتك، بس مش لاقيين طلب دفع معلق لحسابك. لو دي مشكلة تقنية، الدعم هيتواصل معاك فوراً.`;
+      await WhatsAppCloudService.sendFreeText(phone, profile.id, msg);
+      return false;
+    }
+
+    console.log(`[WhatsAppAutomation] Found pending transaction ${pendingTx.id} for user ${profile.id}. Proceeding with activation...`);
+
     // 2. Trigger Activation Engine
     const { data: result, error } = await supabase.rpc("activate_founding_cohort_seat", {
       p_user_id: profile.id,
@@ -329,14 +357,33 @@ class WhatsAppAutomationService {
       p_payment_ref: receipt
     });
 
-    if (error) {
+    if (error || !result?.activated) {
       console.error("[WhatsAppAutomation] RPC Failed for auto-activation:", error);
+      
+      // Update transaction status to pending_review
+      await supabase
+        .from("transactions")
+        .update({ 
+            status: "pending_review", 
+            metadata: { receipt_ref: receipt, error: error || 'activation_failed', failed_at: new Date().toISOString() } 
+        })
+        .eq("id", pendingTx.id);
+
+      const errorMsg = `أهلاً يا ${profile.full_name}. استلمنا إثبات الدفع، بس محتاجين نراجعه يدوياً عشان فيه مشكلة تقنية. فريق الدعم هيفعل حسابك في أقرب وقت.`;
+      await WhatsAppCloudService.sendFreeText(phone, profile.id, errorMsg);
+
       return false;
     }
 
-    // 3. Notify Success back to WhatsApp
+    // 3. Mark the transaction as completed
+    await supabase
+      .from("transactions")
+      .update({ status: "completed", metadata: { receipt_ref: receipt, verified_via: 'whatsapp_webhook', verified_at: new Date().toISOString() } })
+      .eq("id", pendingTx.id);
+
+    // 4. Notify Success back to WhatsApp
     if (result?.activated) {
-       const msg = `تم تفعيل رحلتك بنجاح يا ${profile.full_name}! 🌊✨\nأهلاً بك في الفوج التأسيسي. يمكنك الآن الدخول للمنصة واستكشاف خريطتك.`;
+       const msg = `تم تفعيل رحلتك بنجاح يا ${profile.full_name}! 🌊✨\nأهلاً بك في الفوج التأسيسي. الدفع اتأكد وتقدر دلوقتي تدخل المنصة وتستكشف خريطتك.`;
        await WhatsAppCloudService.sendFreeText(phone, profile.id, msg);
        return true;
     }

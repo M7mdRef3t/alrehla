@@ -50,7 +50,7 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center gap-4 p-4 bg-rose-500/5 rounded-3xl border border-rose-500/10 mb-8 max-w-2xl">
+        <div className="flex items-center gap-4 p-4 bg-rose-500/5 rounded-3xl border border-rose-500/10 mb-8 max-w-2xl flex-row-reverse text-right">
           <div className="p-2 bg-rose-500/20 rounded-xl">
             <AlertTriangle className="w-5 h-5 text-rose-500" />
           </div>
@@ -91,23 +91,23 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
                     />
                   )}
 
-                  <div className="flex items-center justify-between z-10 relative">
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2 opacity-50">
+                  <div className="flex items-center justify-between z-10 relative flex-row-reverse text-right">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2 opacity-50 flex-row-reverse">
                       <TrendingUp className={`w-3 h-3 ${iconColor}`} />
                       Illusion Node
                     </span>
-                    <div className="flex flex-col items-end">
+                    <div className="flex flex-col items-start">
                       <span className="font-mono text-xl font-black drop-shadow-lg">{Math.round(scenarioPercent)}%</span>
                       <span className="text-[8px] uppercase tracking-widest opacity-40">Frequency</span>
                     </div>
                   </div>
 
-                  <div className="z-10 relative space-y-4">
+                  <div className="z-10 relative space-y-4 text-right">
                     <div>
                       <h4 className="text-lg font-black leading-tight text-white group-hover:text-rose-500 transition-colors">
                         {scenario.label}
                       </h4>
-                      <p className="text-[10px] font-bold opacity-40 mt-1 flex items-center gap-1">
+                      <p className="text-[10px] font-bold opacity-40 mt-1 flex items-center gap-1 flex-row-reverse">
                          <span className="w-1 h-1 rounded-full bg-current" />
                          {scenario.count} Souls Affected
                       </p>

@@ -5,7 +5,11 @@ import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import type { AIDecision } from "@/ai/decision-framework";
 import { decisionEngine } from "@/ai/decision-framework";
 
-export const SovereignDecisionLog: FC = () => {
+interface SovereignDecisionLogProps {
+    minimal?: boolean;
+}
+
+export const SovereignDecisionLog: FC<SovereignDecisionLogProps> = ({ minimal }) => {
     const [decisions, setDecisions] = useState<AIDecision[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -69,22 +73,24 @@ export const SovereignDecisionLog: FC = () => {
         setDecisions(prev => prev.map(d => d.id === id ? { ...d, outcome: approved ? "executed" : "rejected", approvedBy: "admin", executedAt: approved ? Date.now() : undefined } : d));
     };
 
-    return (
-        <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden flex flex-col h-full shadow-2xl transition-all">
-            <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-indigo-400">
-                    <Brain className="w-4 h-4" />
-                    <h3 className="text-xs font-black uppercase tracking-widest text-shadow-glow">سجل قرارات الذكاء الاصطناعي (AI Decisions)</h3>
+    const content = (
+        <>
+            {!minimal && (
+                <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between flex-row-reverse text-right">
+                    <div className="flex items-center gap-2 text-indigo-400 flex-row-reverse">
+                        <Brain className="w-4 h-4" />
+                        <h3 className="text-xs font-black uppercase tracking-widest text-shadow-glow">سجل قرارات الذكاء الاصطناعي (AI Decisions)</h3>
+                    </div>
+                    <div className="flex items-center gap-2 flex-row-reverse">
+                        <div className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-indigo-400 animate-pulse' : 'bg-indigo-500'}`} />
+                        <span className="text-[10px] font-bold text-indigo-500/50 uppercase tracking-tighter">
+                            {isLoading ? 'Syncing...' : 'Live'}
+                        </span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-indigo-400 animate-pulse' : 'bg-indigo-500'}`} />
-                    <span className="text-[10px] font-bold text-indigo-500/50 uppercase tracking-tighter">
-                        {isLoading ? 'Syncing...' : 'Live'}
-                    </span>
-                </div>
-            </div>
+            )}
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div className={`flex-1 overflow-y-auto ${minimal ? '' : 'p-4'} space-y-4 custom-scrollbar`}>
                 <AnimatePresence mode="popLayout">
                     {decisions.length > 0 ? (
                         decisions.map((decision, idx) => (
@@ -99,9 +105,9 @@ export const SovereignDecisionLog: FC = () => {
                                     'bg-indigo-500/5 border-indigo-500/10'
                                 }`}
                             >
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="flex flex-col gap-1">
-                                        <div className="flex items-center gap-2">
+                                <div className="flex items-start justify-between flex-row-reverse gap-4 text-right">
+                                    <div className="flex flex-col gap-1 items-end">
+                                        <div className="flex items-center gap-2 flex-row-reverse">
                                             {decision.outcome === 'pending_approval' && <Clock className="w-4 h-4 text-amber-500 animate-pulse" />}
                                             {decision.outcome === 'executed' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
                                             {(decision.outcome === 'rejected' || decision.outcome === 'forbidden') && <XCircle className="w-4 h-4 text-rose-500" />}
@@ -121,7 +127,7 @@ export const SovereignDecisionLog: FC = () => {
                                 </div>
 
                                 {decision.outcome === 'pending_approval' && (
-                                    <div className="mt-4 flex items-center gap-2">
+                                    <div className="mt-4 flex items-center gap-2 flex-row-reverse">
                                         <button 
                                             onClick={() => handleApproval(decision.id!, true)}
                                             className="flex-1 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
@@ -146,6 +152,14 @@ export const SovereignDecisionLog: FC = () => {
                     )}
                 </AnimatePresence>
             </div>
+        </>
+    );
+
+    if (minimal) return content;
+
+    return (
+        <div className="bg-[#0B0F19]/60 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden flex flex-col h-full shadow-2xl transition-all">
+            {content}
         </div>
     );
 };

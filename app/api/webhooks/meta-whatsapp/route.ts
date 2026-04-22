@@ -90,12 +90,16 @@ export async function POST(req: Request) {
       const messageBody = msg.text?.body || msg.interactive?.button_reply?.title || msg.button?.text || "";
       const senderName = value?.contacts?.[0]?.profile?.name || "";
 
+      const hasImage = msg.type === "image" && msg.image?.id;
+
       const payload = {
         from: fromPhoneRaw,
         name: senderName,
         text: messageBody,
         timestamp: msg.timestamp || new Date().getTime().toString(),
         messageId: msg.id,
+        hasImage: !!hasImage,
+        imageId: hasImage ? msg.image.id : undefined,
         metadata: {
           raw: msg
         },

@@ -85,7 +85,9 @@ const EntropyGlow: FC<{ x: number; y: number; level: EntropyLevel }> = memo(({ x
 
   return (
     <motion.circle
-      cx={x} cy={y} r="6"
+      cx={Number.isFinite(x) ? x : 50} 
+      cy={Number.isFinite(y) ? y : 50} 
+      r="6"
       fill={colors[level as 1|2|3]}
       fillOpacity={level === 3 ? 0.6 : 0.4}
       initial={{ scale: 0.8, opacity: 0 }}
@@ -216,9 +218,11 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
 
   // Calculate base position if no drag is happening
   const radius = node.ring === "green" ? 15 : node.ring === "yellow" ? 27 : 38;
-  const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
-  const baseX = 50 + radius * Math.cos(angle);
-  const baseY = 50 + radius * Math.sin(angle);
+  const angle = (index / Math.max(total, 1)) * 2 * Math.PI - Math.PI / 2;
+  const rawX = 50 + radius * Math.cos(angle);
+  const rawY = 50 + radius * Math.sin(angle);
+  const baseX = Number.isFinite(rawX) ? rawX : 50;
+  const baseY = Number.isFinite(rawY) ? rawY : 50;
 
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -532,16 +536,16 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
   };
 
   const groupedNodes = useMemo(() => {
-    const activeNodes = nodes.filter(n => !n.isNodeArchived);
     const groups = {
-      green: activeNodes.filter(n => (n.ring === "green" || !n.ring)),
-      yellow: activeNodes.filter(n => n.ring === "yellow"),
-      red: activeNodes.filter(n => n.ring === "red"),
+      green: nodes.filter(n => n.ring === "green" || !n.ring),
+      yellow: nodes.filter(n => n.ring === "yellow"),
+      red: nodes.filter(n => n.ring === "red"),
     };
     console.log("[DawayirCanvas] groupedNodes:", {
       green: groups.green.length,
       yellow: groups.yellow.length,
-      red: groups.red.length
+      red: groups.red.length,
+      totalReceived: nodes.length
     });
     return groups;
   }, [nodes]);
@@ -625,11 +629,6 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
           {groupedNodes.green.map((node, i) => (
             <RelationshipNode key={node.id} node={node} index={i} total={groupedNodes.green.length} onClick={onNodeClick} entropyLevel={entropyMap[node.id] || 0} />
           ))}
-
-          {/* Debug labels if nodes are missing but count is > 0 */}
-          {activeNodesCount > 0 && nodes.length === 0 && (
-             <text x="50" y="95" fontSize="3" fill="red" textAnchor="middle">خطأ في الفلترة - راجع الكونسول</text>
-          )}
 
           {onAddNode && ghostNodePosition && (
             <motion.g

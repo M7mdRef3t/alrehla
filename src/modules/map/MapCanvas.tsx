@@ -6,6 +6,7 @@ import { X, GripVertical, Plus } from "lucide-react";
 import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
 import type { Ring, MapNode as MapNodeType } from "./mapTypes";
 import { useMapState } from '@/modules/map/dawayirIndex';
+import { filterNodesByContext } from "./mapUtils";
 import { useMeState } from '@/modules/map/dawayirIndex';
 import { mapCopy } from "@/copy/map";
 import { hasSeenOnboarding } from "@/utils/mapOnboarding";
@@ -183,9 +184,14 @@ const getRingPosition = (ring: Ring, nodeIndex: number, totalInRing: number): { 
   if (ring === "green") radius = 15;
   else if (ring === "yellow") radius = 27;
   else radius = 38;
+  
   const x = 50 + radius * Math.cos(angle);
   const y = 50 + radius * Math.sin(angle);
-  return { x, y };
+  
+  return { 
+    x: Number.isFinite(x) ? x : 50, 
+    y: Number.isFinite(y) ? y : 50 
+  };
 };
 
 const GREY_ZONE_RADIUS = 46;
@@ -195,7 +201,10 @@ const getGreyZonePosition = (nodeIndex: number, totalInGrey: number): { x: numbe
   const angle = nodeIndex * angleStep - Math.PI / 2;
   const x = 50 + GREY_ZONE_RADIUS * Math.cos(angle);
   const y = 50 + GREY_ZONE_RADIUS * Math.sin(angle);
-  return { x, y };
+  return { 
+    x: Number.isFinite(x) ? x : 50, 
+    y: Number.isFinite(y) ? y : 50 
+  };
 };
 
 /* ── Illusion Entity View (Dark Asteroids) ── */
@@ -206,8 +215,10 @@ const IllusionEntityView: FC<{ scenario: any; index: number; total: number; onDi
   // Orbit in the deep edges of the map (r=55)
   const radius = 55;
   const initialAngle = (index * (2 * Math.PI) / Math.max(total, 1)) - Math.PI / 2;
-  const cx = 50 + radius * Math.cos(initialAngle);
-  const cy = 50 + radius * Math.sin(initialAngle);
+  const rawX = 50 + radius * Math.cos(initialAngle);
+  const rawY = 50 + radius * Math.sin(initialAngle);
+  const cx = Number.isFinite(rawX) ? rawX : 50;
+  const cy = Number.isFinite(rawY) ? rawY : 50;
 
   const handleDismantle = useCallback((e: React.MouseEvent | any) => {
     if (e?.stopPropagation) e.stopPropagation();
@@ -1001,29 +1012,6 @@ const ME_CENTER_STYLES: Record<string, { fill: string; glow: string; pulseScale:
   }
 };
 
-/*  Filter Context Nodes  */
-
-function filterNodesByContext(
-  nodes: MapNodeType[],
-  goalIdFilter?: string,
-  galaxyGoalIds?: string[]
-): MapNodeType[] {
-  if (galaxyGoalIds != null && galaxyGoalIds.length > 0) {
-    return nodes.filter((n) => galaxyGoalIds.includes(n.goalId ?? "general"));
-  }
-  if (goalIdFilter != null && goalIdFilter !== "") {
-    if (goalIdFilter === "family") {
-      return nodes.filter(
-        (n) =>
-          n.goalId === "family" ||
-          n.goalId == null ||
-          n.treeRelation?.type === "family"
-      );
-    }
-    return nodes.filter((n) => (n.goalId ?? "general") === goalIdFilter);
-  }
-  return nodes;
-}
 
 /* 
     MAIN CANVAS COMPONENT
@@ -1620,7 +1608,11 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     key={star.id}
                     cx={star.x}
                     cy={star.y}
-                    r={star.size}
+                    r={(() => {
+                      if (Number.isFinite(star.size)) return star.size;
+                      console.warn(`[MapCanvas] Invalid star size for node ${star.id}:`, star.size);
+                      return 0;
+                    })()}
                     fill="rgba(255,255,255,1)"
                     initial={{ opacity: 0 }}
                     animate={{ 
@@ -1789,7 +1781,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 {STAR_DATA.map((s) => (
                   <motion.circle
                     key={s.id}
-                    cx={s.cx} cy={s.cy} r={s.r}
+                    cx={s.cx} cy={s.cy} r={Number.isFinite(s.r) ? s.r : 0}
                     fill="white"
                     opacity={s.opacity}
                     animate={{ opacity: [s.opacity, s.opacity * 3, s.opacity] }}

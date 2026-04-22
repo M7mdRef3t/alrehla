@@ -27,18 +27,21 @@ class RevenueService {
       const { supabase } = await import("@/infrastructure/database");
       if (!supabase) return MOCK_SNAPSHOT;
 
-      const { data: customers } = await supabase
-        .from("marketing_leads")
-        .select("status, metadata")
-        .in("status", ["activated", "converted", "proof_received"]);
+      const { data: txs } = await supabase
+        .from("transactions")
+        .select("amount, status, user_id, metadata")
+        .in("status", ["completed"]);
 
       let totalRevenueEgp = 0;
-      const activeSubs = customers?.length ?? 0;
+      const uniqueUsers = new Set<string>();
 
-      (customers as any[])?.forEach((row) => {
-        const amt = typeof row.metadata?.amount === 'number' ? row.metadata.amount : 0;
+      (txs as any[])?.forEach((row) => {
+        const amt = typeof row.amount === 'number' ? row.amount : 0;
         totalRevenueEgp += amt;
+        if (row.user_id) uniqueUsers.add(row.user_id);
       });
+
+      const activeSubs = uniqueUsers.size > 0 ? uniqueUsers.size : (txs?.length ?? 0);
 
       const { data: allLeads } = await supabase
         .from("marketing_leads")
@@ -55,7 +58,7 @@ class RevenueService {
       });
 
       return {
-        mrr: totalRevenueEgp, // Treated as accumulated real EGP for backwards compatibility
+        mrr: totalRevenueEgp, // Treated as accumulated real EGP
         arr: totalRevenueEgp * 12, 
         totalRevenue: totalRevenueEgp,
         activeSubscriptions: activeSubs,
@@ -75,21 +78,21 @@ class RevenueService {
       if (!supabase) return [];
 
       const { data } = await supabase
-        .from("marketing_leads")
-        .select("id, source_type, status, created_at, metadata")
-        .in("status", ["activated", "converted", "proof_received"])
+        .from("transactions")
+        .select("id, provider, status, created_at, amount, currency, metadata")
+        .in("status", ["completed", "pending", "failed"])
         .order("created_at", { ascending: false })
         .limit(limit);
 
-      return (data || []).map((lead) => ({
-        id: lead.id,
-        gateway: this.mapGateway(lead.source_type),
-        amount: lead.metadata?.amount || 0,
-        currency: lead.metadata?.currency || "EGP",
-        usdEquivalent: lead.metadata?.amount || 0,
-        status: "confirmed" as const,
-        timestamp: lead.created_at,
-        market: lead.metadata?.market || "Unknown",
+      return (data || []).map((tx) => ({
+        id: tx.id,
+        gateway: this.mapGateway(tx.provider),
+        amount: tx.amount || 0,
+        currency: tx.currency || "EGP",
+        usdEquivalent: tx.amount || 0,
+        status: tx.status === "completed" ? "confirmed" : (tx.status as any),
+        timestamp: tx.created_at,
+        market: tx.metadata?.market || "Unknown",
       }));
     } catch (e) {
       console.error("[Revenue] Failed to fetch transactions:", e);

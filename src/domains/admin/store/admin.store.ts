@@ -54,6 +54,9 @@ export interface SovereignInsight {
     type: 'truth' | 'warning' | 'opportunity';
     message: string;
     timestamp: string;
+    rationale?: string;
+    confidence?: number;
+    tag?: string;
 }
 
 export interface SovereignStats {

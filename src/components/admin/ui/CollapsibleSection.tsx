@@ -39,23 +39,24 @@ export function CollapsibleSection({
         }}
         className="w-full flex items-center justify-between p-5 text-right hover:bg-white/5 transition-all focus:outline-none"
       >
-        <div className="flex items-center gap-3">
-          {expanded ? <ChevronUp className="w-4 h-4 opacity-70" /> : <ChevronDown className="w-4 h-4 opacity-70" />}
-          {badge}
-        </div>
         <div className="flex items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              {icon}
+              <p className="text-sm font-black flex items-center gap-1.5">{title}</p>
+              {tooltip && <AdminTooltip content={tooltip} position="right" />}
+            </div>
+            {subtitle && <p className="text-[11px] text-white/50 mt-0.5">{subtitle}</p>}
+          </div>
           {headerAction && (
             <div onClick={(e) => e.stopPropagation()}>
               {headerAction}
             </div>
           )}
-          <div>
-            <div className="flex items-center justify-end gap-2">
-              {tooltip && <AdminTooltip content={tooltip} position="right" />}
-              <p className="text-sm font-black flex items-center gap-1.5">{title} {icon}</p>
-            </div>
-            {subtitle && <p className="text-[11px] text-white/50 mt-0.5">{subtitle}</p>}
-          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {badge}
+          {expanded ? <ChevronUp className="w-4 h-4 opacity-70" /> : <ChevronDown className="w-4 h-4 opacity-70" />}
         </div>
       </div>
       {expanded && <div className="p-5 overflow-hidden animate-in fade-in slide-in-from-top-2 border-t border-white/5">{children}</div>}

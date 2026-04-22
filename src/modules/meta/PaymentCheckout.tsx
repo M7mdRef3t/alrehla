@@ -116,14 +116,6 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
       content_name: TIER_LABELS.premium
     });
 
-    // Keep standard registration tracking for third-party sync
-    analyticsService.trackCompleteRegistration({
-      method,
-      value: price.monthly,
-      currency: "USD",
-      content_name: TIER_LABELS.premium
-    });
-
     try {
       const user = await getUserInfo();
       const methodLabels: Record<PaymentMethod, string> = {
@@ -173,36 +165,38 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center text-center p-8 min-h-[360px] justify-center"
+        className="flex flex-col items-center text-center p-8 min-h-[360px] justify-center relative overflow-hidden"
       >
+        <div className="absolute inset-0 bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none" />
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", damping: 15, delay: 0.15 }}
-          className="w-20 h-20 rounded-3xl bg-emerald-500/20 flex items-center justify-center mb-5"
+          className="w-24 h-24 rounded-3xl bg-emerald-500/10 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(16,185,129,0.2)] border border-emerald-400/20 backdrop-blur-md relative"
         >
-          <Check className="w-10 h-10 text-emerald-400" />
+          <div className="absolute inset-0 rounded-3xl border border-emerald-300/30 blur-[2px]" />
+          <Check className="w-12 h-12 text-emerald-400 relative z-10 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
         </motion.div>
 
-        <h3 className="text-xl font-black text-white mb-2">تم إرسال طلبك! 🎉</h3>
-        <p className="text-sm text-slate-400 leading-relaxed max-w-xs mb-6">
-          هنتواصل معاك خلال دقائق لتأكيد الدفع وتفعيل حسابك.
-          <br />لو عايز تسرّع — كلمنا مباشرة:
+        <h3 className="text-2xl font-black text-white mb-2 tracking-tight">تم إرسال الإشارة! 🎉</h3>
+        <p className="text-sm text-emerald-100/70 leading-relaxed max-w-xs mb-8">
+          البوابة استقبلت طلبك. هنتواصل معاك خلال دقائق لتأكيد الدفع وفتح المسار.
+          <br /><span className="text-teal-400/80 mt-2 block">عايز تسرّع العملية؟ كلمنا مباشرة:</span>
         </p>
 
         <button
           onClick={() => openWhatsApp("بعتلك إيصال الدفع عشان تفعّل الحساب.")}
-          className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition-colors mb-3"
+          className="flex items-center justify-center gap-2 w-full max-w-[280px] p-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold transition-all mb-4 shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/30"
         >
           <MessageCircle className="w-5 h-5" />
-          كلمنا على WhatsApp
+          تأكيد عبر WhatsApp
         </button>
 
         <button
           onClick={onClose}
-          className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
+          className="text-sm text-slate-500 hover:text-teal-400 transition-colors"
         >
-          رجوع لرحلتك
+          العودة للرحلة
         </button>
       </motion.div>
     );
@@ -223,12 +217,13 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
         dir="rtl"
       >
         {/* Header */}
-        <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center mx-auto mb-3 shadow-md shadow-teal-500/10">
-            <ShieldCheck className="w-7 h-7 text-slate-950" />
+        <div className="text-center mb-6 relative">
+          <div className="absolute inset-0 bg-teal-500/10 blur-[40px] rounded-full" />
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-teal-400/90 to-emerald-600/90 flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(20,184,166,0.3)] border border-teal-300/20 backdrop-blur-xl">
+            <ShieldCheck className="w-8 h-8 text-slate-950" />
           </div>
-          <h3 className="text-lg font-black text-white mb-1">اختر طريقة الدفع</h3>
-          <p className="text-xs text-slate-400">
+          <h3 className="text-xl font-black text-white mb-1 tracking-tight">تأكيد المرور السيادي</h3>
+          <p className="text-xs text-teal-100/70 font-medium">
             {TIER_LABELS.premium} — {localPriceLabel} أو ${price.monthly}/شهر
           </p>
         </div>
@@ -290,9 +285,9 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           />
         </div>
 
-        <p className="mt-5 text-center text-[10px] text-slate-600 flex items-center justify-center gap-1">
-          <ShieldCheck className="w-3 h-3" />
-          مفيش بيانات بنكية بتتحفظ عندنا
+        <p className="mt-6 text-center text-[10px] text-slate-500 flex items-center justify-center gap-1.5 font-medium tracking-wide">
+          <ShieldCheck className="w-3.5 h-3.5 text-teal-500" />
+          اتصال مشفر ومؤمن بالكامل. لا نحتفظ بأي بيانات بنكية.
         </p>
       </motion.div>
     );
@@ -419,7 +414,9 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
       </div>
 
       {/* Steps */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-4 mb-5">
+      <div className="rounded-3xl border border-white/5 bg-white/[0.01] backdrop-blur-xl p-5 space-y-5 mb-6 shadow-inner relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+        
         {/* Step 1 */}
         <Step n="١" title={isVodafone ? "حوّل على الرقم ده:" : "حوّل على الرمز ده (InstaPay):"}>
           <CopyField
@@ -439,37 +436,41 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           )}
         </Step>
 
+        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent w-3/4 mx-auto" />
+
         {/* Step 2 */}
         <Step n="٢" title={`المبلغ: ${localPriceLabel}`}>
-          <p className="text-xs text-slate-500">باقة {TIER_LABELS.premium} — شهر واحد</p>
+          <p className="text-xs text-slate-400 font-medium">باقة {TIER_LABELS.premium} — تفعيل المسار</p>
         </Step>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent w-3/4 mx-auto" />
 
         {/* Step 3 */}
         <Step n="٣" title="ابعتلنا إيصال التحويل">
-          <p className="text-xs text-slate-500">على WhatsApp وهنفعّلك خلال دقائق</p>
+          <p className="text-xs text-slate-400 font-medium">على WhatsApp وهنفعّلك فوراً</p>
         </Step>
       </div>
 
       {/* Actions */}
-      <div className="space-y-3">
+      <div className="space-y-3 relative z-10">
         <button
           onClick={() => {
             void notifyOwner(selectedMethod);
             openWhatsApp(`بعتلك إيصال تحويل ${isVodafone ? "فودافون كاش" : "InstaPay"} — رقم الحوالة: [ضع رقم الإيصال هنا]`);
           }}
           disabled={isSending}
-          className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition-all disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-white font-bold transition-all disabled:opacity-50 shadow-lg shadow-teal-900/20 hover:shadow-teal-500/30"
         >
           {isSending
             ? <Loader2 className="w-5 h-5 animate-spin" />
             : <MessageCircle className="w-5 h-5" />}
-          {isSending ? "جاري الإرسال..." : "ابعت الإيصال على WhatsApp"}
+          {isSending ? "جاري الإرسال..." : "أرسل الإيصال على WhatsApp"}
         </button>
 
         <button
           onClick={() => void notifyOwner(selectedMethod)}
           disabled={isSending}
-          className="w-full text-center text-xs text-slate-500 hover:text-slate-300 transition-colors py-2 disabled:opacity-50"
+          className="w-full text-center text-xs font-medium text-slate-500 hover:text-teal-400 transition-colors py-2 disabled:opacity-50"
         >
           حوّلت بالفعل ومحتاج تفعيل؟ اضغط هنا
         </button>
@@ -495,9 +496,10 @@ function MethodButton({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-4 p-4 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-teal-400/30 transition-all text-right group"
+      className="w-full flex items-center gap-4 p-4 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.05] hover:border-teal-400/40 transition-all duration-300 text-right group shadow-lg shadow-black/20 hover:shadow-teal-900/20 relative overflow-hidden"
     >
-      <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
+      <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0 border border-white/5 shadow-inner`}>
         {icon}
       </div>
       <div className="flex-1 min-w-0">

@@ -532,6 +532,11 @@ export function trackEvent(
           last_activity_time: new Date().toISOString()
       });
   }
+
+  // --- 4) Meta Custom Funnel Events ---
+  if (eventName === AnalyticsEvents.ONBOARDING_STEP_COMPLETE) {
+      sendMetaEvent("OnboardingStep", safeParams, { bypassConsent: true, client_event_id });
+  }
 }
 
 export async function trackIdentityLinked(userId: string): Promise<void> {

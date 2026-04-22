@@ -119,7 +119,11 @@ export const PlatformHeader = memo(function PlatformHeader({
   onNavigate,
   onLogout,
 }: PlatformHeaderProps) {
+  const level = useGamificationState((s) => s.level);
+  const setOverlay = useAppOverlayState((s) => s.setOverlay);
+
   const [scrolled, setScrolled] = useState(false);
+
   const [hidden, setHidden] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -365,15 +369,16 @@ export const PlatformHeader = memo(function PlatformHeader({
       <div className="flex items-center gap-3">
         {isLoggedIn && (
           <button
-            onClick={() => useAppOverlayState.getState().setOverlay("evolutionHub", true)}
+            onClick={() => { console.log("[EvolutionHub] Level button clicked — calling setOverlay('evolutionHub', true)"); setOverlay("evolutionHub", true); }}
             className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/20 transition-all group"
           >
             <Trophy className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-black text-amber-500 font-mono">
-              Lvl {useGamificationState.getState().level}
+              Lvl {level}
             </span>
           </button>
         )}
+
 
         <button
           type="button"
@@ -456,20 +461,7 @@ export const PlatformHeader = memo(function PlatformHeader({
           <div className="w-9 h-9 rounded-full bg-white/10 animate-pulse" />
         ) : isLoggedIn ? (
           <div className="flex items-center gap-3">
-            {isNewUser && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                type="button"
-                onClick={handleLandingCta}
-                className="hidden sm:flex group relative items-center gap-1.5 sm:gap-2 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-xs sm:text-sm font-bold overflow-hidden border border-teal-500/30"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 transition-transform group-hover:scale-110" />
-                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Sparkles className="w-3.5 h-3.5 text-teal-400 relative z-10" />
-                <span className="text-teal-400 relative z-10 whitespace-nowrap">اكتشف خريطتك</span>
-              </motion.button>
-            )}
+
             <div ref={userMenuRef} className="relative" id="header-user-menu">
             {userMenuOpen ? (
               <button
@@ -674,7 +666,7 @@ export const PlatformHeader = memo(function PlatformHeader({
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             
             <LogIn className="w-4 h-4 sm:w-5 sm:h-5 text-slate-900 relative z-10" />
-            <span className="text-slate-900 relative z-10 whitespace-nowrap">اكتشف خريطتك</span>
+            <span className="text-slate-900 relative z-10 whitespace-nowrap">تسجيل الدخول</span>
           </motion.button>
         )}
       </div>
@@ -689,7 +681,10 @@ export const MobileNavBar = memo(function MobileNavBar({
 }: Pick<PlatformHeaderProps, "activeScreen" | "onNavigate">) {
   const activeNavId = getActiveNavId(activeScreen);
   const user = useAuthState((s) => s.user);
+  const level = useGamificationState((s) => s.level);
+  const setOverlay = useAppOverlayState((s) => s.setOverlay);
   const isLoggedIn = Boolean(user);
+
 
   const handleNav = useCallback(
     (id: string) => {
@@ -749,18 +744,19 @@ export const MobileNavBar = memo(function MobileNavBar({
       {isLoggedIn && (
         <div className="flex-1 flex flex-col items-center justify-center py-3">
           <button
-            onClick={() => useAppOverlayState.getState().setOverlay("evolutionHub", true)}
+            onClick={() => { console.log("[EvolutionHub] Mobile Level button clicked"); setOverlay("evolutionHub", true); }}
             className="flex flex-col items-center justify-center gap-1 group"
           >
             <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center group-active:scale-90 transition-transform">
               <Trophy className="w-5 h-5 text-amber-500" />
             </div>
             <span className="text-[10px] font-black text-amber-500 font-mono">
-              Lvl {useGamificationState.getState().level}
+              Lvl {level}
             </span>
           </button>
         </div>
       )}
+
     </nav>
   );
 });

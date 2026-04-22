@@ -60,6 +60,7 @@ import { LanternSwarm } from "./LanternSwarm";
 import { LanternInsightModal } from "./LanternInsightModal";
 import { subscribeToDawayirSignals } from "@/modules/recommendation/recommendationBus";
 import { MapArchitectChat } from "@/modules/dawayir/components/MapArchitectChat";
+import { filterNodesByContext } from "@/modules/map/mapUtils";
 
 const DawayirCanvas = lazy(() => import("@/modules/dawayir/DawayirCanvas").then(m => ({ default: m.DawayirCanvas })));
 const FeelingCheckModal = lazy(() => import("@/modules/dawayir/FeelingCheckModal").then(m => ({ default: m.FeelingCheckModal })));
@@ -377,11 +378,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const lastAddedNodeId = useMapState((s) => s.lastAddedNodeId);
   const dismissPlacementTooltip = useMapState((s) => s.dismissPlacementTooltip);
   const activeNodes = useMemo(() => {
-    const active = nodes.filter((n) => !n.isNodeArchived);
-    console.log("MAP_COUNT_DEBUG_UNIQUE_123: active count", active.length, "total nodes", nodes.length);
+    // Standardized filtering using shared utility
+    const filtered = filterNodesByContext(nodes, goalId, galaxyMode ? [] : null); // Adjust galaxy goal ids if needed
+    const active = filtered.filter((n) => !n.isNodeArchived);
+    console.log("[CoreMapScreen] activeNodes count:", active.length, "goalId:", goalId);
     return active;
-  }, [nodes]);
-  const archivedNodes = useMemo(() => nodes.filter((n) => n.isNodeArchived), [nodes]);
+  }, [nodes, goalId, galaxyMode]);
+
+  const archivedNodes = useMemo(() => {
+    const filtered = filterNodesByContext(nodes, goalId, galaxyMode ? [] : null);
+    return filtered.filter((n) => n.isNodeArchived);
+  }, [nodes, goalId, galaxyMode]);
   const [showOnboarding, setShowOnboarding] = useState(() => activeNodes.length === 0 && !hasSeenOnboarding() && !journeyMode);
   const lastAddedNode = lastAddedNodeId ? nodes.find((node) => node.id === lastAddedNodeId) ?? null : null;
 
@@ -857,7 +864,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 <Suspense fallback={null}>
                   {mapType === "masafaty" ? (
                     <DawayirCanvas 
-                      nodes={nodes}
+                      nodes={activeNodes} // Only pass active filtered nodes
                       onNodeClick={(node) => onSelectNode(node.id)}
                       onAddNode={handleAddNodeClick}
                       goalId={goalId}

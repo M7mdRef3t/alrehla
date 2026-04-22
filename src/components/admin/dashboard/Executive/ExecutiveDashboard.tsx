@@ -10,6 +10,8 @@ import { PhaseOneGoal } from "../Overview/components/PhaseOneGoal";
 import { SuccessIndexCard } from "../Overview/components/SuccessIndexCard";
 import { ExecutiveReport } from "../Overview/components/ExecutiveReport";
 import { SovereignABTestRadar } from "../Analytics/SovereignABTestRadar";
+import { PendingIntentsWidget } from "./components/PendingIntentsWidget";
+import { CreditCard } from "lucide-react";
 
 import {
     fetchOverviewStats,
@@ -274,6 +276,18 @@ export const ExecutiveDashboard: FC = () => {
                     </CollapsibleSection>
 
                     <SovereignABTestRadar />
+
+                    <CollapsibleSection
+                        title="معاملات الدفع العالقة"
+                        icon={<CreditCard className="w-4 h-4" />}
+                        subtitle="التحقق السِيادي والمراجعة اليدوية"
+                        defaultExpanded={true}
+                        headerColors="border-amber-500/20 bg-amber-500/5 text-amber-500"
+                    >
+                        <div className="pt-2">
+                            <PendingIntentsWidget />
+                        </div>
+                    </CollapsibleSection>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <CollapsibleSection

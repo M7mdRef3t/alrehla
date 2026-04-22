@@ -20,7 +20,11 @@ import { growthEngine, type DiffusionMetrics } from "@/services/growthEngine";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import debounce from "lodash/debounce";
 
-export const SovereignSpreadCommand: FC = () => {
+interface SovereignSpreadCommandProps {
+  minimal?: boolean;
+}
+
+export const SovereignSpreadCommand: FC<SovereignSpreadCommandProps> = ({ minimal }) => {
   const [metrics, setMetrics] = useState<DiffusionMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [catalystIntensity, setCatalystIntensity] = useState(0.6);
@@ -63,46 +67,48 @@ export const SovereignSpreadCommand: FC = () => {
   return (
     <div className="space-y-6">
       {/* Spread Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <motion.div 
-              animate={{ rotate: 360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              className="absolute -inset-2 border border-dashed border-indigo-500/20 rounded-full"
-            />
-            <div className="p-4 bg-[#0B0F19]/80 rounded-2xl border border-white/10 shadow-2xl relative z-10">
-              <Network className="w-6 h-6 text-indigo-400" />
+      {!minimal && (
+        <div className="flex flex-col md:flex-row items-center justify-between flex-row-reverse gap-4 text-right">
+          <div className="flex items-center gap-4 flex-row-reverse">
+            <div className="relative">
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                className="absolute -inset-2 border border-dashed border-indigo-500/20 rounded-full"
+              />
+              <div className="p-4 bg-[#0B0F19]/80 rounded-2xl border border-white/10 shadow-2xl relative z-10">
+                <Network className="w-6 h-6 text-indigo-400" />
+              </div>
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase">Spread Command</h2>
+              <div className="flex items-center gap-2 flex-row-reverse">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] text-right">Quantum Diffusion Active</p>
+              </div>
             </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase">Spread Command</h2>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em]">Quantum Diffusion Active</p>
-            </div>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/5">
-           <AnimatePresence mode="wait">
-             {isSaving && (
-                <motion.div 
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="px-3 py-1 text-[9px] font-black text-amber-400 uppercase tracking-widest"
-                >
-                  Syncing...
-                </motion.div>
-             )}
-           </AnimatePresence>
-           <div className="px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Real-time Pulse</span>
-           </div>
+          <div className="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/5 flex-row-reverse">
+             <AnimatePresence mode="wait">
+               {isSaving && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="px-3 py-1 text-[9px] font-black text-amber-400 uppercase tracking-widest"
+                  >
+                    Syncing...
+                  </motion.div>
+               )}
+             </AnimatePresence>
+             <div className="px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center gap-2 flex-row-reverse">
+                <Activity className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Real-time Pulse</span>
+             </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         
@@ -173,8 +179,8 @@ export const SovereignSpreadCommand: FC = () => {
         {/* Catalyst Controls Card */}
         <div className="xl:col-span-8 space-y-6">
            <div className="hud-glass p-8 rounded-[2.5rem] border-amber-500/10 bg-amber-500/[0.01] relative overflow-hidden">
-              <div className="flex items-center justify-between mb-8">
-                 <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between mb-8 flex-row-reverse text-right">
+                 <div className="flex items-center gap-4 flex-row-reverse">
                     <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                        <Zap className="w-6 h-6 text-amber-400 animate-pulse" />
                     </div>
@@ -223,13 +229,13 @@ export const SovereignSpreadCommand: FC = () => {
                         setInviteScarcity(next);
                         saveSetting("invite_scarcity", next);
                       }}
-                      className={`w-full p-6 rounded-3xl border transition-all flex items-center justify-between group ${
+                      className={`w-full p-6 rounded-3xl border transition-all flex items-center justify-between flex-row-reverse group text-right ${
                         inviteScarcity 
                         ? "bg-rose-500/10 border-rose-500/30 text-rose-400" 
                         : "bg-white/2 border-white/5 text-slate-400 hover:border-white/20"
                       }`}
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-row-reverse">
                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
                            inviteScarcity ? "bg-rose-500/20 border-rose-500/30" : "bg-black/20 border-white/10"
                          }`}>
@@ -237,7 +243,7 @@ export const SovereignSpreadCommand: FC = () => {
                          </div>
                          <div className="text-right">
                             <p className={`text-sm font-black italic tracking-tighter uppercase ${inviteScarcity ? "text-rose-300" : "text-white"}`}>
-                               Invite Scarcity Mode
+                                Invite Scarcity Mode
                             </p>
                             <p className="text-[10px] font-bold opacity-60">نظام الندرة و الـ FOMO</p>
                          </div>
@@ -246,7 +252,7 @@ export const SovereignSpreadCommand: FC = () => {
                     </button>
 
                     <div className="p-4 bg-white/5 rounded-2xl border border-dashed border-white/10">
-                       <p className="text-[10px] text-slate-500 leading-relaxed font-bold italic">
+                       <p className="text-[10px] text-slate-500 leading-relaxed font-bold italic text-right">
                           "نظام الندرة بيقفل العضويات الجديدة إلا بدعوة من شخص موجود.. وده بيزود رغبة الناس إنهم يدخلوا 'الملاذ' ويحسوا بتميزهم."
                        </p>
                     </div>
@@ -281,8 +287,8 @@ export const SovereignSpreadCommand: FC = () => {
             <TrendingUp className="w-64 h-64" />
          </div>
          
-         <div className="flex items-center justify-between mb-8 relative z-10">
-            <div className="flex items-center gap-4">
+         <div className="flex items-center justify-between mb-8 relative z-10 flex-row-reverse text-right">
+            <div className="flex items-center gap-4 flex-row-reverse">
                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                   <Activity className="w-6 h-6 text-emerald-400" />
                </div>
@@ -299,9 +305,9 @@ export const SovereignSpreadCommand: FC = () => {
               <motion.div 
                 key={idx}
                 whileHover={{ scale: 1.02 }}
-                className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-indigo-500/20 hover:bg-white/[0.05] transition-all flex items-center justify-between"
+                className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-indigo-500/20 hover:bg-white/[0.05] transition-all flex items-center justify-between flex-row-reverse text-right"
               >
-                 <div className="flex items-center gap-4">
+                 <div className="flex items-center gap-4 flex-row-reverse">
                     <div className="relative">
                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-lg font-black text-white shadow-lg">
                           {idx + 1}
@@ -313,7 +319,7 @@ export const SovereignSpreadCommand: FC = () => {
                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{spreader.count} نداء ناجح</p>
                     </div>
                  </div>
-                 <div className="text-right">
+                 <div className="text-left">
                     <p className="text-[9px] font-black text-emerald-400 italic uppercase mb-1">Resonance Score</p>
                     <p className="text-xl font-black text-white font-mono">{Math.round(spreader.resonance * 100)}%</p>
                  </div>

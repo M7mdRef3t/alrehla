@@ -252,6 +252,11 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     sovereignChronicle: showSovereignChronicle,
   } = flags;
 
+  // Debug: Track EvolutionHub overlay state
+  useEffect(() => {
+    console.log("[AppOverlayHost] showEvolutionHub changed:", showEvolutionHub);
+  }, [showEvolutionHub]);
+
   // Implementation of Layer 3 (Execution): Overlay Mutex & Severity Index
   // Auto-trigger pulse check logic
   usePulseCheckLogic(canUsePulseCheck, screen, true);
@@ -680,10 +685,16 @@ export const AppOverlayHost = memo(function AppOverlayHost({
           />
         )}
 
-        {showEvolutionHub && isVisible("evolutionHub") && (
-          <TajmeedHub 
-            onClose={() => closeOverlay("evolutionHub")}
-          />
+        {showEvolutionHub && (
+          <div
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4"
+            style={{ background: "rgba(2,6,23,0.85)", backdropFilter: "blur(12px)" }}
+            onClick={(e) => { if (e.target === e.currentTarget) closeOverlay("evolutionHub"); }}
+          >
+            <TajmeedHub 
+              onClose={() => closeOverlay("evolutionHub")}
+            />
+          </div>
         )}
 
         {showSovereignChronicle && isVisible("sovereignChronicle") && (

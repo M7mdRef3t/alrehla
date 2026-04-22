@@ -63,7 +63,7 @@ export const LiveTelemetry: React.FC = () => {
     ];
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8 bg-black min-h-screen text-slate-100 font-mono">
+        <div className="space-y-8 text-slate-100 font-mono animate-in fade-in duration-700">
             {/* Header: Industrial Aesthetics */}
             <div className="flex justify-between items-end border-b border-white/10 pb-6">
                 <div>
@@ -76,8 +76,11 @@ export const LiveTelemetry: React.FC = () => {
                     </p>
                 </div>
                 <div className="text-right">
-                    <span className="text-[10px] text-slate-500 font-bold block uppercase">Pulse Sync</span>
-                    <span className="text-xs font-black text-white px-2 py-1 bg-white/5 rounded">ONLINE</span>
+                    <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-widest">Pulse Sync</span>
+                    <div className="flex items-center gap-2 justify-end mt-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                        <span className="text-xs font-black text-white px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">LIVE_FEED</span>
+                    </div>
                 </div>
             </div>
 

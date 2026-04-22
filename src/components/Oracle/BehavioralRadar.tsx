@@ -13,28 +13,33 @@ import {
     fetchFunnelAnalytics,
     fetchLiveBehavioralEvents,
     fetchTimeToActionHistogram,
+    fetchPendingIntents,
     FunnelStats,
     BehavioralEvent,
-    HistogramPoint
+    HistogramPoint,
+    PendingIntent
 } from '@/services/adminApi';
 
 export const BehavioralRadar: React.FC = () => {
     const [funnel, setFunnel] = useState<FunnelStats | null>(null);
     const [events, setEvents] = useState<BehavioralEvent[]>([]);
     const [histogram, setHistogram] = useState<HistogramPoint[]>([]);
+    const [intents, setIntents] = useState<PendingIntent[]>([]);
     const [loading, setLoading] = useState(true);
     const [segment, setSegment] = useState<'all' | 'mobile' | 'desktop'>('all');
 
     useEffect(() => {
         const load = async () => {
-            const [f, e, h] = await Promise.all([
+            const [f, e, h, i] = await Promise.all([
                 fetchFunnelAnalytics(),
                 fetchLiveBehavioralEvents(),
-                fetchTimeToActionHistogram()
+                fetchTimeToActionHistogram(),
+                fetchPendingIntents()
             ]);
             if (f) setFunnel(f);
             if (e) setEvents(e);
             if (h) setHistogram(h);
+            if (i) setIntents(i);
             setLoading(false);
         };
         load();
@@ -237,6 +242,66 @@ export const BehavioralRadar: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Third Row: Pending Intents Table */}
+            <div className="bg-slate-900/40 p-8 rounded-[3rem] border border-white/5 backdrop-blur-3xl overflow-hidden relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/[0.02] via-transparent to-rose-500/[0.02] pointer-events-none" />
+                <div className="flex justify-between items-center mb-6 relative z-10">
+                    <h3 className="text-lg font-black text-white flex items-center gap-3">
+                        <Clock className="text-orange-400 w-5 h-5" />
+                        نوايا العبور المعلقة (أحدث 5)
+                    </h3>
+                    <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                        <span className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">{intents.length} في الانتظار</span>
+                    </div>
+                </div>
+                
+                {intents.length === 0 ? (
+                    <div className="py-8 text-center border border-white/5 rounded-2xl bg-white/[0.02] relative z-10">
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">لا يوجد نوايا معلقة حالياً. السيستم نظيف.</p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto custom-scrollbar relative z-10" dir="rtl">
+                        <table className="w-full border-collapse text-right">
+                            <thead>
+                                <tr className="border-b border-white/5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                    <th className="pb-4 pr-4">المسافر</th>
+                                    <th className="pb-4">المبلغ</th>
+                                    <th className="pb-4">الحالة</th>
+                                    <th className="pb-4 text-center">الوقت</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {intents.slice(0, 5).map((intent) => (
+                                    <tr key={intent.id} className="group hover:bg-white/[0.02] transition-colors">
+                                        <td className="py-4 pr-4">
+                                            <p className="text-xs font-black text-white">{intent.userName || 'مسافر مجهول'}</p>
+                                            <p className="text-[9px] text-slate-500 font-mono mt-1">{intent.userPhone}</p>
+                                        </td>
+                                        <td className="py-4">
+                                            <p className="text-xs font-bold text-emerald-400 tabular-nums">{intent.amount} {intent.currency}</p>
+                                        </td>
+                                        <td className="py-4">
+                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[8px] font-black uppercase tracking-[0.1em] ${
+                                                intent.status === 'flagged' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
+                                            }`}>
+                                                <div className={`w-1 h-1 rounded-full ${intent.status === 'flagged' ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                                                {intent.status === 'flagged' ? 'محل شك' : 'في الانتظار'}
+                                            </span>
+                                        </td>
+                                        <td className="py-4 text-center">
+                                            <p className="text-[9px] font-mono text-slate-400">
+                                                {new Date(intent.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
             {/* Bottom Row: Distribution & Retention Curve */}

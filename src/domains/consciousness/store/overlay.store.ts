@@ -136,10 +136,11 @@ interface AppOverlayState {
     pendingPulse?: PulseSubmitPayload;
   };
   lastPulseCheckScreen: string;
+  evolutionHubTab: 'quests' | 'guide';
   isOpen: (flag: AppOverlayFlag) => boolean;
   openOverlay: (flag: AppOverlayFlag) => void;
   closeOverlay: (flag: AppOverlayFlag) => void;
-  setOverlay: (flag: AppOverlayFlag, value: boolean) => void;
+  setOverlay: (flag: AppOverlayFlag, value: boolean, tab?: 'quests' | 'guide') => void;
   setLockedFeature: (feature: FeatureFlagKey | null) => void;
   setAuthIntent: (intent: PostAuthIntent | null) => void;
   setPulseCheck: (isOpen: boolean, context?: PulseCheckContext, pendingPulse?: PulseSubmitPayload) => void;
@@ -157,6 +158,7 @@ export const useAppOverlayState = create<AppOverlayState>((set, get) => ({
     context: "regular"
   },
   lastPulseCheckScreen: "landing",
+  evolutionHubTab: 'quests',
   isOpen: (flag) => get().flags[flag],
   openOverlay: (flag) =>
     set((state) => ({
@@ -166,9 +168,10 @@ export const useAppOverlayState = create<AppOverlayState>((set, get) => ({
     set((state) => ({
       flags: { ...state.flags, [flag]: false }
     })),
-  setOverlay: (flag, value) =>
+  setOverlay: (flag, value, tab) =>
     set((state) => ({
-      flags: { ...state.flags, [flag]: value }
+      flags: { ...state.flags, [flag]: value },
+      evolutionHubTab: tab ?? state.evolutionHubTab
     })),
   setLockedFeature: (feature) => set({ lockedFeature: feature }),
   setAuthIntent: (intent) => set({ postAuthIntent: intent }),

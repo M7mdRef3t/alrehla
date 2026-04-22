@@ -24,6 +24,8 @@ import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { landingCopy } from "@/copy/landing";
 import { HeroSection } from "./HeroSection";
 import { useAdminState } from "@/domains/admin/store/admin.store";
+import { useAuthState } from "@/domains/auth/store/auth.store";
+
 
 // Dynamic Imports for Performance
 const LandingSimulation = dynamic(() => import("./LandingSimulation").then(mod => mod.LandingSimulation), { ssr: false });
@@ -156,6 +158,8 @@ export const Landing: FC<LandingProps> = ({
   const storedMirrorName = useJourneyProgress().mirrorName;
   const nodesCount = useMapState((s) => s.nodes.length);
   const baselineCompletedAt = useJourneyProgress().baselineCompletedAt;
+  const isLoggedIn = !!useAuthState((s) => s.user);
+
   const lastGoalId = useJourneyProgress().goalId;
   const lastGoalCategory = useJourneyProgress().category;
   const lastGoalById = useJourneyProgress().lastGoalById;
@@ -287,7 +291,8 @@ export const Landing: FC<LandingProps> = ({
         trustPoints={["توازن", "تشتت", "استنزاف"]}
         ctaJourney={landingCopy.ctaJourney}
         secondaryCta={landingCopy.secondaryCta}
-        hideCta={hasExistingJourney}
+        hideCta={isLoggedIn || hasExistingJourney}
+
       />
 
       <div className="landing-intrinsic-sentinel" />

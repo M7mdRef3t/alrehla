@@ -1,4 +1,4 @@
-import { supabaseClient } from "./supabaseClient";
+import { safeGetSession } from "./supabaseClient";
 
 export interface Insight {
     id: number;
@@ -12,7 +12,7 @@ export interface Insight {
 
 export const insightService = {
     async getInsights(): Promise<Insight[]> {
-        const { session } = await supabaseClient.safeGetSession();
+        const session = await safeGetSession();
         if (!session) {
             throw new Error("User not authenticated.");
         }
@@ -34,7 +34,7 @@ export const insightService = {
     },
 
     async createInsight(data: Partial<Insight>): Promise<Insight> {
-        const { session } = await supabaseClient.safeGetSession();
+        const session = await safeGetSession();
         if (!session) {
             throw new Error("User not authenticated.");
         }
