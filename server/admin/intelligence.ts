@@ -12,11 +12,66 @@ function buildClient() {
 }
 
 export async function handleOraclePulse(req: any, res: any) {
+  const supabase = buildClient();
+
+  if (req.method === "POST") {
+    // Handle feedback/response to an insight
+    try {
+      const { insightId, message, type = 'breakthrough' } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ ok: false, error: "Message is required" });
+      }
+
+      // 1. Try to get user ID from token
+      const authHeader = req.headers?.authorization || req.headers?.Authorization;
+      let userId: string | null = null;
+      
+      if (typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")) {
+          const token = authHeader.slice(7).trim();
+          // Use the token to get the user, but we'll use our service role client for the actual insert
+          const { data: userData } = await supabase.auth.getUser(token);
+          userId = userData?.user?.id || null;
+      }
+
+      // 2. Fallback: If no user ID found (e.g. secret token), find first owner/admin
+      if (!userId) {
+          const { data: adminUser } = await supabase
+              .from("profiles")
+              .select("id")
+              .in("role", ["owner", "admin", "superadmin"])
+              .limit(1)
+              .maybeSingle();
+          userId = adminUser?.id || null;
+      }
+
+      if (!userId) {
+          return res.status(403).json({ ok: false, error: "Unauthorized: Could not identify an admin user" });
+      }
+
+      // Record this in the truth_vault so the Oracle sees it in the next pulse
+      const { error } = await supabase
+        .from("truth_vault")
+        .insert({
+          user_id: userId,
+          content: `[Oracle Feedback][${insightId}] ${message}`,
+          category: type === 'breakthrough' ? 'breakthrough' : 'breakthrough', // Ensure it matches schema constraints
+          priority: 4,
+          metadata: { insightId, source: 'oracle_admin_response' }
+        });
+
+      if (error) throw error;
+
+      return res.status(200).json({ ok: true, message: "Response recorded in Truth Vault" });
+    } catch (error: any) {
+      console.error("[Oracle Response Error]:", error);
+      return res.status(500).json({ ok: false, error: error.message });
+    }
+  }
+
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
-
-  const supabase = buildClient();
 
   try {
     const now = Date.now();
@@ -43,6 +98,7 @@ export async function handleOraclePulse(req: any, res: any) {
                 retryAfterSec: Math.ceil(remainingMs / 1000),
                 insights: typeof lastCachedInsights === 'string' ? JSON.parse(lastCachedInsights) : lastCachedInsights,
                 stats: typeof lastCachedStats === 'string' ? JSON.parse(lastCachedStats) : lastCachedStats,
+                timestamp: lastPulseTime,
                 isCached: true
             });
         }
@@ -134,7 +190,8 @@ export async function handleOraclePulse(req: any, res: any) {
     return res.status(200).json({
       ok: true,
       insights,
-      stats: finalStats
+      stats: finalStats,
+      timestamp: new Date().toISOString()
     });
 
   } catch (error: any) {

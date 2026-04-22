@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { useState, useEffect, useRef, useCallback, memo, lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell,
@@ -33,6 +34,12 @@ import { assignUrl } from "@/services/navigation";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { Z_LAYERS } from "@/config/zIndices";
+
+// Lazy-load EvolutionHub so PlatformHeader can render it directly
+// (AppOverlayHost is NOT mounted on all pages, e.g. the landing page)
+const TajmeedHub = lazy(() =>
+  import("@/modules/gamification/EvolutionHub").then((m) => ({ default: m.TajmeedHub }))
+);
 
 // Re-importing missing icons correctly
 import { BookOpen, Info, Compass, Map as MapIcon, LayoutGrid } from "lucide-react";
@@ -122,6 +129,7 @@ export const PlatformHeader = memo(function PlatformHeader({
   const level = useGamificationState((s) => s.level);
   const setOverlay = useAppOverlayState((s) => s.setOverlay);
 
+  const [showEvolutionHub, setShowEvolutionHub] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const [hidden, setHidden] = useState(false);
@@ -240,7 +248,7 @@ export const PlatformHeader = memo(function PlatformHeader({
     }
   }, [isLoggedIn, onLogin, onNavigate]);
 
-  const headerClassName = `fixed top-0 right-0 left-0 flex items-center justify-between px-4 md:px-6 lg:px-12 transition-all duration-700 transform ${
+  const headerClassName = `fixed top-0 right-0 left-0 transition-all duration-700 transform ${
     hidden ? "-translate-y-full" : "translate-y-0"
   } ${
     isMinimal 
@@ -251,6 +259,7 @@ export const PlatformHeader = memo(function PlatformHeader({
   }`;
 
   return (
+    <>
     <header
       role="banner"
       dir="rtl"
@@ -258,6 +267,7 @@ export const PlatformHeader = memo(function PlatformHeader({
       className={headerClassName}
       style={{ zIndex: Z_LAYERS.NAVIGATION_BARS }}
     >
+      <div className="relative flex items-center justify-between w-full h-full px-4 md:px-6 lg:px-12">
       <button
         type="button"
         id="header-logo"
@@ -369,7 +379,10 @@ export const PlatformHeader = memo(function PlatformHeader({
       <div className="flex items-center gap-3">
         {isLoggedIn && (
           <button
-            onClick={() => { console.log("[EvolutionHub] Level button clicked — calling setOverlay('evolutionHub', true)"); setOverlay("evolutionHub", true); }}
+            onClick={() => {
+              setShowEvolutionHub(true);
+              setOverlay("evolutionHub", true);
+            }}
             className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/20 transition-all group"
           >
             <Trophy className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
@@ -670,7 +683,36 @@ export const PlatformHeader = memo(function PlatformHeader({
           </motion.button>
         )}
       </div>
+      </div>
     </header>
+
+    {/* Evolution Hub Portal — rendered on document.body to escape header stacking context */}
+    {showEvolutionHub && typeof document !== "undefined" && (
+      createPortal(
+        <AnimatePresence>
+          <motion.div
+            key="evolution-hub-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4"
+            style={{ background: "rgba(2,6,23,0.85)", backdropFilter: "blur(12px)" }}
+            onClick={(e) => { if (e.target === e.currentTarget) { setShowEvolutionHub(false); setOverlay("evolutionHub", false); } }}
+          >
+            <Suspense fallback={
+              <div className="flex items-center justify-center">
+                <div className="w-12 h-12 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+              </div>
+            }>
+              <TajmeedHub onClose={() => { setShowEvolutionHub(false); setOverlay("evolutionHub", false); }} />
+            </Suspense>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
+      )
+    )}
+    </>
   );
 });
 
@@ -684,6 +726,7 @@ export const MobileNavBar = memo(function MobileNavBar({
   const level = useGamificationState((s) => s.level);
   const setOverlay = useAppOverlayState((s) => s.setOverlay);
   const isLoggedIn = Boolean(user);
+  const [showEvolutionHub, setShowEvolutionHub] = useState(false);
 
 
   const handleNav = useCallback(
@@ -708,6 +751,7 @@ export const MobileNavBar = memo(function MobileNavBar({
       ];
 
   return (
+    <>
     <nav
       dir="rtl"
       aria-label="التنقل السفلي"
@@ -744,7 +788,10 @@ export const MobileNavBar = memo(function MobileNavBar({
       {isLoggedIn && (
         <div className="flex-1 flex flex-col items-center justify-center py-3">
           <button
-            onClick={() => { console.log("[EvolutionHub] Mobile Level button clicked"); setOverlay("evolutionHub", true); }}
+            onClick={() => {
+              setShowEvolutionHub(true);
+              setOverlay("evolutionHub", true);
+            }}
             className="flex flex-col items-center justify-center gap-1 group"
           >
             <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center group-active:scale-90 transition-transform">
@@ -758,5 +805,33 @@ export const MobileNavBar = memo(function MobileNavBar({
       )}
 
     </nav>
+
+    {/* Evolution Hub Portal — rendered on document.body to escape nav stacking context */}
+    {showEvolutionHub && typeof document !== "undefined" && (
+      createPortal(
+        <AnimatePresence>
+          <motion.div
+            key="mobile-evolution-hub-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4"
+            style={{ background: "rgba(2,6,23,0.85)", backdropFilter: "blur(12px)" }}
+            onClick={(e) => { if (e.target === e.currentTarget) { setShowEvolutionHub(false); setOverlay("evolutionHub", false); } }}
+          >
+            <Suspense fallback={
+              <div className="flex items-center justify-center">
+                <div className="w-12 h-12 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+              </div>
+            }>
+              <TajmeedHub onClose={() => { setShowEvolutionHub(false); setOverlay("evolutionHub", false); }} />
+            </Suspense>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
+      )
+    )}
+    </>
   );
 });

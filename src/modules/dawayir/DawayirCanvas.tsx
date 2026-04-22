@@ -575,9 +575,11 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
         const index = ringNodes.length;
         const total = ringNodes.length + 1;
         const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
+        const rawX = 50 + radius * Math.cos(angle);
+        const rawY = 50 + radius * Math.sin(angle);
         pos = {
-          x: 50 + radius * Math.cos(angle),
-          y: 50 + radius * Math.sin(angle)
+          x: Number.isFinite(rawX) ? rawX : 50,
+          y: Number.isFinite(rawY) ? rawY : 50
         };
         break;
       }

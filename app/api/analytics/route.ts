@@ -4,6 +4,7 @@ import {
     analyticsEnvelopeSchema,
     resolveAnalyticsPayloadSchema
 } from "@/domains/analytics/contracts";
+import { sendMetaCapiEvent } from "@/server/metaCapi";
 
 // Uses a service role key to bypass row level security for ingestion purposes
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -33,7 +34,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Payload too large" }, { status: 413 });
         }
 
-        const json = await req.json();
+        let json;
+        try {
+            json = await req.json();
+        } catch (jsonError) {
+            console.warn("[Analytics Ingestion] Invalid JSON payload:", jsonError);
+            return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+        }
         
         // Data sanitization: Convert empty strings to null before validation
         const sanitizedJson = { ...json };
@@ -127,8 +134,6 @@ export async function POST(req: Request) {
         // --- CAPI Bridge (Server-Side Side Effect) ---
         // This is where we bridge analytics to Meta CAPI without waiting for the response
         try {
-            const { sendMetaCapiEvent } = await import("@/server/metaCapi");
-            
             const event_id = data.client_event_id || data.lead_id || `${data.event_type}_${Date.now()}`;
             
             // Map internal events to Meta Standard Events

@@ -18,6 +18,9 @@ export interface SovereignInsight {
     type: 'truth' | 'warning' | 'opportunity';
     message: string;
     timestamp: string;
+    rationale?: string;
+    confidence?: number;
+    tag?: string;
 }
 
 /**
@@ -159,7 +162,7 @@ export class OracleService {
 
         const prompt = `
       بصفتك "The Oracle" وكبير مستشاري "Dawayir Sovereign Control". 
-      قم بتحليل "نبض المنصة" الحالي وتوليد 3 رؤى استراتيجية عميقة.
+      قم بتحليل "نبض المنصة" الحالي وتوليد 3 رؤى استراتيجية عميقة ومبنية على "المبادئ الأولى" (First Principles).
 
       النبض الحالي:
       - عدد المستخدمين الآن: ${context.activeNow}
@@ -168,17 +171,26 @@ export class OracleService {
       - آخر اختراقات (Truth Vault): ${JSON.stringify(context.recentTruths.map(t => t.content))}
 
       المطلوب:
-      توليد 3 رؤى دقيقة جداً وموجهة لمالك المنصة بالعامية المصرية وبأسلوب "الأوراكل" (Skeptical, Progressive, First Principles). 
-      ركز بشكل خاص على "الاحتكاك السلوكي" (Behavioral Friction) - إذا كان الناس يقضون وقتاً طويلاً في 'سجين ذهني' أو 'استنزاف نشط'، فهذا يعني فخ أو عقدة في التصميم يجب كسرها.
+      توليد 3 رؤى دقيقة جداً وموجهة لمالك المنصة (محمد رسول الله) بالعامية المصرية وبأسلوب "الأوراكل" (Skeptical, Progressive, First Principles). 
 
-      كل رؤية يجب أن تكون واحدة من هذه الأنواع:
-      1. truth: حقيقة عميقة تم رصدها من الـ Truth Vault أو السلوك الجماعي.
-      2. warning: تحذير من "وقوع المستخدمين في فخ" (User Trap) أو اضطراب في المسار.
-      3. opportunity: فرصة للتحسين الجذري في نظام الـ Routing لفك عقد المستخدمين.
+      لكل رؤية، قدم:
+      1. message: التوجيه الأساسي أو الملاحظة (مختصرة وقوية).
+      2. rationale: تحليل "الحقيقة الكاشفة" والمنطق العميق وراء هذا التوجيه. اشرح "ليه ده بيحصل؟" و "إيه الأثر الجوهري؟" بلهجة مصرية ذكية (مثل: "الحقيقة الكاشفة يا مالك المنصة...").
+      3. confidence: رقم بين 85 و 99 يمثل دقة التحليل.
+      4. tag: وسم معماري بالإنجليزية يصف الحالة (مثل: Entropy Equilibrium, Cognitive Friction, Relational Gravity).
+      5. type: (truth | warning | opportunity).
 
-      رجع JSON فقط:
+      رجع JSON فقط كمصفوفة:
       [
-        { "id": "1", "type": "truth" | "warning" | "opportunity", "message": "...", "timestamp": "الآن" }
+        { 
+          "id": "uuid", 
+          "type": "truth", 
+          "message": "...", 
+          "rationale": "...", 
+          "confidence": 95, 
+          "tag": "...",
+          "timestamp": "الآن" 
+        }
       ]
     `;
 

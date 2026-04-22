@@ -71,6 +71,29 @@ export class MarketingAutomationService {
                 }
             }
 
+            // 3. Check for Incomplete Gate Sessions (Lead Recovery)
+            const { data: incompleteSessions } = await supabase
+                .from('gate_sessions')
+                .select('*')
+                .is('qualified_at', null)
+                .not('phone', 'is', null)
+                .gte('updated_at', new Date(Date.now() - 30 * 60 * 1000).toISOString()); // Last 30 mins
+
+            if (incompleteSessions && incompleteSessions.length > 0) {
+                logger.log(`💡 Found ${incompleteSessions.length} incomplete sessions. Evaluating recovery...`);
+                for (const session of incompleteSessions) {
+                    // Logic to potentially scale energy or ignite market specifically for these
+                    actions.push({
+                        id: `recovery-${session.id}`,
+                        gatewayId: session.source_area || 'direct',
+                        type: 'ignite_market',
+                        reasoning: `Incomplete session with phone captured. Recovering lead through autonomous outreach.`,
+                        payload: { marketId: session.source_area, sessionId: session.id },
+                        severity: "high"
+                    });
+                }
+            }
+
             // 2. Execute & Log Actions (Only the fully allowed ones)
             for (const action of actions) {
                 await this.executeAction(action);
@@ -81,6 +104,24 @@ export class MarketingAutomationService {
             logger.error("Auto-Ignition Loop Error:", error);
             return [];
         }
+    }
+
+    /**
+     * Triggers an instant nudge for a hot lead that just provided their phone number.
+     */
+    static async triggerInstantLeadNudge(sessionId: string, phone: string) {
+        if (!isSupabaseReady || !supabase) return;
+
+        logger.log(`🔥 Hot Lead Captured: ${phone}. Triggering instant indexing...`);
+        
+        // Log the event to AI Decisions for later evaluation or instant outreach
+        await supabase.from("dawayir_ai_decisions").insert({
+            type: "instant_lead_nudge",
+            timestamp: Date.now(),
+            reasoning: `Lead provided phone number but session not yet qualified. Ensuring persistence and readiness for Market Ignition.`,
+            payload: { sessionId, phone },
+            outcome: "indexed"
+        });
     }
 
     private static async executeAction(action: AutonomousAction) {

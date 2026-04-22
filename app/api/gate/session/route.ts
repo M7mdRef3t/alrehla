@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendMetaCapiEvent } from '@/server/metaCapi';
+import { MarketingAutomationService } from '@/services/marketingAutomationService';
 
 function getGateDb() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -41,8 +42,40 @@ export async function POST(req: Request) {
 
     const timestamp = new Date().toISOString();
 
+    // 1. Handle Incremental Steps (e.g., layer1_area, layer1_teaser, layer1_identity)
+    if (step.startsWith('layer1_')) {
+      const { error: upsertError } = await db.from('gate_sessions').upsert({
+        id: sessionId,
+        name: payload.name,
+        phone: payload.phone,
+        email: payload.email,
+        source_area: payload.sourceArea,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_content,
+        utm_term,
+        fbclid,
+        fbp,
+        fbc,
+        updated_at: timestamp
+      }, { onConflict: 'id' });
+
+      if (upsertError) {
+        console.error('[Gate API] Incremental Upsert Error', upsertError);
+        return NextResponse.json({ error: 'Failed incremental update' }, { status: 500 });
+      }
+
+      // Automation Trigger: If phone is captured, nudge the lead
+      if (payload.phone) {
+        void MarketingAutomationService.triggerInstantLeadNudge(sessionId, payload.phone);
+      }
+
+      return NextResponse.json({ status: 'success', incremental: true });
+    }
+
     if (step === 'layer1') {
-      const { error: insertError } = await db.from('gate_sessions').insert({
+      const { error: insertError } = await db.from('gate_sessions').upsert({
         id: sessionId,
         name: payload.name,
         phone: payload.phone,
@@ -58,12 +91,9 @@ export async function POST(req: Request) {
         fbp,
         fbc,
         updated_at: timestamp
-      });
+      }, { onConflict: 'id' });
 
       if (insertError) {
-        if (insertError.code === '23505') { // Unique violation
-          return NextResponse.json({ status: 'already_recorded', reason: 'idempotency_duplicate' });
-        }
         console.error('[Gate API] Supabase Layer 1 DB Error', insertError);
         return NextResponse.json({ error: 'Failed DB insertion' }, { status: 500 });
       }

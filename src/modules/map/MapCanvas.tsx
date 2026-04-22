@@ -1116,13 +1116,15 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   const archivedNodes = useMemo(() => {
     return allNodes.filter(n => n.isNodeArchived).map(n => {
       // Deterministic but random-looking position for the nebula stars
-      const seed = n.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const seed = String(n.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const angle = (seed % 360) * (Math.PI / 180);
       const distance = 48 + (seed % 15); // Far background, beyond rings
+      const rawX = 50 + distance * Math.cos(angle);
+      const rawY = 50 + distance * Math.sin(angle);
       return {
         id: n.id,
-        x: 50 + distance * Math.cos(angle),
-        y: 50 + distance * Math.sin(angle),
+        x: Number.isFinite(rawX) ? rawX : 50,
+        y: Number.isFinite(rawY) ? rawY : 50,
         opacity: 0.1 + (seed % 10) / 40,
         size: 0.5 + (seed % 10) / 10
       };

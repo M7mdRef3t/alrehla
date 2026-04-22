@@ -63,13 +63,30 @@ function MarketingGateContent() {
     }
   };
 
+  const handleStepComplete = async (step: string) => {
+    // Incremental Upsert to prevent lead loss
+    void fetch('/api/gate/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        step: `layer1_${step}`,
+        sessionId: state.sessionId,
+        name: state.name,
+        phone: state.phone,
+        email: state.email,
+        sourceArea: state.sourceArea,
+        ...getUtmPayload()
+      })
+    });
+  };
+
   const handleLayer1Submit = async () => {
     if (!state.email || !state.sourceArea || !state.name || !state.phone) return;
     
     // Pixel Fire
     const eventId = trackGateEventPixelOnly('Lead', { external_id: state.sessionId }, `${state.sessionId}-lead`);
     
-    // Backend Idempotent Fire & Record
+    // Final Layer 1 Sync
     const response = await fetch('/api/gate/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -137,6 +154,7 @@ function MarketingGateContent() {
           email={state.email || ''}
           onChange={handleLayer1Change}
           onSubmit={handleLayer1Submit}
+          onStepComplete={handleStepComplete}
           isValid={isLayer1Valid}
         />
       )}

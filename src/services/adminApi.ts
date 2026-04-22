@@ -132,12 +132,14 @@ export async function fetchAlertIncidents(): Promise<AlertIncident[] | null> {
 export async function fetchSovereignInsights(): Promise<{
   insights: SovereignInsight[];
   stats: SovereignStats | null;
+  timestamp?: string;
   error?: string;
   retryAfterSec?: number;
 } | null> {
   const apiData = await callAdminApi<{ 
     insights: SovereignInsight[]; 
     stats: SovereignStats;
+    timestamp?: string;
     error?: string;
     retryAfterSec?: number;
   }>("oracle-pulse");
@@ -146,9 +148,22 @@ export async function fetchSovereignInsights(): Promise<{
   return {
     insights: apiData.insights || [],
     stats: apiData.stats || null,
-    error: apiData.error,
-    retryAfterSec: apiData.retryAfterSec
+    timestamp: apiData.timestamp,
+    retryAfterSec: apiData.retryAfterSec,
+    error: apiData.error
   };
+}
+
+export async function respondToOracleInsight(
+  insightId: string,
+  message: string,
+  type: 'breakthrough' | 'shadow_pattern' | 'boundary_set' = 'breakthrough'
+): Promise<boolean> {
+  const apiData = await callAdminApi<{ ok: boolean }>("oracle-pulse", {
+    method: "POST",
+    body: JSON.stringify({ insightId, message, type })
+  });
+  return Boolean(apiData?.ok);
 }
 
 export async function updateAlertIncidentStatus(

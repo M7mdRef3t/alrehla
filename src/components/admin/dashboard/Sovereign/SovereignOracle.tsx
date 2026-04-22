@@ -1,8 +1,8 @@
-import { FC, useState, useEffect, useCallback, useMemo } from "react";
+import { FC, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Zap, Brain, Eye, Terminal, Loader2, RefreshCw, Activity, ShieldCheck, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
-import { fetchSovereignInsights } from "@/services/adminApi";
-import { useAdminState, type SovereignInsight } from "@/domains/admin/store/admin.store";
+import { Sparkles, Zap, Brain, Eye, Terminal, Loader2, RefreshCw, Activity, ShieldCheck, ChevronDown, ChevronUp, Copy, Check, MessageSquare, Send } from "lucide-react";
+import { fetchSovereignInsights, respondToOracleInsight } from "@/services/adminApi";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { augmentInsightWithAi } from "@/services/oracleAiService";
 
 // Module-level guard: survives React Strict Mode's double-invoke
@@ -74,14 +74,16 @@ const ConfidenceGauge = ({ value, type }: { value: number, type: string }) => {
   );
 };
 
-// Removed SCIENTIFIC_TAGS
-
 export const SovereignOracle: FC<SovereignOracleProps> = ({ minimal }) => {
   const { sovereignInsights, setSovereignInsights, sovereignStats, setSovereignStats } = useAdminState();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [cooldown, setCooldown] = useState<number>(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [responseMessage, setResponseMessage] = useState("");
+  const [isSendingResponse, setIsSendingResponse] = useState(false);
+  const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set());
 
   const refreshInsights = useCallback(async () => {
     if (cooldown > 0 || _oracleFetching) return;
@@ -98,28 +100,52 @@ export const SovereignOracle: FC<SovereignOracleProps> = ({ minimal }) => {
             hour12: true
           });
 
+          let pulseTime = nowTime;
+          if (result.timestamp) {
+            pulseTime = new Date(result.timestamp).toLocaleTimeString('ar-EG', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: true
+            });
+          } else {
+            pulseTime = new Date().toLocaleTimeString('ar-EG', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: true
+            });
+          }
+
+          // 1. Initial State Sync
           const localizedInsights = result.insights.map(i => ({
             ...i,
-            timestamp: (i.timestamp === 'Ø§Ù„Ø¢Ù†' || i.timestamp === 'Now' || !i.timestamp) ? nowTime : i.timestamp
+            timestamp: (i.timestamp === "\u0627\u0644\u0622\u0646" || i.timestamp === "Now" || !i.timestamp) ? pulseTime : i.timestamp
           }));
-
-          // Set raw insights with precise timestamp first
           setSovereignInsights(localizedInsights);
 
-          // Trigger background augmentation for each insight missing a rationale
-          localizedInsights.forEach(async (insight) => {
+          // 2. Immediate Parallel Augmentation (Only for insights missing Rationale)
+          const augmentationPromises = localizedInsights.map(async (insight) => {
             if (!insight.rationale) {
               const augmentation = await augmentInsightWithAi(insight);
               if (augmentation.rationale) {
-                // Update specific insight in store
-                const currentInsights = useAdminState.getState().sovereignInsights;
-                const updatedInsights = currentInsights.map((item) =>
-                  item.id === insight.id ? { ...item, ...augmentation } : item
-                );
-                useAdminState.getState().setSovereignInsights(updatedInsights);
+                return { id: insight.id, ...augmentation };
               }
             }
+            return null;
           });
+
+          const augmentations = await Promise.all(augmentationPromises);
+
+          const validAugmentations = augmentations.filter((a): a is { id: string, rationale: string, confidence: number, tag: string } => a !== null);
+          if (validAugmentations.length > 0) {
+            const currentInsights = useAdminState.getState().sovereignInsights;
+            const updatedInsights = currentInsights.map(item => {
+              const aug = validAugmentations.find(a => a.id === item.id);
+              return aug ? { ...item, ...aug } : item;
+            });
+            setSovereignInsights(updatedInsights);
+          }
         }
         if (result.stats) {
           setSovereignStats(result.stats);
@@ -140,6 +166,24 @@ export const SovereignOracle: FC<SovereignOracleProps> = ({ minimal }) => {
       _oracleFetching = false;
     }
   }, [setSovereignInsights, setSovereignStats, cooldown]);
+
+  const handleRespond = async (insight: any) => {
+    if (!responseMessage.trim() || isSendingResponse) return;
+    setIsSendingResponse(true);
+    try {
+      const ok = await respondToOracleInsight(insight.id, responseMessage);
+      if (ok) {
+        setResolvedIds(prev => new Set(prev).add(insight.id));
+        setRespondingId(null);
+        setResponseMessage("");
+        // Optionally refresh after a bit to let the truth vault propagate
+      }
+    } catch (err) {
+      console.error("Failed to send response", err);
+    } finally {
+      setIsSendingResponse(false);
+    }
+  };
 
   useEffect(() => {
     if (cooldown > 0) {
@@ -165,7 +209,7 @@ export const SovereignOracle: FC<SovereignOracleProps> = ({ minimal }) => {
               <Brain className="w-4 h-4 drop-shadow-glow-indigo" />
             </div>
             <div>
-              <h3 className="text-xs font-black uppercase tracking-widest text-shadow-glow">ØªÙˆØ¬ÙŠÙ‡Ø§Øª Ø§Ù„Ø£ÙˆØ±Ø§ÙƒÙ„</h3>
+              <h3 className="text-xs font-black uppercase tracking-widest text-shadow-glow">توجيهات الأوراكل</h3>
               <p className="text-[9px] opacity-40 font-mono tracking-tighter uppercase">Sovereign Intelligence Pulse</p>
             </div>
           </div>
@@ -199,7 +243,7 @@ export const SovereignOracle: FC<SovereignOracleProps> = ({ minimal }) => {
                 </div>
                 <div className="flex items-center gap-2 mb-3 text-rose-400 relative z-10 flex-row-reverse text-right">
                     <Activity className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Ø§Ø­ØªÙƒØ§Ùƒ Ø§Ù„Ø³Ù„ÙˆÙƒ (Behavioral Friction)</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">احتكاك السلوك (Behavioral Friction)</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 relative z-10">
                     {sortedFriction.slice(0, 4).map(f => (
@@ -281,19 +325,78 @@ export const SovereignOracle: FC<SovereignOracleProps> = ({ minimal }) => {
                           <div className="pt-3 mt-3 border-t border-white/5 space-y-3">
                             <div className="flex flex-row-reverse items-center gap-2 text-[10px] font-bold opacity-80">
                               <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                              <span>Ø§Ù„Ù…Ù†Ø·Ù‚ Ø§Ù„Ø³ÙŠØ§Ø¯ÙŠ (Deep Rationale)</span>
+                              <span>المنطق السيادي (Deep Rationale)</span>
                             </div>
                             <p className="text-[10px] leading-relaxed opacity-60 font-medium italic">
                               {insight.rationale || (
-                                <span className="flex items-center gap-2">
+                                <span className="flex flex-row-reverse items-center gap-2">
                                   <Loader2 className="w-3 h-3 animate-spin" />
-                                  Ø¬Ø§Ø±Ù Ù…Ø²Ø§Ù…Ù†Ø© Ø§Ù„Ù…Ù†Ø·Ù‚ Ø§Ù„Ø³ÙŠØ§Ø¯ÙŠ Ù…Ù† Ø§Ù„Ù…Ø¨Ø§Ø¯Ø¦ Ø§Ù„Ø£ÙˆÙ„Ù‰...
+                                  جاري مزامنة المنطق السيادي من المبادئ الأولى...
                                 </span>
                               )}
                             </p>
-                            <div className="flex items-center gap-2 p-2 bg-black/20 rounded-lg border border-white/5">
+                            <div className="flex flex-row-reverse items-center gap-2 p-2 bg-black/20 rounded-lg border border-white/5">
                               <Terminal className="w-3 h-3 opacity-40" />
                               <span className="text-[9px] font-mono opacity-40 uppercase tracking-tighter">Analysis Node: {insight.id.split('-')[0]}</span>
+                            </div>
+
+                            {/* Response Section */}
+                            <div className="pt-2">
+                              {resolvedIds.has(insight.id) ? (
+                                <div className="flex flex-row-reverse items-center gap-2 py-2 px-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 text-[10px] font-bold">
+                                  <ShieldCheck className="w-4 h-4" />
+                                  <span>تم تسجيل الرد في خزانة الحقائق السيادية</span>
+                                </div>
+                              ) : respondingId === insight.id ? (
+                                <div className="space-y-2">
+                                  <textarea
+                                    autoFocus
+                                    value={responseMessage}
+                                    onChange={(e) => setResponseMessage(e.target.value)}
+                                    placeholder="اكتب ردك هنا (ماذا فعلت؟ أو لماذا قررت تجاهل هذا؟)"
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-[10px] text-right text-white focus:outline-none focus:border-indigo-500/50 transition-colors min-h-[80px]"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                  <div className="flex flex-row-reverse gap-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRespond(insight);
+                                      }}
+                                      disabled={isSendingResponse || !responseMessage.trim()}
+                                      className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-[10px] font-bold flex items-center justify-center gap-2 transition-all"
+                                    >
+                                      {isSendingResponse ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                                      إرسال الرد للسيستم
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setRespondingId(null);
+                                        setResponseMessage("");
+                                      }}
+                                      className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white/60 rounded-lg text-[10px] font-bold transition-all"
+                                    >
+                                      إلغاء
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setRespondingId(insight.id);
+                                    // Pre-fill if it's a known work
+                                    if (insight.message.includes("الهوية") || insight.message.includes("بوابة")) {
+                                       setResponseMessage("تم تنفيذ تحسين مسار الهوية (Split Reveal) وتفعيل الأرشفة اللحظية (Incremental Indexing) والأتمتة (Lead Nudge) لتقليل الفقد.");
+                                    }
+                                  }}
+                                  className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 transition-all text-white/80"
+                                >
+                                  <MessageSquare className="w-3 h-3" />
+                                  رد على التوجيه
+                                </button>
+                              )}
                             </div>
                           </div>
                         </motion.div>
@@ -315,7 +418,7 @@ export const SovereignOracle: FC<SovereignOracleProps> = ({ minimal }) => {
                             ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
                             : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white"
                           }`}
-                          title="Ù†Ø³Ø® Ø§Ù„ØªÙˆØ¬ÙŠÙ‡"
+                          title="نسخ التوجيه"
                         >
                           {copiedId === insight.id ? (
                             <Check className="w-3 h-3" />
@@ -344,8 +447,8 @@ export const SovereignOracle: FC<SovereignOracleProps> = ({ minimal }) => {
                  <Brain className="w-12 h-12 opacity-10 animate-pulse text-indigo-400" />
                )}
                <div className="text-center space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400/40">Ø§Ù„Ø§Ø±ØªØ¨Ø§Ø· Ø§Ù„Ù…Ø¹Ø±ÙÙŠ</p>
-                  <p className="text-xs font-bold opacity-30">Ø¬Ø§Ø±Ù ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ù…Ø¨Ø§Ø¯Ø¦ Ø§Ù„Ø£ÙˆÙ„Ù‰ Ù„Ù„ÙØ¶Ø§Ø¡...</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400/40">الارتباط المعرفي</p>
+                  <p className="text-xs font-bold opacity-30">جاري تحليل المبادئ الأولى للفضاء...</p>
                </div>
             </div>
           )}
@@ -364,15 +467,15 @@ export const SovereignOracle: FC<SovereignOracleProps> = ({ minimal }) => {
           {isRefreshing ? (
              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
           ) : cooldown > 0 ? (
-             <div className="flex items-center gap-2">
+             <div className="flex flex-row-reverse items-center gap-2">
                <div className="w-3.5 h-3.5 border-2 border-white/10 border-t-white/30 rounded-full animate-spin" />
-               <span>Cooling Down</span>
+               <span>جاري المعالجة (Cooling Down)</span>
              </div>
           ) : (
              <>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               <Sparkles className="w-3.5 h-3.5 group-hover:scale-125 transition-transform" />
-              <span>ØªÙˆÙ„ÙŠØ¯ ØªØ­Ù„ÙŠÙ„ Ù…Ø¹Ù…Ù‚ (AI Pulse)</span>
+              <span>توليد تحليل معمق (AI Pulse)</span>
              </>
           )}
           {cooldown > 0 && <span className="font-mono ml-2">[{cooldown}s]</span>}
