@@ -1018,15 +1018,15 @@ const RotatingWord: FC = () => {
     <span className="rotating-word-wrapper relative inline-block w-full max-w-full">
       {/* wrapper  Time Complexity */}
       <span className="invisible select-none block whitespace-nowrap" aria-hidden>
-        {ROTATING_WORDS[5]}
+        {ROTATING_WORDS.reduce((a, b) => a.length > b.length ? a : b)}
       </span>
       <AnimatePresence mode="wait">
         {show && (
           <motion.span
             key={index}
-            initial={{ opacity: 0, y: 12, clipPath: "polygon(0 150%, 100% 150%, 100% 150%, 0% 150%)" }}
-            animate={{ opacity: 1, y: 0, clipPath: "polygon(0 -50%, 100% -50%, 100% 150%, 0% 150%)" }}
-            exit={{ opacity: 0, y: -12, clipPath: "polygon(0 -50%, 100% -50%, 100% -50%, 0% -50%)" }}
+            initial={{ opacity: 0, y: 12, clipPath: "polygon(-10% 150%, 110% 150%, 110% 150%, -10% 150%)" }}
+            animate={{ opacity: 1, y: 0, clipPath: "polygon(-10% -50%, 110% -50%, 110% 150%, -10% 150%)" }}
+            exit={{ opacity: 0, y: -12, clipPath: "polygon(-10% -50%, 110% -50%, 110% -50%, -10% -50%)" }}
             transition={{ duration: 0.45, ease: techEase }}
             /* placeholder  Time Complexity */
             className="absolute right-0 top-0 flex items-center headline-accent w-fit h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal" style={{ fontFamily: 'var(--font-display)' }}
