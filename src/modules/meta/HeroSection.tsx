@@ -111,6 +111,7 @@ const HERO_STYLES = `
     color: var(--amber-500);
     font-family: var(--font-display);
     font-size: clamp(2.8rem, 6.5vw, 4.8rem);
+    white-space: nowrap;
   }
 
   /* height  clipping Time Complexity */
