@@ -723,8 +723,9 @@ const HERO_STYLES = `
     -webkit-text-fill-color: transparent;
     background-clip: text;
     filter: drop-shadow(0 0 24px rgba(45,212,191,0.28));
-    display: block;
-    width: 100%;
+    display: inline-block;
+    padding: 0 0.2em;
+    margin: 0 -0.2em;
   }
 
   /* --- Rotating word --- */
