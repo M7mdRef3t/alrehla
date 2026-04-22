@@ -15,6 +15,7 @@ interface NotificationsPanelProps {
 export const NotificationsPanel = memo(function NotificationsPanel({
   isOpen,
   onClose,
+  anchorRef,
 }: NotificationsPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -39,13 +40,20 @@ export const NotificationsPanel = memo(function NotificationsPanel({
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        onClose();
+      // If clicking inside panel, do nothing
+      if (panelRef.current && panelRef.current.contains(e.target as Node)) {
+        return;
       }
+      // If clicking the anchor (the bell button), let the button's own onClick handle it
+      if (anchorRef?.current && anchorRef.current.contains(e.target as Node)) {
+        return;
+      }
+      // Otherwise close
+      onClose();
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, anchorRef]);
 
   // Close on Escape
   useEffect(() => {
@@ -77,7 +85,7 @@ export const NotificationsPanel = memo(function NotificationsPanel({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -12, scale: 0.95 }}
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute left-0 top-12 w-80 z-50 rounded-2xl overflow-hidden
+          className="fixed inset-x-4 top-20 md:absolute md:left-0 md:right-auto md:top-12 md:w-80 z-50 rounded-2xl overflow-hidden
                      bg-[rgba(2,4,10,0.7)] backdrop-blur-3xl border border-white/10
                      shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
         >

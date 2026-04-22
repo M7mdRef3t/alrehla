@@ -235,10 +235,18 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       className={`cursor-grab ${isDragging ? "cursor-grabbing" : ""}`}
       whileHover={{ scale: 1.15, transition: { type: "spring", stiffness: 400, damping: 10 } }}
       whileTap={{ scale: 0.95 }}
+      initial={{ scale: 0, opacity: 0, filter: "blur(10px)" }}
       animate={isDragging ? 
-        { scale: 1.3, filter: "drop-shadow(0 0 15px rgba(45,212,191,0.6))" } : 
-        { scale: 1, filter: "none" }
+        { scale: 1.3, opacity: 1, filter: "drop-shadow(0 0 15px rgba(45,212,191,0.6))" } : 
+        { scale: 1, opacity: 1, filter: "blur(0px)" }
       }
+      transition={{ 
+        type: "spring", 
+        stiffness: 300, 
+        damping: 15,
+        opacity: { duration: 0.3 },
+        scale: { type: "spring", stiffness: 400, damping: 10, delay: index * 0.05 }
+      }}
       onTap={() => {
         if (!isDragging && !deleteClickedRef.current && !showConfirmDelete) onClick(node);
       }}
@@ -306,10 +314,15 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
         </>
       ) : (
         <g className="pointer-events-none">
-          <User 
-            x={baseX - 2} y={baseY - 2} 
-            width={4} height={4} 
-            className={node.isAnalyzing ? "text-teal-500/50 animate-pulse" : "text-white"} 
+          {/* Native SVG Human Icon (to avoid square issues) */}
+          <circle cx={baseX} cy={baseY - 1} r="1.2" fill="currentColor" className={node.isAnalyzing ? "text-teal-500/50 animate-pulse" : "text-white"} />
+          <path 
+            d={`M ${baseX - 2} ${baseY + 2} Q ${baseX} ${baseY - 0.5} ${baseX + 2} ${baseY + 2}`} 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="0.6" 
+            strokeLinecap="round"
+            className={node.isAnalyzing ? "text-teal-500/50 animate-pulse" : "text-white"}
           />
         </g>
       )}
@@ -448,14 +461,20 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode, 
   const allNodes = useMapState((s) => s.nodes);
   
   const nodes = useMemo(() => {
-    if (!goalIdFilter) return allNodes;
+    console.log("[DawayirCanvas] allNodes:", allNodes.length, "goalIdFilter:", goalIdFilter);
+    // If filter is 'general' or not provided, we show all nodes EXCEPT those specifically marked for other contexts
+    // But usually, we want 'general' to show everything that isn't strictly hidden.
+    if (!goalIdFilter || goalIdFilter === "general") {
+      return allNodes;
+    }
+    
     if (goalIdFilter === "family") {
       return allNodes.filter(
         (n) =>
           n.goalId === "family" || n.goalId == null || n.treeRelation?.type === "family"
       );
     }
-    return allNodes.filter((n) => (n.goalId ?? "general") === goalIdFilter);
+    return allNodes.filter((n) => n.goalId === goalIdFilter);
   }, [allNodes, goalIdFilter]);
 
   const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
@@ -477,12 +496,55 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode, 
   };
 
   const groupedNodes = useMemo(() => {
-    return {
-      green: nodes.filter(n => n.ring === "green" && !n.isNodeArchived),
-      yellow: nodes.filter(n => n.ring === "yellow" && !n.isNodeArchived),
-      red: nodes.filter(n => n.ring === "red" && !n.isNodeArchived),
+    const activeNodes = nodes.filter(n => !n.isNodeArchived);
+    const groups = {
+      green: activeNodes.filter(n => (n.ring === "green" || !n.ring)),
+      yellow: activeNodes.filter(n => n.ring === "yellow"),
+      red: activeNodes.filter(n => n.ring === "red"),
     };
+    console.log("[DawayirCanvas] groupedNodes:", {
+      green: groups.green.length,
+      yellow: groups.yellow.length,
+      red: groups.red.length
+    });
+    return groups;
   }, [nodes]);
+
+  const activeNodesCount = useMemo(() => {
+    return Object.values(groupedNodes).reduce((acc, curr) => acc + curr.length, 0);
+  }, [groupedNodes]);
+
+  const ghostNodePosition = useMemo(() => {
+    console.log("[DawayirCanvas] Calculating ghost pos. activeCount:", activeNodesCount);
+    // If map has no active nodes, put it prominently but safely below center
+    if (activeNodesCount === 0) {
+      return { x: 50, y: 72 };
+    }
+
+    // Default position if something goes wrong
+    let pos = { x: 50, y: 80 };
+
+    // Find the first ring that isn't "full"
+    const rings: ("green" | "yellow" | "red")[] = ["green", "yellow", "red"];
+    for (const r of rings) {
+      const ringNodes = groupedNodes[r];
+      const maxInRing = r === "green" ? 8 : r === "yellow" ? 12 : 16;
+      
+      if (ringNodes.length < maxInRing) {
+        const radius = r === "green" ? 15 : r === "yellow" ? 27 : 38;
+        const index = ringNodes.length;
+        const total = ringNodes.length + 1;
+        const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
+        pos = {
+          x: 50 + radius * Math.cos(angle),
+          y: 50 + radius * Math.sin(angle)
+        };
+        break;
+      }
+    }
+    console.log("[DawayirCanvas] Final Ghost Pos:", pos);
+    return pos;
+  }, [activeNodesCount, groupedNodes]);
 
   const { entropyMap, isLoading: aiLoading } = useMasafatyAnalysis();
   const [selectedEntropyNode, setSelectedEntropyNode] = useState<string | null>(null);
@@ -527,6 +589,73 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode, 
           {groupedNodes.green.map((node, i) => (
             <RelationshipNode key={node.id} node={node} index={i} total={groupedNodes.green.length} onClick={onNodeClick} entropyLevel={entropyMap[node.id] || 0} />
           ))}
+
+          {onAddNode && ghostNodePosition && (
+            <motion.g
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onTap={onAddNode}
+              style={{ pointerEvents: "all", cursor: "pointer" }}
+            >
+              {/* Pulsing Aura */}
+              <motion.circle
+                cx={ghostNodePosition.x}
+                cy={ghostNodePosition.y}
+                r="6"
+                fill="none"
+                stroke="rgba(45, 212, 191, 0.3)"
+                strokeWidth="0.2"
+                strokeDasharray="1 1"
+                animate={{ 
+                   scale: [1, 1.3, 1],
+                   opacity: [0.2, 0.5, 0.2],
+                   rotate: 360
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              />
+              
+              {/* Interaction Area (Invisible but large enough) */}
+              <circle
+                cx={ghostNodePosition.x}
+                cy={ghostNodePosition.y}
+                r="7"
+                fill="transparent"
+              />
+
+              {/* Empty Person Shell */}
+              <circle
+                cx={ghostNodePosition.x}
+                cy={ghostNodePosition.y}
+                r="4.5"
+                fill="rgba(15, 23, 42, 0.7)"
+                fillOpacity="1"
+                stroke="rgba(45, 212, 191, 0.8)"
+                strokeOpacity="1"
+                strokeWidth="0.5"
+                strokeDasharray="1 1"
+              />
+              
+              {/* Plus Icon inside (Pure Native Paths) */}
+              <g transform={`translate(${ghostNodePosition.x}, ${ghostNodePosition.y})`}>
+                <line x1="-1.8" y1="0" x2="1.8" y2="0" stroke="#2dd4bf" strokeWidth="0.8" strokeLinecap="round" />
+                <line x1="0" y1="-1.8" x2="0" y2="1.8" stroke="#2dd4bf" strokeWidth="0.8" strokeLinecap="round" />
+              </g>
+
+              {/* Label */}
+              <text
+                x={ghostNodePosition.x}
+                y={ghostNodePosition.y + 8}
+                textAnchor="middle"
+                fontSize="2.4"
+                fill="#2dd4bf"
+                style={{ fontWeight: "bold", opacity: 0.9, pointerEvents: "none" }}
+              >
+                إضافة شخص
+              </text>
+            </motion.g>
+          )}
         </svg>
 
         {/* See and Decide Overlay */}

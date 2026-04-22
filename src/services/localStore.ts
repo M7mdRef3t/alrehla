@@ -23,7 +23,32 @@ let saveTimeout: NodeJS.Timeout | null = null;
 export const loadStoredState = async (): Promise<StoredState | null> => {
   if (!isBrowser) return null;
   try {
-    const parsed = await getJSON<StoredState>(STORAGE_KEY);
+    let parsed = await getJSON<StoredState>(STORAGE_KEY);
+    
+    // Fallback to alrehla-dawayir-storage if main key is empty
+    if (!parsed || !Array.isArray(parsed.nodes) || parsed.nodes.length === 0) {
+      const altRaw = localStorage.getItem("alrehla-dawayir-storage");
+      if (altRaw) {
+        try {
+          const altParsed = JSON.parse(altRaw);
+          const graphNodes = altParsed?.state?.graph?.nodes;
+          if (Array.isArray(graphNodes) && graphNodes.length > 0) {
+            // Map domain nodes to MapNode structure if needed
+            // For now, assume they are compatible or at least have enough data
+            parsed = {
+              nodes: graphNodes.map(n => ({
+                ...n,
+                ring: n.ring || "green",
+                isNodeArchived: n.archived || false
+              }))
+            } as StoredState;
+          }
+        } catch (e) {
+          // Ignore parse errors from fallback
+        }
+      }
+    }
+
     if (!parsed || !Array.isArray(parsed.nodes)) return null;
 
     const migratedNodes = sanitizeMapNodes(parsed.nodes).map((node) => {

@@ -2,7 +2,7 @@ import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, GripVertical } from "lucide-react";
+import { X, GripVertical, Plus } from "lucide-react";
 import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
 import type { Ring, MapNode as MapNodeType } from "./mapTypes";
 import { useMapState } from '@/modules/map/dawayirIndex';
@@ -331,6 +331,12 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     }
   }, [isHighlighted]);
 
+  useEffect(() => {
+    if (justAdded) {
+      soundManager.playRadarPing(); // Use a distinct "birth" sound if available, otherwise radar ping
+    }
+  }, [justAdded]);
+
   const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({ id: node.id });
 
   const hasMismatch = node.analysis?.recommendedRing && node.ring !== node.analysis.recommendedRing;
@@ -429,6 +435,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
 
   return (
     <motion.div
+      layout
       className="outline-none focus:outline-none focus-visible:outline-none"
       style={{
         ...style,
@@ -436,8 +443,9 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         pointerEvents: isExploding ? "none" : "auto",
         WebkitTapHighlightColor: "transparent",
       }}
-      animate={isExploding ? { scale: 2, opacity: 0 } : undefined}
-      transition={isExploding ? { duration: 0.6, ease: "easeOut" } : undefined}
+      initial={justAdded ? { scale: 0.2, opacity: 0, rotate: -45, filter: "brightness(2)" } : false}
+      animate={isExploding ? { scale: 2, opacity: 0 } : justAdded ? { scale: 1, opacity: 1, rotate: 0, filter: "brightness(1)" } : undefined}
+      transition={isExploding ? { duration: 0.6, ease: "easeOut" } : justAdded ? { duration: 0.8, type: "spring", bounce: 0.5 } : undefined}
       onMouseEnter={() => setShowDelete(true)}
       onMouseLeave={() => setShowDelete(false)}
     >
@@ -1023,6 +1031,7 @@ function filterNodesByContext(
 
 interface MapCanvasProps {
   onNodeClick?: (id: string) => void;
+  onAddNode?: () => void;
   onMeClick?: () => void;
   canOpenDetails?: boolean;
   goalIdFilter?: string;
@@ -1043,6 +1052,7 @@ interface MapCanvasProps {
 
 export const MapCanvas: FC<MapCanvasProps> = ({
   onNodeClick,
+  onAddNode,
   onMeClick,
   canOpenDetails = true,
   goalIdFilter,
@@ -1394,16 +1404,49 @@ export const MapCanvas: FC<MapCanvasProps> = ({
 
   const nodePositions = useMemo(() => {
     const posMap: Record<string, { x: number; y: number }> = {};
+    const totalDetached = detachedNodes.length;
+    
+    // 1. Position detached nodes
     detachedNodes.forEach((node, idx) => {
-      posMap[node.id] = getGreyZonePosition(idx, detachedNodes.length);
+      posMap[node.id] = getGreyZonePosition(idx, Math.max(totalDetached, 1));
     });
+    
+    // 2. Position ring nodes
     Object.entries(nodesByRing).forEach(([ring, ringNodes]) => {
       ringNodes.forEach((node, idx) => {
         posMap[node.id] = getRingPosition(ring as Ring, idx, ringNodes.length);
       });
     });
+
+    // 3. Position Ghost Node organically
+    if (onAddNode) {
+      const gCount = nodesByRing.green?.length || 0;
+      const yCount = nodesByRing.yellow?.length || 0;
+      const rCount = nodesByRing.red?.length || 0;
+      
+      // If map has no active ring nodes, put it prominently but safely below center
+      if (ringNodes.length === 0) {
+        posMap['ghost-add-node'] = { x: 50, y: 72 };
+      } 
+      // Otherwise, place it in the next available logical ring slot
+      else if (gCount < 4) {
+        posMap['ghost-add-node'] = getRingPosition('green', gCount, gCount + 1);
+      } else if (yCount < 8) {
+        posMap['ghost-add-node'] = getRingPosition('yellow', yCount, yCount + 1);
+      } else if (rCount < 12) {
+        posMap['ghost-add-node'] = getRingPosition('red', rCount, rCount + 1);
+      } else {
+        // Fallback to grey zone but offset to avoid extreme top/bottom
+        const angle = (totalDetached * (2 * Math.PI) / (totalDetached + 1)) - Math.PI / 4;
+        posMap['ghost-add-node'] = { 
+          x: 50 + GREY_ZONE_RADIUS * Math.cos(angle), 
+          y: 50 + GREY_ZONE_RADIUS * Math.sin(angle) 
+        };
+      }
+    }
+    
     return posMap;
-  }, [detachedNodes, nodesByRing]);
+  }, [detachedNodes, nodesByRing, nodes.length, onAddNode]);
 
   const connectionThreads = useMemo(() => {
     if (shouldUseLightweightRendering) return [];
@@ -2128,6 +2171,26 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                       isSovereign={isSovereign}
                     />
                   ))}
+                  {/* Ghost Add Person Node */}
+                  {onAddNode && (
+                    <motion.button
+                      key="ghost-add-node"
+                      layout
+                      type="button"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="absolute z-20 w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-dashed border-teal-500/50 bg-slate-800/30 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:border-teal-400 hover:bg-slate-700/50 transition-all shadow-lg hover:shadow-[0_0_20px_rgba(45,212,191,0.3)] pointer-events-auto"
+                      style={{
+                        left: `${nodePositions['ghost-add-node']?.x ?? 50}%`,
+                        top: `${nodePositions['ghost-add-node']?.y ?? 90}%`,
+                        transform: "translate(-50%, -50%)",
+                      }}
+                      onClick={(e) => { e.stopPropagation(); onAddNode(); }}
+                      title="إضافة شخص جديد"
+                    >
+                      <Plus className="w-5 h-5 text-teal-400/70" />
+                    </motion.button>
+                  )}
                 </AnimatePresence>
               </div>
             </div>

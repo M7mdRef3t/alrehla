@@ -100,13 +100,10 @@ const HERO_STYLES = `
     box-shadow: 0 0 14px var(--cyan-glow);
   }
 
+
   .headline-line {
     display: block;
-    min-height: 70px;
-    height: auto;
     line-height: 1.2;
-    overflow: visible;
-    width: 100%;
     margin-bottom: 0.1em;
     color: var(--amber-500);
     font-family: var(--font-display);
@@ -116,17 +113,15 @@ const HERO_STYLES = `
 
   /* Subline */
   .headline-subline {
-    display: block;
-    min-height: 45px;
-    height: auto;
+    display: inline-block;
+    width: auto;
     line-height: 1.2;
-    overflow: visible;
-    width: 100%;
     color: var(--color-amber-50);
-    font-size: 0.78em;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
     font-weight: 600;
-    margin-bottom: 0.1em;
+    margin: 0;
     font-family: var(--font-display);
+    white-space: nowrap;
   }
 
   .hero-divider {
@@ -262,6 +257,13 @@ const HERO_STYLES = `
     padding-top: 0.2em;
     padding-bottom: 0.2em;
     color: var(--text-main);
+  }
+
+  .headline-inline-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
   }
 
   .hero-copy-column .hero-body {
@@ -760,8 +762,8 @@ const HERO_STYLES = `
   /* --- rotation  Time Complexity --- */
   .rotating-word-wrapper {
     position: relative;
-    display: inline-block;
-    width: 100%;
+    display: inline-grid;
+    width: auto;
     min-height: 1.3em;
     padding: 0;
     overflow: visible;
@@ -896,6 +898,7 @@ const HERO_STYLES = `
 
     .hero-content-wrapper {
       flex-direction: column;
+      align-items: center;
       gap: 2rem;
       padding: 5rem 1rem 3rem;
       width: 100%;
@@ -905,12 +908,15 @@ const HERO_STYLES = `
     }
 
     .hero-copy-column {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
+      display: contents;
     }
+
+    .hero-eyebrow-row { order: 1; }
+    .hero-headline { order: 2; }
+    .hero-divider { order: 3; }
+    .map-area { order: 4; }
+    .hero-body { order: 5; }
+    .hero-cta-container { order: 6; }
     
     .headline-static {
       display: flex;
@@ -932,26 +938,34 @@ const HERO_STYLES = `
     .headline-subline {
       text-align: center;
       white-space: normal;
-      margin-top: 0.5rem;
+      margin-top: -0.25rem; /* Negative margin to pull it up */
+    }
+
+    .headline-inline-row {
+      flex-direction: column;
+      gap: 0;
     }
 
     .rotating-word-wrapper {
-      justify-content: center;
+      display: grid !important;
+      justify-items: center;
       text-align: center !important;
       margin-left: auto;
       margin-right: auto;
-      display: flex !important;
+      width: 100%;
     }
 
     .hero-body {
-      text-align: center !important;
+      text-align: justify !important;
+      text-justify: inter-word;
+      text-align-last: center !important;
       margin-left: auto;
       margin-right: auto;
       width: 100%;
       box-sizing: border-box;
       font-size: 1.05rem;
-      line-height: 1.6;
-      padding: 0;
+      line-height: 1.8;
+      padding: 0 1.25rem;
     }
 
 
@@ -1449,8 +1463,10 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
             <motion.h1 variants={fadeUp} className="headline-static hero-headline">
               <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
-              <span className="headline-subline">أنت فقط</span>
-              <RotatingWord />
+              <span className="headline-inline-row">
+                <span className="headline-subline">أنت فقط</span>
+                <RotatingWord />
+              </span>
             </motion.h1>
 
             <motion.div variants={fadeUp} className="hero-divider" />
@@ -1459,7 +1475,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
               هدئ السرعة. لست بحاجة للركض والمزيد من السعي، بل إلى المزيد من الوضوح. مشكلتك ليست في كثرة المهام بل في ضبابية الطريق. نحول شتات ذهنك إلى لوحة بصرية واحدة تكشف لك جذور استنزافك، وترسم لك خريطة العودة لقلبك واستعادة السيطرة على طاقتك.
             </motion.p>
 
-            <motion.div variants={fadeUp}>
+            <motion.div variants={fadeUp} className="hero-cta-container">
               <div className="hero-command-bar">
                 <input
                   type="text"

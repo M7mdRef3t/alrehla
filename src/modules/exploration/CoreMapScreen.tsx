@@ -351,7 +351,13 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const showPlacementTooltip = useMapState((s) => s.showPlacementTooltip);
   const lastAddedNodeId = useMapState((s) => s.lastAddedNodeId);
   const dismissPlacementTooltip = useMapState((s) => s.dismissPlacementTooltip);
-  const [showOnboarding, setShowOnboarding] = useState(() => nodes.length === 0 && !hasSeenOnboarding() && !journeyMode);
+  const activeNodes = useMemo(() => {
+    const active = nodes.filter((n) => !n.isNodeArchived);
+    console.log("MAP_COUNT_DEBUG_UNIQUE_123: active count", active.length, "total nodes", nodes.length);
+    return active;
+  }, [nodes]);
+  const archivedNodes = useMemo(() => nodes.filter((n) => n.isNodeArchived), [nodes]);
+  const [showOnboarding, setShowOnboarding] = useState(() => activeNodes.length === 0 && !hasSeenOnboarding() && !journeyMode);
   const lastAddedNode = lastAddedNodeId ? nodes.find((node) => node.id === lastAddedNodeId) ?? null : null;
 
   useEffect(() => {
@@ -370,8 +376,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     context: Record<string, unknown>;
   } | undefined>();
   const [showJournalArchive, setShowJournalArchive] = useState(false);
-  const activeNodes = useMemo(() => nodes.filter((n) => !n.isNodeArchived), [nodes]);
-  const archivedNodes = useMemo(() => nodes.filter((n) => n.isNodeArchived), [nodes]);
   const greenNodes = useMemo(() => activeNodes.filter((n) => n.ring === "green" && !n.isDetached), [activeNodes]);
   const relationshipWeather = useMemo(
     () => deriveRelationshipWeather(nodes, lastPulse?.energy ?? null),
@@ -445,8 +449,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   }, [showPlacementTooltip, dismissPlacementTooltip]);
 
   useEffect(() => {
-    if (nodes.length > 0 && showOnboarding) setShowOnboarding(false);
-  }, [nodes.length, showOnboarding]);
+    if (activeNodes.length > 0 && showOnboarding) setShowOnboarding(false);
+  }, [activeNodes.length, showOnboarding]);
 
   useEffect(() => {
     if (!canUseGalaxyView && galaxySubView === "forest") setGalaxySubView("map");
@@ -574,6 +578,19 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       return;
     }
     onSelectNode(id);
+  };
+
+  const handleAddNodeClick = () => {
+    onSelectNode(null);
+    const sub = loadSubscription();
+    // Allow up to 4 nodes (0, 1, 2, 3 are fine, 4th triggers upgrade)
+    // Actually the user said "allow users to reach four nodes" 
+    // so activeNodes.length >= 4 is correct.
+    if (sub.tier === "basic" && activeNodes.length >= 4) {
+      setIsUpgradeOpen(true);
+    } else {
+      setShowAddPerson(true);
+    }
   };
 
   const handleToggleUnifiedContexts = () => {
@@ -782,6 +799,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               >
                 <MapCanvas
                   onNodeClick={handleNodeClick}
+                  onAddNode={handleAddNodeClick}
                   canOpenDetails={canUseBasicDiagnosis}
                   onMeClick={() => {
                     if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
@@ -821,6 +839,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   ) : (
                     <MapCanvas
                       onNodeClick={handleNodeClick}
+                      onAddNode={handleAddNodeClick}
                       canOpenDetails={canUseBasicDiagnosis}
                       onMeClick={() => {
                         if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
@@ -858,7 +877,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           </AnimatePresence>
 
           {/* Empty State */}
-          {nodes.length === 0 && !showOnboarding && !journeyMode && (
+          {activeNodes.length === 0 && !showOnboarding && !journeyMode && (
             <motion.div
               className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
               initial={{ opacity: 0 }}
@@ -903,7 +922,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </>
       )}
 
-      {showOnboarding && nodes.length === 0 && !journeyMode && (
+      {showOnboarding && activeNodes.length === 0 && !journeyMode && (
         <MapOnboardingOverlay onClose={() => setShowOnboarding(false)} />
       )}
 
@@ -937,30 +956,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             })}
           </div>
         </motion.div>
-      )}
-
-      {/* Premium FAB */}
-      {!journeyMode && (
-        <motion.button
-          type="button"
-          className="fixed z-40 right-6 bottom-[calc(var(--bottom-nav-height,5rem)+2rem+env(safe-area-inset-bottom))] md:bottom-[7.5rem] w-14 h-14 rounded-full flex items-center justify-center shadow-2xl pointer-events-auto"
-          style={{
-            background: "linear-gradient(135deg, #2DD4BF 0%, #0D9488 100%)",
-            boxShadow: "0 0 30px rgba(45,212,191,0.3)"
-          }}
-          onClick={() => {
-            onSelectNode(null);
-            const sub = loadSubscription();
-            if (sub.tier === "basic" && activeNodes.length >= 4) setIsUpgradeOpen(true);
-            else setShowAddPerson(true);
-          }}
-          whileHover={{ scale: 1.1, rotate: 90 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">
-            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </motion.button>
       )}
 
       {/* Modals & Overlays */}

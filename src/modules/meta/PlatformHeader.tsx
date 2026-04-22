@@ -327,7 +327,7 @@ export const PlatformHeader = memo(function PlatformHeader({
         {isLoggedIn && (
           <button
             onClick={() => useAppOverlayState.getState().setOverlay("evolutionHub", true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/20 transition-all group"
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/20 transition-all group"
           >
             <Trophy className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-black text-amber-500 font-mono">
@@ -341,7 +341,7 @@ export const PlatformHeader = memo(function PlatformHeader({
           id="header-theme-toggle"
           aria-label={isDark ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
           onClick={handleThemeToggle}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-white dark:text-zinc-300 dark:hover:text-white hover:bg-zinc-400/10 dark:hover:bg-white/10 transition-all"
+          className="hidden md:flex w-9 h-9 rounded-full items-center justify-center text-zinc-400 hover:text-white dark:text-zinc-300 dark:hover:text-white hover:bg-zinc-400/10 dark:hover:bg-white/10 transition-all"
         >
           <AnimatePresence mode="wait" initial={false}>
             {isDark ? (
@@ -369,54 +369,40 @@ export const PlatformHeader = memo(function PlatformHeader({
         </button>
 
           <div className="relative text-amber-500">
-            <AnimatePresence>
-              {isLoggedIn && (
-                notifOpen ? (
-                  <motion.button
-                    key="bell-open"
-                    ref={bellRef}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    type="button"
-                    id="header-notifications"
-                    aria-label={hasUnread ? "لديك إشعارات جديدة" : "الإشعارات"}
-                    aria-expanded="true"
-                    onClick={handleBellClick}
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-slate-900 dark:text-white bg-slate-400/10 dark:bg-white/10 hover:bg-slate-400/20 dark:hover:bg-white/20 transition-all relative"
-                  >
-                    <Bell className="w-5 h-5 transition-colors text-teal-400" />
-                    <AnimatePresence>
-                      {hasUnread && (
-                        <motion.span
-                          key="badge"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                          className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-teal-400 ring-2 ring-slate-900 animate-pulse"
-                        />
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    key="bell-closed"
-                    ref={bellRef}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    type="button"
-                    id="header-notifications"
-                    aria-label={hasUnread ? "لديك إشعارات جديدة" : "الإشعارات"}
-                    aria-expanded="false"
-                    onClick={handleBellClick}
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-white dark:text-zinc-300 dark:hover:text-white hover:bg-zinc-400/10 dark:hover:bg-white/10 transition-all relative"
-                  >
-                    <Bell className={`w-5 h-5 transition-colors ${hasUnread ? "text-teal-400" : ""}`} />
-                  </motion.button>
-                )
-              )}
-            </AnimatePresence>
+            {isLoggedIn && (
+              <motion.button
+                ref={bellRef}
+                type="button"
+                id="header-notifications"
+                aria-label={hasUnread ? "لديك إشعارات جديدة" : "الإشعارات"}
+                aria-expanded={notifOpen ? "true" : "false"}
+                onClick={handleBellClick}
+                whileTap={{ scale: 0.95 }}
+                className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all relative border border-slate-200/50 dark:border-white/10 ${
+                  notifOpen
+                    ? "text-teal-600 dark:text-teal-400 bg-slate-400/10 dark:bg-white/[0.14]"
+                    : "text-slate-600 dark:text-white/80 bg-slate-400/5 dark:bg-white/[0.05] hover:bg-slate-400/10 dark:hover:bg-white/[0.1]"
+                }`}
+              >
+                <Bell
+                  className={`w-5 h-5 shrink-0 ${hasUnread ? "text-teal-400" : "text-white"}`}
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  fill="none"
+                />
+                <AnimatePresence>
+                  {hasUnread && (
+                    <motion.span
+                      key="badge"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      className="absolute top-0 right-0 w-3 h-3 rounded-full bg-rose-500 ring-2 ring-[var(--page-bg)] animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]"
+                    />
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            )}
 
             {isLoggedIn && (
               <NotificationsPanel
@@ -425,10 +411,6 @@ export const PlatformHeader = memo(function PlatformHeader({
                 anchorRef={bellRef}
               />
             )}
-          </div>
-
-          <div className="relative">
-            {isLoggedIn && <InAppNotificationCenter />}
           </div>
 
         {status === "loading" ? (
@@ -527,6 +509,16 @@ export const PlatformHeader = memo(function PlatformHeader({
                     >
                       <Settings className="w-4 h-4 text-slate-500" />
                       الإعدادات
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={handleThemeToggle}
+                      className="flex md:hidden items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-[var(--text-secondary)] hover:bg-white/[0.08] hover:text-white"
+                      role="menuitem"
+                    >
+                      {isDark ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-500" />}
+                      {isDark ? "الوضع الفاتح" : "الوضع الداكن"}
                     </button>
 
                     <div className="mt-1 border-t border-white/[0.08] pt-2">

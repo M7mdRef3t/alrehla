@@ -662,11 +662,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* ───── DESKTOP SIDEBAR ───── */}
       <div
-        className="fixed top-0 right-0 h-full hidden md:flex flex-row-reverse group/sidebar"
+        className="fixed top-0 right-0 h-full hidden md:flex flex-row-reverse group/sidebar pointer-events-none"
         style={{ zIndex: Z_LAYERS.SIDEBAR }}
         aria-label="القائمة الرئيسية"
       >
-        <div className={`h-full w-72 shrink-0 overflow-hidden border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B0F19] transition-transform duration-300 ${isDesktopSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className={`pointer-events-auto h-full w-72 shrink-0 overflow-hidden border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B0F19] transition-transform duration-300 ${isDesktopSidebarOpen ? "translate-x-0" : "translate-x-full"}`}>
           <aside className="h-full w-full flex flex-col gap-3 py-6 px-4">
             {viewingNode?.analysis && (
               <div className="shrink-0 space-y-1 mb-1">
@@ -939,13 +939,18 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           </aside>
         </div>
 
-        {/* Desktop Handle */}
-        <div
-          className={`h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-700 text-white border-l border-teal-900 cursor-pointer py-4 hover:bg-teal-600 transition-colors`}
-          onClick={() => setIsDesktopSidebarOpen((current) => !current)}
-          title={isDesktopSidebarOpen ? "أغلق محطة الانطلاق" : "افتح محطة الانطلاق"}
+        {/* Desktop Handle - Fixed positioning outside flow */}
+        <div 
+          className="fixed inset-0 pointer-events-none z-[60]"
+          style={{ zIndex: Z_LAYERS.NAVIGATION_BARS + 10 }}
         >
-          <PanelRightOpen className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0 text-white"}`} />
+          <div
+            className={`absolute right-0 bottom-[calc(var(--bottom-nav-height,5rem)+10.5rem+env(safe-area-inset-bottom))] w-8 h-20 flex flex-col justify-center items-center bg-teal-700/90 backdrop-blur-md text-white border border-r-0 border-teal-900 cursor-pointer rounded-l-xl shadow-2xl hover:bg-teal-600 transition-all duration-300 pointer-events-auto`}
+            onClick={() => setIsDesktopSidebarOpen((current) => !current)}
+            title={isDesktopSidebarOpen ? "أغلق محطة الانطلاق" : "افتح محطة الانطلاق"}
+          >
+            <PanelRightOpen className={`w-5 h-5 transition-transform duration-300 ${isDesktopSidebarOpen ? "rotate-180" : "rotate-0 text-white"}`} />
+          </div>
         </div>
       </div>
 
@@ -961,15 +966,15 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         </button>
       )}
 
-      {/* ───── MOBILE MENU TRIGGER ───── */}
+      {/* ───── MOBILE MENU TRIGGER (DRAG HANDLE) ───── */}
       <button
         type="button"
         title="افتح القائمة"
         onClick={handleOpen}
-        className="fixed top-4 right-4 md:hidden w-11 h-11 flex items-center justify-center rounded-full bg-[#0B0F19] border border-slate-700 text-slate-300 shadow-lg"
+        className="fixed right-0 bottom-[calc(var(--bottom-nav-height,5rem)+10.5rem+env(safe-area-inset-bottom))] md:hidden w-6 h-16 flex items-center justify-center bg-[#0B0F19]/90 backdrop-blur-md border border-r-0 border-slate-700 rounded-l-xl shadow-lg transition-transform hover:-translate-x-1"
         style={{ zIndex: Z_LAYERS.NAVIGATION_BARS + 1 }}
       >
-        <PanelRightOpen className="w-5 h-5" />
+        <div className="w-1 h-6 rounded-full bg-slate-400/50" />
       </button>
 
       {/* ───── MOBILE SIDEBAR ───── */}

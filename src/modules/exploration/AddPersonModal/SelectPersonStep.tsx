@@ -206,7 +206,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
         <button
           type="button"
           className="flex-1 px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-slate-400 font-bold hover:bg-white/10 hover:text-white transition-all duration-500"
-          onClick={onCancel}
+          onClick={() => onCancel()}
         >
           <EditableText id="add_person_cancel" defaultText="إلغاء الأمر" page="add_person" editOnClick={false} />
         </button>

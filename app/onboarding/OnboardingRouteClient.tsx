@@ -68,7 +68,7 @@ const WarpOverlay = () => (
 export default function OnboardingRouteClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { status } = useAuthState();
+  const { status, user } = useAuthState();
   const isReady = status === "ready";
   
   const mirrorName = useJourneyState((s) => s.mirrorName);
@@ -103,7 +103,7 @@ export default function OnboardingRouteClient() {
     if (!isReady) return;
 
     // 2. Handle Unauthenticated users
-    if (status === "unauthenticated") {
+    if (isReady && !user) {
       console.log("[Onboarding] Unauthenticated user. Redirecting to home.");
       window.location.replace("/");
       return;
