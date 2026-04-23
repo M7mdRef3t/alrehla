@@ -2,7 +2,7 @@ import { logger } from "@/services/logger";
 import React, { useState, useRef, useEffect, type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Share2, X, Sparkles } from "lucide-react";
-import html2canvas from "html2canvas";
+// html2canvas loaded on-demand inside handleCapture to avoid bundle bloat
 import { calculateEntropy } from "@/services/predictiveEngine";
 import { useToastState } from '@/modules/map/dawayirIndex';
 
@@ -64,6 +64,7 @@ export const HealingEchoModal: FC<HealingEchoModalProps> = ({
     setIsGenerating(true);
     
     try {
+      const { default: html2canvas } = await import("html2canvas");
       const canvas = await html2canvas(printRef.current, {
         scale: 3, // High resolution for social media
         useCORS: true,

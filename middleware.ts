@@ -99,9 +99,20 @@ export async function middleware(request: NextRequest) {
         const geminiSecret = request.headers.get('x-internal-secret');
         const isInternal = geminiSecret && geminiSecret === process.env.GEMINI_INTERNAL_SECRET;
 
-        // If not internal, we already applied rate limiting above, but we could add more checks here
         if (!isInternal) {
-            // Future: Add dedicated quota checks or usage logging here
+            // Require at minimum a valid Supabase session cookie or bearer token
+            const authHeader = request.headers.get('authorization') || '';
+            const cookieHeader = request.headers.get('cookie') || '';
+            const hasSupabaseSession = /sb-[a-z0-9\-]+-auth-token/i.test(cookieHeader) || 
+                                     /alrehla-ecosystem-auth/i.test(cookieHeader);
+            const hasBearer = authHeader.startsWith('Bearer ') && authHeader.length > 7;
+
+            if (!hasSupabaseSession && !hasBearer) {
+                return NextResponse.json(
+                    { error: 'Authentication required for AI services.' },
+                    { status: 401 }
+                );
+            }
         }
     }
 

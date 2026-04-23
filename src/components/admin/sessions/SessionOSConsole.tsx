@@ -4,8 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, BrainCircuit, Users, FileText, Briefcase, ChevronRight, Share, FileCheck2, AlertTriangle, MessageCircle, BarChart3, TrendingUp, LayoutDashboard, Filter, Zap, Bell, Download, Clock, Loader2, XCircle } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from 'recharts';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// jsPDF and html2canvas are loaded on-demand inside generatePDF to avoid adding ~322KB to the initial bundle
 
 type ConsoleTab = 'dashboard' | 'triage_queue' | 'ai_brief' | 'live_session' | 'post_session' | 'analytics';
 
@@ -140,6 +139,11 @@ export function SessionOSConsole() {
     const element = document.getElementById('report-export-container');
     if (!element) return;
     try {
+      // Dynamic import — loads ~322KB only when user requests export
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
       const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#000000' });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');

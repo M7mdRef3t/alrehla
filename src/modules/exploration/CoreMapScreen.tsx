@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import type { ComponentProps, FC } from "react";
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { MapCanvas } from "../map/MapCanvas";
@@ -86,6 +86,70 @@ const cosmicFade = {
     filter: "blur(0px)",
     transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
   }
+};
+
+const isInvalidSvgToken = (value: string): boolean => {
+  const token = value.trim().toLowerCase();
+  return (
+    token === "" ||
+    token === "undefined" ||
+    token === "nan" ||
+    token === "null" ||
+    token === "infinity" ||
+    token === "-infinity"
+  );
+};
+
+const toSafeSvgCoordinate = (value: unknown, fallback: number): number | string => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && !isInvalidSvgToken(value)) return value;
+  return fallback;
+};
+
+const toSafeSvgRadius = (value: unknown, fallback: number): number => {
+  if (typeof value === "number" && Number.isFinite(value)) return Math.max(value, 0);
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return Math.max(parsed, 0);
+  }
+  return Math.max(fallback, 0);
+};
+
+const sanitizeCircleMotionState = <T,>(state: T): T => {
+  if (!state || typeof state !== "object" || Array.isArray(state)) return state;
+  const record = state as Record<string, unknown>;
+  if (!Object.prototype.hasOwnProperty.call(record, "r")) return state;
+
+  const rawR = record.r;
+  const safeR = Array.isArray(rawR)
+    ? rawR.map((value) => toSafeSvgRadius(value, 0))
+    : toSafeSvgRadius(rawR, 0);
+
+  return { ...record, r: safeR } as T;
+};
+
+type SafeMotionCircleProps = ComponentProps<typeof motion.circle> & {
+  cx?: number | string;
+  cy?: number | string;
+  r?: number | string;
+};
+
+const SafeMotionCircle: FC<SafeMotionCircleProps> = ({ cx = 0, cy = 0, r = 0, ...props }) => {
+  const { initial, animate, exit, whileHover, whileTap, whileFocus, ...rest } = props;
+  return (
+    <motion.circle
+      cx={toSafeSvgCoordinate(cx, 0)}
+      cy={toSafeSvgCoordinate(cy, 0)}
+      r={toSafeSvgRadius(r, 0)}
+      initial={sanitizeCircleMotionState(initial)}
+      animate={sanitizeCircleMotionState(animate)}
+      exit={sanitizeCircleMotionState(exit)}
+      whileHover={sanitizeCircleMotionState(whileHover)}
+      whileTap={sanitizeCircleMotionState(whileTap)}
+      whileFocus={sanitizeCircleMotionState(whileFocus)}
+      {...rest}
+    />
+  );
 };
 
 const SovereignBroadcastOverlay: FC<{ message: { message: string; id: string } | null }> = ({ message }) => {
@@ -929,14 +993,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               <div className="relative mb-6">
                 <svg width={80} height={80} viewBox="0 0 80 80">
                   {[0, 0.6, 1.2].map((delay, i) => (
-                    <motion.circle
+                    <SafeMotionCircle
                       key={i} cx={40} cy={40} r={20}
                       fill="none" stroke="rgba(45,212,191,0.6)" strokeWidth={1}
                       animate={{ r: [20, 38], opacity: [0.7, 0] }}
                       transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut", delay }}
                     />
                   ))}
-                  <motion.circle
+                  <SafeMotionCircle
                     cx={40} cy={40} r={10}
                     fill="url(#emptyStateGrad)"
                     animate={{ scale: [1, 1.12, 1], opacity: [0.85, 1, 0.85] }}

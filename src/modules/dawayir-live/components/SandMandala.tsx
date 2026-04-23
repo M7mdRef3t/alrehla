@@ -3,7 +3,7 @@
 import { logger } from "@/services/logger";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import html2canvas from "html2canvas";
+// html2canvas loaded dynamically inside effect \u2014 only when animation activates
 
 type SandMandalaProps = {
   targetRef: RefObject<HTMLElement | null>;
@@ -51,6 +51,7 @@ export default function SandMandala({ targetRef, isActive, onComplete }: SandMan
       setDimensions({ width: rect.width, height: rect.height });
 
       try {
+        const { default: html2canvas } = await import("html2canvas");
         const capture = await html2canvas(targetElement, {
           backgroundColor: null,
           scale: 2,

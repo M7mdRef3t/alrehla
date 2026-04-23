@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sendAdminTelegramNotice } from '@/server/telegramNotifier';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.VITE_SUPABASE_ANON_KEY!
-);
+import { supabaseAdmin as supabase } from '@/infrastructure/database/client';
 
 export async function GET(req: Request) {
   // Simple check to ensure only authorized cron can call this (Optional but recommended)
@@ -15,6 +10,9 @@ export async function GET(req: Request) {
   }
 
   try {
+    if (!supabase) {
+      throw new Error("Supabase Admin client not configured.");
+    }
     // 1. Fetch Funnel Metrics from Supabase
     // This assumes you have a table tracking variants/views/clicks
     const { data: metrics, error } = await supabase

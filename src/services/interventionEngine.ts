@@ -1,11 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "./supabaseClient";
 import { getRankedActions } from "./actionAdaptation";
 
 function getSupabaseAdmin() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-    if (!supabaseUrl || !serviceRoleKey) return null;
-    return createClient(supabaseUrl, serviceRoleKey);
+    return supabaseAdmin;
 }
 
 export type InterventionType = 'low_mood_streak' | 'stress_overload' | 'energy_crash' | 'negative_trajectory';

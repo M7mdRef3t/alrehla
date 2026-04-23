@@ -10,7 +10,6 @@ import {
   Fingerprint, 
   Activity, 
   ShieldCheck, 
-  MessageCircle,
   Sparkles
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -43,10 +42,8 @@ import {
   getRelationshipWeatherPath
 } from "@/utils/relationshipWeatherJourney";
 import { runtimeEnv } from "@/config/runtimeEnv";
-import { normalizeWhatsAppPhone } from "@/utils/phoneNumber";
 import { openInNewTab } from "@/services/clientDom";
 
-const DEFAULT_WHATSAPP_CONTACT = "201062635923";
 
 // ... existing utility imports ...
 
@@ -167,30 +164,9 @@ export const Landing: FC<LandingProps> = ({
   const lastGoalRecord = getLastGoalMeta(lastGoalById, lastGoalId, lastGoalCategory);
   const lastGoalLabel = getGoalLabel(lastGoalRecord?.goalId);
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
-
-  const whatsAppNumber = runtimeEnv.whatsappContactNumber || DEFAULT_WHATSAPP_CONTACT;
-  const whatsAppLink = useMemo(() => {
-    const normalized = normalizeWhatsAppPhone(whatsAppNumber);
-    if (!normalized) return null;
-    return `https://wa.me/${normalized}`;
-  }, [whatsAppNumber]);
-
   const journeyPaths = useAdminState((s) => s.journeyPaths);
   const weatherPath = useMemo(() => getRelationshipWeatherPath(journeyPaths), [journeyPaths]);
   const weatherEntryHref = getRelationshipWeatherEntryHref(weatherPath);
-
-  const openWhatsAppChat = (placement: "landing_floating_fab") => {
-    if (!whatsAppLink) return;
-    
-    let finalLink = whatsAppLink;
-    if (mirrorName) {
-      const message = encodeURIComponent(`أهلاً، أنا ${mirrorName}. كنت بمر في الرحلة ومحتاج مساعدة...`);
-      finalLink = `${whatsAppLink}?text=${message}`;
-    }
-
-    analyticsService.whatsapp({ placement });
-    openInNewTab(finalLink);
-  };
 
   const pwaInstall = usePWAInstall();
   const [mirrorName, setMirrorName] = useState(storedMirrorName ?? "");
@@ -297,66 +273,107 @@ export const Landing: FC<LandingProps> = ({
 
       <div className="landing-intrinsic-sentinel" />
 
-      {/* 2. OPERATING SYSTEM SECTION (Hardened Pitch) */}
+      {/* 2. TRAVELER'S ARSENAL SECTION (Journey Philosophy) */}
       <section className="relative py-28 px-4 max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease }}
-          className="glass-premium rounded-[48px] overflow-hidden p-10 sm:p-20 text-center relative"
+          className="glass-premium rounded-[48px] overflow-hidden p-10 sm:p-20 text-center relative group/arsenal"
         >
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/2 bg-teal-500/10 blur-[120px] pointer-events-none" />
+          {/* Ambient Breathing Background */}
+          <motion.div 
+            animate={{ 
+              opacity: [0.1, 0.15, 0.1],
+              scale: [1, 1.05, 1],
+            }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-full bg-gradient-to-b from-teal-500/10 to-indigo-500/5 blur-[120px] pointer-events-none" 
+          />
 
           <div className="mb-16 relative z-10">
-            <p className="text-[10px] font-black tracking-[0.5em] uppercase mb-6 text-teal-500 opacity-80">
-              نظام التشغيل — Operating System
-            </p>
-            <h2 className="text-4xl sm:text-6xl font-black mb-8 landing-principles-title tracking-tight text-white">
-              إحنا مش بنخمّن.<br /><span className="text-teal-400">إحنا بنحلل الـ Logic.</span>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="inline-flex items-center gap-2 mb-6"
+            >
+              <Sparkles className="w-4 h-4 text-teal-500 opacity-80" />
+              <p className="text-[10px] font-black tracking-[0.5em] uppercase text-teal-500 opacity-80 m-0 leading-none">
+                عُدَّة المَسَافِر
+              </p>
+              <Sparkles className="w-4 h-4 text-teal-500 opacity-80" />
+            </motion.div>
+            <h2 className="text-4xl sm:text-6xl font-black mb-8 landing-principles-title tracking-tight !text-white leading-tight">
+              لا تمشِ في الظلام.<br /><span className="text-teal-400 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-sky-300">نحن نضيء لك خريطة طاقتك.</span>
             </h2>
-            <p className="text-base sm:text-xl max-w-[55ch] mx-auto text-slate-400 leading-relaxed font-medium">
-              "الرحلة" بتوفرلك نظام تشغيل لوعيك بيشوف علاقاتك كداوئر طاقة ومسارات تدفق. مفيش أحكام عاطفية، فيه بيانات منطقية بتساعدك تسترد سيادتك على حياتك.
+            <p className="text-base sm:text-xl max-w-[55ch] mx-auto text-slate-300 leading-relaxed font-medium">
+              "الرحلة" ليست مجرد منصة، هي بوصلتك وعدستك لرؤية ما خفي عنك. نكشف لك مسارات طاقتك، من يمنحك النور، ومن يسحب منك الحياة، لتسترد سيادتك على مسارك.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-right relative z-10" dir="rtl">
             {[
               { 
-                title: "رصد الاستنزاف", 
-                desc: "تحديد النقط اللي طاقتك بتتسرب منها بدقة جراحية وتوقف النزيف فوراً.", 
-                icon: <Fingerprint className="w-8 h-8 text-teal-400" />,
-                accent: "rgba(45, 212, 191, 0.15)"
+                title: "كشف الثقوب السوداء", 
+                desc: "نضيء لك الأماكن الخفية التي تتسرب منها طاقة حياتك، لتوقف النزيف قبل أن تفقد شغفك.", 
+                icon: <Fingerprint className="w-8 h-8 text-teal-300 relative z-10" />,
+                bgIcon: <Fingerprint className="w-24 h-24 text-teal-500/10 absolute -right-4 -bottom-4 group-hover/card:scale-110 transition-transform duration-700" />,
+                accent: "rgba(45, 212, 191, 0.15)",
+                glow: "group-hover/card:shadow-[0_0_40px_rgba(45,212,191,0.15)]",
+                borderGlow: "group-hover/card:border-teal-500/30"
               },
               { 
-                title: "خرائط النبض", 
-                desc: "رسم بياني حي لتدفق الطاقة في كل دائرة؛ مين بيزودك ومين بيسحب منك.", 
-                icon: <Activity className="w-8 h-8 text-sky-400" />,
-                accent: "rgba(56, 189, 248, 0.15)"
+                title: "رادار الطاقة والنبض", 
+                desc: "رسم حي لنبض علاقاتك؛ ترى بوضوح من يمدك بالحياة ومن يطفئ نورك في كل دائرة.", 
+                icon: <Activity className="w-8 h-8 text-sky-300 relative z-10" />,
+                bgIcon: <Activity className="w-24 h-24 text-sky-500/10 absolute -right-4 -bottom-4 group-hover/card:scale-110 transition-transform duration-700" />,
+                accent: "rgba(56, 189, 248, 0.15)",
+                glow: "group-hover/card:shadow-[0_0_40px_rgba(56,189,248,0.15)]",
+                borderGlow: "group-hover/card:border-sky-500/30"
               },
               { 
-                title: "تحصين الحدود", 
-                desc: "أدوات عملية لبناء جدار حماية لسلامك النفسي وسيادتك على قرارك.", 
-                icon: <ShieldCheck className="w-8 h-8 text-indigo-400" />,
-                accent: "rgba(129, 140, 248, 0.15)"
+                title: "درع السيادة والحماية", 
+                desc: "عُدّة مسافر متكاملة لبناء أسوار حصينة تحمي سلامك النفسي وتضمن سيادتك الكاملة على قرارك.", 
+                icon: <ShieldCheck className="w-8 h-8 text-indigo-300 relative z-10" />,
+                bgIcon: <ShieldCheck className="w-24 h-24 text-indigo-500/10 absolute -right-4 -bottom-4 group-hover/card:scale-110 transition-transform duration-700" />,
+                accent: "rgba(129, 140, 248, 0.15)",
+                glow: "group-hover/card:shadow-[0_0_40px_rgba(129,140,248,0.15)]",
+                borderGlow: "group-hover/card:border-indigo-500/30"
               }
             ].map((f, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
-                whileHover={{ y: -8, transition: { duration: 0.2 } }}
-                className="group p-10 rounded-[32px] border border-white/5 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
+                transition={{ delay: 0.1 + i * 0.15, duration: 0.6, ease: "easeOut" }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className={`group/card p-10 rounded-[32px] border border-white/5 bg-white/[0.02] backdrop-blur-md transition-all duration-500 relative overflow-hidden ${f.glow} ${f.borderGlow}`}
               >
-                <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg"
+                {/* Background oversized icon for cinematic depth */}
+                {f.bgIcon}
+                
+                {/* Subtle radial gradient that follows hover (simulated via CSS opacity on hover) */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/[0.03] opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
+
+                <motion.div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 relative"
                   style={{ backgroundColor: f.accent }}
+                  whileHover={{ scale: 1.1, rotate: 3 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
+                  {/* Inner pulse ring */}
+                  <motion.div 
+                    className="absolute inset-0 rounded-2xl border border-white/20"
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  />
                   {f.icon}
-                </div>
-                <h3 className="text-2xl font-black mb-4 text-white group-hover:text-teal-300 transition-colors">{f.title}</h3>
-                <p className="text-base text-slate-500 leading-relaxed font-medium group-hover:text-slate-400 transition-colors">{f.desc}</p>
+                </motion.div>
+                
+                <h3 className="text-2xl font-black mb-4 text-white group-hover/card:text-teal-300 transition-colors duration-300 relative z-10">{f.title}</h3>
+                <p className="text-base text-slate-400 leading-relaxed font-medium group-hover/card:text-slate-300 transition-colors duration-300 relative z-10">{f.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -466,25 +483,7 @@ export const Landing: FC<LandingProps> = ({
         }}
       />
 
-      {/* FLOATING WHATSAPP */}
-      {whatsAppLink && (
-        <motion.button
-          type="button"
-          title="تواصل عبر واتساب"
-          onClick={() => openWhatsAppChat("landing_floating_fab")}
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          whileHover={{ scale: 1.1, y: -4 }}
-          whileTap={{ scale: 0.9 }}
-          className="fixed z-[100] left-6 bottom-8 w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/10 hover:bg-emerald-500 transition-colors"
-        >
-          <MessageCircle className="w-6 h-6 shrink-0" />
-          <span className="absolute -top-1 -right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-          </span>
-        </motion.button>
-      )}
+      {/* GLOBAL WHATSAPP MOVED TO SURFACE */}
     </div>
   );
 };

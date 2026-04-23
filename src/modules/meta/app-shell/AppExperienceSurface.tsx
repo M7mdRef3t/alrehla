@@ -19,6 +19,7 @@ import { type AppScreen } from "@/navigation/navigationMachine";
 import { AppSidebar } from "../AppSidebar";
 import { Z_LAYERS } from "@/config/zIndices";
 import { useLayoutState } from "@/modules/map/store/layout.store";
+import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 
 
 
@@ -306,6 +307,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
       />
       <GlobalToast />
         <GraphEventToast />
+        <FloatingWhatsApp placement={`global_fab_${screen}`} />
       </div>
     </>
   );

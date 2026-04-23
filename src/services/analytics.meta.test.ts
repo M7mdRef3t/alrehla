@@ -64,8 +64,7 @@ describe("meta analytics tracking", () => {
 
     trackLandingView({ entry_variant: "default" });
 
-    // Should call init then track
-    expect(fbq).toHaveBeenCalledWith("init", "964579425998794");
+    // init is now handled during script injection, verify the track call
     expect(fbq).toHaveBeenCalledWith("track", "ViewContent", expect.objectContaining({
       content_name: "alrehla_landing",
       content_category: "landing",
@@ -90,7 +89,7 @@ describe("meta analytics tracking", () => {
       flow: "relationship_onboarding"
     });
 
-    expect(fbq).toHaveBeenCalledWith("init", "964579425998794");
+    // init is handled by script injection, verify track calls
     
     expect(fbq).toHaveBeenCalledWith("track", "Lead", expect.objectContaining({
       source: "landing",

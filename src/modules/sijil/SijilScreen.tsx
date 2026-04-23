@@ -401,7 +401,7 @@ export const SijilScreen: FC = () => {
           <div className="p-4 rounded-xl"
             style={{ background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.06)" }}
           >
-            <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
               {(() => {
                 const last7 = events.filter((e) => Date.now() - e.timestamp < 7 * 86400000);
                 const last30 = events.filter((e) => Date.now() - e.timestamp < 30 * 86400000);
@@ -471,7 +471,7 @@ export const SijilScreen: FC = () => {
             style={{ background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.06)" }}
           >
             <p className="text-[10px] text-emerald-400/50 font-bold mb-2">تحليل التفاعل</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { label: "تنوع المصادر", value: `${sourceStats.length} منتج`, emoji: "🔗" },
                 { label: "أكثر منتج", value: sourceStats[0] ? SOURCE_META[sourceStats[0].source]?.label || sourceStats[0].source : "—", emoji: "👑" },

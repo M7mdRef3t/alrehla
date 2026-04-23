@@ -494,7 +494,7 @@ export const RiwayaScreen: FC = () => {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {[
               { label: "نبضات", value: summary.totalPulses, emoji: "💓", color: "#ef4444" },
               { label: "أوسمة", value: summary.totalBadges, emoji: "🏅", color: "#fbbf24" },
@@ -515,7 +515,7 @@ export const RiwayaScreen: FC = () => {
 
           {/* Peaks & Valleys */}
           {(peaksAndValleys.peaks.length > 0 || peaksAndValleys.valleys.length > 0) && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Peaks */}
               <div className="p-4 rounded-2xl" style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.08)" }}>
                 <p className="text-[10px] text-emerald-400/60 font-bold flex items-center gap-1 mb-2">

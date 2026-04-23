@@ -55,7 +55,7 @@ export const InsightsLibrary: FC<InsightsLibraryProps> = ({ isOpen, onClose }) =
                     <div className="flex items-center gap-4">
                         <div className="relative hidden sm:block">
                             <input 
-                                className="bg-slate-800/50 border-none outline-none rounded-full py-2 pr-10 pl-4 text-sm focus:ring-1 focus:ring-teal-400/50 w-64 placeholder:text-slate-500" 
+                                className="bg-slate-800/50 border-none outline-none rounded-full py-2 pr-10 pl-4 text-sm focus:ring-1 focus:ring-teal-400/50 w-full sm:w-64 placeholder:text-slate-500" 
                                 placeholder="بحث في الملاحظات..." 
                                 type="text"
                             />

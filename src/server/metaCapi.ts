@@ -191,14 +191,10 @@ async function logCapiTelemetry(data: {
   error_message?: string;
 }) {
   try {
-    const { createClient } = await import("@supabase/supabase-js");
-    const admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-      process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
-      { auth: { persistSession: false } }
-    );
+    const { supabaseAdmin } = await import("@/infrastructure/database/client");
+    if (!supabaseAdmin) return;
     
-    await admin.from("capi_telemetry").insert([data]);
+    await supabaseAdmin.from("capi_telemetry").insert([data]);
   } catch (err) {
     console.error("[CAPI Telemetry] Failed to log to DB:", err);
   }

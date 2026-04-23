@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type ComponentProps } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, TrendingUp, AlertTriangle, Copy,
@@ -8,6 +8,18 @@ import {
 } from "lucide-react";
 import { CA_DIMENSIONS, type CADimension } from "@/data/comprehensiveAssessmentData";
 import { getComparisonResults, type AnalysisResult } from "@/services/partnerCompareService";
+
+const toSafeSvgNumber = (value: unknown, fallback: number): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+const SafeMotionCircle = ({ cx = 0, cy = 0, r = 0, ...props }: ComponentProps<typeof motion.circle>) => (
+  <motion.circle
+    cx={typeof cx === "string" ? cx : toSafeSvgNumber(cx, 0)}
+    cy={typeof cy === "string" ? cy : toSafeSvgNumber(cy, 0)}
+    r={Math.max(toSafeSvgNumber(typeof r === "string" ? Number(r) : r, 0), 0)}
+    {...props}
+  />
+);
 
 /* ══════════════════════════════════════════
    Dual Radar Chart
@@ -86,7 +98,7 @@ function CompatGauge({ pct, color }: { pct: number; color: string }) {
     <div style={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={size * 0.09} />
-        <motion.circle cx={cx} cy={cy} r={r} fill="none" stroke={color}
+        <SafeMotionCircle cx={cx} cy={cy} r={r} fill="none" stroke={color}
           strokeWidth={size * 0.09} strokeLinecap="round"
           strokeDasharray={circ}
           initial={{ strokeDashoffset: circ }}

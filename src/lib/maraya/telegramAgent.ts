@@ -6,19 +6,9 @@ import { logger } from "@/services/logger";
  */
 
 import { GoogleGenAI } from '@google/genai';
-import { createClient } from '@supabase/supabase-js';
-
-// Setup Supabase lazily so the module can load without env configuration.
-let supabase: ReturnType<typeof createClient> | null = null;
+import { supabaseAdmin as supabase } from '@/infrastructure/database/client';
 
 function getSupabase() {
-  if (supabase) return supabase;
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-  if (!supabaseUrl || !supabaseKey) return null;
-
-  supabase = createClient(supabaseUrl, supabaseKey);
   return supabase;
 }
 

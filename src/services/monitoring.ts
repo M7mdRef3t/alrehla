@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/react";
+import * as Sentry from "@sentry/nextjs";
 import Clarity from "@microsoft/clarity";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { trackError } from "./analytics";
@@ -10,13 +10,7 @@ export function initMonitoring(): void {
   const dsn = runtimeEnv.sentryDsn?.trim();
   if (!dsn) return;
 
-  Sentry.init({
-    dsn,
-    environment: runtimeEnv.appEnv || (runtimeEnv.isDev ? "development" : "production"),
-    tracesSampleRate: Number(runtimeEnv.sentryTracesSampleRate ?? 0.1),
-    replaysSessionSampleRate: Number(runtimeEnv.sentryReplaysSessionSampleRate ?? 0),
-    replaysOnErrorSampleRate: Number(runtimeEnv.sentryReplaysOnErrorSampleRate ?? 0.2)
-  });
+  // Sentry initialization is now handled automatically by @sentry/nextjs via sentry.*.config.ts files
   
   // Initialize Microsoft Clarity
   const clarityId = runtimeEnv.clarityProjectId?.trim();

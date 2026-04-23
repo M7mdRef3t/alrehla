@@ -65,17 +65,7 @@ export function AppChromeShell({
         </div>
       )}
 
-      {chromeVisibility.showFloatingWhatsApp && whatsAppLink && (
-        <button
-          type="button"
-          onClick={onOpenWhatsApp}
-          className={`fixed z-40 right-4 ${sidebarExpanded ? "md:right-80" : "md:right-6"} bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all duration-500`}
-          title="تواصل واتساب"
-          aria-label="تواصل واتساب"
-        >
-          <MessageCircle className="w-5 h-5 shrink-0" />
-        </button>
-      )}
+
 
       {children}
 

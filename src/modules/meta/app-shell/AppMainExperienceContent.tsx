@@ -5,17 +5,19 @@ import { type AppScreen } from "@/navigation/navigationMachine";
 import { AppStartScreens } from "../AppStartScreens";
 import { AppJourneyScreens } from "../AppJourneyScreens";
 import { AppMetaScreens } from "../AppMetaScreens";
-import { StoriesScreen } from "../../growth/StoriesScreen";
-import { AboutScreen } from "../../growth/AboutScreen";
-import { RelationshipInsightsDashboard } from "../../exploration/RelationshipInsightsDashboard";
-import { QuizzesHub } from "../../growth/QuizzesHub";
-import { BehavioralAnalysisHub } from "../../exploration/BehavioralAnalysisHub";
-import { ResourcesCenter } from "../../growth/ResourcesCenter";
 import type { ResourceTab } from "../../growth/ResourcesCenter";
-import { UserProfile } from "../UserProfile";
-import { SanctuaryDashboard } from "../SanctuaryDashboard";
-import { DawayirPlayground } from "../../social/DawayirPlayground";
 import { AwarenessSkeleton } from "../AwarenessSkeleton";
+
+// ─── Lazy-loaded screens (split from initial bundle) ─────────────────────────
+const StoriesScreen = lazy(() => import("../../growth/StoriesScreen").then(m => ({ default: m.StoriesScreen })));
+const AboutScreen = lazy(() => import("../../growth/AboutScreen").then(m => ({ default: m.AboutScreen })));
+const RelationshipInsightsDashboard = lazy(() => import("../../exploration/RelationshipInsightsDashboard").then(m => ({ default: m.RelationshipInsightsDashboard })));
+const QuizzesHub = lazy(() => import("../../growth/QuizzesHub").then(m => ({ default: m.QuizzesHub })));
+const BehavioralAnalysisHub = lazy(() => import("../../exploration/BehavioralAnalysisHub").then(m => ({ default: m.BehavioralAnalysisHub })));
+const ResourcesCenter = lazy(() => import("../../growth/ResourcesCenter").then(m => ({ default: m.ResourcesCenter })));
+const UserProfile = lazy(() => import("../UserProfile").then(m => ({ default: m.UserProfile })));
+const SanctuaryDashboard = lazy(() => import("../SanctuaryDashboard").then(m => ({ default: m.SanctuaryDashboard })));
+const DawayirPlayground = lazy(() => import("../../social/DawayirPlayground").then(m => ({ default: m.DawayirPlayground })));
 
 const CommandCenter = lazy(() => import("../../lifeOS/CommandCenter"));
 const MarayaApp = lazy(() => import("../../maraya/MarayaApp"));
@@ -279,9 +281,11 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   if (screen === "stories") {
     return (
       <PageShell headerMode="none" tabBarVisible={false}>
-        <StoriesScreen
-          onBack={() => onNavigate?.("landing" as AppScreen)}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <StoriesScreen
+            onBack={() => onNavigate?.("landing" as AppScreen)}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -289,10 +293,12 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   if (screen === "about") {
     return (
       <PageShell headerMode="none" tabBarVisible={false}>
-        <AboutScreen
-          onBack={() => onNavigate?.("landing" as AppScreen)}
-          onStart={() => onStartJourney?.()}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <AboutScreen
+            onBack={() => onNavigate?.("landing" as AppScreen)}
+            onStart={() => onStartJourney?.()}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -300,10 +306,12 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   if (screen === "insights") {
     return (
       <PageShell headerMode="standard" tabBarVisible={true} breadcrumbVisible={true}>
-        <RelationshipInsightsDashboard
-          onBack={() => onNavigate?.("landing" as AppScreen)}
-          onGoToQuizzes={() => onNavigate?.("quizzes" as AppScreen)}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <RelationshipInsightsDashboard
+            onBack={() => onNavigate?.("landing" as AppScreen)}
+            onGoToQuizzes={() => onNavigate?.("quizzes" as AppScreen)}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -311,9 +319,11 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   if (screen === "profile") {
     return (
       <PageShell headerMode="standard" tabBarVisible={true} breadcrumbVisible={true}>
-        <UserProfile
-          onBack={() => onNavigate?.("landing" as AppScreen)}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <UserProfile
+            onBack={() => onNavigate?.("landing" as AppScreen)}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -321,9 +331,11 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   if (screen === "quizzes") {
     return (
       <PageShell headerMode="standard" tabBarVisible={true} breadcrumbVisible={true}>
-        <QuizzesHub
-          onBack={() => onNavigate?.("landing" as AppScreen)}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <QuizzesHub
+            onBack={() => onNavigate?.("landing" as AppScreen)}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -331,13 +343,15 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   if (screen === "behavioral-analysis") {
     return (
       <PageShell headerMode="standard" tabBarVisible={true} breadcrumbVisible={true}>
-        <BehavioralAnalysisHub
-          onBack={() => onNavigate?.("landing" as AppScreen)}
-          onNavigateToResources={(tab, search) => {
-            setResourceDeepLink({ tab, search });
-            onNavigate?.("resources" as AppScreen);
-          }}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <BehavioralAnalysisHub
+            onBack={() => onNavigate?.("landing" as AppScreen)}
+            onNavigateToResources={(tab, search) => {
+              setResourceDeepLink({ tab, search });
+              onNavigate?.("resources" as AppScreen);
+            }}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -346,11 +360,13 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
     const link = resourceDeepLink;
     return (
       <PageShell headerMode="standard" tabBarVisible={true} breadcrumbVisible={true}>
-        <ResourcesCenter
-          onBack={() => { setResourceDeepLink(null); onNavigate?.("landing" as AppScreen); }}
-          initialTab={link?.tab}
-          initialSearch={link?.search}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <ResourcesCenter
+            onBack={() => { setResourceDeepLink(null); onNavigate?.("landing" as AppScreen); }}
+            initialTab={link?.tab}
+            initialSearch={link?.search}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -358,10 +374,12 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   if (screen === "sanctuary") {
     return (
       <PageShell headerMode="standard" tabBarVisible={true} breadcrumbVisible={true}>
-        <SanctuaryDashboard
-          onNavigate={(s) => onNavigate?.(s as any)}
-          onOpenBreathing={() => onOpenBreathing?.()}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <SanctuaryDashboard
+            onNavigate={(s) => onNavigate?.(s as any)}
+            onOpenBreathing={() => onOpenBreathing?.()}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -382,9 +400,11 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   if (screen === "dawayir") {
     return (
       <PageShell headerMode="standard" tabBarVisible={true}>
-        <DawayirPlayground
-          onBack={() => onNavigate?.("landing" as AppScreen)}
-        />
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <DawayirPlayground
+            onBack={() => onNavigate?.("landing" as AppScreen)}
+          />
+        </Suspense>
       </PageShell>
     );
   }

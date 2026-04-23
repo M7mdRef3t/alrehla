@@ -61,7 +61,7 @@ export class GraphRecommendationEngine {
                 let meta: any = {};
                 try {
                     meta = typeof match.metadata === 'string' ? JSON.parse(match.metadata) : match.metadata || {};
-                } catch(e) {}
+                } catch(e) { logger.warn("[Recommendation] metadata parse error:", e); }
 
                 recommendations.push({
                     id: match.id,

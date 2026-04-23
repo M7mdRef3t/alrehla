@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, type ComponentProps } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Brain,
@@ -14,6 +14,18 @@ import type { ResourceTab } from '@/modules/growth/ResourcesCenter';
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { UserProfile } from '@/modules/meta/UserProfile';
 import { FutureEchoSimulator } from './FutureEchoSimulator';
+
+const toSafeSvgNumber = (value: unknown, fallback: number): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+const SafeMotionCircle = ({ cx = 0, cy = 0, r = 0, ...props }: ComponentProps<typeof motion.circle>) => (
+  <motion.circle
+    cx={typeof cx === "string" ? cx : toSafeSvgNumber(cx, 0)}
+    cy={typeof cy === "string" ? cy : toSafeSvgNumber(cy, 0)}
+    r={Math.max(toSafeSvgNumber(typeof r === "string" ? Number(r) : r, 0), 0)}
+    {...props}
+  />
+);
 
 /* ══════════════════════════════════════════
    Types
@@ -186,7 +198,7 @@ function TriggerRing({ score }: { score: number }) {
     <div style={{ position: "relative", width: 130, height: 130, flexShrink: 0 }}>
       <svg width={130} height={130} style={{ transform: "rotate(-90deg)" }}>
         <circle cx={65} cy={65} r={r} stroke="rgba(255,255,255,0.04)" strokeWidth={10} fill="none" />
-        <motion.circle
+        <SafeMotionCircle
           cx={65} cy={65} r={r}
           stroke="url(#triggerGrad)" strokeWidth={10} fill="none"
           strokeDasharray={circ}

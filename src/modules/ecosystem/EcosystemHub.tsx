@@ -1,18 +1,13 @@
 /**
- * مركز القيادة الموحّد — Ecosystem Command Center
+ * مدارات الرحلة — Ecosystem Constellation
  *
- * Unified dashboard pulling live stats from ALL 27 products.
- * Provides at-a-glance ecosystem health + quick navigation.
+ * A sentient, orbital interface replacing the generic dashboard.
+ * Active tools orbit close to the core, while inactive tools form a background nebula.
  */
 
-import React, { useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  Moon, Mail, Flame, TrendingUp, Eye, Brain, Compass,
-  BookOpen, AlertTriangle, LayoutGrid, Bell, ScrollText,
-  Droplets, Scale, Users, FileText, Sparkles, Gem,
-  Shield, Timer, Star, Zap, ArrowUpRight,
-} from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, ArrowUpRight } from "lucide-react";
 
 // Import stores to aggregate data
 import { useMapState } from "@/modules/map/dawayirIndex";
@@ -31,13 +26,9 @@ interface ProductPulse {
   name: string;
   emoji: string;
   color: string;
-  /** Main stat number */
   stat: number;
-  /** Label for the stat */
   statLabel: string;
-  /** Is this product active/has data? */
   hasActivity: boolean;
-  /** Navigation target */
   screen: string;
 }
 
@@ -63,11 +54,10 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
   const khalwaSessions = useKhalwaState((s) => s.sessions);
   const khalwaMinutes = useKhalwaState((s) => s.getTotalMinutes());
 
-  const wirdStreak = 0; // wird doesn't expose currentStreak yet
+  const wirdStreak = 0;
 
   // Build product pulses
   const products: ProductPulse[] = useMemo(() => [
-    // Core Ecosystem
     { id: "dawayir", name: "دوائر", emoji: "🔵", color: "#6366f1", stat: mapNodes?.length ?? 0, statLabel: "عقدة", hasActivity: (mapNodes?.length ?? 0) > 0, screen: "dawayir" },
     { id: "maraya", name: "مرايا", emoji: "🪞", color: "#a78bfa", stat: 0, statLabel: "انعكاس", hasActivity: false, screen: "maraya" },
     { id: "atmosfera", name: "أتموسفيرا", emoji: "🌤️", color: "#f472b6", stat: 0, statLabel: "حالة", hasActivity: false, screen: "atmosfera" },
@@ -75,27 +65,22 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
     { id: "baseera", name: "بصيرة", emoji: "👁️", color: "#14b8a6", stat: 0, statLabel: "رؤية", hasActivity: false, screen: "baseera" },
     { id: "watheeqa", name: "وثيقة", emoji: "📜", color: "#e879f9", stat: 0, statLabel: "وثيقة", hasActivity: false, screen: "watheeqa" },
     { id: "kharita", name: "خريطة", emoji: "🗺️", color: "#06b6d4", stat: 0, statLabel: "أداة", hasActivity: false, screen: "kharita" },
-    // Balance & Social
     { id: "mizan", name: "ميزان", emoji: "⚖️", color: "#f97316", stat: 0, statLabel: "تقييم", hasActivity: false, screen: "mizan" },
     { id: "rifaq", name: "رفاق", emoji: "👥", color: "#22c55e", stat: 0, statLabel: "رفيق", hasActivity: false, screen: "rifaq" },
     { id: "murshid", name: "مرشد", emoji: "🧠", color: "#8b5cf6", stat: 0, statLabel: "توجيه", hasActivity: false, screen: "murshid" },
     { id: "jisr", name: "جسر", emoji: "🌉", color: "#ec4899", stat: 0, statLabel: "جسر", hasActivity: false, screen: "jisr" },
     { id: "rafiq", name: "رفيق", emoji: "🧭", color: "#6366f1", stat: 0, statLabel: "رفيق", hasActivity: false, screen: "rafiq" },
-    // Reports & Navigation
     { id: "taqrir", name: "تقرير", emoji: "📊", color: "#06b6d4", stat: 0, statLabel: "تقرير", hasActivity: false, screen: "taqrir" },
     { id: "bawsala", name: "بوصلة", emoji: "🧭", color: "#06b6d4", stat: 0, statLabel: "قرار", hasActivity: false, screen: "bawsala" },
     { id: "riwaya", name: "رواية", emoji: "📖", color: "#fb923c", stat: 0, statLabel: "فصل", hasActivity: false, screen: "riwaya" },
-    // Safety & Protection
     { id: "nadhir", name: "نذير", emoji: "🛡️", color: "#ef4444", stat: 0, statLabel: "تنبيه", hasActivity: false, screen: "nadhir" },
-    // Habits & Rituals
     { id: "wird", name: "وِرد", emoji: "🔥", color: "#fbbf24", stat: wirdStreak, statLabel: "يوم", hasActivity: wirdStreak > 0, screen: "wird" },
     { id: "warsha", name: "ورشة", emoji: "⚡", color: "#f97316", stat: 0, statLabel: "تحدي", hasActivity: false, screen: "warsha" },
     { id: "mithaq", name: "ميثاق", emoji: "🤝", color: "#fbbf24", stat: pledges?.length ?? 0, statLabel: "عقد", hasActivity: (pledges?.length ?? 0) > 0, screen: "mithaq" },
     { id: "sullam", name: "سُلّم", emoji: "📈", color: "#84cc16", stat: goals?.length ?? 0, statLabel: "هدف", hasActivity: (goals?.length ?? 0) > 0, screen: "sullam" },
     { id: "bathra", name: "بذرة", emoji: "🌱", color: "#10b981", stat: seeds?.length ?? 0, statLabel: "بذرة", hasActivity: (seeds?.length ?? 0) > 0, screen: "bathra" },
     { id: "session-intake", name: "جلسات", emoji: "📅", color: "#3b82f6", stat: 0, statLabel: "طلب", hasActivity: false, screen: "session-intake" },
-    { id: "session-console", name: "كونسول الجلسات", emoji: "🧩", color: "#3b82f6", stat: 0, statLabel: "جلسة", hasActivity: false, screen: "session-console" },
-    // Soul & Inner Work
+    { id: "session-console", name: "كونسول", emoji: "🧩", color: "#3b82f6", stat: 0, statLabel: "جلسة", hasActivity: false, screen: "session-console" },
     { id: "samt", name: "صمت", emoji: "🤫", color: "#14b8a6", stat: 0, statLabel: "نَفَس", hasActivity: false, screen: "samt" },
     { id: "qalb", name: "قلب", emoji: "❤️", color: "#ef4444", stat: 0, statLabel: "نبض", hasActivity: false, screen: "qalb" },
     { id: "niyya", name: "نية", emoji: "🎯", color: "#10b981", stat: 0, statLabel: "نية", hasActivity: false, screen: "niyya" },
@@ -104,7 +89,6 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
     { id: "kanz", name: "كنز", emoji: "🪙", color: "#f59e0b", stat: 0, statLabel: "حكمة", hasActivity: false, screen: "kanz" },
     { id: "tazkiya", name: "تزكية", emoji: "🌿", color: "#a78bfa", stat: 0, statLabel: "تطهير", hasActivity: false, screen: "tazkiya" },
     { id: "protocol", name: "بروتوكول", emoji: "⚡", color: "#f59e0b", stat: 0, statLabel: "خطة", hasActivity: false, screen: "protocol" },
-    // Memory & Focus
     { id: "markaz", name: "مركز", emoji: "🏢", color: "#6366f1", stat: 0, statLabel: "أمر", hasActivity: false, screen: "markaz" },
     { id: "sada", name: "صدى", emoji: "🔔", color: "#06b6d4", stat: 0, statLabel: "تنبيه", hasActivity: false, screen: "sada" },
     { id: "hafiz", name: "حافظ", emoji: "💎", color: "#a855f7", stat: 0, statLabel: "ذكرى", hasActivity: false, screen: "hafiz" },
@@ -114,184 +98,231 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
     { id: "athar", name: "أثر", emoji: "📜", color: "#f59e0b", stat: 0, statLabel: "أثر", hasActivity: false, screen: "athar" },
     { id: "risala", name: "رسالة", emoji: "✉️", color: "#f59e0b", stat: 0, statLabel: "رسالة", hasActivity: false, screen: "risala" },
     { id: "shahada", name: "شهادة", emoji: "📄", color: "#14b8a6", stat: 0, statLabel: "شهادة", hasActivity: false, screen: "shahada" },
-    // New Modules
     { id: "observatory", name: "المرصد", emoji: "🕸️", color: "#818cf8", stat: 0, statLabel: "نمط", hasActivity: false, screen: "observatory" },
     { id: "wasiyya", name: "وصية", emoji: "✉️", color: "#fbbf24", stat: letters?.length ?? 0, statLabel: "رسالة", hasActivity: (letters?.length ?? 0) > 0, screen: "wasiyya" },
     { id: "khalwa", name: "خلوة", emoji: "🧘", color: "#8b5cf6", stat: khalwaSessions?.length ?? 0, statLabel: "جلسة", hasActivity: (khalwaSessions?.length ?? 0) > 0, screen: "khalwa" },
   ], [mapNodes, pledges, goals, seeds, letters, khalwaSessions, wirdStreak]);
 
-  const activeProducts = products.filter((p) => p.hasActivity);
+  const activeProducts = useMemo(() => products.filter((p) => p.hasActivity), [products]);
+  const inactiveProducts = useMemo(() => products.filter((p) => !p.hasActivity), [products]);
+  
   const totalActive = activeProducts.length;
-
-  // Ecosystem health — percentage of products with activity
   const healthPct = Math.round((totalActive / products.length) * 100);
 
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
+  // Layout Constants
+  const INNER_RADIUS = typeof window !== 'undefined' && window.innerWidth < 768 ? 110 : 160;
+  const OUTER_RADIUS = typeof window !== 'undefined' && window.innerWidth < 768 ? 200 : 340;
+
+  // Calculate coordinates for nodes
+  const calculateOrbit = (nodes: ProductPulse[], radius: number, isInner: boolean) => {
+    return nodes.map((node, i) => {
+      // Add slight randomness to outer orbit to make it feel like a nebula
+      const jitterX = isInner ? 0 : (Math.random() - 0.5) * 40;
+      const jitterY = isInner ? 0 : (Math.random() - 0.5) * 40;
+      const angle = (i / nodes.length) * 2 * Math.PI;
+      
+      return {
+        ...node,
+        x: Math.cos(angle) * radius + jitterX,
+        y: Math.sin(angle) * radius + jitterY,
+      };
+    });
+  };
+
+  const innerNodes = useMemo(() => calculateOrbit(activeProducts, INNER_RADIUS, true), [activeProducts]);
+  const outerNodes = useMemo(() => calculateOrbit(inactiveProducts, OUTER_RADIUS, false), [inactiveProducts]);
+
   return (
-    <div className="min-h-screen bg-slate-950 font-sans pb-32" dir="rtl">
-      {/* Ambient */}
+    <div className="relative w-full min-h-screen bg-[#030712] overflow-hidden flex items-center justify-center font-sans" dir="rtl">
+      
+      {/* 1. Deep Space Nebula Background */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-[500px] h-[500px] rounded-full top-[-15%] right-[-10%]"
-          style={{ background: "radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 65%)" }} />
-        <div className="absolute w-[400px] h-[400px] rounded-full bottom-[-10%] left-[-5%]"
-          style={{ background: "radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 65%)" }} />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+            rotate: [0, 90, 0]
+          }}
+          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          className="absolute w-[800px] h-[800px] rounded-full top-[-20%] right-[-10%] blur-[120px]"
+          style={{ background: "radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)" }} 
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.5, 1],
+            opacity: [0.2, 0.4, 0.2],
+            rotate: [0, -90, 0]
+          }}
+          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+          className="absolute w-[600px] h-[600px] rounded-full bottom-[-10%] left-[-10%] blur-[100px]"
+          style={{ background: "radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)" }} 
+        />
       </div>
 
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 px-5 pt-14 pb-2">
-        <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-indigo-900/15 border border-indigo-500/20">
-            <LayoutGrid className="w-7 h-7 text-indigo-400" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-white tracking-tight">مركز القيادة</h1>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">27 منتج — نظرة واحدة</p>
-          </div>
-        </div>
-      </motion.div>
+      {/* Header Overlay */}
+      <div className="absolute top-0 left-0 right-0 p-6 z-50 pointer-events-none flex justify-between items-start">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="pointer-events-auto">
+          <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-l from-white to-white/60 tracking-tight">
+            سماء الرحلة
+          </h1>
+          <p className="text-sm text-slate-400 font-medium mt-1 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-teal-400" />
+            تتناغم مع إيقاعك
+          </p>
+        </motion.div>
+      </div>
 
-      {/* Ecosystem Health Ring */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2 }}
-        className="relative z-10 px-5 py-6"
+      {/* The Constellation Container */}
+      <div className="relative flex items-center justify-center w-full h-[800px] max-w-[1000px] mx-auto scale-75 md:scale-100">
+        
+        {/* Orbit Rings (Visual Only) */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+          <div className="absolute rounded-full border border-slate-500 border-dashed" style={{ width: INNER_RADIUS * 2, height: INNER_RADIUS * 2 }} />
+          <div className="absolute rounded-full border border-slate-700/50" style={{ width: OUTER_RADIUS * 2, height: OUTER_RADIUS * 2 }} />
+        </div>
+
+        {/* 2. The Singularity (Core Pulse) */}
+        <div className="absolute z-10 flex flex-col items-center justify-center pointer-events-none">
+          <motion.div
+            animate={{ 
+              boxShadow: [
+                `0 0 40px rgba(20, 184, 166, 0.2)`,
+                `0 0 80px rgba(20, 184, 166, 0.6)`,
+                `0 0 40px rgba(20, 184, 166, 0.2)`
+              ]
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="w-32 h-32 md:w-40 md:h-40 rounded-full border border-teal-500/30 bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center pointer-events-auto cursor-pointer"
+            onClick={() => onNavigate?.("home")}
+          >
+            <span className="text-3xl font-black text-white mb-1">{healthPct}%</span>
+            <span className="text-[10px] text-teal-400 font-bold tracking-widest uppercase">رنين النظام</span>
+          </motion.div>
+        </div>
+
+        {/* 3. Global Rotation Container */}
+        <motion.div 
+          animate={{ rotate: 360 }} 
+          transition={{ duration: 180, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          {/* Inner Orbit (Active Products) */}
+          {innerNodes.map((node) => (
+            <OrbitNode 
+              key={node.id} 
+              node={node} 
+              isInner={true} 
+              isHovered={hoveredNode === node.id}
+              onHover={setHoveredNode}
+              onClick={() => onNavigate?.(node.screen)}
+            />
+          ))}
+
+          {/* Outer Orbit (Inactive Nebula) */}
+          {outerNodes.map((node) => (
+            <OrbitNode 
+              key={node.id} 
+              node={node} 
+              isInner={false} 
+              isHovered={hoveredNode === node.id}
+              onHover={setHoveredNode}
+              onClick={() => onNavigate?.(node.screen)}
+            />
+          ))}
+        </motion.div>
+
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════ */
+/*           ORBIT NODE COMPONENT             */
+/* ═══════════════════════════════════════════ */
+
+interface OrbitNodeProps {
+  node: ProductPulse & { x: number; y: number };
+  isInner: boolean;
+  isHovered: boolean;
+  onHover: (id: string | null) => void;
+  onClick: () => void;
+}
+
+function OrbitNode({ node, isInner, isHovered, onHover, onClick }: OrbitNodeProps) {
+  return (
+    <motion.div
+      className="absolute"
+      style={{ left: `calc(50% + ${node.x}px)`, top: `calc(50% + ${node.y}px)` }}
+      // Counter-rotate so items stay upright
+      animate={{ rotate: -360 }}
+      transition={{ duration: 180, repeat: Infinity, ease: "linear" }}
+      onMouseEnter={() => onHover(node.id)}
+      onMouseLeave={() => onHover(null)}
+    >
+      <motion.button
+        onClick={onClick}
+        whileHover={{ scale: 1.2, zIndex: 50 }}
+        whileTap={{ scale: 0.9 }}
+        className="relative flex flex-col items-center justify-center group -translate-x-1/2 -translate-y-1/2"
       >
-        <div className="flex items-center justify-center gap-8">
-          {/* Health Ring */}
-          <div className="relative w-28 h-28">
-            <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-              <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(51,65,85,0.2)" strokeWidth="6" />
-              <motion.circle
-                cx="50" cy="50" r="42" fill="none"
-                stroke="url(#healthGrad)" strokeWidth="6" strokeLinecap="round"
-                strokeDasharray={`${2 * Math.PI * 42}`}
-                initial={{ strokeDashoffset: 2 * Math.PI * 42 }}
-                animate={{ strokeDashoffset: 2 * Math.PI * 42 * (1 - healthPct / 100) }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-              />
-              <defs>
-                <linearGradient id="healthGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#6366f1" />
-                  <stop offset="100%" stopColor="#10b981" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-black text-white">{healthPct}%</span>
-              <span className="text-[8px] text-slate-500 font-bold">صحة النظام</span>
-            </div>
-          </div>
+        {/* Glow behind the node */}
+        <AnimatePresence>
+          {(isInner || isHovered) && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0 }}
+              className="absolute inset-0 rounded-full blur-xl"
+              style={{ background: node.color, opacity: isHovered ? 0.6 : 0.3 }}
+            />
+          )}
+        </AnimatePresence>
 
-          {/* Quick Stats */}
-          <div className="space-y-3">
-            {[
-              { label: "منتج فعّال", value: totalActive, color: "#10b981", icon: <Zap className="w-3 h-3" /> },
-              { label: "إجمالي المنتجات", value: products.length, color: "#6366f1", icon: <LayoutGrid className="w-3 h-3" /> },
-              { label: "دقائق خلوة", value: khalwaMinutes, color: "#8b5cf6", icon: <Timer className="w-3 h-3" /> },
-            ].map((s) => (
-              <div key={s.label} className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: `${s.color}15`, color: s.color }}>
-                  {s.icon}
-                </div>
-                <div>
-                  <span className="text-sm font-black text-white">{s.value}</span>
-                  <span className="text-[9px] text-slate-500 mr-1">{s.label}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* The Node Bubble */}
+        <div 
+          className={`relative z-10 flex items-center justify-center rounded-full border backdrop-blur-md transition-all duration-300
+            ${isInner 
+              ? 'w-14 h-14 md:w-16 md:h-16 border-white/20 shadow-lg' 
+              : 'w-10 h-10 border-white/5 opacity-50 group-hover:opacity-100 group-hover:w-14 group-hover:h-14'
+            }
+          `}
+          style={{ 
+            background: isInner || isHovered ? `${node.color}20` : 'rgba(15,23,42,0.8)',
+            borderColor: isInner || isHovered ? `${node.color}50` : 'rgba(255,255,255,0.05)'
+          }}
+        >
+          <span className={`${isInner || isHovered ? 'text-2xl' : 'text-lg grayscale group-hover:grayscale-0'} transition-all`}>
+            {node.emoji}
+          </span>
+
+          {/* Activity Dot */}
+          {isInner && (
+            <div className="absolute top-0 right-0 w-3 h-3 rounded-full border border-slate-900" style={{ background: node.color }} />
+          )}
         </div>
-      </motion.div>
 
-      {/* Active Products Highlight */}
-      {activeProducts.length > 0 && (
-        <div className="relative z-10 px-5 mb-4">
-          <h3 className="text-[10px] text-slate-500 font-bold mb-3 uppercase tracking-wider">🟢 منتجات نشطة</h3>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {activeProducts.map((p, i) => (
-              <motion.button
-                key={p.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + i * 0.05 }}
-                onClick={() => onNavigate?.(p.screen)}
-                className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
-                style={{
-                  background: `${p.color}10`,
-                  border: `1px solid ${p.color}25`,
-                }}
-              >
-                <span className="text-sm">{p.emoji}</span>
-                <div className="text-right">
-                  <span className="text-[10px] font-bold text-white block">{p.name}</span>
-                  <span className="text-[9px] font-bold" style={{ color: p.color }}>{p.stat} {p.statLabel}</span>
-                </div>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Full Product Grid */}
-      <div className="relative z-10 px-5">
-        <h3 className="text-[10px] text-slate-500 font-bold mb-3 uppercase tracking-wider">🌌 المنظومة الكاملة</h3>
-        <div className="grid grid-cols-3 gap-2">
-          {products.map((p, i) => (
-            <motion.button
-              key={p.id}
-              initial={{ opacity: 0, y: 12 }}
+        {/* Floating Label */}
+        <AnimatePresence>
+          {(isInner || isHovered) && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 + i * 0.02 }}
-              onClick={() => onNavigate?.(p.screen)}
-              className="relative rounded-xl p-3 text-center transition-all group"
-              style={{
-                background: p.hasActivity ? `${p.color}08` : "rgba(15,23,42,0.4)",
-                border: `1px solid ${p.hasActivity ? `${p.color}25` : "rgba(51,65,85,0.2)"}`,
-              }}
+              exit={{ opacity: 0, y: -5 }}
+              className="absolute top-full mt-2 flex flex-col items-center pointer-events-none whitespace-nowrap"
             >
-              {/* Activity dot */}
-              {p.hasActivity && (
-                <div className="absolute top-2 left-2 w-1.5 h-1.5 rounded-full" style={{ background: p.color }}>
-                  <motion.div
-                    className="absolute inset-0 rounded-full"
-                    style={{ background: p.color }}
-                    animate={{ scale: [1, 2], opacity: [0.6, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                </div>
-              )}
-
-              <span className="text-xl block mb-1">{p.emoji}</span>
-              <span className="text-[10px] font-bold block" style={{ color: p.hasActivity ? "#fff" : "#64748b" }}>
-                {p.name}
-              </span>
-              {p.hasActivity && (
-                <span className="text-[9px] font-bold mt-0.5 block" style={{ color: p.color }}>
-                  {p.stat} {p.statLabel}
+              <span className="text-xs font-bold text-white drop-shadow-md">{node.name}</span>
+              {node.hasActivity && (
+                <span className="text-[10px] font-black" style={{ color: node.color }}>
+                  {node.stat} {node.statLabel}
                 </span>
               )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-              {/* Hover arrow */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <ArrowUpRight className="w-3 h-3 text-slate-500" />
-              </div>
-            </motion.button>
-          ))}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="relative z-10 mx-5 mt-8 p-4 rounded-2xl text-center"
-        style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(51,65,85,0.2)" }}
-      >
-        <p className="text-[10px] text-slate-600 leading-relaxed">
-          🌌 مركز القيادة — كل أدوات رحلتك في نظرة واحدة
-        </p>
-      </motion.div>
-    </div>
+      </motion.button>
+    </motion.div>
   );
 }

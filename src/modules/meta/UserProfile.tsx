@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, type ComponentProps } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Award, BarChart3, BookOpen,
@@ -15,6 +15,18 @@ import { useMapState } from '@/modules/map/dawayirIndex';
 import { ACHIEVEMENTS } from "@/data/achievements";
 import { QuestBoard as DailyQuests } from "../gamification/QuestBoard";
 import { calculateEntropy } from "@/services/predictiveEngine";
+
+const toSafeSvgNumber = (value: unknown, fallback: number): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+const SafeMotionCircle = ({ cx = 0, cy = 0, r = 0, ...props }: ComponentProps<typeof motion.circle>) => (
+  <motion.circle
+    cx={typeof cx === "string" ? cx : toSafeSvgNumber(cx, 0)}
+    cy={typeof cy === "string" ? cy : toSafeSvgNumber(cy, 0)}
+    r={Math.max(toSafeSvgNumber(typeof r === "string" ? Number(r) : r, 0), 0)}
+    {...props}
+  />
+);
 
 
 /* ══════════════════════════════════════════
@@ -114,7 +126,7 @@ function PersonalityRadar({ dims, size = 260 }: { dims: RadarDim[]; size?: numbe
           const val = Math.max(0, Math.min(1, d.value / 100));
           const p = pt(i, r * val);
           return (
-            <motion.circle key={`dot-${i}`} cx={p.x} cy={p.y} r={4}
+            <SafeMotionCircle key={`dot-${i}`} cx={p.x} cy={p.y} r={4}
               initial={{ r: 0 }} animate={{ r: 4 }} transition={{ delay: 0.5 + i * 0.1 }}
               fill="#fff" stroke="#2dd4bf" strokeWidth={2} filter="url(#neon-glow)" />
           );
@@ -153,7 +165,7 @@ function ProfileAvatar({ rank, level }: { rank: string; level: number }) {
       <svg width={size} height={size} style={{ position: "absolute", transform: "rotate(-90deg)", zIndex: 2 }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none"
           stroke="var(--app-border)" strokeWidth={4} />
-        <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none"
+        <SafeMotionCircle cx={size / 2} cy={size / 2} r={r} fill="none"
           stroke={cfg.color} strokeWidth={4.5} strokeLinecap="round"
           strokeDasharray={circ}
           initial={{ strokeDashoffset: circ }}

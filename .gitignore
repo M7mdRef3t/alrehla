@@ -93,3 +93,19 @@ ts_errors_fresh.txt
 scratch/
 fix_cursors.js
 __*
+
+# Debug/dev artifacts
+dev-perf*.log
+dev_server*.log
+.tmp-postcss.css
+eslint-report.json
+analytics_err.log
+landing_page.*
+landing_page_local.*
+landing_page_actual.*
+test-payload.json
+test-response*.json
+test_*.mjs
+codex-intake.png
+error.html
+build_output*.log

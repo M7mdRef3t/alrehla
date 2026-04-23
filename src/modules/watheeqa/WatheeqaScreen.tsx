@@ -238,7 +238,7 @@ export const WatheeqaScreen: FC = () => {
             {/* Mood Selector */}
             <div className="p-4 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3">حالتك المزاجية الآن</p>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {MOODS.map((m) => (
                   <button
                     key={m.id}
@@ -415,7 +415,7 @@ export const WatheeqaScreen: FC = () => {
             className="px-5 space-y-5"
           >
             {/* Summary Stats */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
                 { label: "تدوينات", value: totalEntries.toString(), icon: FileText, color: "#fb923c" },
                 { label: "أيام متواصلة", value: streak.toString(), icon: Flame, color: "#ef4444" },

@@ -1,0 +1,21 @@
+/**
+ * admin/index.ts — Barrel re-export for all admin modules.
+ * This allows imports like: import { ... } from "@/services/admin"
+ */
+
+export * from "./adminTypes";
+export * from "./adminCore";
+export * from "./adminSettings";
+export * from "./adminAlerts";
+export * from "./adminAiLogs";
+export * from "./adminMissions";
+export * from "./adminBroadcasts";
+export * from "./adminAnalytics";
+export * from "./adminReports";
+export * from "./adminSeo";
+export * from "./adminSupport";
+export * from "./adminUsers";
+export * from "./adminRevenue";
+export * from "./adminContent";
+export * from "./adminDreams";
+export * from "./adminJourneyPaths";

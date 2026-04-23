@@ -752,51 +752,44 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
             
             <div className="max-w-7xl mx-auto pb-20 relative z-10">
               <Suspense fallback={<div>Loading...</div>}>
-                {effectiveTab === "sovereign" && <SovereignPanel />}
-                {effectiveTab === "entity" && <EntityDashboard />}
-                {effectiveTab === "exec-overview" && <ExecutiveDashboard />}
-                {effectiveTab === "governance-ledger" && <GovernanceHub />}
-                {effectiveTab === "war-room" && <AlertsPanel />}
-                {effectiveTab === "design-lab" && <DesignLab />}
-                {effectiveTab === "content" && <ContentPanel />}
-                {effectiveTab === "ops-docs" && <OpsDocsPanel />}
-
+                {effectiveTab === "sovereign" && (
+                  <div className="space-y-12">
+                    <SovereignPanel />
+                    <ExecutiveDashboard />
+                    <HealthMonitorPanel />
+                    <FlowDynamicsDashboard />
+                  </div>
+                )}
+                
                 {effectiveTab === "growth-revenue" && (
                   <div className="space-y-12">
                     <GrowthRevenueDashboard />
+                    <SovereignFunnel />
+                    <SovereignExpansionHub />
                     <SalesEnablementPanel />
+                    <MarketingOpsPanel />
+                    <MailCommandCenter />
+                    <CreativeDashboard />
+                    <SeoGeoAuditorPanel />
                     <B2BAnalytics />
                     <AdAnalyticsDashboard />
                   </div>
                 )}
                 
-                {effectiveTab === "sovereign-funnel" && <SovereignFunnel />}
-                
-                {effectiveTab === "security-ops" && <SecurityOpsDashboard />}
-                
                 {effectiveTab === "consciousness-atlas" && (
                   <div className="space-y-12">
                     <ConsciousnessAtlasDashboard />
                     <ConsciousnessMap />
-                  </div>
-                )}
-                
-                {effectiveTab === "flow-map" && (
-                  <div className="space-y-12">
+                    <ConsciousnessArchivePanel />
+                    <ConsciousnessGraph />
+                    <DreamsMatrixPanel />
                     <FlowMapPanel />
                     <MapRegistryPanel />
                     <JourneyPathsPanel />
+                    <UsersPanel />
+                    <UserStatePanel />
                   </div>
                 )}
-                
-                {effectiveTab === "feedback-survey" && (
-                  <div className="space-y-12">
-                    <FeedbackPanel />
-                    <SurveyResultsPanel />
-                  </div>
-                )}
-                
-                {effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
                 
                 {effectiveTab === "ai-studio" && (
                   <div className="space-y-12">
@@ -804,42 +797,28 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                     <AISimulatorPanel />
                     <TheCrucible />
                     <AIDecisionLogPanel maxDecisions={100} />
+                    <DesignLab />
+                    <FeatureFlagsPanel />
+                    <ContentPanel />
+                    <OpsDocsPanel />
+                    <RepoIntelPanel />
+                    <EntityDashboard />
+                    <GovernanceHub />
                   </div>
                 )}
                 
-                {effectiveTab === "health-monitor" && (
+                {effectiveTab === "war-room" && (
                   <div className="space-y-12">
-                    <HealthMonitorPanel />
-                    <FlowDynamicsDashboard />
+                    <AlertsPanel />
+                    <SecurityOpsDashboard />
+                    <FleetCommander />
+                    <FeedbackPanel />
+                    <SurveyResultsPanel />
+                    <SupportTicketsPanel />
+                    <SessionOSPanel />
+                    <LiveAdminPanel />
                   </div>
                 )}
-                
-                {effectiveTab === "users-state" && (
-                  <div className="space-y-12">
-                    <UsersPanel />
-                    <UserStatePanel />
-                    <ConsciousnessGraph />
-                  </div>
-                )}
-                
-                {effectiveTab === "consciousness" && <ConsciousnessArchivePanel />}
-                {effectiveTab === "dreams-matrix" && <DreamsMatrixPanel />}
-                {effectiveTab === "fleet" && <FleetCommander />}
-                {effectiveTab === "seo-geo" && <SeoGeoAuditorPanel />}
-                {effectiveTab === "repo-intel" && <RepoIntelPanel />}
-                {effectiveTab === "dawayir-live" && <LiveAdminPanel />}
-                
-                {effectiveTab === "marketing-ops" && (
-                  <div className="space-y-12">
-                    <MarketingOpsPanel />
-                    <MailCommandCenter />
-                    <CreativeDashboard />
-                  </div>
-                )}
-                
-                {effectiveTab === "expansion-hub" && <SovereignExpansionHub />}
-                {effectiveTab === "session-os" && <SessionOSPanel />}
-                {effectiveTab === "support-tickets" && <SupportTicketsPanel />}
               </Suspense>
             </div>
           </div>

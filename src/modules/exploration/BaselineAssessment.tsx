@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type ComponentProps } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Shield, Battery, Users, Target, Compass, Sparkles } from "lucide-react";
@@ -9,6 +9,18 @@ import {
   type BaselineAnswers
 } from "@/data/baselineQuestions";
 import { useJourneyProgress } from "@/domains/journey";
+
+const toSafeSvgNumber = (value: unknown, fallback: number): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+const SafeMotionCircle = ({ cx = 0, cy = 0, r = 0, ...props }: ComponentProps<typeof motion.circle>) => (
+  <motion.circle
+    cx={typeof cx === "string" ? cx : toSafeSvgNumber(cx, 0)}
+    cy={typeof cy === "string" ? cy : toSafeSvgNumber(cy, 0)}
+    r={Math.max(toSafeSvgNumber(typeof r === "string" ? Number(r) : r, 0), 0)}
+    {...props}
+  />
+);
 
 interface BaselineAssessmentProps {
   onComplete: () => void;
@@ -179,7 +191,7 @@ export const BaselineAssessment: FC<BaselineAssessmentProps> = ({ onComplete }) 
             stroke="rgba(255,255,255,0.05)"
             strokeWidth={4}
           />
-          <motion.circle
+          <SafeMotionCircle
             cx={72} cy={72} r={68}
             fill="none"
             stroke="url(#compassGradient)"

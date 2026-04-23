@@ -16,7 +16,6 @@ import {
   Palette,
   Trophy,
   BarChart3,
-  MessageCircle,
   Globe,
   Sparkles,
   Layers,
@@ -271,24 +270,6 @@ const EcosystemHub = lazy(() =>
 
 const DEFAULT_WHATSAPP_CONTACT = "0201110795932";
 
-function normalizeArabicDigits(value: string): string {
-  return value
-    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
-    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776));
-}
-
-function normalizeWhatsAppPhone(rawPhone: string): string {
-  let digits = normalizeArabicDigits(rawPhone).replace(/\D/g, "");
-  if (!digits) return "";
-
-  if (digits.startsWith("00")) digits = digits.slice(2);
-  if (digits.startsWith("020")) digits = digits.slice(1);
-  if (digits.startsWith("0") && digits.length === 11) digits = `20${digits.slice(1)}`;
-  if (digits.startsWith("2") && digits.length === 12) return digits;
-  if (digits.startsWith("20")) return digits;
-  return digits;
-}
-
 interface AppSidebarProps {
   onOpenGym: () => void;
   onStartJourney: () => void;
@@ -476,11 +457,6 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [initialRecoveryOptions, setInitialRecoveryOptions] = useState<RecoveryPlanOpenWith | null>(null);
   
   const whatsAppNumber = runtimeEnv.whatsappContactNumber || DEFAULT_WHATSAPP_CONTACT;
-  const whatsAppLink = useMemo(() => {
-    const normalized = normalizeWhatsAppPhone(whatsAppNumber);
-    if (!normalized) return null;
-    return `https://wa.me/${normalized}`;
-  }, [whatsAppNumber]);
   
   const recoveryPlanOpenWith = useMapState((s) => s.recoveryPlanOpenWith);
   const setRecoveryPlanOpenWith = useMapState((s) => s.setRecoveryPlanOpenWith);
@@ -597,11 +573,6 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     setSidebarExpanded(true);
   };
 
-  const openWhatsAppChat = (placement: "desktop_sidebar" | "mobile_sidebar" | "floating_fab") => {
-    if (!whatsAppLink) return;
-    analyticsService.whatsapp({ placement });
-    openInNewTab(whatsAppLink);
-  };
 
   const openAdminDashboard = () => {
     try {
@@ -971,17 +942,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         </div>
       </div>
 
-      {/* ───── FLOATING WHATSAPP ───── */}
-      {whatsAppLink && (
-        <button
-          type="button"
-          title="تواصل عبر واتساب"
-          onClick={() => openWhatsAppChat("floating_fab")}
-          className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md hover:bg-emerald-500 transition-colors duration-200"
-        >
-          <MessageCircle className="w-5 h-5 shrink-0" />
-        </button>
-      )}
+      {/* ───── FLOATING WHATSAPP MOVED TO GLOBAL SURFACE ───── */}
 
       {/* ───── MOBILE MENU TRIGGER (DRAG HANDLE) ───── */}
       <button

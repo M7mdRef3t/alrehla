@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShieldCheck, Ticket, Download, Sparkles, User, Calendar, Award, Loader2 } from "lucide-react";
-import html2canvas from "html2canvas";
+// html2canvas loaded on-demand inside handleDownloadImage to avoid bundle bloat
 
 interface BoardingPassModalProps {
   isOpen: boolean;
@@ -33,6 +33,7 @@ export const BoardingPassModal: FC<BoardingPassModalProps> = ({ isOpen, onClose,
       // Wait a tiny bit for any animations to settle
       await new Promise(r => setTimeout(r, 100));
 
+      const { default: html2canvas } = await import("html2canvas");
       const canvas = await html2canvas(ticketRef.current, {
         backgroundColor: null,
         scale: 2, // Higher quality

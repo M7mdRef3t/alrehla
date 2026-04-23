@@ -188,17 +188,18 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
           {/* ── backdrop — dark cosmic blur ── */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[90]"
+            className="absolute inset-0"
             style={{
               background: "rgba(10, 14, 31, 0.85)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              willChange: "opacity",
             }}
             onClick={onClose}
           />
@@ -209,12 +210,13 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 24 }}
             transition={{ duration: 0.35, type: "spring", stiffness: 280, damping: 24 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[95] max-w-md mx-auto overflow-hidden"
+            className="relative z-10 w-full max-w-md overflow-hidden"
             style={{
               background: "rgba(15, 22, 41, 0.95)",
               border: "1px solid rgba(255, 255, 255, 0.08)",
               borderRadius: "1.5rem",
               boxShadow: "0 24px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(45, 212, 191, 0.06)",
+              willChange: "transform, opacity",
             }}
             role="dialog"
             aria-modal="true"
@@ -547,7 +549,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
             </div>
 
           </motion.div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   );

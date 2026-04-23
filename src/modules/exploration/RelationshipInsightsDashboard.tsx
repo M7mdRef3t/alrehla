@@ -1,10 +1,22 @@
 'use client';
 
-import { useMemo } from "react";
+import { useMemo, type ComponentProps } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, Users, Target, AlertTriangle, ArrowLeft, BarChart2 } from "lucide-react";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import type { MapNode, Ring } from "../map/mapTypes";
+
+const toSafeSvgNumber = (value: unknown, fallback: number): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+const SafeMotionCircle = ({ cx = 0, cy = 0, r = 0, ...props }: ComponentProps<typeof motion.circle>) => (
+  <motion.circle
+    cx={typeof cx === "string" ? cx : toSafeSvgNumber(cx, 0)}
+    cy={typeof cy === "string" ? cy : toSafeSvgNumber(cy, 0)}
+    r={Math.max(toSafeSvgNumber(typeof r === "string" ? Number(r) : r, 0), 0)}
+    {...props}
+  />
+);
 
 /* ═══════════════════════════════════════════════
    Pure-SVG helper: Sparkline مصغرة
@@ -115,7 +127,7 @@ function CircleGauge({ value, label, size = 120 }: { value: number; label: strin
           </linearGradient>
         </defs>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="10" />
-        <motion.circle
+        <SafeMotionCircle
           cx={size / 2} cy={size / 2} r={r}
           fill="none" stroke="url(#gauge-grad)" strokeWidth="10"
           strokeLinecap="round"

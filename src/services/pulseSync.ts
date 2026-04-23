@@ -11,9 +11,12 @@ export async function pushPulseLog(entry: PulseEntry): Promise<void> {
   if (!isSupabaseReady || !supabase) return;
   const mode = getTrackingMode();
   const sessionId = mode === "identified" ? getTrackingSessionId() : null;
+  const { data: { session } } = await supabase.auth.getSession();
+  const authenticatedUserId = session?.user?.id || null;
 
   const basePayload = {
     session_id: sessionId,
+    user_id: authenticatedUserId,
     energy: entry.energy,
     mood: entry.mood,
     focus: entry.focus,

@@ -30,6 +30,12 @@ const PuckLandingAdapter = dynamic(() => import("./PuckLandingAdapter").then((m)
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
 
+type ReactFiberLike = {
+  type?: unknown;
+  elementType?: unknown;
+  return?: ReactFiberLike | null;
+};
+
 function hasRenderablePuckData(data: Data | null | undefined): data is Data {
   if (!data || typeof data !== "object") return false;
 
@@ -97,6 +103,60 @@ function shouldSilenceAiLog(args: unknown[]): boolean {
   );
 }
 
+function isInvalidSvgRadiusValue(value: string): boolean {
+  const token = value.trim().toLowerCase();
+  return (
+    token === "" ||
+    token === "undefined" ||
+    token === "nan" ||
+    token === "null" ||
+    token === "infinity" ||
+    token === "-infinity"
+  );
+}
+
+function getFiberDisplayName(candidate: unknown): string | null {
+  if (typeof candidate === "string") return candidate;
+  if (typeof candidate === "function") {
+    return candidate.displayName || candidate.name || null;
+  }
+  if (!candidate || typeof candidate !== "object") return null;
+
+  const record = candidate as Record<string, unknown>;
+  if (typeof record.displayName === "string") return record.displayName;
+  if (typeof record.name === "string") return record.name;
+
+  const render = record.render;
+  if (typeof render === "function") {
+    return render.displayName || render.name || null;
+  }
+
+  return null;
+}
+
+function getReactOwnerChain(node: Element): string[] {
+  const record = node as Record<string, unknown>;
+  const fiberKey = Object.keys(record).find((key) => key.startsWith("__reactFiber$"));
+  if (!fiberKey) return [];
+
+  const chain: string[] = [];
+  let cursor = record[fiberKey] as ReactFiberLike | null;
+
+  while (cursor && chain.length < 12) {
+    const name =
+      getFiberDisplayName(cursor.elementType) ??
+      getFiberDisplayName(cursor.type);
+
+    if (name && chain[chain.length - 1] !== name) {
+      chain.push(name);
+    }
+
+    cursor = cursor.return ?? null;
+  }
+
+  return chain;
+}
+
 function shouldBootIntoFullApp(): boolean {
   if (typeof window === "undefined") return true;
   if (runtimeEnv.isDev && window.location.pathname === "/") return false;
@@ -153,6 +213,76 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
   const [shouldLoadFullApp, setShouldLoadFullApp] = useState(!forceLanding);
   const [lockFullAppMode, setLockFullAppMode] = useState(!forceLanding);
   const [landingAuthIntent, setLandingAuthIntent] = useState<PostAuthIntent | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof Element === "undefined" || typeof SVGCircleElement === "undefined") return;
+
+    const windowRecord = window as Window & Record<string, unknown>;
+    const patchFlag = "__ALREHLA_INVALID_SVG_RADIUS_DEBUG__";
+    if (windowRecord[patchFlag]) return;
+
+    const originalSetAttribute = Element.prototype.setAttribute;
+    const originalSetAttributeNS = Element.prototype.setAttributeNS;
+
+    const patchedSetAttribute = function (this: Element, name: string, value: string) {
+      if (
+        this instanceof SVGCircleElement &&
+        name === "r" &&
+        isInvalidSvgRadiusValue(String(value))
+      ) {
+        if (runtimeEnv.isDev) {
+          const ownerChain = getReactOwnerChain(this);
+          console.groupCollapsed("[SVG radius debug] Invalid <circle r> detected");
+          console.error("value:", value);
+          console.error("ownerChain:", ownerChain.join(" <- ") || "(unknown)");
+          console.error("element:", this);
+          console.trace("[SVG radius debug trace]");
+          console.groupEnd();
+        }
+
+        return originalSetAttribute.call(this, name, "0");
+      }
+
+      return originalSetAttribute.call(this, name, value);
+    };
+
+    const patchedSetAttributeNS = function (
+      this: Element,
+      namespace: string | null,
+      name: string,
+      value: string
+    ) {
+      if (this instanceof SVGCircleElement && name === "r" && isInvalidSvgRadiusValue(String(value))) {
+        if (runtimeEnv.isDev) {
+          const ownerChain = getReactOwnerChain(this);
+          console.groupCollapsed("[SVG radius debug] Invalid <circle r> detected (NS)");
+          console.error("value:", value);
+          console.error("ownerChain:", ownerChain.join(" <- ") || "(unknown)");
+          console.error("element:", this);
+          console.trace("[SVG radius debug trace]");
+          console.groupEnd();
+        }
+
+        return originalSetAttributeNS.call(this, namespace, name, "0");
+      }
+
+      return originalSetAttributeNS.call(this, namespace, name, value);
+    };
+
+    windowRecord[patchFlag] = true;
+    Element.prototype.setAttribute = patchedSetAttribute;
+    Element.prototype.setAttributeNS = patchedSetAttributeNS;
+
+    return () => {
+      if (Element.prototype.setAttribute === patchedSetAttribute) {
+        Element.prototype.setAttribute = originalSetAttribute;
+      }
+      if (Element.prototype.setAttributeNS === patchedSetAttributeNS) {
+        Element.prototype.setAttributeNS = originalSetAttributeNS;
+      }
+      delete windowRecord[patchFlag];
+    };
+  }, []);
 
   useEffect(() => {
     if (!runtimeEnv.isDev || typeof window === "undefined") return;
