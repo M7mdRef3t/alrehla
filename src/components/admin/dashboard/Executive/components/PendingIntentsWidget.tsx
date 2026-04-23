@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { adminApi, type PendingIntent } from '@/services/adminApi';
+import { adminApi } from "@/services/admin/adminRevenue";
+import { type PendingIntent } from "@/services/admin/adminTypes";
 import { CreditCard, Clock, User, Phone, CheckCircle, AlertCircle, Check, X } from 'lucide-react';
 
 export const PendingIntentsWidget: React.FC = () => {

@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from "react";
 import { AlertTriangle, Lightbulb, Zap, Activity } from "lucide-react";
-import type { ExecutiveReport as ExecutiveReportType } from "@/services/adminApi";
+import type { ExecutiveReport as ExecutiveReportType } from "@/services/admin/adminTypes";
 
 interface ExecutiveReportProps {
     data: ExecutiveReportType | null;

@@ -3,12 +3,8 @@
 import { logger } from "@/services/logger";
 
 import React, { useEffect, useState } from 'react';
-import {
-    fetchAlertIncidents,
-    resetAlertIncidents,
-    updateAlertIncidentStatus,
-    type AlertIncident
-} from '@/services/adminApi';
+import { fetchAlertIncidents, resetAlertIncidents, updateAlertIncidentStatus } from "@/services/admin/adminAlerts";
+import { type AlertIncident } from "@/services/admin/adminTypes";
 import {
     AlertTriangle,
     CheckCircle,

@@ -1,10 +1,8 @@
 import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, ShieldAlert, ShieldCheck, Siren, Shield } from "lucide-react";
-import {
-  sendOwnerSecurityWebhook,
-  type SecuritySignalsReport
-} from "@/services/adminApi";
+import { sendOwnerSecurityWebhook } from "@/services/admin/adminCore";
+import { type SecuritySignalsReport } from "@/services/admin/adminTypes";
 import { sendNotification } from "@/services/notifications";
 import { soundManager } from "@/services/soundManager";
 import { AdminTooltip } from "./AdminTooltip";

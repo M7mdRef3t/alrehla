@@ -123,7 +123,7 @@ export const useThemeState = create<ThemeState>()(
       },
       fetchCloudTokens: async () => {
         try {
-          const { fetchThemePalette } = await import("@/services/adminApi");
+          const { fetchThemePalette } = await import("@/services/admin/adminSettings");
           const cloudTokens = await fetchThemePalette();
           if (cloudTokens) {
             const mapped: DesignTokens = {
@@ -142,7 +142,7 @@ export const useThemeState = create<ThemeState>()(
       },
       publishToCloud: async () => {
         try {
-          const { updateThemePalette } = await import("@/services/adminApi");
+          const { updateThemePalette } = await import("@/services/admin/adminSettings");
           const tokens = get().customTokens;
           const success = await updateThemePalette({
             primary: tokens.primaryColor,

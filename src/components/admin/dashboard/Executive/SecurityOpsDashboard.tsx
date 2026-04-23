@@ -11,7 +11,9 @@ import { SystemHealth } from "../Overview/components/SystemHealth";
 import { RecoveryWidget } from "../Overview/components/RecoveryWidget";
 import { OpsInsights } from "../Overview/components/OpsInsights";
 
-import { fetchOverviewStats, fetchSystemHealth, fetchOwnerOpsReport, type OverviewStats, fetchOpsInsights } from "@/services/adminApi";
+import { fetchOverviewStats } from "@/services/admin/adminAnalytics";
+import { fetchSystemHealth, fetchOwnerOpsReport, fetchOpsInsights } from "@/services/admin/adminReports";
+import { type OverviewStats } from "@/services/admin/adminTypes";
 import type { SystemHealthReport, SecuritySignalsReport, OpsInsights as OpsInsightsType } from "@/types/admin.types";
 
 export const SecurityOpsDashboard: FC = () => {

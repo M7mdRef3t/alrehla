@@ -1,91 +1,30 @@
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
-import { Star, Quote, ArrowLeft, TrendingUp, Users, Target } from "lucide-react";
+import { Star, Quote, ArrowLeft, TrendingUp, Users, Target, Loader2, Sparkles, Heart } from "lucide-react";
+import { supabase } from "@/services/supabaseClient";
 
-// ── بيانات قصص النجاح ──
-const STORIES = [
-  {
-    id: "1",
-    name: "سارة المنصوري",
-    age: 29,
-    city: "الرياض",
-    category: "العلاقات",
-    quote: "كنت عاجزة عن فهم نفسي في العلاقات. الرحلة ساعدتني أشوف الأنماط اللي كنت مكررّها بلا وعي.",
-    outcome: "بعد ٤ أشهر، قدرت أبدأ علاقة صحية وأحدد حدودي بوضوح.",
-    stars: 5,
-    avatar: "س",
-    color: "from-teal-500 to-emerald-600",
-  },
-  {
-    id: "2",
-    name: "خالد الزهراني",
-    age: 34,
-    city: "جدة",
-    category: "الإنتاجية",
-    quote: "كنت أعرف إن في مشكلة بالتسويف لكن ما كنت أعرف السبب الحقيقي. الخريطة كشّفت لي إن الخوف من الفشل هو الجذر.",
-    outcome: "أنهيت مشروعي الجانبي اللي كان موقوف ٣ سنوات.",
-    stars: 5,
-    avatar: "خ",
-    color: "from-violet-500 to-purple-600",
-  },
-  {
-    id: "3",
-    name: "نورة العتيبي",
-    age: 26,
-    city: "أبوظبي",
-    category: "الثقة بالنفس",
-    quote: "ما كنت أقدر أتخذ قرارات بدون موافقة الناس. الرحلة علمّتني أثق برؤيتي الداخلية.",
-    outcome: "تركت وظيفتي وأسست مشروعي الخاص — وهذا أكبر قرار في حياتي.",
-    stars: 5,
-    avatar: "ن",
-    color: "from-rose-500 to-pink-600",
-  },
-  {
-    id: "4",
-    name: "محمد الشمري",
-    age: 41,
-    city: "الكويت",
-    category: "القلق والتوتر",
-    quote: "كنت أظن القلق جزء من شخصيتي. اكتشفت إنه رد فعل على مواقف محددة — وهذا غيّر كل شيء.",
-    outcome: "نمط النوم تحسّن وتوقفت عن العلاج التقليدي بإشراف طبيب.",
-    stars: 5,
-    avatar: "م",
-    color: "from-blue-500 to-cyan-600",
-  },
-  {
-    id: "5",
-    name: "ريم الغامدي",
-    age: 31,
-    city: "الدوحة",
-    category: "الهوية الشخصية",
-    quote: "كنت أعيش الحياة اللي يتوقعها أهلي مني. بدأت أسأل: أنا مين فعلاً؟",
-    outcome: "قدرت أخبر أهلي باختياراتي الحقيقية وأحافظ على علاقتهم في نفس الوقت.",
-    stars: 5,
-    avatar: "ر",
-    color: "from-amber-500 to-orange-600",
-  },
-  {
-    id: "6",
-    name: "يوسف القحطاني",
-    age: 38,
-    city: "مسقط",
-    category: "العمل والمهنة",
-    quote: "كنت ناجح من الخارج لكن فاضي من الداخل. الرحلة ساعدتني أعيد تعريف النجاح بطريقتي.",
-    outcome: "انتقلت لمجال يتوافق مع قيمي وأنا أسعد بكتير.",
-    stars: 5,
-    avatar: "ي",
-    color: "from-green-500 to-teal-600",
-  },
-];
+export interface Story {
+  id: string;
+  name: string;
+  age: number;
+  city: string;
+  category: string;
+  quote: string;
+  outcome: string;
+  stars: number;
+  avatar: string;
+  color: string;
+  created_at?: string;
+}
 
 const container: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.08 } },
+  show: { transition: { staggerChildren: 0.12 } },
 };
 
 const item: Variants = {
-  hidden: { opacity: 0, y: 28 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
+  hidden: { opacity: 0, y: 30, scale: 0.96 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
 };
 
 interface StoriesScreenProps {
@@ -93,174 +32,247 @@ interface StoriesScreenProps {
 }
 
 export const StoriesScreen = memo(function StoriesScreen({ onBack }: StoriesScreenProps) {
-  return (
-    <div className="relative w-full">
+  const [stories, setStories] = useState<Story[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-teal-500/5 to-transparent pointer-events-none" />
-      {/* ── Hero ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="max-w-5xl mx-auto text-center mb-24 relative"
-      >
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchStories() {
+      try {
+        const { data, error } = await supabase
+          .from('success_stories')
+          .select('*')
+          .eq('is_published', true)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error("Error fetching stories:", error);
+          return;
+        }
+
+        if (isMounted && data) {
+          setStories(data);
+        }
+      } catch (err) {
+        console.error("Unexpected error fetching stories:", err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+    fetchStories();
+    return () => { isMounted = false; };
+  }, []);
+
+  return (
+    <div className="relative w-full min-h-screen overflow-x-hidden bg-[#03050a] selection:bg-teal-500/30 selection:text-teal-200">
+      {/* ── Background Elements ── */}
+      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-teal-900/10 via-emerald-900/5 to-transparent pointer-events-none" />
+      <div className="absolute top-1/4 -right-64 w-96 h-96 bg-teal-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 -left-64 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.015] pointer-events-none mix-blend-overlay" />
+
+      {/* ── Header ── */}
+      <div className="max-w-6xl mx-auto px-4 md:px-6 pt-6 flex items-center justify-between relative z-10">
         {onBack && (
           <button
             type="button"
             onClick={onBack}
-            className="group flex items-center gap-2 text-slate-500 hover:text-teal-400 transition-all mb-12 text-sm font-medium"
+            className="group flex items-center gap-3 text-slate-400 hover:text-white transition-colors text-sm font-semibold"
           >
-            <div className="w-8 h-8 rounded-full border border-white/5 flex items-center justify-center group-hover:border-teal-500/30 group-hover:bg-teal-500/5 transition-all">
+            <div className="w-10 h-10 rounded-full bg-white/[0.03] border border-white/[0.08] flex items-center justify-center group-hover:bg-white/[0.08] group-hover:border-white/[0.15] group-hover:shadow-[0_0_15px_rgba(20,184,166,0.2)] transition-all duration-300">
               <ArrowLeft className="w-4 h-4" />
             </div>
             رجوع للمنصة
           </button>
         )}
-        
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] backdrop-blur-md">
+          <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+          <span className="text-slate-300 text-xs font-semibold tracking-wide">القصص الحقيقية</span>
+        </div>
+      </div>
+
+      {/* ── Hero Section ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-5xl mx-auto text-center mt-12 mb-20 md:mb-28 relative px-4 z-10"
+      >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] backdrop-blur-md mb-8"
+          className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-teal-500/10 to-emerald-500/10 border border-teal-500/20 backdrop-blur-md mb-8 shadow-[0_0_30px_rgba(20,184,166,0.1)]"
         >
-          <div className="flex -space-x-1.5 space-x-reverse">
-            {[1,2,3].map(i => (
-              <div key={i} className="w-6 h-6 rounded-full border-2 border-[#060b18] bg-teal-500 flex items-center justify-center text-[8px] font-bold text-white">
-                {i === 3 ? "+1k" : ""}
-              </div>
-            ))}
-          </div>
-          <span className="text-slate-400 text-xs font-semibold mr-2">+٢,٤٠٠ رحلة تحول حقيقية</span>
+          <Sparkles className="w-4 h-4 text-teal-400" />
+          <span className="text-teal-200 text-sm font-bold tracking-wide">مختبر الوعي الذاتي</span>
         </motion.div>
 
-        <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.1] mb-8 tracking-tight">
-          قصص من داخل 
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.2] md:leading-[1.1] mb-6 tracking-tight">
+          خلف كل اسم، 
           <br />
-          <span className="relative inline-block mt-2">
-            <span className="bg-gradient-to-r from-teal-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              مختبر الوعي الذاتي
-            </span>
+          <span className="relative inline-block mt-3 text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-emerald-400 to-cyan-300">
+            حكاية انتصار حقيقية
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
-              transition={{ delay: 1, duration: 1 }}
-              className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-teal-500/0 via-teal-500/40 to-teal-500/0 rounded-full"
+              transition={{ delay: 1, duration: 1.2, ease: "easeOut" }}
+              className="absolute -bottom-3 left-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent rounded-full"
             />
           </span>
         </h1>
         
-        <p className="text-slate-400 text-xl max-w-2xl mx-auto leading-relaxed font-medium">
+        <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium mt-8">
           ليسوا "مؤثرين" أو حملات إعلانية. هؤلاء بشر خاضوا المواجهة مع أنفسهم 
-          ليخرجوا بنسخة أكثر صدقاً ووضوحاً.
+          ليخرجوا بنسخة أكثر صدقاً ووضوحاً. اقرأ تجاربهم لتدرك أنك لست وحدك.
         </p>
       </motion.div>
 
       {/* ── Dashboard of Impact ── */}
-      <div className="max-w-5xl mx-auto mb-20 grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
-        {[
-          { icon: Users, label: "رحلات مكتملة", val: "٢,٤٢١" },
-          { icon: TrendingUp, label: "تحسن ملموس", val: "٩٤٪" },
-          { icon: Target, label: "أهداف محققة", val: "١٥,٨٠٠" },
-          { icon: Star, label: "تقييم الرضا", val: "٤.٩/٥" },
-        ].map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 + i * 0.1 }}
-            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-sm"
-          >
-            <stat.icon className="w-5 h-5 text-teal-500/50 mb-3" />
-            <div className="text-2xl font-black text-white mb-1">{stat.val}</div>
-            <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{stat.label}</div>
-          </motion.div>
-        ))}
+      <div className="max-w-5xl mx-auto mb-20 md:mb-28 px-4 z-10 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent rounded-[2rem] -z-10 blur-xl" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5 p-2 bg-white/[0.01] border border-white/[0.05] rounded-[2rem] backdrop-blur-xl">
+          {[
+            { icon: Users, label: "رحلات مكتملة", val: "٢,٤٢١", color: "text-blue-400" },
+            { icon: TrendingUp, label: "تحسن ملموس", val: "٩٤٪", color: "text-emerald-400" },
+            { icon: Target, label: "أهداف محققة", val: "١٥,٨٠٠", color: "text-amber-400" },
+            { icon: Star, label: "تقييم الرضا", val: "٤.٩/٥", color: "text-rose-400" },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4 + i * 0.1, duration: 0.5, ease: "backOut" }}
+              className="group p-6 rounded-3xl bg-white/[0.02] border border-white/[0.03] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-300 relative overflow-hidden flex flex-col items-center justify-center text-center"
+            >
+              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+              <stat.icon className={`w-6 h-6 ${stat.color} mb-4 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300`} />
+              <div className="text-3xl font-black text-white mb-1 tracking-tight drop-shadow-md">{stat.val}</div>
+              <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">{stat.label}</div>
+            </motion.div>
+          ))}
+        </div>
       </div>
 
-      {/* ── قصص ── */}
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-      >
-        {STORIES.map((story) => (
-          <motion.article
-            key={story.id}
-            variants={item}
-            className="group relative rounded-2xl overflow-hidden
-                       bg-white/[0.04] border border-white/[0.08]
-                       hover:border-white/20 hover:bg-white/[0.07]
-                       transition-all duration-300 p-6 flex flex-col gap-4"
-          >
-            {/* Category badge */}
-            <div className={`inline-flex w-fit px-3 py-1 rounded-full bg-gradient-to-r ${story.color}
-                             text-white text-[11px] font-bold`}>
-              {story.category}
-            </div>
+      {/* ── Stories Grid ── */}
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-32 px-4 z-10 relative">
+          <Loader2 className="w-10 h-10 text-teal-500 animate-spin mb-6" />
+          <p className="text-teal-200/70 text-sm font-semibold tracking-wide">جاري استحضار القصص الحقيقية...</p>
+        </div>
+      ) : stories.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-32 px-4 z-10 relative">
+          <div className="w-16 h-16 rounded-full bg-white/[0.02] border border-white/[0.05] flex items-center justify-center mb-6">
+             <Quote className="w-6 h-6 text-slate-500" />
+          </div>
+          <p className="text-slate-400 text-lg font-medium">القصص تُكتب الآن، وتُنسج في صمت. عد قريباً.</p>
+        </div>
+      ) : (
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 px-4 md:px-6 mb-32 z-10 relative"
+        >
+          {stories.map((story) => (
+            <motion.article
+              key={story.id}
+              variants={item}
+              className="group relative rounded-[32px] overflow-hidden bg-[#0A0D14] border border-white/[0.05] hover:border-white/[0.12] transition-all duration-500 flex flex-col hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_rgba(20,184,166,0.15)]"
+            >
+              {/* Top ambient glow */}
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${story.color} opacity-50 group-hover:opacity-100 transition-opacity duration-300`} />
+              <div className={`absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br ${story.color} rounded-full blur-[60px] opacity-[0.08] group-hover:opacity-[0.15] transition-opacity duration-500`} />
 
-            {/* Quote */}
-            <div className="relative">
-              <Quote className="w-6 h-6 text-white/10 absolute -top-1 -right-1" />
-              <p className="text-slate-300 text-sm leading-relaxed pr-4">
-                "{story.quote}"
-              </p>
-            </div>
+              <div className="p-8 flex flex-col h-full z-10">
+                {/* Category & Rating */}
+                <div className="flex justify-between items-start mb-6">
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] text-slate-300 text-xs font-bold shadow-sm`}>
+                    <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${story.color}`} />
+                    {story.category}
+                  </div>
+                  <div className="flex gap-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                    {Array.from({ length: story.stars }).map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400 drop-shadow-[0_0_2px_rgba(251,191,36,0.4)]" />
+                    ))}
+                  </div>
+                </div>
 
-            {/* Outcome */}
-            <div className="rounded-xl bg-teal-500/[0.08] border border-teal-500/20 p-3">
-              <p className="text-teal-300 text-xs leading-relaxed font-medium">
-                ✦ {story.outcome}
-              </p>
-            </div>
+                {/* Quote */}
+                <div className="relative mb-6 flex-grow">
+                  <Quote className="w-8 h-8 text-white/[0.03] absolute -top-2 -right-2 transform -scale-x-100" />
+                  <p className="text-slate-200 text-[15px] leading-[1.8] pr-2 font-medium">
+                    "{story.quote}"
+                  </p>
+                </div>
 
-            {/* Avatar + Name */}
-            <div className="flex items-center gap-3 mt-auto pt-2 border-t border-white/[0.06]">
-              <span className={`w-9 h-9 rounded-full bg-gradient-to-br ${story.color}
-                               flex items-center justify-center text-white font-bold text-sm shrink-0`}>
-                {story.avatar}
-              </span>
-              <div>
-                <p className="text-white text-sm font-semibold">{story.name}</p>
-                <p className="text-slate-500 text-xs">{story.age} سنة · {story.city}</p>
+                {/* Outcome */}
+                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-4 mb-8 group-hover:bg-white/[0.04] transition-colors duration-300 relative overflow-hidden">
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${story.color} opacity-40`} />
+                  <p className="text-teal-100 text-[13px] leading-[1.7] font-semibold pr-2">
+                    <span className="text-teal-400/80 mr-1.5 font-bold">النتيجة:</span>
+                    {story.outcome}
+                  </p>
+                </div>
+
+                {/* Author Info */}
+                <div className="flex items-center gap-4 mt-auto pt-6 border-t border-white/[0.04] relative">
+                  <div className="relative">
+                    <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${story.color} flex items-center justify-center text-white font-black text-lg shadow-[0_4px_15px_rgba(0,0,0,0.2)]`}>
+                      {story.avatar}
+                    </span>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#0A0D14] rounded-full flex items-center justify-center">
+                      <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-bold mb-0.5">{story.name}</p>
+                    <p className="text-slate-500 text-xs font-semibold">{story.age} عاماً · {story.city}</p>
+                  </div>
+                  
+                  {/* Interaction element (Future proofing) */}
+                  <button className="mr-auto w-8 h-8 rounded-full bg-white/[0.02] hover:bg-white/[0.08] border border-white/[0.05] flex items-center justify-center transition-colors">
+                    <Heart className="w-3.5 h-3.5 text-slate-400 hover:text-rose-400 hover:fill-rose-400 transition-colors" />
+                  </button>
+                </div>
               </div>
-              <div className="mr-auto flex gap-0.5">
-                {Array.from({ length: story.stars }).map((_, i) => (
-                  <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-            </div>
-          </motion.article>
-        ))}
-      </motion.div>
+            </motion.article>
+          ))}
+        </motion.div>
+      )}
 
-      {/* ── CTA ── */}
+      {/* ── Call to Action ── */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true }}
-        className="max-w-4xl mx-auto text-center mt-32 relative py-20 px-8 rounded-[40px] overflow-hidden"
-        style={{ background: "linear-gradient(135deg, rgba(45,212,191,0.05) 0%, rgba(20,184,166,0.02) 100%)" }}
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        className="max-w-4xl mx-auto text-center mb-24 relative py-20 px-6 md:px-12 mx-4 md:mx-auto rounded-[40px] overflow-hidden z-10"
       >
+        <div className="absolute inset-0 bg-gradient-to-b from-teal-500/[0.03] to-emerald-500/[0.01]" />
         <div className="absolute inset-0 border border-teal-500/10 rounded-[40px]" />
         
-        <h2 className="text-3xl md:text-5xl font-black text-white mb-6">قصتك هي البداية الحقيقية</h2>
-        <p className="text-slate-400 mb-10 text-xl max-w-xl mx-auto leading-relaxed">
-          انضم لآلاف الأشخاص الذين قرروا فهم عالمهم الداخلي ورسم خريطتهم الخاصة.
+        <div className="w-16 h-16 mx-auto rounded-full bg-teal-500/10 flex items-center justify-center mb-8">
+           <Sparkles className="w-8 h-8 text-teal-400" />
+        </div>
+        
+        <h2 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight">قصتك هي البداية الحقيقية</h2>
+        <p className="text-slate-400 mb-12 text-lg md:text-xl max-w-xl mx-auto leading-relaxed font-medium">
+          انضم لآلاف الأشخاص الذين قرروا التوقف عن الهرب، والبدء في مواجهة أنفسهم لبناء النسخة الأصدق من حياتهم.
         </p>
         
         <button
           type="button"
           onClick={onBack}
-          className="group relative px-12 py-5 rounded-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black
-                     shadow-[0_20px_50px_rgba(45,212,191,0.3)] hover:shadow-[0_25px_60px_rgba(45,212,191,0.5)]
-                     transition-all active:scale-95 text-lg"
+          className="group relative px-10 py-5 rounded-full bg-white text-slate-950 font-black shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60px_rgba(255,255,255,0.25)] hover:scale-[1.02] transition-all duration-300 text-lg overflow-hidden"
         >
-          <span className="relative z-10 flex items-center gap-3">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-100 to-emerald-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <span className="relative z-10 flex items-center justify-center gap-3">
              ابدأ رحلتك الآن
              <motion.span 
-               animate={{ x: [0, 5, 0] }}
-               transition={{ repeat: Infinity, duration: 1.5 }}
+               animate={{ x: [0, 6, 0] }}
+               transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
              >
                →
              </motion.span>
@@ -270,4 +282,3 @@ export const StoriesScreen = memo(function StoriesScreen({ onBack }: StoriesScre
     </div>
   );
 });
-

@@ -17,7 +17,8 @@ import {
     Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchUserStates, fetchUserStateDetail, exportUserStates, fetchUsers, type UserStateRow, type AdminUserRow } from "@/services/adminApi";
+import { fetchUserStates, fetchUserStateDetail, exportUserStates, fetchUsers } from "@/services/admin/adminUsers";
+import { type UserStateRow, type AdminUserRow } from "@/services/admin/adminTypes";
 import { downloadBlobFile } from "@/services/clientDom";
 
 export const UserStatePanel: FC = () => {

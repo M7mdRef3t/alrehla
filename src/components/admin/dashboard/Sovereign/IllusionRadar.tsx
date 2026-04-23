@@ -2,7 +2,7 @@ import { logger } from "@/services/logger";
 import React, { type FC, useState } from "react";
 import { AlertTriangle, TrendingUp, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import type { TopScenario } from "@/services/adminApi";
+import type { TopScenario } from "@/services/admin/adminTypes";
 import { marketingCopywriter, type TikTokScriptGeneration } from "@/ai/aiMarketingCopy";
 import { TikTokTeleprompterModal } from "./TikTokTeleprompterModal";
 

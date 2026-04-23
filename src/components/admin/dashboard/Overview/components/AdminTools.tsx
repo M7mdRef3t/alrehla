@@ -2,7 +2,9 @@ import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { FileText, Save, RefreshCw, Sun, Moon, Sunset, Palette, Loader2 } from "lucide-react";
-import { runCronReport, saveThemePalette, fetchThemePalette, type ThemePalette } from "@/services/adminApi";
+import { runCronReport } from "@/services/admin/adminReports";
+import { saveThemePalette, fetchThemePalette } from "@/services/admin/adminSettings";
+import { type ThemePalette } from "@/services/admin/adminTypes";
 
 interface AdminToolsProps {
     loading: boolean;

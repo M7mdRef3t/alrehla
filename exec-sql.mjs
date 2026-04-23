@@ -2,7 +2,7 @@ import pg from 'pg';
 import fs from 'fs';
 
 const { Client } = pg;
-const dbUrl = 'postgresql://postgres:mm2JMw1iyQiP1l0O@db.acvcnktpsbayowhurcmn.supabase.co:5432/postgres';
+const dbUrl = 'postgresql://postgres:Wm0SVFd6tZ5Xyfqa@db.acvcnktpsbayowhurcmn.supabase.co:5432/postgres';
 
 const client = new Client({
   connectionString: dbUrl,
@@ -10,7 +10,7 @@ const client = new Client({
 
 async function run() {
   await client.connect();
-  const sql = fs.readFileSync('supabase/migrations/20260407150000_create_feedback_table.sql', 'utf8');
+  const sql = fs.readFileSync('supabase/migrations/20260423232300_create_success_stories.sql', 'utf8');
   try {
     await client.query(sql);
     console.log('Migration applied successfully');

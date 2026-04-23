@@ -20,8 +20,10 @@ import {
   type JourneyPathStep,
   type JourneyPathStepKind
 } from "@/domains/admin/store/admin.store";
-import { generateJourneyPath, updateJourneyPaths, auditJourneyPath, getRevenueMetrics, simulateJourneyPath } from "@/services/adminApi";
-import type { CognitiveSimulationResult } from "@/services/adminApi";
+import { generateJourneyPath, auditJourneyPath, simulateJourneyPath } from "@/services/admin/adminJourneyPaths";
+import { updateJourneyPaths } from "@/services/admin/adminSettings";
+import { getRevenueMetrics } from "@/services/admin/adminRevenue";
+import type { CognitiveSimulationResult } from "@/services/admin/adminTypes";
 import { createCurrentUrl, pushUrl } from "@/services/navigation";
 import {
   RELATIONSHIP_WEATHER_PATH_SLUG,

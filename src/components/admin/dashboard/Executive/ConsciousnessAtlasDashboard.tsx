@@ -2,7 +2,8 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { Workflow, Compass } from "lucide-react";
 
-import { fetchOverviewStats, type OverviewStats } from "@/services/adminApi";
+import { fetchOverviewStats } from "@/services/admin/adminAnalytics";
+import { type OverviewStats } from "@/services/admin/adminTypes";
 import { ConsciousnessMap } from "../Consciousness/ConsciousnessMap";
 import { AwarenessAndScenarios } from "../Overview/components/AwarenessAndScenarios";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";

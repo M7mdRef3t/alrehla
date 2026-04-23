@@ -15,7 +15,7 @@ import {
   Waves
 } from "lucide-react";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
-import { sendBroadcast } from "@/services/adminApi"; // Optional: Use for AI intervention
+import { sendBroadcast } from "@/services/admin/adminBroadcasts"; // Optional: Use for AI intervention
 import { useAdminState } from "@/domains/admin/store/admin.store";
 
 interface GhostTrace {

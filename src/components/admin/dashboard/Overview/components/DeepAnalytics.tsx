@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { Activity, Zap, BarChart3, SplitSquareHorizontal, Compass, Clock } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
-import type { OverviewStats } from "@/services/adminApi";
+import type { OverviewStats } from "@/services/admin/adminTypes";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface DeepAnalyticsProps {

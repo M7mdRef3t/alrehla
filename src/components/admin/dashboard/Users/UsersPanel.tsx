@@ -4,14 +4,8 @@ import { Users, Loader2, X, Eye, Network, History, Sparkles, BrainCircuit, Arrow
 import { motion, AnimatePresence } from "framer-motion";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { isSupabaseReady } from "@/services/supabaseClient";
-import {
-  fetchVisitorSessions,
-  fetchJourneyMap,
-  fetchSessionEvents,
-  type SessionEventRow,
-  type VisitorSessionSummary,
-  type JourneyMapSnapshot,
-} from "@/services/adminApi";
+import { fetchVisitorSessions, fetchJourneyMap, fetchSessionEvents } from "@/services/admin/adminUsers";
+import { type SessionEventRow, type VisitorSessionSummary, type JourneyMapSnapshot } from "@/services/admin/adminTypes";
 
 export const UsersPanel: FC = () => {
   const [query, setQuery] = useState("");

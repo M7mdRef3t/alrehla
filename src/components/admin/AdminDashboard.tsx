@@ -37,13 +37,10 @@ import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
 import { sovereignAgent } from "@/services/LocalSovereignAgent";
 import { isPrivilegedRole } from "@/utils/featureFlags";
-import {
-  fetchAdminConfig,
-  fetchAiLogs,
-  fetchMissions,
-  fetchBroadcasts,
-  fetchJourneyPaths,
-} from "@/services/adminApi";
+import { fetchAdminConfig, fetchJourneyPaths } from "@/services/admin/adminSettings";
+import { fetchAiLogs } from "@/services/admin/adminAiLogs";
+import { fetchMissions } from "@/services/admin/adminMissions";
+import { fetchBroadcasts } from "@/services/admin/adminBroadcasts";
 import { LiveFreezePill } from "./LiveFreezePill";
 import { isSupabaseReady, supabase } from "@/services/supabaseClient";
 import { AdminTooltip } from "./dashboard/Overview/components/AdminTooltip";

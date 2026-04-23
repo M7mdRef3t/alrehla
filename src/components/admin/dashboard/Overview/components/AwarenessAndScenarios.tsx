@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { Layers, Target, Compass } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
-import type { OverviewStats } from "@/services/adminApi";
+import type { OverviewStats } from "@/services/admin/adminTypes";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface AwarenessAndScenariosProps {

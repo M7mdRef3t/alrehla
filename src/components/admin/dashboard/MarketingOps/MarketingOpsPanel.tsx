@@ -48,7 +48,7 @@ import { SovereignGatewayCommand, AVAILABLE_GATEWAYS } from "../Sovereign/Sovere
 import { StatCard } from "../Executive/components/StatCard";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 
-import { adminApi } from "@/services/adminApi";
+import { adminApi } from "@/services/admin/adminRevenue";
 import { growthEngine, GrowthMetrics } from "@/services/growthEngine";
 
 // --- Types ---

@@ -14,12 +14,8 @@ import {
     Mail,
     Zap
 } from 'lucide-react';
-import { 
-    fetchPendingIntents, 
-    approvePendingIntent, 
-    flagPendingIntent,
-    PendingIntent 
-} from '@/services/adminApi';
+import { fetchPendingIntents, approvePendingIntent, flagPendingIntent } from "@/services/admin/adminRevenue";
+import { PendingIntent } from "@/services/admin/adminTypes";
 import { useAuthState } from '@/domains/auth/store/auth.store';
 
 export const PendingIntentsPanel: React.FC = () => {

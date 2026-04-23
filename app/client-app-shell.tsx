@@ -118,7 +118,8 @@ function isInvalidSvgRadiusValue(value: string): boolean {
 function getFiberDisplayName(candidate: unknown): string | null {
   if (typeof candidate === "string") return candidate;
   if (typeof candidate === "function") {
-    return candidate.displayName || candidate.name || null;
+    const fn = candidate as any;
+    return fn.displayName || fn.name || null;
   }
   if (!candidate || typeof candidate !== "object") return null;
 
@@ -413,6 +414,7 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
         return;
       // Public screens: accessible without subscription or onboarding
       case "bawsala":
+      case "sanctuary":
         openPublicScreenFromLanding(screen);
         return;
       default:
@@ -492,6 +494,7 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
               ) : (
                 <Landing
                   onStartJourney={startRecoveryFromLanding}
+                  onNavigate={handleLandingNavigate}
                 />
               )}
             </Suspense>

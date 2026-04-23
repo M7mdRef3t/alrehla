@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { ArrowLeft, Target, Sparkles, CheckCircle2 } from "lucide-react";
-import type { PhaseOneGoalProgress } from "@/services/adminApi";
+import type { PhaseOneGoalProgress } from "@/services/admin/adminTypes";
 
 interface PhaseOneGoalProps {
     data: PhaseOneGoalProgress | null;

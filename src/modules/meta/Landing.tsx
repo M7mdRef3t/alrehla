@@ -142,6 +142,7 @@ const LANDING_STYLES = `
 
 interface LandingProps {
   onStartJourney: () => void;
+  onNavigate?: (screen: string) => void;
   onOpenSurvey?: () => void;
   ownerInstallRequestNonce?: number;
   onOwnerInstallRequestHandled?: () => void;
@@ -149,6 +150,7 @@ interface LandingProps {
 
 export const Landing: FC<LandingProps> = ({
   onStartJourney: _onStartJourney,
+  onNavigate,
   ownerInstallRequestNonce = 0,
   onOwnerInstallRequestHandled,
 }) => {
@@ -225,11 +227,16 @@ export const Landing: FC<LandingProps> = ({
           _onStartJourney();
         } else {
           void trackingService.recordFlow("journey_started_frictionless");
-          window.location.assign("/sanctuary");
+          if (onNavigate) {
+            onNavigate("sanctuary");
+          } else {
+            window.sessionStorage.setItem("dawayir-app-boot-action", "navigate:sanctuary");
+            window.location.reload();
+          }
         }
       }
     }, 1200);
-  }, [mirrorName, hasExistingJourney, _onStartJourney]);
+  }, [mirrorName, hasExistingJourney, _onStartJourney, onNavigate]);
 
   const isMobile = useIsMobile();
 

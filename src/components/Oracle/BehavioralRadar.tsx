@@ -9,16 +9,9 @@ import {
     AlertTriangle,
     TrendingUp
 } from 'lucide-react';
-import {
-    fetchFunnelAnalytics,
-    fetchLiveBehavioralEvents,
-    fetchTimeToActionHistogram,
-    fetchPendingIntents,
-    FunnelStats,
-    BehavioralEvent,
-    HistogramPoint,
-    PendingIntent
-} from '@/services/adminApi';
+import { fetchFunnelAnalytics, fetchLiveBehavioralEvents, fetchTimeToActionHistogram } from "@/services/admin/adminAnalytics";
+import { fetchPendingIntents } from "@/services/admin/adminRevenue";
+import { FunnelStats, BehavioralEvent, HistogramPoint, PendingIntent } from "@/services/admin/adminTypes";
 
 export const BehavioralRadar: React.FC = () => {
     const [funnel, setFunnel] = useState<FunnelStats | null>(null);

@@ -20,7 +20,8 @@ const nextConfig = {
   transpilePackages: ["@alrehla/atmosfera", "@alrehla/dawayir", "@alrehla/masarat"],
   poweredByHeader: false,
   experimental: {
-    esmExternals: "loose"
+    esmExternals: "loose",
+    optimizePackageImports: ["lucide-react", "framer-motion", "recharts"]
   },
 
   // ═══ SEO & Security Headers ═══
@@ -107,22 +108,30 @@ const nextConfig = {
 
 import { withSentryConfig } from "@sentry/nextjs";
 
-export default withSentryConfig(withBundleAnalyzer(nextConfig), {
-  // For all available options, see:
-  // https://github.com/getsentry/sentry-webpack-plugin#options
-  org: "alrehla",
-  project: "alrehla",
-  sentryUrl: "https://sentry.io/",
-  
-  // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
-  
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
-  
-  // Hides source maps from generated client bundles
-  hideSourceMaps: true,
-  
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
-});
+let finalConfig = withBundleAnalyzer(nextConfig);
+
+// Only apply Sentry if we have the auth token, to prevent build failures in CI/Vercel
+// when Sentry is not fully configured yet.
+if (process.env.SENTRY_AUTH_TOKEN || process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  finalConfig = withSentryConfig(finalConfig, {
+    // For all available options, see:
+    // https://github.com/getsentry/sentry-webpack-plugin#options
+    org: "alrehla",
+    project: "alrehla",
+    sentryUrl: "https://sentry.io/",
+    
+    // Only print logs for uploading source maps in CI
+    silent: !process.env.CI,
+    
+    // Upload a larger set of source maps for prettier stack traces (increases build time)
+    widenClientFileUpload: true,
+    
+    // Hides source maps from generated client bundles
+    hideSourceMaps: true,
+    
+    // Automatically tree-shake Sentry logger statements to reduce bundle size
+    disableLogger: true,
+  });
+}
+
+export default finalConfig;

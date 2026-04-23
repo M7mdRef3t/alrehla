@@ -4,7 +4,7 @@ import { useAuthState, getEffectiveRoleFromState } from "@/domains/auth/store/au
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "@/utils/featureFlags";
 import { isUserMode } from "@/config/appEnv";
 import { runtimeEnv } from "@/config/runtimeEnv";
-import { fetchAdminConfig } from "@/services/adminApi";
+import { fetchAdminConfig } from "@/services/admin/adminSettings";
 
 const hasSupabaseEnv = Boolean(runtimeEnv.supabaseUrl && runtimeEnv.supabaseAnonKey);
 

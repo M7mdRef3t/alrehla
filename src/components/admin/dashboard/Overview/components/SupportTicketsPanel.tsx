@@ -1,7 +1,8 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { CheckCircle2, Ticket, XCircle, ArrowRight, Loader2, Image as ImageIcon, Zap } from "lucide-react";
-import { fetchOpenSupportTickets, resolveActivationTicket, rejectActivationTicket, type SupportTicketEntry } from "@/services/adminApi";
+import { fetchOpenSupportTickets, resolveActivationTicket, rejectActivationTicket } from "@/services/admin/adminSupport";
+import { type SupportTicketEntry } from "@/services/admin/adminTypes";
 import { supabase } from "@/services/supabaseClient";
 import { CollapsibleSection } from "../../../ui/CollapsibleSection";
 function getSupportTicketLabel(ticket: SupportTicketEntry): string {

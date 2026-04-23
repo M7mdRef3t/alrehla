@@ -18,16 +18,10 @@ import { useAdminState, getScoringWeights, getScoringThresholds } from "@/domain
 import { useAppContentState } from '@/modules/map/dawayirIndex';
 import { useFleetState } from "@/domains/admin/store/fleet.store";
 import { isSupabaseReady } from "@/services/supabaseClient";
-import {
-    saveMission,
-    deleteMission,
-    saveBroadcast,
-    deleteBroadcast,
-    fetchAppContentEntries,
-    saveAppContentEntry,
-    deleteAppContentEntry,
-    type AdminContentEntry
-} from "@/services/adminApi";
+import { saveMission, deleteMission } from "@/services/admin/adminMissions";
+import { saveBroadcast, deleteBroadcast } from "@/services/admin/adminBroadcasts";
+import { fetchAppContentEntries, saveAppContentEntry, deleteAppContentEntry } from "@/services/admin/adminContent";
+import { type AdminContentEntry } from "@/services/admin/adminTypes";
 import { buildResultTemplateFromAnswers } from "@/utils/resultScreenTemplates";
 import type { PersonGender } from "@/utils/resultScreenAI";
 import type { QuickAnswer2 } from "@/utils/suggestInitialRing";

@@ -41,17 +41,16 @@ jobs:
           fi
           echo "Vercel configuration verified."
 
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: team_URGAR9qk4F6x6EdDj39dAZlF
-          vercel-project-id: prj_zJd5ooYLoZJkRCIHNlkjiQ53gGgH
-          vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          vercel-project-name: alrehla
-          vercel-version: latest
-          working-directory: ./
+      - name: Deploy to Vercel (Preview)
+        if: github.ref != 'refs/heads/main'
+        run: npx vercel --yes --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: team_URGAR9qk4F6x6EdDj39dAZlF
+          VERCEL_PROJECT_ID: prj_zJd5ooYLoZJkRCIHNlkjiQ53gGgH
 
-
-
+      - name: Deploy to Vercel (Production)
+        if: github.ref == 'refs/heads/main'
+        run: npx vercel --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: team_URGAR9qk4F6x6EdDj39dAZlF
+          VERCEL_PROJECT_ID: prj_zJd5ooYLoZJkRCIHNlkjiQ53gGgH

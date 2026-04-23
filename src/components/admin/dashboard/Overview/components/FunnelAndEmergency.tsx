@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { AlertTriangle, Filter, User, Play, CheckCircle2 } from "lucide-react";
-import type { OverviewStats } from "@/services/adminApi";
+import type { OverviewStats } from "@/services/admin/adminTypes";
 import { AdminTooltip } from "./AdminTooltip";
 import { CollapsibleSection } from "../../../ui/CollapsibleSection";
 interface FunnelAndEmergencyProps {

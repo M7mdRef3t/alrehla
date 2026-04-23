@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { BarChart3, Target, Users } from "lucide-react";
-import type { OverviewStats } from "@/services/adminApi";
+import type { OverviewStats } from "@/services/admin/adminTypes";
 import { AdminTooltip } from "./AdminTooltip";
 import { CollapsibleSection } from "../../../ui/CollapsibleSection";
 type PotentialTravelersStats = NonNullable<OverviewStats["potentialTravelers"]>;

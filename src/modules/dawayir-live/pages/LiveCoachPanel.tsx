@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Eye, PlayCircle, ScanSearch, Search, Share2, ShieldCheck, Sparkles, Users2 } from "lucide-react";
 import { assignUrl } from "@/services/navigation";
-import { fetchJourneyPaths } from "@/services/adminApi";
+import { fetchJourneyPaths } from "@/services/admin/adminSettings";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getDawayirLiveHistoryHref } from "@/utils/dawayirLiveJourney";
 import { createLiveShare, getLiveSession, listCoachLiveSessions } from "../api";

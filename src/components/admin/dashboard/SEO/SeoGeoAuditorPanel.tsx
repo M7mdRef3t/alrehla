@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { applySeoAutofix, runSeoAudit, type SeoAuditFinding, type SeoAuditReport, type SeoAutofixResult } from "@/services/adminApi";
+import { applySeoAutofix, runSeoAudit } from "@/services/admin/adminSeo";
+import { type SeoAuditFinding, type SeoAuditReport, type SeoAutofixResult } from "@/services/admin/adminTypes";
 
 type LoadingState = "idle" | "loading";
 

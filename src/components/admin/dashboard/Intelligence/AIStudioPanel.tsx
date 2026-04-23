@@ -98,7 +98,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { isSupabaseReady } from "@/services/supabaseClient";
 import { geminiClient } from "@/services/geminiClient";
-import { saveSystemPrompt, saveScoring, saveAiLog, rateAiLog as rateAiLogRemote } from "@/services/adminApi";
+import { saveSystemPrompt, saveScoring } from "@/services/admin/adminSettings";
+import { saveAiLog, rateAiLog as rateAiLogRemote } from "@/services/admin/adminAiLogs";
 
 export const AIStudioPanel: FC = () => {
     // Global State

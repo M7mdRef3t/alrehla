@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, X, Send, Sparkles, Loader2, Minimize2, Maximize2 } from "lucide-react";
 import { useAdminState } from "@/domains/admin/store/admin.store";
-import { callAdminApi } from "@/services/adminApi";
+import { callAdminApi } from "@/services/admin/adminCore";
 
 export const AdminCopilotModal: FC = () => {
   const isCopilotOpen = useAdminState((s) => s.isCopilotOpen);

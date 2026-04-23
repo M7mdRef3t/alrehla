@@ -1,7 +1,7 @@
 import { FC, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Zap, Brain, Eye, Terminal, Loader2, RefreshCw, Activity, ShieldCheck, ChevronDown, ChevronUp, Copy, Check, MessageSquare, Send } from "lucide-react";
-import { fetchSovereignInsights, respondToOracleInsight } from "@/services/adminApi";
+import { fetchSovereignInsights, respondToOracleInsight } from "@/services/admin/adminAlerts";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { augmentInsightWithAi } from "@/services/oracleAiService";
 

@@ -46,7 +46,8 @@ import {
   Archive,
   Undo2,
   LayoutGrid,
-  ChevronDown
+  ChevronDown,
+  MessageCircle
 } from "lucide-react";
 import { useJourneyProgress } from "@/domains/journey";
 import { useJourneyState as useJourneyStore } from "@/domains/journey/store/journey.store";
@@ -322,6 +323,69 @@ const SidebarSector: FC<{ title: string; children: React.ReactNode; icon: React.
   );
 };
 
+const getSidebarItemColorClass = (color?: string) => {
+  switch (color?.toString().toLowerCase().trim()) {
+    case "#10b981":
+      return "sidebar-color-emerald";
+    case "#f43f5e":
+    case "#fb7185":
+      return "sidebar-color-rose";
+    case "#a78bfa":
+      return "sidebar-color-violet";
+    case "#60a5fa":
+      return "sidebar-color-sky";
+    case "#14b8a6":
+      return "sidebar-color-teal";
+    case "#2dd4bf":
+      return "sidebar-color-cyan";
+    case "#f59e0b":
+    case "#f5a623":
+      return "sidebar-color-amber";
+    case "#64748b":
+    case "#94a3b8":
+      return "sidebar-color-slate";
+    case "var(--ds-color-brand-teal-400)":
+      return "sidebar-color-brand-teal";
+    default:
+      return "";
+  }
+};
+
+const SidebarItem: FC<{
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  active?: boolean;
+  color?: string;
+  badge?: string | number;
+}> = ({ label, icon, onClick, active, color, badge }) => {
+  const colorClass = getSidebarItemColorClass(color);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`ds-sidebar-item ${colorClass}`}
+      data-active={active}
+    >
+      <div className="ds-icon-box">
+        {icon}
+      </div>
+      <span className="truncate flex-1">{label}</span>
+      {badge && (
+        <span className="ds-badge !text-[10px] !px-1.5 !h-4 text-slate-400">
+          {badge}
+        </span>
+      )}
+      {active && (
+        <motion.div 
+          layoutId="sidebar-active-indicator"
+          className="absolute left-0 w-1 h-5 rounded-r-full sidebar-active-indicator"
+        />
+      )}
+    </button>
+  );
+};
+
 export const AppSidebar: FC<AppSidebarProps> = ({
   onOpenGym,
   onStartJourney,
@@ -340,69 +404,6 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   /**
    * Sidebar Sector UI Component was moved outside to maintain state
    */
-
-  const getSidebarItemColorClass = (color?: string) => {
-    switch (color?.toString().toLowerCase().trim()) {
-      case "#10b981":
-        return "sidebar-color-emerald";
-      case "#f43f5e":
-      case "#fb7185":
-        return "sidebar-color-rose";
-      case "#a78bfa":
-        return "sidebar-color-violet";
-      case "#60a5fa":
-        return "sidebar-color-sky";
-      case "#14b8a6":
-        return "sidebar-color-teal";
-      case "#2dd4bf":
-        return "sidebar-color-cyan";
-      case "#f59e0b":
-      case "#f5a623":
-        return "sidebar-color-amber";
-      case "#64748b":
-      case "#94a3b8":
-        return "sidebar-color-slate";
-      case "var(--ds-color-brand-teal-400)":
-        return "sidebar-color-brand-teal";
-      default:
-        return "";
-    }
-  };
-
-  const SidebarItem: FC<{
-    label: string;
-    icon: React.ReactNode;
-    onClick: () => void;
-    active?: boolean;
-    color?: string;
-    badge?: string | number;
-  }> = ({ label, icon, onClick, active, color, badge }) => {
-    const colorClass = getSidebarItemColorClass(color);
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className={`ds-sidebar-item ${colorClass}`}
-        data-active={active}
-      >
-        <div className="ds-icon-box">
-          {icon}
-        </div>
-      <span className="truncate flex-1">{label}</span>
-      {badge && (
-        <span className="ds-badge !text-[10px] !px-1.5 !h-4 text-slate-400">
-          {badge}
-        </span>
-      )}
-      {active && (
-        <motion.div 
-          layoutId="sidebar-active-indicator"
-          className="absolute left-0 w-1 h-5 rounded-r-full sidebar-active-indicator"
-        />
-      )}
-    </button>
-  );
-};
 
   const setOverlay = useAppOverlayState((state) => state.setOverlay);
   const isDesktopSidebarOpen = useLayoutState((s) => s.sidebarExpanded);

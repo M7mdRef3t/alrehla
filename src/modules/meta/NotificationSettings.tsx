@@ -8,7 +8,7 @@ import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
 import { getEffectiveFeatureAccess } from "@/utils/featureFlags";
 import { isSupabaseReady } from "@/services/supabaseClient";
-import { savePulseCheckMode } from "@/services/adminApi";
+import { savePulseCheckMode } from "@/services/admin/adminSettings";
 import { isUserMode } from "@/config/appEnv";
 import { runtimeEnv } from "@/config/runtimeEnv";
 

@@ -12,7 +12,9 @@ import { MarketingAndRetention } from "../Overview/components/MarketingAndRetent
 import { SupportTicketsPanel } from "../Overview/components/SupportTicketsPanel";
 import { PromoCodesPanel } from "../Overview/components/PromoCodesPanel";
 
-import { fetchOverviewStats, type OverviewStats, fetchWeeklyReport, type WeeklyReport } from "@/services/adminApi";
+import { fetchOverviewStats } from "@/services/admin/adminAnalytics";
+import { type OverviewStats, type WeeklyReport } from "@/services/admin/adminTypes";
+import { fetchWeeklyReport } from "@/services/admin/adminReports";
 
 export const GrowthRevenueDashboard: FC = () => {
     const [remoteStats, setRemoteStats] = useState<OverviewStats | null>(null);

@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { AlertOctagon, TrendingUp, Lock, Radar } from "lucide-react";
-import type { OverviewStats } from "@/services/adminApi";
+import type { OverviewStats } from "@/services/admin/adminTypes";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface GrowthAndFrictionProps {

@@ -5,7 +5,8 @@ import { Compass, Activity, ShieldAlert, Cpu } from "lucide-react";
 import { StatCard, formatNumber } from "./components/StatCard";
 import { GrowthAndFriction } from "../Overview/components/GrowthAndFriction";
 import { DeepAnalytics } from "../Overview/components/DeepAnalytics";
-import { fetchOverviewStats, type OverviewStats } from "@/services/adminApi";
+import { fetchOverviewStats } from "@/services/admin/adminAnalytics";
+import { type OverviewStats } from "@/services/admin/adminTypes";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 
 export const FlowDynamicsDashboard: FC = () => {

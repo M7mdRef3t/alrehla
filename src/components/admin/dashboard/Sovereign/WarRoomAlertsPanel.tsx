@@ -2,7 +2,8 @@ import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, CheckCircle, Clock, ShieldAlert, XCircle, RefreshCw } from "lucide-react";
-import { fetchAlertIncidents, updateAlertIncidentStatus, resetAlertIncidents, type AlertIncident } from "@/services/adminApi";
+import { fetchAlertIncidents, updateAlertIncidentStatus, resetAlertIncidents } from "@/services/admin/adminAlerts";
+import { type AlertIncident } from "@/services/admin/adminTypes";
 
 interface WarRoomAlertsPanelProps {
   minimal?: boolean;

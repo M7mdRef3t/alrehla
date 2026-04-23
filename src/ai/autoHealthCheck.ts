@@ -16,7 +16,7 @@ import { runtimeEnv } from "../config/runtimeEnv";
 
 import { decisionEngine } from "./decision-framework";
 import type { AIDecision } from "./decision-framework";
-import { sendOwnerSecurityWebhook } from "@/services/adminApi";
+import { sendOwnerSecurityWebhook } from "@/services/admin/adminCore";
 import { sendNotification } from "@/services/notifications";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -539,7 +539,7 @@ export class AutoHealthChecker {
     logger.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
     try {
-      import("@/services/adminApi").then((mod) => {
+      import("@/services/admin/adminCore").then((mod) => {
         mod.sendOwnerSecurityWebhook({
             type: "health_critical",
             status: result.status,

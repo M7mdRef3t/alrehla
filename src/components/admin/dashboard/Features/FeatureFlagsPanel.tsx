@@ -25,7 +25,7 @@ import { useAuthState, getEffectiveRoleFromState } from "@/domains/auth/store/au
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "@/utils/featureFlags";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { FEATURE_FLAGS, type FeatureFlagKey, type FeatureFlagMode } from "@/config/features";
-import { saveFeatureFlags } from "@/services/adminApi";
+import { saveFeatureFlags } from "@/services/admin/adminSettings";
 import { isSupabaseReady } from "@/services/supabaseClient";
 import { createCurrentUrl, pushUrl, replaceUrl } from "@/services/navigation";
 import { motion, AnimatePresence } from "framer-motion";

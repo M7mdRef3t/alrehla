@@ -13,13 +13,10 @@ import { SovereignABTestRadar } from "../Analytics/SovereignABTestRadar";
 import { PendingIntentsWidget } from "./components/PendingIntentsWidget";
 import { CreditCard } from "lucide-react";
 
-import {
-    fetchOverviewStats,
-    type OverviewStats,
-    fetchExecutiveReport,
-    fetchSovereignExecutiveReport,
-    type SovereignExecutiveReport
-} from "@/services/adminApi";
+import { fetchOverviewStats } from "@/services/admin/adminAnalytics";
+import { type OverviewStats, type SovereignExecutiveReport } from "@/services/admin/adminTypes";
+import { fetchExecutiveReport } from "@/services/admin/adminReports";
+import { fetchSovereignExecutiveReport } from "@/services/admin/adminRevenue";
 import { fetchFlowAuditLogs, type FlowAuditLogEntry } from "@/services/flowAudit";
 import type { ExecutiveReport as ExecutiveReportType } from "@/types/admin.types";
 import { vercelService, type VercelPulse } from "@/services/vercelService";

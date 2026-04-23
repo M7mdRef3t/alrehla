@@ -5,7 +5,7 @@ import { logger } from "@/services/logger";
 import { useEffect, useMemo, useRef, useState, lazy } from "react";
 import { BadgeCheck, Clock3, Download, Gem, Link2, RotateCcw, Share2, Wind } from "lucide-react";
 import { assignUrl } from "@/services/navigation";
-import { fetchJourneyPaths } from "@/services/adminApi";
+import { fetchJourneyPaths } from "@/services/admin/adminSettings";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import {
   getDawayirLiveLaunchHref,

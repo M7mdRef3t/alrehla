@@ -21,7 +21,8 @@ import {
   Landmark
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchSovereignExecutiveReport, type SovereignExecutiveReport } from "@/services/adminApi";
+import { fetchSovereignExecutiveReport } from "@/services/admin/adminRevenue";
+import { type SovereignExecutiveReport } from "@/services/admin/adminTypes";
 import { growthEngine, type GrowthMetrics, type DiffusionMetrics } from "@/services/growthEngine";
 import { getClients, type ClientLink } from "@/services/b2bService";
 import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";

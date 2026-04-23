@@ -3,7 +3,7 @@ import type { FC } from "react";
 import { useState } from "react";
 import { AlertTriangle, RefreshCw, TrendingUp, Zap, Target, ActivitySquare } from "lucide-react";
 import { motion } from "framer-motion";
-import { runCronReport } from "@/services/adminApi";
+import { runCronReport } from "@/services/admin/adminReports";
 import { computeConsciousRevenueMetrics } from "@/services/consciousRevenueLink";
 import type { WeeklyReport } from "@/types/admin.types";
 import { AdminTooltip } from "./AdminTooltip";

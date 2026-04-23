@@ -16,7 +16,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { assignUrl } from "@/services/navigation";
-import { fetchJourneyPaths } from "@/services/adminApi";
+import { fetchJourneyPaths } from "@/services/admin/adminSettings";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getDawayirLiveLaunchHref, getDawayirLivePath } from "@/utils/dawayirLiveJourney";
 import { createLiveShare, getLiveSession, listLiveSessions } from "../api";
