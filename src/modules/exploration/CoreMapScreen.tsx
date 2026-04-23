@@ -928,7 +928,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <div className="relative mb-6">
-                <svg width="80" height="80" viewBox="0 0 80 80">
+                <svg width={80} height={80} viewBox="0 0 80 80">
                   {[0, 0.6, 1.2].map((delay, i) => (
                     <motion.circle
                       key={i} cx={40} cy={40} r={20}

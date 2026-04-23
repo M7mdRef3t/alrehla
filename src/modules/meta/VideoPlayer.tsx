@@ -293,7 +293,7 @@ export function VideoPlayer({
               <div style={{ position: "relative", width: 40, height: 40, borderRadius: "50%", border: `2px solid ${color}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ fontSize: 13, fontWeight: 900, color }}>{Math.ceil(remaining)}</span>
                 <motion.svg style={{ position: "absolute", inset: -2, transform: "rotate(-90deg)" }} viewBox="0 0 44 44">
-                  <motion.circle cx="22" cy="22" r="20" stroke={color} strokeWidth="2" fill="none" strokeDasharray="126" animate={{ strokeDashoffset: 126 }} transition={{ duration: remaining, ease: "linear" }} />
+                  <motion.circle cx={22} cy={22} r={20} stroke={color} strokeWidth={2} fill="none" strokeDasharray="126" animate={{ strokeDashoffset: 126 }} transition={{ duration: remaining, ease: "linear" }} />
                 </motion.svg>
               </div>
               <div style={{ textAlign: "right" }}>

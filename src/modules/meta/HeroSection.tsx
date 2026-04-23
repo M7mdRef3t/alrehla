@@ -1167,7 +1167,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
             />
             {/* Neural Pulse - Data traveling from core to node */}
             <motion.circle
-              r="1.5"
+              r={1.5}
               fill={n.color}
               initial={{ offsetDistance: "0%", opacity: 0 }}
               animate={{ 
@@ -1194,9 +1194,9 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
             return (
               <g key={i}>
                 <motion.circle
-                  cx="190" cy="190" r={safeRingRadius}
+                  cx={190} cy={190} r={safeRingRadius}
                   stroke={ring.stroke}
-                  strokeWidth="1"
+                  strokeWidth={1}
                   fill="none"
                   strokeDasharray={ring.dash === "none" ? undefined : ring.dash}
                   animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
@@ -1206,10 +1206,10 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
                 />
                 {!reduceMotion && (
                   <motion.circle
-                    cx="190" cy="190" r={safeRingRadius}
+                    cx={190} cy={190} r={safeRingRadius}
                     fill="none"
                     stroke={ring.stroke}
-                    strokeWidth="2"
+                    strokeWidth={2}
                     strokeDasharray="1 100"
                     animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
                     transition={{ duration: ring.dur * 0.4, repeat: Infinity, ease: "linear" }}
@@ -1245,7 +1245,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
                 {hovered === i && (
                   <circle
                     cx={node.cx} cy={node.cy} r={safeNodeRadius + 6}
-                    fill="none" stroke={node.color} strokeWidth="1.5"
+                    fill="none" stroke={node.color} strokeWidth={1.5}
                     opacity={0.4}
                     className="pulse-ring"
                     transformOrigin={`${node.cx}px ${node.cy}px`}
@@ -1287,9 +1287,9 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
           className="center-core"
           transformOrigin="190px 190px"
         >
-          <circle cx="190" cy="190" r="22" fill="rgba(0, 240, 255, 0.15)" />
-          <circle cx="190" cy="190" r="14" fill="var(--teal)" className="center-core__glow" />
-          <circle cx="190" cy="190" r="6" fill="#fff" opacity={0.9} />
+          <circle cx={190} cy={190} r={22} fill="rgba(0, 240, 255, 0.15)" />
+          <circle cx={190} cy={190} r={14} fill="var(--teal)" className="center-core__glow" />
+          <circle cx={190} cy={190} r={6} fill="#fff" opacity={0.9} />
         </motion.g>
       </svg>
 

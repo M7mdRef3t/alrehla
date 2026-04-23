@@ -270,10 +270,10 @@ export const MarkazScreen: FC = () => {
           {/* Health Score */}
           <div className="w-14 h-14 relative">
             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-              <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="5" />
-              <motion.circle cx="50" cy="50" r="40" fill="none"
+              <circle cx={50} cy={50} r={40} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={5} />
+              <motion.circle cx={50} cy={50} r={40} fill="none"
                 stroke={healthScore >= 60 ? "#10b981" : healthScore >= 30 ? "#fbbf24" : "#ef4444"}
-                strokeWidth="5" strokeLinecap="round"
+                strokeWidth={5} strokeLinecap="round"
                 strokeDasharray={`${(healthScore / 100) * 251} 251`}
                 initial={{ strokeDasharray: "0 251" }}
                 animate={{ strokeDasharray: `${(healthScore / 100) * 251} 251` }}

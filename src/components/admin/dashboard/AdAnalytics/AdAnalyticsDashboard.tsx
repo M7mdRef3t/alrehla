@@ -46,7 +46,7 @@ import {
   formatCurrency,
   formatNumber,
 } from './adAnalyticsData';
-import { getBearerToken } from '@/utils/authHelpers';
+import { getAuthToken as getBearerToken } from '@/domains/auth/store/auth.store';
 
 // ─── Sub-components ──────────────────────────────────────
 

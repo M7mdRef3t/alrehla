@@ -84,12 +84,49 @@ export class ResonanceSignalService {
 
     /** Aggregated Resonance Stats for the Dashboard */
     static async getGlobalStats() {
-        // Return mock levels for now to prevent heavy aggregation in v1
-        return {
-            resonanceScore: 78,
-            activePairings: 12,
-            ionizingStatus: false,
-            ghostingRate: 5.1
-        };
+        try {
+            // Count total active sessions
+            const { count: totalActive } = await supabase!
+                .from("sessions")
+                .select("id", { count: "exact", head: true })
+                .eq("status", "active");
+
+            // Count ghosting sessions (inactive for 24h+)
+            const yesterday = new Date();
+            yesterday.setHours(yesterday.getHours() - 24);
+
+            const { count: ghostingCount } = await supabase!
+                .from("sessions")
+                .select("id", { count: "exact", head: true })
+                .eq("status", "active")
+                .lt("created_at", yesterday.toISOString());
+
+            const total = totalActive || 1;
+            const ghosting = ghostingCount || 0;
+            const ghostingRate = (ghosting / total) * 100;
+            
+            // Heuristic calculation
+            const resonanceScore = Math.max(0, 100 - (ghostingRate * 1.5));
+            const ionizingStatus = ghostingRate > 20;
+
+            // Approximate active pairings from getPairingSuggestions
+            const pairings = await this.getPairingSuggestions();
+
+            return {
+                resonanceScore: Math.round(resonanceScore),
+                activePairings: pairings.length * 2, // Multiplying to get total paired users
+                ionizingStatus,
+                ghostingRate: Number(ghostingRate.toFixed(1))
+            };
+        } catch (error) {
+            logger.error("[ResonanceSignal] Global stats check failed:", error);
+            // Fallback safety net
+            return {
+                resonanceScore: 0,
+                activePairings: 0,
+                ionizingStatus: true,
+                ghostingRate: 0
+            };
+        }
     }
 }

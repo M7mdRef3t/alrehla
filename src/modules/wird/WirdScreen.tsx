@@ -67,9 +67,9 @@ function CounterModal({ dhikr, onClose }: { dhikr: Dhikr; onClose: () => void })
           {/* Background ring */}
           <svg className="absolute inset-0 w-full h-full -rotate-90">
             <circle cx="96" cy="96" r="88" fill="none" stroke="rgba(51,65,85,0.2)" strokeWidth="6" />
-            <motion.circle cx="96" cy="96" r="88" fill="none"
+            <motion.circle cx={96} cy={96} r={88} fill="none"
               stroke={completed ? "#22c55e" : catMeta.color}
-              strokeWidth="6" strokeLinecap="round"
+              strokeWidth={6} strokeLinecap="round"
               strokeDasharray={2 * Math.PI * 88}
               strokeDashoffset={2 * Math.PI * 88 * (1 - pct / 100)}
               transition={{ duration: 0.3 }} />

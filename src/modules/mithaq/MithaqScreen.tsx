@@ -224,9 +224,9 @@ const PledgeCard: FC<{ pledge: Pledge; idx: number }> = ({ pledge, idx }) => {
         {/* Progress Ring */}
         <div className="w-11 h-11 relative shrink-0">
           <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-            <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="5" />
-            <motion.circle cx="50" cy="50" r="38" fill="none" stroke={catMeta.color}
-              strokeWidth="5" strokeLinecap="round"
+            <circle cx={50} cy={50} r={38} fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth={5} />
+            <motion.circle cx={50} cy={50} r={38} fill="none" stroke={catMeta.color}
+              strokeWidth={5} strokeLinecap="round"
               strokeDasharray={`${(progressPct / 100) * 239} 239`}
               initial={{ strokeDasharray: "0 239" }}
               animate={{ strokeDasharray: `${(progressPct / 100) * 239} 239` }}
@@ -437,9 +437,9 @@ export const MithaqScreen: FC = () => {
           {/* Overall Rate */}
           <div className="w-14 h-14 relative">
             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-              <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="5" />
-              <motion.circle cx="50" cy="50" r="40" fill="none" stroke="#fbbf24"
-                strokeWidth="5" strokeLinecap="round"
+              <circle cx={50} cy={50} r={40} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={5} />
+              <motion.circle cx={50} cy={50} r={40} fill="none" stroke="#fbbf24"
+                strokeWidth={5} strokeLinecap="round"
                 strokeDasharray={`${(overallRate / 100) * 251} 251`}
                 initial={{ strokeDasharray: "0 251" }}
                 animate={{ strokeDasharray: `${(overallRate / 100) * 251} 251` }}

@@ -83,6 +83,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   dawra: "Dawra Cycle Tracker",
   zill: "Zill Shadow Work",
   sila: "Sila Relationship Tracker",
+  basma: "Basma Identity Fingerprint",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -163,6 +164,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   dawra: { title: "دورة — إيقاعاتك الشخصية | Alrehla", description: "اكتشف أنماطك المتكررة في الطاقة والمزاج والإنتاجية." },
   zill: { title: "ظل — واجه ظلالك | Alrehla", description: "استكشف الجوانب المخفية — shadow work للنمو الحقيقي." },
   sila: { title: "صلة — جودة علاقاتك | Alrehla", description: "تتبع جودة التواصل مع أهم أشخاص حياتك." },
+  basma: { title: "بصمة — هويتك الفريدة | Alrehla", description: "حمضك النفسي — سماتك وقيمك وبيانات هويتك." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {

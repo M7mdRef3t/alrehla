@@ -219,7 +219,7 @@ function AnalysisRadar({ dimensions, scores, size = 240 }: {
       />
       {dimensions.map((d, i) => {
         const valPt = pt(i, r * ((scores[d.id] ?? 0) / 12));
-        return <circle key={i} cx={valPt.x} cy={valPt.y} r="5" fill={d.color} stroke="#080b15" strokeWidth="2" />;
+        return <circle key={i} cx={valPt.x} cy={valPt.y} r={5} fill={d.color} stroke="#080b15" strokeWidth={2} />;
       })}
       {dimensions.map((d, i) => {
         const lblPt = pt(i, r * 1.25);

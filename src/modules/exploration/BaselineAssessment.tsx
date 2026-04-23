@@ -174,16 +174,16 @@ export const BaselineAssessment: FC<BaselineAssessmentProps> = ({ onComplete }) 
         {/* Progress Bezel (SVG Circle) */}
         <svg className="absolute w-36 h-36 -rotate-90 pointer-events-none">
           <circle
-            cx="72" cy="72" r="68"
+            cx={72} cy={72} r={68}
             fill="none"
             stroke="rgba(255,255,255,0.05)"
-            strokeWidth="4"
+            strokeWidth={4}
           />
           <motion.circle
-            cx="72" cy="72" r="68"
+            cx={72} cy={72} r={68}
             fill="none"
             stroke="url(#compassGradient)"
-            strokeWidth="5"
+            strokeWidth={5}
             strokeLinecap="round"
             strokeDasharray="427.25" // 2 * pi * 68
             initial={{ strokeDashoffset: 427.25 }}

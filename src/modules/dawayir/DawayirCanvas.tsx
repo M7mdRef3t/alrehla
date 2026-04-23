@@ -26,6 +26,25 @@ const NativeX: FC<{ x: number; y: number; size: number }> = ({ x, y, size }) => 
   </g>
 );
 
+const toSafeSvgNumber = (value: unknown, fallback: number): number => {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+};
+
+type SafeMotionCircleProps = React.ComponentProps<typeof motion.circle> & {
+  cx?: number;
+  cy?: number;
+  r?: number;
+};
+
+const SafeMotionCircle: FC<SafeMotionCircleProps> = ({ cx = 50, cy = 50, r = 1, ...props }) => (
+  <motion.circle
+    cx={toSafeSvgNumber(cx, 50)}
+    cy={toSafeSvgNumber(cy, 50)}
+    r={Math.max(toSafeSvgNumber(r, 1), 0)}
+    {...props}
+  />
+);
+
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
 interface DawayirCanvasProps {
@@ -53,17 +72,17 @@ const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ r
   return (
     <g>
       <circle 
-        cx="50" cy="50" r={safeRadius} 
+        cx={50} cy={50} r={safeRadius} 
         fill="none" 
         stroke="var(--app-border)" 
-        strokeWidth="0.5" 
+        strokeWidth={0.5} 
       />
       <circle
-        cx="50" cy="50" r={safeRadius}
+        cx={50} cy={50} r={safeRadius}
         fill="none"
         stroke={colors[ring]}
         strokeOpacity="0.15"
-        strokeWidth="0.2"
+        strokeWidth={0.2}
         strokeDasharray="1 2"
         style={{
           transformOrigin: '50% 50%',
@@ -84,7 +103,7 @@ const EntropyGlow: FC<{ x: number; y: number; level: EntropyLevel }> = memo(({ x
   };
 
   return (
-    <motion.circle
+    <SafeMotionCircle
       cx={Number.isFinite(x) ? x : 50} 
       cy={Number.isFinite(y) ? y : 50} 
       r={6}
@@ -131,20 +150,20 @@ const MeNodeCenter: FC = memo(() => {
   return (
     <g transform="translate(50, 50)">
       {/* Halo Effect */}
-      <motion.circle
-        r="8"
+      <SafeMotionCircle
+        r={8}
         fill="rgba(45, 212, 191, 0.05)"
         animate={{ scale: [1, 1.1, 1] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
       
       {/* Core "Me" */}
-      <motion.circle 
-        r="6" 
+      <SafeMotionCircle 
+        r={6} 
         fill="var(--space-950)" 
         stroke="var(--ring-safe)" 
         strokeOpacity="0.6"
-        strokeWidth="0.8" 
+        strokeWidth={0.8} 
         animate={{ scale: [1, 1.05, 1] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -164,12 +183,12 @@ const MeNodeCenter: FC = memo(() => {
       {/* Asset Indicators around the Me Node */}
       {indicators.map((asset) => (
         <g key={asset.id} transform={`translate(${asset.x}, ${asset.y})`}>
-          <circle r="2" fill="rgba(15, 23, 42, 0.8)" stroke="rgba(255,255,255,0.1)" strokeWidth="0.2" />
-          <motion.circle 
-            r="2" 
+          <circle r={2} fill="rgba(15, 23, 42, 0.8)" stroke="rgba(255,255,255,0.1)" strokeWidth={0.2} />
+          <SafeMotionCircle 
+            r={2} 
             fill="none" 
             stroke="currentColor" 
-            strokeWidth="0.3"
+            strokeWidth={0.3}
             strokeDasharray="12.56" // 2 * PI * 2
             strokeDashoffset={12.56 * (1 - asset.val / 100)}
             className={asset.color}
@@ -269,19 +288,19 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       {...listeners}
     >
       {/* "Birth" Animation - A pulsing ring that appears only once on mount */}
-      <motion.circle
-        cx={baseX} cy={baseY} r="4"
+      <SafeMotionCircle
+        cx={baseX} cy={baseY} r={4}
         fill="none"
         stroke="var(--soft-teal)"
-        strokeWidth="1"
+        strokeWidth={1}
         initial={{ scale: 1, opacity: 0.8 }}
         animate={{ scale: 2.5, opacity: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       />
       {node.isMirrorNode && (
-        <motion.circle
-          cx={baseX} cy={baseY} r="7"
-          fill="none" stroke="rgba(251,191,36,0.6)" strokeWidth="0.5"
+        <SafeMotionCircle
+          cx={baseX} cy={baseY} r={7}
+          fill="none" stroke="rgba(251,191,36,0.6)" strokeWidth={0.5}
           strokeDasharray="2 2"
           animate={{ rotate: 360, scale: [1, 1.15, 1], opacity: [0.3, 0.8, 0.3] }}
           transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
@@ -294,7 +313,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
           animate={{ y: [0, -1, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <circle r="1.8" fill="#eab308" />
+          <circle r={1.8} fill="#eab308" />
           <text textAnchor="middle" dy="0.6" fontSize="1.8" fill="#1e293b" fontWeight="black" className="pointer-events-none drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]">⚡</text>
         </motion.g>
       )}
@@ -303,11 +322,11 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       
       {/* Analyzing Glow */}
       {node.isAnalyzing && (
-        <motion.circle
+        <SafeMotionCircle
           cx={baseX} cy={baseY} r={6}
           fill="none"
           stroke="rgba(20, 184, 166, 0.5)"
-          strokeWidth="0.5"
+          strokeWidth={0.5}
           strokeDasharray="2 2"
           initial={{ rotate: 0 }}
           animate={{ rotate: 360 }}
@@ -317,21 +336,21 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
 
       {entropyLevel === 3 ? (
         <g>
-          <motion.circle
+          <SafeMotionCircle
             cx={baseX} cy={baseY} r={5.5}
             fill="none"
             stroke="url(#blackhole-grad)"
-            strokeWidth="1.5"
+            strokeWidth={1.5}
             strokeDasharray="3 5"
             animate={{ rotate: -360 }}
             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
             style={{ transformOrigin: `${baseX}px ${baseY}px` }}
           />
-          <motion.circle
+          <SafeMotionCircle
             cx={baseX} cy={baseY} r={7}
             fill="none"
             stroke="rgba(244,63,94,0.3)"
-            strokeWidth="0.5"
+            strokeWidth={0.5}
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
@@ -340,7 +359,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
             fill="#020617" 
             stroke="#f43f5e" 
             strokeOpacity={0.8}
-            strokeWidth="1.2" 
+            strokeWidth={1.2} 
             style={{ filter: "drop-shadow(0 0 5px rgba(244,63,94,0.7))" }}
           />
         </g>
@@ -350,7 +369,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
           fill="var(--space-950)" 
           stroke={node.isAnalyzing ? "var(--soft-teal)" : ringColors[node.ring]} 
           strokeOpacity={node.isAnalyzing ? 0.4 : 1}
-          strokeWidth="0.8" 
+          strokeWidth={0.8} 
           className="transition-colors duration-300"
         />
       )}
@@ -378,7 +397,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
             d={`M ${baseX - 2.2} ${baseY + 1.8} Q ${baseX} ${baseY - 0.2} ${baseX + 2.2} ${baseY + 1.8}`} 
             fill="none" 
             stroke="#ffffff" 
-            strokeWidth="0.8" 
+            strokeWidth={0.8} 
             strokeLinecap="round"
           />
         </g>
@@ -410,7 +429,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
         whileHover={{ scale: 1.2 }}
         animate={{ opacity: 1, scale: 1 }}
       >
-        <circle cx={baseX - 4.5} cy={baseY - 4.5} r={2.2} fill="rgba(15, 23, 42, 0.9)" stroke="rgba(244, 63, 94, 0.5)" strokeWidth="0.3" />
+        <circle cx={baseX - 4.5} cy={baseY - 4.5} r={2.2} fill="rgba(15, 23, 42, 0.9)" stroke="rgba(244, 63, 94, 0.5)" strokeWidth={0.3} />
         <foreignObject x={baseX - 6.5} y={baseY - 6.5} width="4" height="4">
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Scissors size={10} color="#f43f5e" />
@@ -680,13 +699,13 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
               style={{ pointerEvents: "all", cursor: "pointer", transformOrigin: `${ghostNodePosition.x}px ${ghostNodePosition.y}px` }}
             >
               {/* Pulsing Aura */}
-              <motion.circle
+              <SafeMotionCircle
                 cx={ghostNodePosition.x}
                 cy={ghostNodePosition.y}
-                r="6"
+                r={6}
                 fill="none"
                 stroke="rgba(45, 212, 191, 0.3)"
-                strokeWidth="0.2"
+                strokeWidth={0.2}
                 strokeDasharray="1 1"
                 animate={{ 
                    scale: [1, 1.3, 1],
@@ -700,7 +719,7 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
               <circle
                 cx={ghostNodePosition.x}
                 cy={ghostNodePosition.y}
-                r="7"
+                r={7}
                 fill="transparent"
               />
 
@@ -708,12 +727,12 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
               <circle
                 cx={ghostNodePosition.x}
                 cy={ghostNodePosition.y}
-                r="4.5"
+                r={4.5}
                 fill="rgba(45, 212, 191, 0.15)"
                 fillOpacity="1"
                 stroke="rgba(45, 212, 191, 0.6)"
                 strokeOpacity="1"
-                strokeWidth="0.4"
+                strokeWidth={0.4}
               />
               
               {/* Plus Icon inside (Pure Native Paths) - Higher Visibility */}

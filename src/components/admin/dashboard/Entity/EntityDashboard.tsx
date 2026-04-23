@@ -187,10 +187,10 @@ function PulseDashboard() {
     useEffect(() => {
         const fetchPulse = async () => {
             try {
-                // Assuming we use our getBearerToken utility, but for this component we can import it or handle auth in fetch
-                const authModule = await import("@/utils/authHelpers");
+                // Using getAuthToken from our auth store
+                const authModule = await import("@/domains/auth/store/auth.store");
                 const res = await fetch("/api/admin/pulse", {
-                    headers: { authorization: `Bearer ${authModule.getBearerToken()}` }
+                    headers: { authorization: `Bearer ${authModule.getAuthToken()}` }
                 });
                 const json = await res.json();
                 if (json.ok) {

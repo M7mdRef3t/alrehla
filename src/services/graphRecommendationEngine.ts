@@ -50,22 +50,27 @@ export class GraphRecommendationEngine {
             const queryText = nodeVector.content;
             const matches = await consciousnessService.recallSimilarMoments(queryText, {
                 limit: 5,
-                sources: ["note"] // نستخدم "note" كـ placeholder للأصول التعليمية في الـ Vectors
+                sources: ["educational_asset"] // البحث المباشر في الأصول التعليمية المدمجة
             });
 
             // 4. دمج النتائج وترتيبها
             const recommendations: RecommendationResult[] = [];
 
-            // تحويل الـ matches إلى توصيات حقيقية من البيانات الثابتة (حالياً)
+            // تحويل الـ matches إلى توصيات مباشرة بالاعتماد على الميتاداتا
             for (const match of matches) {
-                // محاولة مطابقة الـ match مع محتوى حقيقي
-                const asset = this.findAssetByContent(match.content);
-                if (asset) {
-                    recommendations.push({
-                        ...asset,
-                        relevance: match.similarity
-                    });
-                }
+                let meta: any = {};
+                try {
+                    meta = typeof match.metadata === 'string' ? JSON.parse(match.metadata) : match.metadata || {};
+                } catch(e) {}
+
+                recommendations.push({
+                    id: match.id,
+                    type: meta.type || "story", // "video" | "story" | "faq"
+                    title: meta.title || "رؤية مقترحة",
+                    description: match.content,
+                    relevance: match.similarity,
+                    context: "بناءً على التوافق الدلالي مع حالتك"
+                });
             }
 
             // إضافة توصية "Nudge" بناءً على الروابط
@@ -86,23 +91,5 @@ export class GraphRecommendationEngine {
             logger.error("❌ [Recommendation Engine] Failed to get recommendations:", error);
             return [];
         }
-    }
-
-    /**
-     * وظيفة مساعدة للبحث في البيانات الثابتة عن الأصل التعليمي
-     * ملاحظة: في المستقبل سيتم جلب هذه البيانات من جدول educational_assets
-     */
-    private static findAssetByContent(content: string): Omit<RecommendationResult, "relevance"> | null {
-        // بحث بسيط في الـ static data
-        const video = videos.find(v => content.includes(v.title));
-        if (video) return { id: video.id, type: "video", title: video.title, description: video.description };
-
-        const story = successStories.find(s => content.includes(s.title));
-        if (story) return { id: story.id, type: "story", title: story.title, description: story.summary };
-
-        const faq = faqs.find(f => content.includes(f.question));
-        if (faq) return { id: faq.id, type: "faq", title: faq.question, description: faq.answer };
-
-        return null;
     }
 }

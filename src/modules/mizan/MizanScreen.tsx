@@ -122,11 +122,11 @@ function ProgressRing({ score, color, size = 160 }: { score: number; color: stri
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="transform -rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.04)" strokeWidth="10" fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.04)" strokeWidth={10} fill="none" />
         <motion.circle
           cx={size / 2} cy={size / 2} r={r}
           stroke={color}
-          strokeWidth="10"
+          strokeWidth={10}
           fill="none"
           strokeLinecap="round"
           initial={{ strokeDashoffset: circ }}

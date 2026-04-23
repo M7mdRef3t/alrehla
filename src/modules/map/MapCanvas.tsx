@@ -73,11 +73,11 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
   return (
     <g aria-label={label}>
       {/* Glass fill zone */}
-      <circle cx="50" cy="50" r={safeRadius} fill={`url(#${fillId})`} className="pointer-events-none" />
+      <circle cx={50} cy={50} r={safeRadius} fill={`url(#${fillId})`} className="pointer-events-none" />
 
       {/* Outer ambient halo */}
       <motion.circle
-        cx="50" cy="50" r={safeRadius + 1.5}
+        cx={50} cy={50} r={safeRadius + 1.5}
         fill="none" stroke={color} strokeWidth={2.5} opacity={0.08}
         animate={{ 
           opacity: [0.05, 0.18 + audioIntensity * 0.1, 0.05],
@@ -88,7 +88,7 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
 
       {/* Main neon ring — thick, glowing, without SVG filter to prevent gray box artifacts */}
       <motion.circle
-        cx="50" cy="50" r={safeRadius}
+        cx={50} cy={50} r={safeRadius}
         fill="none" stroke={color}
         animate={{ 
           strokeWidth: [3, 5 + audioIntensity * 3, 3], 
@@ -98,7 +98,7 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
         className="pointer-events-none"
       />
       <motion.circle
-        cx="50" cy="50" r={safeRadius}
+        cx={50} cy={50} r={safeRadius}
         fill="none" stroke={color}
         animate={{ 
           strokeWidth: [1.4, 2.4 + audioIntensity, 1.4], 
@@ -110,7 +110,7 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
 
       {/* Inner dashed shimmer */}
       <motion.circle
-        cx="50" cy="50" r={safeRadius - 0.8}
+        cx={50} cy={50} r={safeRadius - 0.8}
         fill="none" stroke={color} strokeWidth={0.5} opacity={0.3}
         strokeDasharray="2 5"
         animate={{ strokeDashoffset: [0, -20] }}
@@ -120,7 +120,7 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
       {/* Chromatic aberration — danger ring only */}
       {ring === "red" && (
         <motion.circle
-          cx="50" cy="50" r={safeRadius + 0.8}
+          cx={50} cy={50} r={safeRadius + 0.8}
           fill="none" stroke="rgba(244,63,94,0.3)" strokeWidth={4}
           animate={{ opacity: [0, 0.5, 0], scale: [0.97, 1.03, 0.97] }}
           style={{ transformOrigin: "50px 50px" }}
@@ -1637,9 +1637,9 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   {[1, 2, 3].map((i) => (
                     <motion.circle
                       key={i}
-                      cx="50"
-                      cy="50"
-                      r="10"
+                      cx={50}
+                      cy={50}
+                      r={10}
                       fill="none"
                       stroke="rgba(45,212,191,0.15)"
                       strokeWidth={0.5}

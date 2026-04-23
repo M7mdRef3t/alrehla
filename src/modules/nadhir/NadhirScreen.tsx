@@ -398,9 +398,9 @@ export const NadhirScreen: FC = () => {
             {/* Gauge Circle */}
             <div className="w-32 h-32 mx-auto relative mb-4">
               <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="6" />
-                <motion.circle cx="50" cy="50" r="42" fill="none"
-                  stroke={crisisLevel.color} strokeWidth="6" strokeLinecap="round"
+                <circle cx={50} cy={50} r={42} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={6} />
+                <motion.circle cx={50} cy={50} r={42} fill="none"
+                  stroke={crisisLevel.color} strokeWidth={6} strokeLinecap="round"
                   strokeDasharray={`${(crisisLevel.level / 100) * 264} 264`}
                   initial={{ strokeDasharray: "0 264" }}
                   animate={{ strokeDasharray: `${(crisisLevel.level / 100) * 264} 264` }}
