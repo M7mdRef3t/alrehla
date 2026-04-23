@@ -7,7 +7,7 @@ import html2canvas from "html2canvas";
 import { trackEvent, trackPageView, generateUUID, AnalyticsEvents, sendMetaEvent } from "../../src/services/analytics";
 import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "../../src/services/marketingAttribution";
 import { useAdminState } from "@/domains/admin/store/admin.store";
-import { fetchJourneyPaths } from "../../src/services/adminApi";
+import { fetchJourneyPaths } from "../../src/services/admin/adminSettings";
 import { normalizePhoneForFunnel, type FunnelIdentifiers } from "@/domains/funnel/contracts";
 import {
   getRelationshipWeatherInitialStage,
