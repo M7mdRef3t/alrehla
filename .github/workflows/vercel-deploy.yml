@@ -9,6 +9,12 @@ concurrency:
   group: vercel-deploy-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  deployments: write
+  pull-requests: write
+
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
