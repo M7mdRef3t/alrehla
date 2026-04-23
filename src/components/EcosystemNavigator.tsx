@@ -123,6 +123,7 @@ const ALL_PRODUCTS: EcosystemProduct[] = [
   { id: "nabd",      name: "نبض",       description: "فحص مزاجك وطاقتك — 5 ثواني",         icon: <Flame className="w-4 h-4" />,        status: "active",      color: "#ef4444", url: "/#nabd" },
   { id: "raseed",    name: "رصيد",      description: "رأس مالك النفسي — 6 أبعاد",          icon: <Gem className="w-4 h-4" />,          status: "active",      color: "#f59e0b", url: "/#raseed" },
   { id: "dawra",     name: "دورة",      description: "اكتشف إيقاعاتك الشخصية المتكررة",      icon: <TrendingUp className="w-4 h-4" />,   status: "active",      color: "#6366f1", url: "/#dawra" },
+  { id: "zill",      name: "ظل",       description: "واجه ظلالك الخفية — shadow work",        icon: <Eye className="w-4 h-4" />,          status: "active",      color: "#4c1d95", url: "/#zill" },
 ];
 
 // ─── Categories ─────────────────────────────────────────────────────────────
@@ -155,7 +156,7 @@ const CATEGORIES: ProductCategory[] = [
     color: "#8b5cf6",
     bgColor: "#2a1b4a",
     products: ALL_PRODUCTS.filter(p =>
-      ["atmosfera", "samt", "khalwa", "nadhir", "qalb", "niyya", "jathr", "ruya", "kanz", "tazkiya", "mizan", "qinaa", "nabd"].includes(p.id)
+      ["atmosfera", "samt", "khalwa", "nadhir", "qalb", "niyya", "jathr", "ruya", "kanz", "tazkiya", "mizan", "qinaa", "nabd", "zill"].includes(p.id)
     ),
   },
   {
