@@ -63,6 +63,7 @@ const RuyaScreen = lazy(() => import("../../ruya/RuyaScreen"));
 const RayaScreen = lazy(() => import("../../raya/RayaScreen"));
 const YawmiyyatScreen = lazy(() => import("../../yawmiyyat/YawmiyyatScreen"));
 const QinaaScreen = lazy(() => import("../../qinaa/QinaaScreen"));
+const NabdScreen = lazy(() => import("../../nabd/NabdScreen"));
 
 
 
@@ -824,6 +825,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
           <QinaaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "nabd") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" /></div>}>
+          <NabdScreen />
         </Suspense>
       </PageShell>
     );
