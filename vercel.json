@@ -27,7 +27,7 @@
     },
     {
       "path": "/api/cron/ab-test-monitor",
-      "schedule": "0 * * * *"
+      "schedule": "0 10 * * *"
     }
   ]
 }
