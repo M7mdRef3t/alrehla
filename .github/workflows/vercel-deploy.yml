@@ -2,7 +2,7 @@ name: Vercel Deploy
 
 on:
   push:
-    branches: ["main"]
+    branches: ["**"]
   workflow_dispatch:
 
 concurrency:
@@ -28,14 +28,15 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Verify Vercel token
+      - name: Verify Vercel Configuration
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "VERCEL_TOKEN secret is missing."
+            echo "::error::VERCEL_TOKEN is missing! Please add it to GitHub Secrets."
             exit 1
           fi
+          echo "Vercel configuration verified."
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
@@ -44,3 +45,6 @@ jobs:
           vercel-org-id: team_URGAR9qk4F6x6EdDj39dAZlF
           vercel-project-id: prj_zJd5ooYLoZJkRCIHNlkjiQ53gGgH
           vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-project-name: alrehla
+
