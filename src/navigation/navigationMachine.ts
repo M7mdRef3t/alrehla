@@ -76,7 +76,8 @@ export type AppScreen =
   | "dawra"
   | "zill"
   | "sila"
-  | "basma";
+  | "basma"
+  | "qutb";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

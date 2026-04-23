@@ -5,6 +5,8 @@
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type TraitCategory = "cognitive" | "emotional" | "social" | "spiritual" | "creative" | "resilience";
 
@@ -113,6 +115,6 @@ export const useBasmaState = create<BasmaState>()(
         return top.map(t => t.name).join(" · ");
       },
     }),
-    { name: "alrehla-basma" }
+    { name: "alrehla-basma", storage: zustandIdbStorage }
   )
 );

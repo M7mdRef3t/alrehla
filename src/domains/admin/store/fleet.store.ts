@@ -1,6 +1,8 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface FleetVessel {
     id: string;
@@ -49,6 +51,6 @@ export const useFleetState = create<FleetState>()(
                 vessels: state.vessels.map(v => v.id === id ? { ...v, energyLevel: energy } : v)
             }))
         }),
-        { name: 'dawayir-fleet-state' }
+        { name: 'dawayir-fleet-state', storage: zustandIdbStorage }
     )
 );

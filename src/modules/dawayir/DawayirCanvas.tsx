@@ -594,12 +594,6 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
       yellow: nodes.filter(n => n.ring === "yellow"),
       red: nodes.filter(n => n.ring === "red"),
     };
-    console.log("[DawayirCanvas] groupedNodes:", {
-      green: groups.green.length,
-      yellow: groups.yellow.length,
-      red: groups.red.length,
-      totalReceived: nodes.length
-    });
     return groups;
   }, [nodes]);
 
@@ -608,7 +602,6 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
   }, [groupedNodes]);
 
   const ghostNodePosition = useMemo(() => {
-    console.log("[DawayirCanvas] Calculating ghost pos. activeCount:", activeNodesCount);
     // If map has no active nodes, put it prominently but safely below center
     if (activeNodesCount === 0) {
       return { x: 50, y: 72 };
@@ -637,7 +630,6 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
         break;
       }
     }
-    console.log("[DawayirCanvas] Final Ghost Pos:", pos);
     return pos;
   }, [activeNodesCount, groupedNodes]);
 

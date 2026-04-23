@@ -6,6 +6,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -242,6 +244,6 @@ export const useWarshaState = create<WarshaState>()(
       getTotalCompleted: () => get().completedChallenges.length,
       getBadgeCount: () => get().completedChallenges.length,
     }),
-    { name: "alrehla-warsha" }
+    { name: "alrehla-warsha", storage: zustandIdbStorage }
   )
 );

@@ -161,10 +161,9 @@ export const useAuthState = create<AuthState>((set) => ({
   tier: "free",
   ecosystemData: null,
   setSession: (session) =>
-    set((state) => {
+    set(() => {
       const user = session?.user ?? null;
       const displayName = getDisplayNameFromUser(user);
-      console.log("[Auth Store] Session updated. User exists:", !!user, "Status was:", state.status);
       return {
         session,
         user,
@@ -294,7 +293,6 @@ async function initSupabaseAuth(): Promise<void> {
       }
       supabaseClient = supabase;
       const session = await safeGetSession();
-      console.log("[Auth Store] Initializing with session:", !!session);
       
       await syncAuthRole(session);
       useAuthState.getState().setSession(session);
@@ -310,7 +308,6 @@ async function initSupabaseAuth(): Promise<void> {
       }
 
       supabase.auth.onAuthStateChange((event, nextSession) => {
-        console.log("[Auth Store] Auth state changed event:", event, "Session exists:", !!nextSession);
         const currentSession = nextSession ?? null;
         useAuthState.getState().setSession(currentSession);
         void syncAuthRole(currentSession);

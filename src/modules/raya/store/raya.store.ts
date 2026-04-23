@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -160,6 +162,6 @@ export const useRayaState = create<RayaState>()(
         return Math.max(0, goal.targetDays - elapsed);
       },
     }),
-    { name: "alrehla-raya" }
+    { name: "alrehla-raya", storage: zustandIdbStorage }
   )
 );

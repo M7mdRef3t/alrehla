@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface ConsciousnessPoint {
   timestamp: number;
@@ -24,7 +26,7 @@ export const useConsciousnessHistory = create<ConsciousnessHistoryState>()(
       clearHistory: () => set({ history: [] }),
     }),
     {
-      name: 'consciousness-history-storage',
+      name: 'consciousness-history-storage', storage: zustandIdbStorage,
     }
   )
 );

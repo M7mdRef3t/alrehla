@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -273,6 +275,6 @@ export const useTazkiyaState = create<TazkiyaState>()(
           .slice(0, limit);
       },
     }),
-    { name: "alrehla-tazkiya" }
+    { name: "alrehla-tazkiya", storage: zustandIdbStorage }
   )
 );

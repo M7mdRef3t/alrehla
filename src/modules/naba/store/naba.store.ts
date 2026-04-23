@@ -6,6 +6,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type InspirationKind = "quote" | "question" | "challenge" | "wisdom" | "exercise";
 
@@ -162,6 +164,6 @@ export const useNabaState = create<NabaState>()(
         });
       },
     }),
-    { name: "alrehla-naba" }
+    { name: "alrehla-naba", storage: zustandIdbStorage }
   )
 );

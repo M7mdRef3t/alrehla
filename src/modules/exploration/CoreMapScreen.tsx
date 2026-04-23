@@ -381,7 +381,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     // Standardized filtering using shared utility
     const filtered = filterNodesByContext(nodes, goalId, galaxyMode ? [] : null); // Adjust galaxy goal ids if needed
     const active = filtered.filter((n) => !n.isNodeArchived);
-    console.log("[CoreMapScreen] activeNodes count:", active.length, "goalId:", goalId);
     return active;
   }, [nodes, goalId, galaxyMode]);
 

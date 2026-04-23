@@ -5,6 +5,8 @@
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type RelationshipType = "family" | "friend" | "partner" | "mentor" | "colleague" | "community";
 export type ConnectionQuality = 1 | 2 | 3 | 4 | 5; // 1=disconnected, 5=deeply connected
@@ -114,6 +116,6 @@ export const useSilaState = create<SilaState>()(
       getPersonLogs: (personId) => get().logs.filter(l => l.personId === personId),
       getTotalPeople: () => get().people.length,
     }),
-    { name: "alrehla-sila" }
+    { name: "alrehla-sila", storage: zustandIdbStorage }
   )
 );

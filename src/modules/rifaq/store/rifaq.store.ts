@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type BuddyStatus = "invited" | "active" | "paused";
 

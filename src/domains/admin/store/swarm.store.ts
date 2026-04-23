@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { PersonaType } from "@/agent/personae";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 interface SwarmState {
     activePersona: PersonaType;
@@ -23,7 +25,7 @@ export const useSwarmState = create<SwarmState>()(
             resetToAuto: () => set({ activePersona: "AUTO", manualOverride: false }),
         }),
         {
-            name: "dawayir-swarm-state",
+            name: "dawayir-swarm-state", storage: zustandIdbStorage,
         }
     )
 );

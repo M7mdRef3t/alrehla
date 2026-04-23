@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface NodeROI {
     nodeId: string;
@@ -56,7 +58,7 @@ export const useFirewallState = create<FirewallState>()(
             getROI: (nodeId) => get().roiData[nodeId]?.roiScore ?? 0,
         }),
         {
-            name: 'dawayir-firewall-storage'
+            name: 'dawayir-firewall-storage', storage: zustandIdbStorage
         }
     )
 );

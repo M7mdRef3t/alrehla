@@ -5,6 +5,8 @@
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type CapitalDimension = "awareness" | "resilience" | "connection" | "growth" | "peace" | "purpose";
 
@@ -118,6 +120,6 @@ export const useRaseedState = create<RaseedState>()(
         return Math.round(avg * 100);
       },
     }),
-    { name: "alrehla-raseed" }
+    { name: "alrehla-raseed", storage: zustandIdbStorage }
   )
 );

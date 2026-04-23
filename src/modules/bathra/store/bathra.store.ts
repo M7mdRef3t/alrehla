@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -222,6 +224,6 @@ export const useBathraState = create<BathraState>()(
         });
       },
     }),
-    { name: "alrehla-bathra" }
+    { name: "alrehla-bathra", storage: zustandIdbStorage }
   )
 );

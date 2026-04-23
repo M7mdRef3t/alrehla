@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -131,6 +133,6 @@ export const useQalbState = create<QalbState>()(
         return Math.max(...hist.map((p) => p.score));
       },
     }),
-    { name: "alrehla-qalb" }
+    { name: "alrehla-qalb", storage: zustandIdbStorage }
   )
 );

@@ -30,6 +30,7 @@ import {
   Zap,
   Flag,
   Fingerprint,
+  Navigation,
   ArrowLeft,
   Search,
   X,
@@ -127,6 +128,7 @@ const ALL_PRODUCTS: EcosystemProduct[] = [
   { id: "zill",      name: "ظل",       description: "واجه ظلالك الخفية — shadow work",        icon: <Eye className="w-4 h-4" />,          status: "active",      color: "#4c1d95", url: "/#zill" },
   { id: "sila",      name: "صلة",      description: "جودة علاقاتك — رفاق الطريق",          icon: <Users className="w-4 h-4" />,        status: "active",      color: "#22c55e", url: "/#sila" },
   { id: "basma",     name: "بصمة",     description: "حمضك النفسي — هويتك الفريدة",           icon: <Fingerprint className="w-4 h-4" />,  status: "active",      color: "#6366f1", url: "/#basma" },
+  { id: "qutb",      name: "قطب",      description: "نجمك القطبي — الهدف الأعلى",          icon: <Navigation className="w-4 h-4" />,   status: "active",      color: "#f59e0b", url: "/#qutb" },
 ];
 
 // ─── Categories ─────────────────────────────────────────────────────────────
@@ -139,7 +141,7 @@ const CATEGORIES: ProductCategory[] = [
     color: "#06b6d4",
     bgColor: "#0e3a4a",
     products: ALL_PRODUCTS.filter(p =>
-      ["alrehla", "ecosystem-hub", "dawayir", "bawsala", "maraya", "observatory", "kharita", "mirah", "baseera", "taqrir", "raseed", "dawra", "basma"].includes(p.id)
+      ["alrehla", "ecosystem-hub", "dawayir", "bawsala", "maraya", "observatory", "kharita", "mirah", "baseera", "taqrir", "raseed", "dawra", "basma", "qutb"].includes(p.id)
     ),
   },
   {

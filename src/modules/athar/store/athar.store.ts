@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -131,6 +133,6 @@ export const useAtharState = create<AtharState>()(
           .sort((a, b) => b.count - a.count);
       },
     }),
-    { name: "alrehla-athar" }
+    { name: "alrehla-athar", storage: zustandIdbStorage }
   )
 );

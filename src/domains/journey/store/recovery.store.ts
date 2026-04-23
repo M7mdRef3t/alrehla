@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { RecoveryPath } from '@/services/RecoveryEngine';
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 interface RecoveryState {
     activeInsightId: string | null;
@@ -37,7 +39,7 @@ export const useRecoveryState = create<RecoveryState>()(
             }),
         }),
         {
-            name: 'dawayir-recovery-storage'
+            name: 'dawayir-recovery-storage', storage: zustandIdbStorage
         }
     )
 );

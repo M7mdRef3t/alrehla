@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -173,6 +175,6 @@ export const useRuyaState = create<RuyaState>()(
         return streak;
       },
     }),
-    { name: "alrehla-ruya" }
+    { name: "alrehla-ruya", storage: zustandIdbStorage }
   )
 );

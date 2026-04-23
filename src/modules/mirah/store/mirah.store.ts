@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type InsightCategory =
   | "energy"
@@ -114,6 +116,6 @@ export const useMirahState = create<MirahState>()(
 
       setLastAnalysisDate: (d) => set({ lastAnalysisDate: d }),
     }),
-    { name: "alrehla-mirah" }
+    { name: "alrehla-mirah", storage: zustandIdbStorage }
   )
 );

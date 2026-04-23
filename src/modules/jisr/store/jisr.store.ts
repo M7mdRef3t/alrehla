@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -195,6 +197,6 @@ export const useJisrState = create<JisrState>()(
       getTotalCount: () => get().bridges.length,
       getCompletedCount: () => get().bridges.filter((b) => b.isComplete).length,
     }),
-    { name: "alrehla-jisr" }
+    { name: "alrehla-jisr", storage: zustandIdbStorage }
   )
 );

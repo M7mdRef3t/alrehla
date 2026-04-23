@@ -6,6 +6,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface SafeContact {
   id: string;
@@ -117,6 +119,6 @@ export const useNadhirState = create<NadhirState>()(
 
       clearCooldown: () => set({ cooldownEndTime: null }),
     }),
-    { name: "alrehla-nadhir" }
+    { name: "alrehla-nadhir", storage: zustandIdbStorage }
   )
 );

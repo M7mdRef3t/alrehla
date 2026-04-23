@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface BlindCapsule {
   id: string;
@@ -52,7 +54,7 @@ export const useBlindCapsuleState = create<BlindCapsuleState>()(
       clearCapsules: () => set({ capsules: [] }),
     }),
     {
-      name: "dawayir-blind-capsules",
+      name: "dawayir-blind-capsules", storage: zustandIdbStorage,
       version: 1,
     }
   )

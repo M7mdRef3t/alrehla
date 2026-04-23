@@ -8,6 +8,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -151,6 +153,6 @@ export const useQinaaState = create<QinaaState>()(
 
       getTotalMasks: () => get().masks.length,
     }),
-    { name: "alrehla-qinaa" }
+    { name: "alrehla-qinaa", storage: zustandIdbStorage }
   )
 );

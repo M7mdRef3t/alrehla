@@ -8,6 +8,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -167,6 +169,6 @@ export const useWasiyyaState = create<WasiyyaState>()(
         };
       },
     }),
-    { name: "alrehla-wasiyya" }
+    { name: "alrehla-wasiyya", storage: zustandIdbStorage }
   )
 );

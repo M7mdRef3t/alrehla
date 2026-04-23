@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface PredictiveState {
     crashProbability: number; // 0-1
@@ -31,7 +33,7 @@ export const usePredictiveState = create<PredictiveState>()(
             toggleSurvivalMode: (active) => set({ isSurvivalMode: active })
         }),
         {
-            name: 'dawayir-predictive-storage'
+            name: 'dawayir-predictive-storage', storage: zustandIdbStorage
         }
     )
 );

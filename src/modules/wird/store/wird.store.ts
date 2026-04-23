@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -216,6 +218,6 @@ export const useWirdState = create<WirdState>()(
       getDailyTotal: () => get().progress.filter((p) => p.date === todayKey()).reduce((sum, p) => sum + p.count, 0),
       getCategoryAdhkar: (cat) => get().adhkar.filter((d) => d.category === cat),
     }),
-    { name: "alrehla-wird" }
+    { name: "alrehla-wird", storage: zustandIdbStorage }
   )
 );

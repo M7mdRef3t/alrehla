@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type PledgeStatus = "active" | "completed" | "broken" | "expired";
 export type PledgeCategory = "habit" | "mindset" | "relationship" | "health" | "skill" | "spiritual";
@@ -165,6 +167,6 @@ export const useMithaqState = create<MithaqState>()(
         return Math.round((kept / pledge.checkIns.length) * 100);
       },
     }),
-    { name: "alrehla-mithaq" }
+    { name: "alrehla-mithaq", storage: zustandIdbStorage }
   )
 );

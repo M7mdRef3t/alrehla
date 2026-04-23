@@ -252,11 +252,6 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     sovereignChronicle: showSovereignChronicle,
   } = flags;
 
-  // Debug: Track EvolutionHub overlay state
-  useEffect(() => {
-    console.log("[AppOverlayHost] showEvolutionHub changed:", showEvolutionHub);
-  }, [showEvolutionHub]);
-
   // Implementation of Layer 3 (Execution): Overlay Mutex & Severity Index
   // Auto-trigger pulse check logic
   usePulseCheckLogic(canUsePulseCheck, screen, true);

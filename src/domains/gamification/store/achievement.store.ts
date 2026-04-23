@@ -7,6 +7,8 @@ import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorag
 import { loadStreak } from "@/services/streakSystem";
 import { useRitualState } from "@/domains/journey/store/ritual.store";
 import { useLifeState } from '@/modules/map/dawayirIndex';
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 const STORAGE_KEY = "dawayir-achievements";
 

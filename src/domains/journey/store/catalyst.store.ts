@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface CatalystState {
     momentumPool: number; // 0-100
@@ -35,7 +37,7 @@ export const useCatalystState = create<CatalystState>()(
             }),
         }),
         {
-            name: 'dawayir-catalyst-storage'
+            name: 'dawayir-catalyst-storage', storage: zustandIdbStorage
         }
     )
 );

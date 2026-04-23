@@ -6,6 +6,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type MemorySource =
   | "pulse"
@@ -160,6 +162,6 @@ export const useHafizState = create<HafizState>()(
         });
       },
     }),
-    { name: "alrehla-hafiz" }
+    { name: "alrehla-hafiz", storage: zustandIdbStorage }
   )
 );

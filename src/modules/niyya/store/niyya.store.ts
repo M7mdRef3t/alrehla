@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -179,6 +181,6 @@ export const useNiyyaState = create<NiyyaState>()(
         });
       },
     }),
-    { name: "alrehla-niyya" }
+    { name: "alrehla-niyya", storage: zustandIdbStorage }
   )
 );

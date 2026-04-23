@@ -4,6 +4,8 @@
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type MoodLevel = 1 | 2 | 3 | 4 | 5;
 export type EnergyLevel = 1 | 2 | 3 | 4 | 5;
@@ -109,6 +111,6 @@ export const useNabdState = create<NabdState>()(
       getTotalPulses: () => get().pulses.length,
       hasCheckedToday: () => get().getToday().length > 0,
     }),
-    { name: "alrehla-nabd" }
+    { name: "alrehla-nabd", storage: zustandIdbStorage }
   )
 );

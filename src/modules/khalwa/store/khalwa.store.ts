@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -164,6 +166,6 @@ export const useKhalwaState = create<KhalwaState>()(
         return [...get().sessions].sort((a, b) => b.startedAt - a.startedAt).slice(0, limit);
       },
     }),
-    { name: "alrehla-khalwa" }
+    { name: "alrehla-khalwa", storage: zustandIdbStorage }
   )
 );

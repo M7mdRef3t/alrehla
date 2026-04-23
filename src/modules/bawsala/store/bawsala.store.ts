@@ -6,6 +6,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface BawsalaValue {
   id: string;
@@ -143,6 +145,6 @@ export const useBawsalaState = create<BawsalaState>()(
       removeDecision: (id) =>
         set((s) => ({ decisions: s.decisions.filter((d) => d.id !== id) })),
     }),
-    { name: "alrehla-bawsala" }
+    { name: "alrehla-bawsala", storage: zustandIdbStorage }
   )
 );

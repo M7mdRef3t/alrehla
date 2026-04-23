@@ -5,6 +5,8 @@ import {
   createGraph, createNode, createEdge, analyzeGraph
 } from "../services/engine";
 import { eventBus as bus } from "@/shared/events/bus";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 interface DawayirState {
   graph: DawayirGraph;
@@ -53,7 +55,7 @@ export const useDawayirStore = create<DawayirState>()(
         // Tajmeed integration signal - use the real reward requested event in the future
         // For now, we use analytics as a proxy if needed, or custom events
         bus.emit("analytics:event", {
-          name: "dawayir_node_added",
+          name: "dawayir_node_added", storage: zustandIdbStorage,
           properties: { ring: node.ring }
         });
       },
@@ -108,7 +110,7 @@ export const useDawayirStore = create<DawayirState>()(
         
         // Tajmeed integration signal
         bus.emit("analytics:event", {
-          name: "dawayir_boundary_set",
+          name: "dawayir_boundary_set", storage: zustandIdbStorage,
           properties: { nodeId: id }
         });
       },
@@ -143,7 +145,7 @@ export const useDawayirStore = create<DawayirState>()(
       }
     }),
     {
-      name: "alrehla-dawayir-storage",
+      name: "alrehla-dawayir-storage", storage: zustandIdbStorage,
       partialize: (state) => ({ graph: state.graph }),
     }
   )

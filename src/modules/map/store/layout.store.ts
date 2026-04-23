@@ -250,7 +250,7 @@ export const useLayoutState = create<LayoutState>()(
       }
     }),
     {
-      name: "dawayir-layout-state",
+      name: "dawayir-layout-state", storage: zustandIdbStorage,
       // حفظ التفضيلات فقط (مش الحالة المؤقتة)
       partialize: (state) => ({
         userPreferredMode: state.userPreferredMode,
@@ -273,6 +273,8 @@ export const useLayoutState = create<LayoutState>()(
 
 // 🧠 Synapse Receptor (Neural Link)
 import { SynapseBus } from "@/core/synapse/SynapseBus";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 SynapseBus.subscribe((event) => {
   if (event.intensity >= 0.7) {

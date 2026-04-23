@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface CreativeSeed {
     id: string;
@@ -49,7 +51,7 @@ export const useSynthesisState = create<SynthesisState>()(
             }),
         }),
         {
-            name: 'dawayir-synthesis-storage'
+            name: 'dawayir-synthesis-storage', storage: zustandIdbStorage
         }
     )
 );

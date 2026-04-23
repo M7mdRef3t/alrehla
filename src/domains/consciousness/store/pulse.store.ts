@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushPulseLog } from "@/services/pulseSync";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type PulseMood = "bright" | "calm" | "anxious" | "angry" | "sad" | "tense" | "hopeful" | "overwhelmed";
 export type PulseFocus = "event" | "thought" | "body" | "none";

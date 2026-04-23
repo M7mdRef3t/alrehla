@@ -5,6 +5,8 @@
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type ShadowType = "emotion" | "trait" | "belief" | "memory" | "pattern" | "projection";
 export type IntegrationLevel = 1 | 2 | 3 | 4 | 5; // 1=fully repressed, 5=integrated
@@ -101,6 +103,6 @@ export const useZillState = create<ZillState>()(
 
       getTotalShadows: () => get().shadows.length,
     }),
-    { name: "alrehla-zill" }
+    { name: "alrehla-zill", storage: zustandIdbStorage }
   )
 );

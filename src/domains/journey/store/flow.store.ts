@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface FlowState {
     focusScore: number; // 0-1, 1 is peak flow
@@ -40,7 +42,7 @@ export const useFlowState = create<FlowState>()(
             recordInteraction: () => set({ lastInteractionAt: Date.now() }),
         }),
         {
-            name: 'dawayir-flow-storage'
+            name: 'dawayir-flow-storage', storage: zustandIdbStorage
         }
     )
 );

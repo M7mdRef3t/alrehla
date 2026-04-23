@@ -6,6 +6,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -122,6 +124,6 @@ export const useKanzState = create<KanzState>()(
         }));
       },
     }),
-    { name: "alrehla-kanz" }
+    { name: "alrehla-kanz", storage: zustandIdbStorage }
   )
 );

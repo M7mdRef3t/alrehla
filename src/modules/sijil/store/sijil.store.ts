@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type ActivitySource =
   | "pulse" | "wird" | "bawsala" | "watheeqa" | "nadhir"
@@ -78,6 +80,6 @@ export const useSijilState = create<SijilState>()(
           .sort((a, b) => b.count - a.count);
       },
     }),
-    { name: "alrehla-sijil" }
+    { name: "alrehla-sijil", storage: zustandIdbStorage }
   )
 );

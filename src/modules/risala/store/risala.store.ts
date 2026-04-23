@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -218,6 +220,6 @@ export const useRisalaState = create<RisalaState>()(
         return stats;
       },
     }),
-    { name: "alrehla-risala" }
+    { name: "alrehla-risala", storage: zustandIdbStorage }
   )
 );

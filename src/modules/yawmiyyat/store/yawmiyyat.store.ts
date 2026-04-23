@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -145,6 +147,6 @@ export const useYawmiyyatState = create<YawmiyyatState>()(
 
       getTotalEntries: () => get().entries.length,
     }),
-    { name: "alrehla-yawmiyyat" }
+    { name: "alrehla-yawmiyyat", storage: zustandIdbStorage }
   )
 );

@@ -7,6 +7,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { GraphEvent } from "@/services/automagicLoop";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 interface EventHistoryState {
     events: GraphEvent[];
@@ -52,7 +54,7 @@ export const useEventHistoryStore = create<EventHistoryState>()(
             }
         }),
         {
-            name: "dawayir-event-history"
+            name: "dawayir-event-history", storage: zustandIdbStorage
         }
     )
 );

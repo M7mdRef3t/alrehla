@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface GrowthState {
     isOverclocking: boolean;
@@ -39,7 +41,7 @@ export const useGrowthState = create<GrowthState>()(
             })
         }),
         {
-            name: 'dawayir-growth-storage'
+            name: 'dawayir-growth-storage', storage: zustandIdbStorage
         }
     )
 );

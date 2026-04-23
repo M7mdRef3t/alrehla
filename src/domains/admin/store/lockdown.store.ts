@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 interface LockdownState {
   isLockedDown: boolean;
@@ -46,7 +48,7 @@ export const useLockdownState = create<LockdownState>()(
       }
     }),
     {
-      name: "dawayir-lockdown-protocol",
+      name: "dawayir-lockdown-protocol", storage: zustandIdbStorage,
       version: 1,
     }
   )

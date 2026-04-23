@@ -6,6 +6,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type GrowthArea = "personal" | "social" | "health" | "career" | "spiritual" | "creative";
 
@@ -206,6 +208,6 @@ export const useSullamState = create<SullamState>()(
         });
       },
     }),
-    { name: "alrehla-sullam" }
+    { name: "alrehla-sullam", storage: zustandIdbStorage }
   )
 );

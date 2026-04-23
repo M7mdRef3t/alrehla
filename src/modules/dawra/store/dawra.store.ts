@@ -5,6 +5,8 @@
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type CycleType = "energy" | "productivity" | "mood" | "social" | "creativity" | "focus";
 export type CyclePhase = "peak" | "rising" | "stable" | "declining" | "low";
@@ -108,6 +110,6 @@ export const useDawraState = create<DawraState>()(
 
       getTotalEntries: () => get().entries.length,
     }),
-    { name: "alrehla-dawra" }
+    { name: "alrehla-dawra", storage: zustandIdbStorage }
   )
 );

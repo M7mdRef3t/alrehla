@@ -22,6 +22,8 @@ import type {
   MorningPriority
 } from "@/types/lifeDomains";
 import { calculateLifeScore, calculateTrend } from "@/services/lifeScoreEngine";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 const STORAGE_KEY = "alrehla-life-os";
 

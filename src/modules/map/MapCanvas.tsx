@@ -1,5 +1,5 @@
 import { logger } from "@/services/logger";
-import type { FC } from "react";
+import type { ComponentProps, FC } from "react";
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, GripVertical, Plus } from "lucide-react";
@@ -39,6 +39,24 @@ function isLegacyMapUiEnabled(): boolean {
   return false;
 }
 
+const toSafeSvgNumber = (value: unknown, fallback: number): number => {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+};
+
+type SafeMotionCircleProps = ComponentProps<typeof motion.circle> & {
+  cx?: number | string;
+  cy?: number | string;
+  r?: number | string;
+};
+
+const SafeMotionCircle: FC<SafeMotionCircleProps> = ({ cx = 50, cy = 50, r = 0, ...props }) => {
+  const safeCx = typeof cx === "string" ? cx : toSafeSvgNumber(cx, 50);
+  const safeCy = typeof cy === "string" ? cy : toSafeSvgNumber(cy, 50);
+  const safeR = typeof r === "string" ? r : Math.max(toSafeSvgNumber(r, 0), 0);
+
+  return <motion.circle cx={safeCx} cy={safeCy} r={safeR} {...props} />;
+};
+
 /* ── Star Field Generator ── */
 const STAR_COUNT = 55;
 const STAR_DATA = Array.from({ length: STAR_COUNT }, (_, i) => ({
@@ -76,7 +94,7 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
       <circle cx={50} cy={50} r={safeRadius} fill={`url(#${fillId})`} className="pointer-events-none" />
 
       {/* Outer ambient halo */}
-      <motion.circle
+      <SafeMotionCircle
         cx={50} cy={50} r={safeRadius + 1.5}
         fill="none" stroke={color} strokeWidth={2.5} opacity={0.08}
         animate={{ 
@@ -87,7 +105,7 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
       />
 
       {/* Main neon ring — thick, glowing, without SVG filter to prevent gray box artifacts */}
-      <motion.circle
+      <SafeMotionCircle
         cx={50} cy={50} r={safeRadius}
         fill="none" stroke={color}
         animate={{ 
@@ -97,7 +115,7 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
         transition={{ duration: breatheDuration * 2, repeat: Infinity, ease: "easeInOut" }}
         className="pointer-events-none"
       />
-      <motion.circle
+      <SafeMotionCircle
         cx={50} cy={50} r={safeRadius}
         fill="none" stroke={color}
         animate={{ 
@@ -109,7 +127,7 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
       />
 
       {/* Inner dashed shimmer */}
-      <motion.circle
+      <SafeMotionCircle
         cx={50} cy={50} r={safeRadius - 0.8}
         fill="none" stroke={color} strokeWidth={0.5} opacity={0.3}
         strokeDasharray="2 5"
@@ -119,7 +137,7 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
 
       {/* Chromatic aberration — danger ring only */}
       {ring === "red" && (
-        <motion.circle
+        <SafeMotionCircle
           cx={50} cy={50} r={safeRadius + 0.8}
           fill="none" stroke="rgba(244,63,94,0.3)" strokeWidth={4}
           animate={{ opacity: [0, 0.5, 0], scale: [0.97, 1.03, 0.97] }}
@@ -257,8 +275,8 @@ const IllusionEntityView: FC<{ scenario: any; index: number; total: number; onDi
         <circle cx={cx} cy={cy} r={2.5} className="fill-slate-900 dark:fill-slate-950" stroke="#4c1d95" strokeWidth={0.6} />
         
         {/* Breathing toxic glow */}
-        <motion.circle
-          cx={cx} cy={cy} r={4.5}
+              <SafeMotionCircle
+                cx={cx} cy={cy} r={4.5}
           fill="none" stroke="rgba(192,132,252,0.6)" strokeWidth={1}
           animate={{ opacity: [0.1, 0.5, 0.1], scale: [0.9, 1.1, 0.9] }}
           transition={{ duration: 4 + (index % 3), repeat: Infinity, ease: "easeInOut" }}
@@ -1606,7 +1624,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               {/* ── Nebula of Reclamation: Archived Stars ── */}
               <g className="nebula-reclamation">
                 {archivedNodes.map((star) => (
-                  <motion.circle
+                  <SafeMotionCircle
                     key={star.id}
                     cx={star.x}
                     cy={star.y}
@@ -1635,7 +1653,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               {!shouldReduceMotion && (
                 <g opacity={0.3}>
                   {[1, 2, 3].map((i) => (
-                    <motion.circle
+                    <SafeMotionCircle
                       key={i}
                       cx={50}
                       cy={50}
@@ -1781,7 +1799,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               {/* ── Cosmic Star Field (Dark Mode Only) ── */}
               <g className="pointer-events-none dark-visible hidden dark:block">
                 {STAR_DATA.map((s) => (
-                  <motion.circle
+                  <SafeMotionCircle
                     key={s.id}
                     cx={s.cx} cy={s.cy} r={Number.isFinite(s.r) ? s.r : 0}
                     fill="white"
@@ -1837,7 +1855,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     />
                     {/* Bright traveling particle */}
                     {!shouldReduceMotion && (
-                      <motion.circle
+                      <SafeMotionCircle
                         r={0.9}
                         fill={particleColor}
                         animate={{
@@ -1883,7 +1901,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                   />
                   {/* Traveling threat particle */}
-                  <motion.circle
+                  <SafeMotionCircle
                     r={1.1}
                     fill="#fb7185"
                     animate={{ offsetDistance: ["0%", "100%"], opacity: [0, 1, 0] }}
@@ -1945,7 +1963,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               {/*  Detachment Zone — The Forbidden Frontier  */}
               <g className="pointer-events-none">
                 {/* Outer mist field */}
-                <motion.circle
+                <SafeMotionCircle
                   cx="50" cy="50"
                   r={Number.isFinite(GREY_ZONE_STROKE_RADIUS) ? GREY_ZONE_STROKE_RADIUS + 2 : 0}
                   fill="none"
@@ -1956,7 +1974,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                 />
                 {/* Rotating dashed boundary */}
-                <motion.circle
+                <SafeMotionCircle
                   cx="50" cy="50"
                   r={Number.isFinite(GREY_ZONE_STROKE_RADIUS) ? GREY_ZONE_STROKE_RADIUS : 0}
                   fill="none"
@@ -1970,7 +1988,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                 />
                 {/* Inner ghost field */}
-                <motion.circle
+                <SafeMotionCircle
                   cx="50" cy="50"
                   r={Number.isFinite(GREY_ZONE_STROKE_RADIUS) ? GREY_ZONE_STROKE_RADIUS - 2 : 0}
                   fill="none"
@@ -2007,7 +2025,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
 
                 {/* Deep void aura — background cosmic field */}
                 {!shouldReduceMotion && (
-                  <motion.circle
+                  <SafeMotionCircle
                     cx="50" cy="50" r={22}
                     fill="url(#soulCore)"
                     animate={{ opacity: [0.3, 0.6, 0.3], scale: [0.9, 1.1, 0.9] }}
@@ -2018,7 +2036,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
 
                 {/* Corona ring — outermost atmospheric glow */}
                 {!shouldReduceMotion && (
-                  <motion.circle
+                  <SafeMotionCircle
                     cx="50" cy="50" r={13}
                     fill="none"
                     stroke={battery === "drained" ? "rgba(148,163,184,0.3)" : "rgba(45,212,191,0.35)"}
@@ -2031,7 +2049,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
 
                 {/* 5 expanding heartbeat waves — synchronized pulse */}
                 {!shouldReduceMotion && [0, 1.2, 2.4, 3.6, 4.8].map((delay, i) => (
-                  <motion.circle
+                  <SafeMotionCircle
                     key={`wave-${i}`}
                     cx="50" cy="50" r={8}
                     stroke={battery === "drained" ? "rgba(148,163,184,0.6)" : battery === "charged" ? "rgba(94,234,212,0.7)" : "rgba(45,212,191,0.6)"}

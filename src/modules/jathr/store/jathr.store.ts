@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -179,6 +181,6 @@ export const useJathrState = create<JathrState>()(
 
       getAlignmentHistory: (n) => get().alignments.slice(0, n),
     }),
-    { name: "alrehla-jathr" }
+    { name: "alrehla-jathr", storage: zustandIdbStorage }
   )
 );

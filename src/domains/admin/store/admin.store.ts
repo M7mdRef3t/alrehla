@@ -11,6 +11,8 @@ import { getAuthRole } from "@/domains/auth/store/auth.store";
 import { getEffectiveFeatureAccess } from "@/utils/featureFlags";
 import { isUserMode } from "@/config/appEnv";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export interface ScoringWeights {
   often: number;
@@ -576,7 +578,7 @@ export const useAdminState = create<AdminState>()(
       clearAgentActivity: () => set({ agentActivity: [] })
     }),
     {
-      name: "dawayir-admin-state",
+      name: "dawayir-admin-state", storage: zustandIdbStorage,
       merge: (persistedState, currentState) => {
         const typedPersistedState = persistedState as Partial<AdminState> | undefined;
         if (!typedPersistedState) return currentState;

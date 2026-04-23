@@ -20,6 +20,8 @@ import type {
 } from "@/types/dailyRituals";
 import { getTodayDate } from "@/types/dailyRituals";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 
 const STORAGE_KEY = "alrehla-daily-rituals";

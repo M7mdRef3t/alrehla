@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -173,6 +175,6 @@ export const useSamtState = create<SamtState>()(
           .sort((a, b) => b.minutes - a.minutes);
       },
     }),
-    { name: "alrehla-samt" }
+    { name: "alrehla-samt", storage: zustandIdbStorage }
   )
 );

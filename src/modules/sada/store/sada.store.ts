@@ -6,6 +6,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type NudgeType =
   | "morning_brief"
@@ -101,6 +103,6 @@ export const useSadaState = create<SadaState>()(
 
       getUnreadCount: () => get().nudges.filter((n) => !n.read).length,
     }),
-    { name: "alrehla-sada" }
+    { name: "alrehla-sada", storage: zustandIdbStorage }
   )
 );

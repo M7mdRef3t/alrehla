@@ -158,7 +158,7 @@ export const useThemeState = create<ThemeState>()(
       }
     }),
     {
-      name: "dawayir-theme",
+      name: "dawayir-theme", storage: zustandIdbStorage,
       onRehydrateStorage: () => (state) => {
         if (state) {
           // Heal state: merge with defaults to ensure new properties exist
@@ -180,6 +180,8 @@ export const useThemeState = create<ThemeState>()(
 // or system preference only. Consciousness states can change visual tokens
 // (colors/effects) without overriding the whole day/night mode.
 import { SynapseBus } from "@/core/synapse/SynapseBus";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 SynapseBus.subscribe((_event) => {
   // Theme changes from SynapseBus disabled intentionally.

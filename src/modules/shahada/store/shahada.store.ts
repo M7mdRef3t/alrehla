@@ -7,6 +7,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 /* ═══════════════════════════════════════════ */
 /*                 TYPES                      */
@@ -130,6 +132,6 @@ export const useShahadaState = create<ShahadaState>()(
         return certs.length > 0 ? Math.round((certs.filter((c) => c.unlocked).length / certs.length) * 100) : 0;
       },
     }),
-    { name: "alrehla-shahada" }
+    { name: "alrehla-shahada", storage: zustandIdbStorage }
   )
 );

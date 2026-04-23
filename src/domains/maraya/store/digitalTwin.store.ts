@@ -2,6 +2,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DigitalTwinGraph, ConsciousnessNode, ConnectivityEdge, TelemetrySnapshot } from '@/types/digitalTwin';
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 interface DigitalTwinState {
     graph: DigitalTwinGraph;
@@ -85,7 +87,7 @@ export const useDigitalTwinState = create<DigitalTwinState>()(
             })
         }),
         {
-            name: 'dawayir-digital-twin-storage'
+            name: 'dawayir-digital-twin-storage', storage: zustandIdbStorage
         }
     )
 );

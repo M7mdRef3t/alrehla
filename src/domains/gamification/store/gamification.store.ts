@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushGamificationStats, pushGamificationBadge } from "@/services/gamificationSync";
 import { generateChronicle, ChronicleEntry } from "@/services/chroniclesEngine";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+
 
 export type Rank =
     | "مستطلع جَدِيد"
@@ -491,7 +493,7 @@ export const useGamificationState = create<GamificationState>()(
 
         }),
         {
-            name: "dawayir-gamification-storage",
+            name: "dawayir-gamification-storage", storage: zustandIdbStorage,
         }
     )
 );
