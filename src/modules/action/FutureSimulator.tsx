@@ -6,7 +6,7 @@
 
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Telescope, Sparkles, TrendingDown, TrendingUp, AlertTriangle } from "lucide-react";
+import { Telescope, Zap as Sparkles, TrendingDown, TrendingUp, AlertTriangle } from "lucide-react";
 import { simulateHypotheticalState } from "@/services/propheticEngine";
 import type { MapNode } from "../map/mapTypes";
 

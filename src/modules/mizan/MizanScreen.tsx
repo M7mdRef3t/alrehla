@@ -16,7 +16,7 @@ import { motion } from "framer-motion";
 import {
   Scale, TrendingUp, TrendingDown, Flame, Star, Zap,
   Heart, Shield, BookOpen, Brain, Award, Target,
-  BarChart3, Sparkles, ChevronUp, Activity, Clock,
+  BarChart3, Zap as Sparkles, ChevronUp, Activity, Clock,
   Crown, Medal, ArrowUpRight, Minus
 } from "lucide-react";
 import { useGamificationState, type Badge, type Rank } from "@/domains/gamification/store/gamification.store";

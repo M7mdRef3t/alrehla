@@ -4,7 +4,7 @@ import {
   Trash2,
   ArrowUp,
   ArrowDown,
-  Sparkles,
+  Zap as Sparkles,
   Layout,
   CheckCircle2,
   AlertCircle,

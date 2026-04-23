@@ -9,7 +9,7 @@ import { openInNewTab } from "@/services/clientDom";
 import { Z_LAYERS } from "@/config/zIndices";
 import { useJourneyProgress } from "@/domains/journey";
 
-const DEFAULT_WHATSAPP_CONTACT = "201110795932";
+const DEFAULT_WHATSAPP_CONTACT = "201140111147";
 
 interface FloatingWhatsAppProps {
   placement?: string;
@@ -28,12 +28,26 @@ export const FloatingWhatsApp: FC<FloatingWhatsAppProps> = ({
     if (!normalized) return null;
     
     let link = `https://wa.me/${normalized}`;
-    if (mirrorName) {
-      const message = encodeURIComponent(`أهلاً، أنا ${mirrorName}. كنت بمر في الرحلة ومحتاج مساعدة...`);
-      link = `${link}?text=${message}`;
+    
+    let sourceText = "";
+    if (placement.includes("landing")) {
+      sourceText = "[من صفحة البداية]";
+    } else if (placement.includes("app")) {
+      sourceText = "[من داخل المنصة]";
+    } else {
+      sourceText = `[المصدر: ${placement}]`;
     }
+
+    const baseMessage = mirrorName 
+      ? `أهلاً، أنا ${mirrorName}. كنت بمر في الرحلة ومحتاج مساعدة...`
+      : `أهلاً، كنت بمر في الرحلة ومحتاج مساعدة...`;
+      
+    const fullMessage = `${baseMessage} ${sourceText}`;
+    
+    link = `${link}?text=${encodeURIComponent(fullMessage)}`;
+    
     return link;
-  }, [whatsAppNumber, mirrorName]);
+  }, [whatsAppNumber, mirrorName, placement]);
 
   const handleOpen = () => {
     if (!whatsAppLink) return;

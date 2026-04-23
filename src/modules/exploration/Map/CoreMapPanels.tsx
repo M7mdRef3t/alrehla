@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Activity, ChevronDown, Orbit, ShieldCheck, Sparkles, Zap, Volume2, VolumeX, Headset } from "lucide-react";
+import { Activity, ChevronDown, Orbit, ShieldCheck, Zap as Sparkles, Zap, Volume2, VolumeX, Headset } from "lucide-react";
 import { useState, useEffect } from "react";
 import { mapCopy } from "@/copy/map";
 import { TEIWidget } from "../TEIWidget";

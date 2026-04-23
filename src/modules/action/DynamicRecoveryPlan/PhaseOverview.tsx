@@ -1,6 +1,6 @@
 import React, { type FC } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, CheckCircle2 } from "lucide-react";
+import { Zap as Sparkles, CheckCircle2 } from "lucide-react";
 import type { DynamicRecoveryPlan as Plan } from "@/utils/dynamicPlanGenerator";
 
 interface PhaseOverviewProps {

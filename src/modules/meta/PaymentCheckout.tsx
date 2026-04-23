@@ -18,7 +18,7 @@ import {
   ArrowLeft,
   ShieldCheck,
   Loader2,
-  Sparkles,
+  Zap as Sparkles,
   ChevronDown,
 } from "lucide-react";
 import {

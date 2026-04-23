@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, ShieldCheck, Sparkles, Lock } from "lucide-react";
+import { ChevronRight, ShieldCheck, Zap as Sparkles, Lock } from "lucide-react";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { useEffect, useState } from "react";

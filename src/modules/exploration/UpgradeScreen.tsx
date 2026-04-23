@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Sparkles, BrainCircuit, X, Check, Lock, Star, Loader2, Zap } from "lucide-react";
+import { Shield, Zap as Sparkles, BrainCircuit, X, Check, Lock, Star, Loader2, Zap } from "lucide-react";
 import { Z_LAYERS } from "@/config/zIndices";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { TIER_PRICES_USD } from "@/config/pricing";

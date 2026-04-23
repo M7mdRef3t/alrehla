@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, AlertTriangle, Target, TrendingUp, Flame, Moon, CalendarDays } from "lucide-react";
+import { Zap as Sparkles, AlertTriangle, Target, TrendingUp, Flame, Moon, CalendarDays } from "lucide-react";
 import { type LifeScore, type MorningPriority, getDomainConfig } from "@/types/lifeDomains";
 import { loadStreak } from "@/services/streakSystem";
 import { resolveDisplayName } from "@/services/userMemory";

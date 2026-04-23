@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Camera, CheckCircle2, Lock, Sparkles, User, Palette, ShieldCheck, Paintbrush } from "lucide-react";
+import { Camera, CheckCircle2, Lock, Zap as Sparkles, User, Palette, ShieldCheck, Paintbrush } from "lucide-react";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { loadUserMemory, saveUserMemory, updatePreferredName, updateBio } from "@/services/userMemory";

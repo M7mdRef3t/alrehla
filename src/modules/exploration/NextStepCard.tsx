@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { motion } from "framer-motion";
 import type { NextStepDecisionV1 } from "../recommendation/types";
-import { Sparkles, BrainCircuit, Compass, RefreshCw, ChevronLeft } from "lucide-react";
+import { Zap as Sparkles, BrainCircuit, Compass, RefreshCw, ChevronLeft } from "lucide-react";
 
 interface NextStepCardProps {
   decision: NextStepDecisionV1;

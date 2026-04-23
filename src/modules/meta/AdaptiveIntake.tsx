@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Send, Sparkles, Brain, Zap, Target, Lock, Compass } from "lucide-react";
+import { ChevronRight, ChevronLeft, Send, Zap as Sparkles, Brain, Zap, Target, Lock, Compass } from "lucide-react";
 import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { Card } from "./UI";
 import { soundManager } from "@/services/soundManager";

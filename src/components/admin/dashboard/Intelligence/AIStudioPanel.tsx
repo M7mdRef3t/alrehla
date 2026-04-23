@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect, useRef } from "react";
 import {
-    Sparkles,
+    Zap as Sparkles,
     Loader2,
     ThumbsUp,
     ThumbsDown,

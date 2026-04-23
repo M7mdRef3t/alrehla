@@ -26,6 +26,7 @@ const GoogleAuthModal = dynamic(() => import("@/modules/exploration/GoogleAuthMo
 const Analytics = dynamic(() => import("@vercel/analytics/react").then((m) => m.Analytics), { ssr: false });
 const SpeedInsights = dynamic(() => import("@vercel/speed-insights/react").then((m) => m.SpeedInsights), { ssr: false });
 const PuckLandingAdapter = dynamic(() => import("./PuckLandingAdapter").then((m) => m.PuckLandingAdapter), { ssr: false });
+const FloatingWhatsApp = dynamic(() => import("@/components/FloatingWhatsApp").then((m) => m.FloatingWhatsApp), { ssr: false });
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
@@ -515,6 +516,7 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
         )}
         <AnalyticsConsentBanner />
         <AnalyticsDiagnosticsOverlay />
+        <FloatingWhatsApp placement={shouldLoadFullApp ? "global_fab_app" : "global_fab_landing"} />
         {runtimeEnv.isProd && (
           <Suspense fallback={<AwarenessSkeleton />}>
             <Analytics />

@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState, useRef, useEffect, type ComponentProps } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { Shield, Battery, Users, Target, Compass, Sparkles } from "lucide-react";
+import { Shield, Battery, Users, Target, Compass, Zap as Sparkles } from "lucide-react";
 import {
   BASELINE_QUESTIONS,
   computeBaselineScore,

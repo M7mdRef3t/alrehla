@@ -13,7 +13,7 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Layers, X, Sparkles, Check } from "lucide-react";
+import { Layers, X, Zap as Sparkles, Check } from "lucide-react";
 import { useLayoutState, type LayoutMode } from '@/modules/map/dawayirIndex';
 
 /**

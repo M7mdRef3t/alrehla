@@ -10,7 +10,7 @@ import {
   Heart,
   Lock,
   Unlock,
-  Sparkles,
+  Zap as Sparkles,
   Network,
   Zap,
 } from "lucide-react";

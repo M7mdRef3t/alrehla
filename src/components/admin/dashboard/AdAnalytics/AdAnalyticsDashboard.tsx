@@ -13,7 +13,7 @@ import {
   Users,
   Target,
   BarChart3,
-  Sparkles,
+  Zap as Sparkles,
   AlertTriangle,
   Lightbulb,
   CheckCircle2,

@@ -28,7 +28,7 @@ import {
   Radar,
   Ghost,
   GitMerge,
-  Sparkles,
+  Zap as Sparkles,
   DollarSign,
   PieChart,
   Target,

@@ -27,7 +27,7 @@ import { useAtharState } from "@/modules/athar/store/athar.store";
 
 import {
   Compass,
-  Sparkles,
+  Zap as Sparkles,
   ChevronLeft,
   X,
   ArrowLeft,

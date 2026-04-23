@@ -7,7 +7,7 @@ import {
   MessageCircle,
   Medal,
   Quote,
-  Sparkles,
+  Zap as Sparkles,
   Users,
   Award,
   BookOpen,

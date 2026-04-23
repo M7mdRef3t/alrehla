@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Moon, Sun, Cpu, 
-  Sparkles, Shield, 
+  Zap as Sparkles, Shield, 
   Coins, Lock, CheckCircle,
   Palette, Mic2, ArrowRight
 } from "lucide-react";

@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Compass, Star, BookOpen, Wind, ShieldAlert, Sparkles, Activity, Radar, Fingerprint, Database } from "lucide-react";
+import { ArrowRight, Compass, Star, BookOpen, Wind, ShieldAlert, Zap as Sparkles, Activity, Radar, Fingerprint, Database } from "lucide-react";
 import { getJourneyToolsView } from "@/data/journeyTools";
 import { useJourneyProgress, trackingService } from "@/domains/journey";
 import { useMapState } from '@/modules/map/dawayirIndex';

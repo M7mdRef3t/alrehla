@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
-import { Activity, Zap, ShieldAlert, Sparkles } from "lucide-react";
+import { Activity, Zap, ShieldAlert, Zap as Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { RevenueEngineCard } from "../Overview/components/RevenueEngineCard";

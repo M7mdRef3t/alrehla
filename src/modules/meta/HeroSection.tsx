@@ -1034,6 +1034,18 @@ const HERO_STYLES = `
       background: rgba(8, 12, 22, 0.95);
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
+    .metric-card--health {
+      top: -5%;
+      right: 0%;
+      transform: scale(0.85);
+      transform-origin: top right;
+    }
+    .metric-card--drain {
+      bottom: -5%;
+      left: 0%;
+      transform: scale(0.85);
+      transform-origin: bottom left;
+    }
     .node-core, .center-core__glow, .orbit-ring--glow {
       filter: none;
     }

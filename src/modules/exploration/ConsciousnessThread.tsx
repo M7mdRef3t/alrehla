@@ -2,7 +2,7 @@ import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { History, Zap, Calendar, ChevronDown, Sparkles, MessageCircle, Trophy } from "lucide-react";
+import { History, Zap, Calendar, ChevronDown, Zap as Sparkles, MessageCircle, Trophy } from "lucide-react";
 import { supabase } from "@/services/supabaseClient";
 
 interface ThreadEvent {

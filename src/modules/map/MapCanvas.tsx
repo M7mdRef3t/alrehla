@@ -975,7 +975,7 @@ const IllusionEntity: FC<IllusionEntityProps> = memo(({ id, label, type, orbitAn
           }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         >
-          <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay" />
+          <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay" />
           <Flame className="w-5 h-5 text-indigo-300 opacity-80" />
         </motion.button>
         

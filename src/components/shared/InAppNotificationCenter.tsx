@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ShieldAlert, Sparkles, X, Activity } from "lucide-react";
+import { Bell, ShieldAlert, Zap as Sparkles, X, Activity } from "lucide-react";
 
 export interface SystemNotification {
   id: string;

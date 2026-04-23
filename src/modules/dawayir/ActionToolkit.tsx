@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, MessageCircle, Heart, Zap, RefreshCw, X, ChevronRight } from "lucide-react";
+import { Zap as Sparkles, MessageCircle, Heart, Zap, RefreshCw, X, ChevronRight } from "lucide-react";
 import { Button } from '@/modules/meta/UI/Button';
 import { useMasafatyAnalysis } from "./hooks/useMasafatyAnalysis";
 import { trackEvent, AnalyticsEvents } from "@/services/analytics";

@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Globe, Radio, Activity, Sparkles, Brain, Orbit, X, Target, Users, TrendingUp, ShieldAlert, Award, Zap,
+  Globe, Radio, Activity, Zap as Sparkles, Brain, Orbit, X, Target, Users, TrendingUp, ShieldAlert, Award, Zap,
   Navigation, MousePointer2, Thermometer, Info, MapPin, RefreshCw, Lock, Unlock, ZapOff, Check
 } from "lucide-react";
 import { growthEngine, type DiffusionMetrics } from "@/services/growthEngine";

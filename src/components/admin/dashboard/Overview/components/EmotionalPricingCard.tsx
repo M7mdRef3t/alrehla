@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
-import { Gift, PercentCircle, TrendingUp, Sparkles } from "lucide-react";
+import { Gift, PercentCircle, TrendingUp, Zap as Sparkles } from "lucide-react";
 import {
   getEmotionalPricingStats,
   type EmotionalPricingStats,

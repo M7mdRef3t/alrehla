@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { motion } from "framer-motion";
 import { useJourneyState } from "@/domains/journey/store/journey.store";
-import { Sparkles, Brain, Zap, Target, Lock, Compass, ArrowLeft } from "lucide-react";
+import { Zap as Sparkles, Brain, Zap, Target, Lock, Compass, ArrowLeft } from "lucide-react";
 
 const STATE_META = {
   overloaded: {

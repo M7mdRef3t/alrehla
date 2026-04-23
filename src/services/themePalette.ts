@@ -1,4 +1,4 @@
-import { fetchThemePalette as fetchThemePaletteSetting, type ThemePalette } from "./adminApi";
+import { fetchThemePalette as fetchThemePaletteSetting, type ThemePalette } from "./admin/adminSettings";
 import { getDocumentOrNull } from "./clientRuntime";
 
 function applyThemePaletteInternal(palette: ThemePalette | null) {

@@ -7,7 +7,7 @@ import {
   Zap, 
   Layers, 
   TrendingUp, 
-  Sparkles, 
+  Zap as Sparkles, 
   Network, 
   MapPin, 
   Cpu, 

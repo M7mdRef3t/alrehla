@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
-import { Users, Loader2, X, Eye, Network, History, Sparkles, BrainCircuit, ArrowRight, UserCircle, Activity, ShieldAlert, Trophy } from "lucide-react";
+import { Users, Loader2, X, Eye, Network, History, Zap as Sparkles, BrainCircuit, ArrowRight, UserCircle, Activity, ShieldAlert, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { isSupabaseReady } from "@/services/supabaseClient";

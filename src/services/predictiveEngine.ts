@@ -6,7 +6,7 @@ import { useMapState } from '@/modules/map/dawayirIndex';
 import { MapNode } from "@/modules/map/mapTypes";
 import { usePulseState, PulseEntry } from "@/domains/consciousness/store/pulse.store";
 import { GrowthEngine } from "./growthEngine";
-import { fetchOverviewStats } from "./adminApi";
+import { fetchOverviewStats } from "./admin/adminAnalytics";
 
 export type UserState = "CHAOS" | "ORDER" | "FLOW";
 

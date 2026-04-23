@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, BookOpen, Cpu, Shield, Users, GitBranch, Edit3, Save, Sparkles } from "lucide-react";
+import { Activity, BookOpen, Cpu, Shield, Users, GitBranch, Edit3, Save, Zap as Sparkles } from "lucide-react";
 import { NervousSystem } from "@/services/nervousSystem";
 import { useVictoryEngine } from "@/services/victoryEngineStore";
 import { AutoOptimizer } from "@/services/autoOptimizer";

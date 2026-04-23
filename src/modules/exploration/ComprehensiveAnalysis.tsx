@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo, useEffect, useRef, type ComponentProps 
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ChevronLeft, ChevronRight, RotateCcw,
-  Sparkles, CheckCircle,
+  Zap as Sparkles, CheckCircle,
   Clock, Save, CheckCheck, Users,
 } from "lucide-react";
 import { CA_DIMENSIONS, type CADimension } from "@/data/comprehensiveAssessmentData";

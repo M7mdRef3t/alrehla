@@ -5,7 +5,7 @@ import {
   LineChart,
   CalendarDays,
   Target,
-  Sparkles,
+  Zap as Sparkles,
   BrainCircuit,
   Activity,
   Users,

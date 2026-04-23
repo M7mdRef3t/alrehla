@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Info, Target, BookOpen, Sparkles, ShieldAlert, Share2, Download } from "lucide-react";
+import { Info, Target, BookOpen, Zap as Sparkles, ShieldAlert, Share2, Download } from "lucide-react";
 import type { FeelingAnswers } from "../FeelingCheck";
 import type { RealityAnswers } from "../RealityCheck";
 import type { QuickAnswer2 } from "@/utils/suggestInitialRing";

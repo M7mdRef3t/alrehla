@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, UserPlus, Trophy, MessageCircle, Send, Shield,
   Flame, Star, Heart, ArrowRight, Copy, Check, Share2,
-  Swords, Target, Zap, Crown, ChevronRight, Sparkles,
+  Swords, Target, Zap, Crown, ChevronRight, Zap as Sparkles,
   HandHeart, UserCheck, Clock, Lock, Eye, EyeOff
 } from "lucide-react";
 import { useRifaqState, type Buddy, type TeamChallenge } from "./store/rifaq.store";

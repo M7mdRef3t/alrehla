@@ -1,6 +1,6 @@
 import { memo, useState, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
-import { Star, Quote, ArrowLeft, TrendingUp, Users, Target, Loader2, Sparkles, Heart } from "lucide-react";
+import { Star, Quote, ArrowLeft, TrendingUp, Users, Target, Loader2, Zap as Sparkles, Heart } from "lucide-react";
 import { supabase } from "@/services/supabaseClient";
 
 export interface Story {
@@ -39,6 +39,11 @@ export const StoriesScreen = memo(function StoriesScreen({ onBack }: StoriesScre
     let isMounted = true;
     async function fetchStories() {
       try {
+        if (!supabase) {
+          console.error("Supabase client is not available.");
+          return;
+        }
+
         const { data, error } = await supabase
           .from('success_stories')
           .select('*')
@@ -71,7 +76,7 @@ export const StoriesScreen = memo(function StoriesScreen({ onBack }: StoriesScre
       <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-teal-900/10 via-emerald-900/5 to-transparent pointer-events-none" />
       <div className="absolute top-1/4 -right-64 w-96 h-96 bg-teal-500/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 -left-64 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.015] pointer-events-none mix-blend-overlay" />
+      <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.015] pointer-events-none mix-blend-overlay" />
 
       {/* ── Header ── */}
       <div className="max-w-6xl mx-auto px-4 md:px-6 pt-6 flex items-center justify-between relative z-10">

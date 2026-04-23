@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Sparkles, Copy, X, Loader2, MessageSquareText } from "lucide-react";
+import { Shield, Zap as Sparkles, Copy, X, Loader2, MessageSquareText } from "lucide-react";
 import { Z_LAYERS } from "@/config/zIndices";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { useMapState } from '@/modules/map/dawayirIndex';

@@ -14,7 +14,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Droplets, Heart, Shuffle, Clock, Flame,
-  Sparkles, BookOpen, HelpCircle, Dumbbell,
+  Zap as Sparkles, BookOpen, HelpCircle, Dumbbell,
   Lightbulb, Star,
 } from "lucide-react";
 import { useNabaState, type InspirationKind, type InspirationCard } from "./store/naba.store";

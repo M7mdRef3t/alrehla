@@ -1,5 +1,5 @@
 import { Dream, Knot } from '@/types/dreams';
-import { OverviewStats } from './adminApi';
+import { OverviewStats } from './admin/adminTypes';
 import { useMapState } from '@/modules/map/dawayirIndex';
 
 /**

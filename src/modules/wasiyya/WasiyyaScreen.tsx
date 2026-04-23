@@ -22,7 +22,7 @@ import {
   Mail,
   MailOpen,
   X,
-  Sparkles,
+  Zap as Sparkles,
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════ */

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   BookOpen, Filter, Calendar, Zap, 
-  ChevronLeft, X, Search, Sparkles,
+  ChevronLeft, X, Search, Zap as Sparkles,
   Layers, Clock, ArrowRight
 } from "lucide-react";
 import { nexusService } from "@/services/nexusService";

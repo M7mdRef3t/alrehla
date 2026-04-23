@@ -12,7 +12,7 @@
 import type { FC } from "react";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sprout, Plus, Droplets, Archive, ChevronDown, Sparkles } from "lucide-react";
+import { Sprout, Plus, Droplets, Archive, ChevronDown, Zap as Sparkles } from "lucide-react";
 import {
   useBathraState,
   CATEGORY_META,

@@ -15,7 +15,7 @@ import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Gem, Star, Bookmark, Search, Plus, X, Hash,
-  Calendar, Sparkles, Folder, Tag, Clock, Trash2,
+  Calendar, Zap as Sparkles, Folder, Tag, Clock, Trash2,
   Heart, ChevronDown, Filter,
 } from "lucide-react";
 import {

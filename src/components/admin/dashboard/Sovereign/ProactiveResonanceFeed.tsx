@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Activity, Eye, ShieldCheck, Brain, ArrowRight } from "lucide-react";
+import { Zap as Sparkles, Activity, Eye, ShieldCheck, Brain, ArrowRight } from "lucide-react";
 import { CollapsibleSection } from "../../ui/CollapsibleSection";
 
 interface ResonanceInsight {

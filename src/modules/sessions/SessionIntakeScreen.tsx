@@ -17,7 +17,7 @@ import {
   Target,
   Clock,
   Shield,
-  Sparkles,
+  Zap as Sparkles,
   CheckCircle2,
   Loader2,
 } from "lucide-react";

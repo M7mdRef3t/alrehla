@@ -1,7 +1,7 @@
 'use client';
 
 import type { FormEvent } from "react";
-import { ArrowRight, Eye, History, Link2, MessageSquareText, Mic, MicOff, Send, Sparkles, X } from "lucide-react";
+import { ArrowRight, Eye, History, Link2, MessageSquareText, Mic, MicOff, Send, Zap as Sparkles, X } from "lucide-react";
 import { motion } from "framer-motion";
 import type { CognitiveMetrics, JourneyStage, LiveLanguage, SessionStatus, TruthContract } from '../types';
 

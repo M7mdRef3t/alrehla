@@ -1,6 +1,6 @@
 import React, { type FC, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wind, Sparkles } from "lucide-react";
+import { Wind, Zap as Sparkles } from "lucide-react";
 
 /**
  * v1_serenity_bridge 🧘‍♂️

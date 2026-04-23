@@ -10,7 +10,7 @@ import { useAuthState } from "@/domains/auth/store/auth.store";
 import { type Dream } from "@/types/dreams";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { type MapNode } from "@/modules/map/mapTypes";
-import { Loader2, Sparkles, Brain, Target, ShieldAlert, Activity, Zap, Radio, AlertCircle } from "lucide-react";
+import { Loader2, Zap as Sparkles, Brain, Target, ShieldAlert, Activity, Zap, Radio, AlertCircle } from "lucide-react";
 import { DreamsMatrix } from "@/modules/map/DreamsMatrix";
 import { usePredictiveState } from "@/domains/consciousness/store/predictive.store";
 import { PredictiveEngine } from "@/services/predictiveEngine";

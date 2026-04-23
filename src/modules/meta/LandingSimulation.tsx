@@ -203,17 +203,23 @@ export function LandingSimulation() {
                 <Cpu className="h-8 w-8" />
               </div>
               <h3 className="mb-4 text-3xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>تهيئة مرآة الوعي</h3>
-              <p className="mb-10 text-[15px] leading-loose text-white/70 max-w-[34ch] mx-auto text-justify" style={{ textJustify: "inter-word", textAlignLast: "center" }}>
-                لا نجري استبيانات تقليدية. هنا 3 أسئلة من المبادئ الأولى، في دقيقتين فقط، لتشغيل بروتوكول الرصد وتحديد ثغرات طاقتك.
+              <p className="mb-10 text-[15px] leading-loose text-slate-300 max-w-[34ch] mx-auto text-center">
+                ليس مجرد استبيان؛ إنها عدسة لترى داخلك بوضوح. ٣ خطوات صامتة تكشف لك مصدر استنزافك وتضيء لك خطوتك القادمة.
               </p>
               <button
                 onClick={handleStart}
                 className="group relative inline-flex items-center gap-3 rounded-2xl px-8 py-4 text-sm font-bold text-white transition-all overflow-hidden"
                 style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}
               >
-                <div className="absolute inset-0 bg-[var(--ds-color-brand-teal-500)]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                {/* Pulse ring for cinematic effect */}
+                <motion.div 
+                  className="absolute inset-0 rounded-2xl border border-teal-500/20"
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0, 0.3] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                />
+                <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 شغّل المرآة
-                <ArrowLeft className="h-5 w-5 text-[var(--ds-color-brand-teal-400)] transition-transform group-hover:-translate-x-1" />
+                <ArrowLeft className="h-5 w-5 text-teal-400 transition-transform group-hover:-translate-x-1" />
               </button>
             </motion.div>
           )}
@@ -241,14 +247,15 @@ export function LandingSimulation() {
               <div className="space-y-3">
                 {QUESTIONS[currentQuestionIndex].options.map((option, i) => (
                   <motion.button
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * i }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * i, ease: "easeOut", duration: 0.4 }}
                     key={option.id + currentQuestionIndex}
                     onClick={() => handleAnswer(option.id, option.category)}
-                    className="group w-full rounded-2xl border border-white/5 bg-[rgba(255,255,255,0.02)] p-5 text-right text-[15px] font-medium text-white/70 transition-all hover:bg-[rgba(255,255,255,0.04)] hover:border-[var(--ds-color-brand-teal-500)]/30 hover:text-white hover:pl-7"
+                    className="group relative w-full rounded-2xl border border-white/5 bg-white/[0.02] p-5 text-right text-[15px] font-medium text-slate-300 transition-all duration-300 hover:bg-white/[0.04] hover:border-teal-500/30 hover:text-white hover:pl-7 hover:shadow-[0_0_20px_rgba(45,212,191,0.1)] overflow-hidden"
                   >
-                    {option.text}
+                    <div className="absolute inset-0 bg-gradient-to-r from-teal-500/0 via-teal-500/0 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    <span className="relative z-10">{option.text}</span>
                   </motion.button>
                 ))}
               </div>
@@ -264,8 +271,8 @@ export function LandingSimulation() {
               className="flex flex-col items-center justify-center text-center py-10"
             >
               <Loader2 className="mb-8 h-12 w-12 animate-spin text-[var(--teal)] drop-shadow-[0_0_20px_rgba(0,240,255,0.5)]" />
-              <h3 className="text-xl font-black text-white mb-3" style={{ fontFamily: "var(--font-display)" }}>جاري تحليل الأنماط..</h3>
-              <p className="text-sm text-white/40">يتم رصد الإشارات الخفية للتبعية والاستنزاف وفك شفرة طاقتك.</p>
+              <h3 className="text-xl font-black text-white mb-3" style={{ fontFamily: "var(--font-display)" }}>نزيح الضباب عن مسارك..</h3>
+              <p className="text-sm text-white/40">نقرأ إشاراتك الصامتة لنكشف لك ما يعيق رحلتك الآن.</p>
             </motion.div>
           )}
 

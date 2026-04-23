@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, type ComponentProps } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, TrendingUp, AlertTriangle, Copy,
-  ChevronRight, ChevronDown, Loader2, Sparkles, MapPin,
+  ChevronRight, ChevronDown, Loader2, Zap as Sparkles, MapPin,
 } from "lucide-react";
 import { CA_DIMENSIONS, type CADimension } from "@/data/comprehensiveAssessmentData";
 import { getComparisonResults, type AnalysisResult } from "@/services/partnerCompareService";

@@ -12,7 +12,7 @@ import {
     Lock,
     Share2,
     Smartphone,
-    Sparkles,
+    Zap as Sparkles,
     Zap,
     Rocket,
     Settings,

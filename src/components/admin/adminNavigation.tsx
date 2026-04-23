@@ -6,7 +6,7 @@ import {
   Database,
   Users,
   History,
-  Sparkles,
+  Zap as Sparkles,
   ShieldCheck,
   MessageSquare,
   Palette,

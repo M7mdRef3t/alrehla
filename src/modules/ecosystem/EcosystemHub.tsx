@@ -7,7 +7,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowUpRight } from "lucide-react";
+import { Zap as Sparkles, ArrowUpRight } from "lucide-react";
 
 // Import stores to aggregate data
 import { useMapState } from "@/modules/map/dawayirIndex";

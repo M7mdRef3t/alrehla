@@ -21,7 +21,7 @@ import {
   Star,
   ChevronLeft,
   MessageCircleHeart,
-  Sparkles,
+  Zap as Sparkles,
   User,
 } from "lucide-react";
 

@@ -1,7 +1,7 @@
 import { logger } from "@/services/logger";
 import React, { type FC, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, CheckCircle2, Circle, AlertTriangle, Sparkles, HelpCircle, LayoutTemplate, Terminal } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, Circle, AlertTriangle, Zap as Sparkles, HelpCircle, LayoutTemplate, Terminal } from "lucide-react";
 import type { Ring, DailyPathProgress } from "../map/mapTypes";
 import { analyzeWithAI } from "@/utils/aiPatternAnalyzer";
 import { generateAIPlan } from "@/utils/aiPlanGenerator";

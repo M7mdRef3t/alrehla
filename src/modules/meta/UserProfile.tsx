@@ -6,7 +6,7 @@ import {
   ArrowLeft, Award, BarChart3, BookOpen,
   Flame, Pencil, Check,
   Map, TrendingUp, Zap,
-  Sparkles, Orbit, Rocket, Compass, CalendarDays, Wind
+  Zap as Sparkles, Orbit, Rocket, Compass, CalendarDays, Wind
 } from "lucide-react";
 import { useGamificationState } from "@/services/gamificationEngine";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";

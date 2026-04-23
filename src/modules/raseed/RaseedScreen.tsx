@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRaseedState, DIMENSION_META, type CapitalDimension } from "./store/raseed.store";
-import { Coins, TrendingUp, Trophy, Sparkles, Plus, X } from "lucide-react";
+import { Coins, TrendingUp, Trophy, Zap as Sparkles, Plus, X } from "lucide-react";
 
 function AddXpModal({ onClose }: { onClose: () => void }) {
   const { addXp } = useRaseedState();

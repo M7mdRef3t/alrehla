@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare, Clock, CheckCircle2, AlertCircle, Plus, Brain,
   User, Calendar, ChevronRight, X, Activity, Target, FileText,
-  Sparkles, TrendingUp, Timer
+  Zap as Sparkles, TrendingUp, Timer
 } from "lucide-react";
 import { isSupabaseReady, supabase } from "@/services/supabaseClient";
 

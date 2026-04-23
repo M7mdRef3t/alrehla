@@ -10,10 +10,10 @@ const client = new Client({
 
 async function run() {
   await client.connect();
-  const sql = fs.readFileSync('supabase/migrations/20260423232300_create_success_stories.sql', 'utf8');
+  const sql = 'SELECT COUNT(*) FROM success_stories;';
   try {
-    await client.query(sql);
-    console.log('Migration applied successfully');
+    const res = await client.query(sql);
+    console.log('Success stories count:', res.rows[0].count);
   } catch (err) {
     console.error('Migration failed:', err);
   } finally {

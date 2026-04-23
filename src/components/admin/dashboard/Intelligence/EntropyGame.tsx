@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDigitalTwinState } from '@/domains/maraya/store/digitalTwin.store';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { Zap as Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface Particle {
     x: number;

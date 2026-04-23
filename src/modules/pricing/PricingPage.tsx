@@ -2,7 +2,7 @@
 
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from "react";
-import { Check, Shield, Sparkles, ArrowLeft, Zap } from "lucide-react";
+import { Check, Shield, Zap as Sparkles, ArrowLeft, Zap } from "lucide-react";
 import { signInWithGoogleAtPath } from "@/services/authService";
 import { consumeEmotionalOffer, getEmotionalOffer } from "@/services/subscriptionManager";
 import { supabase } from "@/services/supabaseClient";

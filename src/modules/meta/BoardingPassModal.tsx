@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShieldCheck, Ticket, Download, Sparkles, User, Calendar, Award, Loader2 } from "lucide-react";
+import { X, ShieldCheck, Ticket, Download, Zap as Sparkles, User, Calendar, Award, Loader2 } from "lucide-react";
 // html2canvas loaded on-demand inside handleDownloadImage to avoid bundle bloat
 
 interface BoardingPassModalProps {

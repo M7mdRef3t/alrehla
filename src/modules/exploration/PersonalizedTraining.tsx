@@ -7,7 +7,7 @@ import {
   Trophy,
   Target,
   X,
-  Sparkles
+  Zap as Sparkles
 } from "lucide-react";
 import { getScenariosForNode, type TrainingScenario } from "@/data/symptomScenarios";
 import type { Ring } from "../map/mapTypes";

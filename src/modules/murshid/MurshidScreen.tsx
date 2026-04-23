@@ -12,7 +12,7 @@ import type { FC } from "react";
 import { useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Brain, Sparkles, AlertTriangle, PartyPopper, Target,
+  Brain, Zap as Sparkles, AlertTriangle, PartyPopper, Target,
   ChevronRight, TrendingUp, Eye, Shield, Zap, Heart,
   Lightbulb, Bell, Star, ChevronDown, ArrowRight,
   MessageCircle, Sun, Moon, Activity, RefreshCw,

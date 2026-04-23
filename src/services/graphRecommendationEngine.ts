@@ -50,7 +50,7 @@ export class GraphRecommendationEngine {
             const queryText = nodeVector.content;
             const matches = await consciousnessService.recallSimilarMoments(queryText, {
                 limit: 5,
-                sources: ["educational_asset"] // البحث المباشر في الأصول التعليمية المدمجة
+                sources: [("educational_asset" as any)] // البحث المباشر في الأصول التعليمية المدمجة
             });
 
             // 4. دمج النتائج وترتيبها
@@ -60,7 +60,7 @@ export class GraphRecommendationEngine {
             for (const match of matches) {
                 let meta: any = {};
                 try {
-                    meta = typeof match.metadata === 'string' ? JSON.parse(match.metadata) : match.metadata || {};
+                    meta = typeof (match as any).metadata === 'string' ? JSON.parse((match as any).metadata) : (match as any).metadata || {};
                 } catch(e) { logger.warn("[Recommendation] metadata parse error:", e); }
 
                 recommendations.push({

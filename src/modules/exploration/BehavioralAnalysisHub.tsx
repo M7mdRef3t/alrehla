@@ -7,7 +7,7 @@ import {
   Zap, Heart, AlertCircle,
   Share2, Download, Bell, BellOff, Users,
   Home, Settings, Database, Sun, Moon, Lock, Unlock, X,
-  Sparkles, Link2, BookOpen
+  Zap as Sparkles, Link2, BookOpen
 } from "lucide-react";
 import { supabase } from "@/services/supabaseClient";
 import type { ResourceTab } from '@/modules/growth/ResourcesCenter';

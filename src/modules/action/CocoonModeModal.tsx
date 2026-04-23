@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Zap as Sparkles } from "lucide-react";
 import { Z_LAYERS } from "@/config/zIndices";
 import { useScrollLock } from "@/hooks/useScrollLock";
 

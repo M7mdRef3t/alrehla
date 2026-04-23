@@ -4,7 +4,7 @@ import { memo, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Brain, AlertTriangle, Check, ChevronDown, ChevronUp,
-  Target, Plus, Sparkles, ArrowLeft, Clock, X
+  Target, Plus, Zap as Sparkles, ArrowLeft, Clock, X
 } from "lucide-react";
 import { LIFE_DOMAINS, getDomainConfig, type LifeDomainId, type DecisionOption } from "@/types/lifeDomains";
 import { useLifeState } from '@/modules/map/dawayirIndex';

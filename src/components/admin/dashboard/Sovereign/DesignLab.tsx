@@ -3,7 +3,7 @@ import {
   Palette, 
   Layers, 
   Maximize, 
-  Sparkles, 
+  Zap as Sparkles, 
   RotateCcw, 
   Sun, 
   Moon,

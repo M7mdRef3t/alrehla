@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getQuestionOfDay } from '@/services/dailyIntel';
 import { saveDailyIntel, supabase } from '@/services/supabaseClient';
-import { Sparkles, Save, ShieldCheck } from 'lucide-react';
+import { Zap as Sparkles, Save, ShieldCheck } from 'lucide-react';
 
 export const WarRoomWidget: React.FC = () => {
     const [question, setQuestion] = useState("");

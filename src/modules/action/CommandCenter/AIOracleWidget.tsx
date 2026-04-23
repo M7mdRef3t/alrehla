@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Sparkles, RefreshCw } from 'lucide-react';
+import { Brain, Zap as Sparkles, RefreshCw } from 'lucide-react';
 import { generatePredictiveInsight, calculateEntropy } from '@/services/predictiveEngine';
 
 /**

@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Zap as Sparkles } from "lucide-react";
 import { useJourneyProgress } from "@/domains/journey";
 
 interface JourneyCelebrationProps {

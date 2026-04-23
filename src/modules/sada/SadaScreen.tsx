@@ -14,7 +14,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell, BellOff, Sun, Moon, AlertTriangle, TrendingUp,
-  Flame, Heart, Compass, Sparkles, Settings, Trash2,
+  Flame, Heart, Compass, Zap as Sparkles, Settings, Trash2,
   Check, CheckCheck, ChevronLeft, X, Volume2, VolumeX,
 } from "lucide-react";
 import { useSadaState, type NudgeType } from "./store/sada.store";

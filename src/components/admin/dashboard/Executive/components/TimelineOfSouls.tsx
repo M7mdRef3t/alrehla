@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowRight, ShieldCheck, HeartPulse, BrainCircuit } from "lucide-react";
+import { Zap as Sparkles, ArrowRight, ShieldCheck, HeartPulse, BrainCircuit } from "lucide-react";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 
 interface SoulEvent {

@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles } from "lucide-react";
+import { Zap as Sparkles } from "lucide-react";
 import { useMemo } from "react";
 import type { LiveLanguage } from '../types';
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Sparkles, MessageCircle, Lock, Users, Activity } from 'lucide-react';
+import { Shield, Zap as Sparkles, MessageCircle, Lock, Users, Activity } from 'lucide-react';
 import { getActiveCircles, getSharedWisdom, SupportCircle, SharedWisdom } from '@/services/communityService';
 
 /**

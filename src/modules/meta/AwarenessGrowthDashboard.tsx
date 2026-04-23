@@ -6,7 +6,7 @@ import {
   LineChart,
   MessageSquare,
   Workflow,
-  Sparkles,
+  Zap as Sparkles,
   GitMerge,
   Eye,
   HeartPulse,

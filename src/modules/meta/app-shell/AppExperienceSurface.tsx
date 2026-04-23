@@ -19,8 +19,6 @@ import { type AppScreen } from "@/navigation/navigationMachine";
 import { AppSidebar } from "../AppSidebar";
 import { Z_LAYERS } from "@/config/zIndices";
 import { useLayoutState } from "@/modules/map/store/layout.store";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
-
 
 
 // ─── Module-level constants (created once, never re-allocated on render) ───
@@ -305,9 +303,10 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         onOpenMission={mainContentProps.onOpenMission}
         onNavigateAppScreen={mainContentProps.onNavigate}
       />
-      <GlobalToast />
-        <GraphEventToast />
-        <FloatingWhatsApp placement={`global_fab_${screen}`} />
+        <Suspense fallback={null}>
+          <GlobalToast />
+          <GraphEventToast />
+        </Suspense>
       </div>
     </>
   );

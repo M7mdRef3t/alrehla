@@ -5,7 +5,7 @@ import {
   Trash2, 
   Route, 
   BookOpen,
-  Sparkles, 
+  Zap as Sparkles, 
   Loader2, 
   History,
   Workflow,

@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BookOpen, PenLine, Calendar, TrendingUp, Sparkles,
+  BookOpen, PenLine, Calendar, TrendingUp, Zap as Sparkles,
   ChevronDown, ChevronUp, Clock, Heart, Zap, Moon,
   Sun, Cloud, CloudRain, Flame, Shield, Eye,
   FileText, Search, Hash, ArrowUpRight, Star

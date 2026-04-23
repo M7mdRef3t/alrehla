@@ -57,18 +57,18 @@ export interface RafiqState {
 /* ═══════════════════════════════════════════ */
 
 export const TOOL_REGISTRY: Record<string, { name: string; emoji: string; color: string; screen: string }> = {
-  tazkiya:  { name: "تزكية", storage: zustandIdbStorage,   emoji: "🕊️", color: "#a78bfa", screen: "tazkiya" },
-  jisr:     { name: "جسر", storage: zustandIdbStorage,     emoji: "🌉", color: "#10b981", screen: "jisr" },
-  risala:   { name: "رسالة", storage: zustandIdbStorage,   emoji: "💌", color: "#06b6d4", screen: "risala" },
-  khalwa:   { name: "خلوة", storage: zustandIdbStorage,    emoji: "🧘", color: "#8b5cf6", screen: "khalwa" },
-  warsha:   { name: "ورشة", storage: zustandIdbStorage,    emoji: "🏋️", color: "#f97316", screen: "warsha" },
-  kanz:     { name: "كنز", storage: zustandIdbStorage,     emoji: "💎", color: "#f59e0b", screen: "kanz" },
-  bathra:   { name: "بذرة", storage: zustandIdbStorage,    emoji: "🌱", color: "#10b981", screen: "bathra" },
-  mithaq:   { name: "ميثاق", storage: zustandIdbStorage,   emoji: "🤝", color: "#fbbf24", screen: "mithaq" },
-  qalb:     { name: "قلب", storage: zustandIdbStorage,     emoji: "❤️", color: "#ef4444", screen: "qalb" },
-  athar:    { name: "أثر", storage: zustandIdbStorage,     emoji: "📜", color: "#10b981", screen: "athar" },
-  shahada:  { name: "شهادة", storage: zustandIdbStorage,   emoji: "🏆", color: "#eab308", screen: "shahada" },
-  wird:     { name: "وِرد", storage: zustandIdbStorage,    emoji: "📿", color: "#6366f1", screen: "wird" },
+  tazkiya:  { name: "تزكية", emoji: "🕊️", color: "#a78bfa", screen: "tazkiya" },
+  jisr:     { name: "جسر",   emoji: "🌉", color: "#10b981", screen: "jisr" },
+  risala:   { name: "رسالة", emoji: "💌", color: "#06b6d4", screen: "risala" },
+  khalwa:   { name: "خلوة",  emoji: "🧘", color: "#8b5cf6", screen: "khalwa" },
+  warsha:   { name: "ورشة",  emoji: "🏋️", color: "#f97316", screen: "warsha" },
+  kanz:     { name: "كنز",   emoji: "💎", color: "#f59e0b", screen: "kanz" },
+  bathra:   { name: "بذرة",  emoji: "🌱", color: "#10b981", screen: "bathra" },
+  mithaq:   { name: "ميثاق", emoji: "🤝", color: "#fbbf24", screen: "mithaq" },
+  qalb:     { name: "قلب",   emoji: "❤️", color: "#ef4444", screen: "qalb" },
+  athar:    { name: "أثر",   emoji: "📜", color: "#10b981", screen: "athar" },
+  shahada:  { name: "شهادة", emoji: "🏆", color: "#eab308", screen: "shahada" },
+  wird:     { name: "وِرد",  emoji: "📿", color: "#6366f1", screen: "wird" },
 };
 
 export const GREETINGS: Record<MoodTone, string[]> = {

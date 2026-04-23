@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MessageCircle, RefreshCw, Send, AlertCircle, Bot, Check, CheckCheck, Clock, Brain, Sparkles } from "lucide-react";
+import { X, MessageCircle, RefreshCw, Send, AlertCircle, Bot, Check, CheckCheck, Clock, Brain, Zap as Sparkles } from "lucide-react";
 import { getAuthToken } from "@/domains/auth/store/auth.store";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { useToastState } from '@/modules/map/dawayirIndex';

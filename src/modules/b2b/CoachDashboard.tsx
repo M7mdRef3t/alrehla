@@ -4,7 +4,7 @@ import { logger } from "@/services/logger";
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/services/supabaseClient';
-import { Users, Activity, Clock, LogOut, ChevronLeft, AlertTriangle, ShieldAlert, Sparkles, Brain, Search, LayoutDashboard, Settings, Bell } from 'lucide-react';
+import { Users, Activity, Clock, LogOut, ChevronLeft, AlertTriangle, ShieldAlert, Zap as Sparkles, Brain, Search, LayoutDashboard, Settings, Bell } from 'lucide-react';
 import { getClients } from '@/services/b2bService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signInWithGoogleAtPath } from '@/services/authService';

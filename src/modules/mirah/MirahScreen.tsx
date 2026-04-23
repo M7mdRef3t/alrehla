@@ -13,7 +13,7 @@ import type { FC } from "react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Eye, Sparkles, TrendingUp, Brain, Heart,
+  Eye, Zap as Sparkles, TrendingUp, Brain, Heart,
   Zap, Users, Compass, Check, ChevronDown,
   RefreshCw, Target,
 } from "lucide-react";

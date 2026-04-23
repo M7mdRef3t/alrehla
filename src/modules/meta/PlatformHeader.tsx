@@ -12,7 +12,7 @@ import {
   Settings,
   Wrench,
   BarChart2,
-  Sparkles,
+  Zap as Sparkles,
   Brain,
   Home,
   ShieldCheck,
@@ -47,14 +47,14 @@ import { BookOpen, Info, Compass, Map as MapIcon, LayoutGrid } from "lucide-reac
 
 /** Navigation for visitors — conversion-focused */
 const VISITOR_NAV_LINKS = [
-  { id: "home", label: "الأفق", icon: Home },
+  { id: "home", label: "الرئيسية", icon: Home },
   { id: "about", label: "لماذا الرحلة؟", icon: Info },
   { id: "stories", label: "قصص", icon: BookOpen },
 ];
 
 /** Navigation for travelers (logged in) — journey tools */
 const TRAVELER_NAV_LINKS = [
-  { id: "home", label: "الأفق", icon: Home },
+  { id: "home", label: "الرئيسية", icon: Home },
   { id: "map", label: "الخريطة", icon: MapIcon },
   { id: "ecosystem-hub", label: "المنظومة", icon: LayoutGrid },
 ];
@@ -747,13 +747,13 @@ export const MobileNavBar = memo(function MobileNavBar({
 
   const MOBILE_NAV = (isLoggedIn || hasExistingJourney)
     ? [
-        { id: "home", label: "الأفق", icon: Home },
+        { id: "home", label: "الرئيسية", icon: Home },
         { id: "map", label: "الخريطة", icon: MapIcon },
         { id: "ecosystem-hub", label: "المنظومة", icon: LayoutGrid },
         { id: "profile", label: "الملف", icon: User },
       ]
     : [
-        { id: "home", label: "الأفق", icon: Home },
+        { id: "home", label: "الرئيسية", icon: Home },
         { id: "about", label: "لماذا الرحلة؟", icon: Info },
         { id: "stories", label: "قصص", icon: BookOpen },
       ];

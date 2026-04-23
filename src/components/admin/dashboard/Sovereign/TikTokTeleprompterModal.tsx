@@ -1,6 +1,6 @@
 import React, { type FC, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, Copy, Video, Type, Hash, Camera, Check } from "lucide-react";
+import { X, Zap as Sparkles, Copy, Video, Type, Hash, Camera, Check } from "lucide-react";
 import type { TikTokScriptGeneration } from "@/ai/aiMarketingCopy";
 
 interface TikTokTeleprompterModalProps {

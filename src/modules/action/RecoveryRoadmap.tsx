@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { motion } from "framer-motion";
-import { Check, Lock, ArrowRight, Sparkles } from "lucide-react";
+import { Check, Lock, ArrowRight, Zap as Sparkles } from "lucide-react";
 import {
   RECOVERY_PHASES,
   calculateCurrentPhase,

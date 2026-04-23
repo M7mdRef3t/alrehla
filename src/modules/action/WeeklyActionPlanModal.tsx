@@ -5,7 +5,7 @@ import {
   X,
   CalendarDays,
   Target,
-  Sparkles,
+  Zap as Sparkles,
   MessageSquareHeart,
   MoonStar,
   Brain,

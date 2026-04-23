@@ -12,7 +12,7 @@ import {
   Search,
   Share2,
   ShieldCheck,
-  Sparkles,
+  Zap as Sparkles,
   Wand2,
 } from "lucide-react";
 import { assignUrl } from "@/services/navigation";

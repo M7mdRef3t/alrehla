@@ -1,7 +1,7 @@
 import { logger } from "@/services/logger";
 import React, { useState, useRef, useEffect, type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Share2, X, Sparkles } from "lucide-react";
+import { Download, Share2, X, Zap as Sparkles } from "lucide-react";
 // html2canvas loaded on-demand inside handleCapture to avoid bundle bloat
 import { calculateEntropy } from "@/services/predictiveEngine";
 import { useToastState } from '@/modules/map/dawayirIndex';

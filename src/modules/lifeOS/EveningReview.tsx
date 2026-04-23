@@ -11,7 +11,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Moon, Star, Sun, ChevronLeft, CheckCircle2, Sparkles,
+  Moon, Star, Sun, ChevronLeft, CheckCircle2, Zap as Sparkles,
   Heart, Zap, Battery, BatteryLow, BatteryFull, ArrowLeft,
 } from "lucide-react";
 import { useRitualState } from "@/domains/journey/store/ritual.store";

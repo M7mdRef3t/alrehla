@@ -30,6 +30,7 @@ import { useAppShellAccessState } from "./useAppShellAccessState";
 import { useAppShellBootstrapState } from "./useAppShellBootstrapState";
 import { useAppExperienceSurfaceState } from "./useAppExperienceSurfaceState";
 import { SanctuaryLockdownExperience } from "@/modules/action/SanctuaryLockdownExperience";
+import { useLockdownState } from "@/domains/admin/store/lockdown.store";
 import type { AppShellScreen } from '@/modules/map/dawayirIndex';
 import { usePersonalizedBiometrics } from "@/hooks/usePersonalizedBiometrics";
 import { useWeatherFunnelBridge } from "@/hooks/useWeatherFunnelBridge";
@@ -134,9 +135,19 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
 
 
   // ── CONSUME LANDING INTENT (Cross-Shell Navigation) ──
+  const triggerLockdown = useLockdownState((s) => s.triggerLockdown);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     
+    // Check for sanctuary hash first
+    const hash = getHash();
+    if (hash === "#sanctuary") {
+      triggerLockdown();
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      return;
+    }
+
     let action = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
     
     // Fallback to URL parameters if no boot action exists (e.g., direct marketing links)
@@ -175,7 +186,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       setAuthIntent({ kind: "login", createdAt: Date.now() });
       setShowAuthModal(true);
     }
-  }, [setAuthIntent, setScreen, setShowAuthModal]);
+  }, [setAuthIntent, setScreen, setShowAuthModal, triggerLockdown]);
 
   // ── EXIT TO LANDING ──
   useEffect(() => {

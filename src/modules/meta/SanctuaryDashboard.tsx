@@ -5,7 +5,7 @@ import {
     Map as MapIcon, 
     Crosshair, 
     TrendingUp, 
-    Sparkles, 
+    Zap as Sparkles, 
     Wind, 
     ChevronRight,
     Activity,

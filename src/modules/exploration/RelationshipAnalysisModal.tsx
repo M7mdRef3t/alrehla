@@ -6,7 +6,7 @@ import {
   X,
   HeartHandshake,
   BrainCircuit,
-  Sparkles,
+  Zap as Sparkles,
   ClipboardCheck,
   ArrowRight,
   ArrowLeft,

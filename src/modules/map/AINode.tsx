@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Mic, MicOff } from "lucide-react";
+import { Zap as Sparkles, Mic, MicOff } from "lucide-react";
 
 interface AINodeProps {
     isConnected: boolean;

@@ -12,7 +12,7 @@ import {
   History,
   LogOut,
   User,
-  Sparkles,
+  Zap as Sparkles,
   ShieldCheck,
   MessageSquare,
   Workflow,

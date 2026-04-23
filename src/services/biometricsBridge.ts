@@ -25,7 +25,7 @@ export function startBiometricStream(callback: (data: BiometricPulse) => void) {
 
     const init = async () => {
         const session = await safeGetSession();
-        if (!session?.user?.id) return;
+        if (!session?.user?.id || !supabase) return;
         userId = session.user.id;
 
         // Fetch the latest reading first
@@ -100,7 +100,7 @@ export async function pushBiometricReading(heartRate: number, hrv: number) {
     if (!supabase) return;
     
     const session = await safeGetSession();
-    if (!session?.user?.id) return;
+    if (!session?.user?.id || !supabase) return;
 
     const { error } = await supabase.from('user_biometrics').insert({
         user_id: session.user.id,

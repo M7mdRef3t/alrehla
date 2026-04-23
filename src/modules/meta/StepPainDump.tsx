@@ -3,7 +3,7 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MessageSquare, Sparkles, ArrowRight } from "lucide-react";
+import { MessageSquare, Zap as Sparkles, ArrowRight } from "lucide-react";
 
 interface StepPainDumpProps {
   onNext: (text: string) => void;

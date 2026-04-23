@@ -10,7 +10,7 @@ import {
   Clock, Star, Users, RotateCcw, Share2, Trophy, ChevronDown,
   ChevronUp, MessageCircle, FileText, BarChart2,
   Download, Wifi, Lock, Brain, Send,
-  AlertCircle, Sparkles, GraduationCap, Play, Award,
+  AlertCircle, Zap as Sparkles, GraduationCap, Play, Award,
 } from "lucide-react";
 import {
   fetchCourse, fetchModules, fetchUnits, fetchUserProgress, markUnitComplete,

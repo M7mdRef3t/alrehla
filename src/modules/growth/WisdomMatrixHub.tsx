@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Library, BookOpen, Lock, Sparkles, Filter, Bookmark } from "lucide-react";
+import { X, Library, BookOpen, Lock, Zap as Sparkles, Filter, Bookmark } from "lucide-react";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 const MOCK_RESOURCES = [

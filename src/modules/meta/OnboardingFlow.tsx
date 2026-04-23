@@ -13,7 +13,7 @@ import { useGamificationState } from "@/domains/gamification/store/gamification.
 import { soundManager } from "@/services/soundManager";
 import { analyticsService, AnalyticsEvents, generateUUID } from "@/domains/analytics";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
-import { AlertTriangle, Mail, ArrowRight, Sparkles, Zap, Smartphone, User, Lock, ShieldCheck, Target, Activity } from "lucide-react";
+import { AlertTriangle, Mail, ArrowRight, Zap as Sparkles, Zap, Smartphone, User, Lock, ShieldCheck, Target, Activity } from "lucide-react";
 import { PATH_NAMES, generateDynamicPlan, SYMPTOM_TYPE_LABELS, PATTERN_TYPE_LABELS } from "@/modules/pathEngine/pathResolver";
 import type { DynamicRecoveryPlan, SymptomType, ContactLevel } from "@/modules/pathEngine/pathTypes";
 import { signInWithMagicLink } from "@/services/authService";

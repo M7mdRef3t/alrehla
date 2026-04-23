@@ -10,7 +10,7 @@ import {
   Fingerprint, 
   Activity, 
   ShieldCheck, 
-  Sparkles
+  Zap as Sparkles
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { trackingService } from "@/domains/journey";
@@ -28,7 +28,7 @@ import { useAuthState } from "@/domains/auth/store/auth.store";
 
 // Dynamic Imports for Performance
 const LandingSimulation = dynamic(() => import("./LandingSimulation").then(mod => mod.LandingSimulation), { ssr: false });
-const LandingFooter = dynamic(() => import("./landing/LandingFooter").then(mod => mod.LandingFooter), { ssr: true });
+const PlatformFooter = dynamic(() => import("./PlatformFooter").then(mod => mod.PlatformFooter), { ssr: true });
 const AmbientBackground = dynamic(() => import("./landing/AmbientBackground").then(mod => mod.AmbientBackground), { ssr: false });
 
 const ProblemFirstSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.ProblemFirstSection), { ssr: true });
@@ -313,7 +313,8 @@ export const Landing: FC<LandingProps> = ({
               <Sparkles className="w-4 h-4 text-teal-500 opacity-80" />
             </motion.div>
             <h2 className="text-4xl sm:text-6xl font-black mb-8 landing-principles-title tracking-tight !text-white leading-tight">
-              لا تمشِ في الظلام.<br /><span className="text-teal-400 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-sky-300">نحن نضيء لك خريطة طاقتك.</span>
+              لا تمشِ في الظلام.<br />
+              <span className="inline-block mt-4 sm:mt-6 text-teal-400 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-sky-300">نحن نضيء لك خريطة طاقتك.</span>
             </h2>
             <p className="text-base sm:text-xl max-w-[55ch] mx-auto text-slate-300 leading-relaxed font-medium">
               "الرحلة" ليست مجرد منصة، هي بوصلتك وعدستك لرؤية ما خفي عنك. نكشف لك مسارات طاقتك، من يمنحك النور، ومن يسحب منك الحياة، لتسترد سيادتك على مسارك.
@@ -396,14 +397,18 @@ export const Landing: FC<LandingProps> = ({
           transition={{ duration: 0.7, ease }}
         >
           <div className="text-center mb-8">
-            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3 landing-simulation-label">
-              المُحاكي — Simulation
-            </p>
-            <h2 className="text-2xl sm:text-4xl font-black mb-3 landing-simulation-title">
-              صمم مسارك الداخلي
+            <div className="inline-flex items-center gap-2 mb-3">
+              <Sparkles className="w-3 h-3 text-indigo-400 opacity-80" />
+              <p className="text-xs font-bold tracking-[0.25em] uppercase landing-simulation-label m-0 leading-none text-indigo-400">
+                مِرْآة الوَعْي
+              </p>
+              <Sparkles className="w-3 h-3 text-indigo-400 opacity-80" />
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-black mb-4 landing-simulation-title !text-white leading-tight">
+              أين تقف في رحلتك الآن؟
             </h2>
-            <p className="text-sm sm:text-base max-w-[38ch] mx-auto text-slate-400 leading-relaxed">
-              ٣ أسئلة بسيطة — بدون تفكير — وهتكشف النمط اللي ماسك دماغك دلوقتي.
+            <p className="text-base sm:text-lg max-w-[42ch] mx-auto text-slate-300 leading-relaxed">
+              ٣ إشارات صامتة تكشف لك ما يعيق تقدمك ويسحب طاقتك في هذه المحطة.
             </p>
           </div>
           <LandingSimulation />
@@ -413,7 +418,7 @@ export const Landing: FC<LandingProps> = ({
               className="landing-weather-entry group inline-flex items-center gap-3 px-6 py-3 rounded-full text-sm font-bold transition-all duration-300"
             >
               <span className="landing-weather-dot" />
-              قيّم طقس علاقاتك (Weather Check)
+              تفقد طقس علاقاتك
               <span className="transition-transform duration-300 group-hover:translate-x-[-4px]">←</span>
             </a>
           </motion.div>
@@ -482,7 +487,7 @@ export const Landing: FC<LandingProps> = ({
         <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
 
-      <LandingFooter
+      <PlatformFooter
         trustPoints={landingCopy.trustPoints}
         stagger={stagger}
         onOpenLegal={(path) => {

@@ -9,7 +9,7 @@ import {
     Activity,
     Loader2,
     Music,
-    Sparkles,
+    Zap as Sparkles,
     Play,
     Timer,
     AlertTriangle,

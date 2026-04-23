@@ -1,6 +1,6 @@
 import React, { useEffect, useState, type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArchiveRestore, Check, Sparkles } from "lucide-react";
+import { ArchiveRestore, Check, Zap as Sparkles } from "lucide-react";
 import { useBlindCapsuleState } from "@/domains/journey/store/blindCapsule.store";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 

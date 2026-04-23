@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Mic, Play, ArrowLeft, Sparkles } from 'lucide-react';
+import { Mic, Play, ArrowLeft, Zap as Sparkles } from 'lucide-react';
 
 interface LiveWelcomeProps {
   onStartSession: () => void;

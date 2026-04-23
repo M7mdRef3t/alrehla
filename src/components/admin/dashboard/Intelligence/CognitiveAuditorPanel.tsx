@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { executeAgentTool } from '@/services/agentTools';
-import { Brain, FileCode, Search, AlertTriangle, CheckCircle, Flame, Sparkles, Activity } from 'lucide-react';
+import { Brain, FileCode, Search, AlertTriangle, CheckCircle, Flame, Zap as Sparkles, Activity } from 'lucide-react';
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { useToastState } from '@/modules/map/dawayirIndex';
 

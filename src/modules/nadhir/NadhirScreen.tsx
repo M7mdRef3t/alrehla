@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, AlertTriangle, Phone, Heart, Wind, Timer,
   Plus, Trash2, Check, X, ChevronDown, Clock,
-  Eye, Sparkles, Activity, UserCheck, ListChecks, History,
+  Eye, Zap as Sparkles, Activity, UserCheck, ListChecks, History,
 } from "lucide-react";
 import { useNadhirState } from "./store/nadhir.store";
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";

@@ -25,8 +25,8 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
     try {
         if (!supabase) {
-            console.error("[Analytics Ingestion] Missing Supabase configuration.");
-            return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+            console.warn("[Analytics Ingestion] Missing Supabase configuration. Bypassing ingestion.");
+            return NextResponse.json({ status: "success", bypassed: true });
         }
 
         const contentLength = req.headers.get("content-length");

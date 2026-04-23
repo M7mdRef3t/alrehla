@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { X, Download, Share2, Sparkles } from "lucide-react";
+import { X, Download, Share2, Zap as Sparkles } from "lucide-react";
 import { useMapState } from '@/modules/map/dawayirIndex';
 
 interface SoulGeometryOverlayProps {

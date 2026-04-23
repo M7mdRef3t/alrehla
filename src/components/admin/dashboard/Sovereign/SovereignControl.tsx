@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Sparkles, Send, Zap, Wind, AlertCircle, Eye, Brain, ShieldAlert, History, Terminal } from "lucide-react";
+import { Shield, Zap as Sparkles, Send, Zap, Wind, AlertCircle, Eye, Brain, ShieldAlert, History, Terminal } from "lucide-react";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import { fetchOverviewStats } from "@/services/admin/adminAnalytics";

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Plus, ChevronLeft, Layers, ListChecks,
   AlertTriangle, Brain, Check, Clock, Target, ArrowLeft,
-  Sparkles, MessageCircle, ClipboardCheck
+  Zap as Sparkles, MessageCircle, ClipboardCheck
 } from "lucide-react";
 import { LIFE_DOMAINS, getDomainConfig, type LifeDomainId, type LifeEntryType } from "@/types/lifeDomains";
 import { useLifeState } from '@/modules/map/dawayirIndex';

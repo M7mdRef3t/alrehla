@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Compass, Plus, ChevronDown, ChevronRight, Scale, Heart,
   Brain, Star, Trash2, Check, ArrowRight, Clock, Eye,
-  Sparkles, ThumbsUp, ThumbsDown, PenLine, X, AlertCircle,
+  Zap as Sparkles, ThumbsUp, ThumbsDown, PenLine, X, AlertCircle,
 } from "lucide-react";
 import { useBawsalaState, type Decision, type DecisionOption } from "./store/bawsala.store";
 

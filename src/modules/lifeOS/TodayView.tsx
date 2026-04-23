@@ -11,7 +11,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun, Moon, Sunset, CheckCircle2, Circle, Flame,
-  Plus, Sparkles, Zap, Trophy, Battery, BatteryLow, BatteryMedium, Award, ShoppingBag,
+  Plus, Zap as Sparkles, Zap, Trophy, Battery, BatteryLow, BatteryMedium, Award, ShoppingBag,
 } from "lucide-react";
 import { useRitualState } from "@/domains/journey/store/ritual.store";
 import { useLifeState } from '@/modules/map/dawayirIndex';

@@ -17,7 +17,7 @@ import {
   Trophy,
   BarChart3,
   Globe,
-  Sparkles,
+  Zap as Sparkles,
   Layers,
   Move,
   Compass,

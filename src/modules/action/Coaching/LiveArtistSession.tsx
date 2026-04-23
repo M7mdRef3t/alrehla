@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mic, MicOff, Activity, Variable, X, Sparkles, Brain } from 'lucide-react';
+import { Mic, MicOff, Activity, Variable, X, Zap as Sparkles, Brain } from 'lucide-react';
 import { useGeminiLive, UIExerciseMutation } from '@/hooks/useGeminiLive';
 
 export const LiveArtistSession = ({ onClose }: { onClose: () => void }) => {

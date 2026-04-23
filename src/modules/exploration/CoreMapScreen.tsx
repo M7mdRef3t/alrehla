@@ -10,7 +10,7 @@ import { MeNodeDetails } from "./MeNodeDetails";
 import { BreathingOverlay } from "./BreathingOverlay";
 import { MapOnboardingOverlay } from "./MapOnboardingOverlay";
 import { hasSeenOnboarding } from "@/utils/mapOnboarding";
-import { Map, TreeDeciduous, X, Mic, Sparkles } from "lucide-react";
+import { Map, TreeDeciduous, X, Mic, Zap as Sparkles } from "lucide-react";
 import { DailyPulseWidget } from "./DailyPulseWidget";
 import { GoogleAuthModal } from "./GoogleAuthModal";
 import { DailyJournalArchive } from "./DailyJournalArchive";

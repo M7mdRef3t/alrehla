@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { Book, Brain, Shield, Info, Sparkles, Navigation } from "lucide-react";
+import { Book, Brain, Shield, Info, Zap as Sparkles, Navigation } from "lucide-react";
 import { motion } from "framer-motion";
 
 const DICTIONARY_TERMS = [

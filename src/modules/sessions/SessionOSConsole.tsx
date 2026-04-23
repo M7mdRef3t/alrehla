@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare, Clock, CheckCircle2, AlertCircle, Plus, Brain,
   User, Calendar, ChevronRight, ChevronLeft, X, Activity, Target,
-  FileText, Sparkles, TrendingUp, Timer, Shield, Phone, Mail,
+  FileText, Zap as Sparkles, TrendingUp, Timer, Shield, Phone, Mail,
   ArrowRight, Zap, Heart, AlertTriangle, BarChart3, Eye
 } from "lucide-react";
 import { eventBus } from "@/shared/events/bus";

@@ -1,5 +1,5 @@
 import { logger } from "@/services/logger";
-import { adminApi } from "./adminApi";
+import { fetchMarketingSpend } from "./admin/adminSettings";
 import { useToastState } from '@/modules/map/dawayirIndex';
 import { revenueService } from "@/domains/billing";
 import type { RevenueMetricSnapshot } from "@/domains/billing/types";
@@ -39,7 +39,7 @@ export interface DiffusionMetrics {
 class SovereignGrowthEngine {
   async getGrowthMetrics(): Promise<GrowthMetrics> {
     try {
-      const rawSpend = await adminApi.fetchMarketingSpend();
+      const rawSpend = await fetchMarketingSpend();
       const spend = rawSpend ?? 0;
       const revenueSnapshot: RevenueMetricSnapshot = await revenueService.getExecutiveSnapshot();
       const totalRevenue = revenueSnapshot.totalRevenue;
@@ -127,7 +127,7 @@ class SovereignGrowthEngine {
         direct,
       };
 
-      const totalSpend = (await adminApi.fetchMarketingSpend()) ?? 0;
+      const totalSpend = (await fetchMarketingSpend()) ?? 0;
       const regions = revenueSnapshot.regionalResonance;
       
       const topSpreaders = [

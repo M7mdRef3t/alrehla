@@ -3,7 +3,7 @@ import { useState, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { type MapNode } from "@/modules/map/mapTypes";
-import { Sparkles, Activity, ShieldAlert, Target, Lock, AlertTriangle, Zap } from "lucide-react";
+import { Zap as Sparkles, Activity, ShieldAlert, Target, Lock, AlertTriangle, Zap } from "lucide-react";
 import { DreamNode, AlignmentZone } from "@/types/visualDreams";
 import { AlignmentEngine } from "@/services/alignmentEngine";
 import { fetchOverviewStats } from "@/services/admin/adminAnalytics";

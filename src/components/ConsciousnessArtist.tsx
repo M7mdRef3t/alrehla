@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Mic, MicOff, Brain, Waves, Loader2, Sparkles, X } from "lucide-react";
+import { Mic, MicOff, Brain, Waves, Loader2, Zap as Sparkles, X } from "lucide-react";
 import { useSwarmMutationStore } from "@/state/useSwarmMutationStore";
 import { swarmOrchestrator } from "@/infrastructure/agents/swarmOrchestrator";
 

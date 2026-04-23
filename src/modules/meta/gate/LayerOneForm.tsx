@@ -8,7 +8,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
-  Sparkles
+  Zap as Sparkles
 } from 'lucide-react';
 
 interface Props {

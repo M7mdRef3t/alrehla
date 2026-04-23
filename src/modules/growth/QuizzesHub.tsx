@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw, Sparkles, TrendingUp, Clock, Lightbulb, Star, Search, X, Flame } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw, Zap as Sparkles, TrendingUp, Clock, Lightbulb, Star, Search, X, Flame } from "lucide-react";
 
 /* ══════════════════════════════════════════
    Quiz Metadata (tags / time / difficulty)

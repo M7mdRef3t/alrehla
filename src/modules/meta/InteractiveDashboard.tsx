@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Flame, Heart, Sparkles, TrendingUp,
+  ArrowLeft, Flame, Heart, Zap as Sparkles, TrendingUp,
   Users, Zap, CheckCircle2, Circle, ChevronRight, RefreshCw,
   Link2, BarChart3,
 } from "lucide-react";

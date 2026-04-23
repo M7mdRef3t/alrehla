@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe2, ShieldCheck, Zap, Heart, Share2, Sparkles, TrendingUp, Users } from "lucide-react";
+import { Globe2, ShieldCheck, Zap, Heart, Share2, Zap as Sparkles, TrendingUp, Users } from "lucide-react";
 import { useMapState } from '@/modules/map/dawayirIndex';
 
 interface FeedItem {

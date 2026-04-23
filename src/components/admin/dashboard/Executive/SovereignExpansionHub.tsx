@@ -11,7 +11,7 @@ import {
   ArrowUpRight, 
   DollarSign,
   Activity,
-  Sparkles,
+  Zap as Sparkles,
   Loader2,
   TrendingDown,
   BarChart3,

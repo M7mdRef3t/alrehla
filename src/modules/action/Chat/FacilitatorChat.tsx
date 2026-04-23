@@ -3,7 +3,7 @@
 import { logger } from "@/services/logger";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Send, Sparkles, Loader2, Check, Terminal } from 'lucide-react';
+import { X, Send, Zap as Sparkles, Loader2, Check, Terminal } from 'lucide-react';
 import { NodeData } from '@/hooks/useDawayirEngine';
 import { supabase } from '@/services/supabaseClient';
 import { consumeKineticTelemetryOnce, peekLatestKineticTelemetry } from '@/services/kineticTelemetry';

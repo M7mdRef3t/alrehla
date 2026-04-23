@@ -6,7 +6,7 @@ import {
   Trophy, Shield, Zap, 
   ChevronRight, Star, 
   LayoutGrid, ListTodo, 
-  Coins, Sparkles, X,
+  Coins, Zap as Sparkles, X,
   ArrowUpCircle, Award, ShoppingBag,
   Snowflake, Swords, Info
 } from "lucide-react";

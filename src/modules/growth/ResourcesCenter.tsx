@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, BookOpen, Video, HelpCircle, MessageSquare,
   Search, Tag, Play, Copy, Check, ChevronDown, ChevronUp,
-  Bookmark, BookmarkCheck, Star, Clock, Sparkles,
+  Bookmark, BookmarkCheck, Star, Clock, Zap as Sparkles,
   Heart, Dumbbell, ExternalLink, Flame, ListVideo,
   Calendar, GraduationCap, Users, Trophy, ChevronRight,
   Activity, TrendingUp, Award, CheckCircle2, BarChart3

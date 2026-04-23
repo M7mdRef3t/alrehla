@@ -9,7 +9,7 @@ import {
   Medal,
   Library,
   Target,
-  Sparkles,
+  Zap as Sparkles,
   BookMarked,
   Flame,
   Award,

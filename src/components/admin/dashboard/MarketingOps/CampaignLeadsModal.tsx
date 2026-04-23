@@ -6,7 +6,7 @@ import {
   Edit2, Send, Check, AlertCircle, 
   ShieldCheck, Activity, ExternalLink, Copy,
   MessageCircle, Hash, ChevronDown, ChevronUp,
-  MapPin, Clock, Info, Save, Zap, Brain, Sparkles, Wand2, RotateCcw, UserX
+  MapPin, Clock, Info, Save, Zap, Brain, Zap as Sparkles, Wand2, RotateCcw, UserX
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { ar } from "date-fns/locale";

@@ -21,7 +21,7 @@ import {
   Heart, Flame, Target, Brain, Users, BookOpen, Zap,
   Download, Share2, ChevronDown, BarChart3, Activity,
   Shield, Star, Clock, Copy, Check, Eye, ArrowRight,
-  Sparkles, Award, PieChart,
+  Zap as Sparkles, Award, PieChart,
 } from "lucide-react";
 import { usePulseState, type PulseMood } from "@/domains/consciousness/store/pulse.store";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";

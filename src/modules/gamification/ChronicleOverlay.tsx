@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, X, ChevronRight, BookOpen, ScrollText } from "lucide-react";
+import { Zap as Sparkles, X, ChevronRight, BookOpen, ScrollText } from "lucide-react";
 import { useGamification } from "@/domains/gamification";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 

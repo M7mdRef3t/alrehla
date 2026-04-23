@@ -13,7 +13,7 @@ import {
   X,
   Flame,
   Activity,
-  Sparkles,
+  Zap as Sparkles,
   Lock,
   Unlock
 } from "lucide-react";

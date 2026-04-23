@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronRight, ChevronLeft, Flag, Trophy, RotateCcw, Clock, BarChart2, Sparkles, CheckCircle, XCircle, Award, Brain } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, Flag, Trophy, RotateCcw, Clock, BarChart2, Zap as Sparkles, CheckCircle, XCircle, Award, Brain } from "lucide-react";
 import { fetchQuizQuestions, saveQuizSession, type DBQuizQuestion } from "@/services/learningService";
 
 /* ═══════ Types ═══════ */

@@ -6,7 +6,7 @@
 
 import type { FC } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Wand2 } from "lucide-react";
+import { Zap as Sparkles, Wand2 } from "lucide-react";
 
 interface AIGeneratedQuestionBadgeProps {
   /** هل السؤال AI-generated؟ */

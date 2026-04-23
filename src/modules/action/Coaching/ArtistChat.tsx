@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Send, X, AlertCircle } from 'lucide-react';
+import { Zap as Sparkles, Send, X, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { nexusService } from '@/services/nexusService';
 

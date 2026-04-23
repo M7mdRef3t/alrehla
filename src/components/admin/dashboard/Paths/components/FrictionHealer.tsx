@@ -3,7 +3,7 @@ import {
   Heart,
   Brain,
   ShieldAlert,
-  Sparkles,
+  Zap as Sparkles,
   Zap
 } from "lucide-react";
 import type { JourneyPath } from "@/domains/admin/store/admin.store";

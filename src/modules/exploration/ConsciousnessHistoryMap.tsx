@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useConsciousnessHistory } from '@/domains/consciousness/store/history.store';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, TrendingUp, Sparkles, MessageCircle } from 'lucide-react';
+import { Brain, TrendingUp, Zap as Sparkles, MessageCircle } from 'lucide-react';
 
 type HoverPoint = {
   state: string;

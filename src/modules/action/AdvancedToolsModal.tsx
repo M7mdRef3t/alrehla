@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles } from "lucide-react";
+import { X, Zap as Sparkles } from "lucide-react";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { ResultActionToolkit } from "./ResultActionToolkit";
 import { NotesSection } from '@/modules/meta/NotesSection';

@@ -5,7 +5,7 @@
 
 import React, { useMemo, useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { Lock, Map, Compass, Shield, Sparkles, MapPin, CheckCircle2 } from "lucide-react";
+import { Lock, Map, Compass, Shield, Zap as Sparkles, MapPin, CheckCircle2 } from "lucide-react";
 import type { AppScreen } from "@/navigation/navigationMachine";
 
 /* ═══════════════════════════════════════════ */

@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, Calendar, TrendingUp, TrendingDown, Mountain,
   Star, Flame, Heart, Zap, PenLine, ChevronDown,
-  Award, Clock, Sparkles, ArrowUp, ArrowDown, Minus,
+  Award, Clock, Zap as Sparkles, ArrowUp, ArrowDown, Minus,
   Flag, MapPin, Sun, Moon,
 } from "lucide-react";
 import { usePulseState, type PulseMood } from "@/domains/consciousness/store/pulse.store";

@@ -9,7 +9,7 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Heart, ChevronLeft, Check, Flame, Zap } from "lucide-react";
+import { Zap as Sparkles, Heart, ChevronLeft, Check, Flame, Zap } from "lucide-react";
 import { LIFE_DOMAINS, type LifeDomainId } from "@/types/lifeDomains";
 import { useLifeState } from '@/modules/map/dawayirIndex';
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";

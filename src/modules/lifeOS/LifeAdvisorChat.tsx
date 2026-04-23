@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Loader2, Sparkles, Brain, RefreshCw, MessageSquare } from "lucide-react";
+import { X, Send, Loader2, Zap as Sparkles, Brain, RefreshCw, MessageSquare } from "lucide-react";
 import { buildLifeContext } from "@/services/lifeAdvisor";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { useLifeState } from '@/modules/map/dawayirIndex';

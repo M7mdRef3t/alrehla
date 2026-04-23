@@ -22,7 +22,7 @@ import {
   Check,
   ChevronLeft,
   RefreshCw,
-  Sparkles,
+  Zap as Sparkles,
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════ */

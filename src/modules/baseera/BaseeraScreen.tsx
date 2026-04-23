@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Brain, Activity, TrendingUp, TrendingDown, Eye, Shield,
   Zap, Heart, AlertTriangle, Target, BarChart3, Clock,
-  Sparkles, CircleDot, Flame, Waves, ChevronDown, ChevronUp,
+  Zap as Sparkles, CircleDot, Flame, Waves, ChevronDown, ChevronUp,
   Lightbulb, Compass, ArrowRight
 } from "lucide-react";
 import { usePulseState, type PulseEntry, type PulseMood } from "@/domains/consciousness/store/pulse.store";

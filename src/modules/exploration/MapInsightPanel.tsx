@@ -2,7 +2,7 @@ import { logger } from "@/services/logger";
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowRight, AlertCircle, RefreshCw, BrainCircuit, History, Pin, CheckCircle2, Columns } from "lucide-react";
+import { Zap as Sparkles, ArrowRight, AlertCircle, RefreshCw, BrainCircuit, History, Pin, CheckCircle2, Columns } from "lucide-react";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { supabase } from "@/services/supabaseClient";
 

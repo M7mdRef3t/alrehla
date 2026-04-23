@@ -1,4 +1,4 @@
-import type { WeeklyReport } from "./adminApi";
+import type { WeeklyReport } from "./admin/adminTypes";
 
 export interface ConsciousRevenueMetrics {
   averageConsciousnessLevel: number;

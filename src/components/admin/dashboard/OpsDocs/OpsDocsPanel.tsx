@@ -6,7 +6,7 @@ import {
   Flag,
   Layers3,
   ShieldAlert,
-  Sparkles,
+  Zap as Sparkles,
   UserCog,
   Workflow,
   LibraryBig,

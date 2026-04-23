@@ -9,7 +9,7 @@ import {
   CalendarDays,
   Wind,
   ChevronDown,
-  Sparkles,
+  Zap as Sparkles,
   Eye,
   BookOpen,
   Scale,
