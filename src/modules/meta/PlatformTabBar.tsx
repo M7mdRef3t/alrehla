@@ -1,9 +1,11 @@
 import { useState, useEffect, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Wrench, BookOpen, Info, LogIn, LogOut, Sun, Moon, GraduationCap } from "lucide-react";
+import { Home, Wrench, BookOpen, Info, LogIn, LogOut, Sun, Moon, GraduationCap, Map as MapIcon, LayoutGrid, User } from "lucide-react";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useThemeState } from "@/domains/consciousness/store/theme.store";
+import { useJourneyState } from "@/domains/journey/store/journey.store";
+import { useMapState } from "@/modules/map/store/map.store";
 import { signOut } from "@/services/authService";
 
 /**
@@ -35,6 +37,9 @@ function getActiveTabId(screen?: string): string {
   if (!screen || screen === "landing") return "home";
   if (screen === "tools" || screen === "guided" || screen === "mission") return "tools";
   if (screen === "resources" || screen === "behavioral-analysis" || screen === "quizzes") return "resources";
+  if (screen === "map") return "map";
+  if (screen === "ecosystem-hub") return "ecosystem-hub";
+  if (screen === "profile") return "profile";
   return screen;
 }
 
@@ -58,6 +63,24 @@ export const PlatformTabBar = memo(function PlatformTabBar({
 
   // #2 — dynamic active tab
   const activeTabId = getActiveTabId(activeScreen);
+
+  // #4 — Determine navigation links dynamically based on state
+  const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
+  const nodesCount = useMapState((s) => s.nodes.length);
+  const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
+
+  const tabsToRender = (isLoggedIn || hasExistingJourney)
+    ? [
+        { id: "home", label: "الأفق", icon: Home },
+        { id: "map", label: "الخريطة", icon: MapIcon },
+        { id: "ecosystem-hub", label: "المنظومة", icon: LayoutGrid },
+        { id: "profile", label: "الملف", icon: User },
+      ]
+    : [
+        { id: "home", label: "الأفق", icon: Home },
+        { id: "about", label: "لماذا الرحلة؟", icon: Info },
+        { id: "stories", label: "قصص", icon: BookOpen },
+      ];
 
   // #5 — slide-up entry animation on mount
   const [entryDone, setEntryDone] = useState(false);
@@ -105,9 +128,9 @@ export const PlatformTabBar = memo(function PlatformTabBar({
                    px-2 pt-2 pb-1
                    bg-[var(--glass-bg)] border-[var(--glass-border)]"
       >
-        {TAB_ITEMS.map(({ id, label, icon: Icon }) => {
+        {tabsToRender.map(({ id, label, icon: Icon }) => {
           const isActive = activeTabId === id;
-          // Show badge on "stories" tab if there's a new achievement (contextually good)
+          // Show badge on "home" tab if there's a new achievement
           const showBadge = id === "home" && hasUnread;
 
           return (

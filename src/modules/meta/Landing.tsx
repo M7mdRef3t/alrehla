@@ -289,7 +289,7 @@ export const Landing: FC<LandingProps> = ({
         setMirrorName={setMirrorName}
         pulseCount={1947}
         trustPoints={["توازن", "تشتت", "استنزاف"]}
-        ctaJourney={landingCopy.ctaJourney}
+        ctaJourney={hasExistingJourney ? "العودة للخريطة" : landingCopy.ctaJourney}
         secondaryCta={landingCopy.secondaryCta}
         hideCta={isLoggedIn || hasExistingJourney}
 

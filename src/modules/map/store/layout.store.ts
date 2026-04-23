@@ -260,6 +260,13 @@ export const useLayoutState = create<LayoutState>()(
         adaptiveRules: state.adaptiveRules
       }),
       version: 1, // تصفير الحالة القديمة لضمان البداية من وضع "الطيار الآلي" المقفول
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0) {
+          // تجاهل الحالة القديمة (تصفير) كما هو مطلوب
+          return {};
+        }
+        return persistedState;
+      },
     }
   )
 );

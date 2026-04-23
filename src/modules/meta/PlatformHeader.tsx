@@ -26,6 +26,7 @@ import { useAuthState, getEffectiveRoleFromState } from "@/domains/auth/store/au
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useThemeState } from "@/domains/consciousness/store/theme.store";
 import { useJourneyState } from "@/domains/journey/store/journey.store";
+import { useMapState } from "@/modules/map/store/map.store";
 import { signOut } from "@/services/authService";
 import { NotificationsPanel } from "./NotificationsPanel";
 import { InAppNotificationCenter } from "@/components/shared/InAppNotificationCenter";
@@ -156,7 +157,9 @@ export const PlatformHeader = memo(function PlatformHeader({
     (user as { user_metadata?: { avatar_url?: string } } | null)?.user_metadata?.avatar_url ?? null;
 
   const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
+  const nodesCount = useMapState((s) => s.nodes.length);
   const isNewUser = isLoggedIn && !baselineCompletedAt;
+  const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
 
   const lastNewAchievementId = useAchievementState((s) => s.lastNewAchievementId);
   const hasUnread = isLoggedIn && Boolean(lastNewAchievementId);
@@ -166,7 +169,7 @@ export const PlatformHeader = memo(function PlatformHeader({
   const isDark = resolvedTheme === "dark";
 
   const activeNavId = getActiveNavId(activeScreen);
-  const visibleNavLinks = isLoggedIn ? TRAVELER_NAV_LINKS : VISITOR_NAV_LINKS;
+  const visibleNavLinks = (isLoggedIn || hasExistingJourney) ? TRAVELER_NAV_LINKS : VISITOR_NAV_LINKS;
 
   const screenLabel = activeNavId !== "home" ? (SCREEN_LABELS[activeNavId] ?? null) : null;
   const isMinimal = activeScreen === "map" || activeScreen === "dawayir";
@@ -726,6 +729,11 @@ export const MobileNavBar = memo(function MobileNavBar({
   const level = useGamificationState((s) => s.level);
   const setOverlay = useAppOverlayState((s) => s.setOverlay);
   const isLoggedIn = Boolean(user);
+  
+  const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
+  const nodesCount = useMapState((s) => s.nodes.length);
+  const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
+
   const [showEvolutionHub, setShowEvolutionHub] = useState(false);
 
 
@@ -737,7 +745,7 @@ export const MobileNavBar = memo(function MobileNavBar({
     [onNavigate]
   );
 
-  const MOBILE_NAV = isLoggedIn
+  const MOBILE_NAV = (isLoggedIn || hasExistingJourney)
     ? [
         { id: "home", label: "الأفق", icon: Home },
         { id: "map", label: "الخريطة", icon: MapIcon },

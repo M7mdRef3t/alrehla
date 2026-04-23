@@ -242,7 +242,8 @@ const HERO_STYLES = `
       margin-top: 20px;
     }
     .hero-command-btn {
-      width: 100%;
+      width: 80%;
+      max-width: 280px;
       justify-content: center;
     }
     .hero-command-input {
@@ -367,6 +368,7 @@ const HERO_STYLES = `
 
   .node-core {
     filter: drop-shadow(0 0 10px rgba(255,255,255,0.08));
+    will-change: transform;
   }
 
   .pulse-ring {
@@ -836,14 +838,12 @@ const HERO_STYLES = `
     background: rgba(8, 12, 22, 0.7);
     box-shadow: 0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07);
     min-width: 130px;
-    animation: card-hover-snap 8s steps(4) infinite alternate;
+    animation: card-hover-float 6s ease-in-out infinite alternate;
+    will-change: transform;
   }
-  @keyframes card-hover-snap {
-    0%   { transform: translateY(0px);  }
-    25%  { transform: translateY(-4px); }
-    50%  { transform: translateY(-4px) translateX(2px); }
-    75%  { transform: translateY(-8px) translateX(2px); }
-    100% { transform: translateY(-8px); }
+  @keyframes card-hover-float {
+    0%   { transform: translateY(0px) translateX(0px);  }
+    100% { transform: translateY(-8px) translateX(2px); }
   }
 
   /* --- Warp transition --- */
@@ -906,23 +906,21 @@ const HERO_STYLES = `
     .hero-root {
       overflow-x: hidden;
       width: 100%;
-      height: 100svh;
       min-height: 100svh;
-      max-height: 100svh;
-      overflow-y: hidden;
+      overflow-y: visible;
     }
 
     .hero-content-wrapper {
       flex-direction: column;
       align-items: center;
       gap: 1rem;
-      padding: 5rem 1rem 2rem;
+      padding: 6.5rem 1rem 3rem;
       width: 100%;
-      height: 100%;
+      min-height: 100%;
       max-width: 100vw;
       box-sizing: border-box;
       overflow-x: hidden;
-      justify-content: center;
+      justify-content: flex-start;
     }
 
     .hero-copy-column {
@@ -932,7 +930,7 @@ const HERO_STYLES = `
     .hero-eyebrow-row { order: 1; margin-bottom: -0.25rem; }
     .hero-headline { order: 2; margin-bottom: -0.25rem; }
     .hero-divider { order: 3; margin: 0; }
-    .map-area { order: 4; }
+    .map-area { order: 4; margin-top: 0rem !important; transform: scale(0.88); transform-origin: top center; }
     .hero-cta-container { order: 5; margin-top: 0.5rem; margin-bottom: 0.5rem; width: 100%; z-index: 10; }
     .hero-body { order: 6; }
     
@@ -947,7 +945,7 @@ const HERO_STYLES = `
     }
     
     .headline-line {
-      font-size: clamp(2rem, 7vw, 2.6rem);
+      font-size: clamp(2.3rem, 8vw, 3rem);
       line-height: 1.1;
       white-space: normal;
       text-align: center;
@@ -957,14 +955,14 @@ const HERO_STYLES = `
       text-align: center;
       white-space: normal;
       margin-top: 0;
-      font-size: clamp(1.4rem, 5.5vw, 2rem);
+      font-size: clamp(1.7rem, 6.5vw, 2.4rem);
     }
 
     .headline-inline-row {
       flex-direction: column;
       align-items: center;
       gap: 0;
-      margin-top: 0.25rem;
+      margin-top: 1.25rem;
     }
 
     .rotating-word-wrapper {
@@ -984,7 +982,7 @@ const HERO_STYLES = `
       justify-content: center;
     }
 
-    .hero-body {
+    .hero-copy-column .hero-body {
       text-align: center !important;
       text-align-last: center !important;
       margin-left: auto;
@@ -992,13 +990,13 @@ const HERO_STYLES = `
       width: 100%;
       max-width: 95vw;
       box-sizing: border-box;
-      font-size: 0.95rem;
-      line-height: 1.5;
+      font-size: 0.88rem;
+      line-height: 1.6;
       padding: 0 0.5rem;
     }
 
     .hero-body--no-cta {
-      margin-top: 2.5rem;
+      margin-top: 0.5rem;
       position: relative;
       z-index: 10;
     }
@@ -1025,6 +1023,22 @@ const HERO_STYLES = `
       padding-bottom: 0;
       box-sizing: border-box;
       overflow: visible;
+    }
+
+    /* Mobile Performance Optimizations */
+    .sovereign-map__atmosphere {
+      filter: blur(25px);
+    }
+    .metric-card {
+      backdrop-filter: none;
+      background: rgba(8, 12, 22, 0.95);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .node-core, .center-core__glow, .orbit-ring--glow {
+      filter: none;
+    }
+    .orbit-ring--glow {
+      opacity: 0.3;
     }
   }
 
@@ -1168,7 +1182,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
               }}
               style={{
                 offsetPath: `path('M 190 190 L ${n.cx} ${n.cy}')`,
-                filter: `drop-shadow(0 0 4px ${n.color})`
+                willChange: "offset-distance, opacity"
               }}
             />
           </Fragment>
@@ -1515,38 +1529,56 @@ export const HeroSection: FC<HeroSectionProps> = ({
               هدئ السرعة. لست بحاجة للركض والمزيد من السعي، بل إلى المزيد من الوضوح. مشكلتك ليست في كثرة المهام بل في ضبابية الطريق. نحول شتات ذهنك إلى لوحة بصرية واحدة تكشف لك جذور استنزافك، وترسم لك خريطة العودة لقلبك واستعادة السيطرة على طاقتك.
             </motion.p>
 
-            {!hideCta && (
-              <motion.div variants={fadeUp} className="hero-cta-container">
-                <div className="hero-command-bar">
-                  <input
-                    type="text"
-                    id="mirror-name"
-                    name="mirrorName"
-                    placeholder="اسمك (اختياري)"
-                    aria-label="اكتب اسمك"
-                    value={mirrorName}
-                    onChange={e => setMirrorName(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') handleStart(); }}
-                    maxLength={24}
-                    dir="rtl"
-                    className="hero-command-input"
-                  />
-                  <motion.button
-                    type="button"
-                    className="hero-command-btn group"
-                    onClick={handleStart}
-                    id="hero-cta-start"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    animate={{ boxShadow: ["0 4px 15px rgba(20, 184, 166, 0.3)", "0 4px 30px rgba(20, 184, 166, 0.8)", "0 4px 15px rgba(20, 184, 166, 0.3)"] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <span className="relative z-10 font-black tracking-wide">{ctaJourney}</span>
-                    <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow relative z-10 transition-transform duration-300 group-hover:-translate-x-2" />
-                  </motion.button>
-                </div>
+            <div className={`hero-cta-container ${hideCta ? 'hidden md:hidden max-md:block' : ''}`}>
+              <motion.div variants={fadeUp}>
+                {hideCta ? (
+                  <div className="flex justify-center mt-12">
+                    <motion.button
+                      type="button"
+                      className="hero-command-btn group"
+                      onClick={handleStart}
+                      id="hero-cta-start-returning"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      animate={{ boxShadow: ["0 4px 15px rgba(20, 184, 166, 0.3)", "0 4px 30px rgba(20, 184, 166, 0.8)", "0 4px 15px rgba(20, 184, 166, 0.3)"] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <span className="relative z-10 font-black tracking-wide">{ctaJourney}</span>
+                      <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow relative z-10 transition-transform duration-300 group-hover:-translate-x-2" />
+                    </motion.button>
+                  </div>
+                ) : (
+                  <div className="hero-command-bar">
+                    <input
+                      type="text"
+                      id="mirror-name"
+                      name="mirrorName"
+                      placeholder="اسمك (اختياري)"
+                      aria-label="اكتب اسمك"
+                      value={mirrorName}
+                      onChange={e => setMirrorName(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleStart(); }}
+                      maxLength={24}
+                      dir="rtl"
+                      className="hero-command-input"
+                    />
+                    <motion.button
+                      type="button"
+                      className="hero-command-btn group"
+                      onClick={handleStart}
+                      id="hero-cta-start"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      animate={{ boxShadow: ["0 4px 15px rgba(20, 184, 166, 0.3)", "0 4px 30px rgba(20, 184, 166, 0.8)", "0 4px 15px rgba(20, 184, 166, 0.3)"] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <span className="relative z-10 font-black tracking-wide">{ctaJourney}</span>
+                      <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow relative z-10 transition-transform duration-300 group-hover:-translate-x-2" />
+                    </motion.button>
+                  </div>
+                )}
               </motion.div>
-            )}
+            </div>
           </motion.div>
 
           <motion.div
