@@ -28,6 +28,7 @@ import {
   Moon,
   Handshake,
   Zap,
+  Flag,
   ArrowLeft,
   Search,
   X,
@@ -86,6 +87,7 @@ const ALL_PRODUCTS: EcosystemProduct[] = [
   { id: "protocol",  name: "بروتوكول",  description: "خطة الفعل وقت التوتر والاختيار",        icon: <Zap className="w-4 h-4" />,          status: "active",      color: "#f59e0b", url: "/#protocol" },
   { id: "mithaq",    name: "ميثاق",     description: "عقد مع النفس",                         icon: <ScrollText className="w-4 h-4" />,   status: "active",      color: "#fbbf24", url: "/#mithaq" },
   { id: "sullam",    name: "سُلّم",      description: "سلالم النمو",                          icon: <TrendingUp className="w-4 h-4" />,   status: "active",      color: "#84cc16", url: "/#sullam" },
+  { id: "raya",      name: "راية",       description: "رؤيتك طويلة المدى — 90 يوم",           icon: <Flag className="w-4 h-4" />,         status: "active",      color: "#6366f1", url: "/#raya" },
   { id: "bathra",    name: "بذرة",      description: "بذور العادات الصغيرة",                 icon: <Gem className="w-4 h-4" />,          status: "active",      color: "#10b981", url: "/#bathra" },
   { id: "sessions",  name: "جلسات",     description: "تدخلات عميقة وتوجيه",                 icon: <CalendarDays className="w-4 h-4" />, status: "active",      color: "#3b82f6", url: "/#session-intake" },
   { id: "session-console", name: "كونسول الجلسات", description: "تشغيل وإدارة الجلسات العميقة", icon: <LayoutGrid className="w-4 h-4" />, status: "active",      color: "#3b82f6", url: "/#session-console" },
@@ -138,7 +140,7 @@ const CATEGORIES: ProductCategory[] = [
     color: "#10b981",
     bgColor: "#0a2e20",
     products: ALL_PRODUCTS.filter(p =>
-      ["masarat", "wird", "warsha", "jisr", "rifaq", "murshid", "rafiq", "protocol", "mithaq", "sullam", "bathra", "sessions", "session-console"].includes(p.id)
+      ["masarat", "wird", "warsha", "jisr", "rifaq", "murshid", "rafiq", "protocol", "mithaq", "sullam", "raya", "bathra", "sessions", "session-console"].includes(p.id)
     ),
   },
   {

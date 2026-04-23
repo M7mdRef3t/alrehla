@@ -75,6 +75,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   jathr: "Jathr Core Values",
   kharita: "Kharita Ecosystem Map",
   ruya: "Ruya Dream Journal",
+  raya: "Raya Vision Board",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -147,6 +148,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   jathr: { title: "جذر — قيمك الجذرية | Alrehla", description: "اكتشف وتتبع قيمك الأساسية — وعِش بتوافق." },
   kharita: { title: "خريطة — خريطة المنظومة | Alrehla", description: "نظرة بصرية شاملة لكل أدوات رحلتك." },
   ruya: { title: "رؤيا — سجّل أحلامك | Alrehla", description: "سجّل أحلامك وفسّرها — رسائل من لاوعيك." },
+  raya: { title: "راية — رؤيتك طويلة المدى | Alrehla", description: "حدّد أهدافك لـ 90 يوم وتتبّع محطات الرحلة." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {
