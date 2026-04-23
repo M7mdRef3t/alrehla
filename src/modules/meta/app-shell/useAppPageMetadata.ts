@@ -77,6 +77,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   ruya: "Ruya Dream Journal",
   raya: "Raya Vision Board",
   yawmiyyat: "Yawmiyyat Daily Journal",
+  qinaa: "Qinaa Mask Detection",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -151,6 +152,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   ruya: { title: "رؤيا — سجّل أحلامك | Alrehla", description: "سجّل أحلامك وفسّرها — رسائل من لاوعيك." },
   raya: { title: "راية — رؤيتك طويلة المدى | Alrehla", description: "حدّد أهدافك لـ 90 يوم وتتبّع محطات الرحلة." },
   yawmiyyat: { title: "يوميّات — سجّل يومك | Alrehla", description: "سجّل لحظاتك، مزاجك، ودروسك — كل يوم قصة." },
+  qinaa: { title: "قناع — اكشف أقنعتك | Alrehla", description: "اعرف الفجوة بين ذاتك الحقيقية وأقنعتك في كل سياق." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {

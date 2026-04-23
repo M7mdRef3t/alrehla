@@ -62,6 +62,7 @@ const KharitaScreen = lazy(() => import("../../kharita/KharitaScreen"));
 const RuyaScreen = lazy(() => import("../../ruya/RuyaScreen"));
 const RayaScreen = lazy(() => import("../../raya/RayaScreen"));
 const YawmiyyatScreen = lazy(() => import("../../yawmiyyat/YawmiyyatScreen"));
+const QinaaScreen = lazy(() => import("../../qinaa/QinaaScreen"));
 
 
 
@@ -813,6 +814,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <YawmiyyatScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "qinaa") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
+          <QinaaScreen />
         </Suspense>
       </PageShell>
     );
