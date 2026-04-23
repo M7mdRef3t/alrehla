@@ -74,7 +74,8 @@ export type AppScreen =
   | "nabd"
   | "raseed"
   | "dawra"
-  | "zill";
+  | "zill"
+  | "sila";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

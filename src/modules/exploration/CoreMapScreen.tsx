@@ -931,14 +931,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 <svg width="80" height="80" viewBox="0 0 80 80">
                   {[0, 0.6, 1.2].map((delay, i) => (
                     <motion.circle
-                      key={i} cx="40" cy="40" r="20"
-                      fill="none" stroke="rgba(45,212,191,0.6)" strokeWidth="1"
+                      key={i} cx={40} cy={40} r={20}
+                      fill="none" stroke="rgba(45,212,191,0.6)" strokeWidth={1}
                       animate={{ r: [20, 38], opacity: [0.7, 0] }}
                       transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut", delay }}
                     />
                   ))}
                   <motion.circle
-                    cx="40" cy="40" r="10"
+                    cx={40} cy={40} r={10}
                     fill="url(#emptyStateGrad)"
                     animate={{ scale: [1, 1.12, 1], opacity: [0.85, 1, 0.85] }}
                     style={{ transformOrigin: "40px 40px" }}

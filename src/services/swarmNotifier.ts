@@ -35,9 +35,48 @@ export class SwarmNotifier {
     /**
      * Swarm Sync Pulse: Triggers the weekly synchronization event notification.
      */
-    static async triggerSyncPulse(): Promise<boolean> {
-        // Logic for global broadcasting (mocked for now)
-        console.log("⚡ [SwarmNotifier] Broadcasting Weekly Sync Night Pulse...");
-        return true;
+    static async triggerSyncPulse(message: string = "Weekly Sync Night Pulse initiated. Align your vectors."): Promise<boolean> {
+        try {
+            const channel = supabase.channel('swarm_sync_channel');
+            
+            await channel.send({
+                type: 'broadcast',
+                event: 'sync_pulse',
+                payload: {
+                    message,
+                    timestamp: new Date().toISOString()
+                }
+            });
+            
+            console.log("⚡ [SwarmNotifier] Broadcasted Sync Pulse via Supabase Realtime:", message);
+            return true;
+        } catch (error) {
+            console.error("Failed to broadcast swarm sync pulse:", error);
+            return false;
+        }
+    }
+
+    /**
+     * Subscribe to Swarm Sync Pulse events.
+     */
+    static subscribeToSyncPulse(onPulse: (payload: any) => void) {
+        const channel = supabase.channel('swarm_sync_channel')
+            .on(
+                'broadcast',
+                { event: 'sync_pulse' },
+                (payload) => {
+                    console.log("📡 [SwarmNotifier] Received Sync Pulse:", payload.payload);
+                    onPulse(payload.payload);
+                }
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log("📡 [SwarmNotifier] Subscribed to swarm_sync_channel");
+                }
+            });
+            
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }
 }

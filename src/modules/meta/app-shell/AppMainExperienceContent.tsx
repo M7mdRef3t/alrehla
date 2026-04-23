@@ -67,6 +67,7 @@ const NabdScreen = lazy(() => import("../../nabd/NabdScreen"));
 const RaseedScreen = lazy(() => import("../../raseed/RaseedScreen"));
 const DawraScreen = lazy(() => import("../../dawra/DawraScreen"));
 const ZillScreen = lazy(() => import("../../zill/ZillScreen"));
+const SilaScreen = lazy(() => import("../../sila/SilaScreen"));
 
 
 
@@ -868,6 +869,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <ZillScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "sila") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
+          <SilaScreen />
         </Suspense>
       </PageShell>
     );

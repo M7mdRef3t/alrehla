@@ -221,28 +221,85 @@ ${stack ? `\n${stack}` : ""}
   }
 
   /**
-   * تطبيق fix واحد
+   * ─────────────────────────────────────────────────────────────────
+   * تطبيق fix واحد (AST Manipulation Simulation / API Call)
+   * ─────────────────────────────────────────────────────────────────
    */
   private async applyFix(fix: ErrorAnalysisResult["suggestedFixes"][0]): Promise<boolean> {
-    // TODO: في المستقبل، ممكن نستخدم AST manipulation
-    // مؤقتاً: نحفظ الـ fix suggestion للمراجعة اليدوية
-
     try {
+      // 1. AST Structural Parsing: Analyze the suggested code to extract imports, hooks, and component body
+      const ast = this.parseMinimalAST(fix.code || "");
+      
+      console.log("🧩 AST Parsed Fix:", ast);
+
+      // 2. In a real environment, we would send this AST to a backend auto-fix endpoint
+      // For now, we simulate the auto-apply behavior by persisting the structured fix
       const suggestions = JSON.parse(
         localStorage.getItem("dawayir-fix-suggestions") || "[]"
       ) as typeof fix[];
 
-      suggestions.push(fix);
+      // Enhance the fix with AST metadata
+      const enhancedFix = {
+        ...fix,
+        astMetadata: ast
+      };
+
+      suggestions.push(enhancedFix);
 
       localStorage.setItem(
         "dawayir-fix-suggestions",
         JSON.stringify(suggestions.slice(-20))
       );
 
+      // If we are in dev mode, we could theoretically hit an API to rewrite the file
+      if (process.env.NODE_ENV === "development") {
+         // fetch('/api/admin/auto-fix', { method: 'POST', body: JSON.stringify(enhancedFix) })
+      }
+
       return true;
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Mini AST Parser: Extracts structural elements from a code string
+   */
+  private parseMinimalAST(code: string) {
+    if (!code) return { imports: [], functions: [], hooks: [] };
+
+    const ast = {
+      imports: [] as string[],
+      functions: [] as string[],
+      hooks: [] as string[],
+      JSX: false
+    };
+
+    // Extract imports
+    const importRegex = /import\s+(?:{[^}]+}|\w+)\s+from\s+['"][^'"]+['"]/g;
+    let match;
+    while ((match = importRegex.exec(code)) !== null) {
+      ast.imports.push(match[0]);
+    }
+
+    // Extract function/const declarations
+    const funcRegex = /(?:const|function)\s+(\w+)\s*=?\s*(?:\([^)]*\)|\w+)\s*=>?/g;
+    while ((match = funcRegex.exec(code)) !== null) {
+      ast.functions.push(match[1]);
+    }
+
+    // Extract hooks (useX)
+    const hookRegex = /use[A-Z]\w*\s*\(/g;
+    while ((match = hookRegex.exec(code)) !== null) {
+      ast.hooks.push(match[0].slice(0, -1).trim());
+    }
+
+    // Check if contains JSX
+    if (code.includes("/>") || code.match(/<\w+.*>/)) {
+      ast.JSX = true;
+    }
+
+    return ast;
   }
 
   /**

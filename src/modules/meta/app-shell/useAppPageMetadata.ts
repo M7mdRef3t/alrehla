@@ -82,6 +82,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   raseed: "Raseed Capital Counter",
   dawra: "Dawra Cycle Tracker",
   zill: "Zill Shadow Work",
+  sila: "Sila Relationship Tracker",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -161,6 +162,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   raseed: { title: "رصيد — رأس مالك النفسي | Alrehla", description: "6 أبعاد لرأس مالك النفسي — كل فعل واعي يضيف لرصيدك." },
   dawra: { title: "دورة — إيقاعاتك الشخصية | Alrehla", description: "اكتشف أنماطك المتكررة في الطاقة والمزاج والإنتاجية." },
   zill: { title: "ظل — واجه ظلالك | Alrehla", description: "استكشف الجوانب المخفية — shadow work للنمو الحقيقي." },
+  sila: { title: "صلة — جودة علاقاتك | Alrehla", description: "تتبع جودة التواصل مع أهم أشخاص حياتك." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {

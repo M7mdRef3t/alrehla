@@ -4,7 +4,7 @@
  * Phase 1: Mock Data | Inspired by Gomarble
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp,
@@ -17,17 +17,13 @@ import {
   AlertTriangle,
   Lightbulb,
   CheckCircle2,
-  ExternalLink,
   RefreshCcw,
   Plug,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
   Zap,
-  Eye,
-  MousePointerClick,
   BrainCircuit,
-  ChevronDown,
 } from 'lucide-react';
 import type {
   AdPlatform,
@@ -38,9 +34,9 @@ import type {
 } from './adAnalyticsData';
 import { AdminTooltip } from '../Overview/components/AdminTooltip';
 import {
-  mockKPIs,
-  mockDailyPerformance,
-  mockPlatformBreakdown,
+  mockKPIs as fallbackKPIs,
+  mockDailyPerformance as fallbackDailyPerformance,
+  mockPlatformBreakdown as fallbackPlatformBreakdown,
   mockCACAnalysis,
   mockRecommendations,
   mockTopAds,
@@ -50,11 +46,13 @@ import {
   formatCurrency,
   formatNumber,
 } from './adAnalyticsData';
+import { getBearerToken } from '@/utils/authHelpers';
 
 // ─── Sub-components ──────────────────────────────────────
 
-const PlatformBadge: React.FC<{ platform: AdPlatform; size?: 'sm' | 'md' }> = ({ platform, size = 'sm' }) => {
-  const color = PLATFORM_COLORS[platform];
+const PlatformBadge: React.FC<{ platform: AdPlatform | string; size?: 'sm' | 'md' }> = ({ platform, size = 'sm' }) => {
+  const p = platform as AdPlatform;
+  const color = PLATFORM_COLORS[p] || '#94A3B8';
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full font-black uppercase tracking-wider ${
@@ -63,20 +61,21 @@ const PlatformBadge: React.FC<{ platform: AdPlatform; size?: 'sm' | 'md' }> = ({
       style={{ backgroundColor: `${color}15`, color, border: `1px solid ${color}30` }}
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-      {PLATFORM_LABELS[platform]}
+      {PLATFORM_LABELS[p] || platform}
     </span>
   );
 };
 
-const ChangeIndicator: React.FC<{ value: number; invert?: boolean }> = ({ value, invert = false }) => {
-  const isPositive = invert ? value < 0 : value > 0;
-  const isNeutral = value === 0;
+const ChangeIndicator: React.FC<{ value: number | string; invert?: boolean }> = ({ value, invert = false }) => {
+  const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+  const isPositive = invert ? numericValue < 0 : numericValue > 0;
+  const isNeutral = numericValue === 0 || isNaN(numericValue);
   return (
     <span className={`inline-flex items-center gap-1 text-[10px] font-black ${
       isNeutral ? 'text-slate-500' : isPositive ? 'text-emerald-400' : 'text-rose-400'
     }`}>
       {isNeutral ? <Minus className="w-3 h-3" /> : isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-      {Math.abs(value).toFixed(1)}%
+      {Math.abs(numericValue || 0).toFixed(1)}%
     </span>
   );
 };
@@ -109,14 +108,13 @@ const TypeBadge: React.FC<{ type: string }> = ({ type }) => {
   );
 };
 
-
 // ─── KPI Card ────────────────────────────────────────────
 
 const KPICard: React.FC<{
   icon: React.ReactNode;
   label: string;
   value: string;
-  change: number;
+  change: number | string;
   invertChange?: boolean;
   accentColor: string;
   delay?: number;
@@ -147,14 +145,12 @@ const KPICard: React.FC<{
   </motion.div>
 );
 
-
 // ─── Chart Area ──────────────────────────────────────────
 
-const PerformanceChart: React.FC = () => {
+const PerformanceChart: React.FC<{ data: any[] }> = ({ data }) => {
   const [metric, setMetric] = useState<'spend' | 'conversions' | 'cac' | 'roas'>('spend');
-  const data = mockDailyPerformance;
   const values = data.map(d => d[metric]);
-  const maxVal = Math.max(...values);
+  const maxVal = Math.max(...values, 1);
   const minVal = Math.min(...values);
   const range = maxVal - minVal || 1;
 
@@ -167,16 +163,15 @@ const PerformanceChart: React.FC = () => {
 
   const cfg = metricConfig[metric];
 
-  // Build SVG path
   const width = 100;
   const height = 40;
   const padding = 2;
   const points = values.map((v, i) => ({
-    x: padding + ((width - 2 * padding) / (values.length - 1)) * i,
+    x: padding + ((width - 2 * padding) / (values.length > 1 ? values.length - 1 : 1)) * i,
     y: height - padding - ((v - minVal) / range) * (height - 2 * padding),
   }));
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-  const areaD = `${pathD} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
+  const areaD = points.length > 0 ? `${pathD} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z` : '';
 
   return (
     <motion.div
@@ -211,8 +206,8 @@ const PerformanceChart: React.FC = () => {
         </div>
       </div>
 
-      {/* Chart */}
       <div className="relative h-48 mb-4">
+        {data.length > 0 ? (
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full" preserveAspectRatio="none">
           <defs>
             <linearGradient id={`grad-${metric}`} x1="0" y1="0" x2="0" y2="1">
@@ -226,38 +221,40 @@ const PerformanceChart: React.FC = () => {
             <circle key={i} cx={p.x} cy={p.y} r="0.8" fill={cfg.color} opacity="0.8" />
           ))}
         </svg>
+        ) : (
+          <div className="flex items-center justify-center w-full h-full text-slate-600 text-xs italic">لا توجد بيانات كافية للرسم</div>
+        )}
       </div>
 
-      {/* X-axis labels */}
       <div className="flex justify-between px-1">
         {data.map((d, i) => (
           <span key={i} className="text-[8px] text-slate-600 font-mono">{d.date}</span>
         ))}
       </div>
 
-      {/* Summary Row */}
+      {data.length > 0 && (
       <div className="flex gap-6 mt-4 pt-4 border-t border-white/5">
         <div>
           <span className="text-[9px] text-slate-500 uppercase font-bold">Current</span>
-          <p className="text-lg font-black text-white" style={{ color: cfg.color }}>{cfg.format(values[values.length - 1])}</p>
+          <p className="text-lg font-black text-white" style={{ color: cfg.color }}>{cfg.format(values[values.length - 1] || 0)}</p>
         </div>
         <div>
           <span className="text-[9px] text-slate-500 uppercase font-bold">Average</span>
-          <p className="text-lg font-black text-slate-400">{cfg.format(values.reduce((a, b) => a + b, 0) / values.length)}</p>
+          <p className="text-lg font-black text-slate-400">{cfg.format(values.reduce((a, b) => a + b, 0) / (values.length || 1))}</p>
         </div>
         <div>
           <span className="text-[9px] text-slate-500 uppercase font-bold">Peak</span>
           <p className="text-lg font-black text-slate-400">{cfg.format(maxVal)}</p>
         </div>
       </div>
+      )}
     </motion.div>
   );
 };
 
-
 // ─── Platform Breakdown Table ────────────────────────────
 
-const PlatformTable: React.FC = () => (
+const PlatformTable: React.FC<{ data: any[] }> = ({ data }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -282,29 +279,30 @@ const PlatformTable: React.FC = () => (
           </tr>
         </thead>
         <tbody>
-          {mockPlatformBreakdown.map((row: PlatformBreakdown, i: number) => (
+          {data.length > 0 ? data.map((row: any, i: number) => (
             <tr key={row.platform} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
               <td className="py-4 pr-4"><PlatformBadge platform={row.platform} size="md" /></td>
-              <td className="py-4 pr-4 text-sm font-bold text-white">{formatCurrency(row.spend)}</td>
-              <td className="py-4 pr-4 text-sm text-slate-400">{formatNumber(row.impressions)}</td>
-              <td className="py-4 pr-4 text-sm text-slate-400">{formatNumber(row.clicks)}</td>
-              <td className="py-4 pr-4 text-sm text-slate-400">{row.ctr.toFixed(2)}%</td>
-              <td className="py-4 pr-4 text-sm font-bold text-white">{formatNumber(row.conversions)}</td>
-              <td className="py-4 pr-4 text-sm font-bold text-amber-400">${row.cac.toFixed(2)}</td>
-              <td className="py-4 pr-4 text-sm font-bold text-emerald-400">{row.roas.toFixed(1)}x</td>
+              <td className="py-4 pr-4 text-sm font-bold text-white">{formatCurrency(row.spend || 0)}</td>
+              <td className="py-4 pr-4 text-sm text-slate-400">{formatNumber(row.impressions || 0)}</td>
+              <td className="py-4 pr-4 text-sm text-slate-400">{formatNumber(row.clicks || 0)}</td>
+              <td className="py-4 pr-4 text-sm text-slate-400">{(row.ctr || 0).toFixed(2)}%</td>
+              <td className="py-4 pr-4 text-sm font-bold text-white">{formatNumber(row.conversions || 0)}</td>
+              <td className="py-4 pr-4 text-sm font-bold text-amber-400">${(row.cac || 0).toFixed(2)}</td>
+              <td className="py-4 pr-4 text-sm font-bold text-emerald-400">{(row.roas || 0).toFixed(1)}x</td>
               <td className="py-4 pr-4">
                 {row.trend === 'up' && <TrendingUp className="w-4 h-4 text-emerald-400" />}
                 {row.trend === 'down' && <TrendingDown className="w-4 h-4 text-rose-400" />}
                 {row.trend === 'stable' && <Minus className="w-4 h-4 text-slate-500" />}
               </td>
             </tr>
-          ))}
+          )) : (
+            <tr><td colSpan={9} className="py-4 text-center text-xs text-slate-600">لا توجد بيانات منصات لعرضها</td></tr>
+          )}
         </tbody>
       </table>
     </div>
   </motion.div>
 );
-
 
 // ─── CAC Root Cause Analysis ─────────────────────────────
 
@@ -341,7 +339,6 @@ const CACAnalysisSection: React.FC = () => (
     </div>
   </motion.div>
 );
-
 
 // ─── AI Recommendations ──────────────────────────────────
 
@@ -420,7 +417,6 @@ const RecommendationsSection: React.FC = () => {
   );
 };
 
-
 // ─── Top Ads ─────────────────────────────────────────────
 
 const TopAdsSection: React.FC = () => (
@@ -487,7 +483,6 @@ const TopAdsSection: React.FC = () => (
   </motion.div>
 );
 
-
 // ─── Connected Accounts ──────────────────────────────────
 
 const ConnectedAccountsBar: React.FC = () => (
@@ -506,7 +501,7 @@ const ConnectedAccountsBar: React.FC = () => (
           acc.status === 'connected' ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]' :
           acc.status === 'error' ? 'bg-rose-400' : 'bg-slate-500'
         }`} />
-        <span className="font-bold text-slate-300">{PLATFORM_LABELS[acc.platform]}</span>
+        <span className="font-bold text-slate-300">{PLATFORM_LABELS[acc.platform as AdPlatform] || acc.platform}</span>
         <span className="text-slate-600">|</span>
         <span className="text-slate-500 font-mono">{acc.accountId}</span>
       </div>
@@ -518,18 +513,45 @@ const ConnectedAccountsBar: React.FC = () => (
   </motion.div>
 );
 
-
 // ═══════════════════════════════════════════════════════════
 // ─── MAIN COMPONENT ──────────────────────────────────────
 // ═══════════════════════════════════════════════════════════
 
 export const AdAnalyticsDashboard: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState<any>({
+    kpis: fallbackKPIs,
+    dailyPerformance: fallbackDailyPerformance,
+    platformBreakdown: fallbackPlatformBreakdown
+  });
+  const [loading, setLoading] = useState(true);
 
-  const handleRefresh = () => {
+  const fetchAnalytics = async () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1500);
+    try {
+      const res = await fetch("/api/admin/ad-analytics", {
+        headers: { authorization: `Bearer ${getBearerToken()}` }
+      });
+      const json = await res.json();
+      if (json.ok && json.data) {
+        setAnalyticsData(prev => ({
+          ...prev,
+          kpis: json.data.kpis || prev.kpis,
+          dailyPerformance: json.data.dailyPerformance?.length ? json.data.dailyPerformance : prev.dailyPerformance,
+          platformBreakdown: json.data.platformBreakdown?.length ? json.data.platformBreakdown : prev.platformBreakdown,
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch ad analytics:", err);
+    } finally {
+      setIsRefreshing(false);
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
 
   return (
     <div className="space-y-8 p-2">
@@ -555,7 +577,7 @@ export const AdAnalyticsDashboard: React.FC = () => {
             <option value="90d">آخر 90 يوم</option>
           </select>
           <button
-            onClick={handleRefresh}
+            onClick={fetchAnalytics}
             disabled={isRefreshing}
             className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-slate-400 hover:text-teal-400 hover:bg-teal-500/10 hover:border-teal-500/20 transition-all disabled:opacity-50"
           >
@@ -569,8 +591,8 @@ export const AdAnalyticsDashboard: React.FC = () => {
         <KPICard
           icon={<DollarSign className="w-5 h-5" />}
           label="Total Spend"
-          value={formatCurrency(mockKPIs.totalSpend)}
-          change={mockKPIs.totalSpendChange}
+          value={formatCurrency(analyticsData.kpis.totalSpend)}
+          change={analyticsData.kpis.totalSpendChange}
           accentColor="#2DD4BF"
           delay={0}
           tooltip="حجم الإنفاق الإعلاني الإجمالي عبر جميع المنصات المربوطة."
@@ -578,8 +600,8 @@ export const AdAnalyticsDashboard: React.FC = () => {
         <KPICard
           icon={<Users className="w-5 h-5" />}
           label="Combined CAC"
-          value={`$${mockKPIs.combinedCAC.toFixed(2)}`}
-          change={mockKPIs.cacChange}
+          value={`$${(analyticsData.kpis.combinedCAC || 0).toFixed(2)}`}
+          change={analyticsData.kpis.cacChange}
           invertChange
           accentColor="#FB923C"
           delay={0.05}
@@ -588,8 +610,8 @@ export const AdAnalyticsDashboard: React.FC = () => {
         <KPICard
           icon={<TrendingUp className="w-5 h-5" />}
           label="ROAS"
-          value={`${mockKPIs.roas.toFixed(1)}x`}
-          change={mockKPIs.roasChange}
+          value={`${(analyticsData.kpis.roas || 0).toFixed(1)}x`}
+          change={analyticsData.kpis.roasChange}
           accentColor="#34D399"
           delay={0.1}
           tooltip="العائد على الإنفاق الإعلاني (Return on Ad Spend). الرقم يعكس كل دولار أنفقته جاب كام مكانه."
@@ -597,8 +619,8 @@ export const AdAnalyticsDashboard: React.FC = () => {
         <KPICard
           icon={<Target className="w-5 h-5" />}
           label="Conversions"
-          value={formatNumber(mockKPIs.conversions)}
-          change={mockKPIs.conversionsChange}
+          value={formatNumber(analyticsData.kpis.conversions)}
+          change={analyticsData.kpis.conversionsChange}
           accentColor="#818CF8"
           delay={0.15}
           tooltip="إجمالي التحويلات المؤكدة (تسجيلات/دفع) المنسوبة للإعلانات."
@@ -606,10 +628,10 @@ export const AdAnalyticsDashboard: React.FC = () => {
       </div>
 
       {/* ── Performance Chart ─── */}
-      <PerformanceChart />
+      <PerformanceChart data={analyticsData.dailyPerformance} />
 
       {/* ── Platform Table ─── */}
-      <PlatformTable />
+      <PlatformTable data={analyticsData.platformBreakdown} />
 
       {/* ── Analysis & Recommendations (2-col) ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -625,13 +647,14 @@ export const AdAnalyticsDashboard: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
-        className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10"
+        className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10"
       >
-        <AlertTriangle className="w-4 h-4 text-amber-500/60" />
-        <span className="text-[10px] text-amber-500/60 font-bold uppercase tracking-widest">
-          Phase 1 — Mock Data • الربط الحقيقي مع APIs في المرحلة القادمة
+        <AlertTriangle className="w-4 h-4 text-emerald-500/60" />
+        <span className="text-[10px] text-emerald-500/60 font-bold uppercase tracking-widest">
+          مؤشرات الأداء تعتمد الآن على بيانات حقيقية من قاعدة البيانات (DB)
         </span>
       </motion.div>
     </div>
   );
 };
+

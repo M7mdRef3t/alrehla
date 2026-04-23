@@ -14,7 +14,7 @@ import {
 } from "@dnd-kit/core";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { Ring, MapNode as MapNodeType } from "../map/mapTypes";
-import { User, Clock, Zap, Coins, Maximize, GripVertical, Plus, AlertCircle, Info, X } from "lucide-react";
+import { User, Clock, Zap, Coins, Maximize, GripVertical, Plus, AlertCircle, Info, X, Scissors } from "lucide-react";
 import { useMasafatyAnalysis, EntropyLevel } from "./hooks/useMasafatyAnalysis";
 import { Button } from '@/modules/meta/UI/Button';
 
@@ -87,7 +87,7 @@ const EntropyGlow: FC<{ x: number; y: number; level: EntropyLevel }> = memo(({ x
     <motion.circle
       cx={Number.isFinite(x) ? x : 50} 
       cy={Number.isFinite(y) ? y : 50} 
-      r="6"
+      r={6}
       fill={colors[level as 1|2|3]}
       fillOpacity={level === 3 ? 0.6 : 0.4}
       initial={{ scale: 0.8, opacity: 0 }}
@@ -304,7 +304,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       {/* Analyzing Glow */}
       {node.isAnalyzing && (
         <motion.circle
-          cx={baseX} cy={baseY} r="6"
+          cx={baseX} cy={baseY} r={6}
           fill="none"
           stroke="rgba(20, 184, 166, 0.5)"
           strokeWidth="0.5"
@@ -315,20 +315,51 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
         />
       )}
 
-      <circle 
-        cx={baseX} cy={baseY} r="4" 
-        fill="var(--space-950)" 
-        stroke={node.isAnalyzing ? "var(--soft-teal)" : ringColors[node.ring]} 
-        strokeOpacity={node.isAnalyzing ? 0.4 : 1}
-        strokeWidth="0.8" 
-        className="transition-colors duration-300"
-      />
+      {entropyLevel === 3 ? (
+        <g>
+          <motion.circle
+            cx={baseX} cy={baseY} r={5.5}
+            fill="none"
+            stroke="url(#blackhole-grad)"
+            strokeWidth="1.5"
+            strokeDasharray="3 5"
+            animate={{ rotate: -360 }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            style={{ transformOrigin: `${baseX}px ${baseY}px` }}
+          />
+          <motion.circle
+            cx={baseX} cy={baseY} r={7}
+            fill="none"
+            stroke="rgba(244,63,94,0.3)"
+            strokeWidth="0.5"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <circle 
+            cx={baseX} cy={baseY} r={4} 
+            fill="#020617" 
+            stroke="#f43f5e" 
+            strokeOpacity={0.8}
+            strokeWidth="1.2" 
+            style={{ filter: "drop-shadow(0 0 5px rgba(244,63,94,0.7))" }}
+          />
+        </g>
+      ) : (
+        <circle 
+          cx={baseX} cy={baseY} r={4} 
+          fill="var(--space-950)" 
+          stroke={node.isAnalyzing ? "var(--soft-teal)" : ringColors[node.ring]} 
+          strokeOpacity={node.isAnalyzing ? 0.4 : 1}
+          strokeWidth="0.8" 
+          className="transition-colors duration-300"
+        />
+      )}
 
       {node.avatarUrl ? (
         <>
           <defs>
             <clipPath id={`clip-${node.id}`}>
-              <circle cx={baseX} cy={baseY} r="3.5" />
+              <circle cx={baseX} cy={baseY} r={3.5} />
             </clipPath>
           </defs>
           <image 
@@ -342,7 +373,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       ) : (
         <g className="pointer-events-none">
           {/* Native SVG Human Icon - High Contrast */}
-          <circle cx={baseX} cy={baseY - 1.2} r="1.4" fill="#ffffff" />
+          <circle cx={baseX} cy={baseY - 1.2} r={1.4} fill="#ffffff" />
           <path 
             d={`M ${baseX - 2.2} ${baseY + 1.8} Q ${baseX} ${baseY - 0.2} ${baseX + 2.2} ${baseY + 1.8}`} 
             fill="none" 
@@ -367,21 +398,24 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       {/* Entropy indicator icon */}
       {entropyLevel > 0 && (
         <g transform={`translate(${baseX + 3}, ${baseY - 3})`}>
-          <circle r="1.5" fill="#f43f5e" />
+          <circle r={1.5} fill="#f43f5e" />
           <text textAnchor="middle" dy="0.5" fontSize="1.2" fill="white" fontWeight="bold">!</text>
         </g>
       )}
 
-      {/* Delete Button */}
       <motion.g
         onTap={handleDeleteClick}
-        style={{ transformOrigin: `${baseX - 4}px ${baseY - 4}px` }}
+        style={{ transformOrigin: `${baseX - 4.5}px ${baseY - 4.5}px` }}
         initial={{ opacity: 0, scale: 0 }}
         whileHover={{ scale: 1.2 }}
         animate={{ opacity: 1, scale: 1 }}
       >
-        <circle cx={baseX - 4} cy={baseY - 4} r="2" fill="#64748b" stroke="white" strokeWidth="0.2" />
-        <NativeX x={baseX - 4} y={baseY - 4} size={1.2} />
+        <circle cx={baseX - 4.5} cy={baseY - 4.5} r={2.2} fill="rgba(15, 23, 42, 0.9)" stroke="rgba(244, 63, 94, 0.5)" strokeWidth="0.3" />
+        <foreignObject x={baseX - 6.5} y={baseY - 6.5} width="4" height="4">
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Scissors size={10} color="#f43f5e" />
+          </div>
+        </foreignObject>
       </motion.g>
     </motion.g>
 
@@ -431,10 +465,10 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
             </div>
           </div>
           <p style={{ fontSize: "0.875rem", fontWeight: 700, marginBottom: "0.25rem", color: "#e2e8f0" }}>
-            خرّج "{node.label}" من المدار؟
+            اقطع الحبل الطاقي مع "{node.label}"؟
           </p>
           <p style={{ fontSize: "0.75rem", marginBottom: "1.25rem", color: "#94a3b8" }}>
-            هيتحفظ في "أشخاص مشافين" وتقدر تعيده لو احتجت.
+            هذه خطوة نحو استعادة سيادتك. سيتم حفظ العلاقة في أرشيف الحكمة للاستفادة من دروسها متى شئت.
           </p>
           <div style={{ display: "flex", gap: "0.5rem", flexDirection: "row-reverse" }}>
             <button
@@ -610,6 +644,10 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
             <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
               <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="0.1"/>
             </pattern>
+            <radialGradient id="blackhole-grad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f43f5e" stopOpacity="1" />
+              <stop offset="100%" stopColor="#4c0519" stopOpacity="0" />
+            </radialGradient>
           </defs>
           <rect width="100" height="100" fill="url(#grid)" />
 

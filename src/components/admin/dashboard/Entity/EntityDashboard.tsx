@@ -180,14 +180,65 @@ function TabButton({ id, label, icon: Icon, active, onClick }: TabButtonProps) {
 }
 
 function PulseDashboard() {
-    const { totalXp } = useVictoryEngine(); // Mock or real hook
-    // Assuming these exist, if not we'll mock for UI
+    const { totalXp } = useVictoryEngine(); // Local user metrics from local storage event store
+    const [pulseData, setPulseData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPulse = async () => {
+            try {
+                // Assuming we use our getBearerToken utility, but for this component we can import it or handle auth in fetch
+                const authModule = await import("@/utils/authHelpers");
+                const res = await fetch("/api/admin/pulse", {
+                    headers: { authorization: `Bearer ${authModule.getBearerToken()}` }
+                });
+                const json = await res.json();
+                if (json.ok) {
+                    setPulseData(json.data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch pulse data", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchPulse();
+    }, []);
+
+    const timeAgo = (dateStr: string) => {
+        const diff = Date.now() - new Date(dateStr).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 60) return `منذ ${mins} دقيقة`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `منذ ${hrs} ساعة`;
+        return `منذ ${Math.floor(hrs / 24)} يوم`;
+    };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            <StatCard title="سرعة النمو" value="+12%" trend="up" subtitle="مقارنة بالأسبوع الماضي" color="emerald" tooltip="معدل زيادة المستخدمين وإتمام الجلسات (مؤشر تسارع انتشار الوعي)." />
-            <StatCard title="القادة النشطون" value="1,240" trend="up" subtitle="+84 جدد هذا الشهر" color="teal" tooltip="المستخدمين اللي وصلوا لمراحل متقدمة في الملاذ وبيجذبوا أرواح تانية للنظام." />
-            <StatCard title="نقاط التطور الكلية" value={totalXp?.toLocaleString("en-US") ?? "0"} subtitle="محاربة عشوائية النظام" color="violet" tooltip="إجمالي الطاقة والتطور (XP) لكل النظام. كل ما زاد المجموع، قلت نسبة النزيف الطاقي." />
+            <StatCard 
+                title="سرعة النمو" 
+                value={isLoading ? "..." : pulseData?.growthRate || "+0%"} 
+                trend="up" 
+                subtitle="مقارنة بالأسبوع الماضي" 
+                color="emerald" 
+                tooltip="معدل زيادة المستخدمين وإتمام الجلسات (مؤشر تسارع انتشار الوعي)." 
+            />
+            <StatCard 
+                title="القادة النشطون" 
+                value={isLoading ? "..." : (pulseData?.activeLeaders || 0).toLocaleString()} 
+                trend="up" 
+                subtitle="نشطون في الملاذ" 
+                color="teal" 
+                tooltip="المستخدمين اللي وصلوا لمراحل متقدمة في الملاذ وبيجذبوا أرواح تانية للنظام." 
+            />
+            <StatCard 
+                title="نقاط التطور الكلية" 
+                value={totalXp?.toLocaleString("en-US") ?? "0"} 
+                subtitle="محاربة عشوائية النظام" 
+                color="violet" 
+                tooltip="إجمالي الطاقة والتطور (XP) لكل النظام. كل ما زاد المجموع، قلت نسبة النزيف الطاقي." 
+            />
 
             <div className="col-span-1 md:col-span-2 bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 h-[400px] flex items-center justify-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent" />
@@ -207,15 +258,21 @@ function PulseDashboard() {
                     <AdminTooltip content="سجل مباشر بالأشخاص اللي تمكنوا من كسر حلقة النزيف الخفي وتغيير مسار وعيهم بنجاح داخل الملاذ." position="bottom" />
                 </div>
                 <div className="space-y-4">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="flex gap-3 items-start p-3 rounded-lg bg-slate-800/80 border border-slate-700/50">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 animate-pulse" />
-                            <div>
-                                <p className="text-sm text-slate-200 font-medium">قائد #8292 نجح في كسر حلقة مفرغة</p>
-                                <p className="text-xs text-slate-500">منذ دقيقتين • كتلة الجاذبية -40%</p>
+                    {isLoading ? (
+                        <p className="text-xs text-slate-500">جاري تحميل السجل...</p>
+                    ) : pulseData?.recentVictories?.length > 0 ? (
+                        pulseData.recentVictories.map((vic: any, idx: number) => (
+                            <div key={vic.id || idx} className="flex gap-3 items-start p-3 rounded-lg bg-slate-800/80 border border-slate-700/50">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 animate-pulse" />
+                                <div>
+                                    <p className="text-sm text-slate-200 font-medium">قائد #{vic.id.slice(0, 4)} نجح في الانضمام</p>
+                                    <p className="text-xs text-slate-500">{timeAgo(vic.created_at)} • حالة: {vic.status}</p>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    ) : (
+                        <p className="text-xs text-slate-500">لا يوجد انتصارات مسجلة بعد.</p>
+                    )}
                 </div>
             </div>
         </div>

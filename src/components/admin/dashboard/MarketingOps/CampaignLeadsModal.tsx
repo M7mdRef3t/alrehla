@@ -283,6 +283,29 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     }
   };
 
+  const [isGlobalTriggering, setIsGlobalTriggering] = useState(false);
+  const handleGlobalTrigger = async () => {
+    if (isGlobalTriggering) return;
+    setIsGlobalTriggering(true);
+    try {
+      const res = await fetch("/api/cron/marketing-outreach?force=true", {
+        method: "GET",
+        headers: { authorization: `Bearer ${getBearerToken()}` }
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert(`✅ تم إطلاق طابور الإرسال الآلي بنجاح. تمت معالجة ${data.processed} رسالة.`);
+        onLeadUpdated();
+      } else {
+        alert("⚠️ فشل إطلاق الطابور الآلي: " + data.error);
+      }
+    } catch (err) {
+      alert("⚠️ حدث خطأ في الاتصال بالخادم.");
+    } finally {
+      setIsGlobalTriggering(false);
+    }
+  };
+
   const handleMarkBounced = async (lead: any) => {
     if (bouncingLeadId !== lead.id) {
       setBouncingLeadId(lead.id);
@@ -625,6 +648,17 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
                       <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">التحويل</div>
                       <div className="text-xl font-black text-emerald-400">{conversionRate}%</div>
                    </div>
+                   
+                   <button
+                     onClick={handleGlobalTrigger}
+                     disabled={isGlobalTriggering}
+                     className="hidden md:flex items-center gap-2 h-12 px-4 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all font-black text-xs disabled:opacity-50"
+                     title="تشغيل طابور الإرسال الآلي الآن"
+                   >
+                     {isGlobalTriggering ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                     <span className="hidden lg:block">الإرسال الآلي</span>
+                   </button>
+
                    <button
                     onClick={onClose}
                     className="w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all text-slate-400 hover:text-white shrink-0"
