@@ -80,6 +80,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   qinaa: "Qinaa Mask Detection",
   nabd: "Nabd Pulse Check",
   raseed: "Raseed Capital Counter",
+  dawra: "Dawra Cycle Tracker",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -157,6 +158,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   qinaa: { title: "قناع — اكشف أقنعتك | Alrehla", description: "اعرف الفجوة بين ذاتك الحقيقية وأقنعتك في كل سياق." },
   nabd: { title: "نبض — فحص مزاجك وطاقتك | Alrehla", description: "5 ثواني فقط — سجّل نبضك اليومي." },
   raseed: { title: "رصيد — رأس مالك النفسي | Alrehla", description: "6 أبعاد لرأس مالك النفسي — كل فعل واعي يضيف لرصيدك." },
+  dawra: { title: "دورة — إيقاعاتك الشخصية | Alrehla", description: "اكتشف أنماطك المتكررة في الطاقة والمزاج والإنتاجية." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {
