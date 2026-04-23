@@ -76,6 +76,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   kharita: "Kharita Ecosystem Map",
   ruya: "Ruya Dream Journal",
   raya: "Raya Vision Board",
+  yawmiyyat: "Yawmiyyat Daily Journal",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -149,6 +150,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   kharita: { title: "خريطة — خريطة المنظومة | Alrehla", description: "نظرة بصرية شاملة لكل أدوات رحلتك." },
   ruya: { title: "رؤيا — سجّل أحلامك | Alrehla", description: "سجّل أحلامك وفسّرها — رسائل من لاوعيك." },
   raya: { title: "راية — رؤيتك طويلة المدى | Alrehla", description: "حدّد أهدافك لـ 90 يوم وتتبّع محطات الرحلة." },
+  yawmiyyat: { title: "يوميّات — سجّل يومك | Alrehla", description: "سجّل لحظاتك، مزاجك، ودروسك — كل يوم قصة." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {

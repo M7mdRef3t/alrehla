@@ -61,6 +61,7 @@ const JathrScreen = lazy(() => import("../../jathr/JathrScreen"));
 const KharitaScreen = lazy(() => import("../../kharita/KharitaScreen"));
 const RuyaScreen = lazy(() => import("../../ruya/RuyaScreen"));
 const RayaScreen = lazy(() => import("../../raya/RayaScreen"));
+const YawmiyyatScreen = lazy(() => import("../../yawmiyyat/YawmiyyatScreen"));
 
 
 
@@ -802,6 +803,16 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <PageShell headerMode="none" tabBarVisible={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <RayaScreen />
+        </Suspense>
+      </PageShell>
+    );
+  }
+
+  if (screen === "yawmiyyat") {
+    return (
+      <PageShell headerMode="none" tabBarVisible={true}>
+        <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
+          <YawmiyyatScreen />
         </Suspense>
       </PageShell>
     );

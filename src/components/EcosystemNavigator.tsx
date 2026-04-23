@@ -118,6 +118,7 @@ const ALL_PRODUCTS: EcosystemProduct[] = [
   { id: "wasiyya",   name: "وصية",      description: "رسائل مختومة لنفسك المستقبلية",         icon: <Mail className="w-4 h-4" />,         status: "active",      color: "#fbbf24", url: "/#wasiyya" },
   { id: "risala",    name: "رسالة",     description: "رسائل ومعنى في محطات الطريق",           icon: <Mail className="w-4 h-4" />,         status: "active",      color: "#f59e0b", url: "/#risala" },
   { id: "shahada",   name: "شهادة",     description: "إثبات التحول والمعنى",                  icon: <FileText className="w-4 h-4" />,     status: "active",      color: "#14b8a6", url: "/#shahada" },
+  { id: "yawmiyyat", name: "يوميّات",   description: "سجّل لحظات يومك — كل يوم قصة",         icon: <CalendarDays className="w-4 h-4" />, status: "active",      color: "#f59e0b", url: "/#yawmiyyat" },
 ];
 
 // ─── Categories ─────────────────────────────────────────────────────────────
@@ -160,7 +161,7 @@ const CATEGORIES: ProductCategory[] = [
     color: "#a855f7",
     bgColor: "#2d1b4a",
     products: ALL_PRODUCTS.filter(p =>
-      ["history-insights", "markaz", "sada", "hafiz", "watheeqa", "sijil", "riwaya", "athar", "naba", "wasiyya", "risala", "shahada"].includes(p.id)
+      ["history-insights", "markaz", "sada", "hafiz", "watheeqa", "sijil", "riwaya", "athar", "naba", "wasiyya", "risala", "shahada", "yawmiyyat"].includes(p.id)
     ),
   },
 ];

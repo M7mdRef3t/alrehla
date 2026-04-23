@@ -68,7 +68,8 @@ export type AppScreen =
   | "jathr"
   | "kharita"
   | "ruya"
-  | "raya";
+  | "raya"
+  | "yawmiyyat";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 
