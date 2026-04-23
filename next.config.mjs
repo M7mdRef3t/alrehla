@@ -116,8 +116,8 @@ if (process.env.SENTRY_AUTH_TOKEN || process.env.NEXT_PUBLIC_SENTRY_DSN) {
   finalConfig = withSentryConfig(finalConfig, {
     // For all available options, see:
     // https://github.com/getsentry/sentry-webpack-plugin#options
-    org: "alrehla",
-    project: "alrehla",
+    org: process.env.SENTRY_ORG || "alrehla",
+    project: process.env.SENTRY_PROJECT || "alrehla",
     sentryUrl: "https://sentry.io/",
     
     // Only print logs for uploading source maps in CI
