@@ -44,6 +44,8 @@ jobs:
           vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           vercel-project-name: alrehla
+          vercel-version: latest
           working-directory: ./
+
 
 
