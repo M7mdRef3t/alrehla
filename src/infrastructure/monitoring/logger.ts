@@ -2,11 +2,10 @@
 /**
  * Infrastructure — Monitoring (Logger)
  * 
- * Centralized logging with Sentry integration (production)
+ * Centralized logging with console output (production)
  * and localStorage persistence (development).
  */
 
-import * as Sentry from "@sentry/nextjs";
 import { runtimeEnv } from "@/config/runtimeEnv";
 
 const LOCAL_STORAGE_KEY = "dawayir-error-log";
@@ -32,18 +31,8 @@ export const logger = {
     // 1. Console
     console.error(messageOrError, error, ...args);
 
-    // 2. Sentry in production
+    // 2. Production errors are captured by the Sentry Next.js integration.
     if (runtimeEnv.isProd) {
-      if (actualError instanceof Error) {
-        Sentry.captureException(actualError, { extra: { message, ...args } });
-      } else if (messageOrError instanceof Error) {
-        Sentry.captureException(messageOrError, { extra: { ...args } });
-      } else {
-        Sentry.captureMessage(message || "Unknown error", {
-          level: "error",
-          extra: { error: actualError, ...args },
-        });
-      }
       return;
     }
 

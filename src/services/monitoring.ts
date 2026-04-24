@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/nextjs";
 import Clarity from "@microsoft/clarity";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { trackError } from "./analytics";
@@ -37,18 +36,22 @@ export function initMonitoring(): void {
 }
 
 export function identifyUser(userId: string, email?: string): void {
-  // Sentry
-  Sentry.setUser({ id: userId, email });
+  if (typeof window !== "undefined") {
+    void import("@sentry/nextjs").then((Sentry) => {
+      Sentry.setUser({ id: userId, email });
+
+      const sentryId = Sentry.lastEventId();
+      if (sentryId) {
+        Clarity.setTag("sentry_event_id", sentryId);
+      }
+    }).catch(() => {
+      // Sentry is non-critical for the user journey.
+    });
+  }
   
   // Clarity identity syncing
   try {
     Clarity.identify(userId);
-    
-    // Cross-link Sentry and Clarity IDs if possible
-    const sentryId = Sentry.lastEventId();
-    if (sentryId) {
-      Clarity.setTag("sentry_event_id", sentryId);
-    }
   } catch (e) {
     // Clarity non-critical
   }
