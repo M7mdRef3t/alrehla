@@ -9,18 +9,7 @@ import {
   type BaselineAnswers
 } from "@/data/baselineQuestions";
 import { useJourneyProgress } from "@/domains/journey";
-
-const toSafeSvgNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value) ? value : fallback;
-
-const SafeMotionCircle = ({ cx = 0, cy = 0, r = 0, ...props }: ComponentProps<typeof motion.circle>) => (
-  <motion.circle
-    cx={typeof cx === "string" ? cx : toSafeSvgNumber(cx, 0)}
-    cy={typeof cy === "string" ? cy : toSafeSvgNumber(cy, 0)}
-    r={Math.max(toSafeSvgNumber(typeof r === "string" ? Number(r) : r, 0), 0)}
-    {...props}
-  />
-);
+import { SafeMotionCircle } from "@/components/ui/SafeSvg";
 
 interface BaselineAssessmentProps {
   onComplete: () => void;

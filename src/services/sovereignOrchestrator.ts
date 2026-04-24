@@ -49,15 +49,55 @@ export class SovereignOrchestrator {
             // Generate interventions based on the current system friction
             const interventions = await this.synthesizeInterventions(resonanceScore, latestFriction);
             
+            // ── Phase III: Sentient Hub Bridges ──────────────────────────────────
+            await this.bridgePeopleToIntelligence(resonanceScore);
+            await this.bridgeFrictionToGrowth(latestFriction);
+            // ──────────────────────────────────────────────────────────────────
+
             this.lastResonance = resonanceScore;
             this.lastFriction = latestFriction;
             this.cachedInterventions = interventions;
 
-            useAdminState.setState({ aiInterventions: interventions });
+            useAdminState.setState({ 
+                aiInterventions: interventions,
+                lastSentientPulse: Date.now() 
+            });
         } catch (error) {
             console.error("❌ [SovereignOrchestrator] Core evaluation failed:", error);
         } finally {
             this.isOrchestrating = false;
+        }
+    }
+
+    /**
+     * Bridge 1: People Hub -> AI Studio (Crucible)
+     * Automatically triggers a simulation when resonance is low.
+     */
+    private static async bridgePeopleToIntelligence(resonance: number): Promise<void> {
+        if (resonance < 40 && this.lastResonance >= 40) {
+            console.log("🧠 [Sentient Bridge] Resonance drop detected. Triggering Crucible Simulation...");
+            await decisionEngine.execute({
+                type: "recommend_action",
+                timestamp: Date.now(),
+                reasoning: `انخفاض التناغم الجماعي لـ ${resonance}%. بدء محاكاة في البوتقة (Crucible) لإيجاد مسارات استقرار.`,
+                payload: { target: "crucible", action: "simulate_recovery_paths" }
+            });
+        }
+    }
+
+    /**
+     * Bridge 2: People Hub -> Growth Hub (Marketing Ops)
+     * Triggers a soothing campaign when friction is detected.
+     */
+    private static async bridgeFrictionToGrowth(friction: string | null): Promise<void> {
+        if (friction && friction !== this.lastFriction) {
+            console.log("🚀 [Sentient Bridge] Friction detected. Triggering Growth Nudge...");
+            await decisionEngine.execute({
+                type: "ignite_market",
+                timestamp: Date.now(),
+                reasoning: `رصد احتكاك إدراكي: "${friction}". إطلاق حملة "سكينة" استباقية في الأسواق المتأثرة.`,
+                payload: { target: "growth", action: "deploy_soothing_nudge", friction }
+            });
         }
     }
 

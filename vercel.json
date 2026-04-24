@@ -1,6 +1,7 @@
 {
   "version": 2,
   "framework": "nextjs",
+  "buildCommand": "NODE_OPTIONS=--max-old-space-size=4096 npm run build",
   "headers": [
     {
       "source": "/(.*)",
@@ -30,4 +31,4 @@
       "schedule": "0 10 * * *"
     }
   ]
-}
+}

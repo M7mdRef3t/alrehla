@@ -319,7 +319,9 @@ export const useMapState = create<MapState>((set, get) => ({
       isMirrorNode
     };
     const nextNodes = [...get().nodes, newNode];
+    console.log("[MapStore Debug] Node added:", newNode.label, "goalId:", newNode.goalId, "totalNodes:", nextNodes.length);
     set({ nodes: nextNodes, showPlacementTooltip: true, lastAddedNodeId: nodeId });
+
     get().syncMapStorage();
     emitDawayirSignal({
       type: "node_added",

@@ -13,6 +13,15 @@ interface BoardingPassModalProps {
   poeticState?: string;
 }
 
+const SHIMMER_ANIMATION = `
+@keyframes shimmer {
+  0% { transform: translateX(-100%) rotate(25deg); opacity: 0; }
+  20% { opacity: 0.3; }
+  50% { transform: translateX(100%) rotate(25deg); opacity: 0.3; }
+  100% { transform: translateX(200%) rotate(25deg); opacity: 0; }
+}
+`;
+
 export const BoardingPassModal: FC<BoardingPassModalProps> = ({ isOpen, onClose, userName, joinDate, userId, poeticState }) => {
   const [mounted, setMounted] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -91,7 +100,7 @@ export const BoardingPassModal: FC<BoardingPassModalProps> = ({ isOpen, onClose,
                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6"
             >
               <Award className="w-3 h-3" />
-              Founding Member Access
+              وصول عضوية تأسيسية
             </motion.div>
 
             <motion.h2 
@@ -122,9 +131,17 @@ export const BoardingPassModal: FC<BoardingPassModalProps> = ({ isOpen, onClose,
               {/* Wrapper to handle rounded edges and bg during capture */}
               <div 
                 ref={ticketRef} 
-                className="bg-slate-900 rounded-[2rem] p-4 p-px bg-gradient-to-r from-amber-500/40 to-amber-500/10"
+                className="bg-slate-900 rounded-[2.2rem] p-px bg-gradient-to-br from-amber-500/50 via-amber-200/30 to-amber-600/50 shadow-[0_0_40px_rgba(245,158,11,0.2)]"
               >
-                <div className="bg-slate-900 rounded-[1.95rem] p-6 text-right relative overflow-hidden group">
+                <style>{SHIMMER_ANIMATION}</style>
+                <div className="bg-slate-950 rounded-[2.1rem] p-6 md:p-8 text-right relative overflow-hidden group">
+                  {/* Gold Foil Shimmer */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    <div 
+                      className="absolute inset-0 w-1/2 h-[200%] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                      style={{ animation: 'shimmer 4s infinite linear', top: '-50%' }}
+                    />
+                  </div>
                   {/* Stamp */}
                   <div className="absolute top-4 left-4 opacity-10 rotate-[-15deg] scale-150 group-hover:scale-[1.6] transition-transform duration-700">
                      <ShieldCheck className="w-24 h-24 text-amber-400" />
@@ -132,7 +149,7 @@ export const BoardingPassModal: FC<BoardingPassModalProps> = ({ isOpen, onClose,
 
                   <div className="flex justify-between items-start mb-10 relative z-10">
                     <div className="text-left">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase">Serial Number</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase">الرقم التسلسلي</p>
                       <p className="text-sm font-mono text-amber-500/80">{serialNumber}</p>
                     </div>
                     <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
@@ -142,7 +159,7 @@ export const BoardingPassModal: FC<BoardingPassModalProps> = ({ isOpen, onClose,
 
                   <div className="space-y-6 relative z-10">
                     <div>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Pass Holder</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">حامل البطاقة</p>
                       <div className="flex items-center gap-3 justify-end">
                         <p className="text-xl md:text-2xl font-black text-slate-100">{userName || "مُحارب الوعي"}</p>
                         <User className="w-5 h-5 text-amber-400/60" />
@@ -151,14 +168,14 @@ export const BoardingPassModal: FC<BoardingPassModalProps> = ({ isOpen, onClose,
 
                     <div className="grid grid-cols-2 gap-4 border-t border-amber-500/20 pt-6">
                        <div className="text-right">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Status</p>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">الرتبة</p>
                           <div className="flex items-center gap-2 justify-end text-amber-400 font-bold">
                              <span className="text-xs">عضو تأسيسي</span>
                              <Sparkles className="w-3 h-3" />
                           </div>
                        </div>
                        <div className="text-left">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Issue Date</p>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">تاريخ الإصدار</p>
                           <div className="flex items-center gap-2 text-slate-300 font-bold">
                              <Calendar className="w-3 h-3" />
                              <span className="text-xs font-mono">{displayDate}</span>
@@ -168,7 +185,7 @@ export const BoardingPassModal: FC<BoardingPassModalProps> = ({ isOpen, onClose,
 
                     {poeticState && (
                       <div className="mt-6 border-t border-amber-500/10 pt-4 text-center">
-                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Private State | الحالة الخاصة</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">الحالة الخاصة</p>
                         <div className="inline-block px-4 py-1 rounded-lg bg-amber-500/5 border border-amber-500/20">
                           <p className="text-sm font-black text-amber-200">{poeticState}</p>
                         </div>

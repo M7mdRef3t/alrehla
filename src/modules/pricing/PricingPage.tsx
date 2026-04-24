@@ -2,7 +2,9 @@
 
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from "react";
-import { Check, Shield, Zap as Sparkles, ArrowLeft, Zap } from "lucide-react";
+import { Check, Shield, Zap as Sparkles, ArrowRight, ArrowLeft, Zap, Crown, Compass } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { Variants } from "framer-motion";
 import { signInWithGoogleAtPath } from "@/services/authService";
 import { consumeEmotionalOffer, getEmotionalOffer } from "@/services/subscriptionManager";
 import { supabase } from "@/services/supabaseClient";
@@ -46,7 +48,6 @@ export default function PricingPage() {
     const params = new URLSearchParams(window.location.search);
     const magicVip = params.get("vip");
     if (magicVip && magicVip.trim().length > 0) {
-      // Small timeout to allow state to settle
       setTimeout(() => {
         setVipCode(magicVip.trim());
         setShowVipInput(true);
@@ -120,202 +121,243 @@ export default function PricingPage() {
     window.location.href = `/coach`;
   };
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2, delayChildren: 0.1 }
+    }
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
+  };
+
   return (
     <div
-      className="min-h-screen px-4 py-16 font-sans md:py-24 bg-app transition-colors"
+      className="min-h-screen min-h-[100dvh] w-full overflow-x-hidden isolate relative bg-[#02040a] text-slate-200"
       dir="rtl"
-      style={{
-        background: "radial-gradient(circle at top, rgba(20,184,166,0.08), transparent 50%), var(--app-bg)"
-      }}
     >
-      <div className="mx-auto flex w-full max-w-xl md:max-w-4xl flex-col items-center">
-        {/* Emotional offer banner */}
-        {emotionalOffer && !offerConsumed ? (
-          <div className="mb-8 w-full rounded-2xl border border-teal-400/20 bg-teal-400/10 px-5 py-4 text-right">
-            <p className="text-sm font-bold leading-tight text-teal-100">{emotionalOffer.title}</p>
-            <p className="mt-1 text-sm leading-[1.7] text-teal-200/70">{emotionalOffer.message}</p>
-            <button
-              type="button"
-              onClick={() => {
-                consumeEmotionalOffer();
-                setOfferConsumed(true);
-              }}
-              className="mt-3 rounded-lg bg-teal-400 px-4 py-2 text-xs font-bold text-teal-950 transition-colors hover:bg-teal-300"
+      {/* Cinematic Background */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-500/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '3s' }} />
+        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.03] mix-blend-overlay" />
+      </div>
+
+      <div className="relative z-10 mx-auto flex w-full max-w-xl md:max-w-5xl flex-col items-center px-6 py-16 md:py-24">
+        
+        {/* Emotional Offer Banner */}
+        <AnimatePresence>
+          {emotionalOffer && !offerConsumed && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              className="mb-12 w-full rounded-3xl border border-teal-500/20 bg-teal-500/5 backdrop-blur-xl p-6 text-right relative overflow-hidden"
             >
-              تم الاستلام
-            </button>
-          </div>
-        ) : null}
+              <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/10 blur-3xl rounded-full" />
+              <p className="text-lg font-bold text-teal-400 mb-1">{emotionalOffer.title}</p>
+              <p className="text-slate-400 text-sm leading-relaxed mb-4">{emotionalOffer.message}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  consumeEmotionalOffer();
+                  setOfferConsumed(true);
+                }}
+                className="rounded-xl bg-teal-500 px-6 py-2.5 text-xs font-black text-[#02040a] transition-all hover:scale-105 active:scale-95 shadow-lg shadow-teal-500/20"
+              >
+                قبول الهدية
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Header */}
-        <div className="mb-10 max-w-lg text-center">
-          <p className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-teal-500 dark:text-teal-400">
-            مساحاتك الخاصة
-          </p>
-            <h1 className="mb-4 text-3xl font-black leading-tight text-app-foreground md:text-3xl" style={{ fontFamily: "var(--font-display)" }}>
-            خطوة واحدة بينك وبين التعافي
-          </h1>
-          <p className="text-sm leading-[1.8] text-app-muted-foreground">
-            أنت الآن في أمان.. يمكنك البقاء في مساحتك المبدئية للتحليل، أو فتح المسار الأكثر خطورة وعمقاً.
-          </p>
-        </div>
-
-        {/* A/B Pricing Cards */}
-        <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 md:max-w-4xl max-w-xl mx-auto">
-          {/* Free Tier Card */}
-          <div
-            className="relative flex flex-col overflow-hidden rounded-[2rem] border border-app-border p-8 md:p-10 transition-all bg-app-surface/60 backdrop-blur-xl"
+        {/* Header Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-16 max-w-2xl text-center"
+        >
+          <motion.p 
+            initial={{ opacity: 0, letterSpacing: '0.1em' }}
+            animate={{ opacity: 1, letterSpacing: '0.3em' }}
+            className="mb-6 text-[11px] font-black uppercase text-teal-500 tracking-[0.3em]"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-app-muted border border-app-border">
-                <Shield className="h-6 w-6 text-app-muted-foreground" />
+            استثمارك في ذاتك
+          </motion.p>
+          <h1 className="mb-6 text-4xl md:text-5xl font-black leading-tight text-white tracking-tight">
+            اختر أفق <span className="text-transparent bg-clip-text bg-gradient-to-l from-teal-400 to-blue-400">رحلتك القادمة</span>
+          </h1>
+          <p className="text-lg text-slate-400 leading-relaxed max-w-lg mx-auto">
+            هل تكتفي بالنظر للخريطة، أم قررت اليوم أن تبدأ التحرك الفعلي نحو التعافي؟
+          </p>
+        </motion.div>
+
+        {/* Pricing Cards Grid */}
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid w-full grid-cols-1 gap-8 md:grid-cols-2"
+        >
+          {/* Free Tier Card */}
+          <motion.div
+            variants={itemVariants}
+            className="relative group flex flex-col overflow-hidden rounded-[2.5rem] border border-white/5 bg-white/[0.02] backdrop-blur-2xl p-8 md:p-12 transition-all hover:bg-white/[0.04]"
+          >
+            <div className="flex items-center gap-4 mb-8">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5 border border-white/10 text-slate-400">
+                <Compass className="h-7 w-7" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-app-foreground">مساحتك المبدئية</h2>
-                <p className="text-xs text-app-muted-foreground">مساحة خاصة لاكتشاف خريطتك</p>
+                <h2 className="text-2xl font-black text-white">مساحة الأمان</h2>
+                <p className="text-sm text-slate-500">بداية الاستكشاف</p>
               </div>
             </div>
 
-            {/* Price */}
-            <div className="mb-8 rounded-2xl border border-app-border bg-app-muted p-6 text-center">
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-4xl font-black text-app-foreground">مجاناً</span>
-              </div>
-              <p className="mt-2 text-[10px] text-app-muted-foreground uppercase tracking-widest">متاح دائماً</p>
+            <div className="mb-10 rounded-3xl border border-white/5 bg-white/5 p-8 text-center">
+              <span className="text-5xl font-black text-white">مجاناً</span>
+              <p className="mt-3 text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold">متاحة لكل مسافر</p>
             </div>
 
-            {/* Features */}
-            <ul className="mb-8 space-y-3 flex-1">
+            <ul className="mb-12 space-y-4 flex-1">
               {[
                 "تشخيص الوعي وخريطة العلاقات",
                 "روشتة تعافي مبدئية",
                 "نبضات يومية للحالة المزاجية",
                 "نصائح الذكاء الاصطناعي الأساسية"
               ].map((f) => (
-                <li key={f} className="flex items-center gap-3">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-app-muted">
-                    <Check className="h-3 w-3 text-teal-400" />
+                <li key={f} className="flex items-center gap-4">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/5">
+                    <Check className="h-3.5 w-3.5 text-teal-500" />
                   </div>
-                  <span className="text-sm text-app-muted-foreground">{f}</span>
+                  <span className="text-slate-400 font-medium">{f}</span>
                 </li>
               ))}
             </ul>
 
-            {/* CTA */}
             <button
               onClick={() => { window.location.href = "/"; }}
-              className="mt-auto w-full py-4 text-sm font-bold text-app-muted-foreground border border-app-border rounded-2xl hover:bg-app-muted hover:text-app-foreground transition-all"
+              className="mt-auto w-full py-5 text-sm font-black text-slate-400 border border-white/10 rounded-2xl hover:bg-white/5 hover:text-white transition-all active:scale-95"
             >
-              استمر في مساحتك
+              البقاء في مساحة الأمان
             </button>
-          </div>
+          </motion.div>
 
           {/* Premium Tier Card */}
-          <div
-            className="relative flex flex-col overflow-hidden rounded-[2rem] border border-teal-500/30 p-8 md:p-10 shadow-xl bg-app-surface/80 backdrop-blur-xl"
-            style={{
-              background: "radial-gradient(circle at top right, rgba(20,184,166,0.12), transparent 50%), var(--app-surface)"
-            }}
+          <motion.div
+            variants={itemVariants}
+            className="relative group flex flex-col overflow-hidden rounded-[2.5rem] border border-teal-500/20 bg-teal-500/[0.02] backdrop-blur-2xl p-8 md:p-12 shadow-2xl"
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-400/50 to-transparent" />
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-teal-500 text-teal-950 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_0_15px_rgba(45,212,191,0.2)]">
-              المسار الأكثر طلباً
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-teal-500 to-transparent opacity-50" />
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 bg-teal-500 text-[#02040a] text-[10px] font-black uppercase tracking-[0.2em] px-5 py-1.5 rounded-full shadow-[0_0_20px_rgba(20,184,166,0.3)]">
+              المسار الأكثر عمقاً
             </div>
 
-            <div className="flex items-center gap-3 mb-6 mt-2">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-400/10 border border-teal-400/20">
-                <Sparkles className="h-6 w-6 text-teal-500 dark:text-teal-400" />
+            <div className="flex items-center gap-4 mb-8 mt-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-400">
+                <Crown className="h-7 w-7" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-app-foreground">{TIER_LABELS.premium}</h2>
-                <p className="text-xs text-teal-600 dark:text-teal-400/80">التعافي العميق بأدوات خاصة</p>
+                <h2 className="text-2xl font-black text-white">أفق التوسع</h2>
+                <p className="text-sm text-teal-500/60 font-bold">الأدوات المتقدمة للتعافي</p>
               </div>
             </div>
 
-            {/* Price */}
-            <div className="mb-8 rounded-2xl border border-teal-500/10 bg-teal-500/[0.03] p-6 text-center">
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-5xl font-black text-app-foreground">{globalPrice}</span>
-              </div>
-              <p className="mt-2 text-xs text-app-muted-foreground">أو <span className="text-teal-600 dark:text-teal-400 font-bold">{localPrice}</span> / شهر للمصريين</p>
+            <div className="mb-10 rounded-3xl border border-teal-500/10 bg-teal-500/5 p-8 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-full bg-teal-500/[0.02] animate-pulse" />
+              <span className="relative z-10 text-6xl font-black text-white tracking-tighter">{globalPrice.split(' ')[0]}</span>
+              <span className="relative z-10 text-xl font-bold text-slate-400 mr-2">/ شهر</span>
+              <p className="mt-4 text-xs text-slate-500 font-medium">أو <span className="text-teal-400 font-black">{localPrice}</span> للمقيمين في مصر</p>
             </div>
 
-            {/* Features */}
-            <ul className="mb-8 space-y-3 flex-1">
+            <ul className="mb-12 space-y-4 flex-1">
               {FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-3">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-500/10 dark:bg-teal-400/20">
-                    <Check className="h-3 w-3 text-teal-600 dark:text-teal-400" />
+                <li key={f} className="flex items-center gap-4">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-500/10">
+                    <Sparkles className="h-3.5 w-3.5 text-teal-400" />
                   </div>
-                  <span className="text-sm font-medium text-app-foreground">{f}</span>
+                  <span className="text-slate-200 font-bold">{f}</span>
                 </li>
               ))}
             </ul>
 
-            {/* CTA */}
             <button
               onClick={() => void handleSubscribe()}
               disabled={isLoading}
-              className="group w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 dark:from-teal-400 dark:to-emerald-400 py-4 text-lg font-black text-white dark:text-teal-950 shadow-lg dark:shadow-[0_0_20px_rgba(45,212,191,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:hover:scale-100"
+              className="relative group w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-l from-teal-500 to-blue-500 py-5 text-xl font-black text-[#02040a] shadow-xl shadow-teal-500/20 transition-all hover:scale-[1.02] hover:shadow-teal-500/40 active:scale-95 disabled:opacity-60"
             >
               {isLoading ? (
                 "جاري التجهيز..."
               ) : (
                 <>
-                  <Zap className="h-5 w-5" />
-                  افتح المسار المتقدم
-                  <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+                  <Zap className="h-6 w-6 fill-current" />
+                  ابدأ التعافي العميق
+                  <ArrowLeft className="h-6 w-6 transition-transform group-hover:-translate-x-1" />
                 </>
               )}
             </button>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
-        {/* Trust */}
-        <div className="mt-10 flex flex-col items-center gap-6">
-          <div className="flex flex-wrap items-center justify-center gap-4 text-center text-xs text-app-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Shield className="h-3.5 w-3.5" />
-              بياناتك مشفرة ومحمية
-            </div>
-            <span className="h-1 w-1 rounded-full bg-app-border" />
-            <div>إلغاء في أي وقت بدون شروط</div>
-            <span className="h-1 w-1 rounded-full bg-app-border" />
-            <div>الفتح خلال ساعة من التواصل</div>
-          </div>
-
-          <div className="w-full max-w-sm">
-            {!showVipInput ? (
-              <button 
-                onClick={() => setShowVipInput(true)}
-                className="w-full text-xs font-bold text-teal-600/60 dark:text-teal-400/60 hover:text-teal-500 py-2 border border-transparent border-b-teal-500/20 transition-all cursor-pointer bg-transparent outline-none"
-              >
-                لديك كود مرور سري (VIP)؟
-              </button>
-            ) : (
-              <div className="w-full relative flex items-center transform transition-all animate-in fade-in slide-in-from-bottom-2">
-                <input 
-                  type="text" 
-                  autoFocus
-                  placeholder="أدخل الكود..." 
-                  value={vipCode}
-                  onChange={(e) => setVipCode(e.target.value)}
-                  dir="ltr"
-                  className="w-full bg-app-muted/50 border border-teal-500/30 rounded-2xl py-3 px-4 outline-none focus:border-teal-400 text-center font-black tracking-widest text-teal-400 uppercase"
-                />
-                <button
-                  onClick={() => handleVipSubmit()}
-                  disabled={isVipLoading || !vipCode.trim()}
-                  className="absolute right-2 px-4 py-1.5 rounded-xl bg-teal-500/20 text-teal-400 text-sm font-bold hover:bg-teal-500 hover:text-white transition-all disabled:opacity-50"
-                >
-                  {isVipLoading ? "..." : "تأكيد"}
-                </button>
+        {/* Secret Gate (VIP Section) */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="mt-20 flex flex-col items-center gap-8 w-full max-w-md"
+        >
+          {!showVipInput ? (
+            <button 
+              onClick={() => setShowVipInput(true)}
+              className="group flex flex-col items-center gap-3 text-slate-500 hover:text-teal-400 transition-all"
+            >
+              <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:border-teal-500/50 group-hover:shadow-[0_0_15px_rgba(20,184,166,0.2)] transition-all">
+                <Shield className="w-4 h-4" />
               </div>
-            )}
-            {vipError && <div className="text-center text-xs text-red-400 mt-2 font-bold">{vipError}</div>}
+              <span className="text-xs font-black tracking-[0.2em] uppercase">لديك كود مرور سري؟</span>
+            </button>
+          ) : (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full relative group"
+            >
+              <input 
+                type="text" 
+                autoFocus
+                placeholder="أدخل الشفرة..." 
+                value={vipCode}
+                onChange={(e) => setVipCode(e.target.value)}
+                dir="ltr"
+                className="w-full bg-white/[0.02] border border-teal-500/20 rounded-2xl py-4 px-6 outline-none focus:border-teal-500/50 focus:bg-teal-500/[0.05] text-center font-black tracking-[0.4em] text-teal-400 uppercase placeholder:text-slate-700 transition-all"
+              />
+              <button
+                onClick={() => handleVipSubmit()}
+                disabled={isVipLoading || !vipCode.trim()}
+                className="absolute left-2 top-2 bottom-2 px-6 rounded-xl bg-teal-500 text-[#02040a] text-sm font-black hover:bg-teal-400 transition-all disabled:opacity-50"
+              >
+                {isVipLoading ? "..." : "تأكيد"}
+              </button>
+            </motion.div>
+          )}
+          {vipError && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-xs text-red-400 font-bold tracking-wide">{vipError}</motion.div>}
+          
+          {/* Trust Badges */}
+          <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-black uppercase tracking-[0.15em] text-slate-600 mt-4">
+            <span className="flex items-center gap-2"><Shield className="w-3 h-3" /> بيانات مشفرة</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
+            <span>إلغاء في أي وقت</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
+            <span>دعم مستمر ٢٤/٧</span>
           </div>
-        </div>
+        </motion.div>
+
+        <div className="h-24" />
       </div>
     </div>
   );
 }
+

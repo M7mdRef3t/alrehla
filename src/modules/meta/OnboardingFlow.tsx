@@ -43,12 +43,14 @@ const ONBOARDING_STYLES = `
   50% { transform: scale(1.08); filter: drop-shadow(0 0 24px var(--soft-teal-glow)); }
 }
 .ob-step-enter {
-  opacity: 1; transform: translateX(0) scale(1);
-  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: 1; transform: translateX(0) scale(1) translateY(0);
+  filter: blur(0px);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease-out;
 }
 .ob-step-exit {
-  opacity: 0; transform: translateX(60px) scale(0.95);
-  transition: opacity 0.25s ease-in, transform 0.25s ease-in;
+  opacity: 0; transform: translateX(40px) scale(0.97) translateY(10px);
+  filter: blur(8px);
+  transition: opacity 0.4s ease-in, transform 0.4s ease-in, filter 0.4s ease-in;
   pointer-events: none; position: absolute; inset: 0;
 }
 .ob-btn-tap:active { transform: scale(0.96); transition: transform 0.1s; }
@@ -159,6 +161,29 @@ interface OnboardingFlowProps {
     intent?: string | null;
   } | null;
 }
+
+const SentientGuideBubble: FC<{ message: string; visible: boolean }> = ({ message, visible }) => (
+  <AnimatePresence>
+    {visible && (
+      <motion.div
+        initial={{ opacity: 0, y: 15, scale: 0.9, filter: "blur(10px)" }}
+        animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+        exit={{ opacity: 0, y: -10, scale: 0.95, filter: "blur(10px)" }}
+        className="absolute top-0 left-0 right-0 z-[60] px-4 -mt-12"
+      >
+        <div className="bg-teal-500/10 backdrop-blur-xl border border-teal-500/20 rounded-2xl p-4 shadow-[0_10px_40px_rgba(45,212,191,0.1)] relative">
+          <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal-500 text-[8px] font-black text-slate-900 uppercase tracking-widest">
+            <Sparkles className="w-2.5 h-2.5" />
+            توجيه واعٍ
+          </div>
+          <p className="text-xs text-teal-100 font-bold leading-relaxed text-center">
+            {message}
+          </p>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
 
 type Ring = "green" | "yellow" | "red";
 
@@ -1152,6 +1177,16 @@ const ONBOARDING_STEP_NAMES = [
   "safety"         // 8
 ];
 
+const SENTIENT_MESSAGES: Record<number, string> = {
+  0: "أهلاً بك. أنا هنا لأرشدك في استكشاف خريطة وعيك. دعنا نبدأ بتصفية الضجيج.",
+  1: "كل حرف تكتبه هنا هو خطوة نحو الوضوح. لا تتردد، أفرغ ما في قلبك.",
+  2: "الآن، دعنا نحدد من هم رفاق طريقك في هذه المرحلة.",
+  3: "توزيع الدوائر يساعدك على رؤية حدودك. من يشحنك؟ ومن يستنزفك؟",
+  4: "هذه الأنماط التي نراها هي مفتاح استعادة سيادتك.",
+  5: "بقي القليل لنجهز لك بوصلتك الخاصة.. كيف يمكننا البقاء على اتصال؟",
+  6: "رؤيتك أصبحت جاهزة. هذه هي خارطة طريقك نحو السكينة."
+};
+
 export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initialMirrorName, gateContext = null }) => {
   const router = useRouter();
   const addNode = useMapState((s) => s.addNode);
@@ -1612,6 +1647,10 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
         </div>
 
         <div className="px-8 py-6 pb-10 overflow-y-auto custom-scrollbar relative">
+          <SentientGuideBubble 
+            message={SENTIENT_MESSAGES[step] || ""} 
+            visible={step < 7 && !!SENTIENT_MESSAGES[step]} 
+          />
           {step === 0 && <FirstSparkOnboarding onComplete={handleNoiseNext} gateContext={gateContext} />}
           {step === 1 && <StepPainDump onNext={handlePainDumpNext} onSkip={() => goTo(2)} />}
           {step === 2 && <StepInventory onNext={handleInventoryNext} onSkip={handleSkip} mirrorName={seededMirrorName} />}

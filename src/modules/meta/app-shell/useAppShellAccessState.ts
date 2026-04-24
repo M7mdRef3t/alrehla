@@ -49,7 +49,7 @@ export function useAppShellAccessState({
 
   // Always check the raw (database) role for owner-level privileges
   // so that the owner's admin UI isn't blocked when previewing as a user
-  const isPrivilegedUser = isPrivilegedRole(rawRole) || isPrivilegedRole(role);
+  const isPrivilegedUser = isPrivilegedRole(rawRole) || isPrivilegedRole(role) || adminAccess;
   const normalizedRole = typeof role === "string" ? role.trim().toLowerCase() : "";
   const normalizedRawRole = typeof rawRole === "string" ? rawRole.trim().toLowerCase() : "";
   const isOwnerWatcher = normalizedRole === "owner" || normalizedRole === "superadmin" || normalizedRole === "admin" || normalizedRole === "developer" ||

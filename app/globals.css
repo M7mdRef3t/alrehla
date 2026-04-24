@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* ⚡ CRITICAL: Tell Tailwind v4 to use .dark class for dark: utilities
+   instead of @media (prefers-color-scheme: dark).
+   This must match next-themes attribute="class" in layout.tsx */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-space-void: var(--space-void, #0a0e1f);
   --color-space-950: var(--space-950, #0f1629);

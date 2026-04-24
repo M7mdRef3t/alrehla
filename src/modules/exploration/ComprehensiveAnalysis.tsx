@@ -11,18 +11,10 @@ import { CA_DIMENSIONS, type CADimension } from "@/data/comprehensiveAssessmentD
 import { PartnerCompare } from '@/modules/growth/PartnerCompare';
 import { saveAnalysisResult, generateShareCode } from "@/services/partnerCompareService";
 import { useQuizHistory } from "@/hooks/useQuizHistory";
+import { SafeMotionCircle, SafeCircle } from "@/components/ui/SafeSvg";
 
 const toSafeSvgNumber = (value: unknown, fallback: number): number =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
-
-const SafeMotionCircle = ({ cx = 0, cy = 0, r = 0, ...props }: ComponentProps<typeof motion.circle>) => (
-  <motion.circle
-    cx={typeof cx === "string" ? cx : toSafeSvgNumber(cx, 0)}
-    cy={typeof cy === "string" ? cy : toSafeSvgNumber(cy, 0)}
-    r={Math.max(toSafeSvgNumber(typeof r === "string" ? Number(r) : r, 0), 0)}
-    {...props}
-  />
-);
 
 /* ══════════════════════════════════════════
    Save / Resume — localStorage
@@ -511,7 +503,7 @@ function CircularGauge({ pct, label, color, size = 160 }: {
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
       <div style={{ position: "relative", width: size, height: size }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={size * 0.08} />
+          <SafeCircle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={size * 0.08} />
           <SafeMotionCircle
             cx={cx} cy={cy} r={r} fill="none"
             stroke={color} strokeWidth={size * 0.08}

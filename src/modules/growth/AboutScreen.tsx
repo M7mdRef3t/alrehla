@@ -1,5 +1,5 @@
 import { memo, useState, useEffect, useRef } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 import { Brain, Map, Zap, Heart, Shield, ArrowLeft, Lightbulb, Zap as Sparkles } from "lucide-react";
 
 // ── القيم الجوهرية للرحلة ──
@@ -42,16 +42,15 @@ interface AboutScreenProps {
 }
 
 export const AboutScreen = memo(function AboutScreen({ onBack, onStart }: AboutScreenProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [timeSpent, setTimeSpent] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const smoothX = useSpring(mouseX, { damping: 40, stiffness: 40 });
+  const smoothY = useSpring(mouseY, { damping: 40, stiffness: 40 });
 
   // 1. الضباب الحي (Sentient Fog)
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"]
-  });
+  const { scrollYProgress } = useScroll();
 
   const fogOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const fogBlur = useTransform(scrollYProgress, [0, 0.2], [40, 0]);
@@ -68,7 +67,8 @@ export const AboutScreen = memo(function AboutScreen({ onBack, onStart }: AboutS
   const handleMouseMove = (e: React.MouseEvent) => {
     const x = (e.clientX / window.innerWidth) * 2 - 1; // من -1 إلى 1
     const y = (e.clientY / window.innerHeight) * 2 - 1; 
-    setMousePosition({ x, y });
+    mouseX.set(x * -80);
+    mouseY.set(y * -80);
   };
 
   // 4. خروج الفراغ (Void Exit)
@@ -86,7 +86,6 @@ export const AboutScreen = memo(function AboutScreen({ onBack, onStart }: AboutS
 
   return (
     <div 
-      ref={containerRef}
       onMouseMove={handleMouseMove}
       className="relative w-full bg-[#03050a] overflow-x-hidden font-sans selection:bg-teal-500/30 selection:text-teal-200"
     >
@@ -109,16 +108,22 @@ export const AboutScreen = memo(function AboutScreen({ onBack, onStart }: AboutS
         )}
       </AnimatePresence>
 
+      {/* ── Reactive Blobs (Background) ── */}
+      <motion.div 
+        style={{ x: smoothX, y: smoothY }}
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] max-w-3xl aspect-square bg-teal-500/10 rounded-full blur-[140px] pointer-events-none z-0"
+      />
+
       {/* ── الضباب الحي (Sentient Fog) ── */}
       <motion.div 
-        className="fixed inset-0 pointer-events-none z-40 bg-[#03050a]/90"
+        className="fixed inset-0 pointer-events-none z-10 bg-[#03050a]/60"
         style={{ 
           opacity: fogOpacity,
           backdropFilter: useTransform(fogBlur, b => `blur(${b}px)`)
         }}
       />
 
-      <div className="max-w-4xl mx-auto px-6 py-12 relative z-10">
+      <div className="max-w-4xl mx-auto px-6 py-12 relative z-30">
         
         {/* Back */}
         {onBack && (
@@ -140,15 +145,7 @@ export const AboutScreen = memo(function AboutScreen({ onBack, onStart }: AboutS
           className="relative min-h-[90vh] flex flex-col justify-center mb-20 text-center"
         >
           
-          {/* Reactive Blobs */}
-          <motion.div 
-            animate={{ 
-              x: mousePosition.x * -80, 
-              y: mousePosition.y * -80,
-            }}
-            transition={{ type: "spring", damping: 40, stiffness: 40 }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] max-w-3xl aspect-square bg-teal-500/10 rounded-full blur-[140px] pointer-events-none"
-          />
+          {/* Removed Reactive Blobs from here as they are now in the background */}
 
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -175,12 +172,18 @@ export const AboutScreen = memo(function AboutScreen({ onBack, onStart }: AboutS
             </p>
           </motion.div>
 
-          {/* ── Scroll Indicator ── */}
-          <motion.div 
+        </motion.div>
+
+        {/* ── Scroll Indicator ── */}
+        <motion.div 
+          style={{ opacity: heroOpacity }}
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-50 pointer-events-none"
+        >
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 2, duration: 1 }}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-50"
+            className="flex flex-col items-center gap-3"
           >
             <span className="text-[10px] text-teal-500/70 font-mono tracking-widest uppercase">اغص أعمق</span>
             <div className="w-6 h-10 border-2 border-teal-500/30 rounded-full flex justify-center p-1">

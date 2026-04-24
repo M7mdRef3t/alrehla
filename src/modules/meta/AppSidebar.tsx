@@ -533,7 +533,9 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const journeyPaths = useAdminState((s) => s.journeyPaths);
   const role = useAuthState(getEffectiveRoleFromState);
   const rawRole = useAuthState((s) => s.role);
-  const isOwner = isPrivilegedRole(rawRole) || isPrivilegedRole(role);
+  const ecosystemData = useAuthState((s) => s.ecosystemData);
+  const activeSatellites = ecosystemData?.active_satellites ?? ["alrehla"];
+  const isOwner = isPrivilegedRole(rawRole) || isPrivilegedRole(role) || adminAccess;
   const canShowJourneyToolsEntry = Boolean(onOpenJourneyTools) && isOwner;
   const sanctuaryPath = getJourneyPathBySlug(journeyPaths, "sanctuary");
   const sanctuaryPathTarget = sanctuaryPath?.isActive ? sanctuaryPath?.targetScreen : "sanctuary";
@@ -673,13 +675,15 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   active={window.location.pathname === "/" && window.location.hash === "#map"}
                   color="#14b8a6"
                 />
-                <SidebarItem
-                  label="البوصلة"
-                  icon={<Compass className="w-3.5 h-3.5 outline-none" />}
-                  onClick={() => navigateProductScreen("bawsala")}
-                  active={window.location.hash === "#bawsala"}
-                  color="#2dd4bf"
-                />
+                {!activeSatellites.includes("masarat") ? null : (
+                  <SidebarItem
+                    label="البوصلة"
+                    icon={<Compass className="w-3.5 h-3.5 outline-none" />}
+                    onClick={() => navigateProductScreen("bawsala")}
+                    active={window.location.hash === "#bawsala"}
+                    color="#2dd4bf"
+                  />
+                )}
                 <SidebarItem
                   label="الأهداف الذكية"
                   icon={<Target className="w-3.5 h-3.5 outline-none" />}
@@ -714,12 +718,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => navigateProductScreen("hafiz")}
                   color="#a855f7"
                 />
-                <SidebarItem
-                  label="الرادار"
-                  icon={<Radar className="w-3.5 h-3.5 outline-none" />}
-                  onClick={() => navigateProductScreen("sada")}
-                  color="#06b6d4"
-                />
+                {activeSatellites.includes("dawayir") && (
+                  <SidebarItem
+                    label="الصدى (رادار)"
+                    icon={<Radar className="w-3.5 h-3.5 outline-none" />}
+                    onClick={() => navigateProductScreen("sada")}
+                    color="#06b6d4"
+                  />
+                )}
                 <SidebarItem
                   label="المركز (Command)"
                   icon={<LayoutGrid className="w-3.5 h-3.5 outline-none" />}
@@ -732,12 +738,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => navigateProductScreen("niyya")}
                   color="#10b981"
                 />
-                <SidebarItem
-                  label="الصمت (Breathing)"
-                  icon={<Wind className="w-3.5 h-3.5 outline-none" />}
-                  onClick={() => navigateProductScreen("samt")}
-                  color="#14b8a6"
-                />
+                {activeSatellites.includes("atmosfera") && (
+                  <SidebarItem
+                    label="الصمت (Breathing)"
+                    icon={<Wind className="w-3.5 h-3.5 outline-none" />}
+                    onClick={() => navigateProductScreen("samt")}
+                    color="#14b8a6"
+                  />
+                )}
               </SidebarSector>
 
               {isOwner && (
@@ -882,30 +890,38 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   onClick={() => setOverlay("pastSessionsLog", true)}
                   color="#a78bfa"
                 />
-                <SidebarItem
-                  label="جلسة خاصة"
-                  icon={<CalendarDays className="w-4 h-4" />}
-                  onClick={() => navigateProductScreen("session-intake")}
-                  color="#60a5fa"
-                />
-                <SidebarItem
-                  label="لوحة الكوتش"
-                  icon={<MessageCircle className="w-4 h-4" />}
-                  onClick={() => navigateProductScreen("session-console")}
-                  color="#14b8a6"
-                />
-                <SidebarItem
-                  label="أجواء الرحلة"
-                  icon={<Wind className="w-4 h-4" />}
-                  onClick={() => navigateProductScreen("atmosfera")}
-                  color="#2dd4bf"
-                />
-                <SidebarItem
-                  label="مسارات"
-                  icon={<Compass className="w-4 h-4" />}
-                  onClick={() => navigateProductScreen("masarat")}
-                  color="#f59e0b"
-                />
+                {activeSatellites.includes("sessions") && (
+                  <>
+                    <SidebarItem
+                      label="جلسة خاصة"
+                      icon={<CalendarDays className="w-4 h-4" />}
+                      onClick={() => navigateProductScreen("session-intake")}
+                      color="#60a5fa"
+                    />
+                    <SidebarItem
+                      label="لوحة الكوتش"
+                      icon={<MessageCircle className="w-4 h-4" />}
+                      onClick={() => navigateProductScreen("session-console")}
+                      color="#14b8a6"
+                    />
+                  </>
+                )}
+                {activeSatellites.includes("atmosfera") && (
+                  <SidebarItem
+                    label="أجواء الرحلة"
+                    icon={<Wind className="w-4 h-4" />}
+                    onClick={() => navigateProductScreen("atmosfera")}
+                    color="#2dd4bf"
+                  />
+                )}
+                {activeSatellites.includes("masarat") && (
+                  <SidebarItem
+                    label="مسارات"
+                    icon={<Compass className="w-4 h-4" />}
+                    onClick={() => navigateProductScreen("masarat")}
+                    color="#f59e0b"
+                  />
+                )}
               </SidebarSector>
             </div>
 

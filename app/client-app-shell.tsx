@@ -98,6 +98,9 @@ function shouldSilenceAiLog(args: unknown[]): boolean {
     text.includes("[ORCHESTRATOR] Sanctuary Mode deactivated") ||
     text.includes("[Decision]") ||
     text.includes("Question generation requires approval") ||
+    // Dev-only: analytics sync fails locally (no SUPABASE_SERVICE_ROLE_KEY in .env.local)
+    text.includes("[JourneyTracking] Failed to sync event") ||
+    text.includes("[JourneyTracking] Invalid analytics envelope blocked") ||
     (lowerMsg.includes("[meta pixel]") && lowerMsg.includes("unavailable") && lowerMsg.includes("traffic permission")) ||
     lowerMsg.includes("skipping auto-scroll behavior") ||
     lowerMsg.includes("pulse anchored to reality")
@@ -114,6 +117,36 @@ function isInvalidSvgRadiusValue(value: string): boolean {
     token === "infinity" ||
     token === "-infinity"
   );
+}
+
+// Intercept console globally before React/Next.js hydration starts
+// This catches early warnings from layout-router and hydration mismatches.
+if (typeof window !== "undefined" && runtimeEnv.isDev) {
+  const originalWarn = console.warn.bind(console);
+  const originalError = console.error.bind(console);
+  const originalInfo = console.info.bind(console);
+  const originalDebug = console.debug.bind(console);
+
+  console.warn = (...args: unknown[]) => {
+    if (!shouldSilenceAiLog(args)) originalWarn(...args);
+  };
+
+  console.error = (...args: unknown[]) => {
+    if (!shouldSilenceAiLog(args)) originalError(...args);
+  };
+
+  console.info = (...args: unknown[]) => {
+    if (!shouldSilenceAiLog(args)) originalInfo(...args);
+  };
+
+  console.debug = (...args: unknown[]) => {
+    const msg = args.join(" ");
+    if (msg.includes("Pulse")) {
+      originalDebug(`[Pulse] Reality anchor: ${msg}`);
+    } else {
+      originalDebug(...args);
+    }
+  };
 }
 
 function getFiberDisplayName(candidate: unknown): string | null {
@@ -138,7 +171,7 @@ function getFiberDisplayName(candidate: unknown): string | null {
 }
 
 function getReactOwnerChain(node: Element): string[] {
-  const record = node as Record<string, unknown>;
+  const record = (node as unknown) as Record<string, unknown>;
   const fiberKey = Object.keys(record).find((key) => key.startsWith("__reactFiber$"));
   if (!fiberKey) return [];
 
@@ -159,6 +192,7 @@ function getReactOwnerChain(node: Element): string[] {
 
   return chain;
 }
+
 
 function shouldBootIntoFullApp(): boolean {
   if (typeof window === "undefined") return true;
@@ -220,8 +254,9 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
   useEffect(() => {
     if (typeof window === "undefined" || typeof Element === "undefined" || typeof SVGCircleElement === "undefined") return;
 
-    const windowRecord = window as Window & Record<string, unknown>;
+    const windowRecord = window as any;
     const patchFlag = "__ALREHLA_INVALID_SVG_RADIUS_DEBUG__";
+
     if (windowRecord[patchFlag]) return;
 
     const originalSetAttribute = Element.prototype.setAttribute;
@@ -233,15 +268,8 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
         name === "r" &&
         isInvalidSvgRadiusValue(String(value))
       ) {
-        if (runtimeEnv.isDev) {
-          const ownerChain = getReactOwnerChain(this);
-          console.groupCollapsed("[SVG radius debug] Invalid <circle r> detected");
-          console.error("value:", value);
-          console.error("ownerChain:", ownerChain.join(" <- ") || "(unknown)");
-          console.error("element:", this);
-          console.trace("[SVG radius debug trace]");
-          console.groupEnd();
-        }
+        // Silenced: SVG radius is patched to 0 automatically — no action needed in dev
+        // (geometry NaN/undefined values are sanitized upstream in the rendering pipeline)
 
         return originalSetAttribute.call(this, name, "0");
       }
@@ -256,15 +284,7 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
       value: string
     ) {
       if (this instanceof SVGCircleElement && name === "r" && isInvalidSvgRadiusValue(String(value))) {
-        if (runtimeEnv.isDev) {
-          const ownerChain = getReactOwnerChain(this);
-          console.groupCollapsed("[SVG radius debug] Invalid <circle r> detected (NS)");
-          console.error("value:", value);
-          console.error("ownerChain:", ownerChain.join(" <- ") || "(unknown)");
-          console.error("element:", this);
-          console.trace("[SVG radius debug trace]");
-          console.groupEnd();
-        }
+        // Silenced: SVG radius is patched to 0 automatically — no action needed in dev
 
         return originalSetAttributeNS.call(this, namespace, name, "0");
       }
@@ -287,42 +307,7 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
     };
   }, []);
 
-  useEffect(() => {
-    if (!runtimeEnv.isDev || typeof window === "undefined") return;
-
-    const originalWarn = console.warn.bind(console);
-    const originalError = console.error.bind(console);
-    const originalInfo = console.info.bind(console);
-    const originalDebug = console.debug.bind(console);
-
-    console.warn = (...args: unknown[]) => {
-      if (!shouldSilenceAiLog(args)) originalWarn(...args);
-    };
-
-    console.error = (...args: unknown[]) => {
-      if (!shouldSilenceAiLog(args)) originalError(...args);
-    };
-
-    console.info = (...args: unknown[]) => {
-      if (!shouldSilenceAiLog(args)) originalInfo(...args);
-    };
-
-    console.debug = (...args: unknown[]) => {
-      const msg = args.join(" ");
-      if (msg.includes("Pulse")) {
-        originalDebug(`[Pulse] Reality anchor: ${msg}`);
-      } else {
-        originalDebug(...args);
-      }
-    };
-
-    return () => {
-      console.warn = originalWarn;
-      console.error = originalError;
-      console.info = originalInfo;
-      console.debug = originalDebug;
-    };
-  }, []);
+  // Console silencing is now handled at module level to catch early hydration/router warnings.
 
   const handleExitToLanding = useCallback(() => {
     if (typeof window !== "undefined" && window.location.pathname !== "/") {

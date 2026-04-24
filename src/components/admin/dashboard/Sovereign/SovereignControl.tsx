@@ -1,19 +1,18 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Zap as Sparkles, Send, Zap, Wind, AlertCircle, Eye, Brain, ShieldAlert, History, Terminal } from "lucide-react";
+import { Shield, Sparkles, Wind, Eye, Brain, ShieldAlert, History, Activity, Compass } from "lucide-react";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import { fetchOverviewStats } from "@/services/admin/adminAnalytics";
 import { fetchAlertIncidents } from "@/services/admin/adminAlerts";
 import { fetchBroadcasts } from "@/services/admin/adminBroadcasts";
-import { type OverviewStats, type AlertIncident } from "@/services/admin/adminTypes";
+import type { OverviewStats, AlertIncident } from "@/services/admin/adminTypes";
 import { useAdminState, type AdminBroadcast } from "@/domains/admin/store/admin.store";
 import { CollapsibleSection } from "../../ui/CollapsibleSection";
 import { IllusionRadar } from "./IllusionRadar";
-import { SovereignSpreadCommand } from "./SovereignSpreadCommand";
-import { SovereignDecisionLog } from "./SovereignDecisionLog";
 import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
+import { ProactiveResonanceFeed } from "./ProactiveResonanceFeed";
 import { useLockdownState } from "@/domains/admin/store/lockdown.store";
 import { useThemeState } from "@/domains/consciousness/store/theme.store";
 
@@ -34,6 +33,7 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
   const [broadcastMessage, setBroadcastMessage] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
   const [isTakeoverModalOpen, setIsTakeoverModalOpen] = useState(false);
+  const [compassionProtocolActive, setCompassionProtocolActive] = useState(false);
   const { isLockedDown, triggerLockdown } = useLockdownState();
   const { customTokens, updateTokens } = useThemeState();
   
@@ -41,6 +41,7 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
   const [liveStats, setLiveStats] = useState<OverviewStats | null>(null);
   const [incidents, setIncidents] = useState<AlertIncident[] | null>(null);
   const [history, setHistory] = useState<AdminBroadcast[]>([]);
+  const [healthScore, setHealthScore] = useState<number>(100);
   const [isLoadingPulse, setIsLoadingPulse] = useState(true);
 
   useEffect(() => {
@@ -62,6 +63,13 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
         setIsLoadingPulse(false);
         return;
       }
+
+      try {
+        const healthData = JSON.parse(localStorage.getItem("dawayir-health-history") || "[]");
+        if (healthData.length > 0) {
+          setHealthScore(healthData[healthData.length - 1].score);
+        }
+      } catch (e) {}
 
       const [data, stats, alerts, historicalBroadcasts] = await Promise.all([
         adminClient.from("system_settings").select("value").eq("key", "global_harmony_override").maybeSingle(),
@@ -112,10 +120,31 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
 
   const criticalCount = incidents?.filter(i => i.severity === 'critical' || i.severity === 'high').length || 0;
   const isCritical = criticalCount > 0;
+  
+  const currentHour = new Date().getHours();
+  const isLateNight = currentHour >= 22 || currentHour <= 5;
 
   return (
     <div className="space-y-12 max-w-[1600px] mx-auto px-4 pb-24" dir="rtl">
       
+      <AnimatePresence>
+        {isLateNight && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="bg-indigo-950/40 border border-indigo-500/20 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6"
+          >
+            <div className="p-3 bg-indigo-500/10 rounded-full shrink-0">
+              <Wind className="w-8 h-8 text-indigo-400" />
+            </div>
+            <div className="flex-1 text-center md:text-right">
+              <h3 className="text-xl font-black text-indigo-300 mb-1">الملاذ آمن الآن. لا توجد قرارات مصيرية تتطلب تدخلك.</h3>
+              <p className="text-sm text-indigo-400/70 font-bold">الوقت متأخر. خذ نفساً عميقاً، المنظومة تحرس نفسها. يفضل عدم تعديل تناغم الأثير حتى شروق الشمس.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 
         HERO SECTION: Proactive Resonance Oracle 
         We strip out the rigid grid stats and present the admin with a human-readable AI analysis.
@@ -123,14 +152,14 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[3rem] p-10 md:p-16 border"
+        className={`relative overflow-hidden rounded-[3rem] p-10 md:p-16 border transition-all duration-1000 ${compassionProtocolActive ? "ring-4 ring-amber-500/50" : ""}`}
         style={{
-          background: isCritical ? "rgba(225, 29, 72, 0.05)" : "rgba(15, 23, 42, 0.6)",
-          borderColor: isCritical ? "rgba(225, 29, 72, 0.2)" : "rgba(51, 65, 85, 0.5)",
-          boxShadow: isCritical ? "0 0 100px rgba(225, 29, 72, 0.1) inset" : "none"
+          background: compassionProtocolActive ? "rgba(245, 158, 11, 0.05)" : isCritical ? "rgba(225, 29, 72, 0.05)" : "rgba(15, 23, 42, 0.6)",
+          borderColor: compassionProtocolActive ? "rgba(245, 158, 11, 0.4)" : isCritical ? "rgba(225, 29, 72, 0.2)" : "rgba(51, 65, 85, 0.5)",
+          boxShadow: compassionProtocolActive ? "0 0 150px rgba(245, 158, 11, 0.15) inset" : isCritical ? "0 0 100px rgba(225, 29, 72, 0.1) inset" : "none"
         }}
       >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent opacity-50" />
+        <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent ${compassionProtocolActive ? "via-amber-400" : "via-amber-500/50"} to-transparent opacity-50`} />
         
         <div className="flex flex-col md:flex-row gap-12 items-center relative z-10">
           
@@ -190,15 +219,89 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
                   حظر شامل (Lockdown)
                 </button>
               )}
+              
+              <button 
+                onClick={() => setCompassionProtocolActive(!compassionProtocolActive)}
+                className={`px-6 py-4 rounded-2xl border transition-all text-sm font-black flex items-center gap-3 ${
+                  compassionProtocolActive 
+                    ? "bg-amber-500 text-slate-900 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:bg-amber-400" 
+                    : "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-500"
+                }`}
+              >
+                <Shield className="w-5 h-5" />
+                {compassionProtocolActive ? "بروتوكول الرحمة مفعل (عزل تسويقي)" : "تفعيل بروتوكول الرحمة"}
+              </button>
             </div>
           </div>
         </div>
+
+        <ProactiveResonanceFeed stats={liveStats} />
       </motion.div>
 
       {/* 
-        SECONDARY LAYER: Illusion Radar & Atmosphere Lab
+        SECONDARY LAYER: The Vitality Core & Flow Aurora
       */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Sanctuary Vitality Core (Replaces HealthMonitorPanel) */}
+        <div className="bg-slate-900/60 border border-slate-800 rounded-[2.5rem] p-10 backdrop-blur-xl relative overflow-hidden group">
+          <div className={`absolute top-0 right-0 w-[300px] h-[300px] blur-[100px] rounded-full pointer-events-none transition-all duration-1000 ${
+            healthScore < 70 ? "bg-rose-500/10" : healthScore < 90 ? "bg-amber-500/10" : "bg-emerald-500/10"
+          }`} />
+          
+          <div className="flex items-center gap-3 mb-8 relative z-10">
+            <Activity className={`w-6 h-6 ${healthScore < 70 ? "text-rose-400" : "text-emerald-400"}`} />
+            <h3 className="text-xl font-black text-white">نبض الملاذ</h3>
+          </div>
+          
+          <div className="relative z-10 flex flex-col items-center justify-center py-4">
+            <div className="relative flex items-center justify-center">
+              <motion.div 
+                animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
+                transition={{ duration: healthScore < 70 ? 1 : 3, repeat: Infinity, ease: "easeInOut" }}
+                className={`absolute inset-0 rounded-full blur-xl ${healthScore < 70 ? "bg-rose-500/30" : "bg-emerald-500/20"}`}
+              />
+              <div className={`w-32 h-32 rounded-full border-2 flex items-center justify-center text-4xl font-black ${
+                healthScore < 70 ? "border-rose-500/50 text-rose-400" : "border-emerald-500/30 text-emerald-400"
+              }`}>
+                {healthScore}%
+              </div>
+            </div>
+            <p className="text-slate-400 font-bold text-sm mt-6 text-center leading-relaxed">
+              {healthScore < 70 ? "هناك جروح في البنية التحتية تتطلب انتباهك. راجع السجلات التقنية." : 
+               healthScore < 90 ? "الملاذ مستقر، ولكن هناك بعض التموجات في الأداء." : 
+               "البنية التحتية تتنفس بانتظام. لا توجد اختناقات برمجية."}
+            </p>
+          </div>
+        </div>
+
+        {/* AI Routing Aurora (Replaces FlowDynamicsDashboard) */}
+        <div className="bg-slate-900/60 border border-slate-800 rounded-[2.5rem] p-10 backdrop-blur-xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none transition-all duration-1000" />
+          
+          <div className="flex items-center gap-3 mb-8 relative z-10">
+            <Compass className="w-6 h-6 text-cyan-400" />
+            <h3 className="text-xl font-black text-white">توجيه الأرواح (AI Routing)</h3>
+          </div>
+          
+          <div className="relative z-10 space-y-6">
+            <div className="flex justify-between items-center pb-4 border-b border-white/5">
+              <span className="text-slate-400 font-bold text-sm">التدخلات لإنقاذ المسار</span>
+              <span className="text-xl font-black text-cyan-400">
+                {liveStats?.routingTelemetry?.interventionHealth?.interventionRatePct ?? 0}%
+              </span>
+            </div>
+            <div className="flex justify-between items-center pb-4 border-b border-white/5">
+              <span className="text-slate-400 font-bold text-sm">معدل الخروج عن المألوف</span>
+              <span className="text-xl font-black text-indigo-400">
+                {liveStats?.routingV2?.explorationRate ?? 0}%
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-bold leading-relaxed pt-2">
+              الذكاء الاصطناعي يتولى توجيه المسافرين بناءً على حمولتهم المعرفية. الأرقام المرتفعة للتدخل تعني أن النظام يستشعر إحباطاً جماعياً ويقوم بتخفيف العبء تلقائياً.
+            </p>
+          </div>
+        </div>
         
         {/* Atmosphere Lab */}
         <div className="bg-slate-900/60 border border-slate-800 rounded-[2.5rem] p-10 backdrop-blur-xl">
@@ -220,7 +323,23 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
                 onChange={(e) => handleUpdateHarmony(parseFloat(e.target.value))}
                 className="w-full accent-teal-500"
               />
-              <p className="text-[10px] text-slate-500 font-black tracking-widest uppercase text-left">Chaos ⟷ Zen</p>
+              <div className="flex flex-col gap-2">
+                <p className="text-[10px] text-slate-500 font-black tracking-widest uppercase text-left">Chaos ⟷ Zen</p>
+                <motion.p 
+                  key={harmonyOverride}
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`text-xs font-bold leading-relaxed pr-2 border-r-2 ${
+                    harmonyOverride < 0.6 ? "text-amber-400 border-amber-500" :
+                    harmonyOverride > 0.85 ? "text-emerald-400 border-emerald-500" :
+                    "text-indigo-400 border-indigo-500"
+                  }`}
+                >
+                  {harmonyOverride < 0.6 ? "تأثير الفراشة: ضغط نفسي محتمل، تسارع في التدفق." :
+                   harmonyOverride > 0.85 ? "تأثير الفراشة: صفاء عميق، استقرار في اتخاذ القرار، هدوء حسي." :
+                   "تأثير الفراشة: توازن بين التحفيز والطمأنينة."}
+                </motion.p>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -238,15 +357,6 @@ export const SovereignControl: FC<SovereignControlProps> = ({ onClose }) => {
                <p className="text-[10px] text-slate-500 font-black tracking-widest uppercase text-left">Clarity ⟷ Tension</p>
             </div>
           </div>
-        </div>
-
-        {/* Spread Command */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-[2.5rem] p-10 backdrop-blur-xl">
-          <div className="flex items-center gap-3 mb-8">
-            <Send className="w-6 h-6 text-purple-400" />
-            <h3 className="text-xl font-black text-white">الانتشار الكمّي</h3>
-          </div>
-          <SovereignSpreadCommand minimal={true} />
         </div>
       </div>
 

@@ -11,6 +11,8 @@ import { BreathingOverlay } from "./BreathingOverlay";
 import { MapOnboardingOverlay } from "./MapOnboardingOverlay";
 import { hasSeenOnboarding } from "@/utils/mapOnboarding";
 import { Map, TreeDeciduous, X, Mic, Zap as Sparkles } from "lucide-react";
+import { SafeMotionCircle } from "@/components/ui/SafeSvg";
+
 import { DailyPulseWidget } from "./DailyPulseWidget";
 import { GoogleAuthModal } from "./GoogleAuthModal";
 import { DailyJournalArchive } from "./DailyJournalArchive";
@@ -88,69 +90,7 @@ const cosmicFade = {
   }
 };
 
-const isInvalidSvgToken = (value: string): boolean => {
-  const token = value.trim().toLowerCase();
-  return (
-    token === "" ||
-    token === "undefined" ||
-    token === "nan" ||
-    token === "null" ||
-    token === "infinity" ||
-    token === "-infinity"
-  );
-};
 
-const toSafeSvgCoordinate = (value: unknown, fallback: number): number | string => {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && !isInvalidSvgToken(value)) return value;
-  return fallback;
-};
-
-const toSafeSvgRadius = (value: unknown, fallback: number): number => {
-  if (typeof value === "number" && Number.isFinite(value)) return Math.max(value, 0);
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) return Math.max(parsed, 0);
-  }
-  return Math.max(fallback, 0);
-};
-
-const sanitizeCircleMotionState = <T,>(state: T): T => {
-  if (!state || typeof state !== "object" || Array.isArray(state)) return state;
-  const record = state as Record<string, unknown>;
-  if (!Object.prototype.hasOwnProperty.call(record, "r")) return state;
-
-  const rawR = record.r;
-  const safeR = Array.isArray(rawR)
-    ? rawR.map((value) => toSafeSvgRadius(value, 0))
-    : toSafeSvgRadius(rawR, 0);
-
-  return { ...record, r: safeR } as T;
-};
-
-type SafeMotionCircleProps = ComponentProps<typeof motion.circle> & {
-  cx?: number | string;
-  cy?: number | string;
-  r?: number | string;
-};
-
-const SafeMotionCircle: FC<SafeMotionCircleProps> = ({ cx = 0, cy = 0, r = 0, ...props }) => {
-  const { initial, animate, exit, whileHover, whileTap, whileFocus, ...rest } = props;
-  return (
-    <motion.circle
-      cx={toSafeSvgCoordinate(cx, 0)}
-      cy={toSafeSvgCoordinate(cy, 0)}
-      r={toSafeSvgRadius(r, 0)}
-      initial={sanitizeCircleMotionState(initial)}
-      animate={sanitizeCircleMotionState(animate)}
-      exit={sanitizeCircleMotionState(exit)}
-      whileHover={sanitizeCircleMotionState(whileHover)}
-      whileTap={sanitizeCircleMotionState(whileTap)}
-      whileFocus={sanitizeCircleMotionState(whileFocus)}
-      {...rest}
-    />
-  );
-};
 
 const SovereignBroadcastOverlay: FC<{ message: { message: string; id: string } | null }> = ({ message }) => {
   return (
@@ -779,10 +719,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             variants={cosmicFade}
             className="flex flex-col items-center"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] mb-4" style={{ borderColor: "rgba(20,184,166,0.3)", background: "rgba(20,184,166,0.08)", color: "#5eead4" }}>
-              <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse shadow-[0_0_12px_rgba(45,212,191,0.8)]" />
-               Sovereign Radar
-            </div>
 
             <motion.h1 
               variants={cosmicFade}
@@ -792,9 +728,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             </motion.h1>
             <motion.p 
               variants={cosmicFade}
-              className="text-xs text-white/40 mt-1 font-medium tracking-wide"
+              className="text-xs text-white mt-4 font-medium tracking-wide"
             >
-              {subtitle}
+              {activeNodes.length === 0 ? mapCopy.emptyMapTitle : subtitle}
             </motion.p>
 
           </motion.div>
@@ -982,30 +918,30 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             )}
           </AnimatePresence>
 
-          {/* Empty State */}
+          {/* Empty State: Subtle Pulse Only */}
           {activeNodes.length === 0 && !showOnboarding && !journeyMode && (
             <motion.div
               className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 1.2 }}
             >
-              <div className="relative mb-6">
-                <svg width={80} height={80} viewBox="0 0 80 80">
-                  {[0, 0.6, 1.2].map((delay, i) => (
+              <div className="relative">
+                <svg width={120} height={120} viewBox="0 0 120 120">
+                  {[0, 0.8, 1.6].map((delay, i) => (
                     <SafeMotionCircle
-                      key={i} cx={40} cy={40} r={20}
-                      fill="none" stroke="rgba(45,212,191,0.6)" strokeWidth={1}
-                      animate={{ r: [20, 38], opacity: [0.7, 0] }}
-                      transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut", delay }}
+                      key={i} cx={60} cy={60} r={30}
+                      fill="none" stroke="rgba(45,212,191,0.4)" strokeWidth={1}
+                      animate={{ r: [30, 58], opacity: [0.5, 0] }}
+                      transition={{ duration: 3.2, repeat: Infinity, ease: "easeOut", delay }}
                     />
                   ))}
                   <SafeMotionCircle
-                    cx={40} cy={40} r={10}
+                    cx={60} cy={60} r={15}
                     fill="url(#emptyStateGrad)"
-                    animate={{ scale: [1, 1.12, 1], opacity: [0.85, 1, 0.85] }}
-                    style={{ transformOrigin: "40px 40px" }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
+                    style={{ transformOrigin: "60px 60px" }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                   />
                   <defs>
                     <radialGradient id="emptyStateGrad" cx="50%" cy="40%" r="60%">
@@ -1014,14 +950,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     </radialGradient>
                   </defs>
                 </svg>
-              </div>
-              <div className="text-center px-6 pointer-events-auto">
-                <motion.h3 className="text-xl font-black mb-2 text-white">
-                  <EditableText id="map_empty_title" defaultText={mapCopy.emptyMapTitle} page="map" />
-                </motion.h3>
-                <p className="text-sm mb-4 max-w-[220px] mx-auto text-slate-300">
-                  <EditableText id="map_empty_hint" defaultText={mapCopy.emptyMapHint} page="map" multiline showEditIcon={false} />
-                </p>
               </div>
             </motion.div>
           )}

@@ -7,6 +7,7 @@ import { type OverviewStats } from "@/services/admin/adminTypes";
 import { ConsciousnessMap } from "../Consciousness/ConsciousnessMap";
 import { AwarenessAndScenarios } from "../Overview/components/AwarenessAndScenarios";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
+import { ProactiveResonanceFeed } from "../Sovereign/ProactiveResonanceFeed";
 
 export const ConsciousnessAtlasDashboard: FC = () => {
     const [remoteStats, setRemoteStats] = useState<OverviewStats | null>(null);
@@ -88,6 +89,11 @@ export const ConsciousnessAtlasDashboard: FC = () => {
                     awarenessGap={remoteStats?.awarenessGap ?? null}
                     loading={initialLoading}
                 />
+            </div>
+
+            {/* Narrative Whispers from the Map */}
+            <div className="max-w-4xl mx-auto">
+                <ProactiveResonanceFeed mode="sentient" stats={remoteStats} />
             </div>
         </div>
     );

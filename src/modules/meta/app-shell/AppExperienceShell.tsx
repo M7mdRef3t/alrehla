@@ -3,7 +3,7 @@
 import { syncMemoryFromSupabase } from "@/services/userMemory";
 import { syncSubscription } from "@/services/subscriptionManager";
 import { syncLiveSessionsFromSupabase } from "@/modules/dawayir-live/utils/sessionHistory";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, startTransition } from "react";
 import { isPhaseOneUserFlow, isUserMode, isRevenueMode } from "@/config/appEnv";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import {
@@ -39,6 +39,7 @@ import { useMapState } from "@/modules/map/store/map.store";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { UserbackWidget } from "@/components/UserbackWidget";
 import { hasDiagnosisCompleted } from "@/modules/diagnosis";
+import type { AdviceCategory } from "@/data/adviceScripts";
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
@@ -176,7 +177,9 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       window.sessionStorage.removeItem(APP_BOOT_ACTION_KEY);
       const targetScreen = action.replace(APP_SCREEN_BOOT_ACTION_PREFIX, "");
       // Navigate to the requested screen (e.g., tools, insights)
-      setScreen(targetScreen as AppShellScreen);
+      startTransition(() => {
+        setScreen(targetScreen as AppShellScreen);
+      });
       return;
     }
 
@@ -681,7 +684,9 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     onSelectNode: setSelectedNodeId,
     onFeatureLocked: setLockedFeature,
     openRegularPulseCheck,
-    openSurveyScreen: () => {
+    openSurveyScreen: (nextGoalId?: string, nextCategory?: string) => {
+      if (nextGoalId) setGoalId(nextGoalId);
+      if (nextCategory) setCategory(nextCategory as AdviceCategory);
       void navigateToScreen("survey");
     },
     openLandingScreen: () => {

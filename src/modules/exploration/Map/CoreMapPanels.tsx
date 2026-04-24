@@ -95,7 +95,7 @@ export function MapOperationalStrip({
     <motion.div 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }} 
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4 pointer-events-auto"
+      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4 pointer-events-auto"
     >
       <div className="relative overflow-hidden rounded-2xl glass-dark border border-white/10 backdrop-blur-3xl shadow-2xl flex items-center p-1.5 h-16 ring-1 ring-white/5">
         {/* Glow Background */}

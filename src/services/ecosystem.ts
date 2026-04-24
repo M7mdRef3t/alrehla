@@ -1,5 +1,6 @@
 import { supabase } from "./supabaseClient";
 import { EcosystemData, ProductId } from "@/types/ecosystem";
+import { ProfileService } from "./profileService";
 import { logger } from "./logger";
 
 // Simple debounce implementation to prevent hammering the DB on every keypress/click
@@ -51,15 +52,10 @@ export class EcosystemSyncService {
         pendingUpdateData = {}; // Clear pending queue
 
         try {
-            const { error } = await supabase.rpc('update_profiles_ecosystem_data', {
-                p_ecosystem_data: dataToSync
-            });
+            const { error } = await ProfileService.updateEcosystemData(dataToSync);
 
             if (error) {
-                logger.error("❌ [EcosystemSync] Failed to sync ecosystem data", error);
-            } else {
-                 // Option to log successful sync in dev environment
-                 // console.log("✨ [EcosystemSync] State aligned with Hub");
+                // logger.error already called inside ProfileService
             }
         } catch (err) {
              logger.error("❌ [EcosystemSync] Unexpected error during sync", err);

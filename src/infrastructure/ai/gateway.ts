@@ -59,7 +59,7 @@ class AIGateway {
   private getClient(): GoogleGenerativeAI | null {
     if (this.client) return this.client;
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!apiKey) {
       console.warn("[AI Gateway] Missing Gemini API Key");
       return null;

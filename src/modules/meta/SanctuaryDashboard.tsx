@@ -221,14 +221,14 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                     <Shield className="text-[var(--consciousness-primary)] w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-500/70">Sovereign Account</h3>
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-500/70">حساب السيادة</h3>
                                     <p className="text-lg font-black text-[var(--ds-theme-text-primary)]">{emailPrefix}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-2 pt-2 border-t border-white/5">
                                 <div className="flex justify-between items-center text-[11px] font-bold">
-                                    <span className="text-slate-500 uppercase tracking-widest">Energy Matrix</span>
+                                    <span className="text-slate-500 uppercase tracking-widest">مصفوفة الطاقة</span>
                                     <span className={energyColor}>{energyLevel * 10}%</span>
                                 </div>
                                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
@@ -342,7 +342,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                         
                                         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/50 border border-white/5 opacity-0 group-hover:opacity-100 transition-opacity ${energyLevel <= 3 ? 'shadow-[0_0_15px_rgba(244,63,94,0.3)]' : ''}`}>
                                             <Power className={`w-3 h-3 ${energyLevel <= 3 ? 'text-rose-400 animate-pulse' : 'text-slate-400'}`} />
-                                            <span className={`text-[9px] font-black uppercase ${energyLevel <= 3 ? 'text-rose-400' : 'text-slate-400'}`}>Initiate Sensory Void</span>
+                                            <span className={`text-[9px] font-black uppercase ${energyLevel <= 3 ? 'text-rose-400' : 'text-slate-400'}`}>تفعيل العزل الحسي</span>
                                         </div>
                                     </motion.div>
                                 ) : (
@@ -360,7 +360,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                         
                                         <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/30 border border-slate-800/50 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <Power className="w-3 h-3 text-slate-500" />
-                                            <span className="text-[9px] font-black uppercase text-slate-500">Return to Matrix</span>
+                                            <span className="text-[9px] font-black uppercase text-slate-500">العودة للمصفوفة</span>
                                         </div>
                                     </motion.div>
                                 )}
@@ -380,7 +380,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                 className={`absolute z-20 ${energyLevel < 4 ? "-top-12 -right-5 ring-2 ring-teal-500/50 bg-teal-500/20" : "-top-10 -right-10 hover:bg-teal-500/10"} ds-card px-4 py-2 rounded-full border-teal-500/30 flex items-center gap-2 group transition-all cursor-pointer`}
                             >
                                 <Wind className="w-4 h-4 text-[var(--consciousness-primary)]" />
-                                <span className="text-[10px] font-black uppercase text-[var(--ds-theme-text-primary)]">
+                                <span className="text-[10px] font-normal uppercase text-[var(--ds-theme-text-primary)]">
                                     {energyLevel < 4 ? "التقط أنفاسك الآن" : "خذ نفساً"}
                                 </span>
                             </motion.button>
@@ -406,7 +406,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                             >
                                 <div className="mb-4 flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400/70">Path Runtime</p>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400/70">مسار التشغيل</p>
                                         <h3 className="mt-2 text-xl font-black text-white">{sanctuaryPath.title}</h3>
                                     </div>
                                     <span className={`rounded-full px-3 py-1 text-[10px] font-black ${sanctuaryPath.isActive ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-800 text-slate-400"}`}>
@@ -467,7 +467,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                 exit={{ opacity: 0, position: "absolute", top: 0, right: 0, width: "100%" }}
                                 className="flex flex-col gap-4"
                             >
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-2 mr-2">Tactical Hub // العمليات</h3>
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-2 mr-2">مركز العمليات</h3>
                                 
                                 <button 
                                     onClick={() => onNavigate(sanctuaryPath?.primaryActionScreen || "map")}
@@ -530,7 +530,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                     <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-amber-500/10 blur-3xl group-hover:bg-amber-500/20 transition-colors" />
                                     <div className="flex items-center gap-2 mb-1">
                                         <Brain className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-amber-500/90">Oracle Broadcast</span>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-amber-500/90">بث الأوراكل</span>
                                     </div>
                                     <p className="text-[11px] font-medium text-slate-300 leading-relaxed italic" dir="rtl">
                                         {energyLevel <= 3 
@@ -542,7 +542,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                     </p>
                                     <div className="flex items-center gap-1.5 opacity-60">
                                         <Lock className="w-2.5 h-2.5 text-amber-500/50" />
-                                        <span className="text-[8px] font-bold uppercase tracking-tighter text-slate-400">Generative Encrypted Insight</span>
+                                        <span className="text-[8px] font-bold uppercase tracking-tighter text-slate-400">بصيرة مشفرة توليدية</span>
                                     </div>
                                 </div>
                             </motion.div>
@@ -557,7 +557,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                 <div className="flex flex-col gap-2 mb-2">
                                     <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-600 flex items-center gap-2">
                                         <Mic className="w-3.5 h-3.5" />
-                                        The Whisper Pad
+                                        مساحة الهمس
                                     </h3>
                                     <p className="text-[10px] text-slate-700 leading-relaxed">
                                         مساحة لتفريغ الأفكار العشوائية التلقائية. الكلمات المكتوبة هنا محصنة بالتشفير العابر، تتبخر ولا يتم الاحتفاظ بها في أي قاعدة بيانات ولا حتى في جهازك بعد انتهاء الجلسة.
@@ -631,7 +631,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
             >
                 <div className="px-4 py-2 flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-[var(--consciousness-primary)] animate-pulse" />
-                    <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">Sovereign Online</span>
+                    <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">السيادة متصلة</span>
                 </div>
                 <div className="w-px h-6 bg-white/10" />
                 <button className="px-4 py-2 text-[10px] font-black text-[var(--consciousness-primary)] uppercase tracking-widest hover:text-white transition-colors">

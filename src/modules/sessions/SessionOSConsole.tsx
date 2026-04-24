@@ -264,14 +264,16 @@ export default function SessionOSConsole() {
 
   return (
     <div
-      className="min-h-screen text-white font-sans"
+      className="min-h-screen text-white font-sans bg-[#03050a] selection:bg-teal-500/30 selection:text-teal-200 relative overflow-hidden"
       dir="rtl"
-      style={{ background: "linear-gradient(135deg, #0a0e1f 0%, #0f1729 50%, #0d1117 100%)" }}
     >
+      {/* ── Background Elements ── */}
+      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-teal-900/10 via-emerald-900/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.015] pointer-events-none mix-blend-overlay" />
+
       {/* Header */}
       <header
-        className="sticky top-0 z-30 border-b border-white/5"
-        style={{ background: "rgba(10, 14, 31, 0.85)", backdropFilter: "blur(20px)" }}
+        className="sticky top-0 z-30 border-b border-white/[0.05] bg-[#03050a]/80 backdrop-blur-xl"
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">

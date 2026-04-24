@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, startTransition } from "react";
 import type { FeatureFlagKey } from "@/config/features";
 import { getWindowOrNull } from "@/services/clientRuntime";
 import { reloadPage } from "@/services/navigation";
@@ -47,7 +47,9 @@ export function useAppNavigationRuntime({
       return false;
     }
 
-    setScreen(result.screen);
+    startTransition(() => {
+      setScreen(result.screen);
+    });
     return result.kind === "navigate";
   }, [canUseJourneyTools, canUseMap, isLockedPhaseOne, setLockedFeature, setScreen]);
 

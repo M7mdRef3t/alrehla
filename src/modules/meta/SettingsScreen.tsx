@@ -3,8 +3,10 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Globe, Briefcase, Crown, ChevronRight,
-    Zap, Star, Gift, Brain, Shield, Palette
+    Zap, Star, Gift, Brain, Shield, Palette, Volume2, VolumeX,
+    Heart, LogOut, ChevronLeft, Trash2, Bell, Moon
 } from "lucide-react";
+import { soundManager } from "@/services/soundManager";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { B2BPortal } from "./B2BPortal";
 import { ReferralPanel } from '@/modules/growth/ReferralPanel';
@@ -19,10 +21,9 @@ import { getLanguage, LANGUAGE_OPTIONS } from "@/services/i18n";
 import { getCulturalContext, saveCulturalContext, PROFILES, type CulturalContext } from "@/services/culturalAdapter";
 import { syncSubscription } from "@/services/subscriptionManager";
 import { useJourneyProgress } from "@/domains/journey";
-import { resolveDisplayName } from "@/services/userMemory";
-import { soundManager } from "@/services/soundManager";
-import { Volume2, VolumeX } from "lucide-react";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+import { useAuthState } from "@/domains/auth/store/auth.store";
+import { ProfileService } from "@/services/profileService";
 
 
 type SettingsSection = "main" | "language" | "b2b" | "referral" | "subscription" | "culture" | "privacy" | "appearance";
@@ -60,10 +61,15 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
 
     useEffect(() => { syncSubscription(); }, []);
 
-    const tier = getCurrentTier();
+    const { 
+        displayName, 
+        tier, 
+        ecosystemData, 
+        bio 
+    } = useAuthState();
+    
     const streak = loadStreak();
-  const memory = loadUserMemory();
-  const displayName = resolveDisplayName();
+    const memory = loadUserMemory();
     const { isSoundEnabled, setSoundEnabled, isSensoryDepthEnabled, setSensoryDepthEnabled } = useJourneyProgress();
 
     useEffect(() => {
@@ -93,9 +99,9 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
             id: "subscription" as SettingsSection,
             icon: Crown,
             label: "الاشتراك",
-            value: TIER_LABELS[tier],
-            color: tier === "basic" ? "#64748b" : "#d97706",
-            badge: tier === "basic" ? "ارقَ" : undefined,
+            value: tier === "pro" ? "المسار المتقدم (Pro)" : "المسار الأساسي (Free)",
+            color: tier === "free" ? "#64748b" : "#d97706",
+            badge: tier === "free" ? "ارقَ" : undefined,
         },
         {
             id: "appearance" as SettingsSection,
@@ -267,9 +273,9 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>الباقة الحالية</p>
                                         <p
                                             className="text-sm font-bold"
-                                            style={{ color: tier === "basic" ? "#64748b" : "#d97706" }}
+                                            style={{ color: tier === "free" ? "#64748b" : "#d97706" }}
                                         >
-                                            {TIER_LABELS[tier]}
+                                            {tier === "pro" ? "برو" : "أساسي"}
                                         </p>
                                     </div>
                                 </div>
@@ -375,15 +381,17 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>الباقة الحالية</p>
-                                        <p className="text-lg font-black text-white mt-0.5">{TIER_LABELS[tier]}</p>
+                                        <p className="text-lg font-black text-white mt-0.5">
+                                            {tier === "pro" ? "برو (Pro)" : "أساسي (Free)"}
+                                        </p>
                                     </div>
                                     <p className="text-2xl font-black" style={{ color: "var(--soft-teal, #34d399)" }}>
-                                        {TIER_PRICES[tier]}
+                                        {tier === "pro" ? "مدفوع" : "مجاني"}
                                     </p>
                                 </div>
                             </div>
 
-                            {tier === "basic" && (
+                            {tier === "free" && (
                                 <motion.button
                                     onClick={() => setShowPaywall(true)}
                                     className="w-full py-3.5 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
@@ -396,7 +404,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                 </motion.button>
                             )}
 
-                            {tier !== "basic" && (
+                            {tier !== "free" && (
                                 <div className="space-y-4">
                                     <div className="text-center py-4">
                                         <Star className="w-8 h-8 text-amber-400 mx-auto mb-2" />

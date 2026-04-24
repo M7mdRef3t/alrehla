@@ -12,6 +12,7 @@ import { AppMainExperienceContent } from "./AppMainExperienceContent";
 import { AppOverlayHost } from "./AppOverlayHost";
 import { AppTransientChromeHost } from "./AppTransientChromeHost";
 import { PlatformHeader } from "../PlatformHeader";
+import { TravelerPreviewBanner } from "../TravelerPreviewBanner";
 import { PlatformTabBar } from "../PlatformTabBar";
 import { PlatformBreadcrumb, buildBreadcrumb } from "../PlatformBreadcrumb";
 import { signOut } from "@/services/authService";
@@ -156,7 +157,8 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
 
   return (
     <>
-      <div className="system-experience-surface" style={{ isolation: 'isolate' }}>
+      <TravelerPreviewBanner />
+      <div className="system-experience-surface min-h-screen w-full overflow-x-hidden bg-[#02040a]" style={{ isolation: 'isolate' }}>
       <PlatformHeader
         activeScreen={screen}
         onNavigate={handleHeaderNavigate}
@@ -171,7 +173,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
       <Suspense fallback={null}>
         <NotificationEnableButton />
       </Suspense>
-      {screen !== "landing" && (
+      {screen !== "landing" && screen !== "ecosystem-hub" && screen !== "kharita" && (
         <>
           <div
             className={`fixed right-0 ${sidebarExpanded ? "md:right-72" : "md:right-0"} left-0 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500 ${scrolled ? "top-16" : "top-20"}`}
@@ -188,7 +190,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         </>
       )}
       <div
-        className={`min-h-screen flex flex-col transition-all duration-500 relative isolate ${screen !== "landing" ? (sidebarExpanded ? "overflow-visible md:pr-72" : "overflow-visible md:pr-0") : ""} bg-[var(--page-bg)]`}
+        className={`min-h-screen flex flex-col transition-all duration-500 relative isolate ${screen !== "landing" ? (sidebarExpanded ? "overflow-x-hidden md:pr-72" : "overflow-x-hidden md:pr-0") : ""} bg-[var(--page-bg)]`}
         dir="rtl"
       >
         {isFeaturePreviewSession && (
@@ -216,18 +218,22 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
           >
 
             <InstallHintBanner />
-            <SyncStatusUI />
+            <Suspense fallback={null}>
+              <SyncStatusUI />
+            </Suspense>
             {welcome?.source === "offline_intervention" && (
               <div 
                 className="fixed top-[calc(env(safe-area-inset-top)+3.5rem)] left-1/2 -translate-x-1/2 w-[min(680px,calc(100%-1.25rem))] pointer-events-none"
                 style={{ zIndex: Z_LAYERS.SYSTEM_TOAST }}
               >
                 <div className="pointer-events-auto">
-                  <OnboardingWelcomeBubble
-                    message={welcome.message}
-                    source={welcome.source}
-                    onClose={onClearWelcome}
-                  />
+                  <Suspense fallback={null}>
+                    <OnboardingWelcomeBubble
+                      message={welcome.message}
+                      source={welcome.source}
+                      onClose={onClearWelcome}
+                    />
+                  </Suspense>
                 </div>
               </div>
             )}
@@ -290,7 +296,9 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
           </main>
           <AppOverlayHost {...overlayHostProps} />
         </AppChromeShell>
-        <AscensionRitual />
+        <Suspense fallback={null}>
+          <AscensionRitual />
+        </Suspense>
       </div>
       <AppSidebar
         onOpenGym={() => mainContentProps.onNavigate?.("tools")}

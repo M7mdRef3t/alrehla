@@ -24,8 +24,8 @@ import {
 import { useSessionIntake } from "@/domains/sessions/hooks/useSessionIntake";
 import { SESSION_GOAL_OPTIONS, COUNTRIES, PREVIOUS_SESSION_OPTIONS } from "@/domains/sessions/constants";
 import { eventBus } from "@/shared/events/bus";
-import { initSessionRewardsBridge } from "@/domains/social/services/sessionRewardsBridge";
 import type { IntakeStep } from "@/domains/sessions/types";
+
 
 /* ─── Step Progress ──────────────────────────── */
 
@@ -205,10 +205,6 @@ export const SessionIntakeScreen = memo(function SessionIntakeScreen({
     isDiagnosisSynced,
   } = useSessionIntake();
 
-  // Initialize rewards bridge
-  useEffect(() => {
-    initSessionRewardsBridge();
-  }, []);
 
   const handleSubmit = async () => {
     const success = await submitIntake();

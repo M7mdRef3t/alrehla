@@ -22,6 +22,14 @@ const container: Variants = {
   show: { transition: { staggerChildren: 0.12 } },
 };
 
+const getFakeLikesCount = (id: string): number => {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % 800 + 120; // returns a number between 120 and 919
+};
+
 const item: Variants = {
   hidden: { opacity: 0, y: 30, scale: 0.96 },
   show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
@@ -34,6 +42,39 @@ interface StoriesScreenProps {
 export const StoriesScreen = memo(function StoriesScreen({ onBack }: StoriesScreenProps) {
   const [stories, setStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [likedStories, setLikedStories] = useState<Set<string>>(new Set());
+
+  // Load liked stories from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('alrehla_liked_stories');
+      if (saved) {
+        setLikedStories(new Set(JSON.parse(saved)));
+      }
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+  }, []);
+
+  const toggleLike = (id: string) => {
+    setLikedStories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('alrehla_liked_stories', JSON.stringify(Array.from(newSet)));
+      } catch (e) {
+        // Ignore errors
+      }
+      
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -236,10 +277,27 @@ export const StoriesScreen = memo(function StoriesScreen({ onBack }: StoriesScre
                     <p className="text-white text-sm font-bold mb-0.5">{story.name}</p>
                     <p className="text-slate-500 text-xs font-semibold">{story.age} عاماً · {story.city}</p>
                   </div>
-                  
-                  {/* Interaction element (Future proofing) */}
-                  <button className="mr-auto w-8 h-8 rounded-full bg-white/[0.02] hover:bg-white/[0.08] border border-white/[0.05] flex items-center justify-center transition-colors">
-                    <Heart className="w-3.5 h-3.5 text-slate-400 hover:text-rose-400 hover:fill-rose-400 transition-colors" />
+                  {/* Interaction element: Like Button */}
+                  <button 
+                    onClick={() => toggleLike(story.id)}
+                    className="mr-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.05] transition-colors group/like"
+                  >
+                    <Heart 
+                      className={`w-3.5 h-3.5 transition-all duration-300 ${
+                        likedStories.has(story.id) 
+                          ? "fill-rose-500 text-rose-500 scale-110 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]" 
+                          : "text-slate-400 group-hover/like:text-rose-400"
+                      }`} 
+                    />
+                    <div className="flex items-center gap-1.5 font-semibold">
+                      <span className={`text-xs ${likedStories.has(story.id) ? "text-rose-400" : "text-slate-500 group-hover/like:text-slate-400"}`}>
+                        {likedStories.has(story.id) ? "أعجبني" : "إعجاب"}
+                      </span>
+                      <div className="w-[1px] h-3 bg-white/[0.1] mx-0.5" />
+                      <span className={`text-[11px] tabular-nums ${likedStories.has(story.id) ? "text-rose-300" : "text-slate-400"}`}>
+                        {getFakeLikesCount(story.id) + (likedStories.has(story.id) ? 1 : 0)}
+                      </span>
+                    </div>
                   </button>
                 </div>
               </div>

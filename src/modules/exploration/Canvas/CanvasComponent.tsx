@@ -4,8 +4,8 @@ import 'reactflow/dist/style.css';
 import CustomNode from './CustomNode';
 import { DawayirState } from '@/hooks/useDawayirEngine';
 
-const NODE_TYPES = Object.freeze({ dawayirNode: CustomNode });
-const EDGE_TYPES = Object.freeze({});
+const NODE_TYPES = { dawayirNode: CustomNode };
+const EDGE_TYPES = {};
 
 interface NodeData {
     id: string;
@@ -25,8 +25,6 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [isPhysicsActive, setIsPhysicsActive] = useState(true);
-    const nodeTypes = useMemo(() => NODE_TYPES, []);
-    const edgeTypes = useMemo(() => EDGE_TYPES, []);
 
     // Initialize nodes and edges from AI data
     useEffect(() => {
@@ -210,8 +208,8 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }
                 onEdgesChange={onEdgesChange}
                 onNodeDragStart={onNodeDragStart}
                 onNodeDragStop={onNodeDragStop}
-                nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
+                nodeTypes={NODE_TYPES}
+                edgeTypes={EDGE_TYPES}
                 onNodeClick={(event: React.MouseEvent, node: Node) => onNodeClick && onNodeClick(node.data as NodeData)}
                 connectionLineType={ConnectionLineType.SmoothStep}
                 fitView

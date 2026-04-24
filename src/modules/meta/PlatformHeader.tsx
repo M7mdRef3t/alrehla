@@ -34,6 +34,7 @@ import { isPrivilegedRole } from "@/utils/featureFlags";
 import { assignUrl } from "@/services/navigation";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+import { useAdminState } from "@/domains/admin/store/admin.store";
 import { Z_LAYERS } from "@/config/zIndices";
 
 // Lazy-load EvolutionHub so PlatformHeader can render it directly
@@ -132,6 +133,7 @@ export const PlatformHeader = memo(function PlatformHeader({
 
   const [showEvolutionHub, setShowEvolutionHub] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const [hidden, setHidden] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -149,7 +151,9 @@ export const PlatformHeader = memo(function PlatformHeader({
   const roleOverride = useAuthState((s) => s.roleOverride);
   const setRoleOverride = useAuthState((s) => s.setRoleOverride);
   
-  const isPrivilegedUser = isPrivilegedRole(rawRole) || isPrivilegedRole(role);
+  const adminAccess = useAdminState((s) => s.adminAccess);
+  
+  const isPrivilegedUser = isPrivilegedRole(rawRole) || isPrivilegedRole(role) || adminAccess;
   const isViewingAsUser = roleOverride === "user";
   const isLoggedIn = Boolean(user);
   const avatarInitial = (firstName?.[0] ?? displayName?.[0] ?? "أ").toUpperCase();
@@ -177,6 +181,10 @@ export const PlatformHeader = memo(function PlatformHeader({
   const handleThemeToggle = useCallback(() => {
     setTheme(isDark ? "light" : "dark");
   }, [isDark, setTheme]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -473,7 +481,7 @@ export const PlatformHeader = memo(function PlatformHeader({
             )}
           </div>
 
-        {status === "loading" ? (
+        {(!mounted || status === "loading") ? (
           <div className="w-9 h-9 rounded-full bg-white/10 animate-pulse" />
         ) : isLoggedIn ? (
           <div className="flex items-center gap-3">

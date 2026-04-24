@@ -28,6 +28,7 @@ import { ContentDetailSheet, type ContentDetailType } from "../exploration/Conte
 
 import { CourseDetailPage } from "./CourseDetailPage";
 import { fetchContentItems, fetchDBArticles, fetchDBVideoCourses, type UserProgressStats } from "@/services/learningService";
+import { behavioralService, type BehavioralPattern } from "@/services/behavioralService";
 
 
 /* ══════════════════════════════════════════
@@ -412,6 +413,14 @@ export function ResourcesCenter({
     loadStats();
   }, []);
 
+  // ── Fetch Active Pattern ──
+  const [activePattern, setActivePattern] = useState<BehavioralPattern | null>(null);
+  useEffect(() => {
+    behavioralService.getPatterns().then(patterns => {
+      if (patterns.length > 0) setActivePattern(patterns[0]);
+    }).catch(console.error);
+  }, []);
+
   // ── Supabase: fetch practice content_items ──
   const [dbExercises, setDbExercises] = useState<Exercise[]>([]);
   useEffect(() => {
@@ -686,68 +695,119 @@ export function ResourcesCenter({
       </div>
 
       {/* ══════════════════════════════════════════
-          HERO: Recommended Section
+          HERO: Contextual Sanctuary (الملاذ السياقي)
          ══════════════════════════════════════════ */}
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "16px 20px 0", position: "relative", zIndex: 1 }}>
-        <AnimatePresence mode="wait">
+        {activePattern ? (
           <motion.div
-            key={`hero-${heroIdx}`}
-            initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
-            transition={{ duration: 0.4 }}
-            onClick={() => setActiveTab(HERO_ITEMS[heroIdx].tab)}
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            onClick={() => {
+              if (activePattern.resourceTab) {
+                setActiveTab(activePattern.resourceTab as ResourceTab);
+              }
+            }}
             whileHover={{ scale: 1.01 }}
             style={{
-              cursor: "pointer", padding: "20px", borderRadius: 22, marginBottom: 14,
-              background: HERO_ITEMS[heroIdx].bg,
-              border: `1px solid ${HERO_ITEMS[heroIdx].color}25`,
-              backdropFilter: "blur(16px)",
+              cursor: "pointer", padding: "24px", borderRadius: 24, marginBottom: 14,
+              background: "linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.08))",
+              border: "1px solid rgba(16,185,129,0.3)",
+              backdropFilter: "blur(20px)",
               position: "relative", overflow: "hidden",
             }}
           >
             <div style={{
-              position: "absolute", top: -20, left: -20, fontSize: 80, opacity: 0.07,
+              position: "absolute", top: -20, left: -20, fontSize: 100, opacity: 0.05,
               filter: "blur(2px)", lineHeight: 1,
-            }}>{HERO_ITEMS[heroIdx].emoji}</div>
-            <span style={{
-              fontSize: 8, fontWeight: 900, letterSpacing: "0.12em",
-              color: HERO_ITEMS[heroIdx].color,
-              background: `${HERO_ITEMS[heroIdx].color}15`,
-              padding: "3px 10px", borderRadius: 8, marginBottom: 8, display: "inline-block",
-            }}>
-              ⭐ {HERO_ITEMS[heroIdx].tag}
-            </span>
-            <h2 style={{ margin: "6px 0 6px", fontSize: 16, fontWeight: 900, color: "#f1f5f9", lineHeight: 1.4 }}>
-              {HERO_ITEMS[heroIdx].emoji} {HERO_ITEMS[heroIdx].title}
+            }}>{activePattern.icon || "✨"}</div>
+            
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <div style={{ padding: "4px 8px", background: "rgba(16,185,129,0.15)", borderRadius: 8, color: "#10B981", fontSize: 9, fontWeight: 900 }}>
+                ملاذك الآن
+              </div>
+              <Sparkles size={12} color="#10B981" />
+            </div>
+
+            <h2 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 900, color: "#f1f5f9", lineHeight: 1.4 }}>
+              التدخل المقترح: {activePattern.title}
             </h2>
-            <p style={{ margin: "0 0 12px", fontSize: 10, color: "#94a3b8", lineHeight: 1.8 }}>
-              {HERO_ITEMS[heroIdx].subtitle}
+            <p style={{ margin: "0 0 16px", fontSize: 11, color: "#94a3b8", lineHeight: 1.7 }}>
+              نظامنا استشعر هذا النمط من كلماتك الأخيرة: "{activePattern.description}". هذا المورد مخصص خصيصاً لمساعدتك في هذه اللحظة.
             </p>
+
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <button style={{
-                background: HERO_ITEMS[heroIdx].color, border: "none", borderRadius: 10,
-                padding: "7px 16px", fontSize: 10, fontWeight: 900, color: "#fff", cursor: "pointer",
+                background: "#10B981", border: "none", borderRadius: 12,
+                padding: "8px 18px", fontSize: 11, fontWeight: 900, color: "#050810", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+                boxShadow: "0 0 20px rgba(16,185,129,0.4)"
               }}>
-                ابدأ التعلم الآن
+                <Play size={12} fill="currentColor" />
+                تفعيل الملاذ
               </button>
-              <button style={{
-                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 10, padding: "7px 12px", fontSize: 10, color: "#94a3b8", cursor: "pointer",
-              }}>
-                عرض التفاصيل
-              </button>
-            </div>
-            {/* Dots */}
-            <div style={{ position: "absolute", bottom: 12, left: 16, display: "flex", gap: 4 }}>
-              {HERO_ITEMS.map((_, i) => (
-                <div key={i} onClick={(e) => { e.stopPropagation(); setHeroIdx(i); }} style={{
-                  width: i === heroIdx ? 16 : 5, height: 5, borderRadius: 3,
-                  background: i === heroIdx ? HERO_ITEMS[heroIdx].color : "rgba(255,255,255,0.15)",
-                  cursor: "pointer", transition: "all 0.3s",
-                }} />
-              ))}
             </div>
           </motion.div>
-        </AnimatePresence>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`hero-${heroIdx}`}
+              initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
+              transition={{ duration: 0.4 }}
+              onClick={() => setActiveTab(HERO_ITEMS[heroIdx].tab)}
+              whileHover={{ scale: 1.01 }}
+              style={{
+                cursor: "pointer", padding: "20px", borderRadius: 22, marginBottom: 14,
+                background: HERO_ITEMS[heroIdx].bg,
+                border: `1px solid ${HERO_ITEMS[heroIdx].color}25`,
+                backdropFilter: "blur(16px)",
+                position: "relative", overflow: "hidden",
+              }}
+            >
+              <div style={{
+                position: "absolute", top: -20, left: -20, fontSize: 80, opacity: 0.07,
+                filter: "blur(2px)", lineHeight: 1,
+              }}>{HERO_ITEMS[heroIdx].emoji}</div>
+              <span style={{
+                fontSize: 8, fontWeight: 900, letterSpacing: "0.12em",
+                color: HERO_ITEMS[heroIdx].color,
+                background: `${HERO_ITEMS[heroIdx].color}15`,
+                padding: "3px 10px", borderRadius: 8, marginBottom: 8, display: "inline-block",
+              }}>
+                ⭐ {HERO_ITEMS[heroIdx].tag}
+              </span>
+              <h2 style={{ margin: "6px 0 6px", fontSize: 16, fontWeight: 900, color: "#f1f5f9", lineHeight: 1.4 }}>
+                {HERO_ITEMS[heroIdx].emoji} {HERO_ITEMS[heroIdx].title}
+              </h2>
+              <p style={{ margin: "0 0 12px", fontSize: 10, color: "#94a3b8", lineHeight: 1.8 }}>
+                {HERO_ITEMS[heroIdx].subtitle}
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button style={{
+                  background: HERO_ITEMS[heroIdx].color, border: "none", borderRadius: 10,
+                  padding: "7px 16px", fontSize: 10, fontWeight: 900, color: "#fff", cursor: "pointer",
+                }}>
+                  ابدأ التعلم الآن
+                </button>
+                <button style={{
+                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 10, padding: "7px 12px", fontSize: 10, color: "#94a3b8", cursor: "pointer",
+                }}>
+                  عرض التفاصيل
+                </button>
+              </div>
+              {/* Dots */}
+              <div style={{ position: "absolute", bottom: 12, left: 16, display: "flex", gap: 4 }}>
+                {HERO_ITEMS.map((_, i) => (
+                  <div key={i} onClick={(e) => { e.stopPropagation(); setHeroIdx(i); }} style={{
+                    width: i === heroIdx ? 16 : 5, height: 5, borderRadius: 3,
+                    background: i === heroIdx ? HERO_ITEMS[heroIdx].color : "rgba(255,255,255,0.15)",
+                    cursor: "pointer", transition: "all 0.3s",
+                  }} />
+                ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        )}
 
         {/* ── Personal Library ── */}
         {(bookmarks.size > 0 || recentlyViewed.length > 0) && (

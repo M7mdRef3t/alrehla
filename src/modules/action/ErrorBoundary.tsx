@@ -32,6 +32,23 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logger.error("ErrorBoundary caught an error:", error, errorInfo);
     this.props.onError?.(error, errorInfo);
+
+    // Auto-recovery for ChunkLoadError (common in Next.js dev server or after deployments)
+    if (error.name === 'ChunkLoadError' || error.message.includes('Loading chunk')) {
+      const lastRecovery = sessionStorage.getItem('chunk_load_recovery_time');
+      const now = Date.now();
+      
+      // Only auto-reload once every 10 seconds to prevent infinite reload loops
+      if (!lastRecovery || (now - parseInt(lastRecovery, 10)) > 10000) {
+        sessionStorage.setItem('chunk_load_recovery_time', now.toString());
+        setTimeout(() => window.location.reload(), 100);
+      }
+    }
+  }
+
+  componentDidMount() {
+    // We purposefully do NOT clear the recovery flag here anymore.
+    // It's time-based now to prevent infinite reload loops when a chunk is permanently broken.
   }
 
   render() {

@@ -2,6 +2,8 @@
 
 import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
+import { SafeCircle, SafeMotionCircle } from "@/components/ui/SafeSvg";
+
 
 interface LifeScoreRingProps {
   score: number; // 0-100
@@ -76,7 +78,7 @@ export const LifeScoreRing = memo(function LifeScoreRing({
         </defs>
 
         {/* Background track */}
-        <circle
+        <SafeCircle
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -87,7 +89,7 @@ export const LifeScoreRing = memo(function LifeScoreRing({
         />
 
         {/* Progress arc */}
-        <motion.circle
+        <SafeMotionCircle
           cx={size / 2}
           cy={size / 2}
           r={radius}

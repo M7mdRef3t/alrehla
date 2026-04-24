@@ -81,10 +81,10 @@ export default function OnboardingRouteClient() {
 
   // Robust force check
   const forceOnboarding = useMemo(() => {
-    const hasForceParam = searchParams.get("force") === "1";
-    const hasForceInUrl = typeof window !== "undefined" && window.location.href.includes("force=1");
-    return hasForceParam || hasForceInUrl;
+    return searchParams?.get("force") === "1";
   }, [searchParams]);
+
+
 
   useEffect(() => {
     // 1. Initial attribution capture
@@ -110,7 +110,7 @@ export default function OnboardingRouteClient() {
     }
 
     // 3. Process Gate context
-    const source = searchParams.get("source");
+    const source = searchParams?.get("source");
     if (typeof window !== "undefined" && source === "gate") {
       const rawPayload = window.sessionStorage.getItem(GATE_ONBOARDING_PAYLOAD_KEY);
       if (rawPayload) {
@@ -132,7 +132,8 @@ export default function OnboardingRouteClient() {
       
       console.log("[Onboarding] Access Permitted:", forceOnboarding ? "Forced Bypass" : "New User");
     }
-  }, [isReady, status, searchParams, forceOnboarding, nodesCount, baselineCompletedAt, isHydrated]);
+  }, [isReady, status, searchParams, forceOnboarding, nodesCount, baselineCompletedAt, isHydrated, user]);
+
 
   const handleComplete = useCallback(() => {
     setIsWarping(true);

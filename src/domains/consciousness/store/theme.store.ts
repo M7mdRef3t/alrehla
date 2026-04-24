@@ -2,6 +2,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { getDocumentOrNull, getWindowOrNull } from "@/services/clientRuntime";
+import { zustandIdbStorage } from '@/utils/idbStorage';
+import { SynapseBus } from "@/core/synapse/SynapseBus";
 
 type Theme = "light" | "dark" | "system";
 
@@ -63,10 +65,12 @@ export function injectTokens(tokens: DesignTokens) {
   if (!documentRef) return;
   const root = documentRef.documentElement;
   
-  // Safe extraction with fallbacks to prevent .toString() on undefined
-  const primary = tokens.primaryColor || DEFAULT_TOKENS.primaryColor;
-  const accent = tokens.accentColor || DEFAULT_TOKENS.accentColor;
-  const voidColor = tokens.spaceVoid || DEFAULT_TOKENS.spaceVoid;
+  // ⚠️ CRITICAL: We do NOT inject --space-void, --teal-400, or --amber-500 here.
+  // Those variables are correctly defined per light/dark mode in consciousness-theme.css.
+  // Writing them as inline styles on :root would override CSS class-based theming
+  // because inline styles have higher specificity than .dark { } class selectors.
+  
+  // Safe extraction with fallbacks
   const radius = tokens.borderRadius || DEFAULT_TOKENS.borderRadius;
   const blurVal = tokens.blur || DEFAULT_TOKENS.blur;
   const spacingVal = tokens.spacing || DEFAULT_TOKENS.spacing;
@@ -76,13 +80,13 @@ export function injectTokens(tokens: DesignTokens) {
   const grain = tokens.grainOpacity ?? DEFAULT_TOKENS.grainOpacity;
   const aberration = tokens.chromaticAberration ?? DEFAULT_TOKENS.chromaticAberration;
 
-  root.style.setProperty("--teal-400", primary);
-  root.style.setProperty("--amber-500", accent);
-  root.style.setProperty("--space-void", voidColor);
+  // Design Lab layout tokens (safe to inject — not theme-dependent)
   root.style.setProperty("--consciousness-border-radius", radius);
   root.style.setProperty("--consciousness-blur", blurVal);
   root.style.setProperty("--consciousness-spacing", spacingVal);
   root.style.setProperty("--pulse-duration", pulse);
+  
+  // Atmosphere Engine tokens (sensory overlays)
   root.style.setProperty("--atmosphere-vignette", vignette.toString());
   root.style.setProperty("--atmosphere-grain", grain.toString());
   root.style.setProperty("--atmosphere-aberration", aberration.toString());
@@ -91,7 +95,6 @@ export function injectTokens(tokens: DesignTokens) {
 function applyTheme(resolvedTheme: "light" | "dark") {
   // We no longer manually manipulate root.classList here.
   // next-themes handles DOM class list application to avoid flashing.
-  // The ThemeSync component bridges useThemeState with next-themes.
 }
 
 export const useThemeState = create<ThemeState>()(
@@ -110,6 +113,12 @@ export const useThemeState = create<ThemeState>()(
             new CustomEvent("zustand-theme-change", { detail: { theme } })
           );
         }
+
+        // Sync to Cloud if authenticated
+        import("@/domains/auth/store/auth.store").then(({ useAuthState }) => {
+          const { updateEcosystemData } = useAuthState.getState();
+          updateEcosystemData({ theme_pref: theme });
+        }).catch(() => {});
       },
       setLiteMode: (liteMode: boolean) => set({ liteMode }),
       updateTokens: (tokens: Partial<DesignTokens>) => {
@@ -165,25 +174,22 @@ export const useThemeState = create<ThemeState>()(
           state.customTokens = { ...DEFAULT_TOKENS, ...state.customTokens };
           
           const resolvedTheme = state.theme === "system" ? getSystemTheme() : state.theme;
-          applyTheme(resolvedTheme);
           state.resolvedTheme = resolvedTheme;
           injectTokens(state.customTokens);
+
+          // Initial sync from cloud if possible
+          import("@/domains/auth/store/auth.store").then(({ useAuthState }) => {
+            const ecosystemData = useAuthState.getState().ecosystemData;
+            if (ecosystemData?.theme_pref && ecosystemData.theme_pref !== state.theme) {
+              state.setTheme(ecosystemData.theme_pref);
+            }
+          }).catch(() => {});
         }
       }
     }
   )
 );
 
-// Synapse Receptor (Neural Link)
-// NOTE: Auto-theme-changes from SynapseBus are intentionally disabled.
-// They caused conflicts with next-themes system. Theme is managed by the user
-// or system preference only. Consciousness states can change visual tokens
-// (colors/effects) without overriding the whole day/night mode.
-import { SynapseBus } from "@/core/synapse/SynapseBus";
-import { zustandIdbStorage } from '@/utils/idbStorage';
-
-
 SynapseBus.subscribe((_event) => {
   // Theme changes from SynapseBus disabled intentionally.
-  // Previously this caused light/dark mode to flip on user stress/catharsis events.
 });

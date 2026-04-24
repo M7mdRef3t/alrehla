@@ -19,6 +19,8 @@ interface PageShellProps {
   className?: string;
   /** Option to disable the intro animation */
   disableAnimation?: boolean;
+  /** Whether the page should span the full width without padding or max-width constraints */
+  fullWidth?: boolean;
 }
 
 /**
@@ -32,7 +34,8 @@ export function PageShell({
   breadcrumbVisible = false,
   maxWidth = "max-w-[var(--phi-content-max)]", // Using the design system's content max width
   className = "",
-  disableAnimation = false
+  disableAnimation = false,
+  fullWidth = false
 }: PageShellProps) {
   
   // padding-top logic based on header and breadcrumb presence
@@ -49,8 +52,8 @@ export function PageShell({
   };
 
   const containerClasses = `
-    flex-1 flex flex-col w-full mx-auto px-4 sm:px-6 lg:px-10
-    ${maxWidth} ${getPaddingTop()} ${getPaddingBottom()} ${className}
+    flex-1 flex flex-col w-full ${fullWidth ? "" : "mx-auto px-4 sm:px-6 lg:px-10"}
+    ${fullWidth ? "max-w-none" : maxWidth} ${getPaddingTop()} ${getPaddingBottom()} ${className}
   `.trim();
 
   if (disableAnimation) {

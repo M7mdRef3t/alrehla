@@ -93,8 +93,8 @@ export const VoicePresence: FC<{
     };
 
     return (
-        <div className="fixed bottom-10 left-10 z-[60] pointer-events-none">
-            <div className="relative flex items-center gap-6 pointer-events-auto">
+        <div className="fixed bottom-8 right-6 z-[60] pointer-events-none">
+            <div className="relative flex flex-row-reverse items-center gap-6 pointer-events-auto">
                 
                 {/* THE NUCLEUS (Orb) */}
                 <button
@@ -158,14 +158,14 @@ export const VoicePresence: FC<{
                 <AnimatePresence>
                     {isOptedIn && (
                         <motion.div 
-                            initial={{ opacity: 0, x: -20 }}
+                            initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
+                            exit={{ opacity: 0, x: 20 }}
                             className="flex flex-col gap-1"
                         >
                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400/60 flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                                {isPlaying ? "ORACLE ACTIVE" : "ORACLE STANDBY"}
+                                {isPlaying ? "الرفيق يتحدث" : "الرفيق حاضر"}
                             </span>
                             
                             {currentScript && (

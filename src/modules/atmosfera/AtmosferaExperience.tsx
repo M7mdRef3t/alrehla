@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Atmosfera } from "@alrehla/atmosfera";
 import type { AtmosferaTheme, EmotionalState } from "@alrehla/atmosfera";
 import { eventBus } from "@/shared/events/bus";
-import { initAtmosferaRewardsBridge } from "@/domains/social/services/atmosferaRewardsBridge";
+
 
 // ─── State Labels ──────────────────────────────────────
 const STATE_LABELS: Record<EmotionalState, { ar: string; icon: string; color: string }> = {
@@ -37,15 +37,7 @@ export default function AtmosferaExperience() {
   const [soundVolume, setSoundVolume] = useState(0.5);
   const [sessionMinutes, setSessionMinutes] = useState(0);
   const [timeOfDay] = useState(getTimeOfDay);
-  const bridgeInitRef = useRef(false);
 
-  // Initialize rewards bridge once
-  useEffect(() => {
-    if (!bridgeInitRef.current) {
-      initAtmosferaRewardsBridge();
-      bridgeInitRef.current = true;
-    }
-  }, []);
 
   // Generate initial theme from localStorage or fallback
   useEffect(() => {

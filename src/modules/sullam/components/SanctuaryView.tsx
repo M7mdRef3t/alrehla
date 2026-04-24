@@ -33,6 +33,14 @@ export function SanctuaryView() {
     return () => clearInterval(interval);
   }, [sanctuary.endsAt]);
 
+  const [echoes] = useState([
+    "هدوءك الآن هو وقود رحلتك القادمة",
+    "الزمن يتوقف هنا.. تنفس بعمق",
+    "أنت أكثر من مجرد إنجازاتك اليومية",
+    "السكينة هي أعلى درجات السيادة",
+    "لا تقلق، بذور نموك تنبت في صمت الملاذ"
+  ]);
+
   if (!sanctuary.isActive) return null;
 
   return (
@@ -58,6 +66,19 @@ export function SanctuaryView() {
             ease: "easeInOut",
           }}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px]"
+        />
+
+        {/* Sentient Breathing Atmosphere */}
+        <motion.div
+          animate={{
+            opacity: [0.05, 0.15, 0.05],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: [0.4, 0, 0.2, 1], // Natural breathing curve
+          }}
+          className="absolute inset-0 bg-blue-400/5"
         />
         
         {/* Fireflies / particles */}
@@ -141,6 +162,31 @@ export function SanctuaryView() {
             العودة لمواصلة الرحلة
           </span>
         </motion.button>
+
+        {/* Floating Whisper Echoes */}
+        <div className="absolute inset-0 pointer-events-none">
+           {echoes.map((echo, i) => (
+             <motion.div
+               key={i}
+               initial={{ opacity: 0, y: 100 }}
+               animate={{ 
+                 opacity: [0, 0.4, 0], 
+                 y: [-200, -800],
+                 x: Math.sin(i) * 50
+               }}
+               transition={{
+                 duration: 15 + i * 2,
+                 repeat: Infinity,
+                 delay: i * 3,
+                 ease: "linear"
+               }}
+               className="absolute bottom-0 text-[10px] font-black uppercase tracking-[0.3em] text-blue-200/40 whitespace-nowrap"
+               style={{ left: `${15 + (i * 20)}%` }}
+             >
+               {echo}
+             </motion.div>
+           ))}
+        </div>
       </div>
     </motion.div>
   );

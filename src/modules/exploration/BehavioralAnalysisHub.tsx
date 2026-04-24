@@ -14,18 +14,12 @@ import type { ResourceTab } from '@/modules/growth/ResourcesCenter';
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { UserProfile } from '@/modules/meta/UserProfile';
 import { FutureEchoSimulator } from './FutureEchoSimulator';
+import { SafeMotionCircle } from "@/components/ui/SafeSvg";
+import { behavioralService, type BehavioralPattern as IBehavioralPattern, type TimelinePoint as ITimelinePoint, type BehavioralAlert as IBehavioralAlert } from "@/services/behavioralService";
+import { AwarenessSkeleton } from "@/modules/meta/AwarenessSkeleton";
 
 const toSafeSvgNumber = (value: unknown, fallback: number): number =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
-
-const SafeMotionCircle = ({ cx = 0, cy = 0, r = 0, ...props }: ComponentProps<typeof motion.circle>) => (
-  <motion.circle
-    cx={typeof cx === "string" ? cx : toSafeSvgNumber(cx, 0)}
-    cy={typeof cy === "string" ? cy : toSafeSvgNumber(cy, 0)}
-    r={Math.max(toSafeSvgNumber(typeof r === "string" ? Number(r) : r, 0), 0)}
-    {...props}
-  />
-);
 
 /* ══════════════════════════════════════════
    Types
@@ -203,7 +197,7 @@ function TriggerRing({ score }: { score: number }) {
           stroke="url(#triggerGrad)" strokeWidth={10} fill="none"
           strokeDasharray={circ}
           initial={{ strokeDashoffset: circ }}
-          animate={{ strokeDashoffset: circ - (circ * score) / 100 }}
+          animate={{ strokeDashoffset: circ - (circ * toSafeSvgNumber(score, 0)) / 100 }}
           transition={{ duration: 1.8, ease: "circOut" }}
           strokeLinecap="round"
         />
@@ -246,6 +240,14 @@ function TimelineChart({ data }: { data: TimelinePoint[] }) {
       })
       .join(" ");
   };
+
+  if (!data || data.length === 0) {
+    return (
+      <div style={{ width: "100%", height: 130, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.02)", borderRadius: 12 }}>
+        <span style={{ fontSize: 10, color: "#475569" }}>لا توجد بيانات متاحة لهذا النطاق الزمني</span>
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: "100%", height: "100%" }}>
@@ -509,13 +511,17 @@ export function BehavioralAnalysisHub({
   const [shareModal, setShareModal] = useState<BehavioralPattern | null>(null);
   const [echoPatternTitle, setEchoPatternTitle] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [supabaseAlerts, setSupabaseAlerts] = useState<SupabaseAlert[]>([]);
+  const [supabaseAlerts, setSupabaseAlerts] = useState<IBehavioralAlert[]>([]);
+  const [realPatterns, setRealPatterns] = useState<IBehavioralPattern[]>([]);
+  const [realMetrics, setRealMetrics] = useState<ITimelinePoint[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Web Push
   const { isSupported: pushSupported, isSubscribed: pushOn, isLoading: pushLoading,
     permission: pushPermission, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } = usePushNotifications();
 
-  const timelineData = TIMELINE_DATA[timeRange];
+  const timelineData = realMetrics.length > 0 ? realMetrics : TIMELINE_DATA[timeRange];
+  const activePatterns = realPatterns.length > 0 ? realPatterns : PATTERNS;
 
   // Trigger score: average of trigger sources weighted by inverse value
   const triggerScore = useMemo(() => {
@@ -539,31 +545,33 @@ export function BehavioralAnalysisHub({
     return () => clearInterval(t);
   }, []);
 
-  // Fetch Supabase behavioral_alerts
+  // Fetch Data
   useEffect(() => {
-    const fetchAlerts = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        if (!supabase) return;
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
-        const { data } = await supabase
-          .from("behavioral_alerts")
-          .select("id, message, pattern_id, resource_tab, resource_key, is_read")
-          .eq("is_read", false)
-          .order("created_at", { ascending: false })
-          .limit(5);
-        if (data && data.length > 0) setSupabaseAlerts(data as SupabaseAlert[]);
-      } catch { /* graceful fallback to local alerts */ }
+        const [patterns, alerts, metrics] = await Promise.all([
+          behavioralService.getPatterns(),
+          behavioralService.getAlerts(),
+          behavioralService.getMetrics(timeRange)
+        ]);
+        setRealPatterns(patterns as any);
+        setSupabaseAlerts(alerts as any);
+        setRealMetrics(metrics as any);
+      } catch (err) {
+        console.error("Failed to fetch behavioral data", err);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchAlerts();
-  }, []);
+    fetchData();
+  }, [timeRange]);
 
   // Dismiss a Supabase alert (mark as read)
   const dismissSupabaseAlert = useCallback(async (alertId: string) => {
     setSupabaseAlerts((prev) => prev.filter((a) => a.id !== alertId));
     try {
-      if (!supabase) return;
-      await supabase.from("behavioral_alerts").update({ is_read: true }).eq("id", alertId);
+      await behavioralService.acknowledgeAlert(alertId);
     } catch { /* ignore */ }
   }, []);
 
@@ -933,22 +941,26 @@ export function BehavioralAnalysisHub({
             <AlertCircle size={14} color="#475569" />
           </div>
           <div style={{ display: isMobile ? "flex" : "flex", flexDirection: isMobile ? "column" : "row", gap: 10 }}>
-            {PATTERNS.map((p, idx) => (
-              <div key={p.id} style={{ flex: 1, minWidth: 0 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                >
-                  <PatternCard
-                    pattern={p}
-                    onShare={handleSharePattern}
-                    onOpenResource={onNavigateToResources}
-                    onOpenEchoSimulator={(title) => setEchoPatternTitle(title)}
-                  />
-                </motion.div>
-              </div>
-            ))}
+            {loading && realPatterns.length === 0 ? (
+              Array(2).fill(0).map((_, i) => <div key={i} style={{ flex: 1 }}><AwarenessSkeleton /></div>)
+            ) : (
+              activePatterns.map((p, idx) => (
+                <div key={p.id} style={{ flex: 1, minWidth: 0 }}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    <PatternCard
+                      pattern={p}
+                      onShare={handleSharePattern}
+                      onOpenResource={onNavigateToResources}
+                      onOpenEchoSimulator={(title) => setEchoPatternTitle(title)}
+                    />
+                  </motion.div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

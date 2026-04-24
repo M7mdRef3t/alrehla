@@ -1,6 +1,11 @@
 import * as Sentry from "@sentry/nextjs";
 import { runtimeEnv } from "@/config/runtimeEnv";
 
+// ═══ Skip Sentry in local development to save ~200MB RAM ═══
+if (runtimeEnv.isDev && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  // Sentry is dormant — the journey is lighter locally
+} else {
+
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN || "";
 
 Sentry.init({
@@ -36,3 +41,5 @@ Sentry.init({
     }),
   ],
 });
+
+} // end else — Sentry active in production only

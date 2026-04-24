@@ -3,16 +3,16 @@ import { motion } from "framer-motion";
 import { Camera, CheckCircle2, Lock, Zap as Sparkles, User, Palette, ShieldCheck, Paintbrush } from "lucide-react";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
-import { loadUserMemory, saveUserMemory, updatePreferredName, updateBio } from "@/services/userMemory";
 import { ACHIEVEMENTS } from "@/data/achievements";
+import { useAuthState, updateBio, updateDisplayName } from "@/domains/auth/store/auth.store";
 
 export const ProfileAppearanceSettings: React.FC = () => {
-    const memory = loadUserMemory();
+    const { bio: profileBio, displayName: profileDisplayName } = useAuthState();
     const { level } = useGamificationState();
     const unlockedIds = useAchievementState((s) => s.unlockedIds);
     
-    const [displayName, setDisplayName] = useState(memory.preferredName || "المسافر");
-    const [bio, setBio] = useState(memory.bio || "أبحث عن النقاء الإدراكي والسيادة المعرفية في الفضاء الرقمي.");
+    const [displayName, setDisplayName] = useState(profileDisplayName || "المسافر");
+    const [bio, setBio] = useState(profileBio || "أبحث عن النقاء الإدراكي والسيادة المعرفية في الفضاء الرقمي.");
     
     const [activeTheme, setActiveTheme] = useState("nebula");
     const [badges, setBadges] = useState(unlockedIds.slice(0, 2));
@@ -39,10 +39,17 @@ export const ProfileAppearanceSettings: React.FC = () => {
         }
     };
 
-    const handleSave = () => {
-        updatePreferredName(displayName);
-        updateBio(bio);
-        alert("تم تحديث هويتك المدارية بنجاح ✔️");
+    const handleSave = async () => {
+        try {
+            await Promise.all([
+                updateDisplayName(displayName),
+                updateBio(bio)
+            ]);
+            alert("تم تحديث هويتك المدارية بنجاح ✔️");
+        } catch (error) {
+            console.error("Failed to update identity", error);
+            alert("فشل تحديث الهوية. حاول مرة أخرى.");
+        }
     };
 
     return (

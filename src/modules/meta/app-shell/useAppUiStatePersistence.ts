@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, startTransition } from "react";
 import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import type { AppScreen } from "@/navigation/navigationMachine";
 import { type AppOverlayFlags, useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
@@ -162,7 +162,9 @@ export function useAppUiStatePersistence({
         const parsed = JSON.parse(savedUiState) as Partial<PersistedUiState>;
         const restoredScreen = normalizeRestorableScreen(typeof parsed.screen === "string" ? parsed.screen : null);
         const restoredModals = normalizePersistedModals(parsed.modals);
-        if (restoredScreen && !hasBootActionRef.current) setScreen(restoredScreen);
+        if (restoredScreen && !hasBootActionRef.current) {
+          startTransition(() => { setScreen(restoredScreen); });
+        }
         patchAppOverlays(toPersistedModalOverlayPatch(restoredModals));
         hasHydratedUiStateRef.current = true;
         return;
@@ -173,7 +175,9 @@ export function useAppUiStatePersistence({
 
     const legacySavedScreen = getFromLocalStorage(getUserLastScreenStorageKey(userId));
     const restored = normalizeRestorableScreen(legacySavedScreen);
-    if (restored && !hasBootActionRef.current) setScreen(restored);
+    if (restored && !hasBootActionRef.current) {
+      startTransition(() => { setScreen(restored); });
+    }
     hasHydratedUiStateRef.current = true;
   }, [authStatus, patchAppOverlays, setScreen, userId]);
 

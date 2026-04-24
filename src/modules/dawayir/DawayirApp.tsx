@@ -9,7 +9,7 @@ import ChatInterface from '@/modules/action/Chat/ChatInterface';
 import CanvasComponent from '@/modules/exploration/Canvas/CanvasComponent';
 import FacilitatorChat from '@/modules/action/Chat/FacilitatorChat';
 import { useDawayirEngine, NodeData } from '@/hooks/useDawayirEngine';
-import { Zap as Sparkles, AlertCircle, Heart, ArrowLeft, Loader2, Save, Check, Share2, Activity, Zap, Shield, Clock, Terminal, Brain } from 'lucide-react';
+import { Zap as Sparkles, AlertCircle, Heart, ArrowLeft, Loader2, Save, Check, Share2, Activity, Zap, Shield, Clock, Terminal, Brain, ClipboardList } from 'lucide-react';
 import { supabase } from '@/services/supabaseClient';
 import { AutomagicEventPopup } from '@/modules/exploration/Map/AutomagicEventPopup';
 import { AccessManager, SubscriptionInfo } from '../billing/AccessManager';
@@ -23,6 +23,8 @@ import { signInWithGoogleAtPath } from '@/services/authService';
 import { PaywallModal } from './components/PaywallModal';
 import { OracleModal, type OraclePrediction } from './components/OracleModal';
 import { TacticalHUD } from './components/TacticalHUD';
+import { ActionPlanDrawer } from './components/ActionPlanDrawer';
+import { TimelineDrawer } from './components/TimelineDrawer';
 
 export default function DawayirApp() {
     useAIOrchestration();
@@ -44,6 +46,8 @@ export default function DawayirApp() {
     const [oraclePrediction, setOraclePrediction] = useState<any>(null); // To store burnout_probability etc.
     const [showOracleModal, setShowOracleModal] = useState(false);
     const [showSimulation, setShowSimulation] = useState(false);
+    const [showActionPlan, setShowActionPlan] = useState(false);
+    const [showTimeline, setShowTimeline] = useState(false);
 
     // AI Facilitator State (Phase 3)
     const [focusedNode, setFocusedNode] = useState<NodeData | null>(null);
@@ -371,6 +375,16 @@ export default function DawayirApp() {
                         <Activity className="w-4 h-4 text-teal-400" />
                     </div>
                     <h1 className="text-xl font-black text-white tracking-tight">دواير</h1>
+                    {/* Timeline Button */}
+                    {user && data && (
+                        <button
+                            onClick={() => setShowTimeline(true)}
+                            className="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center hover:bg-indigo-500/25 transition-all"
+                            title="خط الزمن"
+                        >
+                            <Clock className="w-4 h-4 text-indigo-400" />
+                        </button>
+                    )}
                 </div>
                 <div className="flex items-center gap-4">
                     {user ? (
@@ -526,6 +540,15 @@ export default function DawayirApp() {
                                                 ابدأ تدريبك الآن
                                             </button>
                                         )}
+
+                                        {/* Action Plan Button */}
+                                        <button
+                                            onClick={() => setShowActionPlan(true)}
+                                            className="px-6 py-3 bg-purple-500/15 border border-purple-500/40 text-purple-300 rounded-xl shadow-lg hover:bg-purple-500/25 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest group"
+                                        >
+                                            <ClipboardList className="w-4 h-4 group-hover:animate-pulse" />
+                                            خطة العمل
+                                        </button>
                                     </div>
                                 )}
                                 {(data.id && hasActiveCoach) && (
@@ -563,6 +586,23 @@ export default function DawayirApp() {
 
                         {/* Automagic Event Notification Popup */}
                         <AutomagicEventPopup />
+
+                        {/* Action Plan Drawer */}
+                        {data && (
+                            <ActionPlanDrawer
+                                isOpen={showActionPlan}
+                                onClose={() => setShowActionPlan(false)}
+                                insightMessage={data.insight_message || ''}
+                                nodes={data.nodes}
+                            />
+                        )}
+
+                        {/* Timeline Drawer */}
+                        <TimelineDrawer
+                            isOpen={showTimeline}
+                            onClose={() => setShowTimeline(false)}
+                            userId={user?.id || null}
+                        />
 
                     </div>
                 )}

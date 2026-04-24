@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBasmaState, CATEGORY_META, type TraitCategory } from "./store/basma.store";
-import { Fingerprint, Plus, X, Star, Quote } from "lucide-react";
+import { Fingerprint, Plus, X, Star, Quote, CloudCheck } from "lucide-react";
 
 function AddTraitModal({ onClose }: { onClose: () => void }) {
   const { addTrait } = useBasmaState();
@@ -68,7 +68,8 @@ function AddStatementModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function BasmaScreen() {
+export default function BasmaScreen({ onNavigate }: { onNavigate?: (s: any) => void }) {
+
   const { traits, values, statements, getIdentityScore, getCategoryStrengths, getTopTraits, getUniqueSignature } = useBasmaState();
   const [modal, setModal] = useState<"trait" | "value" | "statement" | null>(null);
   const score = useMemo(() => getIdentityScore(), [getIdentityScore]);
@@ -85,9 +86,24 @@ export default function BasmaScreen() {
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 px-5 pt-14 pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-indigo-900/15 border border-indigo-500/20"><Fingerprint className="w-6 h-6 text-indigo-400" /></div>
+            <div className="relative inline-block">
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute inset-0 bg-indigo-500/30 blur-3xl rounded-full" 
+              />
+              <div className="relative w-12 h-12 rounded-2xl border border-indigo-500/30 flex items-center justify-center bg-slate-900/50">
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 rounded-2xl border border-dashed border-indigo-500/20"
+                />
+                <Fingerprint className="w-6 h-6 text-indigo-400" />
+              </div>
+            </div>
             <div><h1 className="text-2xl font-black text-white tracking-tight">بصمة</h1><p className="text-xs text-slate-500 font-medium mt-0.5">حمضك النفسي — هويتك الفريدة</p></div>
           </div>
+          <CloudCheck className="w-5 h-5 text-emerald-500/50" />
         </div>
       </motion.div>
 
@@ -140,13 +156,20 @@ export default function BasmaScreen() {
       {topTraits.length > 0 && (
         <div className="relative z-10 px-5 mb-4">
           <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">أقوى سماتك</h3>
-          <div className="space-y-1.5">{topTraits.map((t, idx) => { const cm = CATEGORY_META[t.category]; return (
+          <div className="space-y-1.5">{topTraits.map((t, idx) => { const cm = CATEGORY_META[t.category]; const isAuto = t.source !== "manual"; return (
             <motion.div key={t.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.04 }} className="rounded-lg p-2.5 flex items-center gap-2.5" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(51,65,85,0.15)" }}>
               <span className="text-base">{cm.emoji}</span>
-              <div className="flex-1 min-w-0"><p className="text-[11px] text-white/80 font-bold truncate">{t.name}</p>{t.evidence && <p className="text-[8px] text-slate-600 truncate">{t.evidence}</p>}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[11px] text-white/80 font-bold truncate">{t.name}</p>
+                  {isAuto && <span className="text-[7px] px-1 py-0.5 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-black uppercase tracking-tighter">اكتشاف</span>}
+                </div>
+                {t.evidence && <p className="text-[8px] text-slate-600 truncate">{t.evidence}</p>}
+              </div>
               <span className="text-xs font-black shrink-0" style={{ color: cm.color }}>{t.strength}/10</span>
             </motion.div>
           ); })}</div>
+
         </div>
       )}
 
@@ -182,6 +205,14 @@ export default function BasmaScreen() {
           <span className="text-5xl block mb-3">🧬</span>
           <p className="text-sm text-white/80 font-bold">بصمتك في انتظار الاكتشاف</p>
           <p className="text-[10px] text-slate-500 mt-1">أضف سماتك وقيمك لتبني هويتك الفريدة</p>
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate("quizzes")}
+              className="mt-5 px-6 py-2.5 rounded-xl bg-indigo-600/90 text-white text-[11px] font-black hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20"
+            >
+              اكتشف شخصيتك الآن ✨
+            </button>
+          )}
         </div>
       )}
 

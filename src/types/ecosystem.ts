@@ -46,6 +46,33 @@ export interface EcosystemData {
 
   /** Global milestones achieved across the journey */
   milestones?: string[];
+
+  /** User privacy and security preferences */
+  privacy_prefs?: {
+    analyticsEnabled: boolean;
+    crashReportsEnabled: boolean;
+    partnerShareEnabled: boolean;
+    profileVisible: boolean;
+    communityAnonymous: boolean;
+    hideFromSearch: boolean;
+    twoFactorEnabled: boolean;
+    biometricHintShown: boolean;
+  };
+
+  /** Preferred visual theme */
+  theme_pref?: 'light' | 'dark' | 'system';
+
+  /** Notification settings */
+  notification_settings?: {
+    enabled: boolean;
+    dailyReminder: boolean;
+    dailyReminderTime: string;
+    inactiveReminder: boolean;
+    inactiveReminderDays: number;
+    exerciseComplete: boolean;
+    missionReminder: boolean;
+    missionReminderStrategy: "next" | "random" | "last" | "cycle";
+  };
 }
 
 export interface SatelliteSnapshot {

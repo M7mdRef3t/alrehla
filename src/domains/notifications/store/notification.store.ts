@@ -57,7 +57,17 @@ export const useNotificationState = create<NotificationState>((set, get) => ({
 
     // فحص تذكير العودة (ذكي حسب التقدم) قبل تحديث آخر نشاط
     void loadNotificationSettings().then((settings) => {
-      set({ settings });
+      // Sync from cloud if available
+      import("@/domains/auth/store/auth.store").then(({ useAuthState }) => {
+        const ecosystemData = useAuthState.getState().ecosystemData;
+        if (ecosystemData?.notification_settings) {
+          set({ settings: { ...settings, ...ecosystemData.notification_settings } });
+        } else {
+          set({ settings });
+        }
+      }).catch(() => {
+        set({ settings });
+      });
     });
     void checkAndSendInactiveReminder();
     void checkAndSendWeeklyGratitude();
@@ -98,6 +108,12 @@ export const useNotificationState = create<NotificationState>((set, get) => ({
     
     saveNotificationSettings(updatedSettings);
     set({ settings: updatedSettings });
+
+    // Sync to Cloud
+    import("@/domains/auth/store/auth.store").then(({ useAuthState }) => {
+      const { updateEcosystemData } = useAuthState.getState();
+      updateEcosystemData({ notification_settings: updatedSettings as any });
+    }).catch(() => {});
   },
 
   recordUserActivity: () => {

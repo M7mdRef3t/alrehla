@@ -1,107 +1,106 @@
 'use client';
 
 import type { FC } from "react";
-import { motion, type Variants } from "framer-motion";
 import { AlrehlaLogo } from "./logo/AlrehlaLogo";
 import { SocialLinks } from '@/modules/growth/SocialLinks';
 
 interface PlatformFooterProps {
   trustPoints?: string[];
-  stagger?: Variants;
+  stagger?: any; // For framer-motion stagger animation
   onOpenLegal?: (path: "/privacy" | "/terms") => void;
 }
 
+const DEFAULT_TRUST_POINTS = [
+  "نتيجتك في أقل من ٣ دقائق",
+  "مجاني بالكامل — بدون تسجيل",
+  "بياناتك خاصة ومحمية ١٠٠٪"
+];
+
 const PLATFORM_FOOTER_STYLES = `
   .platform-footer {
-    border-top: 1px solid rgba(255,255,255,0.06);
-    background: linear-gradient(to bottom, transparent, rgba(10,13,24,0.95));
-    padding: 64px 24px 40px;
+    background: #02040a;
+    border-top: 1px solid rgba(20,184,166,0.1);
+    padding: 80px 0 40px;
     margin-top: auto;
+    position: relative;
+    z-index: 10;
     width: 100%;
   }
 
   .platform-footer-inner {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
+    padding: 0 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 40px;
+    gap: 48px;
+    text-align: center;
   }
 
   .platform-footer-nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px 32px;
     justify-content: center;
+    gap: 32px;
   }
 
   .platform-footer-link {
-    font-size: 14px;
     color: #94a3b8;
     text-decoration: none;
-    transition: all 0.2s ease;
+    font-size: 14px;
     font-weight: 500;
+    transition: color 0.2s ease;
   }
 
   .platform-footer-link:hover {
-    color: #2dd4bf;
-    text-shadow: 0 0 12px rgba(45, 212, 191, 0.4);
+    color: #14b8a6;
   }
 
   .platform-footer-link.highlight {
-    color: rgba(253, 230, 138, 0.9);
+    color: #14b8a6;
     font-weight: 700;
-  }
-  .platform-footer-link.highlight:hover {
-    color: #fde68a;
-    text-shadow: 0 0 12px rgba(253, 230, 138, 0.4);
   }
 
   .platform-footer-trust-panel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    background: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 24px;
+    background: rgba(20,184,166,0.03);
+    border: 1px solid rgba(20,184,166,0.08);
     padding: 24px 40px;
-    margin-bottom: 8px;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 800px;
   }
 
   .platform-footer-trust-title {
-    font-size: 11px;
+    color: #5eead4;
+    font-size: 12px;
     font-weight: 900;
-    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.3em;
-    margin: 0;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
   }
 
   .platform-footer-trust-row {
     display: flex;
-    gap: 24px;
     flex-wrap: wrap;
     justify-content: center;
+    gap: 24px;
   }
 
   .platform-footer-trust-item {
-    font-size: 14px;
     color: #94a3b8;
-    font-weight: 700;
+    font-size: 13px;
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
   .platform-footer-trust-dot {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
     border-radius: 50%;
-    background-color: #14b8a6;
-    box-shadow: 0 0 8px rgba(20, 184, 166, 0.8);
+    background: #14b8a6;
+    box-shadow: 0 0 8px #14b8a6;
   }
 
   .platform-footer-bottom {
@@ -109,29 +108,37 @@ const PLATFORM_FOOTER_STYLES = `
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    text-align: center;
+    width: 100%;
+    padding-top: 40px;
+    border-top: 1px solid rgba(255,255,255,0.03);
   }
 
   .platform-footer-tagline {
-    font-size: 13px;
     color: #64748b;
-    font-family: var(--font-mono, monospace);
-    letter-spacing: 0.1em;
+    font-size: 13px;
+    font-style: italic;
   }
 
   .platform-footer-copy {
-    margin: 0;
-    font-size: 12px;
     color: #475569;
-    letter-spacing: 0.05em;
+    font-size: 12px;
+  }
+
+  @media (max-width: 768px) {
+    .platform-footer {
+      padding: 60px 0 100px; /* Extra bottom padding for mobile tab bar */
+    }
+    .platform-footer-nav {
+      gap: 20px;
+      flex-direction: column;
+    }
+    .platform-footer-trust-row {
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
   }
 `;
-
-const DEFAULT_TRUST_POINTS = [
-  "بياناتك آمنة ومشفرة",
-  "لا مشاركة مع طرف ثالث",
-  "يمكنك الحذف في أي وقت"
-];
 
 export const PlatformFooter: FC<PlatformFooterProps> = ({
   trustPoints = DEFAULT_TRUST_POINTS,
@@ -147,20 +154,8 @@ export const PlatformFooter: FC<PlatformFooterProps> = ({
     }
   };
 
-  const FooterWrapper = stagger ? motion.footer : 'footer';
-  const wrapperProps = stagger ? {
-    variants: stagger,
-    initial: "hidden",
-    whileInView: "visible",
-    viewport: { once: true }
-  } : {};
-
   return (
-    <FooterWrapper
-      dir="rtl"
-      className="platform-footer"
-      {...(wrapperProps as any)}
-    >
+    <footer dir="rtl" className="platform-footer">
       <style>{PLATFORM_FOOTER_STYLES}</style>
       <div className="platform-footer-inner">
 
@@ -190,14 +185,7 @@ export const PlatformFooter: FC<PlatformFooterProps> = ({
             شروط الاستخدام
           </a>
           <a href="/pricing" className="platform-footer-link highlight">الخطط والأسعار</a>
-          <a
-            href="https://wa.me/201110795932"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="platform-footer-link"
-          >
-            تواصل معنا
-          </a>
+          <a href="/contact" className="platform-footer-link">تواصل معنا</a>
         </nav>
 
         {/* Trust badges */}
@@ -219,7 +207,7 @@ export const PlatformFooter: FC<PlatformFooterProps> = ({
         {/* Bottom text */}
         <div className="platform-footer-bottom">
           <span className="platform-footer-tagline">
-            الرحلة — مساحة أوضح للعلاقات والحدود
+            الرحلة — مساحة لاستعادة نفسك، وبناء حدودك، وفهم مداراتك.
           </span>
           <p className="platform-footer-copy">
             © {year} الرحلة — جميع الحقوق محفوظة
@@ -227,6 +215,6 @@ export const PlatformFooter: FC<PlatformFooterProps> = ({
         </div>
 
       </div>
-    </FooterWrapper>
+    </footer>
   );
-}
+};

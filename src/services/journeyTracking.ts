@@ -170,44 +170,54 @@ async function flushSupabaseSync(): Promise<void> {
   const leadAttr = getStoredLeadAttribution();
   const utm = getStoredUtmParams();
 
-  const rows = batch
-    .map(({ mode, event }) =>
-      buildAnalyticsEnvelope({
-        event_type: event.type,
-        session_id: event.sessionId ?? null,
+  const rowsWithMeta = batch
+    .map((item) => ({
+      item,
+      row: buildAnalyticsEnvelope({
+        event_type: item.event.type,
+        session_id: item.event.sessionId ?? null,
         anonymous_id: anonymousId,
-        client_event_id: event.client_event_id,
+        client_event_id: item.event.client_event_id,
         lead_id: leadAttr?.lead_id || null,
         lead_source: leadAttr?.lead_source || null,
         utm_source: utm?.utm_source || null,
         utm_medium: utm?.utm_medium || null,
         utm_campaign: utm?.utm_campaign || null,
         payload: {
-          ...(event.payload ?? {}),
-          mode
+          ...(item.event.payload ?? {}),
+          mode: item.mode
         }
       })
-    )
-    .filter((row): row is NonNullable<typeof row> => {
-      if (row) return true;
+    }))
+    .filter((entry): entry is { item: typeof batch[0]; row: NonNullable<typeof entry.row> } => {
+      if (entry.row) return true;
       if (runtimeEnv.isDev) {
         console.warn("[JourneyTracking] Invalid analytics envelope blocked before sync");
       }
       return false;
     });
 
+  const failedItems: typeof batch = [];
+
   // Redirect to unified analytics API instead of direct Supabase insertion
-  for (const row of rows) {
-    try {
-      await fetch("/api/analytics", {
-        method: "POST",
-        headers,
-        body: JSON.stringify(row),
-        keepalive: true
-      });
-    } catch (e) {
-      console.warn("[JourneyTracking] Failed to sync to unified analytics", e);
+  for (const { item, row } of rowsWithMeta) {
+    const success = await sendJsonWithResilience(
+      "/api/analytics",
+      row,
+      { headers, keepalive: true },
+      { retries: 2, retryDelayMs: 500, timeoutMs: 8000 }
+    );
+    if (!success) {
+      if (runtimeEnv.isDev) {
+        console.warn(`[JourneyTracking] Failed to sync event ${row.event_type} to unified analytics.`);
+      }
+      failedItems.push(item);
     }
+  }
+
+  // Restore failed items back to the queue (at the beginning) so they aren't lost on 503
+  if (failedItems.length > 0) {
+    supabaseQueue.unshift(...failedItems);
   }
 
   // Only sync session profiles for anonymous tracking.
@@ -449,6 +459,10 @@ export function recordFlowEvent(
   const hasExtraData = extra && Object.keys(extra).length > 0;
   const hasExtraKeys = !!(hasExtraData || utmParams || leadAttribution || dwellTime != null || previousStep);
 
+  const sanitizedMeta = extra?.meta
+    ? Object.fromEntries(Object.entries(extra.meta).filter(([_, v]) => v !== undefined))
+    : {};
+
   const event = {
     type: "flow_event" as const,
     payload: {
@@ -458,7 +472,7 @@ export function recordFlowEvent(
         ? {
             ...(extra?.atStep ? { atStep: extra.atStep } : {}),
             ...(extra?.closeReason ? { closeReason: extra.closeReason } : {}),
-            ...(extra?.meta ? extra.meta : {}),
+            ...sanitizedMeta,
             ...(utmParams ? { utm: utmParams } : {}),
             ...(leadAttribution ? { lead: leadAttribution } : {}),
             ...(dwellTime != null ? { dwellTime } : {}),

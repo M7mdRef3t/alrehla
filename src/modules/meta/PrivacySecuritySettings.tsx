@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/services/supabaseClient";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+import { useAuthState } from "@/domains/auth/store/auth.store";
 
 /* ══════════════════════════════════════════
    Types & Storage
@@ -39,14 +40,9 @@ const DEFAULT_PREFS: PrivacyPrefs = {
   biometricHintShown: false,
 };
 
-function loadPrefs(): PrivacyPrefs {
-  if (typeof window === "undefined") return DEFAULT_PREFS;
-  try {
-    const raw = localStorage.getItem(PRIVACY_KEY);
-    return raw ? { ...DEFAULT_PREFS, ...JSON.parse(raw) } : DEFAULT_PREFS;
-  } catch { return DEFAULT_PREFS; }
+function getEffectivePrefs(data: any): PrivacyPrefs {
+  return { ...DEFAULT_PREFS, ...(data?.privacy_prefs || {}) };
 }
-function savePrefs(p: PrivacyPrefs) { localStorage.setItem(PRIVACY_KEY, JSON.stringify(p)); }
 
 interface SessionInfo { id: string; device: string; location: string; time: string; current: boolean; icon: string; }
 interface LoginEvent  { id: string; device: string; location: string; time: string; success: boolean; }
@@ -727,12 +723,15 @@ function DataExportSection() {
 interface PrivacySecuritySettingsProps { onBack?: () => void; }
 
 export function PrivacySecuritySettings({ onBack }: PrivacySecuritySettingsProps) {
-  const [prefs, setPrefs] = useState<PrivacyPrefs>(loadPrefs);
+  const { ecosystemData, updateEcosystemData } = useAuthState();
   const openOverlay = useAppOverlayState((s) => s.openOverlay);
 
-  const updatePref = useCallback(<K extends keyof PrivacyPrefs>(key: K, value: PrivacyPrefs[K]) => {
-    setPrefs((prev) => { const next = { ...prev, [key]: value }; savePrefs(next); return next; });
-  }, []);
+  const prefs = useMemo(() => getEffectivePrefs(ecosystemData), [ecosystemData]);
+
+  const updatePref = useCallback(async <K extends keyof PrivacyPrefs>(key: K, value: PrivacyPrefs[K]) => {
+    const nextPrefs = { ...prefs, [key]: value };
+    await updateEcosystemData({ privacy_prefs: nextPrefs });
+  }, [prefs, updateEcosystemData]);
 
   const handleDeleteAll = () => {
     const keys: string[] = [];

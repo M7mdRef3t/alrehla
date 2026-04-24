@@ -1,6 +1,9 @@
 import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowLeft, Zap, Shield, Heart } from "lucide-react";
+import { soundManager } from "@/services/soundManager";
+import { SafeMotionCircle, toSafeSvgRadius } from "@/components/ui/SafeSvg";
+
 
 /* --- Types --- */
 interface HeroSectionProps {
@@ -16,14 +19,14 @@ interface HeroSectionProps {
 
 /* --- Constants --- */
 const ROTATING_WORDS = [
-  "خايف تقول لأ",
-  "طاقتك بتتسرب",
-  "مراية لزعل غيرك",
-  "رهين الانتظار",
-  "مطفي من جوه",
-  "خايف تختار",
-  "شايل شيلة غيرك",
-  "عايش لرضاهم"
+  "بتحس إنك خلصت شحن؟",
+  "بتتحرج تكسفهم؟",
+  "رهين الانتظار؟",
+  "نسيت نفسك عشانهم؟",
+  "خايف تقول لأ؟",
+  "شايل شيلة غيرك؟",
+  "تايه في دوائرك؟",
+  "عايز تسترد سيادتك؟"
 ];
 
 /* --- Styles --- */
@@ -75,6 +78,14 @@ const HERO_STYLES = `
     background: radial-gradient(ellipse 70% 30% at 50% 0%, rgba(0, 240, 255, 0.06) 0%, transparent 100%);
     pointer-events: none;
     z-index: 1;
+  }
+
+  .text-shadow-glow {
+    text-shadow: 0 0 20px rgba(45, 212, 191, 0.4), 0 0 40px rgba(45, 212, 191, 0.2);
+  }
+  
+  .headline-glow {
+    filter: drop-shadow(0 0 15px rgba(45, 212, 191, 0.3));
   }
 
   .hero-copy-column {
@@ -270,6 +281,7 @@ const HERO_STYLES = `
     padding-top: 0.2em;
     padding-bottom: 0.2em;
     color: var(--text-main);
+    text-shadow: 0 0 40px rgba(0, 240, 255, 0.15);
   }
 
   .headline-inline-row {
@@ -1153,8 +1165,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
 
   const [hovered, setHovered] = useState<number | null>(null);
-  const toSafeRadius = (value: unknown, fallback: number) =>
-    typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
+
 
   return (
     <motion.div
@@ -1178,119 +1189,112 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
               className="orbit-line"
             />
             {/* Neural Pulse - Data traveling from core to node */}
-            <motion.circle
-              r={1.5}
-              fill={n.color}
-              initial={{ offsetDistance: "0%", opacity: 0 }}
-              animate={{ 
-                offsetDistance: ["0%", "100%"],
-                opacity: [0, 1, 0]
-              }}
-              transition={{ 
-                duration: 2 + Math.random() * 2, 
-                repeat: Infinity, 
-                delay: Math.random() * 3,
-                ease: "easeInOut"
-              }}
-              style={{
-                offsetPath: `path('M 190 190 L ${n.cx} ${n.cy}')`,
-                willChange: "offset-distance, opacity"
-              }}
-            />
+            {Number.isFinite(n.cx) && Number.isFinite(n.cy) && (
+              <SafeMotionCircle
+                r={1.5}
+                fill={n.color}
+                initial={{ offsetDistance: "0%", opacity: 0 }}
+                animate={{ 
+                  offsetDistance: ["0%", "100%"],
+                  opacity: [0, 1, 0]
+                }}
+                transition={{ 
+                  duration: 2 + Math.random() * 2, 
+                  repeat: Infinity, 
+                  delay: Math.random() * 3,
+                  ease: "easeInOut"
+                }}
+                style={{
+                  offsetPath: `path('M 190 190 L ${n.cx} ${n.cy}')`,
+                  willChange: "offset-distance, opacity"
+                }}
+              />
+            )}
           </Fragment>
         ))}
 
         {rings.map((ring, i) => (
-          (() => {
-            const safeRingRadius = toSafeRadius(ring.r, 1);
-            return (
-              <g key={i}>
-                <motion.circle
-                  cx={190} cy={190} r={safeRingRadius}
-                  stroke={ring.stroke}
-                  strokeWidth={1}
-                  fill="none"
-                  strokeDasharray={ring.dash === "none" ? undefined : ring.dash}
-                  animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
-                  transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
-                  className="orbit-ring"
-                  transformOrigin="190px 190px"
-                />
-                {!reduceMotion && (
-                  <motion.circle
-                    cx={190} cy={190} r={safeRingRadius}
-                    fill="none"
-                    stroke={ring.stroke}
-                    strokeWidth={2}
-                    strokeDasharray="1 100"
-                    animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
-                    transition={{ duration: ring.dur * 0.4, repeat: Infinity, ease: "linear" }}
-                    className="orbit-ring orbit-ring--glow"
-                    transformOrigin="190px 190px"
-                  />
-                )}
-              </g>
-            );
-          })()
+          <g key={i}>
+            <SafeMotionCircle
+              cx={190} cy={190} r={ring.r}
+              stroke={ring.stroke}
+              strokeWidth={1}
+              fill="none"
+              strokeDasharray={ring.dash === "none" ? undefined : ring.dash}
+              animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
+              transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
+              className="orbit-ring"
+              transformOrigin="190px 190px"
+            />
+            {!reduceMotion && (
+              <SafeMotionCircle
+                cx={190} cy={190} r={ring.r}
+                fill="none"
+                stroke={ring.stroke}
+                strokeWidth={2}
+                strokeDasharray="1 100"
+                animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
+                transition={{ duration: ring.dur * 0.4, repeat: Infinity, ease: "linear" }}
+                className="orbit-ring orbit-ring--glow"
+                transformOrigin="190px 190px"
+              />
+            )}
+          </g>
         ))}
 
         {nodes.map((node, i) => (
-          (() => {
-            const safeNodeRadius = toSafeRadius(node.r, 1);
-            return (
-              <motion.g
-                key={i}
-                onMouseEnter={() => setHovered(i)}
-                onMouseLeave={() => setHovered(null)}
-                animate={reduceMotion ? {} : {
-                  x: springX.get() * node.w,
-                  y: springY.get() * node.w,
-                  opacity: hovered === i ? 1 : [0.7, 1, 0.7],
-                }}
-                transition={{
-                  opacity: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 },
-                }}
+          <motion.g
+            key={i}
+            onMouseEnter={() => setHovered(i)}
+            onMouseLeave={() => setHovered(null)}
+            animate={reduceMotion ? {} : {
+              x: springX.get() * node.w,
+              y: springY.get() * node.w,
+              opacity: hovered === i ? 1 : [0.7, 1, 0.7],
+            }}
+            transition={{
+              opacity: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 },
+            }}
+            transformOrigin={`${node.cx}px ${node.cy}px`}
+            cursor="pointer"
+            className="node-group"
+          >
+            {hovered === i && (
+              <SafeMotionCircle
+                cx={node.cx} cy={node.cy} r={node.r + 6}
+                fill="none" stroke={node.color} strokeWidth={1.5}
+                opacity={0.4}
+                className="pulse-ring"
                 transformOrigin={`${node.cx}px ${node.cy}px`}
-                cursor="pointer"
-                className="node-group"
-              >
-                {hovered === i && (
-                  <circle
-                    cx={node.cx} cy={node.cy} r={safeNodeRadius + 6}
-                    fill="none" stroke={node.color} strokeWidth={1.5}
-                    opacity={0.4}
-                    className="pulse-ring"
-                    transformOrigin={`${node.cx}px ${node.cy}px`}
-                  />
-                )}
-                <circle cx={node.cx} cy={node.cy} r={safeNodeRadius + 8} fill={node.color} opacity={0.07} />
-                <circle
-                  cx={node.cx} cy={node.cy} r={safeNodeRadius}
-                  fill={node.color}
-                  className="node-core"
-                />
-                <circle cx={node.cx} cy={node.cy} r={safeNodeRadius * 0.35} fill="rgba(0,0,0,0.55)" />
+              />
+            )}
+            <SafeMotionCircle cx={node.cx} cy={node.cy} r={node.r + 8} fill={node.color} opacity={0.07} />
+            <SafeMotionCircle
+              cx={node.cx} cy={node.cy} r={node.r}
+              fill={node.color}
+              className="node-core"
+            />
+            <SafeMotionCircle cx={node.cx} cy={node.cy} r={node.r * 0.35} fill="rgba(0,0,0,0.55)" />
 
-                <AnimatePresence>
-                  {hovered === i && (
-                    <motion.foreignObject
-                      x={node.cx > 190 ? node.cx - 160 : node.cx + 18}
-                      y={node.cy - 16}
-                      width="150" height="36"
-                      initial={{ opacity: 0, filter: "blur(4px)" }}
-                      animate={{ opacity: 1, filter: "blur(0px)" }}
-                      exit={{ opacity: 0, filter: "blur(4px)" }}
-                      transition={{ duration: 0.25 }}
-                    >
-                      <div className="node-tooltip-body">
-                        {node.label}
-                      </div>
-                    </motion.foreignObject>
-                  )}
-                </AnimatePresence>
-              </motion.g>
-            );
-          })()
+
+            <AnimatePresence>
+              {hovered === i && (
+                <motion.foreignObject
+                  x={node.cx > 190 ? node.cx - 160 : node.cx + 18}
+                  y={node.cy - 16}
+                  width="150" height="36"
+                  initial={{ opacity: 0, filter: "blur(4px)" }}
+                  animate={{ opacity: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, filter: "blur(4px)" }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <div className="node-tooltip-body">
+                    {node.label}
+                  </div>
+                </motion.foreignObject>
+              )}
+            </AnimatePresence>
+          </motion.g>
         ))}
 
         <motion.g
@@ -1299,9 +1303,9 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
           className="center-core"
           transformOrigin="190px 190px"
         >
-          <circle cx={190} cy={190} r={22} fill="rgba(0, 240, 255, 0.15)" />
-          <circle cx={190} cy={190} r={14} fill="var(--teal)" className="center-core__glow" />
-          <circle cx={190} cy={190} r={6} fill="#fff" opacity={0.9} />
+          <SafeMotionCircle cx={190} cy={190} r={22} fill="rgba(0, 240, 255, 0.15)" />
+          <SafeMotionCircle cx={190} cy={190} r={14} fill="var(--teal)" className="center-core__glow" />
+          <SafeMotionCircle cx={190} cy={190} r={6} fill="#fff" opacity={0.9} />
         </motion.g>
       </svg>
 
@@ -1388,6 +1392,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const headlineLineRef = useRef<HTMLSpanElement | null>(null);
   const [headlineMeasuredWidth, setHeadlineMeasuredWidth] = useState<number>(0);
 
+
   // Global Mouse tracking for Parallax Base
   const globalMouseX = useMotionValue(0);
   const globalMouseY = useMotionValue(0);
@@ -1420,6 +1425,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
   // Tilt disabled on text column for readability — kept on map only
 
   const handleStart = useCallback(() => {
+    soundManager.playEffect("cosmic_pulse");
     setIsWarping(true);
     setTimeout(onStartJourney, 900);
   }, [onStartJourney]);
@@ -1528,8 +1534,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
             </motion.div>
 
             <motion.h1 variants={fadeUp} className="headline-static hero-headline">
-              <span ref={headlineLineRef} className="headline-line">أنت لست مرهقاً</span>
-              <span className="headline-inline-row">
+              <span className="block mb-2 text-shadow-glow opacity-90">خريطة وعيك،</span>
+              <span ref={headlineLineRef} className="headline-line headline-glow">بتبدأ من هنا.</span>
+              <span className="headline-inline-row mt-4">
                 <span className="headline-subline">أنت فقط</span>
                 <RotatingWord />
               </span>
@@ -1547,7 +1554,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                   <div className="flex justify-center mt-12">
                     <motion.button
                       type="button"
-                      className="hero-command-btn group"
+                      className="hero-command-btn group cosmic-pulse-btn"
                       onClick={handleStart}
                       id="hero-cta-start-returning"
                       whileHover={{ scale: 1.05 }}
@@ -1576,7 +1583,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                     />
                     <motion.button
                       type="button"
-                      className="hero-command-btn group"
+                      className="hero-command-btn group cosmic-pulse-btn"
                       onClick={handleStart}
                       id="hero-cta-start"
                       whileHover={{ scale: 1.05 }}

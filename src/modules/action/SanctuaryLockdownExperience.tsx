@@ -89,7 +89,7 @@ export const SanctuaryLockdownExperience: FC<SanctuaryProps> = ({ onExit }) => {
                   onClick={liftLockdown}
                   className="fixed bottom-4 right-4 text-[10px] text-slate-800 hover:text-slate-500 uppercase tracking-widest"
                >
-                  Dev: Lift Lockdown
+                  تجاوز المطور: إلغاء الملاذ
                </button>
             )}
          </motion.div>

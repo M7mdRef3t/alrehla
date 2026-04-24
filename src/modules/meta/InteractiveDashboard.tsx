@@ -12,6 +12,8 @@ import { useAchievementState } from "@/domains/gamification/store/achievement.st
 import { useQuizHistory } from "@/hooks/useQuizHistory";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { UserProfile } from "./UserProfile";
+import { SafeCircle } from "@/components/ui/SafeSvg";
+
 
 
 /* ══════════════════════════════════════════
@@ -451,7 +453,7 @@ function MoodChart({ pulseHistory }: { pulseHistory: PulseEntry[] }) {
 
             {/* Dots */}
             {points.map((p, i) => p.y !== null && (
-              <circle key={i} cx={p.x} cy={p.y!} r={2}
+              <SafeCircle key={i} cx={p.x} cy={p.y!} r={2}
                 fill="#14B8A6" stroke="#080b15" strokeWidth={1} />
             ))}
           </svg>

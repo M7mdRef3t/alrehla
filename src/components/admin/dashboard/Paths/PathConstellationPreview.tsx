@@ -48,6 +48,8 @@ const nodeTypes = {
   custom: CustomNode
 };
 
+const edgeTypes = {};
+
 export function PathConstellationPreview({ steps }: PathConstellationPreviewProps) {
   const nodes: Node[] = useMemo(() => {
     return steps.map((step, index) => ({
@@ -92,6 +94,7 @@ export function PathConstellationPreview({ steps }: PathConstellationPreviewProp
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         proOptions={{ hideAttribution: true }}

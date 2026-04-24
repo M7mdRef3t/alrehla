@@ -28,7 +28,7 @@ import { useAuthState } from "@/domains/auth/store/auth.store";
 
 // Dynamic Imports for Performance
 const LandingSimulation = dynamic(() => import("./LandingSimulation").then(mod => mod.LandingSimulation), { ssr: false });
-const PlatformFooter = dynamic(() => import("./PlatformFooter").then(mod => mod.PlatformFooter), { ssr: true });
+import { PlatformFooter } from "./PlatformFooter";
 const AmbientBackground = dynamic(() => import("./landing/AmbientBackground").then(mod => mod.AmbientBackground), { ssr: false });
 
 const ProblemFirstSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.ProblemFirstSection), { ssr: true });
@@ -36,6 +36,7 @@ const FeatureShowcaseSection = dynamic(() => import("./landing/LandingSections")
 const HowItWorksSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.HowItWorksSection), { ssr: true });
 const MetricsSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.MetricsSection), { ssr: false });
 const SystemOverclockSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.SystemOverclockSection), { ssr: true });
+const StoriesSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.StoriesSection), { ssr: false });
 const FinalReadinessSection = dynamic(() => import("./landing/LandingSections").then(mod => mod.FinalReadinessSection), { ssr: true });
 import {
   getRelationshipWeatherEntryHref,
@@ -455,7 +456,13 @@ export const Landing: FC<LandingProps> = ({
         data={landingCopy.howItWorks}
       />
 
-      {/* 7. FINAL READINESS */}
+      {/* 7. STORIES — Social Proof */}
+      <StoriesSection
+        stagger={stagger}
+        item={fadeUp}
+      />
+
+      {/* 8. FINAL READINESS */}
       <FinalReadinessSection 
         stagger={stagger} 
         item={fadeUp}

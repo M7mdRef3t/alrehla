@@ -237,11 +237,31 @@ export function RelationshipWeatherSimulation() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center text-center py-10"
+              className="flex flex-col items-center justify-center text-center py-10 relative overflow-hidden h-[300px]"
             >
-              <Loader2 className="mb-6 h-12 w-12 animate-spin text-indigo-400" />
-              <h3 className="text-lg font-bold text-white mb-2">بنحلل الطقس...</h3>
-              <p className="text-sm text-gray-400">بنربط الإشارات عشان نكتشف مناطق التوهان والتسريب</p>
+              {/* Radar Sweep Effect */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-40">
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="w-[400px] h-[400px] border border-indigo-500/20 rounded-full relative"
+                >
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1/2 bg-gradient-to-t from-transparent to-indigo-400 origin-bottom blur-sm" />
+                </motion.div>
+                <div className="absolute w-[300px] h-[300px] border border-indigo-500/10 rounded-full" />
+                <div className="absolute w-[200px] h-[200px] border border-indigo-500/10 rounded-full" />
+                <div className="absolute w-[100px] h-[100px] border border-indigo-500/10 rounded-full" />
+              </div>
+
+              <motion.div
+                animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="relative z-10 flex flex-col items-center"
+              >
+                <Target className="mb-6 h-12 w-12 text-indigo-400 animate-pulse" />
+                <h3 className="text-xl font-black text-white mb-2 uppercase tracking-[0.2em]">جاري مسح الرادار الإدراكي</h3>
+                <p className="text-sm text-indigo-300/60 font-bold">بنربط الإشارات ونحدد مناطق تسريب الطاقة...</p>
+              </motion.div>
             </motion.div>
           )}
 

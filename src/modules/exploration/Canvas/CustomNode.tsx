@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { NodeData } from '@/hooks/useDawayirEngine';
+import { useStressAura } from '@/modules/dawayir/hooks/useStressAura';
 
 const sizeMap = {
     small: 'w-16 h-16 text-[10px] font-bold uppercase tracking-tighter',
@@ -16,15 +17,55 @@ const colorMap = {
 };
 
 const CustomNode = ({ data }: NodeProps<NodeData>) => {
+    const aura = useStressAura();
+    const isCore = data.color === 'core';
+
     return (
         <div
-            className={`rounded-full flex items-center justify-center text-center p-3 border transition-all duration-700 font-mono
+            className={`rounded-full flex items-center justify-center text-center p-3 border transition-all duration-700 font-mono relative
         custom-drag-handle
         ${sizeMap[data.size]} 
         ${colorMap[data.color]}
       `}
         >
             <Handle type="target" position={Position.Top} className="opacity-0" />
+
+            {/* Stress Aura — only on the core "أنا" node */}
+            {isCore && aura.isConnected && (
+                <>
+                    {/* Outer breathing ring */}
+                    <div
+                        className="absolute inset-0 rounded-full pointer-events-none"
+                        style={{
+                            boxShadow: `0 0 ${20 + aura.stressLevel * 0.4}px ${aura.auraColor}, inset 0 0 ${10 + aura.stressLevel * 0.2}px ${aura.auraColor}`,
+                            animation: `pulse ${aura.pulseDuration}s ease-in-out infinite`,
+                            opacity: aura.auraIntensity,
+                        }}
+                    />
+                    {/* Inner glow ring */}
+                    <div
+                        className="absolute rounded-full pointer-events-none"
+                        style={{
+                            inset: '-4px',
+                            border: `2px solid ${aura.auraColor}`,
+                            borderRadius: '50%',
+                            animation: `pulse ${aura.pulseDuration * 1.3}s ease-in-out infinite alternate`,
+                            opacity: aura.auraIntensity * 0.6,
+                        }}
+                    />
+                    {/* Stress level micro-badge */}
+                    <div
+                        className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full text-[7px] font-black text-white z-10"
+                        style={{
+                            background: aura.auraColor,
+                            boxShadow: `0 0 8px ${aura.auraColor}`,
+                        }}
+                    >
+                        {aura.stressLevel}
+                    </div>
+                </>
+            )}
+
             <div className="relative group">
                 <span className="relative z-10">{data.label}</span>
                 {data.mass > 7 && (
@@ -37,6 +78,3 @@ const CustomNode = ({ data }: NodeProps<NodeData>) => {
 };
 
 export default memo(CustomNode);
-
-
-

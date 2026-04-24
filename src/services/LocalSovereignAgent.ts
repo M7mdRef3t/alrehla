@@ -34,21 +34,26 @@ ${AGENT_TOOLS.map(t => `- ${t.name}: ${t.description}`).join('\n')}
 class LocalSovereignAgent {
     private isRunning: boolean = false;
     private intervalId: NodeJS.Timeout | null = null;
+    private timeoutId: NodeJS.Timeout | null = null;
 
     /** Starts the autonomous monitoring loop */
     start(intervalMs: number = 300000) { // Default 5 minutes
         if (this.isRunning) return;
         this.isRunning = true;
-        console.log("[SovereignAgent] Initializing local autonomous loop...");
         
         // Initial run with delay
-        setTimeout(() => this.runCycle(), 10000);
+        this.timeoutId = setTimeout(() => {
+            if (this.isRunning) this.runCycle();
+        }, 10000);
         
-        this.intervalId = setInterval(() => this.runCycle(), intervalMs);
+        this.intervalId = setInterval(() => {
+            if (this.isRunning) this.runCycle();
+        }, intervalMs);
     }
 
     stop() {
         this.isRunning = false;
+        if (this.timeoutId) clearTimeout(this.timeoutId);
         if (this.intervalId) clearInterval(this.intervalId);
     }
 
@@ -59,7 +64,6 @@ class LocalSovereignAgent {
         try {
             const isAvailable = await ollamaClient.isAvailable();
             if (!isAvailable) {
-                console.warn("[SovereignAgent] Ollama not available. Skipping cycle.");
                 return;
             }
 

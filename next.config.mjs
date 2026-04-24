@@ -14,14 +14,22 @@ const nextConfig = {
   ...(isDev && !isVercel ? { distDir: ".next-dev" } : {}),
   reactStrictMode: true,
   swcMinify: true,
-  compiler: {
-    removeConsole: isVercel ? { exclude: ["error", "warn"] } : false
-  },
+  ...(isVercel ? {
+    compiler: {
+      removeConsole: { exclude: ["error", "warn"] }
+    }
+  } : {}),
   transpilePackages: ["@alrehla/atmosfera", "@alrehla/dawayir", "@alrehla/masarat"],
   poweredByHeader: false,
   experimental: {
-    esmExternals: "loose",
+    esmExternals: true,
     optimizePackageImports: ["lucide-react", "framer-motion", "recharts"]
+  },
+  onDemandEntries: {
+    // period (in ms) where the server will keep pages in the buffer
+    maxInactiveAge: 25 * 1000,
+    // number of pages that should be kept simultaneously without being disposed
+    pagesBufferLength: 2,
   },
 
   // ═══ SEO & Security Headers ═══
@@ -55,6 +63,7 @@ const nextConfig = {
               "frame-src 'self' https://accounts.google.com",
               "media-src 'self' blob:",
               "worker-src 'self' blob:",
+              "object-src 'self' data:",
             ].join("; ")
           },
         ],

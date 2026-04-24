@@ -14,15 +14,34 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { useAuthState } from "@/domains/auth/store/auth.store";
+import { ProductId } from "@/types/ecosystem";
+
 interface AwarenessGrowthDashboardProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+
 export const AwarenessGrowthDashboard: FC<AwarenessGrowthDashboardProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { ecosystemData, displayName } = useAuthState();
+  
+  // Extract vector [Emotional, Awareness, Empathy, Flexibility, Conflict, Communication]
+  const vector = ecosystemData?.awareness_vector || [60, 40, 55, 45, 30, 50];
+  const activeSatellites = ecosystemData?.active_satellites || ["alrehla"];
+  
+  const emotional = vector[0] || 0;
+  const awareness = vector[1] || 0;
+  const empathy = vector[2] || 0;
+  const flexibility = vector[3] || 0;
+  const conflict = vector[4] || 0;
+  const communication = vector[5] || 0;
+
+  const currentPhase = activeSatellites.length > 3 ? "تكامل (Integration)" : activeSatellites.length > 1 ? "تعميق (Deepening)" : "بداية (Awakening)";
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -64,9 +83,9 @@ export const AwarenessGrowthDashboard: FC<AwarenessGrowthDashboardProps> = ({
                      <span className="text-[10px] uppercase font-bold tracking-wider bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-sm">
                        Insight Landscape
                      </span>
-                     <span className="text-[10px] font-bold tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                       <Sparkles className="w-3 h-3" /> المرحلة: تعميق (Deepening)
-                     </span>
+                      <span className="text-[10px] font-bold tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" /> المرحلة: {currentPhase}
+                      </span>
                   </div>
                   <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                     خريطة نمو الوعي التراكمية
@@ -98,46 +117,53 @@ export const AwarenessGrowthDashboard: FC<AwarenessGrowthDashboardProps> = ({
                        <div className="inline-flex items-center gap-2 bg-indigo-500/20 backdrop-blur-sm border border-indigo-400/30 px-3 py-1 rounded-full text-xs font-bold mb-4 text-indigo-200">
                          <Sparkles className="w-3 h-3" /> ملخص الوعي الاصطناعي المركزي
                        </div>
-                       <p className="text-xl sm:text-2xl font-medium text-white leading-relaxed italic pr-4 border-r-4 border-indigo-500">
-                         "أنت حالياً في مرحلة <strong className="text-indigo-300 font-black">تكامل الأنماط اللاواعية</strong>. لقد أظهرت نمواً ملحوظاً في الربط بين ردود أفعالك العاطفية الفورية وجذورها المخزنة. التركيز القادم سيكون على تعزيز 'المرونة النفسية' في مواقف الضغط الاجتماعي."
-                       </p>
+                        <p className="text-xl sm:text-2xl font-medium text-white leading-relaxed italic pr-4 border-r-4 border-indigo-500">
+                          "{displayName || "أيها المسافر"}، أنت حالياً في مرحلة <strong className="text-indigo-300 font-black">{currentPhase}</strong>. 
+                          {awareness > 50 
+                            ? " لقد أظهرت نمواً ملحوظاً في الوعي الذاتي. " 
+                            : " رحلتك في الاستكشاف بدأت تؤتي ثمارها. "}
+                          {flexibility < 40 
+                            ? "التركيز القادم سيكون على تعزيز 'المرونة النفسية' في مواقف الضغط." 
+                            : "استمر في تعزيز روابط التواصل العميقة."}"
+                        </p>
                     </div>
                  </div>
               </section>
 
-              {/* Metrics Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                 {/* Insight Points */}
-                 <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
-                    <div>
-                        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">نقاط البصيرة المتراكمة</p>
-                        <p className="text-3xl font-black text-slate-800 dark:text-slate-100">2,840</p>
-                    </div>
-                    <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center text-indigo-500">
-                       <Eye className="w-6 h-6" />
-                    </div>
-                 </div>
-                 {/* Empathy Score */}
-                 <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
-                    <div>
-                        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">زيادة التعاطف (EQ)</p>
-                        <p className="text-3xl font-black text-rose-500 dark:text-rose-400">+18%</p>
-                    </div>
-                    <div className="w-12 h-12 bg-rose-50 dark:bg-rose-900/30 rounded-full flex items-center justify-center text-rose-500">
-                       <HeartPulse className="w-6 h-6" />
-                    </div>
-                 </div>
-                 {/* Emotional Resilience */}
-                 <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
-                    <div>
-                        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">مؤشر المرونة النفسية</p>
-                        <p className="text-3xl font-black text-emerald-500 dark:text-emerald-400">عالي</p>
-                    </div>
-                    <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center text-emerald-500">
-                       <ShieldCheck className="w-6 h-6" />
-                    </div>
-                 </div>
-              </div>
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {/* Insight Points */}
+                  <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+                     <div>
+                         <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">مستوى الوعي</p>
+                         <p className="text-3xl font-black text-slate-800 dark:text-slate-100">{awareness}%</p>
+                     </div>
+                     <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center text-indigo-500">
+                        <Eye className="w-6 h-6" />
+                     </div>
+                  </div>
+                  {/* Empathy Score */}
+                  <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+                     <div>
+                         <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">الذكاء العاطفي (EQ)</p>
+                         <p className="text-3xl font-black text-rose-500 dark:text-rose-400">{empathy}%</p>
+                     </div>
+                     <div className="w-12 h-12 bg-rose-50 dark:bg-rose-900/30 rounded-full flex items-center justify-center text-rose-500">
+                        <HeartPulse className="w-6 h-6" />
+                     </div>
+                  </div>
+                  {/* Emotional Resilience */}
+                  <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+                     <div>
+                         <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">المرونة النفسية</p>
+                         <p className="text-3xl font-black text-emerald-500 dark:text-emerald-400">
+                           {flexibility > 70 ? 'عالية جداً' : flexibility > 40 ? 'مستقرة' : 'قيد التطوير'}
+                         </p>
+                     </div>
+                     <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center text-emerald-500">
+                        <ShieldCheck className="w-6 h-6" />
+                     </div>
+                  </div>
+               </div>
 
               {/* Flex Layout for Linguistic Analysis and Timeline */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
@@ -249,33 +275,35 @@ export const AwarenessGrowthDashboard: FC<AwarenessGrowthDashboardProps> = ({
                           <h3 className="text-lg font-bold flex items-center gap-2 text-slate-100 mb-4">
                             <GitMerge className="w-5 h-5 text-rose-400" /> تطور الـ EQ مقابل الـ IQ
                           </h3>
-                          <div className="space-y-4">
-                             <p className="text-sm text-slate-300 leading-relaxed font-medium mb-4">
-                                "لقد بدأ ذكاؤك العاطفي المتصاعد (EQ) في دمج وتجاوز أنماطك التحليلية والمنطقية البحتة (IQ). هذا يعني اتساع القدرة على استيعاب النوايا الغامضة دون الدخول في دوامة التحليل المفرط."
-                             </p>
-                             
-                             {/* Progress Bars */}
-                             <div className="space-y-3">
-                                <div>
-                                   <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">
-                                      <span>التحليل المنطقي (IQ Mode)</span>
-                                      <span>مستقر</span>
-                                   </div>
-                                   <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                                      <div className="h-full bg-slate-600 rounded-full w-[70%]" />
-                                   </div>
-                                </div>
-                                <div>
-                                   <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">
-                                      <span className="text-rose-400">الاستيعاب العاطفي (EQ Mode)</span>
-                                      <span className="text-rose-400">+ النمو السريع</span>
-                                   </div>
-                                   <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                                      <div className="h-full bg-rose-500 rounded-full w-[85%]" />
-                                   </div>
-                                </div>
-                             </div>
-                          </div>
+                           <div className="space-y-4">
+                              <p className="text-sm text-slate-300 leading-relaxed font-medium mb-4">
+                                {conflict < 40 
+                                  ? "صراعاتك الداخلية في تراجع، مما يفسح المجال لاستيعاب أعمق لنوايا الآخرين." 
+                                  : "هناك بعض الصراعات الداخلية النشطة التي تتطلب انتباهاً في مرحلة 'الظل'."}
+                              </p>
+                              
+                              {/* Progress Bars */}
+                              <div className="space-y-3">
+                                 <div>
+                                    <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">
+                                       <span>التحليل المنطقي (IQ Mode)</span>
+                                       <span>{awareness}%</span>
+                                    </div>
+                                    <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                                       <div className="h-full bg-slate-600 rounded-full transition-all duration-1000" style={{ width: `${awareness}%` }} />
+                                    </div>
+                                 </div>
+                                 <div>
+                                    <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">
+                                       <span className="text-rose-400">الاستيعاب العاطفي (EQ Mode)</span>
+                                       <span className="text-rose-400">{empathy}%</span>
+                                    </div>
+                                    <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                                       <div className="h-full bg-rose-500 rounded-full transition-all duration-1000" style={{ width: `${empathy}%` }} />
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
                        </div>
                     </div>
                     

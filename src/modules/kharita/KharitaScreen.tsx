@@ -4,8 +4,10 @@
  */
 
 import React, { useMemo, useRef, useEffect, useState } from "react";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
 import { Lock, Map, Compass, Shield, Zap as Sparkles, MapPin, CheckCircle2 } from "lucide-react";
+import { SafeMotionCircle, toSafeSvgRadius } from "@/components/ui/SafeSvg";
+
 import type { AppScreen } from "@/navigation/navigationMachine";
 
 /* ═══════════════════════════════════════════ */
@@ -133,15 +135,39 @@ export default function KharitaScreen({ onNavigate }: KharitaScreenProps) {
 
   return (
     <div className="min-h-screen bg-[#020617] font-sans pb-32 overflow-hidden relative" dir="rtl">
-      {/* Background Nebula */}
-      <div className="fixed inset-0 pointer-events-none opacity-40">
+      {/* Ambient Cosmic Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden bg-[#02040a]">
+        {/* Starfield */}
+        <div 
+          className="absolute inset-0 opacity-[0.15]" 
+          style={{ 
+            backgroundImage: `radial-gradient(1px 1px at 20px 30px, #fff 50%, transparent 0), radial-gradient(1px 1px at 40px 70px, #fff 50%, transparent 0), radial-gradient(1px 1px at 50px 100px, #fff 50%, transparent 0)`,
+            backgroundSize: "120px 120px"
+          }} 
+        />
+        
+        {/* Ambient Orbs */}
         <motion.div 
-          className="absolute w-[800px] h-[800px] rounded-full top-0 left-[50%] -translate-x-1/2"
-          style={{ background: "radial-gradient(circle, rgba(16,185,129,0.03), transparent 70%)" }} 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.15, 0.25, 0.15],
+            x: [0, 30, 0],
+            y: [0, -20, 0]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-[20%] -right-[10%] w-[800px] h-[800px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(20, 184, 166, 0.15) 0%, transparent 70%)", filter: "blur(60px)" }} 
         />
         <motion.div 
-          className="absolute w-[600px] h-[600px] rounded-full bottom-0 right-0"
-          style={{ background: "radial-gradient(circle, rgba(139,92,246,0.03), transparent 70%)" }} 
+          animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [0.1, 0.2, 0.1],
+            x: [0, -40, 0],
+            y: [0, 30, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute -bottom-[30%] -left-[15%] w-[900px] h-[900px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%)", filter: "blur(80px)" }} 
         />
       </div>
 

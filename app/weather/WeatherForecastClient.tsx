@@ -255,6 +255,68 @@ const STYLES = `
     border-radius: 0 8px 8px 0;
   }
 
+  .energy-receipt {
+    background: #111118;
+    color: #e2e8f0;
+    border: 1px solid #222;
+    padding: 2rem;
+    position: relative;
+    margin-bottom: 2rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+  }
+  .energy-receipt::before {
+    content: "";
+    position: absolute;
+    top: -6px; left: 0; right: 0; height: 6px;
+    background: radial-gradient(circle, transparent, transparent 3px, #111118 3px, #111118 4px, transparent 4px);
+    background-size: 10px 10px;
+    background-position: center bottom;
+  }
+  .energy-receipt::after {
+    content: "";
+    position: absolute;
+    bottom: -6px; left: 0; right: 0; height: 6px;
+    background: linear-gradient(-45deg, transparent 4px, #111118 0), linear-gradient(45deg, transparent 4px, #111118 0);
+    background-size: 8px 8px;
+    background-position: left bottom;
+  }
+  .receipt-divider {
+    border-top: 1px dashed rgba(255,255,255,0.15);
+    margin: 1.5rem 0;
+  }
+  
+  .radar-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
+    border-radius: 50%;
+    border: 2px solid rgba(45,212,191,0.2);
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(45,212,191,0.1);
+  }
+  .radar-sweep {
+    position: absolute;
+    top: 0; left: 50%;
+    width: 50%; height: 50%;
+    background: linear-gradient(90deg, rgba(45,212,191,0.6), transparent);
+    transform-origin: 0% 100%;
+    animation: radar-spin 2s linear infinite;
+  }
+  .radar-grid {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background-image: 
+      linear-gradient(rgba(45,212,191,0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45,212,191,0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: center center;
+  }
+  @keyframes radar-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
   .weather-card {
     border-width: 1px;
   }
@@ -343,6 +405,7 @@ export default function WeatherForecastClient() {
   const resultRef = useRef<HTMLDivElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [analyzingText, setAnalyzingText] = useState("جاري تشغيل الرادار الطاقي...");
   const clientEventIdRef = useRef<string | null>(null);
   const leadAttributionRef = useRef<FunnelIdentifiers>({});
   if (!clientEventIdRef.current) {
@@ -373,6 +436,24 @@ export default function WeatherForecastClient() {
     leadAttributionRef.current = captureLeadAttributionFromCurrentUrl() ?? {};
     trackPageView("weather_diagnostic_v3");
   }, []);
+
+  useEffect(() => {
+    if (step === "analyzing") {
+      const texts = [
+        "جاري تشغيل الرادار الطاقي...",
+        "رصد مناطق التسريب المستمر...",
+        "مطابقة نمط الاستنزاف السلوكي...",
+        "حساب فاتورة الطاقة الزمنية..."
+      ];
+      let i = 0;
+      setAnalyzingText(texts[0]);
+      const interval = setInterval(() => {
+        i++;
+        if(i < texts.length) setAnalyzingText(texts[i]);
+      }, 700);
+      return () => clearInterval(interval);
+    }
+  }, [step]);
 
   useEffect(() => {
     if (step === "result" && result) {
@@ -599,11 +680,59 @@ export default function WeatherForecastClient() {
 
   const ease = [0.22, 1, 0.36, 1] as const;
 
+const WeatherBackground = ({ level, step }: { level?: WeatherLevel, step: string }) => {
+  if (step === 'intro' || step === 'questions') {
+    return (
+      <>
+        <div className="orb-1" />
+        <div className="orb-2" />
+      </>
+    );
+  }
+  
+  if (step === 'analyzing') {
+    return (
+      <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0">
+        <motion.div 
+          className="absolute w-[80vw] h-[80vw] max-w-[800px] max-h-[800px] rounded-full bg-teal-500/10 blur-[100px]"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+    );
+  }
+
+  const config = {
+    hurricane: { color1: 'rgba(244,63,94,0.15)', color2: 'rgba(159,18,57,0.15)', duration: 3 },
+    storm: { color1: 'rgba(251,146,60,0.15)', color2: 'rgba(194,65,12,0.15)', duration: 5 },
+    wind: { color1: 'rgba(250,204,21,0.1)', color2: 'rgba(161,98,7,0.1)', duration: 8 },
+    sun: { color1: 'rgba(16,185,129,0.1)', color2: 'rgba(4,120,87,0.1)', duration: 15 }
+  };
+  
+  const c = level ? config[level] : config.sun;
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+       <motion.div 
+          className="absolute -top-[20%] -right-[10%] w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] rounded-full blur-[80px]"
+          style={{ background: c.color1 }}
+          animate={{ x: [0, -50, 0], y: [0, 50, 0] }}
+          transition={{ duration: c.duration, repeat: Infinity, ease: "easeInOut" }}
+       />
+       <motion.div 
+          className="absolute -bottom-[20%] -left-[10%] w-[80vw] h-[80vw] max-w-[800px] max-h-[800px] rounded-full blur-[100px]"
+          style={{ background: c.color2 }}
+          animate={{ x: [0, 50, 0], y: [0, -50, 0] }}
+          transition={{ duration: c.duration * 1.2, repeat: Infinity, ease: "easeInOut" }}
+       />
+    </div>
+  );
+};
+
   return (
     <main className="wf-page relative overflow-x-hidden" dir="rtl">
       <style>{STYLES}</style>
-      <div className="orb-1" />
-      <div className="orb-2" />
+      <WeatherBackground step={step} level={result?.weatherLevel} />
 
       <div className="relative z-10 container mx-auto px-4 sm:px-6 py-8 flex flex-col items-center justify-center min-h-screen">
         <AnimatePresence mode="wait">
@@ -697,12 +826,21 @@ export default function WeatherForecastClient() {
           {/* ────── ANALYZING ────── */}
           {step === "analyzing" && (
             <motion.div key="analyzing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
-              <motion.div
-                className="w-20 h-20 rounded-full border-4 border-teal-500/20 border-t-teal-500 mx-auto mb-8"
-                animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-              />
-              <h3 className="text-2xl font-black text-white mb-3">بنحلل النمط بتاعك...</h3>
-              <p className="text-gray-500 text-sm max-w-[30ch] mx-auto">بنربط إجاباتك ببيانات علم النفس السلوكي وأنماط الاستنزاف في العلاقات</p>
+              <div className="radar-container">
+                <div className="radar-grid" />
+                <div className="radar-sweep" />
+              </div>
+              <motion.h3 
+                key={analyzingText}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-xl font-bold text-white mb-3"
+              >
+                {analyzingText}
+              </motion.h3>
+              <p className="text-gray-500 text-sm max-w-[30ch] mx-auto leading-relaxed">
+                نقوم بحساب "التكلفة المخفية" بناءً على تفاعلاتك وقراراتك
+              </p>
             </motion.div>
           )}
 
@@ -714,68 +852,77 @@ export default function WeatherForecastClient() {
             >
               <div ref={resultRef}>
 
-                {/* === PATTERN CARD === */}
-                <div
-                  className={`rounded-2xl border p-6 mb-5 weather-card weather-level-${result.weatherLevel}`}
-                >
-                  <div className="flex items-start gap-4 mb-5">
-                    <div className="text-5xl shrink-0">{PATTERNS[result.pattern].icon}</div>
-                    <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest mb-1 level-accent">
-                        النمط السلوكي المكتشف
-                      </div>
-                      <h2 className="text-2xl font-black text-white">{result.patternName}</h2>
+                <div className="energy-receipt font-mono" dir="rtl">
+                  <div className="text-center font-bold text-gray-500 text-xs mb-5 uppercase tracking-widest opacity-80">
+                    ================================<br/>
+                    فاتورة استنزاف طاقة (غير مسددة)<br/>
+                    ================================
+                  </div>
+                  
+                  <div className="flex justify-between text-xs text-gray-500 mb-6 font-sans">
+                    <span>التاريخ: {new Date().toLocaleDateString('ar-EG')}</span>
+                    <span>المُعرّف: #{clientEventIdRef.current?.slice(0,6).toUpperCase()}</span>
+                  </div>
+
+                  <div className="mb-5 font-sans">
+                    <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                      <Zap className="w-3 h-3 text-teal-400" /> النمط السلوكي المُسجل
+                    </div>
+                    <div className="text-2xl font-black text-white flex items-center gap-3">
+                      {PATTERNS[result.pattern].icon} {result.patternName}
                     </div>
                   </div>
-                  <p className="text-gray-300 leading-relaxed text-[15px] italic">"{result.patternDescription}"</p>
-                </div>
 
-                {/* === THE HIDDEN PRICE === */}
-                <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-6 mb-5">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5" /> الثمن الخفي كل أسبوع
+                  <div className="receipt-divider"></div>
+
+                  <table className="w-full text-sm font-sans mb-4">
+                    <thead>
+                      <tr className="text-gray-500 border-b border-dashed border-gray-800">
+                        <th className="text-right pb-3 font-normal">بند الاستنزاف</th>
+                        <th className="text-left pb-3 font-normal">التكلفة/أسبوع</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-dashed divide-gray-800">
+                      <tr>
+                        <td className="py-4 text-gray-300">تكلفة التعامل مع ({result.drainZoneName})</td>
+                        <td className="py-4 text-left text-white font-bold">{result.weeklyHoursCost - 2} ساعة</td>
+                      </tr>
+                      <tr>
+                        <td className="py-4 text-gray-300">ضريبة التفكير المسبق (Background)</td>
+                        <td className="py-4 text-left text-white font-bold">+ 2 ساعة</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div className="receipt-divider"></div>
+
+                  <div className="flex justify-between items-center mb-6 font-sans">
+                    <span className="text-gray-400 font-bold">إجمالي الهدر الأسبوعي:</span>
+                    <span className={`text-4xl font-black ${result.weatherLevel === 'hurricane' || result.weatherLevel === 'storm' ? 'text-rose-500' : 'text-amber-500'}`}>
+                      {result.weeklyHoursCost} ساعة
+                    </span>
                   </div>
-                  <div className="flex items-end gap-3 mb-4">
-                    <div className="text-6xl font-black result-score">
-                      ~{result.weeklyHoursCost}
+
+                  <div className="bg-white/5 p-5 rounded-xl border border-white/10 mb-6 font-sans relative overflow-hidden">
+                    <div className="absolute right-0 top-0 bottom-0 w-1 bg-amber-500/50"></div>
+                    <div className="text-[10px] text-amber-500 font-bold mb-2 flex items-center gap-2 uppercase tracking-widest">
+                      <AlertTriangle className="w-3.5 h-3.5" /> ملاحظة تشخيصية
                     </div>
-                    <div className="text-gray-400 text-lg mb-2">ساعة طاقة ذهنية وعاطفية</div>
+                    <p className="text-[15px] text-gray-300 leading-relaxed">
+                      {result.coreInsight}
+                    </p>
                   </div>
-                  <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full level-progress-fill"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(result.weeklyHoursCost / 25) * 100}%` }}
-                      transition={{ duration: 1.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    />
-                  </div>
-                  <p className="text-gray-500 text-xs mt-2">من أصل ٢٥ ساعة متاحة أسبوعياً للطاقة الذهنية</p>
-                </div>
 
-                {/* === CORE INSIGHT === */}
-                <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-6 mb-5">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400" /> الجذر الحقيقي
+                  <div className="text-center font-bold text-gray-500 text-[10px] mt-8 mb-4">
+                    --------------------------------<br/>
+                    ٣ خطوات لتقليل الفاتورة الأسبوع القادم:<br/>
+                    --------------------------------
                   </div>
-                  <div className="insight-box">
-                    <p className="text-slate-200 leading-relaxed text-[15px]">{result.coreInsight}</p>
-                  </div>
-                </div>
-
-                {/* === QUICK WINS === */}
-                <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-6 mb-5">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2">
-                    <Zap className="w-3.5 h-3.5 text-teal-400" /> ٣ خطوات تبدأ بيها النهارده
-                  </div>
-                  <div className="space-y-4">
+                  <div className="space-y-3 font-sans">
                     {result.quickActions.map((action, i) => (
                       <div key={i} className="flex items-start gap-3">
-                        <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-black quick-win-badge"
-                        >
-                          {i + 1}
-                        </div>
-                        <p className="text-slate-300 text-sm leading-relaxed">{action}</p>
+                        <span className="text-teal-500 font-black mt-0.5 opacity-80">[{i + 1}]</span>
+                        <span className="text-gray-300 text-[14px] leading-relaxed">{action}</span>
                       </div>
                     ))}
                   </div>

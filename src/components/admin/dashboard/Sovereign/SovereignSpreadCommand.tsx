@@ -33,24 +33,29 @@ export const SovereignSpreadCommand: FC<SovereignSpreadCommandProps> = ({ minima
 
   useEffect(() => {
     const fetchMetrics = async () => {
-      const data = await growthEngine.getDiffusionMetrics();
-      setMetrics(data);
-      setIsLoading(false);
+      try {
+        const data = await growthEngine.getDiffusionMetrics();
+        setMetrics(data);
+        setIsLoading(false);
 
-      if (isSupabaseReady && supabase) {
-        const { data: settings } = await supabase
-          .from("system_settings")
-          .select("key, value")
-          .in("key", ["catalyst_intensity", "invite_scarcity"]);
-        
-        settings?.forEach(s => {
-          if (s.key === "catalyst_intensity") setCatalystIntensity(Number(s.value));
-          if (s.key === "invite_scarcity") setInviteScarcity(s.value === "true" || s.value === true);
-        });
+        if (isSupabaseReady && supabase) {
+          const { data: settings } = await supabase
+            .from("system_settings")
+            .select("key, value")
+            .in("key", ["catalyst_intensity", "invite_scarcity"]);
+          
+          settings?.forEach(s => {
+            if (s.key === "catalyst_intensity") setCatalystIntensity(Number(s.value));
+            if (s.key === "invite_scarcity") setInviteScarcity(s.value === "true" || s.value === true);
+          });
+        }
+      } catch (err) {
+        // HMR or Network error
+        console.warn("[SovereignSpreadCommand] fetchMetrics error", err);
       }
     };
     fetchMetrics();
-    const interval = setInterval(fetchMetrics, 30000);
+    const interval = setInterval(fetchMetrics, 300000); // 5 minutes instead of 30s
     return () => clearInterval(interval);
   }, []);
 

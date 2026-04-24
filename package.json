@@ -6,7 +6,8 @@
     "node": "20.x"
   },
   "scripts": {
-    "dev": "next dev -p 3030",
+    "dev": "next dev --turbo -p 3030",
+    "dev:clean": "powershell -ExecutionPolicy Bypass -File ./scripts/tahir.ps1 && next dev --turbo -p 3030",
     "build": "next build",
     "start": "next start -p 3030",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",

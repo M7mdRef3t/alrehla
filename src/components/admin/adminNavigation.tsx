@@ -6,6 +6,7 @@ import {
   Database,
   Users,
   History,
+  Zap,
   Zap as Sparkles,
   ShieldCheck,
   MessageSquare,
@@ -18,6 +19,10 @@ import {
   Gavel,
   LibraryBig,
   Filter,
+  Trophy,
+  Mail,
+  Globe,
+  Cpu,
 } from "lucide-react";
 
 export type AdminTab =
@@ -48,7 +53,10 @@ export type AdminTab =
   | "ops-docs"
   | "session-os"
   | "support-tickets"
-  | "sovereign-funnel";
+  | "success-stories"
+  | "sovereign-funnel"
+  | "growth-hub"
+  | "people-hub";
 
 export type NavGroup = {
   title: string;
@@ -64,18 +72,22 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "المركز السيادي (Alpha)",
     items: [
       { id: "sovereign", label: "القيادة والنبض الاستباقي", icon: <ShieldCheck className="h-4 w-4 text-amber-500" /> },
+      { id: "exec-overview", label: "نبض الإبداع والمنظومة", icon: <Sparkles className="h-4 w-4 text-rose-400" /> },
+      { id: "flow-map", label: "خريطة التدفق الحي", icon: <Workflow className="h-4 w-4 text-sky-400" /> },
+      { id: "dawayir-live", label: "دوائر لايف (Live)", icon: <Zap className="h-4 w-4 text-amber-400" /> },
     ],
   },
   {
     title: "محرك التوسع والنمو",
     items: [
-      { id: "growth-revenue", label: "التوسع المالي والانتشار", icon: <TrendingUpFallback /> },
+      { id: "growth-hub", label: "رادار التوسع والنمو", icon: <Rocket className="h-4 w-4 text-rose-500" /> },
     ],
   },
   {
     title: "خريطة الإدراك (Nexus)",
     items: [
-      { id: "consciousness-atlas", label: "نبض المسافرين والتوائم", icon: <Workflow className="h-4 w-4 text-teal-400" /> },
+      { id: "consciousness-atlas", label: "أطلس الوعي والتوائم", icon: <Activity className="h-4 w-4 text-teal-400" /> },
+      { id: "people-hub", label: "مركز المسافرين والوعي", icon: <Users className="h-4 w-4 text-rose-400" /> },
     ],
   },
   {
@@ -85,12 +97,38 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: "المحتوى والتشغيل",
+    items: [
+      { id: "content", label: "مخزن المحتوى", icon: <LibraryBig className="h-4 w-4 text-sky-400" /> },
+      { id: "ops-docs", label: "مكتبة التشغيل", icon: <Filter className="h-4 w-4 text-slate-400" /> },
+    ],
+  },
+  {
+    title: "البنية السيادية",
+    items: [
+      { id: "entity", label: "كيان الرحلة (DNA)", icon: <MapPin className="h-4 w-4 text-rose-400" /> },
+      { id: "design-lab", label: "مختبر التصميم", icon: <Palette className="h-4 w-4 text-violet-400" /> },
+      { id: "governance-ledger", label: "سجل الحوكمة", icon: <Gavel className="h-4 w-4 text-amber-400" /> },
+      { id: "feature-flags", label: "مفاتيح المسار", icon: <Flag className="h-4 w-4 text-teal-400" /> },
+    ],
+  },
+  {
     title: "غرفة العمليات والدعم",
     items: [
       { id: "war-room", label: "الدرع وإدارة الأزمات", icon: <Target className="h-4 w-4 text-red-500" /> },
+      { id: "support-tickets", label: "بوابات العبور (الدعم)", icon: <Mail className="h-4 w-4 text-sky-400" /> },
+    ],
+  },
+  {
+    title: "المحركات التحتية (Core)",
+    items: [
+      { id: "health-monitor", label: "رصد صحة المنظومة", icon: <Activity className="h-4 w-4 text-emerald-400" /> },
+      { id: "seo-geo", label: "رادار الانتشار (SEO/Geo)", icon: <Globe className="h-4 w-4 text-rose-400" /> },
+      { id: "session-os", label: "نظام التشغيل (Session OS)", icon: <Cpu className="h-4 w-4 text-slate-400" /> },
     ],
   },
 ];
+
 
 export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
 
@@ -122,7 +160,10 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "expansion-hub": "إستراتيجية الأسواق",
   "session-os": "غرفة الجلسات",
   "support-tickets": "بوابات العبور (الدعم)",
+  "success-stories": "سجل حكايات الانتصار",
   "sovereign-funnel": "مسار التحويل المتقدم (Funnel)",
+  "growth-hub": "رادار التوسع والنمو",
+  "people-hub": "مركز المسافرين والوعي",
 };
 
 export const DEVELOPER_PLUS_TABS: AdminTab[] = ["ai-studio"];
@@ -155,5 +196,8 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "expansion-hub": "إستراتيجية الأسواق: تحليل فرص التوسع التجاري والأسواق المحتملة.",
   "session-os": "غرفة الجلسات: تتبع الجلسات النفسية والكوتشينج من الطلب حتى التوثيق.",
   "support-tickets": "بوابات العبور: مراجعة التحويلات اليدوية وتذاكر الدعم والتفعيل.",
+  "success-stories": "سجل حكايات الانتصار: إدارة القصص الملهمة والدليل الاجتماعي للمنصة.",
   "sovereign-funnel": "مسار التحويل المتقدم: تحليل السقوط والنجاح داخل Funnel المنصة.",
+  "growth-hub": "محرك التوسع: رادار شامل للنمو، الإيرادات، قصص النجاح، وحملات الانتشار.",
+  "people-hub": "مركز المسافرين: إدارة شاملة للمسافرين، نبض الوعي، وأرشيف الإدراك الجماعي.",
 };

@@ -17,6 +17,7 @@ import { Ring, MapNode as MapNodeType } from "../map/mapTypes";
 import { User, Clock, Zap, Coins, Maximize, GripVertical, Plus, AlertCircle, Info, X, Scissors } from "lucide-react";
 import { useMasafatyAnalysis, EntropyLevel } from "./hooks/useMasafatyAnalysis";
 import { Button } from '@/modules/meta/UI/Button';
+import { SafeMotionCircle, toSafeSvgRadius, toSafeSvgCoordinate } from "@/components/ui/SafeSvg";
 
 // Native SVG X Icon for better performance and consistency in SVG coordinate system
 const NativeX: FC<{ x: number; y: number; size: number }> = ({ x, y, size }) => (
@@ -28,70 +29,6 @@ const NativeX: FC<{ x: number; y: number; size: number }> = ({ x, y, size }) => 
 
 const toSafeSvgNumber = (value: unknown, fallback: number): number => {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-};
-
-const isInvalidSvgToken = (value: string): boolean => {
-  const token = value.trim().toLowerCase();
-  return (
-    token === "" ||
-    token === "undefined" ||
-    token === "nan" ||
-    token === "null" ||
-    token === "infinity" ||
-    token === "-infinity"
-  );
-};
-
-const toSafeSvgCoordinate = (value: unknown, fallback: number): number | string => {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && !isInvalidSvgToken(value)) return value;
-  return fallback;
-};
-
-const toSafeSvgRadius = (value: unknown, fallback: number): number => {
-  if (typeof value === "number" && Number.isFinite(value)) return Math.max(value, 0);
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) return Math.max(parsed, 0);
-  }
-  return Math.max(fallback, 0);
-};
-
-const sanitizeCircleMotionState = <T,>(state: T): T => {
-  if (!state || typeof state !== "object" || Array.isArray(state)) return state;
-  const record = state as Record<string, unknown>;
-  if (!Object.prototype.hasOwnProperty.call(record, "r")) return state;
-
-  const rawR = record.r;
-  const safeR = Array.isArray(rawR)
-    ? rawR.map((value) => toSafeSvgRadius(value, 0))
-    : toSafeSvgRadius(rawR, 0);
-
-  return { ...record, r: safeR } as T;
-};
-
-type SafeMotionCircleProps = React.ComponentProps<typeof motion.circle> & {
-  cx?: number | string;
-  cy?: number | string;
-  r?: number | string;
-};
-
-const SafeMotionCircle: FC<SafeMotionCircleProps> = ({ cx = 50, cy = 50, r = 1, ...props }) => {
-  const { initial, animate, exit, whileHover, whileTap, whileFocus, ...rest } = props;
-  return (
-    <motion.circle
-      cx={toSafeSvgCoordinate(cx, 50)}
-      cy={toSafeSvgCoordinate(cy, 50)}
-      r={toSafeSvgRadius(r, 1)}
-      initial={sanitizeCircleMotionState(initial)}
-      animate={sanitizeCircleMotionState(animate)}
-      exit={sanitizeCircleMotionState(exit)}
-      whileHover={sanitizeCircleMotionState(whileHover)}
-      whileTap={sanitizeCircleMotionState(whileTap)}
-      whileFocus={sanitizeCircleMotionState(whileFocus)}
-      {...rest}
-    />
-  );
 };
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */

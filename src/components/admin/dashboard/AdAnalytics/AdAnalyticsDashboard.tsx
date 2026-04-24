@@ -534,13 +534,14 @@ export const AdAnalyticsDashboard: React.FC = () => {
       });
       const json = await res.json();
       if (json.ok && json.data) {
-        setAnalyticsData(prev => ({
+        setAnalyticsData((prev: any) => ({
           ...prev,
           kpis: json.data.kpis || prev.kpis,
           dailyPerformance: json.data.dailyPerformance?.length ? json.data.dailyPerformance : prev.dailyPerformance,
           platformBreakdown: json.data.platformBreakdown?.length ? json.data.platformBreakdown : prev.platformBreakdown,
         }));
       }
+
     } catch (err) {
       console.error("Failed to fetch ad analytics:", err);
     } finally {

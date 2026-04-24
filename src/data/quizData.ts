@@ -1,6 +1,13 @@
 /**
- * quizData.ts — بيانات الاختبارات الأربعة
- * كل اختبار: عنوان + وصف + أسئلة (4 خيارات بقيمة 0-3) + نتائج حسب النطاق
+ * quizData.ts
+ * 
+ * القاموس المركزي لكل الاختبارات في المنصة.
+ * كل اختبار له:
+ * - id: فريد
+ * - title/subtitle/emoji/color: للعرض البصري
+ * - tags: للتصنيف والفلترة
+ * - questions: قائمة الأسئلة (كل سؤال له خيارات بنقاط)
+ * - results: نطاقات النتائج (Bands)
  */
 
 export interface QuizOption {
@@ -22,12 +29,15 @@ export interface QuizResultBand {
   color: string;
 }
 
+export type QuizTag = "علاقات" | "ذات" | "شريك" | "حدود" | "عاطفي" | "شخصية";
+
 export interface QuizDef {
   id: string;
   title: string;
   subtitle: string;
   emoji: string;
   color: string;
+  tags: QuizTag[];
   questions: QuizQuestion[];
   results: QuizResultBand[];
 }
@@ -56,6 +66,7 @@ export const QUIZZES: QuizDef[] = [
     subtitle: "اكتشف كيف تتعامل مع القرب والبعد في علاقاتك",
     emoji: "🔗",
     color: "#A78BFA",
+    tags: ["ذات", "علاقات"],
     questions: [
       { question: "أشعر بالقلق عندما لا يرد شخص مقرب على رسالتي بسرعة", options: OPT_FREQ },
       { question: "أحتاج تأكيد مستمر من الطرف الآخر أنه يحبني", options: OPT_FREQ },
@@ -81,6 +92,7 @@ export const QUIZZES: QuizDef[] = [
     subtitle: "هل تقدر ترسم خطوط واضحة وتحميها؟",
     emoji: "🚧",
     color: "#14B8A6",
+    tags: ["ذات", "حدود"],
     questions: [
       { question: "أقدر أقول 'لا' بدون ما أحس بالذنب", options: OPT_AGREE },
       { question: "أسمح للآخرين يقرروا عني حاجات تخصني", options: [
@@ -109,6 +121,7 @@ export const QUIZZES: QuizDef[] = [
     subtitle: "هل حياتك متمحورة حول شخص آخر؟",
     emoji: "⛓️",
     color: "#F472B6",
+    tags: ["شريك", "عاطفي"],
     questions: [
       { question: "أحس إن سعادتي مربوطة بسعادة شخص تاني", options: OPT_FREQ },
       { question: "بأهمل احتياجاتي عشان أخلي الطرف الآخر مبسوط", options: OPT_FREQ },
@@ -132,6 +145,7 @@ export const QUIZZES: QuizDef[] = [
     subtitle: "قيّم أي علاقة في حياتك — عيلة، صداقة، أو حب",
     emoji: "💎",
     color: "#38BDF8",
+    tags: ["علاقات", "شريك"],
     questions: [
       { question: "أحس بالأمان العاطفي مع هذا الشخص", options: OPT_AGREE },
       { question: "نقدر نتكلم بصراحة عن أي موضوع بدون خوف", options: OPT_AGREE },
@@ -154,6 +168,7 @@ export const QUIZZES: QuizDef[] = [
     subtitle: "اكتشف قدرتك على فهم مشاعرك والتعبير عنها بدقة",
     emoji: "🧠",
     color: "#F59E0B",
+    tags: ["ذات", "عاطفي"],
     questions: [
       { question: "أقدر أحدد بالضبط إيه اللي حاسس بيه في أي لحظة", options: OPT_FREQ },
       { question: "لما حد يزعل، أقدر أفهم سبب زعله حتى لو ما قال", options: OPT_FREQ },
@@ -179,6 +194,7 @@ export const QUIZZES: QuizDef[] = [
     subtitle: "قيّم انسجامك مع دوائرك الاجتماعية المحيطة",
     emoji: "🌐",
     color: "#8B5CF6",
+    tags: ["علاقات", "ذات"],
     questions: [
       { question: "أشعر بالانتماء الحقيقي في مجموعة أصدقائي", options: OPT_AGREE },
       { question: "أقدر أكون اجتماعي من غير ما أفقد هويتي الشخصية", options: OPT_AGREE },
@@ -202,6 +218,7 @@ export const QUIZZES: QuizDef[] = [
     subtitle: "اكتشف جودة استماعك وتبادلك اللفظي مع الآخرين",
     emoji: "💬",
     color: "#EC4899",
+    tags: ["شريك", "علاقات"],
     questions: [
       { question: "لما حد يتكلم، أسمع بتركيز كامل من غير ما أفكر في ردي", options: OPT_FREQ },
       { question: "أقدر أوصّل فكرتي بوضوح حتى في المواقف الصعبة", options: OPT_FREQ },
@@ -215,6 +232,80 @@ export const QUIZZES: QuizDef[] = [
       { min: 0, max: 7, title: "تواصل سطحي 📵", description: "التواصل العميق يحتاج تمرين. جرّب الاستماع الكامل: ركّز 100% على المتحدث بدون مقاطعة.", emoji: "📵", color: "#F87171" },
       { min: 8, max: 14, title: "تواصل جيد 📡", description: "أساسك قوي لكن فيه مجال للتطوير. درّب نفسك على 'عكس المشاعر' — كرر ما فهمته قبل ما ترد.", emoji: "📡", color: "#FBBF24" },
       { min: 15, max: 21, title: "تواصل عميق 🎙️", description: "أنت متواصل ممتاز — تسمع بعمق وتعبّر بوضوح. هذه مهارة نادرة تبني علاقات قوية.", emoji: "🎙️", color: "#34D399" },
+    ],
+  },
+
+  /* ═══ 8. البوصلة الشخصية (Big Five) ═══ */
+  {
+    id: "personality-core",
+    title: "البوصلة الشخصية",
+    subtitle: "اكتشف أبعادك الخمسة الكبرى وتأثيرها على حياتك",
+    emoji: "🧭",
+    color: "#6366f1",
+    tags: ["شخصية", "ذات"],
+    questions: [
+      { question: "أحب تجربة أشياء جديدة ومغامرات غير مألوفة", options: OPT_AGREE },
+      { question: "أهتم جداً بالتفاصيل وأحب أن يكون كل شيء منظماً", options: OPT_AGREE },
+      { question: "أشعر بالنشاط والحيوية عندما أكون وسط الناس", options: OPT_AGREE },
+      { question: "أميل للتفكير في مشاعر الآخرين قبل اتخاذ أي قرار", options: OPT_AGREE },
+      { question: "أشعر بالقلق أو التوتر بسهولة في المواقف الضاغطة", options: OPT_AGREE },
+      { question: "أستمتع بمناقشة الأفكار الفلسفية والمجردة", options: OPT_AGREE },
+      { question: "ألتزم بمواعيدي ووعودي بدقة شديدة", options: OPT_AGREE },
+      { question: "أفضل الهدوء والوحدة لاستعادة طاقتي", options: [
+        { text: "أوافق بشدة", value: 0 }, { text: "أوافق", value: 1 },
+        { text: "لا أوافق", value: 2 }, { text: "لا أوافق أبداً", value: 3 },
+      ]},
+    ],
+    results: [
+      { min: 0, max: 8, title: "الشخصية المستقرة ⚓", description: "أنت تميل للواقعية والهدوء. تفضل المناطق الآمنة والروتين المنظم.", emoji: "⚓", color: "#64748b" },
+      { min: 9, max: 16, title: "الشخصية المتوازنة ⚖️", description: "تمتلك مزيجاً مرناً بين الانفتاح والتحفظ. تستطيع التكيف مع مختلف الظروف.", emoji: "⚖️", color: "#34D399" },
+      { min: 17, max: 24, title: "الشخصية المستكشفة 🚀", description: "روحك حرة وعقلك منفتح. تبحث دائماً عن المعنى والجديد في كل تجربة.", emoji: "🚀", color: "#8b5cf6" },
+    ],
+  },
+
+  /* ═══ 9. محرك القيم ═══ */
+  {
+    id: "values-engine",
+    title: "محرك القيم الجوهرية",
+    subtitle: "ما الذي يحرك بوصلتك الداخلية حقاً؟",
+    emoji: "⭐",
+    color: "#f59e0b",
+    tags: ["شخصية", "ذات"],
+    questions: [
+      { question: "أفضل الصدق الصادم على الكذب المريح", options: OPT_AGREE },
+      { question: "الحرية الشخصية أهم عندي من الاستقرار المادي", options: OPT_AGREE },
+      { question: "مساعدة الآخرين تعطيني معنى لحياتي أكثر من النجاح الفردي", options: OPT_AGREE },
+      { question: "أقدر الإبداع والجمال في كل ما أفعله", options: OPT_AGREE },
+      { question: "العدل هو القيمة التي لا يمكنني التنازل عنها أبداً", options: OPT_AGREE },
+      { question: "أبحث عن التطور المستمر حتى لو كان مؤلماً", options: OPT_AGREE },
+    ],
+    results: [
+      { min: 0, max: 6, title: "الباحث عن الأمان 🛡️", description: "قيمك تتمحور حول الاستقرار والوضوح وحماية من تحب.", emoji: "🛡️", color: "#38BDF8" },
+      { min: 7, max: 12, title: "المثالي الواقعي ✨", description: "توازن بين قيمك العليا ومتطلبات الحياة العملية بذكاء.", emoji: "✨", color: "#FBBF24" },
+      { min: 13, max: 18, title: "صاحب الرسالة 🕊️", description: "تحركك قيم كبرى وتعيش من أجل مبادئ تتجاوز الذات.", emoji: "🕊️", color: "#14B8A6" },
+    ],
+  },
+
+  /* ═══ 10. أسلوب المعالجة الذهنية ═══ */
+  {
+    id: "mind-processing",
+    title: "مقياس المعالجة الذهنية",
+    subtitle: "كيف يحلل عقلك العالم من حولك؟",
+    emoji: "⚙️",
+    color: "#ef4444",
+    tags: ["شخصية", "ذات"],
+    questions: [
+      { question: "أعتمد على المنطق والأرقام قبل مشاعري", options: OPT_AGREE },
+      { question: "أرى الصورة الكبيرة قبل الغوص في التفاصيل", options: OPT_AGREE },
+      { question: "أفضل الخطط المكتوبة على العشوائية", options: OPT_AGREE },
+      { question: "أثق في حدسي (الاحساس الداخلي) في اتخاذ القرارات", options: OPT_AGREE },
+      { question: "أحب تفكيك المشاكل المعقدة إلى أجزاء صغيرة", options: OPT_AGREE },
+      { question: "أتعلم بشكل أفضل من خلال التجربة والخطأ", options: OPT_AGREE },
+    ],
+    results: [
+      { min: 0, max: 6, title: "المعالج الحدسي 🌊", description: "عقلك يعمل بالروابط العاطفية والحدس القوي. ترى ما لا يراه الآخرون.", emoji: "🌊", color: "#ec4899" },
+      { min: 7, max: 12, title: "المعالج المرن 🌀", description: "تستخدم المنطق والحدس معاً حسب الموقف. تفكيرك شمولي.", emoji: "🌀", color: "#8b5cf6" },
+      { min: 13, max: 18, title: "المعالج التحليلي 💎", description: "عقلك دقيق، منظم، ويعشق المنطق. القوة في الوضوح والبيانات.", emoji: "💎", color: "#6366f1" },
     ],
   },
 ];

@@ -30,10 +30,8 @@ import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { useGamification } from "@/domains/gamification";
 import { Zap, Flame } from "lucide-react";
 import { useSynthesisState } from "@/domains/consciousness/store/synthesis.store";
-
-/* 
-    COSMIC MAP CANVAS  Digital Sanctuary
-    */
+import { Typewriter } from "@/modules/meta/UI/Typewriter";
+import { SafeMotionCircle, toSafeSvgRadius, toSafeSvgCoordinate } from "@/components/ui/SafeSvg";
 
 function isLegacyMapUiEnabled(): boolean {
   return false;
@@ -41,76 +39,6 @@ function isLegacyMapUiEnabled(): boolean {
 
 const toSafeSvgNumber = (value: unknown, fallback: number): number => {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-};
-
-const isInvalidSvgToken = (value: string): boolean => {
-  const token = value.trim().toLowerCase();
-  return (
-    token === "" ||
-    token === "undefined" ||
-    token === "nan" ||
-    token === "null" ||
-    token === "infinity" ||
-    token === "-infinity"
-  );
-};
-
-const toSafeSvgCoordinate = (value: unknown, fallback: number): number | string => {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && !isInvalidSvgToken(value)) return value;
-  return fallback;
-};
-
-const toSafeSvgRadius = (value: unknown, fallback: number): number => {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return Math.max(value, 0);
-  }
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) return Math.max(parsed, 0);
-  }
-  return Math.max(fallback, 0);
-};
-
-const sanitizeCircleMotionState = <T,>(state: T): T => {
-  if (!state || typeof state !== "object" || Array.isArray(state)) return state;
-  const record = state as Record<string, unknown>;
-  if (!Object.prototype.hasOwnProperty.call(record, "r")) return state;
-
-  const rawR = record.r;
-  const safeR = Array.isArray(rawR)
-    ? rawR.map((value) => toSafeSvgRadius(value, 0))
-    : toSafeSvgRadius(rawR, 0);
-
-  return { ...record, r: safeR } as T;
-};
-
-type SafeMotionCircleProps = ComponentProps<typeof motion.circle> & {
-  cx?: number | string;
-  cy?: number | string;
-  r?: number | string;
-};
-
-const SafeMotionCircle: FC<SafeMotionCircleProps> = ({ cx = 50, cy = 50, r = 0, ...props }) => {
-  const { initial, animate, exit, whileHover, whileTap, whileFocus, ...rest } = props;
-  const safeCx = toSafeSvgCoordinate(cx, 50);
-  const safeCy = toSafeSvgCoordinate(cy, 50);
-  const safeR = toSafeSvgRadius(r, 0);
-
-  return (
-    <motion.circle
-      cx={safeCx}
-      cy={safeCy}
-      r={safeR}
-      initial={sanitizeCircleMotionState(initial)}
-      animate={sanitizeCircleMotionState(animate)}
-      exit={sanitizeCircleMotionState(exit)}
-      whileHover={sanitizeCircleMotionState(whileHover)}
-      whileTap={sanitizeCircleMotionState(whileTap)}
-      whileFocus={sanitizeCircleMotionState(whileFocus)}
-      {...rest}
-    />
-  );
 };
 
 /* ── Star Field Generator ── */
@@ -138,7 +66,7 @@ interface RingProps {
 
 const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor, breatheDuration }) => {
   const { audioIntensity } = useSynthesisState();
-  const safeRadius = Number.isFinite(radius) ? radius : 0;
+  const safeRadius = toSafeSvgRadius(radius, 0);
   const filterId = ring === "red" ? "neonGlowRed" : ring === "yellow" ? "neonGlowWarning" : "neonGlowSafe";
   const fillId = ring === "red" ? "ringFillRed" : ring === "yellow" ? "ringFillYellow" : "ringFillGreen";
   const dotCount = ring === "green" ? 2 : ring === "yellow" ? 3 : 2;
@@ -147,7 +75,7 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
   return (
     <g aria-label={label}>
       {/* Glass fill zone */}
-      <circle cx={50} cy={50} r={safeRadius} fill={`url(#${fillId})`} className="pointer-events-none" />
+      <SafeMotionCircle cx={50} cy={50} r={safeRadius} fill={`url(#${fillId})`} className="pointer-events-none" />
 
       {/* Outer ambient halo */}
       <SafeMotionCircle
@@ -210,7 +138,7 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
           animate={{ rotate: [startAngle, startAngle + 360] }}
           transition={{ duration: breatheDuration * 5 + i * 2, repeat: Infinity, ease: "linear" }}
         >
-          <circle
+          <SafeMotionCircle
             cx={50 + safeRadius}
             cy={50}
             r={ring === "red" ? 0.9 : 0.7}
@@ -310,8 +238,8 @@ const IllusionEntityView: FC<{ scenario: any; index: number; total: number; onDi
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="pointer-events-none"
       >
-        <circle cx={cx} cy={cy} r={6} fill="rgba(244,63,94, 0.4)" style={{ filter: "blur(2px)" }} />
-        <circle cx={cx} cy={cy} r={2} fill="#fff" />
+        <SafeMotionCircle cx={cx} cy={cy} r={6} fill="rgba(244,63,94, 0.4)" style={{ filter: "blur(2px)" }} />
+        <SafeMotionCircle cx={cx} cy={cy} r={2} fill="#fff" />
       </motion.g>
     );
   }
@@ -1182,10 +1110,16 @@ export const MapCanvas: FC<MapCanvasProps> = ({
     setDestroyedIllusions(prev => new Set(prev).add(id));
   }, []);
 
-  const nodes = useMemo(
-    () => filterNodesByContext(activeNodes, goalIdFilter, galaxyGoalIds).filter((n) => !n.isNodeArchived),
-    [activeNodes, goalIdFilter, galaxyGoalIds]
-  );
+  const nodes = useMemo(() => {
+    const filtered = filterNodesByContext(activeNodes, goalIdFilter, galaxyGoalIds).filter((n) => !n.isNodeArchived);
+    console.log("[MapCanvas Debug] allNodes:", allNodes.length, "activeNodes:", activeNodes.length, "filteredNodes:", filtered.length, "goalIdFilter:", goalIdFilter);
+    if (allNodes.length > 0 && filtered.length === 0) {
+      console.warn("[MapCanvas Debug] Nodes exist in store but none passed the filter!");
+      console.log("[MapCanvas Debug] Sample node goalIds:", allNodes.slice(0, 5).map(n => n.goalId));
+    }
+    return filtered;
+  }, [activeNodes, goalIdFilter, galaxyGoalIds, allNodes]);
+
 
   const archivedNodes = useMemo(() => {
     return allNodes.filter(n => n.isNodeArchived).map(n => {
@@ -1540,7 +1474,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         for (let j = i + 1; j < group.length; j++) {
           const p1 = nodePositions[group[i].id];
           const p2 = nodePositions[group[j].id];
-          if (p1 && p2) {
+          if (p1 && p2 && Number.isFinite(p1.x) && Number.isFinite(p1.y) && Number.isFinite(p2.x) && Number.isFinite(p2.y)) {
             lines.push({
               id: `${group[i].id}-${group[j].id}`,
               x1: p1.x,
@@ -1564,7 +1498,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
     findings.forEach((f, idx) => {
       const p1 = nodePositions[f.affectedNodes[0]];
       const p2 = nodePositions[f.affectedNodes[1]];
-      if (p1 && p2) {
+      if (p1 && p2 && Number.isFinite(p1.x) && Number.isFinite(p1.y) && Number.isFinite(p2.x) && Number.isFinite(p2.y)) {
         lines.push({
           id: `interference-${idx}`,
           x1: p1.x,
@@ -1583,7 +1517,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
     if (!node) return { viewBox: "0 0 100 100" };
 
     const pos = nodePositions[node.id];
-    if (!pos) return { viewBox: "0 0 100 100" };
+    if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return { viewBox: "0 0 100 100" };
 
     const zoomSize = 42;
     const vx = Math.max(0, Math.min(100 - zoomSize, pos.x - zoomSize / 2));
@@ -2131,11 +2065,11 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   style={{ transformOrigin: "50px 50px" }}
                 >
                   {/* Outer orb body */}
-                  <circle cx="50" cy="50" r={8.5} fill={meStyle.fill} />
+                  <SafeMotionCircle cx="50" cy="50" r={8.5} fill={meStyle.fill} />
                   {/* Inner highlight — the "eye" of the planet */}
-                  <circle cx="50" cy="50" r={3.5} fill="#ffffff" style={{ filter: "blur(1px)", opacity: 0.9 }} />
+                  <SafeMotionCircle cx="50" cy="50" r={3.5} fill="#ffffff" style={{ filter: "blur(1px)", opacity: 0.9 }} />
                   {/* Specular highlight dot */}
-                  <circle cx="48" cy="47.5" r={1.2} fill="#ffffff" opacity={0.7} />
+                  <SafeMotionCircle cx="48" cy="47.5" r={1.2} fill="#ffffff" opacity={0.7} />
                 </motion.g>
 
                 {/* "أنا" label */}
@@ -2182,7 +2116,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                         times: [0, 0.4, 0.8, 1]
                       }}
                     >
-                      <circle r={2.5} fill="rgba(45, 212, 191, 0.4)" />
+                      <SafeMotionCircle r={2.5} fill="rgba(45, 212, 191, 0.4)" />
                     </motion.g>
                     {/* Pulsing target */}
                     <motion.g
@@ -2190,7 +2124,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                       transition={{ duration: 2, repeat: Infinity }}
                       style={{ transformOrigin: "68px 50px" }}
                     >
-                      <circle cx={68} cy={50} r={4} fill="none" stroke="rgba(45, 212, 191, 0.4)" strokeWidth={0.5} />
+                      <SafeMotionCircle cx={68} cy={50} r={4} fill="none" stroke="rgba(45, 212, 191, 0.4)" strokeWidth={0.5} />
                     </motion.g>
                   </motion.g>
                 )}
@@ -2274,7 +2208,12 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 >
                   <div className="px-6 py-2.5 rounded-full glass-card border border-teal-500/30 flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                    <span className="text-xs font-bold text-teal-100/90 whitespace-nowrap">ا رز.. ابدأ  ا  </span>
+                    <div className="flex flex-col gap-1 items-start text-right" dir="rtl">
+                      <span className="text-[10px] font-black tracking-widest text-teal-400/60 uppercase">النبض الاستباقي</span>
+                      <span className="text-xs font-bold text-teal-100/90 whitespace-nowrap">
+                        <Typewriter text="المدار جاهز لاستقبال رحلتك.. ابدأ بوضع أول عُقدة في خريطة وعيك لترسم معالم سيادتك." speed={50} />
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               )}

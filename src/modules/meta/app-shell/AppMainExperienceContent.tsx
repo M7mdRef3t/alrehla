@@ -7,6 +7,7 @@ import { AppJourneyScreens } from "../AppJourneyScreens";
 import { AppMetaScreens } from "../AppMetaScreens";
 import type { ResourceTab } from "../../growth/ResourcesCenter";
 import { AwarenessSkeleton } from "../AwarenessSkeleton";
+import { hasDiagnosisCompleted } from "@/modules/diagnosis";
 
 // ─── Lazy-loaded screens (split from initial bundle) ─────────────────────────
 const StoriesScreen = lazy(() => import("../../growth/StoriesScreen").then(m => ({ default: m.StoriesScreen })));
@@ -17,7 +18,7 @@ const BehavioralAnalysisHub = lazy(() => import("../../exploration/BehavioralAna
 const ResourcesCenter = lazy(() => import("../../growth/ResourcesCenter").then(m => ({ default: m.ResourcesCenter })));
 const UserProfile = lazy(() => import("../UserProfile").then(m => ({ default: m.UserProfile })));
 const SanctuaryDashboard = lazy(() => import("../SanctuaryDashboard").then(m => ({ default: m.SanctuaryDashboard })));
-const DawayirPlayground = lazy(() => import("../../social/DawayirPlayground").then(m => ({ default: m.DawayirPlayground })));
+
 
 const CommandCenter = lazy(() => import("../../lifeOS/CommandCenter"));
 const MarayaApp = lazy(() => import("../../maraya/MarayaApp"));
@@ -184,7 +185,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   // State for deep-linking from BehavioralHub to ResourcesCenter
   const [resourceDeepLink, setResourceDeepLink] = useState<{ tab: ResourceTab; search: string } | null>(null);
 
-  if (screen === "landing" || screen === "goal" || screen === "survey" || screen === "map" || screen === "protocol" || screen === "diagnosis") {
+  if (screen === "landing" || screen === "goal" || screen === "survey" || screen === "map" || screen === "dawayir" || screen === "protocol" || screen === "diagnosis") {
     return (
       <AppStartScreens
         screen={screen}
@@ -296,7 +297,13 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
         <Suspense fallback={<AwarenessSkeleton />}>
           <AboutScreen
             onBack={() => onNavigate?.("landing" as AppScreen)}
-            onStart={() => onStartJourney?.()}
+            onStart={() => {
+              if (!hasDiagnosisCompleted()) {
+                onNavigate?.("diagnosis" as AppScreen);
+              } else {
+                onStartJourney?.();
+              }
+            }}
           />
         </Suspense>
       </PageShell>
@@ -386,7 +393,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "life-os") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
           <CommandCenter
             onBack={() => onNavigate?.("landing" as AppScreen)}
@@ -397,21 +404,11 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
     );
   }
 
-  if (screen === "dawayir") {
-    return (
-      <PageShell headerMode="standard" tabBarVisible={true}>
-        <Suspense fallback={<AwarenessSkeleton />}>
-          <DawayirPlayground
-            onBack={() => onNavigate?.("landing" as AppScreen)}
-          />
-        </Suspense>
-      </PageShell>
-    );
-  }
+
 
   if (screen === "maraya") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
           <MarayaApp />
         </Suspense>
@@ -421,7 +418,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "session-intake") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#030308" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <SessionIntakeScreen
             onBack={() => onNavigate?.("landing" as AppScreen)}
@@ -432,7 +429,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   }
   if (screen === "atmosfera") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0e1f" }}><div className="w-8 h-8 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" /></div>}>
           <AtmosferaExperience />
         </Suspense>
@@ -441,7 +438,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   }
   if (screen === "masarat") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0e1f" }}><div className="w-8 h-8 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" /></div>}>
           <MasaratScreen />
         </Suspense>
@@ -450,7 +447,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   }
   if (screen === "session-console") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0e1f" }}><div className="w-8 h-8 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" /></div>}>
           <SessionOSConsole />
         </Suspense>
@@ -459,7 +456,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   }
   if (screen === "baseera") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a1a" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
           <BaseeraScreen />
         </Suspense>
@@ -468,7 +465,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   }
   if (screen === "watheeqa") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a1a" }}><div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" /></div>}>
           <WatheeqaScreen />
         </Suspense>
@@ -478,7 +475,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "mizan") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a1a" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
           <MizanScreen />
         </Suspense>
@@ -488,7 +485,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "rifaq") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a1a" }}><div className="w-8 h-8 border-2 border-pink-500/30 border-t-pink-500 rounded-full animate-spin" /></div>}>
           <RifaqScreen />
         </Suspense>
@@ -498,7 +495,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "murshid") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#070b1a" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
           <MurshidScreen />
         </Suspense>
@@ -508,7 +505,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "taqrir") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a1a" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
           <TaqrirScreen />
         </Suspense>
@@ -518,7 +515,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "bawsala") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#070b1a" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
           <BawsalaScreen />
         </Suspense>
@@ -528,7 +525,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "riwaya") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a1a" }}><div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" /></div>}>
           <RiwayaScreen />
         </Suspense>
@@ -538,7 +535,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "nadhir") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0508" }}><div className="w-8 h-8 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" /></div>}>
           <NadhirScreen />
         </Suspense>
@@ -548,7 +545,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "wird") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0a12" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <WirdScreen />
         </Suspense>
@@ -558,7 +555,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "markaz") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#060812" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <MarkazScreen />
         </Suspense>
@@ -568,7 +565,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "sada") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#080a14" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
           <SadaScreen />
         </Suspense>
@@ -578,7 +575,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "hafiz") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0612" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
           <HafizScreen />
         </Suspense>
@@ -588,7 +585,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "mirah") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0c0616" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
           <MirahScreen />
         </Suspense>
@@ -598,7 +595,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "sijil") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#060a10" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
           <SijilScreen />
         </Suspense>
@@ -608,7 +605,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "naba") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#080612" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
           <NabaScreen />
         </Suspense>
@@ -618,7 +615,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "mithaq") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0c0810" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <MithaqScreen />
         </Suspense>
@@ -628,7 +625,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "sullam") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#080c06" }}><div className="w-8 h-8 border-2 border-lime-500/30 border-t-lime-500 rounded-full animate-spin" /></div>}>
           <SullamScreen />
         </Suspense>
@@ -638,7 +635,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "bathra") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#061208" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
           <BathraScreen />
         </Suspense>
@@ -648,7 +645,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "observatory") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#020617" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <ObservatoryScreen />
         </Suspense>
@@ -658,7 +655,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "wasiyya") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0c0a06" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <WasiyyaScreen />
         </Suspense>
@@ -668,7 +665,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "khalwa") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0616" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
           <KhalwaScreen />
         </Suspense>
@@ -678,7 +675,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "ecosystem-hub") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <EcosystemHub onNavigate={(s) => onNavigate?.(s as any)} />
         </Suspense>
@@ -688,7 +685,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "tazkiya") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#08061a" }}><div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>}>
           <TazkiyaScreen />
         </Suspense>
@@ -698,7 +695,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "jisr") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
           <JisrScreen />
         </Suspense>
@@ -708,7 +705,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "risala") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
           <RisalaScreen />
         </Suspense>
@@ -718,7 +715,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "shahada") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <ShahadaScreen />
         </Suspense>
@@ -728,7 +725,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "warsha") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" /></div>}>
           <WarshaScreen />
         </Suspense>
@@ -738,7 +735,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "kanz") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <KanzScreen />
         </Suspense>
@@ -748,7 +745,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "qalb") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" /></div>}>
           <QalbScreen />
         </Suspense>
@@ -758,7 +755,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "athar") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
           <AtharScreen />
         </Suspense>
@@ -768,7 +765,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "rafiq") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <RafiqScreen />
         </Suspense>
@@ -778,7 +775,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "niyya") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <NiyyaScreen />
         </Suspense>
@@ -788,7 +785,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "samt") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" /></div>}>
           <SamtScreen />
         </Suspense>
@@ -798,7 +795,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "jathr") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
           <JathrScreen />
         </Suspense>
@@ -808,7 +805,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "kharita") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" /></div>}>
           <KharitaScreen onNavigate={onNavigate} />
         </Suspense>
@@ -818,7 +815,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "ruya") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#0a0616" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
           <RuyaScreen />
         </Suspense>
@@ -828,7 +825,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "raya") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <RayaScreen />
         </Suspense>
@@ -838,7 +835,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "yawmiyyat") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <YawmiyyatScreen />
         </Suspense>
@@ -848,7 +845,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "qinaa") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" /></div>}>
           <QinaaScreen />
         </Suspense>
@@ -858,7 +855,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "nabd") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" /></div>}>
           <NabdScreen />
         </Suspense>
@@ -868,7 +865,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "raseed") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <RaseedScreen />
         </Suspense>
@@ -878,7 +875,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "dawra") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <DawraScreen />
         </Suspense>
@@ -888,7 +885,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "zill") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <ZillScreen />
         </Suspense>
@@ -898,7 +895,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "sila") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /></div>}>
           <SilaScreen />
         </Suspense>
@@ -908,9 +905,9 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "basma") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
-          <BasmaScreen />
+          <BasmaScreen onNavigate={onNavigate} />
         </Suspense>
       </PageShell>
     );
@@ -918,7 +915,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
 
   if (screen === "qutb") {
     return (
-      <PageShell headerMode="none" tabBarVisible={true}>
+      <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<div className="h-full w-full flex items-center justify-center" style={{ background: "#050510" }}><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
           <QutbScreen />
         </Suspense>

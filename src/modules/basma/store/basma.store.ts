@@ -46,7 +46,10 @@ export interface BasmaState {
   removeValue: (id: string) => void;
   addStatement: (statement: string, confidence: number) => void;
   removeStatement: (id: string) => void;
+  setFullState: (state: any) => void;
+  syncWithSupabase: () => Promise<void>;
   getByCategory: (cat: TraitCategory) => PersonalityTrait[];
+
   getTopTraits: (n: number) => PersonalityTrait[];
   getIdentityScore: () => number;
   getCategoryStrengths: () => Record<TraitCategory, number>;
@@ -72,18 +75,33 @@ export const useBasmaState = create<BasmaState>()(
       addTrait: (data) => {
         const trait: PersonalityTrait = { ...data, id: genId(), createdAt: Date.now() };
         set(s => ({ traits: [trait, ...s.traits].slice(0, 100) }));
+        get().syncWithSupabase();
       },
-      removeTrait: (id) => set(s => ({ traits: s.traits.filter(t => t.id !== id) })),
+      removeTrait: (id) => {
+        set(s => ({ traits: s.traits.filter(t => t.id !== id) }));
+        get().syncWithSupabase();
+      },
+
 
       addValue: (value, rank, why = "") => {
         set(s => ({ values: [{ id: genId(), value: value.trim(), rank, why: why.trim(), createdAt: Date.now() }, ...s.values].slice(0, 20) }));
+        get().syncWithSupabase();
       },
-      removeValue: (id) => set(s => ({ values: s.values.filter(v => v.id !== id) })),
+      removeValue: (id) => {
+        set(s => ({ values: s.values.filter(v => v.id !== id) }));
+        get().syncWithSupabase();
+      },
+
 
       addStatement: (statement, confidence) => {
         set(s => ({ statements: [{ id: genId(), statement: statement.trim(), confidence, date: new Date().toISOString().slice(0, 10), createdAt: Date.now() }, ...s.statements].slice(0, 50) }));
+        get().syncWithSupabase();
       },
-      removeStatement: (id) => set(s => ({ statements: s.statements.filter(st => st.id !== id) })),
+      removeStatement: (id) => {
+        set(s => ({ statements: s.statements.filter(st => st.id !== id) }));
+        get().syncWithSupabase();
+      },
+
 
       getByCategory: (cat) => get().traits.filter(t => t.category === cat),
 
@@ -114,7 +132,37 @@ export const useBasmaState = create<BasmaState>()(
         if (!top.length) return "بصمتك في انتظار الاكتشاف";
         return top.map(t => t.name).join(" · ");
       },
+
+      setFullState: (data) => {
+        if (!data) return;
+        set({
+          traits: Array.isArray(data.traits) ? data.traits : [],
+          values: Array.isArray(data.values) ? data.values : [],
+          statements: Array.isArray(data.statements) ? data.statements : [],
+        });
+      },
+
+      syncWithSupabase: async () => {
+        const { traits, values, statements } = get();
+        const data = { traits, values, statements };
+        
+        // Import dynamically to avoid circular dependencies
+        const { getAuthUserId } = await import("@/domains/auth/store/auth.store");
+        const userId = getAuthUserId();
+        if (!userId) return;
+
+        const { ProfileService } = await import("@/services/profileService");
+        await ProfileService.updateBasmaData(userId, data);
+      }
     }),
-    { name: "alrehla-basma", storage: zustandIdbStorage }
+    { 
+      name: "alrehla-basma", 
+      storage: zustandIdbStorage,
+      onRehydrateStorage: () => (state) => {
+        // Optional: sync on load if user is logged in
+        if (state) state.syncWithSupabase();
+      }
+    }
   )
 );
+

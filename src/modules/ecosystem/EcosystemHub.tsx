@@ -11,6 +11,8 @@ import { Zap as Sparkles, ArrowUpRight } from "lucide-react";
 
 // Import stores to aggregate data
 import { useMapState } from "@/modules/map/dawayirIndex";
+import { useAuthState } from "@/domains/auth/store/auth.store";
+import { PRODUCT_TO_SATELLITE } from "@/components/EcosystemNavigator";
 import { useMithaqState } from "@/modules/mithaq/store/mithaq.store";
 import { useSullamState } from "@/modules/sullam/store/sullam.store";
 import { useBathraState } from "@/modules/bathra/store/bathra.store";
@@ -55,6 +57,9 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
   const khalwaMinutes = useKhalwaState((s) => s.getTotalMinutes());
 
   const wirdStreak = 0;
+
+  const ecosystemData = useAuthState((s) => s.ecosystemData);
+  const activeSatellites = ecosystemData?.active_satellites ?? ["alrehla"];
 
   // Build product pulses
   const products: ProductPulse[] = useMemo(() => [
@@ -103,24 +108,34 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
     { id: "khalwa", name: "خلوة", emoji: "🧘", color: "#8b5cf6", stat: khalwaSessions?.length ?? 0, statLabel: "جلسة", hasActivity: (khalwaSessions?.length ?? 0) > 0, screen: "khalwa" },
   ], [mapNodes, pledges, goals, seeds, letters, khalwaSessions, wirdStreak]);
 
-  const activeProducts = useMemo(() => products.filter((p) => p.hasActivity), [products]);
-  const inactiveProducts = useMemo(() => products.filter((p) => !p.hasActivity), [products]);
+  const constellationProducts = useMemo(() => {
+    return products.map(p => {
+      const satellite = PRODUCT_TO_SATELLITE[p.id as keyof typeof PRODUCT_TO_SATELLITE];
+      const isLocked = satellite ? !(activeSatellites as string[]).includes(satellite as string) : false;
+      return { ...p, isLocked };
+    });
+  }, [products, activeSatellites]);
+
+  const activeProducts = useMemo(() => constellationProducts.filter((p) => p.hasActivity && !p.isLocked), [constellationProducts]);
+  const inactiveProducts = useMemo(() => constellationProducts.filter((p) => !p.hasActivity || p.isLocked), [constellationProducts]);
   
   const totalActive = activeProducts.length;
   const healthPct = Math.round((totalActive / products.length) * 100);
 
+  const [isMounted, setIsMounted] = useState(false);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  useEffect(() => { setIsMounted(true); }, []);
 
-  // Layout Constants
-  const INNER_RADIUS = typeof window !== 'undefined' && window.innerWidth < 768 ? 110 : 160;
-  const OUTER_RADIUS = typeof window !== 'undefined' && window.innerWidth < 768 ? 200 : 340;
+  // Layout Constants (Safe for SSR)
+  const INNER_RADIUS = isMounted && typeof window !== 'undefined' && window.innerWidth < 768 ? 110 : 160;
+  const OUTER_RADIUS = isMounted && typeof window !== 'undefined' && window.innerWidth < 768 ? 200 : 340;
 
   // Calculate coordinates for nodes
   const calculateOrbit = (nodes: ProductPulse[], radius: number, isInner: boolean) => {
     return nodes.map((node, i) => {
-      // Add slight randomness to outer orbit to make it feel like a nebula
-      const jitterX = isInner ? 0 : (Math.random() - 0.5) * 40;
-      const jitterY = isInner ? 0 : (Math.random() - 0.5) * 40;
+      // Use deterministic "randomness" based on index to avoid hydration mismatch
+      const jitterX = isInner ? 0 : (Math.sin(i * 123.45) * 20);
+      const jitterY = isInner ? 0 : (Math.cos(i * 678.90) * 20);
       const angle = (i / nodes.length) * 2 * Math.PI;
       
       return {
@@ -162,7 +177,7 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
       </div>
 
       {/* Header Overlay */}
-      <div className="absolute top-0 left-0 right-0 p-6 z-50 pointer-events-none flex justify-between items-start">
+      <div className="absolute top-[80px] left-0 right-0 p-6 z-50 pointer-events-none flex justify-between items-start">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="pointer-events-auto">
           <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-l from-white to-white/60 tracking-tight">
             سماء الرحلة
@@ -250,7 +265,9 @@ interface OrbitNodeProps {
   onClick: () => void;
 }
 
-function OrbitNode({ node, isInner, isHovered, onHover, onClick }: OrbitNodeProps) {
+function OrbitNode({ node, isInner, isHovered, onHover, onClick }: OrbitNodeProps & { node: { isLocked?: boolean } }) {
+  const isLocked = node.isLocked;
+
   return (
     <motion.div
       className="absolute"
@@ -262,14 +279,14 @@ function OrbitNode({ node, isInner, isHovered, onHover, onClick }: OrbitNodeProp
       onMouseLeave={() => onHover(null)}
     >
       <motion.button
-        onClick={onClick}
-        whileHover={{ scale: 1.2, zIndex: 50 }}
-        whileTap={{ scale: 0.9 }}
-        className="relative flex flex-col items-center justify-center group -translate-x-1/2 -translate-y-1/2"
+        onClick={isLocked ? undefined : onClick}
+        whileHover={isLocked ? {} : { scale: 1.2, zIndex: 50 }}
+        whileTap={isLocked ? {} : { scale: 0.9 }}
+        className={`relative flex flex-col items-center justify-center group -translate-x-1/2 -translate-y-1/2 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
         {/* Glow behind the node */}
         <AnimatePresence>
-          {(isInner || isHovered) && (
+          {(isInner || isHovered) && !isLocked && (
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -287,14 +304,15 @@ function OrbitNode({ node, isInner, isHovered, onHover, onClick }: OrbitNodeProp
               ? 'w-14 h-14 md:w-16 md:h-16 border-white/20 shadow-lg' 
               : 'w-10 h-10 border-white/5 opacity-50 group-hover:opacity-100 group-hover:w-14 group-hover:h-14'
             }
+            ${isLocked ? 'grayscale opacity-30 bg-slate-950/80' : ''}
           `}
           style={{ 
-            background: isInner || isHovered ? `${node.color}20` : 'rgba(15,23,42,0.8)',
-            borderColor: isInner || isHovered ? `${node.color}50` : 'rgba(255,255,255,0.05)'
+            background: !isLocked && (isInner || isHovered) ? `${node.color}20` : isLocked ? 'rgba(2,6,23,0.9)' : 'rgba(15,23,42,0.8)',
+            borderColor: !isLocked && (isInner || isHovered) ? `${node.color}50` : isLocked ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.05)'
           }}
         >
-          <span className={`${isInner || isHovered ? 'text-2xl' : 'text-lg grayscale group-hover:grayscale-0'} transition-all`}>
-            {node.emoji}
+          <span className={`${(isInner || isHovered) && !isLocked ? 'text-2xl' : 'text-lg grayscale group-hover:grayscale-0'} transition-all`}>
+            {isLocked ? "🔒" : node.emoji}
           </span>
 
           {/* Activity Dot */}
@@ -313,9 +331,14 @@ function OrbitNode({ node, isInner, isHovered, onHover, onClick }: OrbitNodeProp
               className="absolute top-full mt-2 flex flex-col items-center pointer-events-none whitespace-nowrap"
             >
               <span className="text-xs font-bold text-white drop-shadow-md">{node.name}</span>
-              {node.hasActivity && (
+              {node.hasActivity && !isLocked && (
                 <span className="text-[10px] font-black" style={{ color: node.color }}>
                   {node.stat} {node.statLabel}
+                </span>
+              )}
+              {isLocked && (
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter mt-0.5">
+                  تطلب: {PRODUCT_TO_SATELLITE[node.id] || 'alrehla'}
                 </span>
               )}
             </motion.div>

@@ -9,25 +9,11 @@ function ThemeSync() {
   const { setTheme } = useTheme();
   const resolvedStateTheme = useThemeState((s) => s.resolvedTheme);
 
-  // Sync from our OS State (`useThemeState`) to `next-themes`
+  // One-way sync: Zustand store → next-themes
+  // When resolvedTheme changes in our Zustand store, push to next-themes
   React.useEffect(() => {
     setTheme(resolvedStateTheme);
   }, [resolvedStateTheme, setTheme]);
-
-  // Sync from custom events (if consciousness engine overrides)
-  React.useEffect(() => {
-    const handleConsciousnessThemeChange = (e: Event) => {
-      const customEvent = e as CustomEvent<{ isDark: boolean }>;
-      const isDark = customEvent.detail.isDark;
-      setTheme(isDark ? "dark" : "light");
-      useThemeState.getState().setTheme(isDark ? "dark" : "light");
-    };
-
-    window.addEventListener("consciousness-theme-changed", handleConsciousnessThemeChange);
-    return () => {
-      window.removeEventListener("consciousness-theme-changed", handleConsciousnessThemeChange);
-    };
-  }, [setTheme]);
 
   return null;
 }

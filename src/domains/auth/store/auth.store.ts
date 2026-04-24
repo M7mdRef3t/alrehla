@@ -8,6 +8,9 @@ import { runtimeEnv } from "@/config/runtimeEnv";
 import { AnalyticsEvents, trackIdentityLinked } from "@/services/analytics";
 import { analyticsService } from "@/domains/analytics";
 import { markRevenueAccessUnlocked } from "@/services/revenueAccess";
+import { supabase as supabaseClient } from "@/services/supabaseClient";
+import { ProfileService } from "@/services/profileService";
+import { logger } from "@/services/logger";
 import { EcosystemData } from "@/types/ecosystem";
 
 export type UserToneGender = "male" | "female" | "neutral";
@@ -23,21 +26,22 @@ interface AuthState {
   role: string | null;
   roleOverride: string | null;
   tier: SubscriptionTier;
+  bio: string | null;
   ecosystemData: EcosystemData | null;
   setSession: (session: Session | null) => void;
   setRole: (role: string | null) => void;
   setRoleOverride: (role: string | null) => void;
   setTier: (tier: SubscriptionTier) => void;
+  setBio: (bio: string | null) => void;
+  setDisplayName: (name: string | null) => void;
   setEcosystemData: (data: EcosystemData | null) => void;
+  updateEcosystemData: (data: Partial<EcosystemData>) => Promise<{ error: any }>;
 }
 
 const ROLE_OVERRIDE_KEY = "dawayir-role-override";
-// Legacy: the app used to support role overrides via `?asRole=...`.
-// This caused confusing URLs and made "owner" vs "developer" feel the same.
-// We now strip it on load and rely on localStorage + UI controls instead.
 const LEGACY_ROLE_OVERRIDE_QUERY_KEY = "asRole";
 const hasSupabaseEnv = Boolean(runtimeEnv.supabaseUrl && runtimeEnv.supabaseAnonKey);
-let supabaseClient: SupabaseClient | null = null;
+let supabaseClientInstance: SupabaseClient | null = null;
 let supabaseAuthInitialized = false;
 let supabaseAuthInitPromise: Promise<void> | null = null;
 
@@ -122,7 +126,6 @@ function stripLegacyRoleOverrideQueryParam(): void {
 function getInitialRoleOverride(): string | null {
   if (typeof window === "undefined") return null;
 
-  // ?asRole=user → وضع المستخدم: نطبّق ونمسح الرابط.
   try {
     const url = createCurrentUrl();
     if (!url) return null;
@@ -138,18 +141,16 @@ function getInitialRoleOverride(): string | null {
 
   stripLegacyRoleOverrideQueryParam();
 
-  // DEV: allow overriding via localStorage for fast testing.
   if (runtimeEnv.isDev) {
     const stored = getFromLocalStorage(ROLE_OVERRIDE_KEY);
     return stored && stored.trim() ? stored.trim() : null;
   }
 
-  // Production: allow a persisted *down-scope* to `user` only.
   const stored = normalizeRole(getFromLocalStorage(ROLE_OVERRIDE_KEY));
   return stored === "user" ? "user" : null;
 }
 
-export const useAuthState = create<AuthState>((set) => ({
+export const useAuthState = create<AuthState>((set, get) => ({
   status: "loading",
   user: null,
   session: null,
@@ -159,6 +160,7 @@ export const useAuthState = create<AuthState>((set) => ({
   role: null,
   roleOverride: getInitialRoleOverride(),
   tier: "free",
+  bio: null,
   ecosystemData: null,
   setSession: (session) =>
     set(() => {
@@ -167,7 +169,7 @@ export const useAuthState = create<AuthState>((set) => ({
       return {
         session,
         user,
-        status: "ready", // Force ready whenever session is explicitly set
+        status: "ready",
         displayName,
         firstName: getFirstName(displayName),
         toneGender: getToneGenderFromUser(user)
@@ -190,7 +192,26 @@ export const useAuthState = create<AuthState>((set) => ({
       return { roleOverride: normalized };
     }),
   setTier: (tier) => set({ tier }),
-  setEcosystemData: (data) => set({ ecosystemData: data })
+  setBio: (bio) => set({ bio }),
+  setDisplayName: (name) => set({ displayName: name, firstName: getFirstName(name) }),
+  setEcosystemData: (data) => set({ ecosystemData: data }),
+  updateEcosystemData: async (data) => {
+    const { error } = await ProfileService.updateEcosystemData(data);
+    if (!error) {
+      const current = get().ecosystemData || {};
+      set({
+        ecosystemData: {
+          ...current,
+          ...data,
+          satellite_metrics: {
+            ...(current.satellite_metrics || {}),
+            ...(data.satellite_metrics || {}),
+          },
+        } as EcosystemData,
+      });
+    }
+    return { error };
+  },
 }));
 
 export function getAuthToken(): string | null {
@@ -236,40 +257,87 @@ async function syncAuthRole(session: Session | null): Promise<void> {
   if (!user) {
     useAuthState.getState().setRole(null);
     useAuthState.getState().setTier("free");
+    useAuthState.getState().setBio(null);
     return;
   }
 
-  if (!supabaseClient) {
-    useAuthState.getState().setRole(getRoleFromMetadata(user));
+  // Baseline role from metadata
+  let activeRole = getRoleFromMetadata(user);
+  let tier: SubscriptionTier = "free";
+
+  if (!supabaseClientInstance) {
+    useAuthState.getState().setRole(activeRole);
     return;
   }
 
   try {
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabaseClientInstance
       .from("profiles")
-      .select("role, subscription_status, ecosystem_data")
+      .select("role, subscription_status, ecosystem_data, bio, basma_data")
       .eq("id", user.id)
       .maybeSingle();
 
     if (!error && data) {
+      // Use profile role if available, otherwise stay with metadata role
       if (typeof data.role === "string" && data.role.trim()) {
-        useAuthState.getState().setRole(data.role.trim());
+        activeRole = data.role.trim();
       }
-      const tier = getTierFromProfileRow(data);
-      useAuthState.getState().setTier(tier);
-      if (tier === "pro") {
-        markRevenueAccessUnlocked();
-      }
+      
+      tier = getTierFromProfileRow(data);
+      
       if (data.ecosystem_data) {
         useAuthState.getState().setEcosystemData(data.ecosystem_data as EcosystemData);
       }
-      return;
+      if (typeof data.bio === "string") {
+        useAuthState.getState().setBio(data.bio);
+      }
+      if (data.basma_data) {
+        import("@/modules/basma/store/basma.store").then(m => {
+          m.useBasmaState.getState().setFullState(data.basma_data);
+        }).catch(err => logger.error("Failed to load basma store from syncAuthRole", { error: err }));
+      }
+    } else if (error) {
+      logger.error("Error syncing auth role from profile", { error });
     }
-  } catch {
-    // fallback to metadata below
+  } catch (err) {
+    logger.error("Unexpected error in syncAuthRole", { error: err });
   }
 
-  useAuthState.getState().setRole(getRoleFromMetadata(user));
+  // Final updates
+  useAuthState.getState().setRole(activeRole);
+  useAuthState.getState().setTier(tier);
+  if (tier === "pro") {
+    markRevenueAccessUnlocked();
+  }
+}
+
+export async function updateBio(bio: string): Promise<{ error: any }> {
+  const user = useAuthState.getState().user;
+  if (!user) return { error: new Error("No authenticated user") };
+
+  const { error } = await ProfileService.updateBio(user.id, bio);
+  if (!error) {
+    useAuthState.getState().setBio(bio);
+  }
+  return { error };
+}
+
+export async function updateDisplayName(displayName: string): Promise<{ error: any }> {
+  const user = useAuthState.getState().user;
+  if (!user) return { error: new Error("No authenticated user") };
+
+  const { error } = await ProfileService.updateDisplayName(user.id, displayName);
+  if (!error) {
+    useAuthState.getState().setDisplayName(displayName);
+    
+    // Also update Supabase Auth metadata for redundancy
+    if (supabase) {
+      await supabase.auth.updateUser({
+        data: { full_name: displayName }
+      });
+    }
+  }
+  return { error };
 }
 
 async function initSupabaseAuth(): Promise<void> {
@@ -291,18 +359,16 @@ async function initSupabaseAuth(): Promise<void> {
         useAuthState.getState().setRole(null);
         return;
       }
-      supabaseClient = supabase;
+      supabaseClientInstance = supabase;
       const session = await safeGetSession();
       
       await syncAuthRole(session);
       useAuthState.getState().setSession(session);
       
-      // Ensure we are ready even if session is null
       if (useAuthState.getState().status === "loading") {
         useAuthState.setState({ status: "ready" });
       }
 
-      // P0: Link initial identity if session exists
       if (session?.user?.id) {
         void trackIdentityLinked(session.user.id);
       }

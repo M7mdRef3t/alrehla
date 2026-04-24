@@ -1,15 +1,15 @@
 "use client";
 
-import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useThemeState } from "@/domains/consciousness/store/theme.store";
 import { AdminTooltip } from "@/components/admin/dashboard/Overview/components/AdminTooltip";
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const [mounted, setMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const resolvedTheme = useThemeState((s) => s.resolvedTheme);
+  const setTheme = useThemeState((s) => s.setTheme);
 
-  // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -18,7 +18,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     return <div className={`w-10 h-10 opacity-0 ${className}`} />;
   }
 
-  const isDark = theme === "dark" || theme === "system"; // system is usually dark in alrehla
+  const isDark = resolvedTheme === "dark";
 
   return (
     <AdminTooltip content={isDark ? "تفعيل السمة الفاتحة" : "تفعيل السمة الداكنة"} position="bottom">

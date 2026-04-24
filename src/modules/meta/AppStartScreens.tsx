@@ -23,7 +23,7 @@ import { useState } from "react";
 import { DiagnosisScreen } from "@/modules/diagnosis";
 import type { UserStateObject, RecommendedProduct } from "@/modules/diagnosis";
 
-type StartScreen = "landing" | "goal" | "survey" | "map" | "protocol" | "diagnosis";
+type StartScreen = "landing" | "goal" | "survey" | "map" | "dawayir" | "protocol" | "diagnosis";
 
 type WelcomeState = {
   message: string;
@@ -48,7 +48,7 @@ interface AppStartScreensProps {
   nextStepDecision: NextStepDecisionV1 | null;
   hideBottomDock: boolean;
   onStartJourney: () => void;
-  onOpenSurvey: () => void;
+  onOpenSurvey: (goalId?: string, category?: AdviceCategory) => void;
   onGoalBack: () => void;
   onGoalSelected: (nextCategory: AdviceCategory, nextGoalId: string) => void;
   onSurveyComplete: () => void;
@@ -180,7 +180,7 @@ export function AppStartScreens({
             });
             onClearWelcome();
             journey.setLastGoal(nextGoalId, nextCategory);
-            onOpenSurvey(); // Open Adaptive Intake instead of direct map
+            onOpenSurvey(nextGoalId, nextCategory as AdviceCategory); // Open Adaptive Intake instead of direct map
           }}
         />
       </PageShell>

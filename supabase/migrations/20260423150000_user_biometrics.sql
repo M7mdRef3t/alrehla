@@ -4,8 +4,10 @@ create table if not exists public.user_biometrics (
   user_id uuid references auth.users(id) on delete cascade not null,
   heart_rate smallint not null,
   hrv smallint not null,
+  stress_level smallint check (stress_level between 0 and 100),
   timestamp timestamp with time zone default now() not null,
-  source text default 'unknown'
+  source text default 'unknown',
+  metadata jsonb default '{}'::jsonb
 );
 
 -- Index for fast retrieval of latest pulse

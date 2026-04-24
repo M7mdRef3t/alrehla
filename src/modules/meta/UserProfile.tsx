@@ -6,15 +6,18 @@ import {
   ArrowLeft, Award, BarChart3, BookOpen,
   Flame, Pencil, Check,
   Map, TrendingUp, Zap,
-  Zap as Sparkles, Orbit, Rocket, Compass, CalendarDays, Wind
+  Zap as Sparkles, Orbit, Rocket, Compass, CalendarDays, Wind,
+  Brain
 } from "lucide-react";
 import { useGamificationState } from "@/services/gamificationEngine";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
+import { useAuthState, updateBio } from "@/domains/auth/store/auth.store";
 import { useQuizHistory } from "@/hooks/useQuizHistory";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { ACHIEVEMENTS } from "@/data/achievements";
 import { QuestBoard as DailyQuests } from "../gamification/QuestBoard";
 import { calculateEntropy } from "@/services/predictiveEngine";
+import { PatternEngine } from "@/services/patternEngine";
 
 const toSafeSvgNumber = (value: unknown, fallback: number): number =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
@@ -56,7 +59,6 @@ const RANK_CONFIG: Record<string, { label: string; color: string; emoji: string 
 };
 const DEFAULT_RANK = { label: "مبتدئ", color: "#64748b", emoji: "🌱" };
 
-const BIO_KEY = "alrehla_profile_bio";
 
 /* ══════════════════════════════════════════
    Radar Chart — Cosmic Hologram
@@ -211,21 +213,79 @@ function ProfileAvatar({ rank, level }: { rank: string; level: number }) {
 /* ══════════════════════════════════════════
    Editable Bio
    ══════════════════════════════════════════ */
+function EditableName() {
+  const displayName = useAuthState((s) => s.displayName) ?? "المسافر";
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(displayName);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setName(displayName); }, [displayName]);
+
+  const save = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    const { updateDisplayName } = await import("@/domains/auth/store/auth.store");
+    const { error } = await updateDisplayName(name.trim());
+    setSaving(false);
+    if (!error) setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex flex-col items-center gap-2 mb-3">
+        <input 
+          value={name} 
+          onChange={(e) => setName(e.target.value)}
+          className="bg-transparent border-b border-teal-500/50 text-2xl font-black text-white text-center outline-none focus:border-teal-400 pb-1"
+          autoFocus
+        />
+        <div className="flex gap-2">
+          <button onClick={() => setEditing(false)} className="text-[10px] text-slate-500 font-bold">إلغاء</button>
+          <button onClick={save} disabled={saving} className="text-[10px] text-teal-400 font-bold">{saving ? "جاري الحفظ..." : "حفظ"}</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <h2 
+      onClick={() => setEditing(true)} 
+      className="text-2xl font-black text-slate-50 tracking-wide mb-2 cursor-pointer hover:text-teal-300 transition-colors flex items-center gap-2 group"
+    >
+      {displayName}
+      <Pencil size={14} className="text-teal-500/0 group-hover:text-teal-500/60 transition-all" />
+    </h2>
+  );
+}
+
 function EditableBio() {
-  const [bio, setBio] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem(BIO_KEY) ?? "";
-  });
+
+  const bio = useAuthState((s) => s.bio) ?? "";
+  const userId = useAuthState((s) => s.user?.id);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(bio);
+  const [saving, setSaving] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setDraft(bio);
+  }, [bio]);
 
   useEffect(() => { if (editing) ref.current?.focus(); }, [editing]);
 
-  const save = () => {
-    setBio(draft);
-    localStorage.setItem(BIO_KEY, draft);
-    setEditing(false);
+  const save = async () => {
+    setSaving(true);
+    const { error } = await updateBio(draft);
+    if (!error && userId) {
+      setAnalyzing(true);
+      await PatternEngine.extractFromBio(draft, userId);
+      setAnalyzing(false);
+    }
+    setSaving(false);
+    if (!error) {
+      setEditing(false);
+    }
   };
   const cancel = () => { setDraft(bio); setEditing(false); };
 
@@ -234,15 +294,26 @@ function EditableBio() {
       <div className="mt-4 w-full px-2">
         <textarea ref={ref} value={draft} onChange={(e) => setDraft(e.target.value)}
           rows={3} maxLength={160}
+          disabled={saving || analyzing}
           placeholder="دوّن ملاحظة عن رحلتك وملاذك الآمن..."
           className="w-full bg-white dark:bg-slate-900/40 border border-teal-500/30 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none resize-none placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-teal-400 focus:ring-1 focus:ring-teal-400/20 transition-all font-sans leading-relaxed text-center"
         />
         <div className="flex justify-center gap-3 mt-3">
-          <button onClick={cancel} className="px-4 py-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors">
+          <button onClick={cancel} disabled={saving || analyzing} className="px-4 py-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors">
             إلغاء
           </button>
-          <button onClick={save} className="flex items-center gap-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 px-5 py-1.5 rounded-full text-xs font-bold text-slate-950 shadow-sm shadow-teal-500/10 hover:shadow-[0_0_20px_rgba(45,212,191,0.6)] transition-all">
-            <Check size={14} /> حفظ المذكرة
+          <button onClick={save} disabled={saving || analyzing} className="flex items-center gap-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 px-5 py-1.5 rounded-full text-xs font-bold text-slate-950 shadow-sm shadow-teal-500/10 hover:shadow-[0_0_20px_rgba(45,212,191,0.6)] transition-all">
+            {analyzing ? (
+              <>
+                <Brain size={14} className="animate-pulse" />
+                <span>يقرأ طاقتك...</span>
+              </>
+            ) : saving ? (
+              <div className="w-3 h-3 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
+            ) : (
+              <Check size={14} />
+            )}
+            {saving ? "جاري الحفظ..." : "حفظ المذكرة"}
           </button>
         </div>
       </div>
@@ -250,7 +321,7 @@ function EditableBio() {
   }
 
   return (
-    <div className="mt-4 px-4 flex justify-center group relative" onClick={() => setEditing(true)}>
+    <div className="mt-4 px-4 flex justify-center group relative cursor-pointer" onClick={() => setEditing(true)}>
       <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed text-center italic opacity-80 group-hover:opacity-100 transition-opacity max-w-[280px]">
         "{bio || "لم يتم تدوين شيء هنا بعد. اضغط للتدوين في رحلتك المدارية."}"
       </p>
@@ -385,12 +456,14 @@ function JourneyBalance() {
    Active Satellites
    ══════════════════════════════════════════ */
 function ActiveSatellites() {
+  const activeSatellites = useAuthState((s) => s.ecosystemData?.active_satellites) ?? ["alrehla"];
+  
   const satellites = [
-    { id: "alrehla", name: "الرحلة", active: true, color: "#14b8a6", icon: <Rocket size={16} /> },
-    { id: "dawayir", name: "دواير", active: true, color: "#f5a623", icon: <Map size={16} /> },
-    { id: "masarat", name: "مسارات", active: false, color: "#10b981", icon: <Compass size={16} /> },
-    { id: "sessions", name: "جلسات", active: true, color: "#3b82f6", icon: <CalendarDays size={16} /> },
-    { id: "atmosfera", name: "أتموسفيرا", active: true, color: "#8b5cf6", icon: <Wind size={16} /> },
+    { id: "alrehla", name: "الرحلة", color: "#14b8a6", icon: <Rocket size={16} /> },
+    { id: "dawayir", name: "دواير", color: "#f5a623", icon: <Map size={16} /> },
+    { id: "masarat", name: "مسارات", color: "#10b981", icon: <Compass size={16} /> },
+    { id: "sessions", name: "جلسات", color: "#3b82f6", icon: <CalendarDays size={16} /> },
+    { id: "atmosfera", name: "أتموسفيرا", color: "#8b5cf6", icon: <Wind size={16} /> },
   ];
 
   return (
@@ -403,13 +476,16 @@ function ActiveSatellites() {
         <span className="text-sm font-bold text-slate-100">محطات المنظومة الفعالة</span>
       </div>
       <div className="flex flex-wrap gap-3">
-        {satellites.map(s => (
-          <div key={s.id} className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${s.active ? 'bg-white/10 border-white/20' : 'bg-slate-900/50 border-slate-800 opacity-50 grayscale'}`}>
-            <div style={{ color: s.active ? s.color : '#94a3b8' }}>{s.icon}</div>
-            <span className="text-xs font-bold" style={{ color: s.active ? '#f8fafc' : '#94a3b8' }}>{s.name}</span>
-            {s.active && <Check size={12} className="text-teal-400 mr-auto" />}
-          </div>
-        ))}
+        {satellites.map(s => {
+          const isActive = activeSatellites.includes(s.id as any);
+          return (
+            <div key={s.id} className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${isActive ? 'bg-white/10 border-white/20' : 'bg-slate-900/50 border-slate-800 opacity-40 grayscale pointer-events-none'}`}>
+              <div style={{ color: isActive ? s.color : '#94a3b8' }}>{s.icon}</div>
+              <span className="text-xs font-bold" style={{ color: isActive ? '#f8fafc' : '#94a3b8' }}>{s.name}</span>
+              {isActive && <Check size={12} className="text-teal-400 mr-auto" />}
+            </div>
+          );
+        })}
       </div>
     </motion.div>
   );
@@ -602,6 +678,7 @@ interface UserProfileProps {
 
 export function UserProfile({ onBack }: UserProfileProps) {
   const { xp, rank, level } = useGamificationState();
+  const firstName = useAuthState((s) => s.firstName);
   const unlockedIds = useAchievementState((s) => s.unlockedIds);
   const totalPoints = useAchievementState((s) => s.totalPoints);
   const { history } = useQuizHistory();
@@ -649,12 +726,13 @@ export function UserProfile({ onBack }: UserProfileProps) {
           
           <ProfileAvatar rank={rank} level={level} />
           
-          <h2 className="text-2xl font-black text-slate-50 tracking-wide mb-2">المسافر</h2>
+          <EditableName />
           
           <div className="flex items-center gap-2 rounded-full px-4 py-1.5 mb-5" style={{ background: `${cfg.color}10`, border: `1px solid ${cfg.color}30` }}>
             <span className="text-sm">{cfg.emoji}</span>
             <span className="text-xs font-bold" style={{ color: cfg.color }}>{cfg.label}</span>
           </div>
+
 
           <div className="text-[10px] font-semibold text-slate-400 capitalize tracking-widest opacity-80">
             انطلق في رحلته منذ: {memberSince}

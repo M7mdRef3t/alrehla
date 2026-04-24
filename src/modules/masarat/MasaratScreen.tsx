@@ -17,10 +17,7 @@ import type {
   ContactLevel,
 } from "@alrehla/masarat";
 import { eventBus } from "@/shared/events/bus";
-import { initMasaratRewardsBridge } from "@/domains/social/services/masaratRewardsBridge";
 
-// ─── Init bridge once ──────────────────────────────────
-let bridgeReady = false;
 
 // ─── Constants ─────────────────────────────────────────
 const PATH_ICONS: Record<PathId, string> = {
@@ -63,11 +60,6 @@ export default function MasaratScreen() {
   const [selectedContact, setSelectedContact] = useState<ContactLevel | null>(null);
   const [resolvedPath, setResolvedPath] = useState<PathId | null>(null);
 
-  // Init rewards bridge once
-  if (!bridgeReady) {
-    initMasaratRewardsBridge();
-    bridgeReady = true;
-  }
 
   // ── Quick Path handler ──
   const handleQuickPath = useCallback((situation: QuickPathSituation) => {

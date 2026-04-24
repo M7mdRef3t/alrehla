@@ -1,6 +1,6 @@
 import { logger } from "@/services/logger";
 import type { FC, ReactNode } from "react";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, startTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
@@ -29,7 +29,9 @@ import {
   TrendingUp,
   MapPin,
   PanelRightClose,
-  PanelRightOpen
+  PanelRightOpen,
+  Bot,
+  Wind
 } from "lucide-react";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
@@ -62,48 +64,36 @@ import {
 import { AdminOmniSearch } from "./ui/AdminOmniSearch";
 import { AdminCopilotModal } from "./dashboard/Intelligence/AdminCopilotModal";
 import { DataManagement } from '@/modules/meta/DataManagement';
-import { Bot, Wind } from "lucide-react";
-import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
 import { CommandHalo } from "./ui/CommandHalo";
 import { SovereignHUD } from "./ui/SovereignHUD";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
-// Extracted Panels (Lazy Loaded for performance and dependency stability)
-const ExecutiveDashboard = lazy(() => import("./dashboard/Executive/ExecutiveDashboard").then(m => ({ default: m.ExecutiveDashboard })));
-const GrowthRevenueDashboard = lazy(() => import("./dashboard/Executive/GrowthRevenueDashboard").then(m => ({ default: m.GrowthRevenueDashboard })));
-const SecurityOpsDashboard = lazy(() => import("./dashboard/Executive/SecurityOpsDashboard").then(m => ({ default: m.SecurityOpsDashboard })));
-const ConsciousnessAtlasDashboard = lazy(() => import("./dashboard/Executive/ConsciousnessAtlasDashboard").then(m => ({ default: m.ConsciousnessAtlasDashboard })));
-const FlowDynamicsDashboard = lazy(() => import("./dashboard/Executive/FlowDynamicsDashboard").then(m => ({ default: m.FlowDynamicsDashboard })));
-const FlowMapPanel = lazy(() => import("./dashboard/Flow/FlowMapPanel").then(m => ({ default: m.FlowMapPanel })));
-const FeedbackPanel = lazy(() => import("./dashboard/Support/FeedbackPanel").then(m => ({ default: m.FeedbackPanel })));
-const SupportTicketsPanel = lazy(() => import("./dashboard/Overview/components/SupportTicketsPanel").then(m => ({ default: m.SupportTicketsPanel })));
-const FeatureFlagsPanel = lazy(() => import("./dashboard/Features/FeatureFlagsPanel").then(m => ({ default: m.FeatureFlagsPanel })));
+import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
 const ConsciousnessMap = lazy(() => import("./dashboard/Consciousness/ConsciousnessMap").then(m => ({ default: m.ConsciousnessMap })));
-const AIStudioPanel = lazy(() => import("./dashboard/Intelligence/AIStudioPanel").then(m => ({ default: m.AIStudioPanel })));
 const ContentPanel = lazy(() => import("./dashboard/Content/ContentPanel").then(m => ({ default: m.ContentPanel })));
 const UsersPanel = lazy(() => import("./dashboard/Users/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const UserStatePanel = lazy(() => import("./dashboard/Data/UserStatePanel").then(m => ({ default: m.UserStatePanel })));
 const ConsciousnessArchivePanel = lazy(() => import("./dashboard/Consciousness/ConsciousnessArchivePanel").then(m => ({ default: m.ConsciousnessArchivePanel })));
 const B2BAnalytics = lazy(() => import("./dashboard/B2BAnalytics").then(m => ({ default: m.B2BAnalytics })));
 const EntityDashboard = lazy(() => import("./dashboard/Entity/EntityDashboard").then(m => ({ default: m.EntityDashboard })));
-const AIDecisionLogPanel = lazy(() => import("./AIDecisionLog").then(m => ({ default: m.AIDecisionLog })));
 const HealthMonitorPanel = lazy(() => import("./HealthMonitorPanel").then(m => ({ default: m.HealthMonitorPanel })));
-const AISimulatorPanel = lazy(() => import("./dashboard/Intelligence/AISimulatorPanel").then(m => ({ default: m.AISimulatorPanel })));
 const CreativeDashboard = lazy(() => import("./dashboard/Intelligence/CreativeDashboard").then(m => ({ default: m.CreativeDashboard })));
 const SalesEnablementPanel = lazy(() => import("./dashboard/Intelligence/SalesEnablementPanel").then(m => ({ default: m.SalesEnablementPanel })));
-const DreamsMatrixPanel = lazy(() => import("./dashboard/Intelligence/DreamsMatrixPanel").then(m => ({ default: m.DreamsMatrixPanel })));
-const TheCrucible = lazy(() => import("./dashboard/Intelligence/TheCrucible").then(m => ({ default: m.TheCrucible })));
 const ConsciousnessGraph = lazy(() => import("./dashboard/Intelligence/ConsciousnessGraph").then(m => ({ default: m.ConsciousnessGraph })));
-const RepoIntelPanel = lazy(() => import("./dashboard/Intelligence/RepoIntelPanel"));
-const FleetCommander = lazy(() => import("./dashboard/Fleet/FleetCommander").then(m => ({ default: m.FleetCommander })));
+// ── Unified AI Command Hub (replaces 7 individual AI panels) ──────────────────
+const SovereignAIHub = lazy(() => import("./dashboard/Intelligence/SovereignAIHub").then(m => ({ default: m.SovereignAIHub })));
+
 const SeoGeoAuditorPanel = lazy(() => import("./dashboard/SEO/SeoGeoAuditorPanel").then(m => ({ default: m.SeoGeoAuditorPanel })));
-const AlertsPanel = lazy(() => import("./WarRoom/AlertsPanel"));
+const SovereignWarRoom = lazy(() => import("./dashboard/Executive/SovereignWarRoom").then(m => ({ default: m.SovereignWarRoom })));
 const LiveAdminPanel = lazy(() => import("@/modules/dawayir-live/pages/LiveAdminPanel").then(m => ({ default: m.default })));
 const AdAnalyticsDashboard = lazy(() => import("./dashboard/AdAnalytics/AdAnalyticsDashboard").then(m => ({ default: m.AdAnalyticsDashboard })));
 const SurveyResultsPanel = lazy(() => import("./dashboard/Data/SurveyResultsPanel").then(m => ({ default: m.SurveyResultsPanel })));
-const MarketingOpsPanel = lazy(() => import("./dashboard/MarketingOps/MarketingOpsPanel").then(m => ({ default: m.MarketingOpsPanel })));
-const SovereignPanel = lazy(() => import("./dashboard/Sovereign/SovereignControl").then(m => ({ default: m.SovereignControl })));
 const SovereignExpansionHub = lazy(() => import("./dashboard/Executive/SovereignExpansionHub").then(m => ({ default: m.SovereignExpansionHub })));
+// ── Unified Growth Command Hub (replaces 4 individual panels) ────────────────
+const SovereignGrowthHub = lazy(() => import("./dashboard/Executive/SovereignGrowthHub").then(m => ({ default: m.SovereignGrowthHub })));
+// ── Unified People & Consciousness Hub (replaces 4 individual panels) ─────────
+const SovereignPeopleHub = lazy(() => import("./dashboard/Executive/SovereignPeopleHub").then(m => ({ default: m.SovereignPeopleHub })));
+
 const MapRegistryPanel = lazy(() => import("./dashboard/Content/MapRegistryPanel").then(m => ({ default: m.MapRegistryPanel })));
 const MailCommandCenter = lazy(() => import("./dashboard/MailCommand/MailCommandCenter").then(m => ({ default: m.MailCommandCenter })));
 const JourneyPathsPanel = lazy(() => import("./dashboard/Paths/JourneyPathsPanel").then(m => ({ default: m.JourneyPathsPanel })));
@@ -112,6 +102,10 @@ const DesignLab = lazy(() => import("./dashboard/Sovereign/DesignLab"));
 const GovernanceHub = lazy(() => import("./dashboard/Sovereign/GovernanceHub").then(m => ({ default: m.GovernanceHub })));
 const SessionOSPanel = lazy(() => import("./dashboard/Sovereign/SessionOSPanel").then(m => ({ default: m.SessionOSPanel })));
 const SovereignFunnel = lazy(() => import("./dashboard/Analytics/SovereignFunnel").then(m => ({ default: m.SovereignFunnel })));
+const FeatureFlagsPanel = lazy(() => import("./dashboard/Features/FeatureFlagsPanel").then(m => ({ default: m.FeatureFlagsPanel })));
+const SovereignPanel = lazy(() => import("./dashboard/Sovereign/SovereignControl").then(m => ({ default: m.SovereignControl })));
+const ConsciousnessAtlasDashboard = lazy(() => import("./dashboard/Executive/ConsciousnessAtlasDashboard").then(m => ({ default: m.ConsciousnessAtlasDashboard })));
+const FeedbackPanel = lazy(() => import("./dashboard/Support/FeedbackPanel").then(m => ({ default: m.FeedbackPanel })));
 
 const DataManagementModal = lazy(() => Promise.resolve({ default: DataManagement }));
 
@@ -361,14 +355,18 @@ const CollapsibleSidebarGroup: FC<{
 };
 
 export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
-  const [tab, setTab] = useState<AdminTab>(getTabFromLocation);
+  const [tab, setTab] = useState<AdminTab>("sovereign");
   const [showAccount, setShowAccount] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isDesktopSidebarVisible, setIsDesktopSidebarVisible] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
+  const [isDesktopSidebarVisible, setIsDesktopSidebarVisible] = useState<boolean>(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    setTab(getTabFromLocation());
     const storedValue = window.localStorage.getItem(ADMIN_SIDEBAR_VISIBILITY_KEY);
-    return storedValue !== "hidden";
-  });
+    setIsDesktopSidebarVisible(storedValue !== "hidden");
+  }, []);
   const authUser = useAuthState((s) => s.user);
   const adminAccess = useAdminState((s) => s.adminAccess);
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
@@ -521,9 +519,11 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     !canSeeAdvancedTabs && DEVELOPER_PLUS_TABS.includes(tab) ? "entity" : tab;
 
   const handleTabChange = (next: AdminTab) => {
-    setTab(next);
-    updateTabInUrl(next);
-    setIsSidebarOpen(false);
+    startTransition(() => {
+      setTab(next);
+      updateTabInUrl(next);
+      setIsSidebarOpen(false);
+    });
   };
 
   const activeTabItem = NAV_ITEMS.find((item) => item.id === effectiveTab);
@@ -752,70 +752,124 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "sovereign" && (
                   <div className="space-y-12">
                     <SovereignPanel />
-                    <ExecutiveDashboard />
-                    <HealthMonitorPanel />
-                    <FlowDynamicsDashboard />
                   </div>
                 )}
-                
-                {effectiveTab === "growth-revenue" && (
+
+                {effectiveTab === "exec-overview" && (
                   <div className="space-y-12">
-                    <GrowthRevenueDashboard />
-                    <SovereignFunnel />
-                    <SovereignExpansionHub />
-                    <SalesEnablementPanel />
-                    <MarketingOpsPanel />
-                    <MailCommandCenter />
                     <CreativeDashboard />
-                    <SeoGeoAuditorPanel />
-                    <B2BAnalytics />
-                    <AdAnalyticsDashboard />
                   </div>
                 )}
-                
-                {effectiveTab === "consciousness-atlas" && (
+
+                {effectiveTab === "flow-map" && (
                   <div className="space-y-12">
-                    <ConsciousnessAtlasDashboard />
                     <ConsciousnessMap />
-                    <ConsciousnessArchivePanel />
-                    <ConsciousnessGraph />
-                    <DreamsMatrixPanel />
-                    <FlowMapPanel />
-                    <MapRegistryPanel />
-                    <JourneyPathsPanel />
-                    <UsersPanel />
-                    <UserStatePanel />
                   </div>
                 )}
-                
-                {effectiveTab === "ai-studio" && (
-                  <div className="space-y-12">
-                    <AIStudioPanel />
-                    <AISimulatorPanel />
-                    <TheCrucible />
-                    <AIDecisionLogPanel maxDecisions={100} />
-                    <DesignLab />
-                    <FeatureFlagsPanel />
-                    <ContentPanel />
-                    <OpsDocsPanel />
-                    <RepoIntelPanel />
-                    <EntityDashboard />
-                    <GovernanceHub />
-                  </div>
-                )}
-                
-                {effectiveTab === "war-room" && (
-                  <div className="space-y-12">
-                    <AlertsPanel />
-                    <SecurityOpsDashboard />
-                    <FleetCommander />
-                    <FeedbackPanel />
-                    <SurveyResultsPanel />
-                    <SupportTicketsPanel />
-                    <SessionOSPanel />
+
+                {effectiveTab === "dawayir-live" && (
+                  <div>
                     <LiveAdminPanel />
                   </div>
                 )}
+                
+                {effectiveTab === "growth-hub" && (
+                  <div>
+                    <SovereignGrowthHub />
+                  </div>
+                )}
+
+                {effectiveTab === "ai-studio" && (
+                  <div>
+                    <SovereignAIHub />
+                  </div>
+                )}
+
+                {effectiveTab === "war-room" && (
+                  <div className="space-y-12">
+                    <SovereignWarRoom />
+                  </div>
+                )}
+
+                {effectiveTab === "consciousness-atlas" && (
+                  <div className="space-y-12">
+                    <ConsciousnessAtlasDashboard />
+                  </div>
+                )}
+
+                {effectiveTab === "people-hub" && (
+                  <div>
+                    <SovereignPeopleHub />
+                  </div>
+                )}
+
+                {/* ── مخزن المحتوى ─────────────────────────────────── */}
+                {effectiveTab === "content" && (
+                  <div className="space-y-12">
+                    <ContentPanel />
+                  </div>
+                )}
+
+                {/* ── مكتبة التشغيل ────────────────────────────────── */}
+                {effectiveTab === "ops-docs" && (
+                  <div className="space-y-12">
+                    <OpsDocsPanel />
+                  </div>
+                )}
+
+                {/* ── مختبر التصميم ────────────────────────────────── */}
+                {effectiveTab === "design-lab" && (
+                  <div className="space-y-12">
+                    <DesignLab />
+                  </div>
+                )}
+
+                {/* ── مفاتيح المسار ────────────────────────────────── */}
+                {effectiveTab === "feature-flags" && (
+                  <div className="space-y-12">
+                    <FeatureFlagsPanel />
+                  </div>
+                )}
+
+                {/* ── سجل الحوكمة ──────────────────────────────────── */}
+                {effectiveTab === "governance-ledger" && (
+                  <div className="space-y-12">
+                    <GovernanceHub />
+                  </div>
+                )}
+
+                {/* ── كيان الرحلة (DNA) ────────────────────────────── */}
+                {effectiveTab === "entity" && (
+                  <div className="space-y-12">
+                    <EntityDashboard />
+                  </div>
+                )}
+
+                {/* ── المحركات التحتية والصحة ────────────────────────── */}
+                {effectiveTab === "health-monitor" && (
+                  <div className="space-y-12">
+                    <HealthMonitorPanel />
+                  </div>
+                )}
+
+                {effectiveTab === "seo-geo" && (
+                  <div className="space-y-12">
+                    <SeoGeoAuditorPanel />
+                  </div>
+                )}
+
+                {effectiveTab === "session-os" && (
+                  <div className="space-y-12">
+                    <SessionOSPanel />
+                  </div>
+                )}
+
+                {effectiveTab === "support-tickets" && (
+                  <div className="space-y-12">
+                    <FeedbackPanel />
+                  </div>
+                )}
+
               </Suspense>
             </div>
           </div>

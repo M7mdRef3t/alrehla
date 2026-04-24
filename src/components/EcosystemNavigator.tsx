@@ -65,115 +65,93 @@ interface ProductCategory {
 
 // ─── Product Registry ────────────────────────────────────────────────────────
 
-const ALL_PRODUCTS: EcosystemProduct[] = [
+const PRODUCT_REGISTRY: Omit<EcosystemProduct, 'status'>[] = [
   // Exploration & Understanding
-  { id: "alrehla",    name: "الرحلة",    description: "المركز الرئيسي والموزع الذكي",         icon: <Rocket className="w-4 h-4" />,      status: "active",      color: "#14b8a6", url: "/" },
-  { id: "dawayir",   name: "دواير",     description: "أداة التشخيص وفهم الخريطة",           icon: <Map className="w-4 h-4" />,          status: "active",      color: "#f5a623", url: "/#dawayir" },
-  { id: "ecosystem-hub", name: "مركز المنظومة", description: "لوحة قيادة كل أدوات الرحلة",    icon: <LayoutGrid className="w-4 h-4" />,    status: "active",      color: "#6366f1", url: "/#ecosystem-hub" },
-  { id: "bawsala",   name: "بوصلة",     description: "كل قرار صعب — عنده بوصلة",            icon: <Compass className="w-4 h-4" />,      status: "active",      color: "#06b6d4", url: "/#bawsala" },
-  { id: "maraya",    name: "مرايا",      description: "سرد تفاعلي يرى نمطك من الداخل",       icon: <Eye className="w-4 h-4" />,          status: "active",      color: "#a78bfa", url: "/#maraya" },
-  { id: "observatory",name: "المرصد",   description: "الخريطة السلوكية — اكتشف أنماطك",     icon: <Eye className="w-4 h-4" />,          status: "active",      color: "#818cf8", url: "/#observatory" },
-  { id: "kharita",   name: "خريطة",     description: "خريطة المنظومة البصرية",              icon: <Map className="w-4 h-4" />,          status: "active",      color: "#06b6d4", url: "/#kharita" },
-  { id: "mirah",     name: "مرآة",      description: "شوف نفسك بعيون البيانات",             icon: <Eye className="w-4 h-4" />,          status: "active",      color: "#c084fc", url: "/#mirah" },
-  { id: "baseera",   name: "بصيرة",     description: "لوحة الوعي الذاتي",                   icon: <Sparkles className="w-4 h-4" />,     status: "active",      color: "#06b6d4", url: "/#baseera" },
-  { id: "taqrir",    name: "تقرير",     description: "بياناتك في صفحة واحدة",               icon: <FileText className="w-4 h-4" />,     status: "active",      color: "#06b6d4", url: "/#taqrir" },
+  { id: "alrehla",    name: "الرحلة",    description: "المركز الرئيسي والموزع الذكي",         icon: <Rocket className="w-4 h-4" />,      color: "#14b8a6", url: "/" },
+  { id: "dawayir",   name: "دواير",     description: "أداة التشخيص وفهم الخريطة",           icon: <Map className="w-4 h-4" />,          color: "#f5a623", url: "/#dawayir" },
+  { id: "ecosystem-hub", name: "مركز المنظومة", description: "لوحة قيادة كل أدوات الرحلة",    icon: <LayoutGrid className="w-4 h-4" />,    color: "#6366f1", url: "/#ecosystem-hub" },
+  { id: "bawsala",   name: "بوصلة",     description: "كل قرار صعب — عنده بوصلة",            icon: <Compass className="w-4 h-4" />,      color: "#06b6d4", url: "/#bawsala" },
+  { id: "maraya",    name: "مرايا",      description: "سرد تفاعلي يرى نمطك من الداخل",       icon: <Eye className="w-4 h-4" />,          color: "#a78bfa", url: "/#maraya" },
+  { id: "observatory",name: "المرصد",   description: "الخريطة السلوكية — اكتشف أنماطك",     icon: <Eye className="w-4 h-4" />,          color: "#818cf8", url: "/#observatory" },
+  { id: "kharita",   name: "خريطة",     description: "خريطة المنظومة البصرية",              icon: <Map className="w-4 h-4" />,          color: "#06b6d4", url: "/#kharita" },
+  { id: "mirah",     name: "مرآة",      description: "شوف نفسك بعيون البيانات",             icon: <Eye className="w-4 h-4" />,          color: "#c084fc", url: "/#mirah" },
+  { id: "baseera",   name: "بصيرة",     description: "لوحة الوعي الذاتي",                   icon: <Sparkles className="w-4 h-4" />,     color: "#06b6d4", url: "/#baseera" },
+  { id: "taqrir",    name: "تقرير",     description: "بياناتك في صفحة واحدة",               icon: <FileText className="w-4 h-4" />,     color: "#06b6d4", url: "/#taqrir" },
 
   // Work & Execution
-  { id: "masarat",   name: "مسارات",    description: "أداة التنفيذ والتحرك",                 icon: <Compass className="w-4 h-4" />,      status: "active",      color: "#10b981", url: "/#masarat" },
-  { id: "wird",      name: "وِرد",      description: "كل يوم طقس — والطقس يبني العادة",      icon: <Flame className="w-4 h-4" />,        status: "active",      color: "#fbbf24", url: "/#wird" },
-  { id: "warsha",    name: "ورشة",      description: "تحديات 7 أيام لبناء مهارة",            icon: <Flame className="w-4 h-4" />,        status: "active",      color: "#f97316", url: "/#warsha" },
-  { id: "jisr",      name: "جسر",       description: "إصلاح العلاقات — حدّد · عبّر · افعل", icon: <Handshake className="w-4 h-4" />,    status: "active",      color: "#10b981", url: "/#jisr" },
-  { id: "rifaq",     name: "رفاق",      description: "مساحة الرفاق والدعم في الطريق",        icon: <Users className="w-4 h-4" />,        status: "active",      color: "#22c55e", url: "/#rifaq" },
-  { id: "murshid",   name: "مرشد",      description: "توجيه ذكي في لحظات الغموض",            icon: <Brain className="w-4 h-4" />,        status: "active",      color: "#8b5cf6", url: "/#murshid" },
-  { id: "rafiq",     name: "رفيق",      description: "المرافق الذكي في الرحلة اليومية",       icon: <Compass className="w-4 h-4" />,      status: "active",      color: "#6366f1", url: "/#rafiq" },
-  { id: "protocol",  name: "بروتوكول",  description: "خطة الفعل وقت التوتر والاختيار",        icon: <Zap className="w-4 h-4" />,          status: "active",      color: "#f59e0b", url: "/#protocol" },
-  { id: "mithaq",    name: "ميثاق",     description: "عقد مع النفس",                         icon: <ScrollText className="w-4 h-4" />,   status: "active",      color: "#fbbf24", url: "/#mithaq" },
-  { id: "sullam",    name: "سُلّم",      description: "سلالم النمو",                          icon: <TrendingUp className="w-4 h-4" />,   status: "active",      color: "#84cc16", url: "/#sullam" },
-  { id: "raya",      name: "راية",       description: "رؤيتك طويلة المدى — 90 يوم",           icon: <Flag className="w-4 h-4" />,         status: "active",      color: "#6366f1", url: "/#raya" },
-  { id: "bathra",    name: "بذرة",      description: "بذور العادات الصغيرة",                 icon: <Gem className="w-4 h-4" />,          status: "active",      color: "#10b981", url: "/#bathra" },
-  { id: "sessions",  name: "جلسات",     description: "تدخلات عميقة وتوجيه",                 icon: <CalendarDays className="w-4 h-4" />, status: "active",      color: "#3b82f6", url: "/#session-intake" },
-  { id: "session-console", name: "كونسول الجلسات", description: "تشغيل وإدارة الجلسات العميقة", icon: <LayoutGrid className="w-4 h-4" />, status: "active",      color: "#3b82f6", url: "/#session-console" },
+  { id: "masarat",   name: "مسارات",    description: "أداة التنفيذ والتحرك",                 icon: <Compass className="w-4 h-4" />,      color: "#10b981", url: "/#masarat" },
+  { id: "wird",      name: "وِرد",      description: "كل يوم طقس — والطقس يبني العادة",      icon: <Flame className="w-4 h-4" />,        color: "#fbbf24", url: "/#wird" },
+  { id: "warsha",    name: "ورشة",      description: "تحديات 7 أيام لبناء مهارة",            icon: <Flame className="w-4 h-4" />,        color: "#f97316", url: "/#warsha" },
+  { id: "jisr",      name: "جسر",       description: "إصلاح العلاقات — حدّد · عبّر · افعل", icon: <Handshake className="w-4 h-4" />,    color: "#10b981", url: "/#jisr" },
+  { id: "rifaq",     name: "رفاق",      description: "مساحة الرفاق والدعم في الطريق",        icon: <Users className="w-4 h-4" />,        color: "#22c55e", url: "/#rifaq" },
+  { id: "murshid",   name: "مرشد",      description: "توجيه ذكي في لحظات الغموض",            icon: <Brain className="w-4 h-4" />,        color: "#8b5cf6", url: "/#murshid" },
+  { id: "rafiq",     name: "رفيق",      description: "المرافق الذكي في الرحلة اليومية",       icon: <Compass className="w-4 h-4" />,      color: "#6366f1", url: "/#rafiq" },
+  { id: "protocol",  name: "بروتوكول",  description: "خطة الفعل وقت التوتر والاختيار",        icon: <Zap className="w-4 h-4" />,          color: "#f59e0b", url: "/#protocol" },
+  { id: "mithaq",    name: "ميثاق",     description: "عقد مع النفس",                         icon: <ScrollText className="w-4 h-4" />,   color: "#fbbf24", url: "/#mithaq" },
+  { id: "sullam",    name: "سُلّم",      description: "سلالم النمو",                          icon: <TrendingUp className="w-4 h-4" />,   color: "#84cc16", url: "/#sullam" },
+  { id: "raya",      name: "راية",       description: "رؤيتك طويلة المدى — 90 يوم",           icon: <Flag className="w-4 h-4" />,         color: "#6366f1", url: "/#raya" },
+  { id: "bathra",    name: "بذرة",      description: "بذور العادات الصغيرة",                 icon: <Gem className="w-4 h-4" />,          color: "#10b981", url: "/#bathra" },
+  { id: "sessions",  name: "جلسات",     description: "تدخلات عميقة وتوجيه",                 icon: <CalendarDays className="w-4 h-4" />, color: "#3b82f6", url: "/#session-intake" },
+  { id: "session-console", name: "كونسول الجلسات", description: "تشغيل وإدارة الجلسات العميقة", icon: <LayoutGrid className="w-4 h-4" />, color: "#3b82f6", url: "/#session-console" },
 
   // Psychological Health
-  { id: "atmosfera", name: "أتموسفيرا", description: "تنظيم الحالة والمشاعر",                icon: <Wind className="w-4 h-4" />,         status: "active",      color: "#8b5cf6", url: "/#atmosfera" },
-  { id: "samt",      name: "صمت",       description: "تنفس واعي — هدوء في دقائق",            icon: <Wind className="w-4 h-4" />,         status: "active",      color: "#14b8a6", url: "/#samt" },
-  { id: "khalwa",    name: "خلوة",      description: "وضع التركيز العميق — عزلة واعية",      icon: <Moon className="w-4 h-4" />,         status: "active",      color: "#8b5cf6", url: "/#khalwa" },
-  { id: "nadhir",    name: "نذير",      description: "الدرع الأخير — تنفس وتأريض وخطة أمان", icon: <AlertTriangle className="w-4 h-4" />,status: "active",      color: "#ef4444", url: "/#nadhir" },
-  { id: "qalb",      name: "قلب",       description: "صحة قلبك العاطفي — مؤشر موحّد",        icon: <Flame className="w-4 h-4" />,        status: "active",      color: "#ef4444", url: "/#qalb" },
-  { id: "niyya",     name: "نية",       description: "توجيه اليوم قبل الحركة",                icon: <Sparkles className="w-4 h-4" />,     status: "active",      color: "#10b981", url: "/#niyya" },
-  { id: "jathr",     name: "جذر",       description: "قيمك الجذرية تحت الاختيارات",           icon: <Gem className="w-4 h-4" />,          status: "active",      color: "#22c55e", url: "/#jathr" },
-  { id: "ruya",      name: "رؤيا",      description: "دفتر الأحلام والإشارات الداخلية",        icon: <Moon className="w-4 h-4" />,         status: "active",      color: "#8b5cf6", url: "/#ruya" },
-  { id: "kanz",      name: "كنز",       description: "بنك الحكمة الشخصية",                    icon: <Gem className="w-4 h-4" />,          status: "active",      color: "#f59e0b", url: "/#kanz" },
-  { id: "tazkiya",   name: "تزكية",     description: "تطهير يومي — اعترف · سامح · اترك",     icon: <Gem className="w-4 h-4" />,          status: "active",      color: "#a78bfa", url: "/#tazkiya" },
-  { id: "mizan",     name: "ميزان",     description: "قياس التقدم الحقيقي",                  icon: <Scale className="w-4 h-4" />,        status: "active",      color: "#10b981", url: "/#mizan" },
+  { id: "atmosfera", name: "أتموسفيرا", description: "تنظيم الحالة والمشاعر",                icon: <Wind className="w-4 h-4" />,         color: "#8b5cf6", url: "/#atmosfera" },
+  { id: "samt",      name: "صمت",       description: "تنفس واعي — هدوء في دقائق",            icon: <Wind className="w-4 h-4" />,         color: "#14b8a6", url: "/#samt" },
+  { id: "khalwa",    name: "خلوة",      description: "وضع التركيز العميق — عزلة واعية",      icon: <Moon className="w-4 h-4" />,         color: "#8b5cf6", url: "/#khalwa" },
+  { id: "nadhir",    name: "نذير",      description: "الدرع الأخير — تنفس وتأريض وخطة أمان", icon: <AlertTriangle className="w-4 h-4" />,color: "#ef4444", url: "/#nadhir" },
+  { id: "qalb",      name: "قلب",       description: "صحة قلبك العاطفي — مؤشر موحّد",        icon: <Flame className="w-4 h-4" />,        color: "#ef4444", url: "/#qalb" },
+  { id: "niyya",     name: "نية",       description: "توجيه اليوم قبل الحركة",                icon: <Sparkles className="w-4 h-4" />,     color: "#10b981", url: "/#niyya" },
+  { id: "jathr",     name: "جذر",       description: "قيمك الجذرية تحت الاختيارات",           icon: <Gem className="w-4 h-4" />,          color: "#22c55e", url: "/#jathr" },
+  { id: "ruya",      name: "رؤيا",      description: "دفتر الأحلام والإشارات الداخلية",        icon: <Moon className="w-4 h-4" />,         color: "#8b5cf6", url: "/#ruya" },
+  { id: "kanz",      name: "كنز",       description: "بنك الحكمة الشخصية",                    icon: <Gem className="w-4 h-4" />,          color: "#f59e0b", url: "/#kanz" },
+  { id: "tazkiya",   name: "تزكية",     description: "تطهير يومي — اعترف · سامح · اترك",     icon: <Gem className="w-4 h-4" />,          color: "#a78bfa", url: "/#tazkiya" },
+  { id: "mizan",     name: "ميزان",     description: "قياس التقدم الحقيقي",                  icon: <Scale className="w-4 h-4" />,        color: "#10b981", url: "/#mizan" },
 
   // Memory & Documentation
-  { id: "history-insights", name: "خزنة البصائر", description: "تاريخ بصائرك المحفوظة", icon: <BookOpen className="w-4 h-4" />, status: "active", color: "#a855f7", url: "/history" },
-  { id: "markaz",    name: "المركز",     description: "مركز الأمر والقيادة الشخصية",          icon: <LayoutGrid className="w-4 h-4" />,    status: "active",      color: "#6366f1", url: "/#markaz" },
-  { id: "sada",      name: "الصدى",      description: "رصد الإشارات والرؤى المتكررة",          icon: <Bell className="w-4 h-4" />,          status: "active",      color: "#06b6d4", url: "/#sada" },
-  { id: "hafiz",     name: "حافظ",      description: "خزنة الذكريات — لحظاتك المحفوظة",      icon: <Gem className="w-4 h-4" />,          status: "active",      color: "#a855f7", url: "/#hafiz" },
-  { id: "watheeqa",  name: "وثيقة",     description: "سجّل رحلتك يومياً",                   icon: <BookOpen className="w-4 h-4" />,     status: "active",      color: "#fb923c", url: "/#watheeqa" },
-  { id: "sijil",     name: "سِجل",      description: "كل حركة في المنصة — موثّقة",           icon: <ScrollText className="w-4 h-4" />,   status: "active",      color: "#10b981", url: "/#sijil" },
-  { id: "riwaya",    name: "رواية",     description: "رحلتك كقصة — من البداية لهنا",          icon: <BookOpen className="w-4 h-4" />,     status: "active",      color: "#fb923c", url: "/#riwaya" },
-  { id: "athar",     name: "أثر",       description: "سجل حياتك في الرحلة",                  icon: <BookOpen className="w-4 h-4" />,     status: "active",      color: "#10b981", url: "/#athar" },
-  { id: "naba",      name: "نبأ",       description: "رشفة يومية من الوعي",                   icon: <Droplets className="w-4 h-4" />,      status: "active",      color: "#06b6d4", url: "/#naba" },
-  { id: "wasiyya",   name: "وصية",      description: "رسائل مختومة لنفسك المستقبلية",         icon: <Mail className="w-4 h-4" />,         status: "active",      color: "#fbbf24", url: "/#wasiyya" },
-  { id: "risala",    name: "رسالة",     description: "رسائل ومعنى في محطات الطريق",           icon: <Mail className="w-4 h-4" />,         status: "active",      color: "#f59e0b", url: "/#risala" },
-  { id: "shahada",   name: "شهادة",     description: "إثبات التحول والمعنى",                  icon: <FileText className="w-4 h-4" />,     status: "active",      color: "#14b8a6", url: "/#shahada" },
-  { id: "yawmiyyat", name: "يوميّات",   description: "سجّل لحظات يومك — كل يوم قصة",         icon: <CalendarDays className="w-4 h-4" />, status: "active",      color: "#f59e0b", url: "/#yawmiyyat" },
-  { id: "qinaa",     name: "قناع",       description: "اكشف الفجوة بين ذاتك وأقنعتك",       icon: <Eye className="w-4 h-4" />,          status: "active",      color: "#8b5cf6", url: "/#qinaa" },
-  { id: "nabd",      name: "نبض",       description: "فحص مزاجك وطاقتك — 5 ثواني",         icon: <Flame className="w-4 h-4" />,        status: "active",      color: "#ef4444", url: "/#nabd" },
-  { id: "raseed",    name: "رصيد",      description: "رأس مالك النفسي — 6 أبعاد",          icon: <Gem className="w-4 h-4" />,          status: "active",      color: "#f59e0b", url: "/#raseed" },
-  { id: "dawra",     name: "دورة",      description: "اكتشف إيقاعاتك الشخصية المتكررة",      icon: <TrendingUp className="w-4 h-4" />,   status: "active",      color: "#6366f1", url: "/#dawra" },
-  { id: "zill",      name: "ظل",       description: "واجه ظلالك الخفية — shadow work",        icon: <Eye className="w-4 h-4" />,          status: "active",      color: "#4c1d95", url: "/#zill" },
-  { id: "sila",      name: "صلة",      description: "جودة علاقاتك — رفاق الطريق",          icon: <Users className="w-4 h-4" />,        status: "active",      color: "#22c55e", url: "/#sila" },
-  { id: "basma",     name: "بصمة",     description: "حمضك النفسي — هويتك الفريدة",           icon: <Fingerprint className="w-4 h-4" />,  status: "active",      color: "#6366f1", url: "/#basma" },
-  { id: "qutb",      name: "قطب",      description: "نجمك القطبي — الهدف الأعلى",          icon: <Navigation className="w-4 h-4" />,   status: "active",      color: "#f59e0b", url: "/#qutb" },
+  { id: "history-insights", name: "خزنة البصائر", description: "تاريخ بصائرك المحفوظة", icon: <BookOpen className="w-4 h-4" />, color: "#a855f7", url: "/history" },
+  { id: "markaz",    name: "المركز",     description: "مركز الأمر والقيادة الشخصية",          icon: <LayoutGrid className="w-4 h-4" />,    color: "#6366f1", url: "/#markaz" },
+  { id: "sada",      name: "الصدى",      description: "رصد الإشارات والرؤى المتكررة",          icon: <Bell className="w-4 h-4" />,          color: "#06b6d4", url: "/#sada" },
+  { id: "hafiz",     name: "حافظ",      description: "خزنة الذكريات — لحظاتك المحفوظة",      icon: <Gem className="w-4 h-4" />,          color: "#a855f7", url: "/#hafiz" },
+  { id: "watheeqa",  name: "وثيقة",     description: "سجّل رحلتك يومياً",                   icon: <BookOpen className="w-4 h-4" />,     color: "#fb923c", url: "/#watheeqa" },
+  { id: "sijil",     name: "سِجل",      description: "كل حركة في المنصة — موثّقة",           icon: <ScrollText className="w-4 h-4" />,   color: "#10b981", url: "/#sijil" },
+  { id: "riwaya",    name: "رواية",     description: "رحلتك كقصة — من البداية لهنا",          icon: <BookOpen className="w-4 h-4" />,     color: "#fb923c", url: "/#riwaya" },
+  { id: "athar",     name: "أثر",       description: "سجل حياتك في الرحلة",                  icon: <BookOpen className="w-4 h-4" />,     color: "#10b981", url: "/#athar" },
+  { id: "naba",      name: "نبأ",       description: "رشفة يومية من الوعي",                   icon: <Droplets className="w-4 h-4" />,      color: "#06b6d4", url: "/#naba" },
+  { id: "wasiyya",   name: "وصية",      description: "رسائل مختومة لنفسك المستقبلية",         icon: <Mail className="w-4 h-4" />,         color: "#fbbf24", url: "/#wasiyya" },
+  { id: "risala",    name: "رسالة",     description: "رسائل ومعنى في محطات الطريق",           icon: <Mail className="w-4 h-4" />,         color: "#f59e0b", url: "/#risala" },
+  { id: "shahada",   name: "شهادة",     description: "إثبات التحول والمعنى",                  icon: <FileText className="w-4 h-4" />,     color: "#14b8a6", url: "/#shahada" },
+  { id: "yawmiyyat", name: "يوميّات",   description: "سجّل لحظات يومك — كل يوم قصة",         icon: <CalendarDays className="w-4 h-4" />, color: "#f59e0b", url: "/#yawmiyyat" },
+  { id: "qinaa",     name: "قناع",       description: "اكشف الفجوة بين ذاتك وأقنعتك",       icon: <Eye className="w-4 h-4" />,          color: "#8b5cf6", url: "/#qinaa" },
+  { id: "nabd",      name: "نبض",       description: "فحص مزاجك وطاقتك — 5 ثواني",         icon: <Flame className="w-4 h-4" />,        color: "#ef4444", url: "/#nabd" },
+  { id: "raseed",    name: "رصيد",      description: "رأس مالك النفسي — 6 أبعاد",          icon: <Gem className="w-4 h-4" />,          color: "#f59e0b", url: "/#raseed" },
+  { id: "dawra",     name: "دورة",      description: "اكتشف إيقاعاتك الشخصية المتكررة",      icon: <TrendingUp className="w-4 h-4" />,   color: "#6366f1", url: "/#dawra" },
+  { id: "zill",      name: "ظل",       description: "واجه ظلالك الخفية — shadow work",        icon: <Eye className="w-4 h-4" />,          color: "#4c1d95", url: "/#zill" },
+  { id: "sila",      name: "صلة",      description: "جودة علاقاتك — رفاق الطريق",          icon: <Users className="w-4 h-4" />,        color: "#22c55e", url: "/#sila" },
+  { id: "basma",     name: "بصمة",     description: "حمضك النفسي — هويتك الفريدة",           icon: <Fingerprint className="w-4 h-4" />,  color: "#6366f1", url: "/#basma" },
+  { id: "qutb",      name: "قطب",      description: "نجمك القطبي — الهدف الأعلى",          icon: <Navigation className="w-4 h-4" />,   color: "#f59e0b", url: "/#qutb" },
 ];
+
+/** Mapping of product IDs to their parent satellite for gating */
+export const PRODUCT_TO_SATELLITE: Record<string, string> = {
+  // Dawayir group
+  dawayir: 'dawayir', sada: 'dawayir', kharita: 'dawayir', mirah: 'dawayir', baseera: 'dawayir', taqrir: 'dawayir',
+  // Masarat group
+  masarat: 'masarat', bawsala: 'masarat', protocol: 'masarat', mithaq: 'masarat', sullam: 'masarat', raya: 'masarat', bathra: 'masarat',
+  // Sessions group
+  sessions: 'sessions', "session-console": 'sessions', murshid: 'sessions', rafiq: 'sessions',
+  // Atmosfera group
+  atmosfera: 'atmosfera', samt: 'atmosfera', khalwa: 'atmosfera', nadhir: 'atmosfera', qalb: 'atmosfera', jathr: 'atmosfera', ruya: 'atmosfera', kanz: 'atmosfera', tazkiya: 'atmosfera', mizan: 'atmosfera',
+};
 
 // ─── Categories ─────────────────────────────────────────────────────────────
 
-const CATEGORIES: ProductCategory[] = [
-  {
-    id: "explore",
-    label: "الاستكشاف",
-    emoji: "🧭",
-    color: "#06b6d4",
-    bgColor: "#0e3a4a",
-    products: ALL_PRODUCTS.filter(p =>
-      ["alrehla", "ecosystem-hub", "dawayir", "bawsala", "maraya", "observatory", "kharita", "mirah", "baseera", "taqrir", "raseed", "dawra", "basma", "qutb"].includes(p.id)
-    ),
-  },
-  {
-    id: "work",
-    label: "العمل",
-    emoji: "⚡",
-    color: "#10b981",
-    bgColor: "#0a2e20",
-    products: ALL_PRODUCTS.filter(p =>
-      ["masarat", "wird", "warsha", "jisr", "rifaq", "murshid", "rafiq", "protocol", "mithaq", "sullam", "raya", "bathra", "sessions", "session-console"].includes(p.id)
-    ),
-  },
-  {
-    id: "health",
-    label: "الصحة النفسية",
-    emoji: "🧘",
-    color: "#8b5cf6",
-    bgColor: "#2a1b4a",
-    products: ALL_PRODUCTS.filter(p =>
-      ["atmosfera", "samt", "khalwa", "nadhir", "qalb", "niyya", "jathr", "ruya", "kanz", "tazkiya", "mizan", "qinaa", "nabd", "zill"].includes(p.id)
-    ),
-  },
-  {
-    id: "history",
-    label: "الذاكرة",
-    emoji: "🏛️",
-    color: "#a855f7",
-    bgColor: "#2d1b4a",
-    products: ALL_PRODUCTS.filter(p =>
-      ["history-insights", "markaz", "sada", "hafiz", "watheeqa", "sijil", "riwaya", "athar", "naba", "wasiyya", "risala", "shahada", "yawmiyyat", "sila"].includes(p.id)
-    ),
-  },
+// ─── Categories (Static Templates) ──────────────────────────────────────────
+
+const CATEGORY_TEMPLATES = [
+  { id: "explore", label: "الاستكشاف", emoji: "🧭", color: "#06b6d4", bgColor: "#0e3a4a", productIds: ["alrehla", "ecosystem-hub", "dawayir", "bawsala", "maraya", "observatory", "kharita", "mirah", "baseera", "taqrir", "raseed", "dawra", "basma", "qutb"] },
+  { id: "work",    label: "العمل",      emoji: "⚡", color: "#10b981", bgColor: "#0a2e20", productIds: ["masarat", "wird", "warsha", "jisr", "rifaq", "murshid", "rafiq", "protocol", "mithaq", "sullam", "raya", "bathra", "sessions", "session-console"] },
+  { id: "health",  label: "الصحة النفسية", emoji: "🧘", color: "#8b5cf6", bgColor: "#2a1b4a", productIds: ["atmosfera", "samt", "khalwa", "nadhir", "qalb", "niyya", "jathr", "ruya", "kanz", "tazkiya", "mizan", "qinaa", "nabd", "zill"] },
+  { id: "history", label: "الذاكرة",    emoji: "🏛️", color: "#a855f7", bgColor: "#2d1b4a", productIds: ["history-insights", "markaz", "sada", "hafiz", "watheeqa", "sijil", "riwaya", "athar", "naba", "wasiyya", "risala", "shahada", "yawmiyyat", "sila"] },
 ];
 
 // ─── Components ─────────────────────────────────────────────────────────────
@@ -221,26 +199,36 @@ const CategorySection: React.FC<{
                   onClick={() => {
                     if (product.url && onNavigate) onNavigate(product.url);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors text-right group"
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-right group relative overflow-hidden ${product.status === 'locked' ? 'cursor-not-allowed' : 'hover:bg-white/5'}`}
                 >
+                  {product.status === 'locked' && (
+                    <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] z-20 pointer-events-none" />
+                  )}
+                  
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-110"
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform ${product.status === 'locked' ? 'opacity-50' : 'group-hover:scale-110'}`}
                     style={{
                       backgroundColor: `${product.color}20`,
                       color: product.color,
                     }}
                   >
-                    {product.icon}
+                    {product.status === 'locked' ? <Fingerprint className="w-3.5 h-3.5" /> : product.icon}
                   </div>
-                  <div className="flex flex-col items-start overflow-hidden">
-                    <span className="text-sm font-bold text-white leading-tight truncate w-full">
+                  <div className="flex flex-col items-start overflow-hidden relative z-10">
+                    <span className={`text-sm font-bold leading-tight truncate w-full ${product.status === 'locked' ? 'text-slate-500' : 'text-white'}`}>
                       {product.name}
+                      {product.status === 'locked' && <span className="mr-2 text-[10px] opacity-40">🔒</span>}
                     </span>
-                    <span className="text-[10px] text-slate-400 leading-tight truncate w-full">
-                      {product.description}
+                    <span className={`text-[10px] leading-tight truncate w-full ${product.status === 'locked' ? 'text-slate-600 font-bold' : 'text-slate-400'}`}>
+                      {product.status === 'locked' ? (
+                        <span className="flex items-center gap-1">
+                          <Navigation className="w-2.5 h-2.5" />
+                          {`تطلب محطة: ${PRODUCT_TO_SATELLITE[product.id] || 'alrehla'}`}
+                        </span>
+                      ) : product.description}
                     </span>
                   </div>
-                  <ArrowLeft className="w-3.5 h-3.5 text-slate-600 mr-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {product.status !== 'locked' && <ArrowLeft className="w-3.5 h-3.5 text-slate-600 mr-auto opacity-0 group-hover:opacity-100 transition-opacity" />}
                 </button>
               ))}
             </div>
@@ -268,17 +256,41 @@ export const EcosystemNavigator: React.FC<{
     });
   }, [ecosystemData, nodesCount, baselineCompletedAt]);
 
+  const activeSatellites = React.useMemo(() => ecosystemData?.active_satellites ?? ["alrehla"], [ecosystemData]);
+
+  const categoriesWithStatus = React.useMemo(() => {
+    return CATEGORY_TEMPLATES.map(cat => {
+      const products = cat.productIds.map(id => {
+        const base = PRODUCT_REGISTRY.find(p => p.id === id);
+        if (!base) return null;
+        
+        const parentSatellite = PRODUCT_TO_SATELLITE[id] || 'alrehla';
+        const isLocked = !activeSatellites.includes(parentSatellite as any);
+        
+        return {
+          ...base,
+          status: isLocked ? 'locked' : 'active'
+        } as EcosystemProduct;
+      }).filter((p): p is EcosystemProduct => p !== null);
+
+      return {
+        ...cat,
+        products
+      } as ProductCategory;
+    });
+  }, [activeSatellites]);
+
   const filteredCategories = React.useMemo(() => {
-    if (!searchQuery.trim()) return CATEGORIES;
+    if (!searchQuery.trim()) return categoriesWithStatus;
     const query = searchQuery.toLowerCase();
-    return CATEGORIES.map(cat => ({
+    return categoriesWithStatus.map(cat => ({
       ...cat,
       products: cat.products.filter(p =>
         p.name.toLowerCase().includes(query) ||
         p.description.toLowerCase().includes(query)
       )
     })).filter(cat => cat.products.length > 0);
-  }, [searchQuery]);
+  }, [searchQuery, categoriesWithStatus]);
 
   return (
     <>

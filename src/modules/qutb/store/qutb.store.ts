@@ -81,8 +81,18 @@ export const useQutbState = create<QutbState>()(
       })),
 
       addPillar: (category, name, why = "") => {
-        set(s => ({ pillars: [...s.pillars, { id: genId(), category, name: name.trim(), why: why.trim(), alignment: 3, createdAt: Date.now() }].slice(0, 12) }));
+        set(s => ({ 
+          pillars: [...s.pillars, { 
+            id: genId(), 
+            category, 
+            name: name.trim(), 
+            why: why.trim(), 
+            alignment: 3 as AlignmentLevel, 
+            createdAt: Date.now() 
+          }].slice(0, 12) 
+        }));
       },
+
       removePillar: (id) => set(s => ({ pillars: s.pillars.filter(p => p.id !== id) })),
       updatePillarAlignment: (id, alignment) => set(s => ({
         pillars: s.pillars.map(p => p.id === id ? { ...p, alignment } : p),

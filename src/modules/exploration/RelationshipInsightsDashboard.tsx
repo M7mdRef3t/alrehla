@@ -5,18 +5,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, Users, Target, AlertTriangle, ArrowLeft, BarChart2 } from "lucide-react";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import type { MapNode, Ring } from "../map/mapTypes";
-
-const toSafeSvgNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value) ? value : fallback;
-
-const SafeMotionCircle = ({ cx = 0, cy = 0, r = 0, ...props }: ComponentProps<typeof motion.circle>) => (
-  <motion.circle
-    cx={typeof cx === "string" ? cx : toSafeSvgNumber(cx, 0)}
-    cy={typeof cy === "string" ? cy : toSafeSvgNumber(cy, 0)}
-    r={Math.max(toSafeSvgNumber(typeof r === "string" ? Number(r) : r, 0), 0)}
-    {...props}
-  />
-);
+import { SafeMotionCircle } from "@/components/ui/SafeSvg";
 
 /* ═══════════════════════════════════════════════
    Pure-SVG helper: Sparkline مصغرة

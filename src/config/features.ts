@@ -216,7 +216,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, FeatureFlagMode> = {
   landing_live_metrics: "on",
   landing_live_testimonials: "on",
   dawayir_live: "on",
-  dawayir_live_couple: "beta",
-  dawayir_live_coach: "beta",
-  dawayir_live_camera: "beta"
+  dawayir_live_couple: "on",
+  dawayir_live_coach: "on",
+  dawayir_live_camera: "on"
 };

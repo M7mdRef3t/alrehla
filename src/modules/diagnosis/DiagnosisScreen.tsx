@@ -15,6 +15,24 @@ import type { DiagnosisAnswers, UserStateObject, MainPain, RecommendedProduct } 
 import { ConversionOfferCard } from "../conversion/ConversionOfferCard";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { analyticsService } from "@/domains/analytics";
+import { Bot, Sparkles } from "lucide-react";
+
+const SentientGuide: FC<{ message: string }> = ({ message }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="flex items-center gap-3 bg-teal-500/10 border border-teal-500/20 rounded-2xl p-4 mb-6 shadow-[0_10px_30px_rgba(45,212,191,0.1)]"
+  >
+    <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center border border-teal-500/30 shrink-0">
+      <Bot className="w-5 h-5 text-teal-400" />
+    </div>
+    <p className="text-xs text-teal-100 font-bold leading-relaxed">
+      {message}
+    </p>
+  </motion.div>
+);
+
+import type { FC } from "react";
 
 // ════════════════════════════════════════════════
 // Constants
@@ -148,8 +166,8 @@ function ResultCard({
             </defs>
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-black text-white">{state.diagnosisScore}</span>
-            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">score</span>
+            <span className="text-3xl font-black text-white drop-shadow-[0_0_12px_rgba(45,212,191,0.5)]">{state.diagnosisScore}</span>
+            <span className="text-[9px] text-teal-400/60 font-black uppercase tracking-widest">pulse</span>
           </div>
         </div>
       </div>
@@ -303,7 +321,22 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
         </div>
 
         {/* Progress */}
-        {!result && <ProgressBar step={step} total={STEPS} />}
+        {!result && (
+          <>
+            <ProgressBar step={step} total={STEPS} />
+            <div className="mt-4">
+              <SentientGuide 
+                message={
+                  step === 1 ? "خليك صريح مع نفسك، دي البداية عشان تسترد سيادتك." :
+                  step === 2 ? "المشاعر دي رسائل، مهم نفهم هي عايزة تقول إيه." :
+                  step === 3 ? "الوقت بيفرق في تحليل الأنماط المتكررة." :
+                  step === 4 ? "الخوف طبيعي، بس الوضوح هو اللي بيكسره." :
+                  "أخر خطوة، عشان نبني خريطة طريق تناسبك بجد."
+                } 
+              />
+            </div>
+          </>
+        )}
 
         {/* Steps / Result */}
         <AnimatePresence mode="wait">

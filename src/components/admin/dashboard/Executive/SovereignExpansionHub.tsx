@@ -26,6 +26,9 @@ import { type SovereignExecutiveReport } from "@/services/admin/adminTypes";
 import { growthEngine, type GrowthMetrics, type DiffusionMetrics } from "@/services/growthEngine";
 import { getClients, type ClientLink } from "@/services/b2bService";
 import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
+import { ProactiveResonanceFeed } from "../Sovereign/ProactiveResonanceFeed";
+import { fetchOverviewStats } from "@/services/admin/adminAnalytics";
+import { type OverviewStats } from "@/services/admin/adminTypes";
 
 export const SovereignExpansionHub: React.FC = () => {
   const [activeMarket, setActiveMarket] = useState<string | null>("Riyadh");
@@ -33,22 +36,27 @@ export const SovereignExpansionHub: React.FC = () => {
   const [growth, setGrowth] = useState<GrowthMetrics | null>(null);
   const [diffusion, setDiffusion] = useState<DiffusionMetrics | null>(null);
   const [b2bClients, setB2bClients] = useState<ClientLink[]>([]);
+  const [stats, setStats] = useState<OverviewStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ignitionMarketId, setIgnitionMarketId] = useState<string | null>(null);
+  const [selectedPartner, setSelectedPartner] = useState<number | null>(null);
 
   useEffect(() => {
     const init = async () => {
       setLoading(true);
       try {
-        const [rep, grow, diff, clients] = await Promise.all([
+        const [rep, grow, diff, clients, overviewData] = await Promise.all([
           fetchSovereignExecutiveReport(),
           growthEngine.getGrowthMetrics(),
           growthEngine.getDiffusionMetrics(),
-          getClients()
+          getClients(),
+          fetchOverviewStats()
         ]);
         setReport(rep);
         setGrowth(grow);
         setDiffusion(diff);
         setB2bClients(clients);
+        setStats(overviewData ?? null);
       } catch (e) {
         console.error("Failed to load expansion hub data", e);
       } finally {
@@ -189,16 +197,31 @@ export const SovereignExpansionHub: React.FC = () => {
                   </div>
                   
                   {activeMarket === market.id && (
-                     <div className="mt-4 pt-4 border-t border-rose-500/20 text-center">
+                     <div className="mt-4 pt-4 border-t border-rose-500/20 text-center relative">
                         <button
+                           disabled={ignitionMarketId === market.id}
                            onClick={(e) => {
                                e.stopPropagation();
+                               setIgnitionMarketId(market.id);
                                SovereignOrchestrator.executeIntervention(`ignite_market_${market.id}`);
+                               setTimeout(() => setIgnitionMarketId(null), 3000);
                            }}
-                           className="w-full py-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-transform"
+                           className={`w-full py-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-transform ${ignitionMarketId === market.id ? 'opacity-50 cursor-wait' : ''}`}
                         >
-                           Ignite Market (Deploy AI Campaign)
+                           {ignitionMarketId === market.id ? "جاري الإطلاق (Igniting...)" : "Ignite Market (Deploy AI Campaign)"}
                         </button>
+
+                        {/* Ignition Pulse Animation */}
+                        <AnimatePresence>
+                          {ignitionMarketId === market.id && (
+                            <motion.div 
+                              initial={{ scale: 0, opacity: 1 }}
+                              animate={{ scale: 4, opacity: 0 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute inset-0 bg-orange-500/40 rounded-full pointer-events-none"
+                            />
+                          )}
+                        </AnimatePresence>
                      </div>
                   )}
                 </div>
@@ -225,28 +248,65 @@ export const SovereignExpansionHub: React.FC = () => {
 
             <div className="space-y-4">
               {b2bPartners.map((partner, i) => (
-                <div key={i} className="flex items-center justify-between p-5 bg-slate-900/40 rounded-2xl border border-white/5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full border border-sky-500/30 flex items-center justify-center bg-sky-500/5 text-sky-400 font-black text-xs">
-                      {partner.members}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-white">{partner.name}</h4>
-                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-tighter">{partner.type} • {partner.status}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <div className="hidden md:block text-left">
-                      <p className="text-[10px] text-slate-600 font-black text-right mb-1 uppercase tracking-widest">صحة الرنين</p>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                           <div className="h-full bg-sky-500" style={{ width: `${partner.health}%` }} />
-                        </div>
-                        <span className="text-[10px] font-black text-sky-400">{partner.health}%</span>
+                <div 
+                  key={i} 
+                  onClick={() => setSelectedPartner(selectedPartner === i ? null : i)}
+                  className={`flex flex-col p-5 bg-slate-900/40 rounded-2xl border transition-all cursor-pointer ${selectedPartner === i ? 'border-sky-500/50 bg-sky-500/5 shadow-lg shadow-sky-500/10' : 'border-white/5 hover:border-white/10'}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full border border-sky-500/30 flex items-center justify-center bg-sky-500/5 text-sky-400 font-black text-xs">
+                        {partner.members}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-white">{partner.name}</h4>
+                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-tighter">{partner.type} • {partner.status}</p>
                       </div>
                     </div>
-                    <ArrowUpRight className="w-5 h-5 text-slate-600" />
+                    <div className="flex items-center gap-6">
+                      <div className="hidden md:block text-left">
+                        <p className="text-[10px] text-slate-600 font-black text-right mb-1 uppercase tracking-widest">صحة الرنين</p>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                             <div className="h-full bg-sky-500" style={{ width: `${partner.health}%` }} />
+                          </div>
+                          <span className="text-[10px] font-black text-sky-400">{partner.health}%</span>
+                        </div>
+                      </div>
+                      <ArrowUpRight className={`w-5 h-5 text-slate-600 transition-transform ${selectedPartner === i ? 'rotate-45 text-sky-400' : ''}`} />
+                    </div>
                   </div>
+
+                  <AnimatePresence>
+                    {selectedPartner === i && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                         <div className="mt-6 pt-6 border-t border-sky-500/20 grid grid-cols-3 gap-4">
+                            <div className="text-center">
+                               <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Engagement</p>
+                               <p className="text-sm font-black text-white">84%</p>
+                            </div>
+                            <div className="text-center">
+                               <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Retention</p>
+                               <p className="text-sm font-black text-white">92%</p>
+                            </div>
+                            <div className="text-center">
+                               <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Collective TEI</p>
+                               <p className="text-sm font-black text-teal-400">12.4</p>
+                            </div>
+                            <div className="col-span-3 pt-4">
+                               <button className="w-full py-2 bg-sky-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-sky-500/20">
+                                  View Full Resonance Map (Organization DNA)
+                                </button>
+                            </div>
+                         </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ))}
             </div>
@@ -400,6 +460,11 @@ export const SovereignExpansionHub: React.FC = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* Sentient Expansion Feed */}
+      <div className="max-w-4xl mx-auto">
+        <ProactiveResonanceFeed mode="growth" stats={stats} growthMetrics={growth} />
       </div>
     </div>
   );

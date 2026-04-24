@@ -36,6 +36,7 @@ export class SwarmNotifier {
      * Swarm Sync Pulse: Triggers the weekly synchronization event notification.
      */
     static async triggerSyncPulse(message: string = "Weekly Sync Night Pulse initiated. Align your vectors."): Promise<boolean> {
+        if (!supabase) return false;
         try {
             const channel = supabase.channel('swarm_sync_channel');
             
@@ -60,6 +61,7 @@ export class SwarmNotifier {
      * Subscribe to Swarm Sync Pulse events.
      */
     static subscribeToSyncPulse(onPulse: (payload: any) => void) {
+        if (!supabase) return () => {};
         const channel = supabase.channel('swarm_sync_channel')
             .on(
                 'broadcast',
@@ -76,7 +78,8 @@ export class SwarmNotifier {
             });
             
         return () => {
-            supabase.removeChannel(channel);
+            if (supabase) supabase.removeChannel(channel);
         };
     }
+
 }

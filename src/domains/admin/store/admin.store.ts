@@ -418,6 +418,7 @@ interface AdminState {
   latestFriction: string | null;
   aiInterventions: import("@/services/sovereignOrchestrator").SovereignIntervention[];
   agentActivity: import("@/services/LocalSovereignAgent").AgentActivityStep[];
+  lastSentientPulse: number | null;
 
   setAdminAccess: (value: boolean) => void;
   toggleContentEditing: (value: boolean) => void;
@@ -451,6 +452,7 @@ interface AdminState {
   setLatestFriction: (friction: string | null) => void;
   addAgentActivity: (activity: import("@/services/LocalSovereignAgent").AgentActivityStep) => void;
   clearAgentActivity: () => void;
+  setLastSentientPulse: (timestamp: number) => void;
 }
 
 const DEFAULT_PROMPT =
@@ -520,6 +522,7 @@ export const useAdminState = create<AdminState>()(
       latestFriction: null,
       aiInterventions: [],
       agentActivity: [],
+      lastSentientPulse: null,
 
       setAdminAccess: (value) => set({ adminAccess: value }),
       toggleContentEditing: (value) => set({ isContentEditingEnabled: value }),
@@ -575,7 +578,8 @@ export const useAdminState = create<AdminState>()(
         set((state) => ({
           agentActivity: [activity, ...state.agentActivity].slice(0, 100)
         })),
-      clearAgentActivity: () => set({ agentActivity: [] })
+      clearAgentActivity: () => set({ agentActivity: [] }),
+      setLastSentientPulse: (lastSentientPulse) => set({ lastSentientPulse })
     }),
     {
       name: "dawayir-admin-state", storage: zustandIdbStorage,

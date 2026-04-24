@@ -226,7 +226,7 @@ const RadarChart: FC<{ scores: Record<InsightCategory, number> }> = ({ scores })
     <svg viewBox="0 0 200 200" className="w-full max-w-[220px] mx-auto">
       {/* Grid rings */}
       {[0.25, 0.5, 0.75, 1].map((s) => (
-        <polygon key={s} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5"
+        <polygon key={s} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={0.5}
           points={categories.map((_, i) => {
             const a = i * angleStep - Math.PI / 2;
             return `${cx + r * s * Math.cos(a)},${cy + r * s * Math.sin(a)}`;
@@ -237,18 +237,18 @@ const RadarChart: FC<{ scores: Record<InsightCategory, number> }> = ({ scores })
       {/* Axes */}
       {categories.map((_, i) => {
         const a = i * angleStep - Math.PI / 2;
-        return <line key={i} x1={cx} y1={cy} x2={cx + r * Math.cos(a)} y2={cy + r * Math.sin(a)} stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />;
+        return <line key={i} x1={cx} y1={cy} x2={cx + r * Math.cos(a)} y2={cy + r * Math.sin(a)} stroke="rgba(255,255,255,0.04)" strokeWidth={0.5} />;
       })}
 
       {/* Data shape */}
-      <motion.path d={pathData} fill="rgba(168,85,247,0.12)" stroke="#a855f7" strokeWidth="1.5"
+      <motion.path d={pathData} fill="rgba(168,85,247,0.12)" stroke="#a855f7" strokeWidth={1.5}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}
       />
 
       {/* Data dots + labels */}
       {points.map((p) => (
         <g key={p.cat}>
-          <circle cx={p.x} cy={p.y} r="3" fill="#a855f7" />
+          <circle cx={p.x} cy={p.y} r={3} fill="#a855f7" />
           <text x={p.lx} y={p.ly} textAnchor="middle" dominantBaseline="middle"
             fill="#64748b" fontSize="7" fontWeight="bold"
           >{CAT_META[p.cat].emoji}</text>

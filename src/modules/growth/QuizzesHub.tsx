@@ -8,7 +8,8 @@ import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw, Zap as Sparkles, Trend
    Quiz Metadata (tags / time / difficulty)
    ══════════════════════════════════════════ */
 
-type QuizTag = "علاقات" | "ذات" | "شريك" | "حدود" | "عاطفي";
+type QuizTag = "علاقات" | "ذات" | "شريك" | "حدود" | "عاطفي" | "شخصية";
+
 type QuizDifficulty = "سهل" | "متوسط" | "متعمق";
 
 interface QuizMeta {
@@ -26,7 +27,11 @@ const QUIZ_META: Record<string, QuizMeta> = {
   eq:             { durationMin: 7,  difficulty: "متوسط",  tags: ["ذات", "عاطفي"],  popularity: 88 },
   social:         { durationMin: 6,  difficulty: "سهل",    tags: ["علاقات", "ذات"],  popularity: 72 },
   communication:  { durationMin: 6,  difficulty: "متوسط",  tags: ["شريك", "علاقات"], popularity: 80 },
+  "personality-core": { durationMin: 6, difficulty: "متوسط", tags: ["شخصية", "ذات"], popularity: 95 },
+  "values-engine":    { durationMin: 5, difficulty: "سهل",   tags: ["شخصية", "ذات"], popularity: 82 },
+  "mind-processing":  { durationMin: 6, difficulty: "متوسط", tags: ["شخصية", "ذات"], popularity: 87 },
 };
+
 
 const DIFFICULTY_COLORS: Record<QuizDifficulty, string> = {
   سهل:   "#34D399",
@@ -34,7 +39,9 @@ const DIFFICULTY_COLORS: Record<QuizDifficulty, string> = {
   متعمق: "#F87171",
 };
 
-const ALL_TAGS: QuizTag[] = ["علاقات", "ذات", "شريك", "حدود", "عاطفي"];
+const ALL_TAGS: QuizTag[] = ["علاقات", "ذات", "شخصية", "شريك", "حدود", "عاطفي"];
+import { useBasmaState, CATEGORY_META } from "@/modules/basma/store/basma.store";
+
 import { QUIZZES, type QuizDef, type QuizResultBand } from "@/data/quizData";
 import { useQuizHistory, type QuizHistoryEntry } from "@/hooks/useQuizHistory";
 import { useQuizStats } from "@/hooks/useQuizStats";
@@ -1637,17 +1644,21 @@ export function QuizzesHub({ onBack }: QuizzesHubProps) {
   const [notCompletedOnly, setNotCompletedOnly] = useState(false);
   const [insightDismissed, setInsightDismissed] = useState<number>(-1);
   const [showShareCard, setShowShareCard] = useState(false);
-  const [savedProgress, setSavedProgress] = useState<SavedProgress | null>(() => loadSavedProgress());
+  const [savedProgress, setSavedProgress] = useState<SavedProgress | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [showNodePicker, setShowNodePicker] = useState(false);
   const updateNode = useMapState((s) => s.updateNode);
 
   /* show insight milestone if new threshold reached */
-  const showInsight = totalCompleted > 0 && totalCompleted !== insightDismissed && MILESTONE_MESSAGES[totalCompleted];
+  const showInsight = mounted && totalCompleted > 0 && totalCompleted !== insightDismissed && MILESTONE_MESSAGES[totalCompleted];
 
   /* Fire hub_opened event + quiz achievement check on mount */
   useEffect(() => {
+    setMounted(true);
+    setSavedProgress(loadSavedProgress());
+    
     trackingService.recordFlow("quiz_hub_opened");
     // Show first-open onboarding if never visited
     if (!localStorage.getItem(HUB_ONBOARDED_KEY)) {
@@ -1711,6 +1722,40 @@ export function QuizzesHub({ onBack }: QuizzesHubProps) {
         trackingService.recordFlow("quiz_completed", {
           meta: { quizId: quiz.id, score, band: band.title }
         });
+
+        // 🧬 Basma Integration: Link results to personality profile
+        const { addTrait, addValue } = useBasmaState.getState();
+        const scorePct = Math.round((score / (quiz.questions.length * 3)) * 10);
+        
+        const basicTrait = {
+          name: band.title,
+          strength: scorePct || 7,
+          source: `اختبار ${quiz.title.replace("اختبار ", "")}`,
+          evidence: band.description.slice(0, 100) + "..."
+        };
+
+        if (quiz.id === "attachment") {
+          addTrait({ ...basicTrait, category: "social" });
+        } else if (quiz.id === "boundaries") {
+          addTrait({ ...basicTrait, category: "resilience" });
+        } else if (quiz.id === "codependency") {
+          addTrait({ ...basicTrait, category: "emotional" });
+        } else if (quiz.id === "quality") {
+          addTrait({ ...basicTrait, category: "social" });
+        } else if (quiz.id === "eq") {
+          addTrait({ ...basicTrait, category: "emotional" });
+        } else if (quiz.id === "social") {
+          addTrait({ ...basicTrait, category: "social" });
+        } else if (quiz.id === "communication") {
+          addTrait({ ...basicTrait, category: "social" });
+        } else if (quiz.id === "personality-core") {
+          addTrait({ ...basicTrait, category: "resilience" });
+        } else if (quiz.id === "values-engine") {
+          addValue(band.title, 5, band.description);
+        } else if (quiz.id === "mind-processing") {
+          addTrait({ ...basicTrait, category: "cognitive" });
+        }
+
         // Show manual node picker to link result to a person
         setTimeout(() => setShowNodePicker(true), 400);
         return { view: "result", quizId: prev.quizId, score, band };
@@ -1718,6 +1763,7 @@ export function QuizzesHub({ onBack }: QuizzesHubProps) {
       return { ...prev, step: nextStep, answers: nextAnswers };
     });
   }, [addResult]);
+
 
   const goHub = useCallback(() => setState({ view: "hub" }), []);
 

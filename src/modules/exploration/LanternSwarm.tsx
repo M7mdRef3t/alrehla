@@ -8,16 +8,6 @@ export const LanternSwarm: React.FC = () => {
   const { availableLanterns, openLantern, hasInteractedWithCurrentSwarm } = useLanternsState();
 
   if (availableLanterns.length === 0) {
-    if (runtimeEnv.isDev) {
-      return (
-        <button 
-          onClick={() => useLanternsState.getState().spawnLanternsForTopic("relationship-withdrawal")}
-          className="fixed top-24 left-4 z-50 pointer-events-auto bg-amber-600/80 hover:bg-amber-500 text-white text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg"
-        >
-          ✨ Test Lanterns
-        </button>
-      );
-    }
     return null;
   }
 
