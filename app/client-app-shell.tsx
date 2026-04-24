@@ -130,7 +130,8 @@ function getFiberDisplayName(candidate: unknown): string | null {
 
   const render = record.render;
   if (typeof render === "function") {
-    return render.displayName || render.name || null;
+    const r = render as any;
+    return r.displayName || r.name || null;
   }
 
   return null;
