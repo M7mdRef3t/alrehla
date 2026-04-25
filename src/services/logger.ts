@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/react";
+import * as Sentry from "@sentry/nextjs";
 import { runtimeEnv } from "../config/runtimeEnv";
 
 const LOCAL_STORAGE_KEY = "dawayir-error-log";
