@@ -932,8 +932,10 @@ const HERO_STYLES = `
     .hero-root {
       overflow-x: hidden;
       width: 100%;
-      min-height: 100svh;
+      min-height: 100vh;
+      min-height: 100dvh;
       overflow-y: visible;
+      transform-style: flat;
     }
 
     .hero-content-wrapper {
@@ -942,7 +944,8 @@ const HERO_STYLES = `
       gap: 2rem;
       padding: 8rem 1rem 6rem;
       width: 100%;
-      min-height: 100svh;
+      min-height: 100vh;
+      min-height: 100dvh;
       max-width: 100vw;
       box-sizing: border-box;
       overflow-x: hidden;
@@ -1077,15 +1080,17 @@ const HERO_STYLES = `
       .hero-grid,
       .hero-nebula,
       .hero-starfield,
+      .neural-dust-field,
       .metric-card,
       .node-core {
+        animation: none !important;
         will-change: auto !important;
         -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
       }
       
       .hero-content-wrapper {
-        transform: translate3d(0, 0, 0);
+        transform: none;
         will-change: auto;
       }
     }
@@ -1191,7 +1196,7 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
     const step = 0.5;
     mouseX.set(rawX);
     mouseY.set(rawY);
-  }, [reduceMotion, mouseX, mouseY]);
+  }, [reduceMotion, isMobile, mouseX, mouseY]);
 
   useEffect(() => {
     setIsMobile(window.matchMedia("(pointer: coarse)").matches);
