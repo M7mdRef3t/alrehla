@@ -121,13 +121,13 @@ export const ScientificDiagnosticHUD: React.FC<ScientificDiagnosticHUDProps> = (
                initial={{ opacity: 0, y: 5 }}
                animate={{ opacity: 1, y: 0 }}
                exit={{ opacity: 0, y: -5 }}
-               className="text-sm text-white/70 font-bold tracking-wide h-5"
+               className="text-sm text-[var(--consciousness-text-muted)] font-bold tracking-wide h-5"
              >
                {statusText}
              </motion.p>
            </AnimatePresence>
 
-           <p className="text-[10px] text-slate-500 font-mono tracking-widest pt-2" dir="ltr">
+           <p className="text-[10px] text-[var(--consciousness-text-muted)] opacity-50 font-mono tracking-widest pt-2" dir="ltr">
               سلامة الإشارة: 0.984_NX
            </p>
         </div>

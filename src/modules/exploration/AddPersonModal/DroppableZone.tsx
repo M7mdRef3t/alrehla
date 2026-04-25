@@ -24,8 +24,8 @@ export function DroppableZone({ ring, label, bg, border, onPlace, highlight }: D
         isOver ? "ring-4 ring-teal-400 ring-offset-2 scale-[1.02]" : highlight ? "ring-2 ring-teal-500 ring-offset-2" : "hover:scale-[1.02]"
       }`}
     >
-      <span className="text-sm font-semibold text-slate-800">{label}</span>
-      <span className="text-xs text-slate-600 mt-0.5">اضغط أو اسحب الدائرة هنا</span>
+      <span className="text-sm font-semibold text-[var(--consciousness-text)]">{label}</span>
+      <span className="text-xs text-[var(--consciousness-text-muted)] mt-0.5">اضغط أو اسحب الدائرة هنا</span>
     </button>
   );
 }

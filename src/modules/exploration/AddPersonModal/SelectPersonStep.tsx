@@ -52,13 +52,13 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
 
   return (
     <form onSubmit={onContinue} className="text-right flex flex-col min-h-0 h-full">
-      <h2 id="add-person-title" className="text-xl font-extrabold text-slate-100 mb-6 shrink-0 tracking-tight">
+      <h2 id="add-person-title" className="text-xl font-extrabold text-[var(--consciousness-text)] mb-6 shrink-0 tracking-tight">
         <EditableText id="map_add_person_title" defaultText={mapCopy.addPersonTitle} page="map" />
       </h2>
 
       {/* Step 1: Select Title — اختر من الاقتراحات أو المسميات العامة لوصف هذا الكيان */}
       <div className="flex flex-col min-h-0 flex-auto overflow-hidden mb-6">
-        <label className="block text-sm font-semibold text-slate-300 mb-3 shrink-0">
+        <label className="block text-sm font-semibold text-[var(--consciousness-text-muted)] mb-3 shrink-0">
           <EditableText id="add_person_select_label" defaultText="نوع العلاقة" page="add_person" showEditIcon={false} />{" "}
           <span className="text-rose-500">*</span>
         </label>
@@ -79,7 +79,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
                 }}
                 className={`group relative w-full h-full min-h-0 flex flex-col items-center justify-center gap-3 rounded-2xl border transition-all duration-500 focus-visible:outline-none p-4 overflow-hidden ${isSelected
                     ? "bg-teal-500/10 border-teal-400/50 shadow-[0_0_40px_rgba(45,212,191,0.15)]"
-                    : "bg-slate-900/40 border-white/5 hover:border-slate-500 hover:bg-slate-800/60"
+                    : "bg-[var(--page-surface-2)] border-[var(--page-border-soft)] hover:border-[var(--consciousness-primary)] hover:bg-[var(--page-bg-alt)]"
                   }`}
                 title={`اختيار "${suggestion.label}"`}
                 whileHover={{ scale: isSelected ? 1 : 1.02, y: -2 }}
@@ -106,7 +106,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
                   <Icon className={`${isSelected ? "text-teal-300" : "text-slate-500 group-hover:text-slate-300"} w-7 h-7 transition-colors duration-500`} strokeWidth={1.5} />
                 </div>
                 <div
-                  className={`min-h-9 flex items-center justify-center text-center font-black tracking-tight ${isSelected ? "text-teal-300 drop-shadow-[0_0_10px_rgba(45,212,191,0.5)]" : "text-slate-400 group-hover:text-slate-200"
+                  className={`min-h-9 flex items-center justify-center text-center font-black tracking-tight ${isSelected ? "text-teal-500 dark:text-teal-300 drop-shadow-[0_0_10px_rgba(45,212,191,0.5)]" : "text-[var(--consciousness-text-muted)] group-hover:text-[var(--consciousness-text)]"
                     } text-xs sm:text-sm line-clamp-2 transition-colors duration-500`}
                 >
                   {suggestion.label}
@@ -125,10 +125,10 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <div className="w-12 h-12 shrink-0 rounded-full bg-slate-800 group-hover:bg-slate-700 flex items-center justify-center transition-colors">
-              <span className="text-slate-400 group-hover:text-slate-200 text-2xl font-light leading-none">+</span>
+            <div className="w-12 h-12 shrink-0 rounded-full bg-[var(--page-bg-alt)] group-hover:bg-[var(--consciousness-primary)]/20 flex items-center justify-center transition-colors">
+              <span className="text-[var(--consciousness-text-muted)] group-hover:text-[var(--consciousness-primary)] text-2xl font-light leading-none">+</span>
             </div>
-            <div className="min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-bold text-slate-500 group-hover:text-slate-300 tracking-wide transition-colors">
+            <div className="min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-bold text-[var(--consciousness-text-muted)] group-hover:text-[var(--consciousness-primary)] tracking-wide transition-colors">
               <EditableText id="add_person_select_other" defaultText="مسمى آخر" page="add_person" showEditIcon={false} />
             </div>
           </motion.button>

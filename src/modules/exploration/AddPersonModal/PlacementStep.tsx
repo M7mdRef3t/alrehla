@@ -39,17 +39,17 @@ export function PlacementStep({ personLabel, onPlace, suggestedRing, suggestionR
 
   return (
     <div className="text-center px-2">
-      <h2 className="text-2xl font-black text-slate-50 mb-2">{mapCopy.placementTitle}</h2>
-      <p className="text-base text-slate-400 leading-relaxed mb-6">{mapCopy.placementHint}</p>
+      <h2 className="text-2xl font-black text-[var(--consciousness-text)] mb-2">{mapCopy.placementTitle}</h2>
+      <p className="text-base text-[var(--consciousness-text-muted)] leading-relaxed mb-6">{mapCopy.placementHint}</p>
 
       {suggestedRing && suggestionReason && suggestedLabel && (
         <div className="mb-6 p-5 bg-teal-500/10 border border-teal-500/30 backdrop-blur-md rounded-2xl text-right relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-20 h-20 bg-teal-500/5 blur-2xl group-hover:bg-teal-500/10 transition-all" />
-          <p className="text-sm font-black text-teal-400 mb-2 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+          <p className="text-sm font-black text-teal-500 dark:text-teal-400 mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-teal-500 dark:bg-teal-400 animate-pulse" />
             {addPersonCopy.suggestionPrefix} «{suggestedLabel}»
           </p>
-          <p className="text-sm text-slate-300 font-medium leading-relaxed">{suggestionReason}</p>
+          <p className="text-sm text-[var(--consciousness-text-muted)] font-medium leading-relaxed">{suggestionReason}</p>
         </div>
       )}
 
@@ -74,7 +74,7 @@ export function PlacementStep({ personLabel, onPlace, suggestedRing, suggestionR
         <div className="flex justify-center pt-2 pb-4" aria-label="الدائرة في إيدك">
           <DraggablePersonChip personLabel={personLabel} />
         </div>
-        <p className="text-sm font-bold text-slate-500 animate-bounce mt-2">
+        <p className="text-sm font-bold text-[var(--consciousness-text-muted)] opacity-60 animate-bounce mt-2">
           اسحب الدائرة فوق المنطقة واتركها لتثبيت الإحداثيات
         </p>
       </DndContext>

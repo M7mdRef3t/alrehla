@@ -75,24 +75,24 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   if (!node || !node.analysis) {
     return (
       <div
-        className="fixed inset-0 flex items-center justify-center p-4 backdrop-blur-3xl bg-slate-950/60"
+        className="fixed inset-0 flex items-center justify-center p-4 backdrop-blur-3xl bg-[var(--consciousness-background)]/60"
         style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative w-full max-w-md rounded-3xl bg-slate-900/40 p-8 border border-white/10 shadow-2xl"
+          className="relative w-full max-w-md rounded-3xl bg-[var(--page-surface-2)] p-8 border border-[var(--page-border)] shadow-2xl"
           dir="rtl"
         >
-          <button onClick={onClose} className="absolute left-4 top-4 text-slate-400 hover:text-white">
+          <button onClick={onClose} className="absolute left-4 top-4 text-[var(--consciousness-text-muted)] hover:text-[var(--consciousness-text)]">
             <X className="w-5 h-5" />
           </button>
           <div className="py-6 text-center">
-            <h3 className="mb-2 text-xl font-black text-white">الشخص غير متاح الآن</h3>
-            <p className="mb-6 text-slate-400">لا توجد قراءة كاملة محفوظة لهذا الشخص حاليًا.</p>
+            <h3 className="mb-2 text-xl font-black text-[var(--consciousness-text)]">الشخص غير متاح الآن</h3>
+            <p className="mb-6 text-[var(--consciousness-text-muted)]">لا توجد قراءة كاملة محفوظة لهذا الشخص حاليًا.</p>
             <button
                onClick={onClose}
-               className="w-full rounded-2xl py-4 bg-teal-500 text-white font-black shadow-md shadow-teal-500/10 active:scale-95 transition-all"
+               className="w-full rounded-2xl py-4 bg-[var(--consciousness-primary)] text-[var(--ds-color-space-deep)] font-black shadow-md shadow-teal-500/10 active:scale-95 transition-all"
             >
               إغلاق
             </button>
@@ -130,14 +130,14 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 backdrop-blur-3xl bg-slate-950/60"
+      className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 backdrop-blur-3xl bg-[var(--consciousness-background)]/60"
       style={{ zIndex: Z_LAYERS.MODAL_CONTENT }}
       onClick={onClose}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 40 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-[2.5rem] border border-white/10 bg-slate-950/40 p-6 sm:p-10 shadow-[0_0_100px_rgba(0,0,0,0.5)] transition-all duration-500 no-scrollbar"
+        className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-[2.5rem] border border-[var(--page-border)] bg-[var(--page-surface-2)] p-6 sm:p-10 shadow-[0_0_100px_rgba(0,0,0,0.5)] transition-all duration-500 no-scrollbar"
         dir="rtl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -145,25 +145,25 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
         <div className="pointer-events-none absolute -top-24 -right-24 w-96 h-96 bg-teal-500/10 blur-[120px] rounded-full" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 w-96 h-96 bg-purple-500/10 blur-[120px] rounded-full" />
 
-        <div className="sticky top-0 z-20 mb-10 flex items-center justify-between -mx-2 -mt-2 bg-slate-950/20 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/5">
+        <div className="sticky top-0 z-20 mb-10 flex items-center justify-between -mx-2 -mt-2 bg-[var(--page-surface-2)]/80 backdrop-blur-md px-4 py-3 rounded-2xl border border-[var(--page-border-soft)]">
           <div className="flex items-center gap-6">
             <div className="relative group">
                <div className="absolute inset-0 bg-teal-400 opacity-20 blur-xl group-hover:opacity-40 transition-opacity" />
                <button
                  type="button"
                  onClick={() => onClose()}
-                 className="relative h-12 w-12 rounded-2xl bg-white/5 text-slate-300 transition-all hover:bg-white/10 hover:text-white border border-white/10 flex items-center justify-center shadow-xl active:scale-95"
+                 className="relative h-12 w-12 rounded-2xl bg-[var(--page-bg-alt)] text-[var(--consciousness-text-muted)] transition-all hover:bg-[var(--page-surface-2)] hover:text-[var(--consciousness-text)] border border-[var(--page-border)] flex items-center justify-center shadow-xl active:scale-95"
                >
                  <X className="w-6 h-6" />
                </button>
             </div>
             <div>
-              <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+              <h2 className="text-2xl font-black tracking-tight text-[var(--consciousness-text)] sm:text-3xl">
                 {node.label}
               </h2>
               <div className="mt-1 flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-teal-400 shadow-[0_0_8px_var(--ring-safe)]" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--consciousness-text-muted)]">
                   {category === "work" ? "مدار عمل" : category === "family" ? "مدار عائلي" : "مدار عام"}
                 </span>
               </div>
@@ -209,9 +209,9 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               }}
             />
             <div className="relative z-10 flex items-center justify-between mb-4">
-              <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">كشف حساب الطاقة</h4>
+              <h4 className="text-xs font-black uppercase tracking-widest text-[var(--consciousness-text-muted)]">كشف حساب الطاقة</h4>
               <div className="text-right">
-                <p className="text-[10px] font-bold uppercase tracking-tighter text-slate-500">الصافي</p>
+                <p className="text-[10px] font-bold uppercase tracking-tighter text-[var(--consciousness-text-muted)] opacity-60">الصافي</p>
                 <p className="text-3xl font-black tabular-nums" style={{ color: (node.energyBalance?.netEnergy ?? 0) > 0 ? "var(--ring-safe)" : (node.energyBalance?.netEnergy ?? 0) < 0 ? "var(--ring-danger)" : "var(--ring-detached)" }}>
                   {(node.energyBalance?.netEnergy ?? 0) > 0 ? "+" : ""}{node.energyBalance?.netEnergy ?? 0}
                 </p>
@@ -224,24 +224,24 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
           </div>
 
           {node.ring === "green" && (
-            <button onClick={() => useMapState.getState().togglePowerBank(node.id)} className={`w-full rounded-2xl p-5 border transition-all backdrop-blur-md ${node.isPowerBank ? "border-teal-500/50 bg-teal-600/20 text-white shadow-[0_0_30px_rgba(20,184,166,0.3)]" : "border-white/10 bg-white/5 text-slate-300"}`}>
+            <button onClick={() => useMapState.getState().togglePowerBank(node.id)} className={`w-full rounded-2xl p-5 border transition-all backdrop-blur-md ${node.isPowerBank ? "border-teal-500/50 bg-teal-600/20 text-[var(--consciousness-text)] shadow-[0_0_30px_rgba(20,184,166,0.3)]" : "border-[var(--page-border-soft)] bg-[var(--page-surface-2)] text-[var(--consciousness-text-muted)]"}`}>
               <div className="flex items-center justify-between">
                 <div className="text-right">
                   <span className="block text-base font-black">{node.isPowerBank ? "🔋 بطارية طوارئ نشطة" : "🔋 تعيين كبطارية طوارئ"}</span>
-                  <span className="text-xs text-slate-400">للوصول السريع وقت النزيف الطاقي.</span>
+                  <span className="text-xs text-[var(--consciousness-text-muted)]">للوصول السريع وقت النزيف الطاقي.</span>
                 </div>
-                <div className={`h-6 w-6 rounded-full border-2 transition-all ${node.isPowerBank ? "border-teal-400 bg-teal-500 shadow-[0_0_10px_var(--ring-safe)]" : "border-slate-600"}`} />
+                <div className={`h-6 w-6 rounded-full border-2 transition-all ${node.isPowerBank ? "border-teal-400 bg-teal-500 shadow-[0_0_10px_var(--ring-safe)]" : "border-[var(--page-border)]"}`} />
               </div>
             </button>
           )}
 
-          <button onClick={handleArchiveToggle} className={`w-full rounded-2xl border p-5 transition-all backdrop-blur-md ${node.isNodeArchived ? "border-slate-700/50 bg-slate-800/40 text-slate-300" : "border-orange-500/20 bg-orange-500/5 text-orange-400"}`}>
+          <button onClick={handleArchiveToggle} className={`w-full rounded-2xl border p-5 transition-all backdrop-blur-md ${node.isNodeArchived ? "border-[var(--page-border)] bg-[var(--page-surface-2)] text-[var(--consciousness-text-muted)]" : "border-orange-500/20 bg-orange-500/5 text-orange-400"}`}>
             <div className="flex items-center justify-between">
               <div className="text-right">
                 <span className="block text-base font-black">{node.isNodeArchived ? "↩️ استعادة من الأرشيف" : "📥 أرشفة العلاقة مؤقتًا"}</span>
-                <span className="text-xs text-slate-500">وقف الاستنزاف دون حذف البيانات.</span>
+                <span className="text-xs text-[var(--consciousness-text-muted)]">وقف الاستنزاف دون حذف البيانات.</span>
               </div>
-              <div className="h-10 w-10 flex items-center justify-center rounded-2xl border border-white/5 bg-white/5">{node.isNodeArchived ? "⚪" : "📦"}</div>
+              <div className="h-10 w-10 flex items-center justify-center rounded-2xl border border-[var(--page-border-soft)] bg-[var(--page-surface-2)]">{node.isNodeArchived ? "⚪" : "📦"}</div>
             </div>
           </button>
 
@@ -259,12 +259,12 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
             </button>
           )}
 
-          <div className="p-6 bg-slate-900/40 rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl">
+          <div className="p-6 bg-[var(--page-surface-2)] rounded-3xl border border-[var(--page-border-soft)] backdrop-blur-xl shadow-2xl">
             <div className="flex items-center gap-4 mb-6">
-               <div className="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center border border-purple-500/30 font-black text-purple-400"><ClipboardList strokeWidth={3} /></div>
+               <div className="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center border border-purple-500/30 font-black text-purple-500 dark:text-purple-400"><ClipboardList strokeWidth={3} /></div>
                <div className="text-right">
-                 <h4 className="text-base font-black text-white">أعراض مسجلة مع {node.label}</h4>
-                 <p className="text-xs text-slate-400">مراجعة وتحديث الإشارات</p>
+                 <h4 className="text-base font-black text-[var(--consciousness-text)]">أعراض مسجلة مع {node.label}</h4>
+                 <p className="text-xs text-[var(--consciousness-text-muted)]">مراجعة وتحديث الإشارات</p>
                </div>
             </div>
             <SymptomsChecklist
@@ -276,11 +276,11 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
           </div>
 
           {node && (node.analysis?.selectedSymptoms?.length ?? 0) > 0 && (
-            <button onClick={() => setShowTraining(true)} className="w-full rounded-2xl border border-teal-500/30 bg-white/[0.03] p-5 text-teal-400 shadow-xl transition-all hover:bg-teal-500/10 backdrop-blur-md">
+            <button onClick={() => setShowTraining(true)} className="w-full rounded-2xl border border-teal-500/30 bg-[var(--page-surface-2)] p-5 text-teal-500 dark:text-teal-400 shadow-xl transition-all hover:bg-teal-500/10 backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <div className="text-right">
-                  <span className="block text-base font-black text-white">🎯 تدريب مخصص: {node.label}</span>
-                  <span className="text-xs text-slate-400">تجاوز {node.analysis?.selectedSymptoms?.length ?? 0} أعراض.</span>
+                  <span className="block text-base font-black text-[var(--consciousness-text)]">🎯 تدريب مخصص: {node.label}</span>
+                  <span className="text-xs text-[var(--consciousness-text-muted)]">تجاوز {node.analysis?.selectedSymptoms?.length ?? 0} أعراض.</span>
                 </div>
                 <Target className="w-8 h-8 text-teal-500" />
               </div>
@@ -292,7 +292,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               <button onClick={() => setIsBoundaryModalOpen(true)} className="rounded-3xl border border-indigo-500/20 bg-indigo-500/5 p-5 transition-all hover:bg-indigo-500/10">
                 <div className="text-center font-black">
                   <span className="block text-2xl mb-1">🛡️</span>
-                  <span className="text-white text-xs block">درع الحماية</span>
+                  <span className="text-[var(--consciousness-text)] text-xs block">درع الحماية</span>
                 </div>
               </button>
               <button onClick={() => {
@@ -302,7 +302,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               }} className="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-5 transition-all hover:bg-emerald-500/10">
                 <div className="text-center font-black">
                   <span className="block text-2xl mb-1">👻</span>
-                  <span className="text-white text-xs block">انسحاب تكتيكي</span>
+                  <span className="text-[var(--consciousness-text)] text-xs block">انسحاب تكتيكي</span>
                 </div>
               </button>
             </div>

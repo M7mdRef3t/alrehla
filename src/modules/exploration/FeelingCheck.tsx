@@ -95,12 +95,12 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
       )}
 
       <div className="relative z-10 mb-2">
-        <h2 id="feeling-title" className="text-2xl font-black text-white mb-2 tracking-tight">
+        <h2 id="feeling-title" className="text-2xl font-black text-[var(--consciousness-text)] mb-2 tracking-tight">
           <EditableText id="feeling_title" defaultText={feelingCopy.title} page="feeling" />
         </h2>
-        <p className="text-sm font-bold text-slate-400 leading-relaxed px-4 opacity-80">
+        <p className="text-sm font-bold text-[var(--consciousness-text-muted)] leading-relaxed px-4 opacity-80">
           <EditableText id="feeling_body" defaultText={feelingCopy.body} page="feeling" multiline showEditIcon={false} />{" "}
-          <span className="text-teal-400 drop-shadow-[0_0_10px_rgba(45,212,191,0.3)]">({personLabel})</span>
+          <span className="text-teal-500 dark:text-teal-400 drop-shadow-[0_0_10px_rgba(45,212,191,0.3)]">({personLabel})</span>
         </p>
       </div>
 
@@ -114,7 +114,7 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
                 ? "bg-teal-500 shadow-[0_0_10px_#2dd4bf]"
                 : idx === internalStep
                   ? "bg-teal-500/40"
-                  : "bg-white/10"
+                  : "bg-[var(--page-surface-2)] border border-[var(--page-border-soft)]"
             }`}
           />
         ))}
@@ -129,7 +129,7 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
             exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
             className="flex flex-col h-full justify-center space-y-8"
           >
-            <h3 className="text-2xl sm:text-3xl font-black text-center tracking-tight leading-relaxed text-white">
+            <h3 className="text-2xl sm:text-3xl font-black text-center tracking-tight leading-relaxed text-[var(--consciousness-text)]">
               <EditableText id={`feeling_q${internalStep + 1}`} defaultText={feelingCopy[`q${internalStep + 1}` as keyof typeof feelingCopy] as string} page="feeling" showEditIcon={false} />
             </h3>
             
@@ -140,7 +140,7 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
                 const label = feelingCopy.options[opt];
                 const tier = impactTier[opt] ?? "amber";
                 
-                let activeStyle = "bg-white/[0.03] border-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10";
+                let activeStyle = "bg-[var(--page-surface-2)] border-[var(--page-border-soft)] text-[var(--consciousness-text-muted)] hover:border-[var(--page-border)] hover:bg-[var(--page-bg-alt)]";
                 if (isSelected) {
                    if (tier === "green") activeStyle = "bg-teal-500 text-white border-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.3)] scale-[1.02]";
                    else if (tier === "amber") activeStyle = "bg-amber-500 text-white border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)] scale-[1.02]";

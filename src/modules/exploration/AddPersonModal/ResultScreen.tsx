@@ -290,11 +290,11 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.5, duration: 1 }}
-                  className="text-4xl font-black text-white"
+                  className="text-4xl font-black text-[var(--consciousness-text)]"
                 >
-                  {result.commandScore}<span className="text-lg text-slate-500">%</span>
+                  {result.commandScore}<span className="text-lg text-[var(--consciousness-text-muted)] opacity-60">%</span>
                 </motion.span>
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">مؤشر القيادة</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--consciousness-text-muted)] opacity-60 mb-2">مؤشر القيادة</span>
              </div>
           </div>
 
@@ -307,10 +307,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
             <span className="inline-block px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-[10px] font-black text-teal-400 tracking-[0.3em] uppercase">
               الخلاصة الاستراتيجية
             </span>
-            <h2 className="text-4xl sm:text-5xl font-black text-white leading-tight tracking-tight px-4 blur-none">
+            <h2 className="text-4xl sm:text-5xl font-black text-[var(--consciousness-text)] leading-tight tracking-tight px-4 blur-none">
               {isEmotionalPrisoner ? result.state_label : result.title}
             </h2>
-            <p className="text-xl text-slate-400 font-medium max-w-lg mx-auto leading-relaxed">
+            <p className="text-xl text-[var(--consciousness-text-muted)] font-medium max-w-lg mx-auto leading-relaxed">
               {result.goal_label}
             </p>
           </motion.div>
@@ -329,7 +329,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               background: `radial-gradient(circle, ${activeRing === "red" ? "var(--consciousness-critical)" : "var(--consciousness-primary)"}, transparent)` 
             }}
           />
-          <p className="text-xl/relaxed text-slate-300 font-medium whitespace-pre-wrap relative z-10">
+          <p className="text-xl/relaxed text-[var(--consciousness-text)] font-medium whitespace-pre-wrap relative z-10">
             {shortPromiseBody}
           </p>
           
@@ -347,15 +347,15 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 1.5 }}
-          className="px-8 py-6 rounded-[2.5rem] bg-slate-900/40 border border-teal-500/20 relative overflow-hidden group mb-12 text-right shadow-[0_20px_40px_rgba(0,0,0,0.3)]"
+          className="px-8 py-6 rounded-[2.5rem] bg-[var(--page-surface-2)] border border-teal-500/20 relative overflow-hidden group mb-12 text-right shadow-[0_20px_40px_rgba(0,0,0,0.3)]"
         >
           <div className="absolute top-0 right-0 w-1 bg-teal-500 h-full shadow-[0_0_15px_rgba(45,212,191,0.5)]" />
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center justify-end gap-2 mb-3">
+          <span className="text-[10px] font-black text-[var(--consciousness-text-muted)] uppercase tracking-[0.2em] flex items-center justify-end gap-2 mb-3">
              <span className="opacity-50">{result.mission_label}</span>
              <span>•</span>
              <span className="text-teal-400">الهدف الحالي</span>
           </span>
-          <p className="text-2xl font-black text-white">{result.mission_goal}</p>
+          <p className="text-2xl font-black text-[var(--consciousness-text)]">{result.mission_goal}</p>
         </motion.div>
       </div>
 
@@ -372,7 +372,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2 }}
-            className="px-8 py-8 rounded-[3rem] bg-slate-950/40 border border-blue-500/10 text-right shadow-2xl backdrop-blur-md"
+            className="px-8 py-8 rounded-[3rem] bg-[var(--page-surface-2)] border border-blue-500/10 text-right shadow-2xl backdrop-blur-md"
           >
             <h3 className="text-sm font-black text-blue-400 mb-4 flex items-center gap-2">
               <span className="text-xl">🔍</span> {result.understanding_title}
@@ -384,29 +384,29 @@ export const ResultScreen: FC<ResultScreenProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2.2 }}
-            className="px-8 py-8 rounded-[3rem] bg-slate-950/40 border border-violet-500/10 text-right shadow-2xl backdrop-blur-md"
+            className="px-8 py-8 rounded-[3rem] bg-[var(--page-surface-2)] border border-violet-500/10 text-right shadow-2xl backdrop-blur-md"
           >
             <h3 className="text-sm font-black text-violet-400 mb-4 flex items-center gap-2">
               <span className="text-xl">✨</span> {result.explanation_title}
             </h3>
-            <p className="text-base text-slate-300 leading-relaxed font-medium">{result.explanation_body}</p>
+            <p className="text-base text-[var(--consciousness-text-muted)] font-medium leading-relaxed">{result.explanation_body}</p>
           </motion.div>
           
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2.4 }}
-            className="px-8 py-8 rounded-[3rem] bg-[#020617]/90 border border-indigo-500/20 text-right shadow-2xl relative overflow-hidden"
+            className="px-8 py-8 rounded-[3rem] bg-[var(--page-surface-2)] border border-indigo-500/20 text-right shadow-2xl relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-[50px]" />
             <h3 className="text-sm font-black text-indigo-400 mb-2 flex items-center gap-2">
               <span className="text-xl">🎯</span> {result.suggested_zone_title}
             </h3>
-            <p className="text-2xl font-black text-white mb-3">{result.suggested_zone_label}</p>
-            <p className="text-base text-slate-400 font-medium leading-relaxed mb-8">{result.suggested_zone_body}</p>
+            <p className="text-2xl font-black text-[var(--consciousness-text)] mb-3">{result.suggested_zone_label}</p>
+            <p className="text-base text-[var(--consciousness-text-muted)] font-medium leading-relaxed mb-8">{result.suggested_zone_body}</p>
             <button 
                onClick={() => setShowScripts(true)} 
-               className="w-full py-5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-2xl text-sm font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg"
+               className="w-full py-5 bg-[var(--page-surface-2)] hover:bg-[var(--page-bg-alt)] border border-[var(--page-border)] text-[var(--consciousness-text)] rounded-2xl text-sm font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg"
             >
               <BookOpen className="w-5 h-5 text-indigo-400" />
               الموسوعة: جمل جاهزة للرد على {displayName}
@@ -443,8 +443,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
             <Target className="w-7 h-7 text-[var(--consciousness-primary)]" />
           </div>
           <div className="flex-1">
-            <h4 className="text-lg font-black text-white mb-2">تدريب المواجهة المخصص</h4>
-            <p className="text-sm text-slate-300 leading-relaxed font-medium mb-4">
+            <h4 className="text-lg font-black text-[var(--consciousness-text)] mb-2">تدريب المواجهة المخصص</h4>
+            <p className="text-sm text-[var(--consciousness-text-muted)] leading-relaxed font-medium mb-4">
               هنحطك في مواقف حقيقية ونشوف هتتعامل إزاي. التدريب ده هو اللي هيبني "عضلة الحدود" عشان تقدر تحمي نفسك في الواقع.
             </p>
             <button onClick={() => setShowTraining(true)} className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[var(--consciousness-primary)] text-[var(--ds-color-space-deep)] font-black text-sm hover:opacity-90 transition-opacity flex items-center justify-center sm:justify-start gap-2">
@@ -457,10 +457,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
 
       {!summaryOnly && (
         <>
-          <div className="px-6 py-6 rounded-[2rem] bg-slate-950/40 border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-right">
+          <div className="px-6 py-6 rounded-[2rem] bg-[var(--page-surface-2)] border border-[var(--page-border-soft)] flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-right">
             <div>
-              <h4 className="text-base font-black text-white mb-1">لو جاهز، ابدأ خطوتك</h4>
-              <p className="text-xs text-slate-400 font-medium">تقدر تتابع التنفيذ والخطوات في شاشة الخريطة المستقلة.</p>
+              <h4 className="text-base font-black text-[var(--consciousness-text)] mb-1">لو جاهز، ابدأ خطوتك</h4>
+              <p className="text-xs text-[var(--consciousness-text-muted)] font-medium">تقدر تتابع التنفيذ والخطوات في شاشة الخريطة المستقلة.</p>
             </div>
             <div className="flex flex-col w-full sm:w-auto gap-3">
               <button
@@ -482,8 +482,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               )}
             </div>
           </div>
-          <div className="px-6 py-6 rounded-[2rem] bg-[#020617] border border-white/5 text-right">
-            <h3 className="text-sm font-black text-emerald-400 mb-5 flex items-center gap-2">
+          <div className="px-6 py-6 rounded-[2rem] bg-[var(--page-surface-2)] border border-[var(--page-border-soft)] text-right">
+            <h3 className="text-sm font-black text-emerald-500 dark:text-emerald-400 mb-5 flex items-center gap-2">
               <span className="opacity-80">🗺️</span> خطة الخطوة الأولى
             </h3>
             <ol className="space-y-3">
@@ -492,7 +492,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                   <span className="shrink-0 w-6 h-6 mt-0.5 rounded-full bg-[var(--ds-color-primary-soft)] text-[10px] font-black text-[var(--consciousness-primary)] flex items-center justify-center">
                     {index + 1}
                   </span>
-                  <span className="text-sm text-slate-300 font-medium leading-relaxed">{step}</span>
+                  <span className="text-sm text-[var(--consciousness-text)] font-medium leading-relaxed">{step}</span>
                 </li>
               ))}
             </ol>
@@ -520,8 +520,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               <ShieldAlert className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <h4 className="text-base font-black text-white mb-1">أعراض بتحصل معاك مع {displayName}؟</h4>
-              <p className="text-xs text-slate-400 font-medium">اختار كل اللي ينطبق عليك للوصول لأدق خطة تعافي</p>
+              <h4 className="text-base font-black text-[var(--consciousness-text)] mb-1">أعراض بتحصل معاك مع {displayName}؟</h4>
+              <p className="text-xs text-[var(--consciousness-text-muted)] font-medium">اختار كل اللي ينطبق عليك للوصول لأدق خطة تعافي</p>
             </div>
           </div>
           <SymptomsChecklist ring={activeRing} personLabel={displayName} selectedSymptoms={addedNode?.analysis?.selectedSymptoms ?? []} onSymptomsChange={(ids) => addedNode && updateNodeSymptoms(addedNode.id, ids)} />
@@ -539,10 +539,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                 const isReality = item.title.includes("ملف القضية") || item.title.includes("قائمة الواقع");
                 const isDopamine = item.title.includes("بديل الدوبامين");
                 return (
-                  <li key={`${item.title}-${index}`} className="rounded-xl bg-white/[0.02] px-4 py-4 border border-white/5 flex items-start justify-between gap-4">
+                  <li key={`${item.title}-${index}`} className="rounded-xl bg-[var(--page-surface-2)] px-4 py-4 border border-[var(--page-border-soft)] flex items-start justify-between gap-4">
                     <span>
-                      <span className="font-black text-white block mb-1 text-sm">{item.title}</span>{" "}
-                      <span className="text-xs text-slate-400 font-medium leading-relaxed">{item.detail}</span>
+                      <span className="font-black text-[var(--consciousness-text)] block mb-1 text-sm">{item.title}</span>{" "}
+                      <span className="text-xs text-[var(--consciousness-text-muted)] font-medium leading-relaxed">{item.detail}</span>
                     </span>
                     {(isReality || isDopamine) && (
                       <button
@@ -589,9 +589,9 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               {normalizedObstacles.map((item, index) => {
                 const solutionHasReality = item.solution.includes("ملف القضية الحقيقي") || item.solution.includes("قائمة الواقع");
                 return (
-                  <li key={`${item.title}-${index}`} className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 transition-colors hover:bg-white/[0.05]">
+                  <li key={`${item.title}-${index}`} className="p-5 rounded-2xl bg-[var(--page-surface-2)] border border-[var(--page-border-soft)] transition-colors hover:bg-[var(--page-bg-alt)]">
                     <span className="font-black text-[var(--consciousness-critical)] block mb-2">{item.title}:</span>{" "}
-                    <span className="text-base text-slate-300 font-medium leading-relaxed">
+                    <span className="text-base text-[var(--consciousness-text)] font-medium leading-relaxed">
                       {solutionHasReality ? (
                         <>
                           {item.solution.includes("ملف القضية الحقيقي") ? (
@@ -627,10 +627,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
 
         {/* Section 2: Roadmap & Action */}
         {!summaryOnly && (
-          <div id="roadmap" className="space-y-10 pt-8 border-t border-white/5">
+          <div id="roadmap" className="space-y-10 pt-8 border-t border-[var(--page-border-soft)]">
             <div className="text-right">
-              <h3 className="text-2xl font-black text-white mb-2">🎯 طريقك للتعافي</h3>
-              <p className="text-sm text-slate-500 font-medium tracking-wide">خطوات عملية لفك الارتباط واستعادة توازنك</p>
+              <h3 className="text-2xl font-black text-[var(--consciousness-text)] mb-2">🎯 طريقك للتعافي</h3>
+              <p className="text-sm text-[var(--consciousness-text-muted)] font-medium tracking-wide">خطوات عملية لفك الارتباط واستعادة توازنك</p>
             </div>
             {renderRoadmapTab()}
           </div>
@@ -638,17 +638,17 @@ export const ResultScreen: FC<ResultScreenProps> = ({
 
         {/* Section 3: Tools & Symptoms */}
         {!summaryOnly && (
-          <div id="tools" className="space-y-10 pt-8 border-t border-white/5">
+          <div id="tools" className="space-y-10 pt-8 border-t border-[var(--page-border-soft)]">
             <div className="text-right">
-              <h3 className="text-2xl font-black text-white mb-2">🎒 حقيبة الرحلة</h3>
-              <p className="text-sm text-slate-500 font-medium tracking-wide">أدوات مساعدة وأعراض محتملة للتعامل الواعي</p>
+              <h3 className="text-2xl font-black text-[var(--consciousness-text)] mb-2">🎒 حقيبة الرحلة</h3>
+              <p className="text-sm text-[var(--consciousness-text-muted)] font-medium tracking-wide">أدوات مساعدة وأعراض محتملة للتعامل الواعي</p>
             </div>
             {renderToolsTab()}
           </div>
         )}
 
         {/* Sticky Command Bar */}
-        <div className="sticky bottom-4 left-0 right-0 z-50 mt-12 p-3 rounded-[2rem] bg-[#020617]/80 backdrop-blur-3xl border border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] flex flex-col gap-3">
+        <div className="sticky bottom-4 left-0 right-0 z-50 mt-12 p-3 rounded-[2rem] bg-[var(--consciousness-background)]/80 backdrop-blur-3xl border border-[var(--page-border)] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] flex flex-col gap-3">
           
           {isEmergency && (
             <div className="rounded-[1.5rem] border border-rose-500/40 bg-rose-950/40 p-5 text-right relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">

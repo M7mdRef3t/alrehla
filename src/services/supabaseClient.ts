@@ -156,12 +156,42 @@ export async function safeGetSession(): Promise<Session | null> {
   if (!supabase) return null;
 
   try {
-    const { data } = await supabase.auth.getSession();
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      // If the refresh token is invalid or not found, we should clear the session
+      // to prevent the client from retrying with poisoned state.
+      if (
+        error.message?.toLowerCase().includes("refresh token") || 
+        error.status === 400 || 
+        error.status === 401
+      ) {
+        console.warn("[Supabase] Invalid session detected, clearing storage:", error.message);
+        await supabase.auth.signOut();
+        // Force clear the storage key just in case signOut fails or doesn't clear it
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("alrehla-ecosystem-auth");
+        }
+      }
+      return null;
+    }
+
     return data.session ?? null;
   } catch (error) {
     if (isSupabaseAbortError(error)) {
       return null;
     }
+    
+    // Check if it's a standard error with a message containing refresh token issues
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.toLowerCase().includes("refresh token")) {
+      console.warn("[Supabase] Catch block: Invalid refresh token, clearing session.");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("alrehla-ecosystem-auth");
+      }
+      return null;
+    }
+
     throw error;
   }
 }

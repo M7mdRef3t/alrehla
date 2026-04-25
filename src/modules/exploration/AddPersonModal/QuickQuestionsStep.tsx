@@ -132,7 +132,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
               exit="exit"
               className="flex flex-col items-center justify-center space-y-8"
             >
-              <h2 className="text-2xl sm:text-3xl font-black mb-2 text-center text-slate-100">
+              <h2 className="text-2xl sm:text-3xl font-black mb-2 text-center text-[var(--consciousness-text)]">
                 <EditableText
                   id="add_person_emergency_q_wizard"
                   defaultText="هل توجد حالة طوارئ؟"
@@ -140,7 +140,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
                   showEditIcon={false}
                 />
               </h2>
-              <p className="text-slate-400 text-sm text-center max-w-sm mb-6">
+              <p className="text-[var(--consciousness-text-muted)] text-sm text-center max-w-sm mb-6">
                 لو فيه أي محاولة إيذاء، عنف، أو ابتزاز صريح اختار طوارئ عشان الأبلكيشن يتصرف فوراً.
               </p>
               <div className="w-full flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
@@ -149,8 +149,8 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
                   onClick={() => handleEmergencySelect(false)}
                   className={`flex-1 flex flex-col items-center justify-center text-center p-6 sm:p-8 transition-all duration-500 rounded-3xl border ${
                     isEmergency === false
-                      ? "bg-white/10 border-white/20 text-white shadow-[0_0_30px_rgba(255,255,255,0.15)] scale-[1.02]"
-                      : "bg-white/[0.03] border-white/5 text-slate-400 hover:border-white/10 hover:bg-white/[0.05]"
+                      ? "bg-[var(--consciousness-primary)]/10 border-[var(--consciousness-primary)]/40 text-[var(--consciousness-text)] shadow-[0_0_30px_rgba(45,212,191,0.15)] scale-[1.02]"
+                      : "bg-[var(--page-surface-2)] border-[var(--page-border-soft)] text-[var(--consciousness-text-muted)] hover:border-[var(--page-border)] hover:bg-[var(--page-bg-alt)]"
                   }`}
                 >
                   <span className="text-2xl mb-3">🛡️</span>
@@ -185,7 +185,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
               exit="exit"
               className="flex flex-col h-full justify-center space-y-8"
             >
-              <h2 className={`text-2xl sm:text-3xl font-black text-center tracking-tight leading-relaxed ${isEmergency === true ? "text-rose-200" : "text-white"}`}>
+              <h2 className={`text-2xl sm:text-3xl font-black text-center tracking-tight leading-relaxed ${isEmergency === true ? "text-rose-200" : "text-[var(--consciousness-text)]"}`}>
                 <EditableText id="add_person_quick_q1" defaultText={question1} page="add_person" showEditIcon={false} />
               </h2>
               <div className="flex flex-col gap-3 max-w-md mx-auto w-full">
@@ -203,7 +203,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
                             : "bg-teal-500 text-white border-teal-400 shadow-[0_0_30px_rgba(45,212,191,0.2)] scale-[1.02]"
                           : isEmergency === true
                           ? "bg-rose-950/20 border-rose-900/40 text-rose-500/60 hover:bg-rose-900/30 hover:text-rose-300"
-                          : "bg-white/[0.03] border-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10"
+                          : "bg-[var(--page-surface-2)] border-[var(--page-border-soft)] text-[var(--consciousness-text-muted)] hover:border-[var(--page-border)] hover:bg-[var(--page-bg-alt)]"
                       }`}
                     >
                       <div className={`w-4 h-4 rounded-full mr-4 rtl:ml-4 rtl:mr-0 border-2 flex items-center justify-center transition-colors ${isSelected ? "border-white" : "border-slate-500"}`}>
@@ -226,7 +226,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
               exit="exit"
               className="flex flex-col h-full justify-center space-y-8"
             >
-              <h2 className={`text-2xl sm:text-3xl font-black text-center tracking-tight leading-relaxed ${isEmergency === true ? "text-rose-200" : "text-white"}`}>
+              <h2 className={`text-2xl sm:text-3xl font-black text-center tracking-tight leading-relaxed ${isEmergency === true ? "text-rose-200" : "text-[var(--consciousness-text)]"}`}>
                 <EditableText id="add_person_quick_q2" defaultText={question2} page="add_person" showEditIcon={false} />
               </h2>
               <div className="flex flex-col gap-3 max-w-md mx-auto w-full">
@@ -244,7 +244,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
                             : "bg-teal-500 text-white border-teal-400 shadow-[0_0_30px_rgba(45,212,191,0.2)] scale-[1.02]"
                           : isEmergency === true
                           ? "bg-rose-950/20 border-rose-900/40 text-rose-500/60 hover:bg-rose-900/30 hover:text-rose-300"
-                          : "bg-white/[0.03] border-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10"
+                          : "bg-[var(--page-surface-2)] border-[var(--page-border-soft)] text-[var(--consciousness-text-muted)] hover:border-[var(--page-border)] hover:bg-[var(--page-bg-alt)]"
                       }`}
                     >
                       <div className={`w-4 h-4 rounded-full mr-4 rtl:ml-4 rtl:mr-0 border-2 flex items-center justify-center transition-colors ${isSelected ? "border-white" : "border-slate-500"}`}>

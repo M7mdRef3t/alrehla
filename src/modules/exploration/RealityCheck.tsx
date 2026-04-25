@@ -95,12 +95,12 @@ export const RealityCheck: FC<RealityCheckProps> = ({
              <ScanEye className="w-8 h-8 text-teal-400 transition-transform group-hover:scale-110 duration-700" />
              <div className="absolute inset-0 rounded-2xl bg-teal-500/5 blur-xl group-hover:bg-teal-500/10 transition-all" />
           </div>
-          <h2 id="reality-title" className="text-3xl font-black text-white tracking-tight">
+          <h2 id="reality-title" className="text-3xl font-black text-[var(--consciousness-text)] tracking-tight">
             <EditableText id="reality_title" defaultText={realityCopy.title} page="reality" />
           </h2>
-          <p className="text-sm font-bold text-slate-400 leading-relaxed px-4 max-w-md mx-auto opacity-80">
+          <p className="text-sm font-bold text-[var(--consciousness-text-muted)] leading-relaxed px-4 max-w-md mx-auto opacity-80">
             <EditableText id="reality_body_prefix" defaultText={realityCopy.bodyPrefix} page="reality" showEditIcon={false} />{" "}
-            <span className="text-teal-400 border-b border-teal-500/30">({personLabel})</span>
+            <span className="text-teal-500 dark:text-teal-400 border-b border-teal-500/30">({personLabel})</span>
           </p>
         </div>
       </div>
@@ -115,7 +115,7 @@ export const RealityCheck: FC<RealityCheckProps> = ({
                 ? "bg-teal-500 shadow-[0_0_10px_#2dd4bf]"
                 : idx === internalStep
                   ? "bg-teal-500/40"
-                  : "bg-white/10"
+                  : "bg-[var(--page-surface-2)] border border-[var(--page-border-soft)]"
             }`}
           />
         ))}
@@ -130,7 +130,7 @@ export const RealityCheck: FC<RealityCheckProps> = ({
             exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
             className="flex flex-col h-full justify-center space-y-8"
           >
-            <h3 className="text-2xl sm:text-3xl font-black text-center tracking-tight leading-relaxed text-white">
+            <h3 className="text-2xl sm:text-3xl font-black text-center tracking-tight leading-relaxed text-[var(--consciousness-text)]">
               <EditableText id={`reality_q${internalStep + 1}`} defaultText={realityCopy[`q${internalStep + 1}` as keyof typeof realityCopy] as string} page="reality" showEditIcon={false} />
             </h3>
             
@@ -141,7 +141,7 @@ export const RealityCheck: FC<RealityCheckProps> = ({
                 const label = realityCopy.options[opt];
                 const tier = realityTier[opt] ?? "amber";
                 
-                let activeStyle = "bg-white/[0.03] border-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10";
+                let activeStyle = "bg-[var(--page-surface-2)] border-[var(--page-border-soft)] text-[var(--consciousness-text-muted)] hover:border-[var(--page-border)] hover:bg-[var(--page-bg-alt)]";
                 if (isSelected) {
                    if (tier === "green") activeStyle = "bg-teal-500 text-white border-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.3)] scale-[1.02]";
                    else if (tier === "amber") activeStyle = "bg-amber-500 text-white border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)] scale-[1.02]";

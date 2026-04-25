@@ -254,7 +254,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
       aria-modal="true"
     >
       <motion.div
-        className={`relative w-full min-h-0 flex flex-col text-slate-100 ${step === "result" ? "" : "max-w-2xl overflow-hidden rounded-3xl px-6 py-8"}`}
+        className={`relative w-full min-h-0 flex flex-col text-[var(--consciousness-text)] ${step === "result" ? "" : "max-w-2xl overflow-hidden rounded-3xl px-6 py-8"}`}
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 10 }}
@@ -308,14 +308,14 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
                       transition={{ duration: 0.3 }}
                       className="mt-4"
                     >
-                      <label htmlFor="link-parent" className="block text-sm font-semibold text-slate-300 mb-2">
+                      <label htmlFor="link-parent" className="block text-sm font-semibold text-[var(--consciousness-text-muted)] mb-2">
                         ربط بـ (اختياري)
                       </label>
                       <select
                         id="link-parent"
                         value={linkToParentId ?? ""}
                         onChange={(e) => setLinkToParentId(e.target.value || null)}
-                        className="w-full border border-white/10 rounded-xl px-3 py-2.5 text-sm bg-slate-900/50 text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/50"
+                        className="w-full border border-[var(--page-border)] rounded-xl px-3 py-2.5 text-sm bg-[var(--page-surface-2)] text-[var(--consciousness-text)] focus:outline-none focus:ring-2 focus:ring-teal-500/50"
                       >
                         <option value="">— بدون ربط —</option>
                         {familyNodes.map((n) => (
@@ -327,14 +327,14 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
                       <p className="text-xs text-slate-500 mt-1">لو اخترت شخص، هيتربط تحته في شجرة العيلة</p>
                       {linkToParentId && (
                         <>
-                          <label htmlFor="link-relation-type" className="block text-sm font-semibold text-slate-300 mt-3 mb-2">
+                          <label htmlFor="link-relation-type" className="block text-sm font-semibold text-[var(--consciousness-text-muted)] mt-3 mb-2">
                             نوع الربط
                           </label>
                           <select
                             id="link-relation-type"
                             value={linkRelationLabel}
                             onChange={(e) => setLinkRelationLabel(e.target.value)}
-                            className="w-full border border-white/10 rounded-xl px-3 py-2.5 text-sm bg-slate-900/50 text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/50"
+                            className="w-full border border-[var(--page-border)] rounded-xl px-3 py-2.5 text-sm bg-[var(--page-surface-2)] text-[var(--consciousness-text)] focus:outline-none focus:ring-2 focus:ring-teal-500/50"
                           >
                             <option value="" className="bg-slate-900">— اختر نوع الربط —</option>
                             <option value="ابن" className="bg-slate-900">ابن</option>

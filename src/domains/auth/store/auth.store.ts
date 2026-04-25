@@ -383,9 +383,13 @@ async function initSupabaseAuth(): Promise<void> {
           void trackIdentityLinked(currentSession.user.id);
         }
       });
-    } catch {
+    } catch (err) {
+      logger.error("Failed to initialize Supabase Auth:", { error: err });
       useAuthState.getState().setSession(null);
       useAuthState.getState().setRole(null);
+      if (useAuthState.getState().status === "loading") {
+        useAuthState.setState({ status: "ready" });
+      }
     }
   })().finally(() => {
     supabaseAuthInitPromise = null;
