@@ -349,6 +349,8 @@ export type FlowStep =
   | "payment_failed"
   | "payment_intent_submitted"
   | "payment_proof_submitted"
+  | "paid_feature_clicked"
+  | "premium_bridge_viewed"
   | "activation_detected_realtime"
   | "lead_form_submitted"
   | "lead_followup_attempted"

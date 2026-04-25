@@ -1,4 +1,5 @@
 import Clarity from "@microsoft/clarity";
+import * as Sentry from "@sentry/nextjs";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { trackError } from "./analytics";
 
@@ -36,24 +37,17 @@ export function initMonitoring(): void {
 }
 
 export function identifyUser(userId: string, email?: string): void {
-  if (typeof window !== "undefined") {
-    void import("@sentry/nextjs").then((Sentry) => {
-      Sentry.setUser({ id: userId, email });
-
-      const sentryId = Sentry.lastEventId();
-      if (sentryId) {
-        Clarity.setTag("sentry_event_id", sentryId);
-      }
-    }).catch(() => {
-      // Sentry is non-critical for the user journey.
-    });
+  // Set Sentry user context — Sentry is a no-op if not initialized (dev without DSN)
+  try {
+    Sentry.setUser({ id: userId, email });
+  } catch {
+    // Sentry is non-critical for the user journey.
   }
-  
+
   // Clarity identity syncing
   try {
     Clarity.identify(userId);
-  } catch (e) {
+  } catch {
     // Clarity non-critical
   }
 }
-

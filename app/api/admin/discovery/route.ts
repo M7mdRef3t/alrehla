@@ -43,7 +43,30 @@ export async function POST(req: NextRequest) {
     if (!supabaseAdmin)
       return NextResponse.json({ error: "DB not initialized" }, { status: 500 });
 
-    const item = await req.json();
+    const rawItem = await req.json();
+    
+    // Whitelist allowed fields for creation
+    const item = {
+      title: rawItem.title,
+      description: rawItem.description,
+      source: rawItem.source,
+      stage: rawItem.stage || "Inbox",
+      priority: rawItem.priority || "medium",
+      facts: Array.isArray(rawItem.facts) ? rawItem.facts : [],
+      interpretations: Array.isArray(rawItem.interpretations) ? rawItem.interpretations : [],
+      jira_issue_url: rawItem.jira_issue_url,
+      signal_source: rawItem.signal_source,
+      funnel_stage: rawItem.funnel_stage,
+      business_goal: rawItem.business_goal,
+      confidence: typeof rawItem.confidence === 'number' ? rawItem.confidence : null,
+      evidence: Array.isArray(rawItem.evidence) ? rawItem.evidence : [],
+      hypothesis: rawItem.hypothesis,
+      risk: rawItem.risk,
+      next_step: rawItem.next_step,
+      execution_link: rawItem.execution_link,
+      tags: Array.isArray(rawItem.tags) ? rawItem.tags : [],
+    };
+
     const { data, error } = await supabaseAdmin
       .from("discovery_items")
       .insert([item])
@@ -75,7 +98,25 @@ export async function PATCH(req: NextRequest) {
     if (!supabaseAdmin)
       return NextResponse.json({ error: "DB not initialized" }, { status: 500 });
 
-    const { id, updates } = await req.json();
+    const { id, updates: rawUpdates } = await req.json();
+
+    if (!id || typeof id !== 'string') {
+        return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
+    }
+
+    // Whitelist allowed fields for update
+    const updates: Record<string, any> = {};
+    const allowedFields = [
+      'title', 'description', 'source', 'stage', 'priority', 'facts', 'interpretations', 
+      'jira_issue_url', 'signal_source', 'funnel_stage', 'business_goal', 'confidence', 
+      'evidence', 'hypothesis', 'risk', 'next_step', 'execution_link', 'tags'
+    ];
+    
+    for (const field of allowedFields) {
+      if (rawUpdates[field] !== undefined) {
+        updates[field] = rawUpdates[field];
+      }
+    }
 
     const { data, error } = await supabaseAdmin
       .from("discovery_items")

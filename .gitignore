@@ -109,3 +109,15 @@ test_*.mjs
 codex-intake.png
 error.html
 build_output*.log
+
+# Setup scripts & Temporary tools
+create_meta_template.js
+register_webhook.js
+apply_sql.js
+exec-sql.mjs
+check_ai.mjs
+generate_admin_export_map.js
+refactor_admin_imports.js
+replace-sparkles.mjs
+fix_activation.ps1
+*.ps1

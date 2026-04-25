@@ -103,8 +103,12 @@ export async function middleware(request: NextRequest) {
             // Require at minimum a valid Supabase session cookie or bearer token
             const authHeader = request.headers.get('authorization') || '';
             const cookieHeader = request.headers.get('cookie') || '';
-            const hasSupabaseSession = /sb-[a-z0-9\-]+-auth-token/i.test(cookieHeader) || 
-                                     /alrehla-ecosystem-auth/i.test(cookieHeader);
+            // Match any Supabase auth cookie (sb-<any-ref>-auth-token) OR legacy/ecosystem names
+            const hasSupabaseSession = /sb-[a-z0-9\-]+-auth-token/i.test(cookieHeader) ||
+                                     /supabase-auth/i.test(cookieHeader) ||
+                                     /alrehla-ecosystem-auth/i.test(cookieHeader) ||
+                                     /sb-access-token/i.test(cookieHeader) ||
+                                     /sb-refresh-token/i.test(cookieHeader);
             const hasBearer = authHeader.startsWith('Bearer ') && authHeader.length > 7;
 
             if (!hasSupabaseSession && !hasBearer) {

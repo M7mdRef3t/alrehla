@@ -36,10 +36,8 @@ type RuntimeKey =
   | "VITE_OLLAMA_BASE_URL"
   | "VITE_LOCAL_AI_MODEL"
   | "VITE_BOTPRESS_WEBHOOK_URL"
-  | "VITE_BOTPRESS_TOKEN"
   | "VITE_BOTPRESS_BOT_ID"
   | "VITE_BOTPRESS_WORKSPACE_ID"
-  | "VITE_MARKETING_DEBUG_KEY"
   | "VITE_USERBACK_ACCESS_TOKEN";
 
 type NextPublicKey =
@@ -80,10 +78,8 @@ type NextPublicKey =
   | "NEXT_PUBLIC_OLLAMA_BASE_URL"
   | "NEXT_PUBLIC_LOCAL_AI_MODEL"
   | "NEXT_PUBLIC_BOTPRESS_WEBHOOK_URL"
-  | "NEXT_PUBLIC_BOTPRESS_TOKEN"
   | "NEXT_PUBLIC_BOTPRESS_BOT_ID"
   | "NEXT_PUBLIC_BOTPRESS_WORKSPACE_ID"
-  | "NEXT_PUBLIC_MARKETING_DEBUG_KEY"
   | "NEXT_PUBLIC_USERBACK_ACCESS_TOKEN";
 
 /** Safe accessor for process.env that never throws in browser/Vite */
@@ -141,10 +137,8 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
     NEXT_PUBLIC_OLLAMA_BASE_URL: process.env.NEXT_PUBLIC_OLLAMA_BASE_URL,
     NEXT_PUBLIC_LOCAL_AI_MODEL: process.env.NEXT_PUBLIC_LOCAL_AI_MODEL,
     NEXT_PUBLIC_BOTPRESS_WEBHOOK_URL: process.env.NEXT_PUBLIC_BOTPRESS_WEBHOOK_URL,
-    NEXT_PUBLIC_BOTPRESS_TOKEN: process.env.NEXT_PUBLIC_BOTPRESS_TOKEN,
     NEXT_PUBLIC_BOTPRESS_BOT_ID: process.env.NEXT_PUBLIC_BOTPRESS_BOT_ID,
     NEXT_PUBLIC_BOTPRESS_WORKSPACE_ID: process.env.NEXT_PUBLIC_BOTPRESS_WORKSPACE_ID,
-    NEXT_PUBLIC_MARKETING_DEBUG_KEY: process.env.NEXT_PUBLIC_MARKETING_DEBUG_KEY,
     NEXT_PUBLIC_USERBACK_ACCESS_TOKEN: process.env.NEXT_PUBLIC_USERBACK_ACCESS_TOKEN
   };
   const value = candidates[key];
@@ -235,10 +229,10 @@ export const runtimeEnv = {
   sentryReplaysOnErrorSampleRate: readEnv("VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"),
   ownerSecurityWebhookUrl: readEnv("VITE_OWNER_SECURITY_WEBHOOK_URL"),
   botpressWebhookUrl: readEnv("VITE_BOTPRESS_WEBHOOK_URL"),
-  botpressToken: readEnv("VITE_BOTPRESS_TOKEN"),
+  botpressToken: readServerOnlyEnv("BOTPRESS_TOKEN"),
   botpressBotId: readEnv("VITE_BOTPRESS_BOT_ID"),
   botpressWorkspaceId: readEnv("VITE_BOTPRESS_WORKSPACE_ID"),
-  marketingDebugKey: readEnv("VITE_MARKETING_DEBUG_KEY") ?? readServerOnlyEnv("MARKETING_DEBUG_KEY"),
+  marketingDebugKey: readServerOnlyEnv("MARKETING_DEBUG_KEY"),
   telegramBotToken: readServerOnlyEnv("TELEGRAM_BOT_TOKEN", "VITE_TELEGRAM_BOT_TOKEN"),
   telegramChatId: readServerOnlyEnv("TELEGRAM_CHAT_ID", "VITE_TELEGRAM_CHAT_ID"),
   affiliateWhitelist: readEnv("VITE_AFFILIATE_WHITELIST"),

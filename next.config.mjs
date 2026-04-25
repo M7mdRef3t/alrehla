@@ -12,7 +12,7 @@ const isDev = process.env.NODE_ENV !== "production";
 const nextConfig = {
   ...(isVercel ? { output: "standalone" } : {}),
   ...(isDev && !isVercel ? { distDir: ".next-dev" } : {}),
-  reactStrictMode: true,
+  reactStrictMode: !isDev, // Disabled in dev to prevent double-invoke Fast Refresh loops
   swcMinify: true,
   ...(isVercel ? {
     compiler: {

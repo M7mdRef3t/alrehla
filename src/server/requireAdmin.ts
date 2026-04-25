@@ -27,10 +27,10 @@ export async function requireAdmin(req: Request | any) {
     return NextResponse.json({ error: "Unauthorized - Invalid token" }, { status: 401 });
   }
 
-  const allowedRolesStr = process.env.ADMIN_ALLOWED_ROLES || process.env.NEXT_PUBLIC_ADMIN_ALLOWED_ROLES || "owner,superadmin";
+  const allowedRolesStr = process.env.ADMIN_ALLOWED_ROLES || "owner,superadmin";
   const allowedRoles = allowedRolesStr.split(",").map(r => r.trim());
   
-  const userRole = user.user_metadata?.role || user.app_metadata?.role;
+  const userRole = user.app_metadata?.role;
   
   if (!userRole || !allowedRoles.includes(userRole)) {
      return NextResponse.json({ error: "Forbidden - Admin role required" }, { status: 403 });

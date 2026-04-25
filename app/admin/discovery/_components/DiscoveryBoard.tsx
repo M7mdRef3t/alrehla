@@ -17,7 +17,6 @@ import { DiscoveryItem, DiscoveryStage } from "@/types/discovery";
 import BoardColumn from "./BoardColumn";
 import ItemCard from "./ItemCard";
 import ItemDetailModal from "./ItemDetailModal";
-import { runtimeEnv } from "@/config/runtimeEnv";
 import { safeGetSession } from "@/services/supabaseClient";
 
 const STAGES: DiscoveryStage[] = [

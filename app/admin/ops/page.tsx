@@ -16,7 +16,6 @@ import {
   RefreshCw,
   AlertTriangle,
 } from "lucide-react";
-import { runtimeEnv } from "@/config/runtimeEnv";
 import { safeGetSession } from "@/services/supabaseClient";
 
 type OpsCounts = {

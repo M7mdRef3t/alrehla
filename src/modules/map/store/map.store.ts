@@ -22,6 +22,7 @@ import { resolvePathId, symptomIdsToSymptomType } from "@/modules/pathEngine/pat
 import type { ContactLevel } from "@/modules/pathEngine/pathTypes";
 import { emitDawayirSignal } from "@/modules/recommendation/recommendationBus";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
+import { supabase } from "@/services/supabaseClient";
 
 export interface RecoveryPlanOpenWith {
   focusTraumaInheritance?: boolean;
@@ -1132,9 +1133,8 @@ if (typeof window !== "undefined") {
   void hydrateMapState();
 
   // Re-hydrate from cloud when user signs in after initial page load
-  import("@/services/supabaseClient").then(({ supabase: sb }) => {
-    if (!sb) return;
-    sb.auth.onAuthStateChange((event) => {
+  if (supabase) {
+    supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") {
         const current = useMapState.getState();
         // Only re-fetch if local store is empty (no nodes loaded yet)
@@ -1143,5 +1143,5 @@ if (typeof window !== "undefined") {
         }
       }
     });
-  }).catch(() => {/* supabase not available */});
+  }
 }

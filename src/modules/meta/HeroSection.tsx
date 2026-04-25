@@ -864,6 +864,14 @@ const HERO_STYLES = `
     100% { transform: translateY(-8px) translateX(2px); }
   }
 
+  @media (max-width: 1023px) {
+    .metric-card {
+      animation: none !important;
+      will-change: auto;
+      transform: none !important;
+    }
+  }
+
   /* --- Warp transition --- */
   .warp-overlay {
     position: fixed;
@@ -951,7 +959,7 @@ const HERO_STYLES = `
     .map-area { 
       order: 4; 
       margin-top: 0rem !important; 
-      transform: scale(0.88) translate3d(0, 0, 0); 
+      transform: none;
       transform-origin: top center; 
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
@@ -1292,9 +1300,9 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
             key={i}
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
-            animate={reduceMotion ? {} : {
-              x: springX.get() * node.w,
-              y: springY.get() * node.w,
+            animate={reduceMotion || isMobile ? {} : {
+              x: isMobile ? 0 : springX.get() * node.w,
+              y: isMobile ? 0 : springY.get() * node.w,
               opacity: hovered === i ? 1 : [0.7, 1, 0.7],
             }}
             transition={{
@@ -1438,7 +1446,12 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
+    const check = () => setIsMobile(
+      window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024
+    );
+    check();
+    window.addEventListener("resize", check, { passive: true });
+    return () => window.removeEventListener("resize", check);
   }, []);
 
 
@@ -1456,20 +1469,20 @@ export const HeroSection: FC<HeroSectionProps> = ({
   }, [reduceMotion, globalMouseX, globalMouseY]);
 
   // Layer 1: Foreground Grid (Fastest response, moves opposite to mouse context)
-  const gridX = useSpring(useTransform(globalMouseX, x => -x * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
-  const gridY = useSpring(useTransform(globalMouseY, y => -y * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
+  const gridX = useSpring(useTransform(globalMouseX, x => isMobile ? 0 : -x * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
+  const gridY = useSpring(useTransform(globalMouseY, y => isMobile ? 0 : -y * 1.5), { stiffness: 45, damping: 20, mass: 0.5 });
 
   // Layer 2: Midground Stars (Medium response)
-  const starX = useSpring(useTransform(globalMouseX, x => -x * 0.5), { stiffness: 20, damping: 30, mass: 1 });
-  const starY = useSpring(useTransform(globalMouseY, y => -y * 0.5), { stiffness: 20, damping: 30, mass: 1 });
+  const starX = useSpring(useTransform(globalMouseX, x => isMobile ? 0 : -x * 0.5), { stiffness: 20, damping: 30, mass: 1 });
+  const starY = useSpring(useTransform(globalMouseY, y => isMobile ? 0 : -y * 0.5), { stiffness: 20, damping: 30, mass: 1 });
 
   // Layer 3: Deep Nebula (Slow, heavy response)
-  const nebulaX = useSpring(useTransform(globalMouseX, x => -x * 0.2), { stiffness: 10, damping: 40, mass: 2 });
-  const nebulaY = useSpring(useTransform(globalMouseY, y => -y * 0.2), { stiffness: 10, damping: 40, mass: 2 });
+  const nebulaX = useSpring(useTransform(globalMouseX, x => isMobile ? 0 : -x * 0.2), { stiffness: 10, damping: 40, mass: 2 });
+  const nebulaY = useSpring(useTransform(globalMouseY, y => isMobile ? 0 : -y * 0.2), { stiffness: 10, damping: 40, mass: 2 });
 
-  // Layer 4: Neural Dust (Extreme foreground, super fast)
-  const dustX = useSpring(useTransform(globalMouseX, x => -x * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
-  const dustY = useSpring(useTransform(globalMouseY, y => -y * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
+  // Layer 4: Neural Dust (Near plane) — disabled on mobile to prevent jitter
+  const dustX = useSpring(useTransform(globalMouseX, x => isMobile ? 0 : -x * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
+  const dustY = useSpring(useTransform(globalMouseY, y => isMobile ? 0 : -y * 2.5), { stiffness: 60, damping: 20, mass: 0.3 });
 
   // Tilt disabled on text column for readability — kept on map only
 

@@ -40,9 +40,25 @@ export class BotpressService {
   }
 
   /**
-   * Send a message to Botpress via the SDK.
+   * Send a message to Botpress via the SDK (Server) or API Proxy (Client).
    */
   static async sendMessage(payload: BotpressMessagePayload) {
+    if (typeof window !== "undefined") {
+      // Client-side: proxy through our secure API route
+      try {
+        const res = await fetch("/api/botpress/message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        return await res.json();
+      } catch (error) {
+        console.error("[BotpressService] Proxy Error:", error);
+        return { success: false, error };
+      }
+    }
+
+    // Server-side: use SDK
     const client = this.getClient();
     if (!client) return { success: false, error: "not_configured" };
 
