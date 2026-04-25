@@ -121,4 +121,26 @@ export const behavioralService = {
       console.error("Error acknowledging behavioral alert:", error);
     }
   },
+  /**
+   * Subscribe to new behavioral alerts in real-time
+   */
+  subscribeToAlerts: (userId: string, onNewAlert: (alert: BehavioralAlert) => void) => {
+    if (!supabase) return { unsubscribe: () => undefined };
+
+    return supabase
+      .channel("behavioral-alerts-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "behavioral_alerts",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          onNewAlert(payload.new as BehavioralAlert);
+        }
+      )
+      .subscribe();
+  },
 };

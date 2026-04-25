@@ -12,6 +12,8 @@ import {
   checkAndSendMapRevisit,
   type NotificationSettings
 } from "@/services/notifications";
+import { behavioralService, type BehavioralAlert } from "@/services/behavioralService";
+import { useToastState } from "@/modules/map/store/toast.store";
 
 interface NotificationState {
   // حالة الدعم والإذن
@@ -29,6 +31,11 @@ interface NotificationState {
   requestPermission: () => Promise<NotificationPermission>;
   updateSettings: (settings: Partial<NotificationSettings>) => void;
   recordUserActivity: () => void;
+  
+  // Behavioral Alerts
+  behavioralAlerts: BehavioralAlert[];
+  fetchBehavioralAlerts: () => Promise<void>;
+  acknowledgeBehavioralAlert: (id: string) => Promise<void>;
 }
 
 export const useNotificationState = create<NotificationState>((set, get) => ({
@@ -45,6 +52,7 @@ export const useNotificationState = create<NotificationState>((set, get) => ({
       missionReminderStrategy: "next"
     },
   isLoading: false,
+  behavioralAlerts: [],
 
   initialize: () => {
     const isSupported = isNotificationSupported();
@@ -74,6 +82,24 @@ export const useNotificationState = create<NotificationState>((set, get) => ({
     void checkAndSendMapRevisit();
     // تسجيل النشاط عند فتح التطبيق
     recordActivity();
+
+    // جلب تنبيهات السلوك
+    get().fetchBehavioralAlerts();
+
+    // إعداد الاشتراك اللحظي
+    import("@/domains/auth/store/auth.store").then(({ useAuthState }) => {
+      const user = useAuthState.getState().user;
+      if (user) {
+        behavioralService.subscribeToAlerts(user.id, (alert) => {
+          set((state) => ({
+            behavioralAlerts: [alert, ...state.behavioralAlerts].slice(0, 10),
+          }));
+
+          // Trigger global toast
+          useToastState.getState().showToast(alert.message, "warning");
+        });
+      }
+    }).catch(() => {});
   },
 
   requestPermission: async () => {
@@ -118,7 +144,21 @@ export const useNotificationState = create<NotificationState>((set, get) => ({
 
   recordUserActivity: () => {
     recordActivity();
-  }
+  },
+
+  fetchBehavioralAlerts: async () => {
+    const alerts = await behavioralService.getAlerts();
+    set({ behavioralAlerts: alerts });
+  },
+
+  acknowledgeBehavioralAlert: async (id: string) => {
+    await behavioralService.acknowledgeAlert(id);
+    set((state) => ({
+      behavioralAlerts: state.behavioralAlerts.map((a) =>
+        a.id === id ? { ...a, is_read: true } : a
+      ),
+    }));
+  },
 }));
 
 // تهيئة الـ state عند تحميل الملف

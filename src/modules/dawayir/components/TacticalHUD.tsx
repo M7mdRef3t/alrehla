@@ -1,7 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Activity, Zap } from 'lucide-react';
+import { Heart, Activity, Zap, TestTube } from 'lucide-react';
 import { useStressAura, type StressAura } from '../hooks/useStressAura';
+import { isDevMode } from '@/config/appEnv';
+import { pushBiometricReading } from '@/services/biometricsBridge';
 
 interface TacticalHUDProps {
   nodesCount: number;
@@ -93,6 +95,19 @@ export function TacticalHUD({ nodesCount, edgesCount }: TacticalHUDProps) {
                     {aura.isConnected ? 'متصل — بيانات حية' : 'غير متصل'}
                 </span>
             </div>
+
+            {/* Simulation Controls (Dev Only) */}
+            {isDevMode && (
+                <div className="pt-2 border-t border-white/5">
+                    <button 
+                        onClick={() => pushBiometricReading(112, 22, 88)}
+                        className="w-full py-2 bg-rose-500/10 border border-rose-500/30 rounded-lg flex items-center justify-center gap-2 hover:bg-rose-500/20 transition-all group"
+                    >
+                        <TestTube className="w-3 h-3 text-rose-400 group-hover:animate-bounce" />
+                        <span className="text-[10px] font-black text-rose-200">محاكاة توتر حاد</span>
+                    </button>
+                </div>
+            )}
         </div>
     </div>
   );

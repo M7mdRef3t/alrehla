@@ -24,12 +24,12 @@ import {
 import { AlrehlaIcon } from "./logo/AlrehlaIcon";
 import { useAuthState, getEffectiveRoleFromState } from "@/domains/auth/store/auth.store";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
+import { useNotificationState } from "@/domains/notifications/store/notification.store";
 import { useThemeState } from "@/domains/consciousness/store/theme.store";
 import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { useMapState } from "@/modules/map/store/map.store";
 import { signOut } from "@/services/authService";
 import { NotificationsPanel } from "./NotificationsPanel";
-import { InAppNotificationCenter } from "@/components/shared/InAppNotificationCenter";
 import { isPrivilegedRole } from "@/utils/featureFlags";
 import { assignUrl } from "@/services/navigation";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
@@ -165,8 +165,10 @@ export const PlatformHeader = memo(function PlatformHeader({
   const isNewUser = isLoggedIn && !baselineCompletedAt;
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
 
-  const lastNewAchievementId = useAchievementState((s) => s.lastNewAchievementId);
-  const hasUnread = isLoggedIn && Boolean(lastNewAchievementId);
+  const lastNewAchievement = useAchievementState((s) => s.lastNewAchievementId);
+  const behavioralAlerts = useNotificationState((s) => s.behavioralAlerts);
+  const unreadAlertsCount = behavioralAlerts.filter(a => !a.is_read).length;
+  const hasUnread = isLoggedIn && (!!lastNewAchievement || unreadAlertsCount > 0);
 
   const resolvedTheme = useThemeState((s) => s.resolvedTheme);
   const setTheme = useThemeState((s) => s.setTheme);

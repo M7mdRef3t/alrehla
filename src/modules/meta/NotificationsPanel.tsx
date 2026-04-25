@@ -1,7 +1,8 @@
 import { memo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Trophy, Bell, Award } from "lucide-react";
+import { X, Trophy, Bell, Award, AlertCircle } from "lucide-react";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
+import { useNotificationState } from "@/domains/notifications/store/notification.store";
 import { ACHIEVEMENTS } from "@/data/achievements";
 import { useMemo } from "react";
 
@@ -24,15 +25,31 @@ export const NotificationsPanel = memo(function NotificationsPanel({
   const totalPoints        = useAchievementState((s) => s.totalPoints);
   const lastNewId          = useAchievementState((s) => s.lastNewAchievementId);
   const clearLastNew       = useAchievementState((s) => s.clearLastNew);
+  
+  // Behavioral alerts from notification store
+  const behavioralAlerts   = useNotificationState((s) => s.behavioralAlerts);
+  const acknowledgeAlert   = useNotificationState((s) => s.acknowledgeBehavioralAlert);
 
-  // Build notifications list: unlocked achievements in reverse order (newest first)
+  // Build notifications list: merged achievements and behavioral alerts
   const notifications = useMemo(() => {
-    return [...unlockedIds]
-      .reverse()
-      .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
-      .filter(Boolean)
-      .slice(0, 10) as typeof ACHIEVEMENTS;
-  }, [unlockedIds]);
+    const achs = unlockedIds.flatMap((id) => {
+      const found = ACHIEVEMENTS.find((a) => a.id === id);
+      return found ? [{ ...found, type: 'achievement' as const, timestamp: Date.now() }] : [];
+    });
+
+    const alerts = behavioralAlerts.map(a => ({
+      id: a.id,
+      title: 'تنبيه سلوكي',
+      hint: a.message,
+      icon: '⚠️',
+      type: 'alert' as const,
+      timestamp: Date.now(), // ideally we use a real timestamp from DB
+      is_read: a.is_read
+    }));
+
+    // Merge and sort (simple merge for now, prioritizing alerts)
+    return [...alerts, ...achs].slice(0, 15);
+  }, [unlockedIds, behavioralAlerts]);
 
   const isEmpty = notifications.length === 0;
 
@@ -67,8 +84,10 @@ export const NotificationsPanel = memo(function NotificationsPanel({
 
   // Clear badge when panel opens
   useEffect(() => {
-    if (isOpen && lastNewId) {
-      clearLastNew();
+    if (isOpen) {
+      if (lastNewId) clearLastNew();
+      // Optionally mark all behavioral alerts as read? 
+      // User might want to click them individually.
     }
   }, [isOpen, lastNewId, clearLastNew]);
 
@@ -137,37 +156,48 @@ export const NotificationsPanel = memo(function NotificationsPanel({
               </div>
             ) : (
               <ul className="flex flex-col divide-y divide-white/[0.05]">
-                {notifications.map((a, i) => {
-                  const isLatest = a.id === unlockedIds[unlockedIds.length - 1];
+                {notifications.map((n, i) => {
+                  const isAchievement = n.type === 'achievement';
+                  const isUnreadAlert = !isAchievement && !n.is_read;
+                  
                   return (
                     <motion.li
-                      key={a.id}
+                      key={n.id}
                       initial={{ opacity: 0, x: 12 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.04, duration: 0.25 }}
-                      className="flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
+                      onClick={() => {
+                        if (!isAchievement) acknowledgeAlert(n.id);
+                      }}
+                      className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors cursor-pointer ${isUnreadAlert ? 'bg-rose-500/[0.03]' : ''}`}
                     >
                       {/* Icon */}
-                      <span className="text-xl shrink-0 mt-0.5">{a.icon}</span>
+                      <span className="text-xl shrink-0 mt-0.5">{n.icon}</span>
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-white truncate">{a.title}</p>
-                          {isLatest && (
-                            <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-[var(--cyan-glow)]
-                                             text-[var(--teal)] text-[9px] font-bold border border-[var(--teal)]/20">
+                          <p className={`text-sm font-semibold truncate ${isUnreadAlert ? 'text-rose-400' : 'text-white'}`}>
+                            {n.title}
+                          </p>
+                          {isUnreadAlert && (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-rose-500/20
+                                             text-rose-400 text-[9px] font-bold border border-rose-500/20">
                               جديد
                             </span>
                           )}
                         </div>
                         <p className="text-xs text-slate-400 leading-relaxed mt-0.5 line-clamp-2">
-                          {a.hint}
+                          {n.hint}
                         </p>
                       </div>
 
-                      {/* Trophy */}
-                      <Trophy className="w-3.5 h-3.5 text-[var(--gold)] shrink-0 mt-1" />
+                      {/* Side Icon */}
+                      {isAchievement ? (
+                        <Trophy className="w-3.5 h-3.5 text-[var(--gold)] shrink-0 mt-1" />
+                      ) : (
+                        <AlertCircle className={`w-3.5 h-3.5 shrink-0 mt-1 ${isUnreadAlert ? 'text-rose-400' : 'text-slate-500'}`} />
+                      )}
                     </motion.li>
                   );
                 })}

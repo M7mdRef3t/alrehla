@@ -6,7 +6,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { zustandIdbStorage } from '@/utils/idbStorage';
-
+import { ProfileService } from "@/services/profileService";
+import { safeGetSession } from "@/services/supabaseClient";
 
 export type TraitCategory = "cognitive" | "emotional" | "social" | "spiritual" | "creative" | "resilience";
 
@@ -146,12 +147,10 @@ export const useBasmaState = create<BasmaState>()(
         const { traits, values, statements } = get();
         const data = { traits, values, statements };
         
-        // Import dynamically to avoid circular dependencies
-        const { getAuthUserId } = await import("@/domains/auth/store/auth.store");
-        const userId = getAuthUserId();
+        const session = await safeGetSession();
+        const userId = session?.user?.id;
         if (!userId) return;
 
-        const { ProfileService } = await import("@/services/profileService");
         await ProfileService.updateBasmaData(userId, data);
       }
     }),
@@ -159,8 +158,8 @@ export const useBasmaState = create<BasmaState>()(
       name: "alrehla-basma", 
       storage: zustandIdbStorage,
       onRehydrateStorage: () => (state) => {
-        // Optional: sync on load if user is logged in
-        if (state) state.syncWithSupabase();
+        // Removed immediate sync to avoid HMR loops and race conditions with auth initialization.
+        // auth.store handles initial data hydration from Supabase.
       }
     }
   )

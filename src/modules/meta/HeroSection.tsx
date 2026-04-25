@@ -50,6 +50,10 @@ const HERO_STYLES = `
     --glass-reflection: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
     
     position: relative;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
     min-height: 100svh;
     display: flex;
     align-items: center;
@@ -58,6 +62,8 @@ const HERO_STYLES = `
   }
 
   .hero-layer {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
     position: absolute;
     width: 100%;
     height: 100%;
@@ -1038,14 +1044,23 @@ const HERO_STYLES = `
     }
 
     /* Mobile Performance Optimizations */
-    .sovereign-map__atmosphere {
-      filter: blur(25px);
+    @media (max-width: 1024px) {
+      .hero-command-bar, 
+      .pulse-badge, 
+      .trust-pill, 
+      .metric-card, 
+      .node-tooltip-body {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(8, 12, 22, 0.9) !important;
+      }
     }
-    .metric-card {
-      backdrop-filter: none;
-      background: rgba(8, 12, 22, 0.95);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    }
+
+
+
+
+
+
     .metric-card--health {
       top: -5%;
       right: 0%;
@@ -1130,15 +1145,15 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   const springY = useSpring(mouseY, { stiffness: 120, damping: 50, mass: 1.5 });
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (reduceMotion) return;
+    if (reduceMotion || window.matchMedia("(pointer: coarse)").matches) return;
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
     // Discretize mapping for robotic snap feeling
     const rawX = (e.clientX - cx) / 90;
     const rawY = (e.clientY - cy) / 90;
     const step = 0.5;
-    mouseX.set(Math.round(rawX / step) * step);
-    mouseY.set(Math.round(rawY / step) * step);
+    mouseX.set(rawX);
+    mouseY.set(rawY);
   }, [reduceMotion, mouseX, mouseY]);
 
   useEffect(() => {
@@ -1390,7 +1405,11 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const reduceMotion = useReducedMotion();
   const [isWarping, setIsWarping] = useState(false);
   const headlineLineRef = useRef<HTMLSpanElement | null>(null);
-  const [headlineMeasuredWidth, setHeadlineMeasuredWidth] = useState<number>(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
 
 
   // Global Mouse tracking for Parallax Base
@@ -1398,7 +1417,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const globalMouseY = useMotionValue(0);
 
   const handleGlobalMouseMove = useCallback((e: React.MouseEvent) => {
-    if (reduceMotion) return;
+    if (reduceMotion || window.matchMedia("(pointer: coarse)").matches) return;
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
     // 5x more sensitive for dramatic architectural tracking -> now calmed down
@@ -1430,26 +1449,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
     setTimeout(onStartJourney, 900);
   }, [onStartJourney]);
 
-  // Time Complexity
-  useLayoutEffect(() => {
-    const node = headlineLineRef.current;
-    if (!node) return;
 
-    const updateMeasuredWidth = () => {
-      const nextWidth = Math.ceil(node.getBoundingClientRect().width);
-      setHeadlineMeasuredWidth(prev => (prev === nextWidth ? prev : nextWidth));
-    };
-
-    updateMeasuredWidth();
-    const observer = new ResizeObserver(updateMeasuredWidth);
-    observer.observe(node);
-    window.addEventListener("resize", updateMeasuredWidth);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", updateMeasuredWidth);
-    };
-  }, []);
 
   const warpLines = useMemo(() => (
     Array.from({ length: 20 }, (_, i) => ({
@@ -1520,10 +1520,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
             initial="hidden"
             animate="visible"
             className="hero-copy-column"
-            style={{
-              ["--headline-measured-width" as any]:
-                headlineMeasuredWidth > 0 ? `${headlineMeasuredWidth}px` : undefined,
-            }}
           >
             <motion.div variants={fadeUp} className="hero-eyebrow-row">
               <span className="hero-badge">
@@ -1534,8 +1530,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             </motion.div>
 
             <motion.h1 variants={fadeUp} className="headline-static hero-headline">
-              <span className="block mb-2 text-shadow-glow opacity-90">خريطة وعيك،</span>
-              <span ref={headlineLineRef} className="headline-line headline-glow">بتبدأ من هنا.</span>
+              <span ref={headlineLineRef} className="headline-line headline-glow">أنت لست مرهقاً</span>
               <span className="headline-inline-row mt-4">
                 <span className="headline-subline">أنت فقط</span>
                 <RotatingWord />
@@ -1559,7 +1554,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                       id="hero-cta-start-returning"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      animate={{ boxShadow: ["0 4px 15px rgba(20, 184, 166, 0.3)", "0 4px 30px rgba(20, 184, 166, 0.8)", "0 4px 15px rgba(20, 184, 166, 0.3)"] }}
+                      animate={isMobile ? {} : { boxShadow: ["0 4px 15px rgba(20, 184, 166, 0.3)", "0 4px 30px rgba(20, 184, 166, 0.8)", "0 4px 15px rgba(20, 184, 166, 0.3)"] }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
                       <span className="relative z-10 font-black tracking-wide">{ctaJourney}</span>
@@ -1588,7 +1583,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                       id="hero-cta-start"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      animate={{ boxShadow: ["0 4px 15px rgba(20, 184, 166, 0.3)", "0 4px 30px rgba(20, 184, 166, 0.8)", "0 4px 15px rgba(20, 184, 166, 0.3)"] }}
+                      animate={isMobile ? {} : { boxShadow: ["0 4px 15px rgba(20, 184, 166, 0.3)", "0 4px 30px rgba(20, 184, 166, 0.8)", "0 4px 15px rgba(20, 184, 166, 0.3)"] }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
                       <span className="relative z-10 font-black tracking-wide">{ctaJourney}</span>

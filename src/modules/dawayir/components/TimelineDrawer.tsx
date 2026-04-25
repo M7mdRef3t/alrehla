@@ -16,6 +16,15 @@ interface MapSnapshot {
     snapshot_at: string;
 }
 
+interface ShadowSnapshot {
+    id: string;
+    entropy_score: number;
+    state: string;
+    primary_factor: string;
+    metadata: any;
+    timestamp: string;
+}
+
 interface TimelineDrawerProps {
     isOpen: boolean;
     onClose: () => void;
@@ -47,26 +56,42 @@ const trendConfig = {
 };
 
 export function TimelineDrawer({ isOpen, onClose, userId }: TimelineDrawerProps) {
+    const [mode, setMode] = useState<'map' | 'stress'>('map');
     const [snapshots, setSnapshots] = useState<MapSnapshot[]>([]);
+    const [stressEvents, setStressEvents] = useState<ShadowSnapshot[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedSnapshot, setSelectedSnapshot] = useState<MapSnapshot | null>(null);
+    const [selectedStressEvent, setSelectedStressEvent] = useState<ShadowSnapshot | null>(null);
 
     const loadSnapshots = useCallback(async () => {
         if (!userId || !supabase) return;
         setIsLoading(true);
 
-        const { data, error } = await supabase
-            .from('dawayir_map_snapshots')
-            .select('*')
-            .eq('user_id', userId)
-            .order('snapshot_at', { ascending: false })
-            .limit(20);
+        if (mode === 'map') {
+            const { data, error } = await supabase
+                .from('dawayir_map_snapshots')
+                .select('*')
+                .eq('user_id', userId)
+                .order('snapshot_at', { ascending: false })
+                .limit(20);
 
-        if (!error && data) {
-            setSnapshots(data as MapSnapshot[]);
+            if (!error && data) {
+                setSnapshots(data as MapSnapshot[]);
+            }
+        } else {
+            const { data, error } = await supabase
+                .from('shadow_snapshots')
+                .select('*')
+                .eq('user_id', userId)
+                .order('timestamp', { ascending: false })
+                .limit(20);
+
+            if (!error && data) {
+                setStressEvents(data as ShadowSnapshot[]);
+            }
         }
         setIsLoading(false);
-    }, [userId]);
+    }, [userId, mode]);
 
     useEffect(() => {
         if (isOpen) {
@@ -117,6 +142,26 @@ export function TimelineDrawer({ isOpen, onClose, userId }: TimelineDrawerProps)
                                     <X className="w-5 h-5 text-slate-500" />
                                 </button>
                             </div>
+
+                            {/* Mode Toggle */}
+                            <div className="flex gap-1 p-1 bg-white/5 rounded-xl border border-white/5 mb-4">
+                                <button
+                                    onClick={() => setMode('map')}
+                                    className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all ${
+                                        mode === 'map' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:text-slate-300'
+                                    }`}
+                                >
+                                    حالة الخريطة
+                                </button>
+                                <button
+                                    onClick={() => setMode('stress')}
+                                    className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all ${
+                                        mode === 'stress' ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'text-slate-500 hover:text-slate-300'
+                                    }`}
+                                >
+                                    أحداث التوتر
+                                </button>
+                            </div>
                         </div>
 
                         {/* Content */}
@@ -136,7 +181,7 @@ export function TimelineDrawer({ isOpen, onClose, userId }: TimelineDrawerProps)
                                     {/* Vertical timeline line */}
                                     <div className="absolute right-[19px] top-0 bottom-0 w-px bg-white/[0.06]" />
 
-                                    {snapshots.map((snap, idx) => {
+                                    {mode === 'map' ? snapshots.map((snap, idx) => {
                                         const prevSnap = snapshots[idx + 1]; // older
                                         const trend = getStressTrend(snap.stress_level_at_time, prevSnap?.stress_level_at_time ?? null);
                                         const TrendIcon = trendConfig[trend].icon;
@@ -228,21 +273,54 @@ export function TimelineDrawer({ isOpen, onClose, userId }: TimelineDrawerProps)
                                                                         <p className="text-[11px] text-slate-300 leading-relaxed">{snap.insight_snapshot}</p>
                                                                     </div>
                                                                 )}
-
-                                                                {prevSnap && snap.stress_level_at_time !== null && prevSnap.stress_level_at_time !== null && (
-                                                                    <div className={`flex items-center gap-2 p-2 rounded-lg ${
-                                                                        trend === 'down' ? 'bg-teal-500/5' : trend === 'up' ? 'bg-rose-500/5' : 'bg-white/5'
-                                                                    }`}>
-                                                                        <TrendIcon className={`w-4 h-4 ${trendConfig[trend].color}`} />
-                                                                        <span className={`text-[10px] font-bold ${trendConfig[trend].color}`}>
-                                                                            التوتر {trendConfig[trend].label} من {prevSnap.stress_level_at_time}% إلى {snap.stress_level_at_time}%
-                                                                        </span>
-                                                                    </div>
-                                                                )}
                                                             </div>
                                                         </motion.div>
                                                     )}
                                                 </AnimatePresence>
+                                            </motion.div>
+                                        );
+                                    }) : stressEvents.map((event, idx) => {
+                                        const isSelected = selectedStressEvent?.id === event.id;
+                                        return (
+                                            <motion.div
+                                                key={event.id}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: idx * 0.06 }}
+                                                className="relative pr-10 pb-6 last:pb-0"
+                                            >
+                                                {/* Timeline dot */}
+                                                <div className="absolute right-[14px] top-1 z-10">
+                                                    <div className="w-3 h-3 rounded-full border-2 bg-rose-500 border-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
+                                                </div>
+
+                                                {/* Card */}
+                                                <button
+                                                    onClick={() => setSelectedStressEvent(isSelected ? null : event)}
+                                                    className={`w-full text-right p-4 rounded-2xl border transition-all duration-200 ${
+                                                        isSelected
+                                                            ? 'bg-rose-500/10 border-rose-500/30'
+                                                            : 'bg-white/[0.02] border-white/[0.05] hover:border-white/10'
+                                                    }`}
+                                                >
+                                                    {/* Date */}
+                                                    <span className="text-[10px] font-bold text-slate-500">{formatDate(event.timestamp)}</span>
+
+                                                    {/* Event Row */}
+                                                    <div className="flex items-center gap-3 mt-2">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Activity className="w-3 h-3 text-rose-400" />
+                                                            <span className="text-xs font-black text-white font-mono">توتر {event.entropy_score}%</span>
+                                                        </div>
+                                                        <div className="px-2 py-0.5 rounded-md bg-rose-500/10 border border-rose-500/20">
+                                                            <span className="text-[9px] font-black text-rose-300 uppercase">{event.state}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <p className="text-[11px] text-rose-200/60 mt-2 font-bold leading-relaxed">
+                                                        {event.primary_factor}
+                                                    </p>
+                                                </button>
                                             </motion.div>
                                         );
                                     })}

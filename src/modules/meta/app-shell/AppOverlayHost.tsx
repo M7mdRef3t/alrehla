@@ -26,11 +26,9 @@ import type { AppOverlayFlag } from "@/domains/consciousness/store/overlay.store
 import type { PostAuthIntent } from "@/utils/postAuthIntent";
 import { Z_LAYERS } from "@/config/zIndices";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { AnalyticsConsentBanner } from "../AnalyticsConsentBanner";
 
 const GoogleAuthModal = lazy(() => import('@/modules/exploration/GoogleAuthModal').then((m) => ({ default: m.GoogleAuthModal })));
-const AnalyticsConsentBanner = lazy(() =>
-  import("../AnalyticsConsentBanner").then((m) => ({ default: m.AnalyticsConsentBanner }))
-);
 const FaqScreen = lazy(() => import("../FaqScreen").then((m) => ({ default: m.FaqScreen })));
 const MirrorOverlay = lazy(() => import('@/modules/exploration/MirrorOverlay').then((m) => ({ default: m.MirrorOverlay })));
 const RelationshipGym = lazy(() => import('@/modules/exploration/RelationshipGym').then((m) => ({ default: m.RelationshipGym })));

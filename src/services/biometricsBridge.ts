@@ -7,6 +7,7 @@
 
 import { supabase, safeGetSession } from "@/services/supabaseClient";
 import { logger } from "@/services/logger";
+import { ShadowService } from "./shadowService";
 
 export interface BiometricPulse {
     heartRate: number; // BPM
@@ -148,6 +149,27 @@ export async function pushBiometricReading(heartRate: number, hrv: number, stres
 
     if (error) {
         logger.error('Failed to push biometric reading:', error);
+        return;
+    }
+
+    // [SOVEREIGN ENGINE] Auto-Snapshot on Crisis
+    const analysis = analyzeStressLevels({
+        heartRate,
+        hrv,
+        stressLevel: stressLevel ?? deriveStressFromHRV(hrv),
+        timestamp: Date.now()
+    });
+
+    if (analysis.isCrisis) {
+        logger.info("[Sovereign Engine] Crisis detected, auto-saving shadow snapshot.");
+        await ShadowService.saveSnapshot(session.user.id, {
+            state: "CHAOS",
+            entropyScore: stressLevel ?? deriveStressFromHRV(hrv),
+            primaryFactor: analysis.reason || "biometric_spike",
+            unstableNodes: 0, // Calculated later by engine
+            pulseVolatility: 0,
+            lowEnergyRatio: 0,
+        });
     }
 }
 
