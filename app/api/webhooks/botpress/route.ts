@@ -38,25 +38,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 
-    // 1. Botpress Specific Extraction
-    // userId often contains the phone number in Botpress WhatsApp integration
-    const { userId, type, payload, conversationId } = body;
+    // 1. Meta WhatsApp Payload Extraction
+    if (body.object === "whatsapp_business_account" && body.entry) {
+      for (const entry of body.entry) {
+        for (const change of entry.changes) {
+          const value = change.value;
+          if (value && value.messages && value.messages.length > 0) {
+            for (const message of value.messages) {
+              const fromPhone = message.from;
+              const messageId = message.id;
+              const text = message.type === "text" ? message.text?.body : `[Media: ${message.type}]`;
+              
+              console.log(`[WebhookInbound] Processing message from ${fromPhone}: ${text}`);
+              
+              // A. Save to Sovereign CRM
+              const { error: insertError } = await supabase.from("whatsapp_message_events").insert({
+                from_phone: fromPhone,
+                to_phone: "system",
+                message_body: text || "",
+                direction: "inbound",
+                intent_detected: "pending_analysis",
+                whatsapp_message_id: messageId,
+                raw_payload: body
+              });
 
-    if (type === "message" && userId) {
-      console.log(`[WebhookInbound] Processing message from ${userId}: ${payload?.text}`);
-      
-      const { error: insertError } = await supabase.from("whatsapp_message_events").insert({
-        from_phone: userId,
-        to_phone: "botpress",
-        message_body: payload?.text || "Media/Other",
-        direction: "inbound",
-        intent_detected: payload?.intent || "unknown",
-        whatsapp_message_id: body.id || `bp_${Date.now()}`,
-        raw_payload: body
-      });
+              if (insertError) {
+                console.error("[WebhookInbound] Database insertion error:", insertError);
+              }
 
-      if (insertError) {
-        console.error("[WebhookInbound] Database insertion error:", insertError);
+              // B. Forward to Botpress for AI Processing
+              // We import BotpressService dynamically to avoid edge runtime issues if it has Node.js deps
+              const { BotpressService } = await import("@/services/botpressService");
+              await BotpressService.sendMessage({
+                userId: fromPhone,
+                text: text || "Media Message",
+                metadata: { source: "whatsapp", messageId }
+              });
+            }
+          }
+        }
       }
     }
 
