@@ -1,5 +1,5 @@
 /**
- * BREATHING LOGO — اللوجو يتنفس مع المستخدم
+ * BREATHING LOGO — الصقر يتنفس مع المسافر
  * =====================================================
  * اللوجو ينبض بنفس رتم Shadow Pulse للمستخدم
  */
@@ -108,12 +108,12 @@
 
 [data-consciousness-state="flow"] .breathing-logo,
 [data-consciousness-state="flow"] [data-breathing-logo] {
-  filter: drop-shadow(0 0 8px var(--consciousness-primary));
+  filter: drop-shadow(0 0 8px var(--horus-gold, #C9A84C)) drop-shadow(0 0 16px var(--horus-gold-glow, rgba(201, 168, 76, 0.3)));
 }
 
 [data-consciousness-state="thriving"] .breathing-logo,
 [data-consciousness-state="thriving"] [data-breathing-logo] {
-  filter: drop-shadow(0 0 4px var(--consciousness-primary));
+  filter: drop-shadow(0 0 4px var(--horus-gold, #C9A84C));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

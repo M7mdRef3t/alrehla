@@ -1,30 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" rx="40" fill="#0A1628"/>
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f8fafc"/>
-      <stop offset="100%" style="stop-color:#e2e8f0"/>
+    <linearGradient id="fg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F0C75E"/>
+      <stop offset="50%" stop-color="#C9A84C"/>
+      <stop offset="100%" stop-color="#A8873A"/>
     </linearGradient>
+    <filter id="gl" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
-  
-  <!-- Background -->
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  
-  <!-- الدائرة الحمراء (الخارجية) -->
-  <circle cx="256" cy="256" r="200" fill="none" stroke="#fca5a5" stroke-width="28" opacity="0.8"/>
-  
-  <!-- الدائرة الصفراء (الوسطى) -->
-  <circle cx="256" cy="256" r="140" fill="none" stroke="#fcd34d" stroke-width="24" opacity="0.85"/>
-  
-  <!-- الدائرة الخضراء (الداخلية) -->
-  <circle cx="256" cy="256" r="80" fill="none" stroke="#5eead4" stroke-width="20"/>
-  
-  <!-- المركز (أنا) -->
-  <circle cx="256" cy="256" r="36" fill="#0D9488"/>
-  
-  <!-- نقاط تمثل الأشخاص -->
-  <circle cx="256" cy="180" r="12" fill="#14b8a6"/>
-  <circle cx="320" cy="220" r="10" fill="#fbbf24"/>
-  <circle cx="192" cy="220" r="10" fill="#fbbf24"/>
-  <circle cx="340" cy="310" r="8" fill="#f87171"/>
-  <circle cx="172" cy="310" r="8" fill="#f87171"/>
+  <!-- Orbit arcs (dawayir) -->
+  <circle cx="100" cy="100" r="92" stroke="#C9A84C" stroke-width="0.5" opacity="0.12"/>
+  <circle cx="100" cy="100" r="78" stroke="#C9A84C" stroke-width="0.7" opacity="0.15"/>
+  <!-- Falcon -->
+  <g filter="url(#gl)">
+    <!-- Head -->
+    <path d="M100 38 C107 38 113 44 113 52 C113 60 107 66 100 66 C93 66 87 60 87 52 C87 44 93 38 100 38Z" fill="url(#fg)"/>
+    <!-- Eye -->
+    <circle cx="105" cy="50" r="3.5" fill="#0A1628"/>
+    <circle cx="106" cy="49.5" r="1.2" fill="#F0C75E" opacity="0.9"/>
+    <!-- Horus tear -->
+    <path d="M108 52 C108 54 107 58 105 62 C104 64 103 65 102 65" stroke="#0A1628" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.7"/>
+    <!-- Beak -->
+    <path d="M113 52 L121 56 L113 58" fill="#A8873A" opacity="0.85"/>
+    <!-- Neck -->
+    <path d="M95 64 L93 74 L107 74 L105 64" fill="url(#fg)" opacity="0.9"/>
+    <!-- Chest -->
+    <path d="M88 74 C86 82 85 92 88 104 L100 112 L112 104 C115 92 114 82 112 74 Z" fill="url(#fg)"/>
+    <!-- Wings -->
+    <path d="M112 78 C128 70 148 62 170 58 C168 68 158 82 140 94 C128 102 118 106 112 104" fill="url(#fg)" opacity="0.85"/>
+    <path d="M88 78 C72 70 52 62 30 58 C32 68 42 82 60 94 C72 102 82 106 88 104" fill="url(#fg)" opacity="0.85"/>
+    <!-- Wing-tip blue -->
+    <path d="M170 58 C172 54 172 50 170 46" stroke="#1B6CA8" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <path d="M30 58 C28 54 28 50 30 46" stroke="#1B6CA8" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <!-- Tail -->
+    <path d="M95 112 L92 142 L100 148 L108 142 L105 112" fill="url(#fg)" opacity="0.75"/>
+    <!-- Talons -->
+    <path d="M92 142 L86 154 M92 142 L90 156 M92 142 L94 155" stroke="url(#fg)" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <path d="M108 142 L114 154 M108 142 L110 156 M108 142 L106 155" stroke="url(#fg)" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  </g>
 </svg>

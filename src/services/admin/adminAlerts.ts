@@ -3,7 +3,7 @@
  */
 
 import { callAdminApi } from "./adminCore";
-import type { AlertIncident, SovereignInsight, SovereignStats } from "./adminTypes";
+import type { AlertIncident, CommandInsight, CommandStats } from "./adminTypes";
 
 // ─── Alert Incidents ────────────────────────────────────────────────
 export async function fetchAlertIncidents(): Promise<AlertIncident[] | null> {
@@ -32,16 +32,16 @@ export async function resetAlertIncidents(): Promise<boolean> {
 }
 
 // ─── Sovereign Oracle Insights ──────────────────────────────────────
-export async function fetchSovereignInsights(): Promise<{
-  insights: SovereignInsight[];
-  stats: SovereignStats | null;
+export async function fetchCommandInsights(): Promise<{
+  insights: CommandInsight[];
+  stats: CommandStats | null;
   timestamp?: string;
   error?: string;
   retryAfterSec?: number;
 } | null> {
   const apiData = await callAdminApi<{ 
-    insights: SovereignInsight[]; 
-    stats: SovereignStats;
+    insights: CommandInsight[]; 
+    stats: CommandStats;
     timestamp?: string;
     error?: string;
     retryAfterSec?: number;

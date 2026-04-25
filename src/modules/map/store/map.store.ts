@@ -1058,26 +1058,50 @@ async function hydrateMapState() {
     const initial =
       typeof loadStoredState === "function" ? await loadStoredState() : null;
     
-    let nodes = initial?.nodes ?? [];
+    let localNodes = initial?.nodes ?? [];
     let mapType = initial?.mapType ?? "masafaty";
     let feelingResults = initial?.feelingResults ?? null;
     let transformationDiagnosis = initial?.transformationDiagnosis ?? null;
     let aiInterpretation = initial?.aiInterpretation ?? null;
 
-    // Hub-and-Spoke Cloud Recovery:
-    // If local is empty but user might have data in the cloud (e.g. new device/product)
-    if (nodes.length === 0 && !transformationDiagnosis) {
-      const cloudState = await fetchCloudMap();
-      if (cloudState) {
-        nodes = cloudState.nodes || [];
-        mapType = cloudState.mapType || "masafaty";
-        feelingResults = cloudState.feelingResults || null;
-        transformationDiagnosis = cloudState.transformationDiagnosis || null;
-        aiInterpretation = cloudState.aiInterpretation || null;
+    // Always attempt cloud recovery and merge with local
+    const cloudState = await fetchCloudMap();
+    if (cloudState && Array.isArray(cloudState.nodes) && cloudState.nodes.length > 0) {
+      // Merge: local nodes take priority (they may be more up-to-date)
+      const nodesByLabel = new Map<string, MapNode>();
+      
+      // First, add cloud nodes (lower priority)
+      for (const node of cloudState.nodes) {
+        if (node?.label) {
+          nodesByLabel.set(String(node.label).trim(), node);
+        }
       }
+      // Then, overlay local nodes (higher priority — overwrites cloud version)
+      for (const node of localNodes) {
+        if (node?.label) {
+          nodesByLabel.set(String(node.label).trim(), node);
+        }
+      }
+
+      localNodes = Array.from(nodesByLabel.values()).map((node, idx) => ({
+        ...node,
+        id: String(idx + 1)
+      }));
+
+      // Use cloud metadata if local is missing
+      if (!transformationDiagnosis && cloudState.transformationDiagnosis) {
+        transformationDiagnosis = cloudState.transformationDiagnosis;
+      }
+      if (!feelingResults && cloudState.feelingResults) {
+        feelingResults = cloudState.feelingResults;
+      }
+      if (!aiInterpretation && cloudState.aiInterpretation) {
+        aiInterpretation = cloudState.aiInterpretation;
+      }
+      mapType = initial?.mapType ?? cloudState.mapType ?? "masafaty";
     }
 
-    const normalizedNodes = nodes.map(normalizeNodeOrbitHistory);
+    const normalizedNodes = localNodes.map(normalizeNodeOrbitHistory);
     
     useMapState.setState({ 
       nodes: normalizedNodes,
@@ -1090,6 +1114,14 @@ async function hydrateMapState() {
 
     if (normalizedNodes.length > 0) {
       deriveNextId(normalizedNodes);
+      // Persist the merged state locally
+      saveStoredState({
+        nodes: normalizedNodes,
+        mapType,
+        feelingResults,
+        transformationDiagnosis,
+        aiInterpretation
+      });
     }
   } catch {
     useMapState.setState({ isHydrated: true });
@@ -1098,4 +1130,18 @@ async function hydrateMapState() {
 
 if (typeof window !== "undefined") {
   void hydrateMapState();
+
+  // Re-hydrate from cloud when user signs in after initial page load
+  import("@/services/supabaseClient").then(({ supabase: sb }) => {
+    if (!sb) return;
+    sb.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") {
+        const current = useMapState.getState();
+        // Only re-fetch if local store is empty (no nodes loaded yet)
+        if (current.nodes.length === 0) {
+          void hydrateMapState();
+        }
+      }
+    });
+  }).catch(() => {/* supabase not available */});
 }

@@ -13,7 +13,8 @@ export type UserStateType =
   | "stuck"        // واقف مكانه
   | "lost"         // تايه / مش عارف من فين يبدأ
   | "anxious"      // قلقان / مشدود
-  | "ready";       // مستعد للتغيير
+  | "ready"        // مستعد للتغيير
+  | "ununderstood"; // محدش فاهمني / الإحساس أعمق من الاختيارات
 
 // ── مصدر الألم الأساسي ──
 export type MainPain =

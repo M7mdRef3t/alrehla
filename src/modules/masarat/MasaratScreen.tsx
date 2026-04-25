@@ -70,11 +70,14 @@ export default function MasaratScreen() {
   }, []);
 
   // ── Path Finder handler ──
-  const handleResolvePath = useCallback(() => {
-    if (!selectedRing || !selectedContact) return;
+  const handleResolvePath = useCallback((ringOverride?: Ring, contactOverride?: ContactLevel) => {
+    const ring = ringOverride || selectedRing;
+    const contact = contactOverride || selectedContact;
+    if (!ring || !contact) return;
+
     const pathId = resolvePathId({
-      zone: selectedRing,
-      contact: selectedContact,
+      zone: ring,
+      contact: contact,
     });
     setResolvedPath(pathId);
     setMode("result");
@@ -354,7 +357,11 @@ function FinderMode({
                   borderColor: selectedContact === c ? "#2dd4bf" : "rgba(255,255,255,0.1)",
                   backgroundColor: selectedContact === c ? "#2dd4bf18" : "transparent",
                 }}
-                onClick={() => setSelectedContact(c)}
+                onClick={() => {
+                  setSelectedContact(c);
+                  // ⚡ الانتقال التلقائي: تأخير بسيط عشان يلحق يشوف الاختيار
+                  setTimeout(onResolve, 400);
+                }}
               >
                 <span style={{ fontSize: 20 }}>{CONTACT_LABELS[c].icon}</span>
                 <span style={S.optionText}>{CONTACT_LABELS[c].ar}</span>
@@ -363,13 +370,6 @@ function FinderMode({
             ))}
           </div>
         </div>
-      )}
-
-      {/* Resolve Button */}
-      {canResolve && (
-        <button style={S.resolveBtn} onClick={onResolve}>
-          🧭 احدد مسارك
-        </button>
       )}
     </div>
   );
@@ -453,6 +453,7 @@ const S: Record<string, React.CSSProperties> = {
     direction: "rtl",
     maxWidth: 640,
     margin: "0 auto",
+    paddingTop: 80,
     paddingBottom: 80,
   },
   header: {

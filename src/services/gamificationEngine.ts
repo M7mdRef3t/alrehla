@@ -81,7 +81,7 @@ export function getDailyQuests(nodes: any[] = [], completedKeys: string[] = []):
         quests.push({
             id: "dq_expand",
             title: "بناء الرادار",
-            description: "أضف شخصاً جديداً لخريطة السيادة الخاصة بك",
+            description: "أضف شخصاً جديداً لخريطة القيادة الخاصة بك",
             xpReward: 50,
             isCompleted: completedKeys.includes("dq_expand"),
             actionKey: "node_added",

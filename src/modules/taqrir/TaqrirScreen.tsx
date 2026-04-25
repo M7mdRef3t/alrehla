@@ -213,7 +213,7 @@ export const TaqrirScreen: FC = () => {
       ].join("\n") : "⚡ لا توجد بيانات نبض",
       ``,
       `🔥 Streak: ${streak} يوم`,
-      `⭐ المستوى: ${level} (${xp} XP)`,
+      `⭐ المستوى: ${level} (${xp} نقطة)`,
       `🏅 الأوسمة: ${badges.length}`,
       ``,
       `💚 علاقات صحية: ${relData.green}/${relData.total}`,
@@ -389,7 +389,7 @@ export const TaqrirScreen: FC = () => {
           <p className="text-xl font-black text-white">{streak}</p>
           <p className="text-[9px] text-slate-500 font-bold">يوم متواصل</p>
           <p className="text-[8px] text-slate-600 mt-1">
-            مستوى {level} · {xp} XP
+            مستوى {level} · {xp} نقطة
           </p>
         </div>
 

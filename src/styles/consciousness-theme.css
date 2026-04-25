@@ -59,7 +59,7 @@
    DARK MODE — (.dark)
    ════════════════════════════════════════════════ */
 .dark {
-  /* 🎨 Space Palette — Sovereign Dark */
+  /* 🎨 Space Palette — Command Dark */
   --space-void:    #02040a;   /* Obsidian Void */
   --space-950:     #060b17;   /* Extremely Deep Blue */
   --space-deep:    #0a1128;   /* Deep Oceanic Blue */
@@ -67,12 +67,12 @@
   --space-nebula:  #1e293b;   /* Slate Muted */
   --space-aurora:  #4f46e5;   /* Indigo Core */
 
-  /* 🧠 Consciousness Mapping — Sovereign Dark */
+  /* 🧠 Consciousness Mapping — Command Dark */
   --consciousness-background:  var(--space-void);
   --consciousness-text:        #f0fdfa; /* Teal Tinted White */
   --consciousness-text-muted:  #94a3b8; /* solid Slate 400 */
 
-  /* 📄 Page semantic tokens — Sovereign Dark */
+  /* 📄 Page semantic tokens — Command Dark */
   --page-bg:          #02040a;
   --page-bg-alt:      #060b17;
   --page-surface:     rgba(10, 17, 40, 0.5);
@@ -328,11 +328,11 @@ button:not(.unstyled) {
 }
 
 /* ════════════════════════════════════════════════
-   SOVEREIGNTY STORE THEMES — ثيمات متجر السِيادة
+   COMMAND STORE THEMES — ثيمات متجر القيادة
    ════════════════════════════════════════════════ */
 
-/* --- Nocturnal Sovereign (Dark/Glow) --- */
-[data-sovereign-theme="theme_nocturnal"] {
+/* --- Nocturnal Command (Dark/Glow) --- */
+[data-command-theme="theme_nocturnal"] {
   --space-void:    #030712;
   --space-950:     #09090b;
   --space-deep:    #111827;
@@ -343,7 +343,7 @@ button:not(.unstyled) {
 }
 
 /* --- Solar Awareness (Light/Clear) --- */
-[data-sovereign-theme="theme_solar"] {
+[data-command-theme="theme_solar"] {
   --space-void:    #f8fafc;
   --space-950:     #f1f5f9;
   --space-deep:    #e2e8f0;
@@ -357,7 +357,7 @@ button:not(.unstyled) {
 }
 
 /* --- Binary Void (Minimalist Matrix) --- */
-[data-sovereign-theme="theme_binary"] {
+[data-command-theme="theme_binary"] {
   --space-void:    #000000;
   --space-950:     #0a0a0a;
   --space-deep:    #111111;

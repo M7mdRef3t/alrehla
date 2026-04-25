@@ -24,12 +24,25 @@
   --ds-color-brand-amber-500: #f5a623;
   --ds-color-brand-amber-600: #d97706;
 
-  /* Sovereign 3.0 Tokens */
+  /* 🦅 Horus Identity — صقر الشاهين */
+  --ds-color-horus-gold: #C9A84C;
+  --ds-color-horus-gold-bright: #F0C75E;
+  --ds-color-horus-gold-deep: #A8873A;
+  --ds-color-horus-blue: #1B6CA8;
+  --ds-color-horus-blue-deep: #145080;
+  --ds-color-horus-sand: #D4B896;
+  --ds-color-horus-navy: #0A1628;
+  --horus-gold: #C9A84C;
+  --horus-gold-glow: rgba(201, 168, 76, 0.4);
+  --horus-blue: #1B6CA8;
+  --horus-blue-glow: rgba(27, 108, 168, 0.3);
+
+  /* Command 3.0 Tokens */
   --teal: #00f0ff;
-  --gold: #f5a623;
-  --gold-bright: #fbbf24;
+  --gold: #C9A84C;
+  --gold-bright: #F0C75E;
   --cyan-glow: rgba(0, 240, 255, 0.4);
-  --gold-glow: rgba(245, 166, 35, 0.4);
+  --gold-glow: rgba(201, 168, 76, 0.4);
 
   /* Primary */
   --ds-color-primary:       var(--ds-color-brand-teal-400);
@@ -77,7 +90,7 @@
   --text-muted:     var(--ds-theme-text-muted);
 
   /* 🧭 Layout Spacing */
-  --bottom-nav-height: 5rem; /* 80px */
+  --bottom-nav-height: 7rem; /* 112px - Clears the PlatformTabBar + Spacing */
   --fab-bottom-offset: calc(var(--bottom-nav-height) + 1.5rem); /* Space above nav bar */
 }
 
@@ -113,7 +126,7 @@
   --text-secondary: #cbd5e1;
   --text-muted:     #94a3b8;
 
-  /* Overwrite for Dark Sovereign Mode */
+  /* Overwrite for Dark Command Mode */
   --ds-color-primary: var(--teal);
   --ds-color-primary-strong: #2dd4bf;
   --ds-color-primary-glow: var(--cyan-glow);

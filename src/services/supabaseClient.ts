@@ -3,8 +3,8 @@ import { createClient, type Session, type SupabaseClient } from "@supabase/supab
 import { runtimeEnv } from "@/config/runtimeEnv";
 import type { User } from "@supabase/supabase-js";
 
-const supabaseUrl = runtimeEnv.supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://acvcnktpsbayowhurcmn.supabase.co';
-const supabaseAnonKey = runtimeEnv.supabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjdmNua3Rwc2JheW93aHVyY21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTQwOTksImV4cCI6MjA4NTk5MDA5OX0.ZlfaA7HA-09OhnUGeUieqbKcCnL9KKLQaT5C-I-tuXA';
+const supabaseUrl = runtimeEnv.supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = runtimeEnv.supabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 /**
  * Checks if we need cross-domain cookie storage (production with subdomains).
  * On localhost, JWT tokens exceed the 4KB browser cookie limit and get silently dropped,
@@ -87,7 +87,10 @@ declare global {
 }
 
 export const supabase: SupabaseClient | null = (() => {
-  if (!supabaseUrl || !supabaseAnonKey) return null;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("[Supabase] Missing URL or Anon Key. Client will not be initialized.");
+    return null;
+  }
 
   // Reuse existing client across Fast Refresh cycles (crucial for session continuity in dev)
   if (typeof window !== "undefined" && globalThis.__dawayirSupabaseClient) {
@@ -105,8 +108,6 @@ export const supabase: SupabaseClient | null = (() => {
       lock: needsCrossDomainCookies() ? undefined : async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => fn(),
     }
   });
-
-
 
   if (typeof window !== "undefined") {
     globalThis.__dawayirSupabaseClient = client;

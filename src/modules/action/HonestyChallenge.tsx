@@ -35,7 +35,7 @@ export const HonestyChallenge: FC<HonestyChallengeProps> = ({ insight, onAccept,
                     </div>
                     <div>
                         <div className="text-xs font-bold text-rose-400 uppercase tracking-widest">تحدي المصارحة</div>
-                        <div className="text-[10px] text-slate-500 font-mono">Honesty Challenge</div>
+                        <div className="text-[10px] text-slate-500 font-mono">تحدي المصارحة</div>
                     </div>
                 </div>
 
@@ -100,7 +100,7 @@ export const HonestyChallenge: FC<HonestyChallengeProps> = ({ insight, onAccept,
                         >
                             <div className="text-4xl mb-3">🛡️</div>
                             <p className="text-emerald-400 font-bold text-lg">شجاعة حقيقية.</p>
-                            <p className="text-slate-400 text-sm mt-1">+50 XP — وسام الصدق</p>
+                            <p className="text-slate-400 text-sm mt-1">+50 نقطة — وسام الصدق</p>
                         </motion.div>
                     )}
                 </AnimatePresence>

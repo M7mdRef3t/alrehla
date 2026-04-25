@@ -152,7 +152,7 @@ export function MapOperationalStrip({
             <div className="absolute inset-0 bg-teal-400/5 translate-y-10 group-hover:translate-y-0 transition-transform duration-500" />
             <div className="relative flex flex-col items-end">
               <span className="text-[9px] font-black uppercase tracking-[0.25em] text-teal-400">Tactical Control</span>
-              <span className="text-xs font-bold text-teal-50 whitespace-nowrap">لوحة السيادة</span>
+              <span className="text-xs font-bold text-teal-50 whitespace-nowrap">لوحة القيادة</span>
             </div>
             <div className="relative p-2 rounded-lg bg-teal-500/20 text-teal-400 group-hover:scale-110 transition-transform">
                <Orbit className="w-4 h-4" />

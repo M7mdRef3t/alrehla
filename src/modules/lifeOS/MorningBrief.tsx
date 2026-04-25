@@ -167,7 +167,7 @@ export const MorningBrief = memo(function MorningBrief({
                 <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest">مهمة اليوم المقترحة</span>
               </div>
               <div className="px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                <span className="text-[9px] font-black text-emerald-400">+{dailyMission.rewardXp} XP</span>
+                <span className="text-[9px] font-black text-emerald-400">+{dailyMission.rewardXp} نقطة</span>
               </div>
             </div>
 

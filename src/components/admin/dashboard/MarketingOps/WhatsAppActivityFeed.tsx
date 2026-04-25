@@ -41,9 +41,7 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
   const [error, setError] = useState<string | null>(null);
 
   const fetchEvents = useCallback(async () => {
-    const authToken = getAuthToken();
-    const adminCode = useAdminState.getState().adminCode;
-    const bearer = authToken || adminCode;
+    const bearer = getAuthToken();
     
     if (!bearer) return;
 
@@ -230,7 +228,7 @@ export const WhatsAppActivityFeed: React.FC<WhatsAppActivityFeedProps> = ({ onOp
       </div>
 
       <div className="text-[10px] text-center text-slate-600 italic">
-        * يتم تحديث هذه القائمة تلقائياً كل 30 ثانية لرصد حركة السيادة.
+        * يتم تحديث هذه القائمة تلقائياً كل 30 ثانية لرصد حركة القيادة.
       </div>
     </div>
   );

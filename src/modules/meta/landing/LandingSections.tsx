@@ -27,7 +27,7 @@ import { isUserMode } from "@/config/appEnv";
 const PREVIEW_METRICS = [
   { val: "٣ دقائق", label: "لترى ملمح خريطتك الأول", icon: Clock3, color: "text-teal-400" },
   { val: "بداية فورية", label: "لا عوائق تقنية أمامك", icon: Zap, color: "text-amber-400" },
-  { val: "خصوصية سيادية", label: "أسرارك في أمان مطلق", icon: ShieldCheck, color: "text-rose-400" }
+  { val: "خصوصية قيادية", label: "أسرارك في أمان مطلق", icon: ShieldCheck, color: "text-rose-400" }
 ] as const;
 
 export const ProblemFirstSection: FC<{
@@ -388,7 +388,7 @@ export const FinalReadinessSection: FC<{
       <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-teal-300">جاهزية البدء</p>
       <h2 className="mb-3 text-2xl font-black text-white sm:text-3xl">قرارك هو البداية.</h2>
       <p className="mx-auto max-w-[44ch] text-sm leading-7 text-slate-300">
-        "الرحلة" ليست مجرد أداة، بل هي قرار باستعادة زمام الأمور والسيادة على طاقتك. نحن هنا لنمسك بيدك في أول خطوة نحو الوضوح.
+        "الرحلة" ليست مجرد أداة، بل هي قرار باستعادة زمام الأمور والقيادة على طاقتك. نحن هنا لنمسك بيدك في أول خطوة نحو الوضوح.
       </p>
       {lastGoalLabel && (
         <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-slate-200">

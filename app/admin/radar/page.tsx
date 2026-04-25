@@ -774,7 +774,7 @@ const SystemHealthRadar: React.FC<{
 };
 
 export default function AdminRadarPage() {
-  const adminCode = useAdminState((s) => s.adminCode);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pulse, setPulse] = useState<RadarPulse | null>(null);
@@ -826,11 +826,9 @@ export default function AdminRadarPage() {
   const getAdminAccessToken = useCallback(async (): Promise<string> => {
     const session = await safeGetSession();
     const accessToken = session?.access_token;
-    const fallbackToken = typeof adminCode === "string" ? adminCode.trim() : "";
-    const effectiveToken = accessToken || fallbackToken;
-    if (!effectiveToken) throw new Error("Unauthorized");
-    return effectiveToken;
-  }, [adminCode]);
+    if (!accessToken) throw new Error("Unauthorized");
+    return accessToken;
+  }, []);
 
   const loadRadar = useCallback(async (isInitial = false) => {
     try {

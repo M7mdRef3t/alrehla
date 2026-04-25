@@ -41,7 +41,6 @@ export const FeatureFlagsPanel: FC = () => {
     const setBetaAccess = useAdminState((s) => s.setBetaAccess);
     const adminAccess = useAdminState((s) => s.adminAccess);
     const setAdminAccess = useAdminState((s) => s.setAdminAccess);
-    const setAdminCode = useAdminState((s) => s.setAdminCode);
     const baseRole = useAuthState((s) => s.role);
     const roleOverride = useAuthState((s) => s.roleOverride);
     const setRoleOverride = useAuthState((s) => s.setRoleOverride);
@@ -130,7 +129,6 @@ export const FeatureFlagsPanel: FC = () => {
 
     const handleViewAsUser = () => {
         setAdminAccess(false);
-        setAdminCode(null);
         setRoleOverride("user");
         stripRoleQueryParam();
     };

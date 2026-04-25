@@ -17,6 +17,7 @@ import {
   PREMIUM_FEATURES_LIST,
 } from "@/config/pricing";
 import { markRevenueAccessUnlocked } from "@/services/revenueAccess";
+import { BotpressService } from "@/services/botpressService";
 
 const FEATURES = PREMIUM_FEATURES_LIST;
 
@@ -53,6 +54,16 @@ export default function PricingPage() {
         setShowVipInput(true);
         void handleVipSubmit(magicVip.trim());
       }, 500);
+    }
+
+    // Notify Botpress about the visit
+    const leadId = marketingLeadService.getStoredLeadId();
+    if (leadId) {
+      void BotpressService.sendMessage({
+        userId: leadId,
+        text: "User viewed pricing page",
+        metadata: { source: "pricing_page", action: "view" }
+      });
     }
   }, []);
 
@@ -114,6 +125,11 @@ export default function PricingPage() {
           source: "pricing_page",
           sourceType: "website",
           metadata: { leadId: storedLeadId ?? undefined, plan: "premium_intent" }
+        });
+        void BotpressService.sendMessage({
+          userId: storedLeadId || "anonymous",
+          text: "User clicked subscribe button",
+          metadata: { source: "pricing_page", action: "click_subscribe", plan: "premium" }
         });
       } catch { /* non-blocking */ }
     }

@@ -4,13 +4,19 @@ import { telegramBot } from "@/services/telegramBot";
 
 export const dynamic = "force-dynamic";
 
-// Initialize admin client strictly for Cron execution
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// Lazily initialize admin client strictly for Cron execution to prevent build-time errors
+const getSupabaseAdmin = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Supabase URL and Key are required for this cron job.');
+  }
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false }
-});
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false }
+  });
+};
 
 const THRESHOLD_VIEWS = 100;
 const THRESHOLD_CTR = 15; // Percent
@@ -26,6 +32,8 @@ export async function GET(req: Request) {
             return new NextResponse('Unauthorized', { status: 401 });
         }
     }
+
+    const supabaseAdmin = getSupabaseAdmin();
 
     const { data: viewsData, error: viewErr } = await supabaseAdmin
       .from("analytics_events")

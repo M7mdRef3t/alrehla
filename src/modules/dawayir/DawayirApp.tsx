@@ -25,12 +25,14 @@ import { OracleModal, type OraclePrediction } from './components/OracleModal';
 import { TacticalHUD } from './components/TacticalHUD';
 import { ActionPlanDrawer } from './components/ActionPlanDrawer';
 import { TimelineDrawer } from './components/TimelineDrawer';
+import { MapControlDock } from './components/MapControlDock';
+import { MapSettingsModal } from './components/MapSettingsModal';
 
 export default function DawayirApp() {
     useAIOrchestration();
     const { isSanctuary, exitSanctuary, gestureHandlers } = useGestureSanctuary();
 
-    const { data, isLoading, isSaving, error, analyzeAnswers, saveMap } = useDawayirEngine();
+    const { data, isLoading, isSaving, error, analyzeAnswers, saveMap, loadMap } = useDawayirEngine();
     const [showPaywall, setShowPaywall] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [hasActiveCoach, setHasActiveCoach] = useState(false);
@@ -48,6 +50,11 @@ export default function DawayirApp() {
     const [showSimulation, setShowSimulation] = useState(false);
     const [showActionPlan, setShowActionPlan] = useState(false);
     const [showTimeline, setShowTimeline] = useState(false);
+    const [showMapSettings, setShowMapSettings] = useState(false);
+    const [mapSettings, setMapSettings] = useState({
+        showGrid: true,
+        showLabels: true,
+    });
 
     // AI Facilitator State (Phase 3)
     const [focusedNode, setFocusedNode] = useState<NodeData | null>(null);
@@ -153,6 +160,8 @@ export default function DawayirApp() {
                 ]);
                 setSubInfo(info);
                 await checkCoachConnection(userId);
+                // تحميل الخريطة المحفوظة تلقائياً عند بدء الجلسة
+                await loadMap(userId);
             };
 
             client.auth.getSession().then(({ data: { session } }) => {
@@ -275,7 +284,7 @@ export default function DawayirApp() {
             setShowPaywall(true);
             return;
         }
-        await saveMap("خريطة التقييم الأولي");
+        await saveMap(user.id, "خريطة التقييم الأولي");
     };
     const shouldBlockForGenesis = Boolean(user && isOnboarded === false);
     const isOnboardingStateLoading = Boolean(user && isOnboarded === null);
@@ -437,7 +446,7 @@ export default function DawayirApp() {
                                 {sourceStory === 'story-1' ? (
                                     <>
                                         <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 leading-tight">
-                                            مرحباً بك في مساحة السيادة
+                                            مرحباً بك في مساحة القيادة
                                         </h2>
                                         <p className="font-medium max-w-lg mx-auto" style={{ color:"#8faab8" }}>
                                             استلهاماً من رحلة استعادة السيطرة، دعنا نرصد مواطن النزيف في مجالك...
@@ -497,6 +506,7 @@ export default function DawayirApp() {
                                     setFocusedNode(node);
                                 }}
                                 pendingNodeUpdate={pendingNodeUpdate}
+                                settings={mapSettings}
                             />
 
                             {/* Phase 3: The AI Facilitator (Glass-morphic Chat) */}
@@ -518,70 +528,14 @@ export default function DawayirApp() {
                                 </>
                             )}
 
-                            {/* Action Overlay */}
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col md:flex-row gap-4">
-                                {(!data.id) && (
-                                    <div className="flex flex-col md:flex-row gap-4">
-                                        <button
-                                            onClick={handleSave}
-                                            disabled={isSaving}
-                                            className="px-6 py-3 bg-teal-500 text-slate-950 rounded-xl shadow-md shadow-teal-500/10 hover:bg-teal-400 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest"
-                                        >
-                                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                            {isSaving ? 'جاري حفظ الخريطة...' : 'حفظ الخريطة'}
-                                        </button>
-
-                                        {data?.detected_symptoms && data.detected_symptoms.length > 0 && (
-                                            <button
-                                                onClick={() => setShowSimulation(true)}
-                                                className="px-6 py-3 bg-[var(--soft-teal)]/20 border border-[var(--soft-teal)] text-[var(--soft-teal)] rounded-xl shadow-lg hover:bg-[var(--soft-teal)]/20 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest group"
-                                            >
-                                                <Brain className="w-4 h-4 group-hover:animate-pulse" />
-                                                ابدأ تدريبك الآن
-                                            </button>
-                                        )}
-
-                                        {/* Action Plan Button */}
-                                        <button
-                                            onClick={() => setShowActionPlan(true)}
-                                            className="px-6 py-3 bg-purple-500/15 border border-purple-500/40 text-purple-300 rounded-xl shadow-lg hover:bg-purple-500/25 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest group"
-                                        >
-                                            <ClipboardList className="w-4 h-4 group-hover:animate-pulse" />
-                                            خطة العمل
-                                        </button>
-                                    </div>
-                                )}
-                                {(data.id && hasActiveCoach) && (
-                                    <button
-                                        onClick={handleShareWithCoach}
-                                        disabled={isSharing || isShared}
-                                        className={`px-6 py-3 border rounded-xl shadow-lg transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest
-                                            ${isShared
-                                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-default'
-                                                : 'bg-[var(--soft-teal)]/10 text-[var(--soft-teal)] border-[var(--soft-teal)] hover:bg-[var(--soft-teal)]/20'}`}
-                                    >
-                                        {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : (isShared ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />)}
-                                        {isSharing ? 'جاري الرفع...' : (isShared ? 'تمت المشاركة' : 'مشاركة مع الكوتش')}
-                                    </button>
-                                )}
-                                {/* Personal Oracle Control (Proactive AI) */}
-                                {user && data.id && (
-                                    <button
-                                        onClick={handleCallOracle}
-                                        disabled={isOracleLoading}
-                                        className="px-6 py-3 bg-white/5 border border-white/10 text-white rounded-xl shadow-md hover:bg-white/10 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest"
-                                    >
-                                        {isOracleLoading ? "جاري التحليل..." : "تحليل الطاقة"}
-                                        <Sparkles className="w-4 h-4 text-teal-400" />
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => setShowPaywall(true)}
-                                    className="px-8 py-3 bg-gray-900 text-white rounded-full shadow-lg shadow-gray-900/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-semibold"
-                                >
-                                    ابدأ إعادة الهيكلة (النسخة الكاملة)
-                                </button>
-                            </div>
+                        {/* HUD Control Dock */}
+                        <MapControlDock
+                            onAnalyze={() => setShowOracleModal(true)}
+                            onPlan={() => setShowActionPlan(true)}
+                            onSettings={() => setShowMapSettings(true)}
+                            onSave={handleSave}
+                            isSaving={isSaving}
+                        />
                         </div>
 
                         {/* Automagic Event Notification Popup */}
@@ -602,6 +556,16 @@ export default function DawayirApp() {
                             isOpen={showTimeline}
                             onClose={() => setShowTimeline(false)}
                             userId={user?.id || null}
+                        />
+
+                        <MapSettingsModal
+                            isOpen={showMapSettings}
+                            onClose={() => setShowMapSettings(false)}
+                            settings={mapSettings}
+                            onUpdateSettings={setMapSettings}
+                            onResetMap={() => {
+                                window.location.reload();
+                            }}
                         />
 
                     </div>

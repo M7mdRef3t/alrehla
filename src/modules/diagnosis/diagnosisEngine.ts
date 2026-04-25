@@ -117,6 +117,9 @@ function deriveRecommendedProduct(
   // مضغوط عالي → مسارات (لأنه عنده طاقة يتحرك)
   if (type === "overwhelmed" && readiness === "high") return "masarat";
 
+  // محدش فاهمني → دواير (عشان يشوف خريطة الناس اللي حواليه)
+  if (type === "ununderstood") return "dawayir";
+
   // fallback → دواير (Entry point آمن دايماً)
   return "dawayir";
 }
@@ -139,6 +142,7 @@ function calculateDiagnosisScore(
     lost: -10,
     stuck: -5,
     ready: +20,
+    ununderstood: -5,
   };
   score += typeScores[type] ?? 0;
 
@@ -195,6 +199,7 @@ export const USER_STATE_LABELS: Record<string, string> = {
   lost: "تايه ومش عارف من فين تبدأ",
   anxious: "قلقان ومشدود",
   ready: "جاهز وعايز تتحرك",
+  ununderstood: "محدش فاهمني",
 };
 
 export const MAIN_PAIN_LABELS: Record<string, string> = {
@@ -202,6 +207,23 @@ export const MAIN_PAIN_LABELS: Record<string, string> = {
   work: "الشغل والإنجاز",
   self: "علاقتي بنفسي",
   family: "عيلتي",
+};
+
+// ── تسميات لليوزر في النتيجة (مخاطب) ──
+export const USER_STATE_RESULT_LABELS: Record<string, string> = {
+  overwhelmed: "مضغوط ومشغول الدنيا",
+  stuck: "واقف بس مش مطلّع",
+  lost: "تايه ومش عارف من فين تبدأ",
+  anxious: "قلقان ومشدود",
+  ready: "جاهز وعايز تتحرك",
+  ununderstood: "محدش فاهمك",
+};
+
+export const MAIN_PAIN_RESULT_LABELS: Record<string, string> = {
+  relationship: "علاقاتك مع الناس",
+  work: "شغلك وإنجازك",
+  self: "علاقتك بنفسك",
+  family: "عيلتك",
 };
 
 export const RECOMMENDED_PRODUCT_LABELS: Record<string, { name: string; desc: string; emoji: string; color: string }> = {

@@ -709,7 +709,7 @@ export const config: Config<Props> = {
       },
       defaultProps: {
         brandName: "الرحلة",
-        tagline: "بوصلة الوعي الذاتي",
+        tagline: "ارتفع . شوف . اتحرك",
         links: [{ label: "الرئيسية", url: "/" }],
         trustBadges: ["🔒 بياناتك آمنة ومشفرة"],
         padding: "lg",

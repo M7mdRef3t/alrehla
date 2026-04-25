@@ -16,8 +16,8 @@ import { emergencyCopy } from "@/copy/emergency";
 import { recordFlowEvent, recordPathStartedOnce } from "@/services/journeyTracking";
 import { useSyncState } from "@/domains/journey/store/sync.store";
 import { isUserMode } from "@/config/appEnv";
-import { SovereigntySnapshotCard } from "../SovereigntySnapshotCard";
-import { deriveSovereigntySnapshot } from "@/utils/sovereigntySnapshot";
+import { CommandSnapshotCard } from "../CommandSnapshotCard";
+import { deriveCommandSnapshot } from "@/utils/commandSnapshot";
 import { BoundaryEvidenceCard } from "../BoundaryEvidenceCard";
 import { deriveBoundaryEvidence } from "@/utils/boundaryEvidence";
 import { PressureSentenceCard } from "../PressureSentenceCard";
@@ -146,7 +146,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     [result.obstacles]
   );
 
-  const sovereigntySnapshot = useMemo(() => deriveSovereigntySnapshot({
+  const commandSnapshot = useMemo(() => deriveCommandSnapshot({
     displayName,
     ring: activeRing,
     node: addedNode ?? null,
@@ -274,7 +274,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                {/* Filled Arc */}
                <motion.path 
                  initial={{ pathLength: 0 }}
-                 animate={{ pathLength: result.sovereigntyScore / 100 }}
+                 animate={{ pathLength: result.commandScore / 100 }}
                  transition={{ duration: 2, ease: "easeOut" }}
                  d="M 10 50 A 40 40 0 0 1 90 50" 
                  fill="none" 
@@ -292,9 +292,9 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                   transition={{ delay: 0.5, duration: 1 }}
                   className="text-4xl font-black text-white"
                 >
-                  {result.sovereigntyScore}<span className="text-lg text-slate-500">%</span>
+                  {result.commandScore}<span className="text-lg text-slate-500">%</span>
                 </motion.span>
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">مؤشر السيادة</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">مؤشر القيادة</span>
              </div>
           </div>
 
@@ -362,7 +362,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
       {/* High-Fidelity Tactical Instruments */}
       <div className="space-y-4">
         {pressureSentence && <PressureSentenceCard snapshot={pressureSentence} />}
-        {sovereigntySnapshot && <SovereigntySnapshotCard snapshot={sovereigntySnapshot} />}
+        {commandSnapshot && <CommandSnapshotCard snapshot={commandSnapshot} />}
         {boundaryEvidence && <BoundaryEvidenceCard evidence={boundaryEvidence} />}
       </div>
 

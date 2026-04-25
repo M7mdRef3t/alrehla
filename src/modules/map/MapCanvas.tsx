@@ -1389,7 +1389,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
       detachedNodes: detached,
       ringNodes: ring,
       nodesByRing: {
-        green: ring.filter((n) => n.ring === "green"),
+        green: ring.filter((n) => n.ring === "green" || !n.ring),
         yellow: ring.filter((n) => n.ring === "yellow"),
         red: ring.filter((n) => n.ring === "red")
       }
@@ -2088,7 +2088,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     filter: "drop-shadow(0 0 3px var(--soft-teal-glow))"
                   }}
                 >
-                  ◈ أنا ◈
+                  ◈ أنت ◈
                 </text>
               </g>
 
@@ -2136,7 +2136,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               <div className="relative w-full h-full pointer-events-auto">
                 <AnimatePresence>
                   {ringNodes.map((node) => {
-                    const nodesInSameRing = nodesByRing[node.ring];
+                    const ringKey = node.ring || "green";
+                    const nodesInSameRing = nodesByRing[ringKey] || [];
                     const nodeIndex = nodesInSameRing.findIndex(n => n.id === node.id);
                     const totalInRing = nodesInSameRing.length;
                     return (
@@ -2211,7 +2212,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     <div className="flex flex-col gap-1 items-start text-right" dir="rtl">
                       <span className="text-[10px] font-black tracking-widest text-teal-400/60 uppercase">النبض الاستباقي</span>
                       <span className="text-xs font-bold text-teal-100/90 whitespace-nowrap">
-                        <Typewriter text="المدار جاهز لاستقبال رحلتك.. ابدأ بوضع أول عُقدة في خريطة وعيك لترسم معالم سيادتك." speed={50} />
+                        <Typewriter text="المدار جاهز لاستقبال رحلتك.. ابدأ بوضع أول عُقدة في خريطة وعيك لترسم معالم قيادتك." speed={50} />
                       </span>
                     </div>
                   </div>

@@ -1,6 +1,6 @@
 import { logger } from "./logger";
 import { getAuthToken } from "@/domains/auth/store/auth.store";
-import { useAdminState } from "@/domains/admin/store/admin.store";
+
 
 export interface VercelDeployment {
   id: string;
@@ -19,9 +19,7 @@ export interface VercelPulse {
 export const vercelService = {
   getPulse: async (): Promise<VercelPulse> => {
     try {
-      const authToken = getAuthToken();
-      const adminCode = useAdminState.getState().adminCode;
-      const bearer = authToken ?? adminCode;
+      const bearer = getAuthToken();
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json"

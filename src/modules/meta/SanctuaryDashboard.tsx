@@ -137,7 +137,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
 
     const activeNodes = nodes.filter(n => !n.isNodeArchived);
     const energyLevel = lastPulse?.energy ?? 5;
-    const emailPrefix = user?.email?.split("@")[0] || "Sovereign";
+    const emailPrefix = user?.email?.split("@")[0] || "Leader";
     const sanctuaryPath = getJourneyPathBySlug(journeyPaths, "sanctuary");
     const sanctuarySteps = getEnabledJourneySteps(sanctuaryPath);
     const sanctuaryBreathingEnabled = hasEnabledJourneyStepKind(sanctuaryPath, "intervention");
@@ -221,7 +221,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
                                     <Shield className="text-[var(--consciousness-primary)] w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-500/70">حساب السيادة</h3>
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-500/70">حساب القيادة</h3>
                                     <p className="text-lg font-black text-[var(--ds-theme-text-primary)]">{emailPrefix}</p>
                                 </div>
                             </div>
@@ -631,7 +631,7 @@ export const SanctuaryDashboard: React.FC<SanctuaryDashboardProps> = memo(({ onN
             >
                 <div className="px-4 py-2 flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-[var(--consciousness-primary)] animate-pulse" />
-                    <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">السيادة متصلة</span>
+                    <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">القيادة متصلة</span>
                 </div>
                 <div className="w-px h-6 bg-white/10" />
                 <button className="px-4 py-2 text-[10px] font-black text-[var(--consciousness-primary)] uppercase tracking-widest hover:text-white transition-colors">

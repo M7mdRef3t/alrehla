@@ -190,7 +190,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
   useEffect(() => {
     const res = recordDailyVisit();
     if (res.currentStreak > 0) {
-      addXP(20, "تسج دخ ");
+      addXP(20, "تسجيل دخول");
     }
   }, [addXP]);
 

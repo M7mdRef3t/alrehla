@@ -70,7 +70,7 @@ function getClientIp(req: NextRequest): string {
 
 function isSecretAuthorized(req: NextRequest): boolean {
     const authHeader = req.headers.get("authorization") || "";
-    const secrets = [process.env.CRON_SECRET, process.env.ADMIN_API_SECRET, process.env.ADMIN_CODE]
+    const secrets = [process.env.CRON_SECRET, process.env.ADMIN_API_SECRET]
         .filter((value): value is string => Boolean(value && value.trim()))
         .map((value) => value.trim());
     if (secrets.length === 0) return false;

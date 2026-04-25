@@ -1,4 +1,4 @@
-import { useAdminState } from "@/domains/admin/store/admin.store";
+
 import { getAuthToken } from "@/domains/auth/store/auth.store";
 
 export interface AgentToolDefinition {
@@ -48,9 +48,7 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
 ];
 
 export async function executeAgentTool(tool: string, args: any): Promise<any> {
-    const adminCode = useAdminState.getState().adminCode;
-    const authToken = getAuthToken();
-    const bearer = authToken ?? adminCode;
+    const bearer = getAuthToken();
 
     if (!bearer) {
         throw new Error("unauthorized_tool_execution");

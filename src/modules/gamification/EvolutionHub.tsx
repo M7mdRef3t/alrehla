@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useGamification } from "@/domains/gamification";
 import { QuestBoard } from "./QuestBoard";
-import { SovereigntyStore } from "./SovereigntyStore";
+import { LeadershipStore } from "./LeadershipStore";
 import { FrostBoard } from "./FrostBoard";
 import { ChallengeBoard } from "./ChallengeBoard";
 import { soundManager } from "@/services/soundManager";
@@ -138,7 +138,7 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
                         </div>
                         <div className="flex flex-col">
                             <span className="text-xs font-black text-white">{coins}</span>
-                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">عملة سِيادية</span>
+                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">عملة قيادية</span>
                         </div>
                     </div>
                     
@@ -160,7 +160,7 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
                         </div>
                         <div className="flex flex-col">
                             <span className="text-xs font-black text-white">{badges.length}</span>
-                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">أوسمة سِيادية</span>
+                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">أوسمة قيادية</span>
                         </div>
                     </div>
                     
@@ -290,7 +290,7 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
                exit={{ opacity: 0, scale: 1.05 }}
                className="h-full"
              >
-               <SovereigntyStore />
+               <LeadershipStore />
              </motion.div>
            )}
         </AnimatePresence>
@@ -315,9 +315,9 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
                   <div className="absolute inset-0 rounded-full bg-white/20 animate-ping" />
                </motion.div>
 
-               <h2 className="text-5xl font-black text-white mb-4 uppercase tracking-tighter">ارتقاء سِيادي!</h2>
+               <h2 className="text-5xl font-black text-white mb-4 uppercase tracking-tighter">ارتقاء قيادي!</h2>
                <p className="text-xl font-medium text-slate-400 mb-12">
-                  لقد وصلت لمستوى السيادة <span className="text-indigo-400 font-black">{level}</span>
+                  لقد وصلت لمستوى القيادة <span className="text-indigo-400 font-black">{level}</span>
                </p>
 
                <div className="flex gap-4">
@@ -326,7 +326,7 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
                      <div className="text-sm font-black text-emerald-400">مكافأة المستوى</div>
                   </div>
                   <div className="px-6 py-4 rounded-3xl bg-white/5 border border-white/10">
-                     <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">دليل صِيادي جديد</div>
+                     <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">دليل قيادي جديد</div>
                      <div className="text-sm font-black text-indigo-400">فتح مهارة</div>
                   </div>
                </div>

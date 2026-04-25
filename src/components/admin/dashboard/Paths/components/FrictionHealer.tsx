@@ -185,7 +185,7 @@ export const FrictionHealer = memo(function FrictionHealer({
             <header className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-teal-400" />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-400">تقرير السيادة الإدراكية</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-400">تقرير القيادة الإدراكية</h4>
               </div>
               <button
                 onClick={onRunAudit}

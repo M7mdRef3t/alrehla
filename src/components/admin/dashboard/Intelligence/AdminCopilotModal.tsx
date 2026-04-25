@@ -11,7 +11,7 @@ export const AdminCopilotModal: FC = () => {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Array<{ role: "user" | "bot"; text: string }>>([
-    { role: "bot", text: "أهلاً بك يا ريس في مركز السيادة. أنا مساعدك الذكي الخاص. اقدر ألخصلك الأرقام الحيوية، أقيّم لك شكاوي الزوار، أو أساعدك تحلل الأرواح المكتسبة مؤخراً. اؤمرني!" }
+    { role: "bot", text: "أهلاً بك يا ريس في مركز القيادة. أنا مساعدك الذكي الخاص. اقدر ألخصلك الأرقام الحيوية، أقيّم لك شكاوي الزوار، أو أساعدك تحلل الأرواح المكتسبة مؤخراً. اؤمرني!" }
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +35,7 @@ export const AdminCopilotModal: FC = () => {
       const contextData = {
         liveStats: state.liveStatsCache?.data,
         marketingOps: state.opsStatsCache?.data,
-        alerts: state.hasSovereignAlert
+        alerts: state.hasCommandAlert
       };
 
       const res = await callAdminApi<{ reply: string }>("copilot", {

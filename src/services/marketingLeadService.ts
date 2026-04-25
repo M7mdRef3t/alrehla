@@ -5,6 +5,8 @@ import { trackLead, getOrCreateAnonymousId, getStoredClientEventId } from "./ana
 import { recordFlowEvent } from "./journeyTracking";
 import { getStoredUtmParams } from "./marketingAttribution";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
+import { loadDiagnosisState } from "@/modules/diagnosis/types";
+import { BotpressService } from "./botpressService";
 
 const STORAGE_KEY_LEAD_ID = "dawayir_lead_id";
 const STORAGE_KEY_LEAD_PHONE = "dawayir_lead_phone";
@@ -62,7 +64,8 @@ function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayloa
       capturedAt: new Date().toISOString(),
       url: typeof window !== "undefined" ? window.location.href : undefined,
       poeticState: input.metadata?.state,
-      leadIntent: input.metadata?.intent
+      leadIntent: input.metadata?.intent,
+      diagnosis: loadDiagnosisState() ?? undefined
     }
   };
 }
@@ -126,6 +129,20 @@ if (typeof window !== "undefined") { (window as any).marketingLeadService = { ca
     }
     if (resolvedPhone) {
       setInLocalStorage(STORAGE_KEY_LEAD_PHONE, resolvedPhone);
+    }
+
+    // P0-2: Trigger Botpress if phone is captured and diagnosis exists
+    if (resolvedPhone && payload.metadata?.diagnosis) {
+      void BotpressService.sendMessage({
+        userId: resolvedPhone,
+        text: `DIAGNOSIS_COMPLETED: ${payload.metadata.diagnosis.type}`,
+        metadata: {
+          phone: resolvedPhone,
+          name: payload.name,
+          diagnosis: payload.metadata.diagnosis,
+          source: payload.source
+        }
+      }).catch(err => console.error("Botpress trigger failed:", err));
     }
 
     return {

@@ -19,7 +19,7 @@ const DEFAULT_TRUST_POINTS = [
 const PLATFORM_FOOTER_STYLES = `
   .platform-footer {
     background: #02040a;
-    border-top: 1px solid rgba(20,184,166,0.1);
+    border-top: 1px solid rgba(201,168,76,0.15);
     padding: 80px 0 40px;
     margin-top: auto;
     position: relative;
@@ -54,17 +54,17 @@ const PLATFORM_FOOTER_STYLES = `
   }
 
   .platform-footer-link:hover {
-    color: #14b8a6;
+    color: #C9A84C;
   }
 
   .platform-footer-link.highlight {
-    color: #14b8a6;
+    color: #C9A84C;
     font-weight: 700;
   }
 
   .platform-footer-trust-panel {
-    background: rgba(20,184,166,0.03);
-    border: 1px solid rgba(20,184,166,0.08);
+    background: rgba(201,168,76,0.03);
+    border: 1px solid rgba(201,168,76,0.08);
     padding: 24px 40px;
     border-radius: 24px;
     width: 100%;
@@ -72,7 +72,7 @@ const PLATFORM_FOOTER_STYLES = `
   }
 
   .platform-footer-trust-title {
-    color: #5eead4;
+    color: #F0C75E;
     font-size: 12px;
     font-weight: 900;
     text-transform: uppercase;
@@ -99,8 +99,8 @@ const PLATFORM_FOOTER_STYLES = `
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: #14b8a6;
-    box-shadow: 0 0 8px #14b8a6;
+    background: #C9A84C;
+    box-shadow: 0 0 8px rgba(201,168,76,0.6);
   }
 
   .platform-footer-bottom {
@@ -207,7 +207,7 @@ export const PlatformFooter: FC<PlatformFooterProps> = ({
         {/* Bottom text */}
         <div className="platform-footer-bottom">
           <span className="platform-footer-tagline">
-            الرحلة — مساحة لاستعادة نفسك، وبناء حدودك، وفهم مداراتك.
+            الرحلة — ارتفع فوق حياتك، شوف الصورة الكاملة، واتحرك بوعي.
           </span>
           <p className="platform-footer-copy">
             © {year} الرحلة — جميع الحقوق محفوظة

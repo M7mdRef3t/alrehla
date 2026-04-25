@@ -13,7 +13,7 @@ export interface LeadAnalysisVerdict {
     isSpam: boolean;
 }
 
-export interface SovereignInsight {
+export interface CommandInsight {
     id: string;
     type: 'truth' | 'warning' | 'opportunity';
     message: string;
@@ -147,21 +147,21 @@ export class OracleService {
     }
 
     /**
-     * 🔮 SOVEREIGN INSIGHTS (War Room Oracle)
+     * 🔮 COMMAND INSIGHTS (War Room Oracle)
      * Generates a pulse of strategic insights based on truth_vault and routing_events.
      */
-    static async generateSovereignInsights(context: { 
+    static async generateCommandInsights(context: { 
         recentTruths: any[], 
         eventCounts: Record<string, number>,
         activeNow: number,
         behavioralFriction?: Array<{ scenario: string; avgTimeSec: number; sampleSize: number }>
-    }): Promise<SovereignInsight[]> {
+    }): Promise<CommandInsight[]> {
         const frictionSummary = context.behavioralFriction?.length 
             ? context.behavioralFriction.map(f => `${f.scenario}: ${f.avgTimeSec}s (N=${f.sampleSize})`).join(", ")
             : "No friction data available.";
 
         const prompt = `
-      بصفتك "The Oracle" وكبير مستشاري "Dawayir Sovereign Control". 
+      بصفتك "The Oracle" وكبير مستشاري "Dawayir Command Control". 
       قم بتحليل "نبض المنصة" الحالي وتوليد 3 رؤى استراتيجية عميقة ومبنية على "المبادئ الأولى" (First Principles).
 
       النبض الحالي:
@@ -195,16 +195,16 @@ export class OracleService {
     `;
 
         try {
-            const result = await geminiClient.generateJSON<SovereignInsight[]>(prompt);
+            const result = await geminiClient.generateJSON<CommandInsight[]>(prompt);
             return result || [];
         } catch (error) {
-            logger.error("Oracle Sovereign Insights Error:", error);
+            logger.error("Oracle Command Insights Error:", error);
             return [];
         }
     }
 
     /**
-     * 🔥 AUTO-IGNITION (Oracle Sovereign Control)
+     * 🔥 AUTO-IGNITION (Oracle Command Control)
      * Strategically evaluates platforms and directs budgets or defensive lockdowns.
      */
     static async evaluateGatewayAutoIgnition(gateways: any[], diffusion: any): Promise<any[]> {
@@ -225,7 +225,7 @@ export class OracleService {
       ${JSON.stringify(diffusion.gatewayHealth, null, 2)}
 
       المطلوب:
-      تحديد إجراءات "Sovereign Control" حاسمة بناءً على المباديء الأولى (First Principles):
+      تحديد إجراءات "Command Control" حاسمة بناءً على المباديء الأولى (First Principles):
       1. إذا كانت الطاقة (الصرف) عالية، لكن "Resonance" منخفض جداً، فهذا هدر -> اطلب تقليل الطاقة (scale_energy).
       2. إذا كانت الطاقة منخفضة، و Resonance منعدم تماماً -> إغلاق دفاعي تام (lock_gateway).
       3. إذا كان الـ Resonance عالياً بشكل استثنائي والطاقة متوفرة -> إشعال استراتيجي (ignite_market).

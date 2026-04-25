@@ -44,7 +44,7 @@ import { OracleLeadsAnalysis } from "./OracleLeadsAnalysis";
 import { WhatsAppThreadModal } from "./WhatsAppThreadModal";
 import { WhatsAppActivityFeed } from "./WhatsAppActivityFeed";
 import { QuickSendRow } from "./QuickSendRow";
-import { SovereignGatewayCommand, AVAILABLE_GATEWAYS } from "../Sovereign/SovereignGatewayCommand";
+import { CommandGatewayCommand as SovereignGatewayCommand, AVAILABLE_GATEWAYS } from "../Command/CommandGatewayCommand";
 import { StatCard } from "../Executive/components/StatCard";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 
@@ -130,7 +130,7 @@ import { useAdminState } from "@/domains/admin/store/admin.store";
 import { CampaignLeadsModal } from "./CampaignLeadsModal";
 
 function getBearerToken(): string {
-  return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
+  return getAuthToken() ?? "";
 }
 
 async function fetchStats(force = false): Promise<OpsStats> {

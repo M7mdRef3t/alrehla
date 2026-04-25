@@ -34,7 +34,7 @@ export interface ResultTemplate {
   suggested_zone_title: string;
   suggested_zone_label: string;
   suggested_zone_body: string;
-  sovereigntyScore: number; // 0-100%
+  commandScore: number; // 0-100%
 }
 
 export interface ResultTemplateInput {
@@ -135,7 +135,7 @@ function buildResultTemplate(scenario: ResultScenarioKey, gender?: PersonGender)
     suggested_zone_title: RESULT_SCREEN_SECTION_TITLES.suggested_zone_title,
     suggested_zone_label: applyTokens(copy.suggested_zone_label, tokens),
     suggested_zone_body: applyTokens(copy.suggested_zone_body, tokens),
-    sovereigntyScore: 0 // Placeholder, will be overriden
+    commandScore: 0 // Placeholder, will be overriden
   };
 }
 
@@ -188,14 +188,14 @@ export function buildResultTemplateFromAnswers(input: ResultTemplateInput): Resu
 
   const template = buildResultTemplate(matchedScenario, input.personGender);
   
-  // Calculate Sovereignty Score based on First Principles:
-  // Symptom (Feeling) and Contact (Reality) subtract from sovereignty.
+  // Calculate Command Score based on First Principles:
+  // Symptom (Feeling) and Contact (Reality) subtract from your command.
   // max score per category (3 questions * often(10) = 30)
   const maxSubScore = 30;
   const symptomImpact = (symptomScore / maxSubScore) * 50; // 50% weight
   const contactImpact = (contactScore / maxSubScore) * 50; // 50% weight
   
-  template.sovereigntyScore = Math.max(0, Math.min(100, Math.round(100 - (symptomImpact + contactImpact))));
+  template.commandScore = Math.max(0, Math.min(100, Math.round(100 - (symptomImpact + contactImpact))));
 
   // Handle Category Modifiers (Deeper Connection)
   if (input.category === "work") {

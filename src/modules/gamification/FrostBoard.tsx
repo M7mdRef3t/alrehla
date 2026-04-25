@@ -22,7 +22,7 @@ interface FrostEntry {
 function generateLeaderboard(userFP: number, userFreezes: number): FrostEntry[] {
   const competitors: Omit<FrostEntry, "rank">[] = [
     { name: "سيف الرحلة", frostPoints: 2400, totalFreezes: 28, badge: "🏔️" },
-    { name: "نور السيادة", frostPoints: 1980, totalFreezes: 22, badge: "⭐" },
+    { name: "نور القيادة", frostPoints: 1980, totalFreezes: 22, badge: "⭐" },
     { name: "عمر الصقيع", frostPoints: 1750, totalFreezes: 19, badge: "❄️" },
     { name: "رنا الحدود", frostPoints: 1400, totalFreezes: 15, badge: "🛡️" },
     { name: "أنت", frostPoints: Math.max(userFP, 0), totalFreezes: Math.max(userFreezes, 0), badge: "👤", isCurrentUser: true },
@@ -136,7 +136,7 @@ export function FrostBoard() {
           <div className="text-xs font-black text-white/70">موسم الصقيع الأول</div>
           <div className="text-[10px] text-white/30">ينتهي في 30 مايو 2026 · أعلى نقاط صقيع يفوز</div>
         </div>
-        <div className="text-xs font-black text-cyan-400">Season 1</div>
+        <div className="text-xs font-black text-cyan-400">الموسم 1</div>
       </div>
     </div>
   );

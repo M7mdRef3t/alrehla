@@ -828,7 +828,7 @@ export const symptomScenariosDatabase: TrainingScenario[] = [
         id: "id-1-a",
         text: "تخصيص ساعة واحدة يومياً لأنشطة 'فردية بحتة' دون استئذان أحد",
         isCorrect: true,
-        feedback: "✅ استعادة السيادة",
+        feedback: "✅ استعادة القيادة",
         explanation: "الهوية تُبنى في العزلة والأنشطة الفردية. حماية وقتك الخاص هو حق أصيل غير قابل للتفاوض."
       },
       {
@@ -861,7 +861,7 @@ export const symptomScenariosDatabase: TrainingScenario[] = [
         text: "محاولة شرح وجهة نظرك بالتفصيل حتى يقتنع",
         isCorrect: false,
         feedback: "❌ استهلاك طاقي",
-        explanation: "الشرح الطويل هو محاولة للحصول على 'إذن' بالاختلاف. السيادة تعني أنك لا تحتاج إذناً لتكون نفسك."
+        explanation: "الشرح الطويل هو محاولة للحصول على 'إذن' بالاختلاف. القيادة تعني أنك لا تحتاج إذناً لتكون نفسك."
       }
     ]
   },
@@ -879,7 +879,7 @@ export const symptomScenariosDatabase: TrainingScenario[] = [
         text: "تفعيل 'وضع توفير الطاقة': اعتذر فوراً وأعطِ الأولوية لراحتك",
         isCorrect: true,
         feedback: "✅ حماية النواة",
-        explanation: "إهمال النفس هو خيانة للسيادة الشخصية. البطارية الفارغة لا يمكنها شحن الآخرين."
+        explanation: "إهمال النفس هو خيانة للقيادة الشخصية. البطارية الفارغة لا يمكنها شحن الآخرين."
       },
       {
         id: "neg-1-b",

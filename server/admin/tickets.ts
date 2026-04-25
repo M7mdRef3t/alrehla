@@ -1,7 +1,6 @@
 import { getAdminSupabase, recordAdminAudit } from "./_shared";
 import { sendMetaCapiEvent } from "../../src/server/metaCapi";
 import { headers } from "next/headers";
-import { UltramsgService } from "../../src/services/ultramsgService";
 
 export async function handleTicketsResolve(req: any, res: any) {
     const admin = getAdminSupabase();
@@ -103,8 +102,6 @@ export async function handleTicketsResolve(req: any, res: any) {
             }
 
             // 3. Send Meta CAPI event
-            // Note: Since this is purely admin firing the event for the user, 
-            // the IP/Agent belong to the admin. But we at least pass email/phone for matching.
             if (email || phone) {
                 try {
                     const headersList = headers();
@@ -134,12 +131,8 @@ export async function handleTicketsResolve(req: any, res: any) {
                 subscriptionStatus: "active"
             });
 
-            // 4. Fire-and-forget WhatsApp activation message
-            if (phone) {
-                // Not awaiting this so the admin UI updates immediately
-                UltramsgService.sendSubscriberActivationMessage(phone)
-                    .catch(err => console.error("Failed to send WhatsApp activation", err));
-            }
+            // Note: WhatsApp activation message (legacy Ultramsg) removed.
+            // Notifications should now flow through Botpress or the new messaging architecture.
 
             return res.status(200).json({ ok: true });
         }

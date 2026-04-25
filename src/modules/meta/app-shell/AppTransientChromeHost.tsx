@@ -77,7 +77,7 @@ export const AppTransientChromeHost = memo(function AppTransientChromeHost({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.35 }}
-            className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
+            className="fixed bottom-24 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
             role="status"
             aria-live="polite"
           >
@@ -113,7 +113,7 @@ export const AppTransientChromeHost = memo(function AppTransientChromeHost({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.35 }}
-            className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
+            className="fixed bottom-24 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
             role="status"
             aria-live="polite"
           >
@@ -140,7 +140,7 @@ export const AppTransientChromeHost = memo(function AppTransientChromeHost({
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.3 }}
             className="fixed left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
-            style={{ bottom: postNoiseSessionMessage ? "7.1rem" : (lastPulseInsights.length > 0 ? "8.8rem" : "1.5rem") }}
+            style={{ bottom: postNoiseSessionMessage ? "11.5rem" : (lastPulseInsights.length > 0 ? "13.5rem" : "5.5rem") }}
             role="status"
             aria-live="polite"
           >
@@ -172,7 +172,7 @@ export const AppTransientChromeHost = memo(function AppTransientChromeHost({
         )}
       </AnimatePresence>
       {lastPulseInsights.length > 0 && (
-        <div className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-lg mx-auto">
+        <div className="fixed bottom-24 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-lg mx-auto">
           <div className="bento-block" style={{ borderColor: "rgba(245, 166, 35, 0.25)", padding: "1.5rem" }}>
             <div className="flex items-start gap-4 mb-4">
               <div

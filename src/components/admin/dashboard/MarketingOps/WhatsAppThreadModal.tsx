@@ -40,7 +40,7 @@ interface WhatsAppThreadModalProps {
 }
 
 function getBearerToken(): string {
-  return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
+  return getAuthToken() ?? "";
 }
 
 const QUICK_REPLIES = [

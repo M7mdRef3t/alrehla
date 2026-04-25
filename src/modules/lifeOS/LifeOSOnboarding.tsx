@@ -74,21 +74,24 @@ export function LifeOSOnboarding({ onComplete }: LifeOSOnboardingProps) {
     const newAnswers = [...assessmentAnswers, score];
     setAssessmentAnswers(newAnswers);
 
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(q => q + 1);
-    } else {
-      // All questions answered — save assessment
-      const avgScore = Math.round(
-        newAnswers.reduce((s, a) => s + a, 0) / newAnswers.length
-      );
-      submitAssessment(
-        selectedDomain,
-        avgScore,
-        newAnswers,
-        "تقييم اليوم الأول في الرحلة"
-      );
-      setStep("launch");
-    }
+    // ⚡ الانتقال التلقائي: تأخير بسيط لرؤية الفيدباك
+    setTimeout(() => {
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(q => q + 1);
+      } else {
+        // All questions answered — save assessment
+        const avgScore = Math.round(
+          newAnswers.reduce((s, a) => s + a, 0) / newAnswers.length
+        );
+        submitAssessment(
+          selectedDomain,
+          avgScore,
+          newAnswers,
+          "تقييم اليوم الأول في الرحلة"
+        );
+        setStep("launch");
+      }
+    }, 400);
   }, [assessmentAnswers, currentQuestion, questions, selectedDomain, submitAssessment]);
 
   const renderStep = () => {
@@ -98,7 +101,7 @@ export function LifeOSOnboarding({ onComplete }: LifeOSOnboardingProps) {
         return (
           <motion.div
             key="welcome"
-            className="flex flex-col items-center text-center space-y-8 pt-8"
+            className="flex flex-col items-center text-center space-y-8 pt-20"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -177,7 +180,11 @@ export function LifeOSOnboarding({ onComplete }: LifeOSOnboardingProps) {
               {LIFE_DOMAINS.map((domain) => (
                 <motion.button
                   key={domain.id}
-                  onClick={() => setSelectedDomain(domain.id)}
+                  onClick={() => {
+                  setSelectedDomain(domain.id);
+                  // ⚡ الانتقال التلقائي: تأخير بسيط
+                  setTimeout(() => setStep("pulse"), 300);
+                }}
                   className="p-4 rounded-2xl text-right transition-all"
                   style={{
                     background: selectedDomain === domain.id
@@ -209,19 +216,6 @@ export function LifeOSOnboarding({ onComplete }: LifeOSOnboardingProps) {
                 </motion.button>
               ))}
             </div>
-
-            <motion.button
-              onClick={() => setStep("pulse")}
-              className="w-full py-4 rounded-2xl text-sm font-black text-white"
-              style={{
-                background: `linear-gradient(135deg, ${selectedDomainConfig.color}, ${selectedDomainConfig.color}80)`,
-                boxShadow: `0 8px 30px ${selectedDomainConfig.color}30`
-              }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {selectedDomainConfig.icon} ابدأ بـ {selectedDomainConfig.label}
-            </motion.button>
           </motion.div>
         );
 

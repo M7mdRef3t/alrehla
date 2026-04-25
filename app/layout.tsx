@@ -7,8 +7,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ConsciousnessSensoryProvider } from "@/components/providers/ConsciousnessSensoryProvider";
 import { WhisperOverlay } from "@/components/ui/WhisperOverlay";
-import { SovereignReceiver } from "@/components/providers/SovereignReceiver";
-import { SovereignThemeSync } from "@/components/providers/SovereignThemeSync";
+import { CommandReceiver } from "@/components/providers/CommandReceiver";
+import { CommandThemeSync } from "@/components/providers/CommandThemeSync";
 import ClarityInit from "@/components/analytics/ClarityInit";
 
 const cairo = Cairo({
@@ -42,7 +42,7 @@ const tajawal = Tajawal({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.alrehla.app"),
   title: {
-    default: "الرحلة — استرد سيادتك على طاقتك وعلاقاتك",
+    default: "الرحلة — استرد قيادتك على طاقتك وعلاقاتك",
     template: "%s | الرحلة",
   },
   description:
@@ -96,7 +96,7 @@ export const metadata: Metadata = {
     locale: "ar_AR",
     url: "https://www.alrehla.app/",
     siteName: "الرحلة",
-    title: "الرحلة — بوصلة الوعي الذاتي وخريطة العلاقات",
+    title: "الرحلة — ارتفع فوق حياتك وشوف الصورة الكاملة",
     description:
       "ابدأ رحلتك — اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
     images: [
@@ -104,7 +104,7 @@ export const metadata: Metadata = {
         url: "/og-home-optimized.jpg",
         width: 1200,
         height: 630,
-        alt: "الرحلة — بوصلة الوعي الذاتي وخريطة العلاقات",
+        alt: "الرحلة — ارتفع فوق حياتك وشوف الصورة الكاملة",
       },
     ],
   },
@@ -112,7 +112,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@alrehla_app",
     creator: "@alrehla_app",
-    title: "الرحلة — بوصلة الوعي الذاتي وخريطة العلاقات",
+    title: "الرحلة — ارتفع فوق حياتك وشوف الصورة الكاملة",
     description:
       "ابدأ رحلتك — اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
     images: ["/og-home-optimized.jpg"],
@@ -135,7 +135,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0D9488",
+  themeColor: "#0A1628",
   colorScheme: "dark light"
 };
 
@@ -303,8 +303,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <ClarityInit />
           <ConsciousnessSensoryProvider>
             <WhisperOverlay />
-            <SovereignReceiver />
-            <SovereignThemeSync />
+            <CommandReceiver />
+            <CommandThemeSync />
             {children}
           </ConsciousnessSensoryProvider>
         </ThemeProvider>

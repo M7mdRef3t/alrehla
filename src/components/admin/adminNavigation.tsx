@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 export type AdminTab =
-  | "sovereign"
+  | "command"
   | "entity"
   | "exec-overview"
   | "growth-revenue"
@@ -54,7 +54,7 @@ export type AdminTab =
   | "session-os"
   | "support-tickets"
   | "success-stories"
-  | "sovereign-funnel"
+  | "command-funnel"
   | "growth-hub"
   | "people-hub";
 
@@ -69,9 +69,9 @@ function TrendingUpFallback() {
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    title: "المركز السيادي (Alpha)",
+    title: "مركز القيادة (Alpha)",
     items: [
-      { id: "sovereign", label: "القيادة والنبض الاستباقي", icon: <ShieldCheck className="h-4 w-4 text-amber-500" /> },
+      { id: "command", label: "القيادة والنبض الاستباقي", icon: <ShieldCheck className="h-4 w-4 text-amber-500" /> },
       { id: "exec-overview", label: "نبض الإبداع والمنظومة", icon: <Sparkles className="h-4 w-4 text-rose-400" /> },
       { id: "flow-map", label: "خريطة التدفق الحي", icon: <Workflow className="h-4 w-4 text-sky-400" /> },
       { id: "dawayir-live", label: "دوائر لايف (Live)", icon: <Zap className="h-4 w-4 text-amber-400" /> },
@@ -104,7 +104,7 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: "البنية السيادية",
+    title: "بنية القيادة",
     items: [
       { id: "entity", label: "كيان الرحلة (DNA)", icon: <MapPin className="h-4 w-4 text-rose-400" /> },
       { id: "design-lab", label: "مختبر التصميم", icon: <Palette className="h-4 w-4 text-violet-400" /> },
@@ -133,7 +133,7 @@ export const NAV_GROUPS: NavGroup[] = [
 export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
 
 export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
-  sovereign: "القيادة والنبض الاستباقي",
+  command: "القيادة والنبض الاستباقي",
   entity: "كيان الرحلة (DNA)",
   "governance-ledger": "سجل الحوكمة",
   "design-lab": "مختبر التصميم",
@@ -161,7 +161,7 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "session-os": "غرفة الجلسات",
   "support-tickets": "بوابات العبور (الدعم)",
   "success-stories": "سجل حكايات الانتصار",
-  "sovereign-funnel": "مسار التحويل المتقدم (Funnel)",
+  "command-funnel": "مسار التحويل المتقدم (Funnel)",
   "growth-hub": "رادار التوسع والنمو",
   "people-hub": "مركز المسافرين والوعي",
 };
@@ -169,7 +169,7 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
 export const DEVELOPER_PLUS_TABS: AdminTab[] = ["ai-studio"];
 
 export const NAV_TOOLTIPS: Record<AdminTab, string> = {
-  sovereign: "المركز الرئيسي: القصة الكاملة، السرد الاستباقي، ونبض النظام العاطفي.",
+  command: "المركز الرئيسي: القصة الكاملة، السرد الاستباقي، ونبض النظام العاطفي.",
   entity: "كيان الرحلة: استكشاف بصمة المنصة ورسالتها وأهدافها الأساسية.",
   "governance-ledger": "سجل الحوكمة: متابعة قرارات الذكاء الاصطناعي والمصادقة على التحركات الاستراتيجية.",
   "design-lab": "مختبر التصميم: مساحة لإدارة الهوية البصرية واتجاهات التصميم وتجارب الواجهات.",
@@ -197,7 +197,7 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "session-os": "غرفة الجلسات: تتبع الجلسات النفسية والكوتشينج من الطلب حتى التوثيق.",
   "support-tickets": "بوابات العبور: مراجعة التحويلات اليدوية وتذاكر الدعم والتفعيل.",
   "success-stories": "سجل حكايات الانتصار: إدارة القصص الملهمة والدليل الاجتماعي للمنصة.",
-  "sovereign-funnel": "مسار التحويل المتقدم: تحليل السقوط والنجاح داخل Funnel المنصة.",
+  "command-funnel": "مسار التحويل المتقدم: تحليل السقوط والنجاح داخل Funnel المنصة.",
   "growth-hub": "محرك التوسع: رادار شامل للنمو، الإيرادات، قصص النجاح، وحملات الانتشار.",
   "people-hub": "مركز المسافرين: إدارة شاملة للمسافرين، نبض الوعي، وأرشيف الإدراك الجماعي.",
 };

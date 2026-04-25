@@ -66,7 +66,7 @@ export function getRelationshipWeatherTargetDescription(path: JourneyPath | null
 
   if (target === "map" || !target) {
     if (weatherLevel === "hurricane" || weatherLevel === "storm") {
-      return "نذير: وحدة المواجهة ووضع الحدود الصارمة لاستعادة سيادتك على طاقتك المسلوبة.";
+      return "نذير: وحدة المواجهة ووضع الحدود الصارمة لاستعادة قيادتك على طاقتك المسلوبة.";
     }
     if (weatherLevel === "wind" || weatherLevel === "sun") {
       return "ميزان: وحدة الاتزان الصحي وقياس جودة العلاقات لضمان استقرار طاقتك الذهنية.";

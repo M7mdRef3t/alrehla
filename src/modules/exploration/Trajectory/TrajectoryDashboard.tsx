@@ -10,16 +10,16 @@ interface TrajectoryDashboardProps {
     userId?: string;
 }
 
-type SovereigntyRank = 'Aspirant' | 'Initiate' | 'Sovereign' | 'Oracle';
+type CommandRank = 'Aspirant' | 'Initiate' | 'Commander' | 'Oracle';
 type DailyMission = {
     day: number;
     actionable_task: string;
     estimated_minutes: number;
 };
 
-const getRank = (score: number): SovereigntyRank => {
+const getRank = (score: number): CommandRank => {
     if (score >= 801) return 'Oracle';
-    if (score >= 501) return 'Sovereign';
+    if (score >= 501) return 'Commander';
     if (score >= 201) return 'Initiate';
     return 'Aspirant';
 };
@@ -109,12 +109,12 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                             <div className="flex justify-between items-start mb-4">
                                 <h5 className="flex items-center text-amber-500 text-xs font-black uppercase tracking-widest">
                                     <Award className="w-4 h-4 mr-2" />
-                                    Sovereignty Score
+                                    Command Score
                                 </h5>
                                 <div className="flex flex-col items-end">
                                     <span className="text-2xl font-black text-slate-900 dark:text-white">{completedTrajectory.sovereignty_score || 0}</span>
                                     <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md border ${getRank(completedTrajectory.sovereignty_score || 0) === 'Oracle' ? 'bg-amber-400/10 border-amber-400 text-amber-500' :
-                                        getRank(completedTrajectory.sovereignty_score || 0) === 'Sovereign' ? 'bg-[var(--soft-teal)]/10 border-[var(--soft-teal)] text-teal-600' :
+                                        getRank(completedTrajectory.sovereignty_score || 0) === 'Commander' ? 'bg-[var(--soft-teal)]/10 border-[var(--soft-teal)] text-teal-600' :
                                             getRank(completedTrajectory.sovereignty_score || 0) === 'Initiate' ? 'bg-cyan-400/10 border-cyan-400 text-cyan-600' :
                                                 'bg-slate-400/10 border-slate-400 text-slate-500'
                                         }`}>
@@ -140,14 +140,14 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                     className="p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/30 mb-4"
                                 >
                                     <h6 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">
-                                        Unlocked: Sovereignty Lab
+                                        Unlocked: Command Lab
                                     </h6>
                                     <p className="text-xs text-slate-500 dark:text-slate-400">You can now customize your next Reality Hack.</p>
                                 </motion.div>
                             ) : (
                                 <div className="p-4 bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-white/10 mb-4 grayscale opacity-50">
                                     <h6 className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1 flex items-center">
-                                        <Clock className="w-3 h-3 mr-1" /> Locked: Sovereignty Lab
+                                        <Clock className="w-3 h-3 mr-1" /> Locked: Command Lab
                                     </h6>
                                     <p className="text-xs text-slate-500 dark:text-slate-400">Reach 'Initiate' rank to unlock.</p>
                                 </div>

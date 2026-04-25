@@ -16,7 +16,7 @@ const colorMap = {
     neutral: 'bg-[var(--soft-teal)]/10 border-[var(--soft-teal)] text-[var(--soft-teal)] backdrop-blur-md'
 };
 
-const CustomNode = ({ data }: NodeProps<NodeData>) => {
+const CustomNode = ({ data }: NodeProps<NodeData & { showLabels?: boolean }>) => {
     const aura = useStressAura();
     const isCore = data.color === 'core';
 
@@ -67,7 +67,7 @@ const CustomNode = ({ data }: NodeProps<NodeData>) => {
             )}
 
             <div className="relative group">
-                <span className="relative z-10">{data.label}</span>
+                {(data.showLabels || isCore) && <span className="relative z-10">{data.label}</span>}
                 {data.mass > 7 && (
                     <div className="absolute inset-0 bg-white/5 blur-lg rounded-full animate-pulse pointer-events-none" />
                 )}

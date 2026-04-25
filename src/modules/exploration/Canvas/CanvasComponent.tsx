@@ -19,9 +19,13 @@ interface CanvasComponentProps {
     data: DawayirState;
     onNodeClick?: (nodeData: NodeData) => void;
     pendingNodeUpdate?: { id: string; updates: Partial<NodeData> } | null;
+    settings?: {
+        showGrid: boolean;
+        showLabels: boolean;
+    };
 }
 
-export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }: CanvasComponentProps) {
+export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate, settings }: CanvasComponentProps) {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [isPhysicsActive, setIsPhysicsActive] = useState(true);
@@ -47,7 +51,8 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }
                     label: node.label,
                     size: node.size,
                     color: node.color,
-                    mass: node.mass
+                    mass: node.mass,
+                    showLabels: settings?.showLabels ?? true
                 },
                 dragHandle: '.custom-drag-handle',
             };
@@ -218,7 +223,7 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }
                 minZoom={0.5}
                 maxZoom={1.5}
             >
-                <Background color="#111827" gap={40} size={1} variant={BackgroundVariant.Dots} />
+                {settings?.showGrid !== false && <Background color="#111827" gap={40} size={1} variant={BackgroundVariant.Dots} />}
                 <Controls showInteractive={false} className="glass border-white/10 shadow-xl !bg-slate-900/50" />
             </ReactFlow>
         </div>

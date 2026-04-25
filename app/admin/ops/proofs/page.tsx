@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import { getAuthToken } from "@/domains/auth/store/auth.store";
 
 type ProofMetadata = {
   email?: string;
@@ -46,9 +47,9 @@ export default function ProofQueuePage() {
   const fetchProofs = async () => {
     setLoading(true);
     try {
-      const adminCode = runtimeEnv.adminCode ?? "";
+
       const res = await fetch("/api/admin/ops/proofs", {
-        headers: { Authorization: `Bearer ${adminCode}` },
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
         cache: "no-store",
       });
       if (!res.ok) throw new Error("Failed to fetch proofs");
@@ -68,12 +69,12 @@ export default function ProofQueuePage() {
   const handleDecision = async (ticketId: string, decision: "approve" | "reject") => {
     setProcessingId(ticketId);
     try {
-      const adminCode = runtimeEnv.adminCode ?? "";
+
       const res = await fetch("/api/admin/ops/proofs/decision", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          Authorization: `Bearer ${adminCode}`
+          Authorization: `Bearer ${getAuthToken()}`
         },
         body: JSON.stringify({ ticketId, decision }),
       });

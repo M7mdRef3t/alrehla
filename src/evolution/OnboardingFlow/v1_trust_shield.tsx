@@ -22,7 +22,7 @@ const TrustShield: FC<TrustShieldProps> = ({ mirrorName, children }) => {
         </div>
         <div className="flex-1 text-right">
           <p className="text-xs font-bold text-teal-400 mb-1 flex items-center gap-2 justify-start">
-             درع السيادة الشخصية نشط <Lock size={10} />
+             درع القيادة الشخصية نشط <Lock size={10} />
           </p>
           <p className="text-[11px] text-slate-300 leading-relaxed">
             يا {mirrorName || "مسافر"}، رحلة وعيك خاصة بيك لوحدك. كل البيانات اللي بتدخلها هنا بتتشفر وبتتعالج **محلياً على جهازك**، ومش بتخرج للسيرفرات أبداً.

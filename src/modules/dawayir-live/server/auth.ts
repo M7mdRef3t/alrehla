@@ -47,15 +47,7 @@ export async function getOptionalLiveAuthContext(req: NextRequest): Promise<Live
 
   const { data, error } = await client.auth.getUser(token);
   
-  // Support for static Admin Code bypass for system tests/automation
-  const adminCode = process.env.ADMIN_CODE;
-  if (token && adminCode && token === adminCode) {
-    return {
-      client,
-      userId: "00000000-0000-0000-0000-000000000000",
-      role: "superadmin",
-    };
-  }
+
 
   if (error || !data?.user?.id) return null;
 
@@ -84,15 +76,7 @@ export async function requireLiveAuth(req: NextRequest): Promise<LiveAuthContext
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Support for static Admin Code bypass for system tests/automation
-  const adminCode = process.env.ADMIN_CODE;
-  if (token && adminCode && token === adminCode) {
-    return {
-      client,
-      userId: "00000000-0000-0000-0000-000000000000",
-      role: "superadmin",
-    };
-  }
+
 
   const { data, error } = await client.auth.getUser(token);
   if (error || !data?.user?.id) {

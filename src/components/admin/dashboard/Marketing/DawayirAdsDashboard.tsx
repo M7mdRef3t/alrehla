@@ -46,7 +46,7 @@ const DawayirAdsDashboard: FC = () => {
         {[
           { label: "إجمالي الوصول", value: "1.2M", icon: <Globe />, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
           { label: "معدل التحويل", value: "4.8%", icon: <TrendingUp />, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-          { label: "نقرة/سيادة", value: "24.5K", icon: <Zap />, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+          { label: "نقرة/قيادة", value: "24.5K", icon: <Zap />, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
           { label: "تكلفة الاستحواذ", value: "$0.12", icon: <Target />, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" },
         ].map((stat, i) => (
           <motion.div

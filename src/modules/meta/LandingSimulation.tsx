@@ -133,7 +133,7 @@ export function LandingSimulation() {
         return {
           title: "محاولة اللحاق المستمرة تستنزفك",
           message: "أنت لست متأخراً، أنت تستخدم مقياساً خاطئاً. المقارنة الصامتة تغذي جلد الذات وتأكل إنجازك. الحقيقة تكمن في تحديد سرعتك الخاصة.",
-          action: "استعد سيادتك على إيقاعك",
+          action: "استعد قيادتك على إيقاعك",
           icon: <Cpu className="h-10 w-10 text-[var(--gold)]" />
         };
       case "relationships":

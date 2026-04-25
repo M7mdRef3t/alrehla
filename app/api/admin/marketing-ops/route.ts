@@ -14,7 +14,7 @@ function buildClient() {
 }
 
 async function checkAuth(req: Request): Promise<boolean> {
-  const secret = process.env.CRON_SECRET || process.env.MARKETING_DEBUG_KEY || process.env.ADMIN_CODE;
+  const secret = process.env.CRON_SECRET || process.env.MARKETING_DEBUG_KEY || process.env.ADMIN_API_SECRET;
   const auth = req.headers.get("authorization");
 
   // 1. Secret/Cron/Admin Auth

@@ -93,7 +93,7 @@ export const GraphEventToast: FC = () => {
                         </span>
                         {active.prescription.xpReward > 0 && (
                             <span className="text-xs bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 px-2 py-0.5 rounded-full font-bold">
-                                +{active.prescription.xpReward} XP
+                                +{active.prescription.xpReward} نقطة
                             </span>
                         )}
                     </div>

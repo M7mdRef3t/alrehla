@@ -223,7 +223,7 @@ export const CircleGrowthDashboard: FC<CircleGrowthDashboardProps> = ({
                                 </div>
                                 <div className="flex-1">
                                    <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 mb-0.5">{user.name}</h4>
-                                   <p className="text-[10px] items-center text-slate-500 font-bold border border-slate-200 dark:border-slate-700 inline-block px-1.5 py-0.5 rounded-md text-nowrap">LVL {user.lvl} • {user.rank}</p>
+                                   <p className="text-[10px] items-center text-slate-500 font-bold border border-slate-200 dark:border-slate-700 inline-block px-1.5 py-0.5 rounded-md text-nowrap">مستوى {user.lvl} • {user.rank}</p>
                                 </div>
                              </div>
                           ))}

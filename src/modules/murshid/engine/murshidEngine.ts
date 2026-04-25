@@ -142,7 +142,7 @@ function generateGamificationInsights(): MurshidInsight[] {
     insights.push({
       id: "gam-almost-levelup", type: "nudge", priority: 7,
       title: "قريب من المستوى الجديد!",
-      message: `باقي ${remaining} XP فقط للمستوى ${level + 1}. سجّل نبضة أو اكتب تدوينة وهتوصل.`,
+      message: `باقي ${remaining} نقطة فقط للمستوى ${level + 1}. سجّل نبضة أو اكتب تدوينة وهتوصل.`,
       emoji: "⬆️", color: "#a855f7", source: "Tajmeed",
       actionLabel: "سجّل نبضة", actionScreen: "landing",
       timestamp: Date.now(),

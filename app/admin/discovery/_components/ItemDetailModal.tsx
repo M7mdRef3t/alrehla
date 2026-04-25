@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X, Save, Trash2, Loader2, Star, Plus, Minus } from "lucide-react";
 import { DiscoveryItem } from "@/types/discovery";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import { getAuthToken } from "@/domains/auth/store/auth.store";
 
 type ItemDetailModalProps = {
   item: DiscoveryItem;
@@ -22,14 +23,14 @@ export default function ItemDetailModal({ item, onClose, onUpdate, onDelete }: I
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const adminCode = runtimeEnv.adminCode ?? "";
+
       const { id, created_at: _, updated_at: __, ...updates } = form;
       
       const res = await fetch("/api/admin/discovery", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${adminCode}`,
+          Authorization: `Bearer ${getAuthToken()}`,
         },
         body: JSON.stringify({ id, updates }),
       });

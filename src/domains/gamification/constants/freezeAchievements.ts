@@ -158,7 +158,7 @@ export const FREEZE_ACHIEVEMENTS: FreezeAchievement[] = [
     title: "درع الطاقة",
     titleEn: "Energy Shield",
     description: "حافظت على streak 14 يوم مع تجميدات فعالة",
-    hint: "14 يوم من السيادة — درعك ما ينكسر.",
+    hint: "14 يوم من القيادة — درعك ما ينكسر.",
     icon: "💠",
     frostPointsReward: 1000,
     condition: "special_energy_shield",

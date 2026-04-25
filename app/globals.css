@@ -70,9 +70,8 @@
     letter-spacing: -0.01em;
   }
   p {
-    text-align: justify;
-    text-justify: inter-word;
-    text-align-last: center;
+    /* RTL-aware alignment: "start" = right in dir=rtl, left in dir=ltr */
+    text-align: start;
   }
 
   input::placeholder,

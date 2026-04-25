@@ -18,6 +18,7 @@ import BoardColumn from "./BoardColumn";
 import ItemCard from "./ItemCard";
 import ItemDetailModal from "./ItemDetailModal";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import { safeGetSession } from "@/services/supabaseClient";
 
 const STAGES: DiscoveryStage[] = [
   "Inbox",
@@ -40,19 +41,20 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem }: Discove
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<DiscoveryItem | null>(null);
 
-  const adminCode = runtimeEnv.adminCode ?? "";
-
   useEffect(() => {
-    fetch("/api/admin/discovery", {
-      headers: { Authorization: `Bearer ${adminCode}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setItems(data);
-        setLoading(false);
+    safeGetSession().then(session => {
+      const token = session?.access_token ?? "";
+      fetch("/api/admin/discovery", {
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .catch(console.error);
-  }, [adminCode]);
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) setItems(data);
+          setLoading(false);
+        })
+        .catch(console.error);
+    });
+  }, []);
 
   // Prepend newly captured signal optimistically
   useEffect(() => {
@@ -108,14 +110,17 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem }: Discove
             item.id === activeItem.id ? { ...item, stage: overId as DiscoveryStage } : item
           );
           // Persist
-          fetch("/api/admin/discovery", {
-            method: "PATCH",
-            headers: { 
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${adminCode}`
-            },
-            body: JSON.stringify({ id: activeItem.id, updates: { stage: overId } })
-          }).catch(console.error);
+          safeGetSession().then(session => {
+            const token = session?.access_token ?? "";
+            fetch("/api/admin/discovery", {
+              method: "PATCH",
+              headers: { 
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify({ id: activeItem.id, updates: { stage: overId } })
+            }).catch(console.error);
+          });
           return newItems;
         }
         return items;
@@ -129,14 +134,17 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem }: Discove
         if (activeItem.stage !== overItem.stage) {
           newItems[activeIndex] = { ...activeItem, stage: overItem.stage };
           // Persist
-          fetch("/api/admin/discovery", {
-            method: "PATCH",
-            headers: { 
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${adminCode}`
-            },
-            body: JSON.stringify({ id: activeItem.id, updates: { stage: overItem.stage } })
-          }).catch(console.error);
+          safeGetSession().then(session => {
+            const token = session?.access_token ?? "";
+            fetch("/api/admin/discovery", {
+              method: "PATCH",
+              headers: { 
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify({ id: activeItem.id, updates: { stage: overItem.stage } })
+            }).catch(console.error);
+          });
         }
 
         return arrayMove(newItems, activeIndex, overIndex);
@@ -158,9 +166,11 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem }: Discove
 
   const handleDelete = async (id: string) => {
     try {
+      const session = await safeGetSession();
+      const token = session?.access_token ?? "";
       const res = await fetch(`/api/admin/discovery?id=${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${adminCode}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         setItems((prev) => prev.filter((it) => it.id !== id));

@@ -52,7 +52,7 @@ export function derivePressureSentence(
       summary: `لو ظهر ضغط للرجوع إلى النمط القديم مع ${displayName}، هذه الجملة هي 'المرساة' التي تحمي المسافة التي بنيتها بصعوبة.`,
       sentence,
       reasoning: "الجملة دي بتعلن بوضوح إن المسافة الحالية هي 'اختيار' وليست صدفة، وده بيقفل الباب قدام أي محاولات لاستعادة السيطرة القديمة.",
-      sourceLabel: "مرساة السيادة",
+      sourceLabel: "مرساة القيادة",
       copyText: sentence
     };
   }

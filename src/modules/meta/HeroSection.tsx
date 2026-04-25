@@ -26,7 +26,7 @@ const ROTATING_WORDS = [
   "خايف تقول لأ؟",
   "شايل شيلة غيرك؟",
   "تايه في دوائرك؟",
-  "عايز تسترد سيادتك؟"
+  "عايز تسترد قيادتك؟"
 ];
 
 /* --- Styles --- */
@@ -346,7 +346,7 @@ const HERO_STYLES = `
     letter-spacing: 0.2em;
   }
 
-  .sovereign-map {
+  .leadership-map {
     position: relative;
     width: 100%;
     aspect-ratio: 1;
@@ -354,7 +354,7 @@ const HERO_STYLES = `
     perspective: 1200px;
   }
 
-  .sovereign-map__atmosphere {
+  .leadership-map__atmosphere {
     position: absolute;
     inset: -18%;
     background: radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, rgba(99, 102, 241, 0.04) 40%, transparent 75%);
@@ -362,7 +362,7 @@ const HERO_STYLES = `
     pointer-events: none;
   }
 
-  .sovereign-map__svg {
+  .leadership-map__svg {
     width: 100%;
     height: 100%;
     overflow: visible;
@@ -833,7 +833,7 @@ const HERO_STYLES = `
   }
 
   /* --- Right panel The Sovereign Map --- */
-  .sovereign-map {
+  .leadership-map {
     position: relative;
     width: 100%;
     aspect-ratio: 1;
@@ -931,14 +931,14 @@ const HERO_STYLES = `
     .hero-content-wrapper {
       flex-direction: column;
       align-items: center;
-      gap: 1rem;
-      padding: 6.5rem 1rem 3rem;
+      gap: 2rem;
+      padding: 8rem 1rem 6rem;
       width: 100%;
-      min-height: 100%;
+      min-height: 100svh;
       max-width: 100vw;
       box-sizing: border-box;
       overflow-x: hidden;
-      justify-content: flex-start;
+      justify-content: center;
     }
 
     .hero-copy-column {
@@ -948,7 +948,14 @@ const HERO_STYLES = `
     .hero-eyebrow-row { order: 1; margin-bottom: -0.25rem; }
     .hero-headline { order: 2; margin-bottom: -0.25rem; }
     .hero-divider { order: 3; margin: 0; }
-    .map-area { order: 4; margin-top: 0rem !important; transform: scale(0.88); transform-origin: top center; }
+    .map-area { 
+      order: 4; 
+      margin-top: 0rem !important; 
+      transform: scale(0.88) translate3d(0, 0, 0); 
+      transform-origin: top center; 
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
     .hero-cta-container { order: 5; margin-top: 0.5rem; margin-bottom: 0.5rem; width: 100%; z-index: 10; }
     .hero-body { order: 6; }
     
@@ -960,6 +967,9 @@ const HERO_STYLES = `
       width: 100%;
       margin: 0 auto;
       box-sizing: border-box;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      transform: translate3d(0, 0, 0);
     }
     
     .headline-line {
@@ -1037,7 +1047,7 @@ const HERO_STYLES = `
     .map-area {
       width: 100%;
       max-width: min(85vw, 320px);
-      margin: -4rem auto -2rem;
+      margin: 0rem auto 0rem;
       padding-bottom: 0;
       box-sizing: border-box;
       overflow: visible;
@@ -1053,6 +1063,22 @@ const HERO_STYLES = `
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         background: rgba(8, 12, 22, 0.9) !important;
+      }
+
+      .ambient-orb,
+      .hero-grid,
+      .hero-nebula,
+      .hero-starfield,
+      .metric-card,
+      .node-core {
+        will-change: auto !important;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      }
+      
+      .hero-content-wrapper {
+        transform: translate3d(0, 0, 0);
+        will-change: auto;
       }
     }
 
@@ -1100,8 +1126,10 @@ const stagger = {
 const RotatingWord: FC = () => {
   const [index, setIndex] = useState(0);
   const [show, setShow] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
     const id = setInterval(() => {
       setShow(false);
       setTimeout(() => {
@@ -1122,9 +1150,9 @@ const RotatingWord: FC = () => {
         {show && (
           <motion.span
             key={index}
-            initial={{ opacity: 0, y: 12, clipPath: "polygon(-50% 150%, 150% 150%, 150% 150%, -50% 150%)" }}
-            animate={{ opacity: 1, y: 0, clipPath: "polygon(-50% -100%, 150% -100%, 150% 200%, -50% 200%)" }}
-            exit={{ opacity: 0, y: -12, clipPath: "polygon(-50% -100%, 150% -100%, 150% -100%, -50% -100%)" }}
+            initial={{ opacity: 0, y: isMobile ? 6 : 12, clipPath: isMobile ? "none" : "polygon(-50% 150%, 150% 150%, 150% 150%, -50% 150%)" }}
+            animate={{ opacity: 1, y: 0, clipPath: isMobile ? "none" : "polygon(-50% -100%, 150% -100%, 150% 200%, -50% 200%)" }}
+            exit={{ opacity: 0, y: isMobile ? -6 : -12, clipPath: isMobile ? "none" : "polygon(-50% -100%, 150% -100%, 150% -100%, -50% -100%)" }}
             transition={{ duration: 0.45, ease: techEase }}
             /* placeholder  Time Complexity */
             className="absolute right-0 top-0 flex items-center headline-accent w-fit h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal" style={{ fontFamily: 'var(--font-display)' }}
@@ -1137,15 +1165,16 @@ const RotatingWord: FC = () => {
   );
 };
 
-/* --- Sovereign Map  Right Panel --- */
-const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
+/* --- Leadership Map --- */
+const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
+  const [isMobile, setIsMobile] = useState(false);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const springX = useSpring(mouseX, { stiffness: 120, damping: 50, mass: 1.5 });
   const springY = useSpring(mouseY, { stiffness: 120, damping: 50, mass: 1.5 });
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (reduceMotion || window.matchMedia("(pointer: coarse)").matches) return;
+    if (reduceMotion || isMobile) return;
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
     // Discretize mapping for robotic snap feeling
@@ -1157,6 +1186,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   }, [reduceMotion, mouseX, mouseY]);
 
   useEffect(() => {
+    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [handleMouseMove]);
@@ -1170,7 +1200,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
   const nodes = [
     { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "علاقة بموزانها",  w: 1.2 },
-    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم سيادي",    w: 0.8 },
+    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم قيادي",    w: 0.8 },
     { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "نبض متذبذب",  w: 1.5 },
     { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "تشويش روح",   w: 0.9 },
     { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "احتواء حقيقي",w: 1.1 },
@@ -1184,15 +1214,15 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
   return (
     <motion.div
-      className="sovereign-map"
+      className="leadership-map"
     >
-      <div className="sovereign-map__atmosphere" aria-hidden />
+      <div className="leadership-map__atmosphere" aria-hidden />
       <div className="hero-scan-line" aria-hidden />
 
       <svg
         viewBox="0 0 380 380"
         fill="none"
-        className="sovereign-map__svg"
+        className="leadership-map__svg"
       >
         {nodes.map((n, i) => (
           <Fragment key={`nexus-${i}`}>
@@ -1221,7 +1251,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
                 }}
                 style={{
                   offsetPath: `path('M 190 190 L ${n.cx} ${n.cy}')`,
-                  willChange: "offset-distance, opacity"
+                  willChange: isMobile ? "auto" : "offset-distance, opacity"
                 }}
               />
             )}
@@ -1236,12 +1266,12 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
               strokeWidth={1}
               fill="none"
               strokeDasharray={ring.dash === "none" ? undefined : ring.dash}
-              animate={reduceMotion ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
+              animate={reduceMotion || isMobile ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
               transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
               className="orbit-ring"
               transformOrigin="190px 190px"
             />
-            {!reduceMotion && (
+            {!reduceMotion && !isMobile && (
               <SafeMotionCircle
                 cx={190} cy={190} r={ring.r}
                 fill="none"
@@ -1601,7 +1631,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             transition={{ duration: 1.1, ease: techEase, delay: 0.35 }}
           >
-            <SovereignMap reduceMotion={reduceMotion} />
+            <LeadershipMap reduceMotion={reduceMotion} />
           </motion.div>
         </div>
 

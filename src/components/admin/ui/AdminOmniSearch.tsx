@@ -142,7 +142,7 @@ export const AdminOmniSearch: FC = () => {
             
             <div className="p-3 bg-[#080B14] border-t border-slate-800 text-[10px] font-bold text-slate-500 flex justify-between items-center tracking-widest uppercase">
               <span>ابحث وأنجز بسرعة (God Mode)</span>
-              <span>السيادة الإدراكية</span>
+              <span>القيادة الإدراكية</span>
             </div>
           </motion.div>
         </div>

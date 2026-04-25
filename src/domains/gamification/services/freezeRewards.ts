@@ -117,7 +117,7 @@ export const freezeRewardsService = {
     const state = useGamificationState.getState();
     const fpEarned = 50; // مكافأة عالية للوعي العميق
     state.addFrostPoints(fpEarned, "استبصار علائقي عميق 👁️");
-    state.addXP(75, "سيادة معرفية");
+    state.addXP(75, "قيادة معرفية");
     
     eventBus.emit("tajmeed:frost-earned", {
       amount: fpEarned,

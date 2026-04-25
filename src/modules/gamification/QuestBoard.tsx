@@ -61,7 +61,7 @@ export function QuestBoard() {
         <div className="relative z-10 flex items-center justify-between gap-6">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]">المركز السِيادي</span>
+              <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]">المركز القيادي</span>
               {streak > 0 && (
                 <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[9px] font-black">
                   <Flame className="w-3 h-3" /> {streak} يوم
@@ -161,12 +161,12 @@ export function QuestBoard() {
                       ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400/50" 
                       : "bg-indigo-500/5 border-indigo-500/10 text-indigo-400 group-hover:border-indigo-500/30 group-hover:bg-indigo-500/10"
                     }`}>
-                      <span className="text-[10px] font-black">{quest.xpReward} XP</span>
+                      <span className="text-[10px] font-black">{quest.xpReward} نقطة</span>
                     </div>
                     
                     {!quest.isCompleted && (
                        <div className="flex items-center gap-1 text-[9px] font-black text-white/10 uppercase tracking-widest group-hover:text-indigo-400/40 transition-colors">
-                          بسط السيادة <ChevronRight className="w-3 h-3" />
+                          بسط القيادة <ChevronRight className="w-3 h-3" />
                        </div>
                     )}
                   </div>
@@ -194,7 +194,7 @@ export function QuestBoard() {
                 <Zap className="w-4 h-4 text-indigo-400" />
             </div>
             <p className="text-[10px] font-bold text-white/50 leading-relaxed uppercase tracking-wider">
-               نظام التتبع السِيادي نشط. سيتم تسجيل إنجازاتك تلقائياً فور تنفيذ المهام في الميدان.
+               نظام التتبع القيادي نشط. سيتم تسجيل إنجازاتك تلقائياً فور تنفيذ المهام في الميدان.
             </p>
         </div>
       </div>

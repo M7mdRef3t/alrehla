@@ -15,7 +15,7 @@ import { getAuthToken } from "@/domains/auth/store/auth.store";
 import { buildMarketingEmail } from "../../../../lib/marketing/emailTemplate";
 
 function getBearerToken(): string {
-  return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
+  return getAuthToken() ?? "";
 }
 
 interface CampaignLeadsModalProps {

@@ -23,7 +23,7 @@ import { enableNotificationsWithPrompt, getNotificationPermission } from "@/serv
 import { marketingLeadService } from "@/services/marketingLeadService";
 import { StepPainDump } from "./StepPainDump";
 import { classifyState, safetyTriage, type TransformationDiagnosis, type PoeticState } from "../transformationEngine/interpretationEngine";
-import { generateSovereignInsight } from "@/services/interpretationAI";
+import { generateCommandInsight as generateSovereignInsight } from "@/services/interpretationAI";
 import { useRouter } from "next/navigation";
 import { createCurrentUrl } from "@/services/navigation";
 import type { RecommendedProduct, UserStateObject } from "@/modules/diagnosis/types";
@@ -563,6 +563,14 @@ const StepMapping: FC<{
 
   const allPlaced = cards.every((c) => c.placed);
 
+  // ⚡ الانتقال التلقائي: لما يخلص توزيع كل الناس
+  useEffect(() => {
+    if (allPlaced) {
+      const timer = setTimeout(() => onNext(cards), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [allPlaced, cards, onNext]);
+
   return (
     <div className="flex flex-col gap-4 w-full text-center">
       <div className="space-y-1 mb-2">
@@ -662,24 +670,6 @@ const StepMapping: FC<{
         </AnimatePresence>
       </div>
 
-      <div className="pt-2">
-        <button
-          onClick={() => onNext(cards)}
-          disabled={!allPlaced}
-          className="w-full rounded-2xl py-4 text-[15px] font-extrabold transition-all ob-btn-tap relative overflow-hidden group"
-          style={{
-            background: allPlaced ? "#2dd4bf" : "rgba(255,255,255,0.05)",
-            color: allPlaced ? "#0f172a" : "rgba(255,255,255,0.2)",
-            boxShadow: allPlaced ? "0 4px 20px rgba(45,212,191,0.3)" : "none"
-          }}
-        >
-          {allPlaced && <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />}
-          <span className="relative z-10 flex items-center justify-center gap-2">
-            شوف النتيجة <ArrowRight className="w-4 h-4 rotate-180" />
-          </span>
-        </button>
-
-      </div>
     </div>
   );
 };
@@ -688,6 +678,12 @@ const StepMapping: FC<{
 const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onComplete: () => void; onSkip: () => void }> = ({ items, onComplete, onSkip }) => {
   const count = items.length;
   const names = items.map(i => i.name);
+
+  // ⚡ الانتقال التلقائي: تأخير بسيط عشان يلحق يقرأ الجملة
+  useEffect(() => {
+    const timer = setTimeout(onComplete, 2800);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
 
   return (
     <div className="flex flex-col gap-6 w-full items-center text-center">
@@ -719,12 +715,6 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
         </p>
       </div>
 
-      <button
-        onClick={onComplete}
-        className="w-full rounded-2xl py-3.5 text-sm font-bold bg-teal-400 text-zinc-900 transition-all ob-btn-tap shadow-[0_4px_20px_rgba(45,212,191,0.2)]"
-      >
-        كَمّل لخطتك ←
-      </button>
 
 
     </div>
@@ -1078,7 +1068,7 @@ const StepResultsScreen: FC<{
                 <Sparkles className="w-5 h-5 text-teal-300 absolute inset-0 m-auto animate-pulse" />
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-bold text-teal-100 tracking-wide">جاري استحضار الرؤية السِياديّة...</p>
+                <p className="text-sm font-bold text-teal-100 tracking-wide">جاري استحضار الرؤية القيادية...</p>
                 <p className="text-[10px] text-teal-500/60 font-medium">نحلل أنماط الطاقة في دوائرك الآن</p>
               </div>
             </motion.div>
@@ -1093,7 +1083,7 @@ const StepResultsScreen: FC<{
               </div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-2 h-2 rounded-full bg-teal-400 shadow-[0_0_10px_#2dd4bf]"></div>
-                <span className="text-[10px] font-black text-teal-400 uppercase tracking-[0.2em]">الرؤية السِياديّة</span>
+                <span className="text-[10px] font-black text-teal-400 uppercase tracking-[0.2em]">الرؤية القيادية</span>
               </div>
               <div className="text-slate-100 leading-relaxed space-y-4">
                 {aiInterpretation.split('\n').map((line, i) => (
@@ -1182,7 +1172,7 @@ const SENTIENT_MESSAGES: Record<number, string> = {
   1: "كل حرف تكتبه هنا هو خطوة نحو الوضوح. لا تتردد، أفرغ ما في قلبك.",
   2: "الآن، دعنا نحدد من هم رفاق طريقك في هذه المرحلة.",
   3: "توزيع الدوائر يساعدك على رؤية حدودك. من يشحنك؟ ومن يستنزفك؟",
-  4: "هذه الأنماط التي نراها هي مفتاح استعادة سيادتك.",
+  4: "هذه الأنماط التي نراها هي مفتاح استعادة قيادتك.",
   5: "بقي القليل لنجهز لك بوصلتك الخاصة.. كيف يمكننا البقاء على اتصال؟",
   6: "رؤيتك أصبحت جاهزة. هذه هي خارطة طريقك نحو السكينة."
 };
@@ -1562,8 +1552,8 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
       setTransformationDiagnosis(diagnosis);
     }
 
-    addXP(100, "بداية الرحلة السِياديّة 🚀");
-    addCoins(200, "أول مورد سِيادي 🪙");
+    addXP(100, "بداية الرحلة القيادية 🚀");
+    addCoins(200, "أول مورد قيادي 🪙");
     awardBadge(
       "badge_sovereign_start", 
       "المستكشف الأول", 
@@ -1646,7 +1636,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
           ))}
         </div>
 
-        <div className="px-8 py-6 pb-10 overflow-y-auto custom-scrollbar relative">
+        <div className="px-8 pt-10 py-6 pb-10 overflow-y-auto custom-scrollbar relative">
           <SentientGuideBubble 
             message={SENTIENT_MESSAGES[step] || ""} 
             visible={step < 7 && !!SENTIENT_MESSAGES[step]} 

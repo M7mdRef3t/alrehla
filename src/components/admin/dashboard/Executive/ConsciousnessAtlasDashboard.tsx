@@ -7,7 +7,7 @@ import { type OverviewStats } from "@/services/admin/adminTypes";
 import { ConsciousnessMap } from "../Consciousness/ConsciousnessMap";
 import { AwarenessAndScenarios } from "../Overview/components/AwarenessAndScenarios";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
-import { ProactiveResonanceFeed } from "../Sovereign/ProactiveResonanceFeed";
+import { ProactiveResonanceFeed } from "../Command/ProactiveResonanceFeed";
 
 export const ConsciousnessAtlasDashboard: FC = () => {
     const [remoteStats, setRemoteStats] = useState<OverviewStats | null>(null);

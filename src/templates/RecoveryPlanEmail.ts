@@ -32,11 +32,11 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
         }
         .container {
             max-width: 600px; margin: 40px auto; padding: 40px 30px;
-            background-color: #0c1128; border: 1px solid rgba(45,212,191,0.15);
+            background-color: #0c1128; border: 1px solid rgba(201,168,76,0.15);
             border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
         .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 26px; font-weight: 800; color: #2dd4bf; letter-spacing: 1px; }
+        .logo { font-size: 26px; font-weight: 800; color: #C9A84C; letter-spacing: 1px; }
         
         .hero { text-align: center; margin-bottom: 30px; }
         .hero h1 { font-size: 26px; margin-bottom: 12px; color: #ffffff; }
@@ -48,7 +48,7 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
         }
         .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
         .stat-label { color: #94a3b8; font-size: 14px; font-weight: bold; }
-        .stat-value { color: #2dd4bf; font-weight: 800; font-size: 16px; }
+        .stat-value { color: #C9A84C; font-weight: 800; font-size: 16px; }
         
         .prescription {
             border-right: 4px solid #f43f5e; padding-right: 16px; margin-bottom: 35px;
@@ -60,17 +60,17 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
         .p-title { font-weight: 800; display: inline-block; margin-bottom: 4px; }
         .p-red { color: #f43f5e; }
         .p-yellow { color: #f59e0b; }
-        .p-green { color: #2dd4bf; }
+        .p-green { color: #C9A84C; }
         .prescription p { color: #cbd5e1; font-size: 14px; margin: 0; line-height: 1.7; }
 
         .cta-container { text-align: center; margin-top: 30px; }
         .btn {
-            display: inline-block; padding: 18px 40px; background-color: #2dd4bf;
+            display: inline-block; padding: 18px 40px; background-color: #C9A84C;
             color: #020408; text-decoration: none; border-radius: 16px;
             font-weight: 800; font-size: 16px;
-            box-shadow: 0 8px 25px rgba(45,212,191,0.3); transition: all 0.3s; width: 80%; max-width: 300px;
+            box-shadow: 0 8px 25px rgba(201,168,76,0.3); transition: all 0.3s; width: 80%; max-width: 300px;
         }
-        .btn:hover { background-color: #14b8a6; box-shadow: 0 8px 30px rgba(45,212,191,0.4); transform: translateY(-2px); }
+        .btn:hover { background-color: #A8873A; box-shadow: 0 8px 30px rgba(201,168,76,0.4); transform: translateY(-2px); }
 
         .footer { text-align: center; margin-top: 40px; color: #475569; font-size: 11px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; }
         .footer p { margin-bottom: 6px; }
@@ -84,7 +84,7 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">مساحتك الخاصة</div>
+            <div class="logo">🦅 الرحلة</div>
         </div>
 
         <div class="hero">
@@ -93,7 +93,7 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
         </div>
 
         <div class="stat-card">
-            <div style="color: #2dd4bf; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">مؤشرات الوعي اللحظية</div>
+            <div style="color: #C9A84C; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">مؤشرات الوعي اللحظية</div>
             <div class="stat-row">
                 <span class="stat-label">العلاقات على الرادار</span>
                 <span class="stat-value">${relationshipCount}</span>

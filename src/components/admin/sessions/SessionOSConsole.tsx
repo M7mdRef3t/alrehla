@@ -273,7 +273,7 @@ export function SessionOSConsole() {
       {/* Sidebar Navigation */}
       <aside className="w-64 border-l border-neutral-800 bg-[#0F0F0F] flex flex-col p-4 z-10">
         <div className="mb-8 px-2">
-          <h2 className="text-xl font-black text-indigo-400 font-sans tracking-tight uppercase">بوصلة السيادة</h2>
+          <h2 className="text-xl font-black text-indigo-400 font-sans tracking-tight uppercase">بوصلة القيادة</h2>
           <p className="text-[10px] text-neutral-500 mt-1 font-bold uppercase tracking-widest">محرك الوعي الخاص</p>
         </div>
 
@@ -429,7 +429,7 @@ export function SessionOSConsole() {
                           </div>
                        </div>
                        <div className="bg-[#0F0F0F] border border-white/5 rounded-3xl p-8">
-                          <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-8">محركات السيادة (Live Overrides)</h2>
+                          <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-8">محركات القيادة (Live Overrides)</h2>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                              <CommandButton onClick={() => sendSovereignCommand('THEME_SHIFT', { theme: 'tranquil' })} label="هدوء الغابة" icon={<Activity className="w-4 h-4" />} />
                              <CommandButton onClick={() => sendSovereignCommand('THEME_SHIFT', { theme: 'focus' })} label="تركيز حاد" icon={<Zap className="w-4 h-4" />} />

@@ -546,7 +546,7 @@ export function TodayView({
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all shadow-lg shadow-black/20"
               >
                 <Award className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-[10px] font-black text-amber-100 font-mono">Lvl {useGamification().level}</span>
+                <span className="text-[10px] font-black text-amber-100 font-mono">مستوى {useGamification().level}</span>
               </button>
 
               {/* Simulation Trigger (Dev Only) */}

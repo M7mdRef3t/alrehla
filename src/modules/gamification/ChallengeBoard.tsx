@@ -99,7 +99,7 @@ const WEEKLY_CHALLENGES: Challenge[] = [
   },
   {
     id: "ch_weekly_ring_upgrade",
-    title: "إعادة الترتيب السيادي",
+    title: "إعادة الترتيب القيادي",
     description: "حرّك 2 شخص من مدار أحمر لمدار أفضل",
     icon: "🌈",
     category: "weekly",
@@ -129,7 +129,7 @@ const SOVEREIGN_CHALLENGES: Challenge[] = [
   {
     id: "ch_sovereign_fortress",
     title: "بنّاء القلعة",
-    description: "ضع 25 حد سيادي عبر موسمك الأول",
+    description: "ضع 25 حد قيادي عبر موسمك الأول",
     icon: "🏰",
     category: "sovereign",
     difficulty: "legendary",
@@ -231,12 +231,12 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
               {/* FP Reward */}
               <div className="flex items-center gap-1 text-cyan-400/80">
                 <span className="text-[10px]">❄️</span>
-                <span className="text-xs font-black">{challenge.frostPointsReward} FP</span>
+                <span className="text-xs font-black">{challenge.frostPointsReward} نقطة</span>
               </div>
               {/* XP Reward */}
               <div className="flex items-center gap-1 text-indigo-400/60">
                 <Zap className="w-3 h-3" />
-                <span className="text-xs font-bold">{challenge.xpReward} XP</span>
+                <span className="text-xs font-bold">{challenge.xpReward} نقطة</span>
               </div>
               {/* Expiry */}
               {challenge.expiresIn && (
@@ -286,7 +286,7 @@ export function ChallengeBoard() {
   const TABS: { id: ChallengeCategory; label: string; icon: React.ReactNode; count: number }[] = [
     { id: "daily",     label: "اليوم",        icon: <Flame className="w-3.5 h-3.5" />,  count: DAILY_CHALLENGES.length },
     { id: "weekly",    label: "الأسبوع",       icon: <Shield className="w-3.5 h-3.5" />, count: WEEKLY_CHALLENGES.length },
-    { id: "sovereign", label: "السيادية",      icon: <Eye className="w-3.5 h-3.5" />,   count: SOVEREIGN_CHALLENGES.length },
+    { id: "sovereign", label: "القيادية",      icon: <Eye className="w-3.5 h-3.5" />,   count: SOVEREIGN_CHALLENGES.length },
   ];
 
   return (

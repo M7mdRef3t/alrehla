@@ -163,7 +163,7 @@ const MeNodeCenter: FC = memo(() => {
         fill="white"
         className="pointer-events-none drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]"
       >
-        أنا
+        أنت
       </text>
 
       {/* Asset Indicators around the Me Node */}
@@ -473,7 +473,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
             اقطع الحبل الطاقي مع "{node.label}"؟
           </p>
           <p style={{ fontSize: "0.75rem", marginBottom: "1.25rem", color: "#94a3b8" }}>
-            هذه خطوة نحو استعادة سيادتك. سيتم حفظ العلاقة في أرشيف الحكمة للاستفادة من دروسها متى شئت.
+            هذه خطوة نحو استعادة قيادتك. سيتم حفظ العلاقة في أرشيف الحكمة للاستفادة من دروسها متى شئت.
           </p>
           <div style={{ display: "flex", gap: "0.5rem", flexDirection: "row-reverse" }}>
             <button
@@ -532,9 +532,18 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
   const allNodes = passedNodes || storeNodes;
   
   const nodes = useMemo(() => {
-    // We want to show nodes that are NOT archived and match the current goal filter
+    // If nodes were passed from parent (CoreMapScreen), they are ALREADY filtered
+    // by goalId — we only need to remove archived ones
+    if (passedNodes) {
+      return allNodes.filter((node) => !node.isNodeArchived);
+    }
+
+    // Fallback: using store nodes directly — apply goalId filter
     return allNodes.filter((node) => {
       if (node.isNodeArchived) return false;
+
+      // Always include legacy nodes with no goalId assigned
+      if (!node.goalId) return true;
 
       // Handle 'all', 'general', or unspecified as "show everything"
       if (!goalId || goalId === "all" || goalId === "general") {
@@ -554,7 +563,7 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
       // Exact match for everything else
       return node.goalId === goalId;
     });
-  }, [allNodes, goalId]);
+  }, [allNodes, goalId, passedNodes]);
 
   const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
   const archiveNode = useMapState((s) => s.archiveNode);
@@ -741,7 +750,7 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="absolute bottom-24 left-6 right-6 p-6 ds-card rounded-[2rem] flex items-center gap-5 shadow-2xl"
+              className="absolute bottom-48 left-6 right-6 p-6 ds-card rounded-[2rem] flex items-center gap-5 shadow-2xl"
             >
               <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center flex-shrink-0 border border-amber-500/30">
                 <AlertCircle className="w-7 h-7 text-amber-400" />

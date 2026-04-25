@@ -431,7 +431,9 @@ export type FlowStep =
   | "activation_proof_upload_completed"
   | "activation_submit_clicked"
   | "activation_submit_success"
-  | "activation_submit_failed";
+  | "activation_submit_failed"
+  | "paid_feature_clicked"
+  | "premium_bridge_viewed";
 
 export function recordFlowEvent(
   step: FlowStep,

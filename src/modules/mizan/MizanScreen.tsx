@@ -357,11 +357,11 @@ export const MizanScreen: FC = () => {
           <div className="p-4 rounded-2xl" style={{ background: "rgba(168,85,247,0.05)", border: "1px solid rgba(168,85,247,0.12)" }}>
             <Award className="w-4 h-4 text-purple-400 mb-2" />
             <p className="text-2xl font-black text-white">{formatNumber(xp)}</p>
-            <p className="text-[9px] font-bold text-purple-400/60 uppercase tracking-widest mt-0.5">XP إجمالي</p>
+            <p className="text-[9px] font-bold text-purple-400/60 uppercase tracking-widest mt-0.5">إجمالي النقاط</p>
             <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(168,85,247,0.1)" }}>
               <div className="h-full rounded-full bg-purple-500" style={{ width: `${Math.round(levelProgress.progress * 100)}%` }} />
             </div>
-            <p className="text-[9px] text-slate-600 mt-1">Level {level} → {level + 1}</p>
+            <p className="text-[9px] text-slate-600 mt-1">المستوى {level} ← {level + 1}</p>
           </div>
 
           {/* Streak */}
@@ -541,7 +541,7 @@ export const MizanScreen: FC = () => {
             {overallScore >= 70
               ? `رحلتك مبهرة — ${formatNumber(xp)} نقطة خبرة، ${streak} يوم متواصل، و${journalData.total} تدوينة. أنت في المستوى ${level} (${rank}). الأرقام بتقول إنك جاد في التغيير.`
               : overallScore >= 40
-              ? `أنت في الطريق الصح — المستوى ${level} مع ${formatNumber(xp)} XP. كل يوم بتقرّب أكتر. استمر في التوثيق والنبض.`
+              ? `أنت في الطريق الصح — المستوى ${level} مع ${formatNumber(xp)} نقطة. كل يوم بتقرّب أكتر. استمر في التوثيق والنبض.`
               : overallScore >= 10
               ? `بدأت رحلتك — وده أهم خطوة. سجّل نبضك يومياً، اكتب في وثيقة، وشوف الميزان بيتحرك.`
               : `لسه ما بدأتش — اكتب أول تدوينة، سجّل أول نبضة، أضف أول علاقة. الميزان مستنيك.`

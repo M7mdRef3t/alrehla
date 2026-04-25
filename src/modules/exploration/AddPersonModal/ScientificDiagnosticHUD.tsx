@@ -34,7 +34,7 @@ export const ScientificDiagnosticHUD: React.FC<ScientificDiagnosticHUDProps> = (
       "مسح البنية العلائقية...",
       "تحليل البصمة الشعورية...",
       "حساب مدى الأمان...",
-      "مزامنة بيانات السيادة..."
+      "مزامنة بيانات القيادة..."
     ];
 
     const timer = setInterval(() => {

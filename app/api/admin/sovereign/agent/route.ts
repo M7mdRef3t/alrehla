@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { geminiClient } from "@/services/geminiClient";
 import { COGNITIVE_AUDITOR_PROMPT } from "@/prompts/cognitiveAuditor";
 import { supabaseAdmin } from "@/services/supabaseClient";
-import { SovereignBridge } from "@/services/SovereignBridge";
+import { CommandBridge } from "@/services/CommandBridge";
 import { A2AHub } from "@/services/A2AHub";
 import { MCPBridge } from "@/services/MCPBridge";
 
@@ -260,7 +260,7 @@ async function handleDelegateToADK(args: any) {
             context.journey_events = data;
         }
 
-        const result = await SovereignBridge.delegateToADK(task, JSON.stringify(context));
+        const result = await CommandBridge.delegateToADK(task, JSON.stringify(context));
         return NextResponse.json(result);
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
@@ -277,7 +277,7 @@ async function handleGetConsciousnessInsights(args: any) {
             .order("created_at", { ascending: true });
 
         const task = `Analyze the psychological journey for session ${sessionId} and provide behavioral insights.`;
-        const result = await SovereignBridge.delegateToADK(task, JSON.stringify({ journey_events: events }));
+        const result = await CommandBridge.delegateToADK(task, JSON.stringify({ journey_events: events }));
         
         return NextResponse.json(result);
     } catch (error: any) {

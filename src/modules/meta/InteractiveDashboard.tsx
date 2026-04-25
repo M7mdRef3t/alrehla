@@ -174,7 +174,7 @@ function DashboardGreeting({ xp, level, moodToday }: { xp: number; level: number
             <Zap size={11} color="#14B8A6" />
             <span style={{ fontSize: 10, color: "#14B8A6", fontWeight: 700 }}>المستوى {level}</span>
           </div>
-          <span style={{ fontSize: 10, color: "#475569" }}>{xp} XP</span>
+          <span style={{ fontSize: 10, color: "#475569" }}>{xp} نقطة</span>
         </div>
         <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.05)" }}>
           <motion.div
@@ -474,7 +474,7 @@ function MoodChart({ pulseHistory }: { pulseHistory: PulseEntry[] }) {
       ) : (
         <div style={{ textAlign: "center", padding: "16px 0" }}>
           <p style={{ margin: 0, fontSize: 11, color: "#334155" }}>
-            لم تُسجّل نبضك بعد — استخدم Quick Pulse أدناه!
+            لم تُسجّل نبضك بعد — استخدم "النبض السريع" أدناه!
           </p>
         </div>
       )}
@@ -550,7 +550,7 @@ function QuickPulse({ onSave }: { onSave: (e: PulseEntry) => void }) {
           display: "flex", alignItems: "center", gap: 8,
         }}>
         <Sparkles size={14} color="#14B8A6" />
-        <span style={{ fontSize: 12, fontWeight: 700, color: "#14B8A6" }}>Quick Pulse — كيف حالك الآن؟</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "#14B8A6" }}>نبض سريع — كيف حالك الآن؟</span>
         <ChevronRight size={12} color="#14B8A6" style={{ marginRight: "auto" }} />
       </motion.button>
     );
@@ -666,7 +666,7 @@ function DailyTasks({ xp: _xp }: { xp: number }) {
         </div>
         {totalXP > 0 && (
           <span style={{ fontSize: 9, color: "#14B8A6", fontWeight: 700 }}>
-            +{totalXP} XP اكتسبت
+            +{totalXP} نقطة اكتسبت
           </span>
         )}
       </div>

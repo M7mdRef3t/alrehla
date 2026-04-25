@@ -1,5 +1,5 @@
 import { geminiClient } from "./geminiClient";
-import type { SovereignInsight } from "@/domains/admin/store/admin.store";
+import type { CommandInsight } from "@/domains/admin/store/admin.store";
 
 interface AiAugmentationResult {
   rationale: string;
@@ -10,16 +10,16 @@ interface AiAugmentationResult {
 /**
  * يستخدم Gemini لتوليد "المنطق العميق" لكل توجيه بناءً على المبادئ الأولى.
  */
-export async function augmentInsightWithAi(insight: SovereignInsight): Promise<Partial<SovereignInsight>> {
+export async function augmentInsightWithAi(insight: CommandInsight): Promise<Partial<CommandInsight>> {
   const prompt = `
-أنت الأوراكل السيادي (Sovereign Oracle) لمنصة "الرحلة". 
+أنت الأوراكل القيادي (Command Oracle) لمنصة "الرحلة". 
 بصفتك System Architect يحلل الأمور من "المبادئ الأولى" (First Principles)، قدم تحليلاً معمارياً عميقاً للتوجيه التالي.
 
 التوجيه: "${insight.message}"
 نوع التوجيه: ${insight.type}
 
 المطلوب:
-1. rationale: شرح للمنطق السيادي وراء هذا التوجيه بالعامية المصرية بأسلوب ذكي وعملي (بدون زخرفة كلامية زايدة).
+1. rationale: شرح للمنطق القيادي وراء هذا التوجيه بالعامية المصرية بأسلوب ذكي وعملي (بدون زخرفة كلامية زايدة).
 2. confidence: نسبة الثقة في هذا التحليل (رقم بين 85 و 99).
 3. tag: وسم تقني/معماري بالإنجليزية يصف الحالة (مثل: Entropy Equilibrium, Cognitive Friction, Relational Gravity).
 
@@ -32,7 +32,7 @@ export async function augmentInsightWithAi(insight: SovereignInsight): Promise<P
 `;
 
   try {
-    const result = await geminiClient.generateJSON<AiAugmentationResult>(prompt, "sovereign_oracle_rationale");
+    const result = await geminiClient.generateJSON<AiAugmentationResult>(prompt, "command_oracle_rationale");
     if (result) {
       return {
         rationale: result.rationale,

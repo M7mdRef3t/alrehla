@@ -43,10 +43,10 @@ export const FEATURES = {
 
   // ─── Experimental Features ───────────────────
 
-  SOVEREIGN_HUD: {
+  COMMAND_HUD: {
     enabled: false,
     rollout: 0,
-    description: "لوحة القيادة الملكية — قيد التطوير",
+    description: "لوحة القيادة — قيد التطوير",
   },
 
   B2B_EXPANSION: {

@@ -24,7 +24,7 @@ export class SwarmNotifier {
 
         let alert = null;
         if (resonance > 0.9) {
-            alert = "You are in perfect synchronization with the Swarm Elite. Sovereignty peak detected.";
+            alert = "You are in perfect synchronization with the Swarm Elite. Leadership peak detected.";
         } else if (resonance < 0.4) {
             alert = "Resonance decoupling detected. The Swarm momentum is pulling away. Recalibrate your trajectory.";
         }

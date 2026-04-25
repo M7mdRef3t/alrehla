@@ -295,7 +295,8 @@ export const PlatformHeader = memo(function PlatformHeader({
         >
            <AlrehlaIcon size={isMinimal || scrolled ? 32 : 42} className="transition-all duration-700" />
            <motion.div 
-             className="absolute inset-0 bg-teal-400/30 blur-2xl rounded-full -z-10"
+             className="absolute inset-0 blur-2xl rounded-full -z-10"
+             style={{ backgroundColor: "rgba(201, 168, 76, 0.3)" }}
              animate={{ 
                opacity: [0.2, 0.6, 0.2],
                scale: [1, 1.2, 1] 
@@ -303,8 +304,8 @@ export const PlatformHeader = memo(function PlatformHeader({
              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
            />
         </motion.div>
-        <span className={`font-black tracking-tight text-white group-hover:text-[#00F0FF] transition-all duration-500 ${isMinimal || scrolled ? 'text-lg' : 'text-xl'}`} style={{ fontFamily: "var(--font-display)" }}>
-          الرحلة
+        <span className={`font-black tracking-tight text-white transition-all duration-500 ${isMinimal || scrolled ? 'text-lg' : 'text-xl'}`} style={{ fontFamily: "var(--font-display)" }}>
+          <span className="group-hover:text-[var(--horus-gold,#C9A84C)] transition-colors duration-500">الرحلة</span>
         </span>
       </button>
 
@@ -314,9 +315,10 @@ export const PlatformHeader = memo(function PlatformHeader({
           layoutId="spirit-line"
           initial={{ scaleX: 0, opacity: 0 }}
           animate={{ scaleX: 1, opacity: 1 }}
-          className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-teal-500/50 to-transparent z-30"
+          className="absolute bottom-0 left-0 right-0 h-[1px] z-30"
           style={{ 
-            boxShadow: "0 1px 15px rgba(20, 184, 166, 0.4), 0 0 30px rgba(20, 184, 166, 0.2)"
+            background: "linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.5), rgba(27, 108, 168, 0.3), transparent)",
+            boxShadow: "0 1px 15px rgba(201, 168, 76, 0.3), 0 0 30px rgba(27, 108, 168, 0.15)"
           }}
         />
       )}
@@ -400,7 +402,7 @@ export const PlatformHeader = memo(function PlatformHeader({
           >
             <Trophy className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-black text-amber-500 font-mono">
-              Lvl {level}
+              مستوى {level}
             </span>
           </button>
         )}
@@ -816,7 +818,7 @@ export const MobileNavBar = memo(function MobileNavBar({
               <Trophy className="w-5 h-5 text-amber-500" />
             </div>
             <span className="text-[10px] font-black text-amber-500 font-mono">
-              Lvl {level}
+              مستوى {level}
             </span>
           </button>
         </div>

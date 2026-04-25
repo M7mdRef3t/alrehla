@@ -98,7 +98,7 @@ export const AutomagicEventPopup: React.FC = () => {
                                 {prescription.xpReward > 0 && (
                                     <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/10 rounded-lg border border-white/5">
                                         <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-                                        <span className="text-xs font-bold text-yellow-100">+{prescription.xpReward} XP</span>
+                                        <span className="text-xs font-bold text-yellow-100">+{prescription.xpReward} نقطة</span>
                                     </div>
                                 )}
                             </div>

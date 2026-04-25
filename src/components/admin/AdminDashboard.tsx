@@ -37,7 +37,7 @@ import { runtimeEnv } from "@/config/runtimeEnv";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { getEffectiveRoleFromState, useAuthState } from "@/domains/auth/store/auth.store";
-import { sovereignAgent } from "@/services/LocalSovereignAgent";
+import { commandAgent } from "@/services/LocalCommandAgent";
 import { isPrivilegedRole } from "@/utils/featureFlags";
 import { fetchAdminConfig, fetchJourneyPaths } from "@/services/admin/adminSettings";
 import { fetchAiLogs } from "@/services/admin/adminAiLogs";
@@ -65,10 +65,10 @@ import { AdminOmniSearch } from "./ui/AdminOmniSearch";
 import { AdminCopilotModal } from "./dashboard/Intelligence/AdminCopilotModal";
 import { DataManagement } from '@/modules/meta/DataManagement';
 import { CommandHalo } from "./ui/CommandHalo";
-import { SovereignHUD } from "./ui/SovereignHUD";
+import { CommandHUD } from "./ui/CommandHUD";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
-import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
+import { CommandOrchestrator } from "@/services/commandOrchestrator";
 const ConsciousnessMap = lazy(() => import("./dashboard/Consciousness/ConsciousnessMap").then(m => ({ default: m.ConsciousnessMap })));
 const ContentPanel = lazy(() => import("./dashboard/Content/ContentPanel").then(m => ({ default: m.ContentPanel })));
 const UsersPanel = lazy(() => import("./dashboard/Users/UsersPanel").then(m => ({ default: m.UsersPanel })));
@@ -81,29 +81,29 @@ const CreativeDashboard = lazy(() => import("./dashboard/Intelligence/CreativeDa
 const SalesEnablementPanel = lazy(() => import("./dashboard/Intelligence/SalesEnablementPanel").then(m => ({ default: m.SalesEnablementPanel })));
 const ConsciousnessGraph = lazy(() => import("./dashboard/Intelligence/ConsciousnessGraph").then(m => ({ default: m.ConsciousnessGraph })));
 // ── Unified AI Command Hub (replaces 7 individual AI panels) ──────────────────
-const SovereignAIHub = lazy(() => import("./dashboard/Intelligence/SovereignAIHub").then(m => ({ default: m.SovereignAIHub })));
+const CommandAIHub = lazy(() => import("./dashboard/Intelligence/CommandAIHub").then(m => ({ default: m.CommandAIHub })));
 
 const SeoGeoAuditorPanel = lazy(() => import("./dashboard/SEO/SeoGeoAuditorPanel").then(m => ({ default: m.SeoGeoAuditorPanel })));
-const SovereignWarRoom = lazy(() => import("./dashboard/Executive/SovereignWarRoom").then(m => ({ default: m.SovereignWarRoom })));
+const CommandWarRoom = lazy(() => import("./dashboard/Executive/CommandWarRoom").then(m => ({ default: m.CommandWarRoom })));
 const LiveAdminPanel = lazy(() => import("@/modules/dawayir-live/pages/LiveAdminPanel").then(m => ({ default: m.default })));
 const AdAnalyticsDashboard = lazy(() => import("./dashboard/AdAnalytics/AdAnalyticsDashboard").then(m => ({ default: m.AdAnalyticsDashboard })));
 const SurveyResultsPanel = lazy(() => import("./dashboard/Data/SurveyResultsPanel").then(m => ({ default: m.SurveyResultsPanel })));
-const SovereignExpansionHub = lazy(() => import("./dashboard/Executive/SovereignExpansionHub").then(m => ({ default: m.SovereignExpansionHub })));
+const CommandExpansionHub = lazy(() => import("./dashboard/Executive/CommandExpansionHub").then(m => ({ default: m.CommandExpansionHub })));
 // ── Unified Growth Command Hub (replaces 4 individual panels) ────────────────
-const SovereignGrowthHub = lazy(() => import("./dashboard/Executive/SovereignGrowthHub").then(m => ({ default: m.SovereignGrowthHub })));
+const CommandGrowthHub = lazy(() => import("./dashboard/Executive/CommandGrowthHub").then(m => ({ default: m.CommandGrowthHub })));
 // ── Unified People & Consciousness Hub (replaces 4 individual panels) ─────────
-const SovereignPeopleHub = lazy(() => import("./dashboard/Executive/SovereignPeopleHub").then(m => ({ default: m.SovereignPeopleHub })));
+const CommandPeopleHub = lazy(() => import("./dashboard/Executive/CommandPeopleHub").then(m => ({ default: m.CommandPeopleHub })));
 
 const MapRegistryPanel = lazy(() => import("./dashboard/Content/MapRegistryPanel").then(m => ({ default: m.MapRegistryPanel })));
 const MailCommandCenter = lazy(() => import("./dashboard/MailCommand/MailCommandCenter").then(m => ({ default: m.MailCommandCenter })));
 const JourneyPathsPanel = lazy(() => import("./dashboard/Paths/JourneyPathsPanel").then(m => ({ default: m.JourneyPathsPanel })));
 const OpsDocsPanel = lazy(() => import("./dashboard/OpsDocs/OpsDocsPanel"));
-const DesignLab = lazy(() => import("./dashboard/Sovereign/DesignLab"));
-const GovernanceHub = lazy(() => import("./dashboard/Sovereign/GovernanceHub").then(m => ({ default: m.GovernanceHub })));
-const SessionOSPanel = lazy(() => import("./dashboard/Sovereign/SessionOSPanel").then(m => ({ default: m.SessionOSPanel })));
-const SovereignFunnel = lazy(() => import("./dashboard/Analytics/SovereignFunnel").then(m => ({ default: m.SovereignFunnel })));
+const DesignLab = lazy(() => import("./dashboard/Command/DesignLab"));
+const GovernanceHub = lazy(() => import("./dashboard/Command/GovernanceHub").then(m => ({ default: m.GovernanceHub })));
+const SessionOSPanel = lazy(() => import("./dashboard/Command/SessionOSPanel").then(m => ({ default: m.SessionOSPanel })));
+const CommandFunnel = lazy(() => import("./dashboard/Analytics/CommandFunnel").then(m => ({ default: m.CommandFunnel })));
 const FeatureFlagsPanel = lazy(() => import("./dashboard/Features/FeatureFlagsPanel").then(m => ({ default: m.FeatureFlagsPanel })));
-const SovereignPanel = lazy(() => import("./dashboard/Sovereign/SovereignControl").then(m => ({ default: m.SovereignControl })));
+const CommandPanel = lazy(() => import("./dashboard/Command/CommandControl").then(m => ({ default: m.CommandControl })));
 const ConsciousnessAtlasDashboard = lazy(() => import("./dashboard/Executive/ConsciousnessAtlasDashboard").then(m => ({ default: m.ConsciousnessAtlasDashboard })));
 const FeedbackPanel = lazy(() => import("./dashboard/Support/FeedbackPanel").then(m => ({ default: m.FeedbackPanel })));
 
@@ -112,7 +112,7 @@ const DataManagementModal = lazy(() => Promise.resolve({ default: DataManagement
 const getTabFromLocation = (): AdminTab => {
   const params = new URLSearchParams(getSearch());
   const tab = params.get("tab") as AdminTab | null;
-  return NAV_ITEMS.some((item) => item.id === tab) ? tab! : "sovereign";
+  return NAV_ITEMS.some((item) => item.id === tab) ? tab! : "command";
 };
 
 const updateTabInUrl = (tab: AdminTab) => {
@@ -138,7 +138,6 @@ const isTypingTarget = (target: EventTarget | null): boolean => {
 const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   const adminAccess = useAdminState((s) => s.adminAccess);
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
-  const setAdminCode = useAdminState((s) => s.setAdminCode);
   const authUser = useAuthState((s) => s.user);
   const roleOverride = useAuthState((s) => s.roleOverride);
   const authRole = useAuthState(getEffectiveRoleFromState);
@@ -164,7 +163,6 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
     if (roleOverride) {
       if (adminAccess) {
         setAdminAccess(false);
-        setAdminCode(null);
       }
       return;
     }
@@ -185,7 +183,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
     })();
 
     return () => { mounted = false; };
-  }, [adminAccess, authRole, authUser, roleOverride, setAdminAccess, setAdminCode]);
+  }, [adminAccess, authRole, authUser, roleOverride, setAdminAccess]);
 
   const handleLogin = async () => {
     const normalizedCode = code.trim();
@@ -209,7 +207,6 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
       }
 
       setAdminAccess(true);
-      setAdminCode(normalizedCode);
       setError("");
     } catch {
       setError("تعذر التحقق من الرمز حاليًا.");
@@ -232,7 +229,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
             <ShieldCheck className="w-8 h-8 text-teal-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white tracking-widest uppercase font-sans">الوصول السيادي</h1>
+            <h1 className="text-2xl font-black text-white tracking-widest uppercase font-sans">وصول القيادة</h1>
             <p className="text-sm text-teal-400/80 tracking-wider font-bold mt-1">مركز القيادة المتقدم</p>
           </div>
         </div>
@@ -355,7 +352,7 @@ const CollapsibleSidebarGroup: FC<{
 };
 
 export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
-  const [tab, setTab] = useState<AdminTab>("sovereign");
+  const [tab, setTab] = useState<AdminTab>("command");
   const [showAccount, setShowAccount] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDesktopSidebarVisible, setIsDesktopSidebarVisible] = useState<boolean>(true);
@@ -370,7 +367,6 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const authUser = useAuthState((s) => s.user);
   const adminAccess = useAdminState((s) => s.adminAccess);
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
-  const setAdminCode = useAdminState((s) => s.setAdminCode);
   const isContentEditingEnabled = useAdminState((s) => s.isContentEditingEnabled);
   const toggleContentEditing = useAdminState((s) => s.toggleContentEditing);
   const setFeatureFlags = useAdminState((s) => s.setFeatureFlags);
@@ -421,28 +417,28 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
   }, [resonanceScore]);
 
-  // 🔱 Sovereign Orchestrator Evaluator — runs lazily after mount
+  // 🔱 Command Orchestrator Evaluator — runs lazily after mount
   useEffect(() => {
     if (!adminAccess) return;
 
     // Start Local Autonomous Agent
-    sovereignAgent.start();
+    commandAgent.start();
 
     // Keep Cloud Orchestrator as observer/fallback
     const initialTimer = setTimeout(() => {
-      void SovereignOrchestrator.evaluateIntelligence();
+      void CommandOrchestrator.evaluateIntelligence();
     }, 10_000);
 
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
-        void SovereignOrchestrator.evaluateIntelligence();
+        void CommandOrchestrator.evaluateIntelligence();
       }
     }, 300_000); // 5 minutes
     
     return () => {
       clearTimeout(initialTimer);
       clearInterval(interval);
-      sovereignAgent.stop();
+      commandAgent.stop();
     };
   }, [adminAccess]);
 
@@ -533,7 +529,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     <AdminGate>
       <CommandHalo />
       <AdminCopilotModal />
-      <div className="admin-cockpit sovereign-pulse-fast min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-200 flex flex-col lg:flex-row relative isolate selection:bg-teal-500/30 font-sans overflow-hidden transition-colors duration-500">
+      <div className="admin-cockpit command-pulse-fast min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-200 flex flex-col lg:flex-row relative isolate selection:bg-teal-500/30 font-sans overflow-hidden transition-colors duration-500">
         
         {/* Mobile Top Stats Bar */}
         <div className="lg:hidden w-full flex justify-between items-center bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-2 px-4 shadow-sm text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest z-10 shrink-0 transition-colors">
@@ -627,7 +623,6 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
             <button
               onClick={() => {
                 setAdminAccess(false);
-                setAdminCode(null);
                 onExit?.();
               }}
               className="w-full flex items-center gap-3 justify-center bg-slate-900 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-900/50 rounded-xl px-4 py-3 text-xs font-black text-slate-400 hover:text-rose-400 transition-all uppercase tracking-widest group shadow-sm"
@@ -687,13 +682,13 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 </h2>
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-teal-500 animate-[pulse-ring_2s_infinite]" />
-                  <span className="text-xs font-bold text-teal-600 dark:text-teal-400/80 uppercase tracking-widest hidden sm:inline-block">تم تأسيس الاتصال السيادي</span>
+                  <span className="text-xs font-bold text-teal-600 dark:text-teal-400/80 uppercase tracking-widest hidden sm:inline-block">تم تأسيس اتصال القيادة</span>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-4 lg:gap-6">
-              <SovereignHUD />
+              <CommandHUD />
 
               <div className="h-8 w-px bg-slate-800 hidden lg:block mx-2" />
 
@@ -749,9 +744,9 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
             
             <div className="max-w-7xl mx-auto pb-20 relative z-10">
               <Suspense fallback={<div>Loading...</div>}>
-                {effectiveTab === "sovereign" && (
+                {effectiveTab === "command" && (
                   <div className="space-y-12">
-                    <SovereignPanel />
+                    <CommandPanel />
                   </div>
                 )}
 
@@ -775,19 +770,19 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 
                 {effectiveTab === "growth-hub" && (
                   <div>
-                    <SovereignGrowthHub />
+                    <CommandGrowthHub />
                   </div>
                 )}
 
                 {effectiveTab === "ai-studio" && (
                   <div>
-                    <SovereignAIHub />
+                    <CommandAIHub />
                   </div>
                 )}
 
                 {effectiveTab === "war-room" && (
                   <div className="space-y-12">
-                    <SovereignWarRoom />
+                    <CommandWarRoom />
                   </div>
                 )}
 
@@ -799,7 +794,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
                 {effectiveTab === "people-hub" && (
                   <div>
-                    <SovereignPeopleHub />
+                    <CommandPeopleHub />
                   </div>
                 )}
 

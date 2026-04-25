@@ -427,7 +427,7 @@ export function AppRuntimeControllers({
     const { xpLost, streakMaintained } = recordGamificationActivity();
     if (xpLost > 0) {
       useToastState.getState().showToast(
-        `فقدت ${xpLost} XP بسبب انقطاعك عن تسجيل الدخول. العزم يتجدد كل يوم!`,
+        `فقدت ${xpLost} نقطة بسبب انقطاعك عن تسجيل الدخول. العزم يتجدد كل يوم!`,
         "error"
       );
     } else if (streakMaintained) {

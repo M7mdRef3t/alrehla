@@ -4,7 +4,7 @@
  */
 
 import { getAuthToken } from "@/domains/auth/store/auth.store";
-import { useAdminState } from "@/domains/admin/store/admin.store";
+
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { CircuitBreaker } from "../../architecture/circuitBreaker";
 import { fetchJsonWithResilience, sendJsonWithResilience } from "../../architecture/resilientHttp";
@@ -60,9 +60,7 @@ export async function callAdminApi<T>(path: string, options?: RequestInit): Prom
   // In local dev, avoid calling a cross-origin admin API directly from browser
   // to prevent CORS console noise and fallback to local sources gracefully.
   if (isCrossOriginDevAdminApi()) return null;
-  const authToken = getAuthToken();
-  const adminCode = useAdminState.getState().adminCode;
-  const bearer = authToken ?? adminCode;
+  const bearer = getAuthToken();
   if (!bearer) return null;
   const query = buildAdminQuery(path);
   return fetchJsonWithResilience<T>(

@@ -51,7 +51,7 @@ export interface AdminBroadcast {
   createdAt: number;
 }
 
-export interface SovereignInsight {
+export interface CommandInsight {
     id: string;
     type: 'truth' | 'warning' | 'opportunity';
     message: string;
@@ -61,7 +61,7 @@ export interface SovereignInsight {
     tag?: string;
 }
 
-export interface SovereignStats {
+export interface CommandStats {
     activeNow: number;
     breakthroughs24h: number;
     events24h: number;
@@ -391,7 +391,7 @@ const DEFAULT_JOURNEY_PATHS: JourneyPath[] = [
 interface AdminState {
   adminAccess: boolean;
   isContentEditingEnabled: boolean;
-  adminCode: string | null;
+
   featureFlags: Record<FeatureFlagKey, FeatureFlagMode>;
   betaAccess: boolean;
   systemPrompt: string;
@@ -401,9 +401,9 @@ interface AdminState {
   missions: AdminMission[];
   broadcasts: AdminBroadcast[];
   pulseCopyOverrides: PulseCopyOverrides;
-  hasSovereignAlert: boolean;
-  sovereignInsights: SovereignInsight[];
-  sovereignStats: SovereignStats | null;
+  hasCommandAlert: boolean;
+  commandInsights: CommandInsight[];
+  commandStats: CommandStats | null;
   journeyPaths: JourneyPath[];
   
   // Smart Caching Layer
@@ -416,13 +416,13 @@ interface AdminState {
   // Sovereign Intelligence Live State
   resonanceScore: number;
   latestFriction: string | null;
-  aiInterventions: import("@/services/sovereignOrchestrator").SovereignIntervention[];
-  agentActivity: import("@/services/LocalSovereignAgent").AgentActivityStep[];
+  aiInterventions: import("@/services/commandOrchestrator").CommandIntervention[];
+  agentActivity: import("@/services/LocalCommandAgent").AgentActivityStep[];
   lastSentientPulse: number | null;
 
   setAdminAccess: (value: boolean) => void;
   toggleContentEditing: (value: boolean) => void;
-  setAdminCode: (value: string | null) => void;
+
   setFeatureFlags: (flags: Record<FeatureFlagKey, FeatureFlagMode>) => void;
   updateFeatureFlag: (key: FeatureFlagKey, mode: FeatureFlagMode) => void;
   setBetaAccess: (value: boolean) => void;
@@ -440,9 +440,9 @@ interface AdminState {
   setBroadcasts: (broadcasts: AdminBroadcast[]) => void;
   removeBroadcast: (id: string) => void;
   setPulseCopyOverrides: (overrides: PulseCopyOverrides) => void;
-  setHasSovereignAlert: (value: boolean) => void;
-  setSovereignInsights: (insights: SovereignInsight[]) => void;
-  setSovereignStats: (stats: SovereignStats) => void;
+  setHasCommandAlert: (value: boolean) => void;
+  setCommandInsights: (insights: CommandInsight[]) => void;
+  setCommandStats: (stats: CommandStats) => void;
   setJourneyPaths: (paths: JourneyPath[]) => void;
   
   setOpsStatsCache: (data: any) => void;
@@ -450,7 +450,7 @@ interface AdminState {
   setCopilotOpen: (value: boolean) => void;
   setResonanceScore: (score: number) => void;
   setLatestFriction: (friction: string | null) => void;
-  addAgentActivity: (activity: import("@/services/LocalSovereignAgent").AgentActivityStep) => void;
+  addAgentActivity: (activity: import("@/services/LocalCommandAgent").AgentActivityStep) => void;
   clearAgentActivity: () => void;
   setLastSentientPulse: (timestamp: number) => void;
 }
@@ -501,7 +501,7 @@ export const useAdminState = create<AdminState>()(
     (set) => ({
       adminAccess: false,
       isContentEditingEnabled: false,
-      adminCode: null,
+
       featureFlags: DEFAULT_FEATURE_FLAGS,
       betaAccess: false,
       systemPrompt: DEFAULT_PROMPT,
@@ -511,9 +511,9 @@ export const useAdminState = create<AdminState>()(
       missions: [],
       broadcasts: [],
       pulseCopyOverrides: { energy: "auto", mood: "auto", focus: "auto" },
-      hasSovereignAlert: false,
-      sovereignInsights: [],
-      sovereignStats: null,
+      hasCommandAlert: false,
+      commandInsights: [],
+      commandStats: null,
       journeyPaths: DEFAULT_JOURNEY_PATHS,
       opsStatsCache: null,
       liveStatsCache: null,
@@ -526,7 +526,7 @@ export const useAdminState = create<AdminState>()(
 
       setAdminAccess: (value) => set({ adminAccess: value }),
       toggleContentEditing: (value) => set({ isContentEditingEnabled: value }),
-      setAdminCode: (value) => set({ adminCode: value }),
+
       setFeatureFlags: (flags) =>
         set({
           featureFlags: {
@@ -563,9 +563,9 @@ export const useAdminState = create<AdminState>()(
       removeBroadcast: (id) =>
         set((state) => ({ broadcasts: state.broadcasts.filter((b) => b.id !== id) })),
       setPulseCopyOverrides: (overrides) => set({ pulseCopyOverrides: overrides }),
-      setHasSovereignAlert: (value) => set({ hasSovereignAlert: value }),
-      setSovereignInsights: (insights) => set({ sovereignInsights: insights }),
-      setSovereignStats: (stats) => set({ sovereignStats: stats }),
+      setHasCommandAlert: (value) => set({ hasCommandAlert: value }),
+      setCommandInsights: (insights) => set({ commandInsights: insights }),
+      setCommandStats: (stats) => set({ commandStats: stats }),
       setJourneyPaths: (journeyPaths) => set({ journeyPaths }),
       setOpsStatsCache: (data) => 
         set({ opsStatsCache: data ? { data, timestamp: Date.now() } : null }),

@@ -68,7 +68,7 @@ export const AIDecisionLog: FC<AIDecisionLogProps> = ({ maxDecisions = 50 }) => 
           <div>
             <h2 className="text-2xl font-black text-white tracking-widest uppercase flex items-center gap-3">
               المحكمة العليا للذكاء
-              <AdminTooltip content="هنا تقف لتحاسب، تراقب، وتقر قرارات الذكاء الاصطناعي التي تعمل كمراقب على السيادة." position="bottom" />
+              <AdminTooltip content="هنا تقف لتحاسب، تراقب، وتقر قرارات الذكاء الاصطناعي التي تعمل كمراقب على القيادة." position="bottom" />
             </h2>
             <div className="flex items-center gap-2 mt-1">
               <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
@@ -382,8 +382,8 @@ const DecisionTypeLabel: FC<{ type: DecisionType }> = ({ type }) => {
     send_marketing_email: "بث تسويقي",
     process_payment: "حركة مالية",
     grant_discount: "منحة تسعيرية",
-    subscription_activated: "تجديد سيادة",
-    subscription_cancelled: "إلغاء سيادة",
+    subscription_activated: "تجديد قيادة",
+    subscription_cancelled: "إلغاء قيادة",
     optimize_performance: "تحسين مداري",
     fix_bug: "ترميم تقني",
     a_b_test_ui: "تحليل واجهة",

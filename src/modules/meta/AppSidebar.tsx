@@ -83,7 +83,9 @@ import { runtimeEnv } from "@/config/runtimeEnv";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { assignUrl, getHref, pushUrl } from "@/services/navigation";
 import { openInNewTab } from "@/services/clientDom";
-import { SovereignActionBar } from '@/modules/action/SovereignActionBar';
+import { SovereignActionBar as CommandActionBar } from '@/modules/action/CommandActionBar';
+import { LeadershipProfile } from '@/modules/meta/LeadershipProfile';
+import { CommandOracle } from '@/modules/meta/CommandOracle';
 import { getJourneyPathBySlug } from "@/utils/journeyPaths";
 import { PROTOCOLS } from "./ProtocolEngine";
 import { EcosystemNavigator } from "@/components/EcosystemNavigator";
@@ -260,8 +262,8 @@ const InsightsVaultScreen = lazy(() =>
 const UpgradeScreen = lazy(() =>
   import("@/modules/exploration/UpgradeScreen").then((m) => ({ default: m.UpgradeScreen }))
 );
-const SovereignControl = lazy(() =>
-  import("@/components/admin/dashboard/Sovereign/SovereignControl").then((m) => ({ default: m.SovereignControl }))
+const CommandControl = lazy(() =>
+  import("@/components/admin/dashboard/Command/CommandControl").then((m) => ({ default: m.CommandControl }))
 );
 const ArtistChat = lazy(() =>
   import("@/modules/action/Coaching/ArtistChat").then((m) => ({ default: m.ArtistChat }))
@@ -416,7 +418,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [showSovereignControl, setShowSovereignControl] = useState(false);
+  const [showCommandControl, setShowCommandControl] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showEcosystemHub, setShowEcosystemHub] = useState(false);
   const [showInsightsVault, setShowInsightsVault] = useState(false);
@@ -640,7 +642,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   return (
     <>
       {/* ───── FLOATING P&L / ACTION BAR (MOBILE) ───── */}
-      <SovereignActionBar 
+      <CommandActionBar 
         isFloatingMobile 
         viewingNodeId={viewingNode?.id}
         onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })}
@@ -663,7 +665,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               </div>
             )}
             
-            <SovereignActionBar isSidebar={true} viewingNodeId={viewingNode?.id} onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })} className="mb-4" />
+            <CommandActionBar isSidebar={true} viewingNodeId={viewingNode?.id} onOpenRecoveryPlan={(nId) => setRecoveryPlanOpenWith({ preselectedNodeId: nId })} className="mb-4" />
             <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
             
             <div className="flex-1 overflow-y-auto custom-scrollbar py-2 px-2 flex flex-col gap-4">
@@ -699,13 +701,13 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   color="#a78bfa"
                 />
                 <SidebarItem
-                  label="فنان الوعي (Artist)"
+                  label="فنان الوعي"
                   icon={<Sparkles className="w-3.5 h-3.5 outline-none" />}
                   onClick={() => setShowArtistChat(true)}
                   color="#2dd4bf"
                 />
                 <SidebarItem
-                  label="الارتقاء (Upgrade)"
+                  label="الارتقاء"
                   icon={<Sparkles className="w-3.5 h-3.5 outline-none" />}
                   onClick={() => setShowUpgrade(true)}
                   color="#fbbf24"
@@ -713,9 +715,9 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
               </SidebarSector>
 
-              <SidebarSector title="المنظومة (السيادة)" icon={<ShieldCheck className="w-3.5 h-3.5" />} color="indigo">
+              <SidebarSector title="المنظومة (القيادة)" icon={<ShieldCheck className="w-3.5 h-3.5" />} color="indigo">
                 <SidebarItem
-                  label="حافظ (Memories)"
+                  label="حافظ"
                   icon={<History className="w-3.5 h-3.5 outline-none" />}
                   onClick={() => navigateProductScreen("hafiz")}
                   color="#a855f7"
@@ -729,20 +731,20 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   />
                 )}
                 <SidebarItem
-                  label="المركز (Command)"
+                  label="المركز"
                   icon={<LayoutGrid className="w-3.5 h-3.5 outline-none" />}
                   onClick={() => navigateProductScreen("markaz")}
                   color="#6366f1"
                 />
                 <SidebarItem
-                  label="النية (Intention)"
+                  label="النية"
                   icon={<Target className="w-3.5 h-3.5 outline-none" />}
                   onClick={() => navigateProductScreen("niyya")}
                   color="#10b981"
                 />
                 {activeSatellites.includes("atmosfera") && (
                   <SidebarItem
-                    label="الصمت (Breathing)"
+                    label="الصمت"
                     icon={<Wind className="w-3.5 h-3.5 outline-none" />}
                     onClick={() => navigateProductScreen("samt")}
                     color="#14b8a6"
@@ -751,21 +753,21 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               </SidebarSector>
 
               {isOwner && (
-                <SidebarSector title="السيادة (Owner)" icon={<ShieldCheck className="w-3.5 h-3.5" />} color="crimson">
+                <SidebarSector title="القيادة" icon={<ShieldCheck className="w-3.5 h-3.5" />} color="crimson">
                   <SidebarItem
-                    label="لوحة التحكم السيادية"
+                    label="لوحة التحكم القيادية"
                     icon={<Settings className="w-3.5 h-3.5" />}
-                    onClick={() => setShowSovereignControl(true)}
+                    onClick={() => setShowCommandControl(true)}
                     color="#ff0055"
                   />
                    <SidebarItem
-                    label="مركز المنظومة (Hub)"
+                    label="مركز المنظومة"
                     icon={<Network className="w-3.5 h-3.5" />}
                     onClick={() => setShowEcosystemHub(true)}
                     color="#6366f1"
                   />
                   <SidebarItem
-                    label="الـ Dashboard القديم"
+                    label="لوحة البيانات القديمة"
                     icon={<BarChart3 className="w-3.5 h-3.5" />}
                     onClick={openAdminDashboard}
                     color="#64748b"
@@ -940,7 +942,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 </span>
               </button>
               <span className="text-[9px] text-slate-500 tracking-[0.2em] font-medium uppercase">
-                Sovereign Intelligence
+                ذكاء القيادة
               </span>
             </div>
           </aside>
@@ -1031,46 +1033,46 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     color="#a78bfa"
                   />
                   <SidebarItem
-                    label="فنان الوعي (Artist)"
+                    label="فنان الوعي"
                     icon={<Sparkles className="w-5 h-5 outline-none" />}
                     onClick={() => { setShowArtistChat(true); handleClose(); }}
                     color="#2dd4bf"
                   />
                   <SidebarItem
-                    label="الارتقاء (Upgrade)"
+                    label="الارتقاء"
                     icon={<Sparkles className="w-5 h-5 outline-none" />}
                     onClick={() => { setShowUpgrade(true); handleClose(); }}
                     color="#fbbf24"
                   />
                 </SidebarSector>
 
-                <SidebarSector title="المنظومة (السيادة)" icon={<ShieldCheck className="w-4 h-4" />} color="indigo">
+                <SidebarSector title="المنظومة (القيادة)" icon={<ShieldCheck className="w-4 h-4" />} color="indigo">
                   <SidebarItem
-                    label="حافظ (Memories)"
+                    label="حافظ"
                     icon={<History className="w-5 h-5 outline-none" />}
                     onClick={() => { navigateProductScreen("hafiz"); handleClose(); }}
                     color="#a855f7"
                   />
                   <SidebarItem
-                    label="الصدى (Insights)"
+                    label="الصدى"
                     icon={<Radar className="w-5 h-5 outline-none" />}
                     onClick={() => { navigateProductScreen("sada"); handleClose(); }}
                     color="#06b6d4"
                   />
                   <SidebarItem
-                    label="المركز (Command)"
+                    label="المركز"
                     icon={<LayoutGrid className="w-5 h-5 outline-none" />}
                     onClick={() => { navigateProductScreen("markaz"); handleClose(); }}
                     color="#6366f1"
                   />
                   <SidebarItem
-                    label="النية (Intention)"
+                    label="النية"
                     icon={<Target className="w-5 h-5 outline-none" />}
                     onClick={() => { navigateProductScreen("niyya"); handleClose(); }}
                     color="#10b981"
                   />
                   <SidebarItem
-                    label="الصمت (Breathing)"
+                    label="الصمت"
                     icon={<Wind className="w-5 h-5 outline-none" />}
                     onClick={() => { navigateProductScreen("samt"); handleClose(); }}
                     color="#14b8a6"
@@ -1229,7 +1231,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   />
                 </SidebarSector>
 
-                <SidebarSector title="السيادة" icon={<ShieldCheck className="w-4 h-4" />} color="slate">
+                <SidebarSector title="القيادة" icon={<ShieldCheck className="w-4 h-4" />} color="slate">
                   <SidebarItem
                     label="الإشعار"
                     icon={<Bell className="w-5 h-5" />}
@@ -1275,7 +1277,7 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
                     </span>
                   </button>
                   <span className="text-[10px] text-slate-600 tracking-[0.25em] font-medium uppercase">
-                    Sovereign Intelligence
+                    Command Intelligence
                   </span>
                 </div>
               </motion.aside>
@@ -1464,7 +1466,7 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
             <UpgradeScreen isOpen={true} onClose={() => setShowUpgrade(false)} />
           </Suspense>
         )}
-        {showSovereignControl && (
+        {showCommandControl && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1473,19 +1475,19 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
             style={{ zIndex: Z_LAYERS.TACTICAL_CONTENT }}
             role="dialog"
             aria-modal="true"
-            aria-label="لوحة التحكم السيادية"
+            aria-label="لوحة التحكم القيادية"
           >
             <button
               type="button"
-              onClick={() => setShowSovereignControl(false)}
+              onClick={() => setShowCommandControl(false)}
               className="fixed top-4 left-4 z-[220] p-3 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors"
-              aria-label="إغلاق لوحة التحكم السيادية"
+              aria-label="إغلاق لوحة التحكم القيادية"
             >
               <X className="w-5 h-5" />
             </button>
             <div className="min-h-screen px-4 py-16 md:px-8">
               <Suspense fallback={<AwarenessSkeleton />}>
-                <SovereignControl isOpen={true} onClose={() => setShowSovereignControl(false)} />
+                <CommandControl isOpen={true} onClose={() => setShowCommandControl(false)} />
               </Suspense>
             </div>
           </motion.div>

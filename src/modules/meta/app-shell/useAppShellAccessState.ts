@@ -44,6 +44,7 @@ export function useAppShellAccessState({
   const authUser = useAuthState((s) => s.user);
   const authFirstName = useAuthState((s) => s.firstName);
   const authToneGender = useAuthState((s) => s.toneGender);
+  const tier = useAuthState((s) => s.tier);
   const role = useAuthState(getEffectiveRoleFromState);
   const rawRole = useAuthState((s) => s.role);
 
@@ -76,6 +77,12 @@ export function useAppShellAccessState({
   const canUsePulseCheck = availableFeatures.pulse_check;
   const shouldPromptAuthAfterPulse = !authUser && !isPrivilegedUser;
   const shouldGateStartWithAuth = isSupabaseReady && !authUser && !isPrivilegedUser;
+
+  // Granular intent-based feature access
+  const canSaveMap = Boolean(authUser);
+  const canUseGuided = isPrivilegedUser || tier !== "free";
+  const canUseAdvancedAnalysis = isPrivilegedUser || tier !== "free";
+  const canExportReport = isPrivilegedUser || tier !== "free";
 
   const {
     showPulseCheck,
@@ -134,6 +141,10 @@ export function useAppShellAccessState({
     canUseJourneyTools,
     canShowAIChatbot,
     canUsePulseCheck,
+    canSaveMap,
+    canUseGuided,
+    canUseAdvancedAnalysis,
+    canExportReport,
     shouldPromptAuthAfterPulse,
     showPulseCheck,
     setShowPulseCheck,

@@ -9,13 +9,14 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { computeDiagnosis, USER_STATE_LABELS, MAIN_PAIN_LABELS, RECOMMENDED_PRODUCT_LABELS } from "./diagnosisEngine";
+import { computeDiagnosis, USER_STATE_RESULT_LABELS, MAIN_PAIN_RESULT_LABELS, RECOMMENDED_PRODUCT_LABELS } from "./diagnosisEngine";
 import { saveDiagnosisState } from "./types";
 import type { DiagnosisAnswers, UserStateObject, MainPain, RecommendedProduct } from "./types";
 import { ConversionOfferCard } from "../conversion/ConversionOfferCard";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { analyticsService } from "@/domains/analytics";
 import { Bot, Sparkles } from "lucide-react";
+import { BotpressService } from "@/services/botpressService";
 
 const SentientGuide: FC<{ message: string }> = ({ message }) => (
   <motion.div
@@ -63,30 +64,30 @@ function OptionBtn({ label, sub, emoji, selected, color = "#2dd4bf", onClick }: 
     <motion.button
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all text-right"
+      dir="ltr"
+      className="w-full flex flex-row items-center gap-3 px-4 py-3.5 rounded-2xl transition-all"
       style={{
         background: selected ? `${color}18` : "rgba(255,255,255,0.03)",
         border: `1.5px solid ${selected ? color : "rgba(255,255,255,0.08)"}`,
         boxShadow: selected ? `0 0 16px ${color}30` : "none",
       }}
     >
-      {emoji && (
-        <span className="text-xl flex-shrink-0" aria-hidden>{emoji}</span>
-      )}
-      <div className="flex flex-col items-start flex-1">
+      {/* النص: flex-1 يأخذ كل المساحة على اليسار */}
+      <div className="flex flex-col flex-1 text-right" dir="rtl">
         <span
-          className="text-sm font-bold"
+          className="text-sm font-bold block w-full"
           style={{ color: selected ? color : "rgba(255,255,255,0.85)" }}
         >
           {label}
         </span>
         {sub && (
-          <span className="text-[10px] mt-0.5" style={{ color: "rgba(148,163,184,0.7)" }}>
+          <span className="text-[10px] mt-0.5 block w-full" style={{ color: "rgba(148,163,184,0.7)" }}>
             {sub}
           </span>
         )}
       </div>
-      {selected && (
+      {/* الأيقونة: ثاني في DOM = اليمين في LTR flex */}
+      {selected ? (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -97,6 +98,8 @@ function OptionBtn({ label, sub, emoji, selected, color = "#2dd4bf", onClick }: 
             <path d="M1 4.5L4.5 8L11 1" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </motion.div>
+      ) : (
+        emoji && <span className="text-xl flex-shrink-0" aria-hidden>{emoji}</span>
       )}
     </motion.button>
   );
@@ -136,8 +139,8 @@ function ResultCard({
   onProceed: (product: RecommendedProduct) => void;
 }) {
   const product = RECOMMENDED_PRODUCT_LABELS[state.recommendedProduct];
-  const stateLabel = USER_STATE_LABELS[state.type] ?? state.type;
-  const painLabel = MAIN_PAIN_LABELS[state.mainPain] ?? state.mainPain;
+  const stateLabel = USER_STATE_RESULT_LABELS[state.type] ?? state.type;
+  const painLabel = MAIN_PAIN_RESULT_LABELS[state.mainPain] ?? state.mainPain;
 
   return (
     <motion.div
@@ -177,7 +180,7 @@ function ResultCard({
         <h2 className="text-lg font-extrabold text-white">التشخيص اتكمّل</h2>
         <p className="text-sm text-slate-300 leading-relaxed">
           إنت دلوقتي <span className="text-teal-400 font-bold">{stateLabel}</span>،
-          وأكتر حاجة شايلاك هي <span className="text-purple-400 font-bold">{painLabel}</span>.
+          وأكتر حاجة <span className="text-purple-400 font-bold italic">شاغلاك</span> هي <span className="text-purple-400 font-bold">{painLabel}</span>.
         </p>
       </div>
 
@@ -238,6 +241,13 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
 
     if (step < STEPS) {
       setStep((s) => s + 1);
+      
+      // Notify Botpress about progress
+      BotpressService.sendMessage({
+        userId: "anonymous", // Will be updated if user logs in
+        text: `المسافر جاوب على السؤال رقم ${step}`,
+        metadata: { step, answers }
+      });
     } else {
       const computed = computeDiagnosis(answers);
       saveDiagnosisState(computed);
@@ -247,6 +257,13 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
         type: computed.type,
         main_pain: computed.mainPain,
         product: computed.recommendedProduct
+      });
+
+      // Send Final Diagnosis to Botpress
+      BotpressService.sendMessage({
+        userId: "anonymous",
+        text: `المسافر خلص التشخيص. النتيجة: ${computed.type}، المشكلة: ${computed.mainPain}`,
+        metadata: { diagnosis: computed }
       });
 
       setResult(computed);
@@ -269,8 +286,8 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col items-center justify-start overflow-y-auto ob-dark-force"
-      style={{ background: "#020408" }}
+      className="min-h-screen w-full overflow-y-auto ob-dark-force"
+      style={{ background: "#020408", display: "grid", gridTemplateColumns: "1fr", justifyItems: "center" }}
       dir="rtl"
     >
       {/* Background Orbs */}
@@ -296,7 +313,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-sm mx-auto px-5 pb-10 pt-10 flex flex-col gap-6">
+      <div className="relative z-10 w-full flex flex-col items-center gap-6 mx-auto" style={{ maxWidth: "28rem", padding: "15rem 1.25rem 4rem" }}>
 
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -327,7 +344,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
             <div className="mt-4">
               <SentientGuide 
                 message={
-                  step === 1 ? "خليك صريح مع نفسك، دي البداية عشان تسترد سيادتك." :
+                  step === 1 ? "خليك صريح مع نفسك، دي البداية عشان تسترد قيادتك." :
                   step === 2 ? "المشاعر دي رسائل، مهم نفهم هي عايزة تقول إيه." :
                   step === 3 ? "الوقت بيفرق في تحليل الأنماط المتكررة." :
                   step === 4 ? "الخوف طبيعي، بس الوضوح هو اللي بيكسره." :
@@ -356,8 +373,8 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
               {/* ── Q1: Main Pain ── */}
               {step === 1 && (
                 <>
-                  <div className="space-y-1 mb-1">
-                    <h2 className="text-[18px] font-extrabold text-white">إيه اللي شايلك دلوقتي؟</h2>
+                  <div className="space-y-1 mb-1 flex flex-col items-start w-full text-right">
+                    <h2 className="text-[18px] font-extrabold text-white">إيه أكتر حاجة شغلاك دلوقتي؟</h2>
                     <p className="text-[12px] text-slate-400 leading-relaxed">الموضوع اللي بيطلع في بالك لما بتصحى أو قبل ما تنام.</p>
                   </div>
                   <div className="space-y-2.5">
@@ -365,7 +382,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
                       { value: "relationship", label: "علاقاتي مع الناس", sub: "شخص أو أكتر بياخد منك طاقة", emoji: "🔗" },
                       { value: "family", label: "عيلتي", sub: "ضغوط أو توقعات من المقربين", emoji: "🏠" },
                       { value: "work", label: "الشغل والإنجاز", sub: "مش وصّال للي عايزه", emoji: "💼" },
-                      { value: "self", label: "علاقتي بنفسي", sub: "داخلي مش تمام", emoji: "🪞" },
+                      { value: "self", label: "علاقتي بنفسي", sub: "داخلي مش تمام", emoji: "💭" },
                     ] as { value: MainPain; label: string; sub: string; emoji: string }[]).map((opt) => (
                       <OptionBtn
                         key={opt.value}
@@ -373,7 +390,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
                         sub={opt.sub}
                         emoji={opt.emoji}
                         selected={answers.q1_pain === opt.value}
-                        onClick={() => { setAnswer("q1_pain", opt.value); }}
+                        onClick={() => { setAnswer("q1_pain", opt.value); setTimeout(next, 200); }}
                       />
                     ))}
                   </div>
@@ -383,7 +400,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
               {/* ── Q2: Feeling ── */}
               {step === 2 && (
                 <>
-                  <div className="space-y-1 mb-1">
+                  <div className="space-y-1 mb-1 flex flex-col items-start w-full text-right">
                     <h2 className="text-[18px] font-extrabold text-white">إيه الإحساس الأكتر؟</h2>
                     <p className="text-[12px] text-slate-400 leading-relaxed">الوصف اللي لو قلته لحد قريب هيفهمك على طول.</p>
                   </div>
@@ -394,6 +411,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
                       { value: "lost", label: "تايه ومش عارف من فين أبدأ", sub: "مفيش خريطة واضحة جوايا", emoji: "🌫️", color: "#94a3b8" },
                       { value: "anxious", label: "قلقان ومشدود", sub: "خايف من حاجة مش واضحة", emoji: "⚡", color: "#a78bfa" },
                       { value: "ready", label: "جاهز وعايز أتحرك", sub: "محتاج بس خطة واضحة", emoji: "🚀", color: "#2dd4bf" },
+                      { value: "ununderstood", label: "محدش فاهمني", sub: "الإحساس أعمق من كل ده", emoji: "🌑", color: "#6366f1" },
                     ] as { value: string; label: string; sub: string; emoji: string; color: string }[]).map((opt) => (
                       <OptionBtn
                         key={opt.value}
@@ -402,7 +420,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
                         emoji={opt.emoji}
                         selected={answers.q2_feeling === opt.value}
                         color={opt.color}
-                        onClick={() => setAnswer("q2_feeling", opt.value as DiagnosisAnswers["q2_feeling"])}
+                        onClick={() => { setAnswer("q2_feeling", opt.value as DiagnosisAnswers["q2_feeling"]); setTimeout(next, 200); }}
                       />
                     ))}
                   </div>
@@ -412,7 +430,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
               {/* ── Q3: Duration ── */}
               {step === 3 && (
                 <>
-                  <div className="space-y-1 mb-1">
+                  <div className="space-y-1 mb-1 flex flex-col items-start w-full text-right">
                     <h2 className="text-[18px] font-extrabold text-white">من امتى وإنت كده؟</h2>
                     <p className="text-[12px] text-slate-400 leading-relaxed">مش عيب — المهم تعرف.</p>
                   </div>
@@ -428,7 +446,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
                         sub={opt.sub}
                         emoji={opt.emoji}
                         selected={answers.q3_duration === opt.value}
-                        onClick={() => setAnswer("q3_duration", opt.value as DiagnosisAnswers["q3_duration"])}
+                        onClick={() => { setAnswer("q3_duration", opt.value as DiagnosisAnswers["q3_duration"]); setTimeout(next, 200); }}
                       />
                     ))}
                   </div>
@@ -438,7 +456,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
               {/* ── Q4: Blocker ── */}
               {step === 4 && (
                 <>
-                  <div className="space-y-1 mb-1">
+                  <div className="space-y-1 mb-1 flex flex-col items-start w-full text-right">
                     <h2 className="text-[18px] font-extrabold text-white">إيه اللي بيوقفك؟</h2>
                     <p className="text-[12px] text-slate-400 leading-relaxed">كن صريح مع نفسك — الإجابة دي بتفرق.</p>
                   </div>
@@ -455,7 +473,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
                         sub={opt.sub}
                         emoji={opt.emoji}
                         selected={answers.q4_blocker === opt.value}
-                        onClick={() => setAnswer("q4_blocker", opt.value as DiagnosisAnswers["q4_blocker"])}
+                        onClick={() => { setAnswer("q4_blocker", opt.value as DiagnosisAnswers["q4_blocker"]); setTimeout(next, 200); }}
                       />
                     ))}
                   </div>
@@ -465,7 +483,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
               {/* ── Q5: Long-term Goal ── */}
               {step === 5 && (
                 <>
-                  <div className="space-y-1 mb-1">
+                  <div className="space-y-1 mb-1 flex flex-col items-start w-full text-right">
                     <h2 className="text-[18px] font-extrabold text-white">لو هتختار هدف واحد…</h2>
                     <p className="text-[12px] text-slate-400 leading-relaxed">مش لازم يبقى كبير — اللي حاسس إنه الأهم دلوقتي.</p>
                   </div>
@@ -482,30 +500,14 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
                         sub={opt.sub}
                         emoji={opt.emoji}
                         selected={answers.q5_goal === opt.value}
-                        onClick={() => setAnswer("q5_goal", opt.value)}
+                        onClick={() => { setAnswer("q5_goal", opt.value); setTimeout(next, 200); }}
                       />
                     ))}
                   </div>
                 </>
               )}
 
-              {/* Next Button */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={next}
-                disabled={!canProceed}
-                className="w-full py-4 rounded-2xl text-[15px] font-extrabold transition-all mt-2"
-                style={{
-                  background: canProceed
-                    ? "linear-gradient(135deg, #2dd4bf, #8b5cf6)"
-                    : "rgba(255,255,255,0.05)",
-                  color: canProceed ? "#0f172a" : "rgba(255,255,255,0.2)",
-                  cursor: canProceed ? "pointer" : "not-allowed",
-                  boxShadow: canProceed ? "0 4px 20px rgba(45,212,191,0.25)" : "none",
-                }}
-              >
-                {step === STEPS ? "شوف نتيجتك ←" : "كمّل →"}
-              </motion.button>
+              {/* Next Button Removed */}
             </motion.div>
           )}
         </AnimatePresence>

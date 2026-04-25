@@ -9,7 +9,7 @@ import { StatCard, formatNumber } from "./components/StatCard";
 import { PhaseOneGoal } from "../Overview/components/PhaseOneGoal";
 import { SuccessIndexCard } from "../Overview/components/SuccessIndexCard";
 import { ExecutiveReport } from "../Overview/components/ExecutiveReport";
-import { SovereignABTestRadar } from "../Analytics/SovereignABTestRadar";
+import { CommandABTestRadar } from "../Analytics/CommandABTestRadar";
 import { PendingIntentsWidget } from "./components/PendingIntentsWidget";
 import { CreditCard } from "lucide-react";
 
@@ -228,7 +228,7 @@ export const ExecutiveDashboard: FC = () => {
                                 title="إجمالي المسافرين"
                                 value={formatNumber(totalUsers)}
                                 hint="مزامنة موثقة"
-                                tooltip="إجمالي عدد المسافرين السِياديين في المنصة حتى هذه اللحظة."
+                                tooltip="إجمالي عدد المسافرين القياديين في المنصة حتى هذه اللحظة."
                                 onClick={() => navigateToTab("users-state")}
                             />
                             <StatCard
@@ -262,7 +262,7 @@ export const ExecutiveDashboard: FC = () => {
                                 onClick={() => navigateToTab("marketing-ops")}
                             />
                             <StatCard
-                                title="العمليات السِيادية"
+                                title="العمليات القيادية"
                                 value={formatNumber(aiTokensUsed)}
                                 hint="استهلاك التفكير الاصطناعي"
                                 glowColor="indigo"
@@ -272,12 +272,12 @@ export const ExecutiveDashboard: FC = () => {
                         </div>
                     </CollapsibleSection>
 
-                    <SovereignABTestRadar />
+                    <CommandABTestRadar />
 
                     <CollapsibleSection
                         title="معاملات الدفع العالقة"
                         icon={<CreditCard className="w-4 h-4" />}
-                        subtitle="التحقق السِيادي والمراجعة اليدوية"
+                        subtitle="التحقق القيادي والمراجعة اليدوية"
                         defaultExpanded={true}
                         headerColors="border-amber-500/20 bg-amber-500/5 text-amber-500"
                     >

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, Zap, Loader2 } from "lucide-react";
-import { runtimeEnv } from "@/config/runtimeEnv";
+import { safeGetSession } from "@/services/supabaseClient";
 
 type Priority = "low" | "medium" | "high" | "critical";
 
@@ -46,12 +46,13 @@ export default function CaptureSignalModal({ onClose, onSuccess }: CaptureSignal
     setLoading(true);
     setError(null);
     try {
-      const adminCode = runtimeEnv.adminCode ?? "";
+      const session = await safeGetSession();
+      const token = session?.access_token ?? "";
       const res = await fetch("/api/admin/discovery", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${adminCode}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...form,

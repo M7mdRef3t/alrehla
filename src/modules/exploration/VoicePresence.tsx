@@ -1,11 +1,11 @@
 import { FC, useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Mic, MicOff, OracleIcon } from '@/modules/meta/icons/SovereignIcons'; // Assuming these exist, or I can use fallback lucide
+import { Activity, Mic, MicOff, OracleIcon } from '@/modules/meta/icons/LeadershipIcons'; // Assuming these exist, or I can use fallback lucide
 import { supabase } from "@/services/supabaseClient";
 import { useSynthesisState } from "@/domains/consciousness/store/synthesis.store";
 
 /*
-    ORACLE NUCLEUS — Sovereign Voice Presence
+    ORACLE NUCLEUS — Leadership Voice Presence
     A tactical AI presence indicator that visualizes the "Neural Logic" of the platform.
 */
 

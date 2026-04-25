@@ -230,7 +230,11 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     isAdminRoute,
     isAnalyticsRoute,
     setIsAdminRoute,
-    chromeVisibility
+    chromeVisibility,
+    canUseGuided,
+    canSaveMap,
+    canUseAdvancedAnalysis,
+    canExportReport
   } = useAppShellAccessState({
     screen,
     isLandingScreen,
@@ -321,23 +325,22 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     void setScreen("diagnosis" as typeof screen);
   }, [screen, authStatus, authUser, setScreen]);
 
-  // STRICT CHECKOUT GATE: Guard map access for free tier
+  // Intent Paywall Handler
+  const handlePaidFeatureClick = useCallback((feature: string) => {
+    trackingService.recordFlow("paid_feature_clicked", { meta: { feature } });
+    setAppOverlay("premiumBridge", true);
+    trackingService.recordFlow("premium_bridge_viewed", { meta: { source: feature } });
+  }, [setAppOverlay]);
+
+  // STRICT CHECKOUT GATE (Fallback for direct URL access)
   useEffect(() => {
     if (authStatus !== "ready" || !authUser || tier !== "free" || isOwnerWatcher) return;
     
-    // First Sight Grace: If user just finished onboarding, let them see their sanctuary once.
-    const justFinishedOnboarding = typeof window !== "undefined" && window.sessionStorage.getItem("dawayir-onboarding-just-finished") === "true";
-    if (justFinishedOnboarding && screen === "map") {
-      // Consume the flag so the next time it's gated
-      window.sessionStorage.removeItem("dawayir-onboarding-just-finished");
-      return;
+    // If user tries to access guided flow via direct URL while being free, show the mandatory checkout
+    if (screen === "guided") {
+      handlePaidFeatureClick("guided");
     }
-
-    // If user tries to access map or guided flow while being free, show the mandatory checkout
-    if (screen === "map" || screen === "guided") {
-      setAppOverlay("premiumBridge", true);
-    }
-  }, [authStatus, authUser, tier, screen, setAppOverlay, isOwnerWatcher]);
+  }, [authStatus, authUser, tier, screen, handlePaidFeatureClick, isOwnerWatcher]);
 
   const {
     activeBroadcast,
@@ -357,7 +360,9 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     showCocoon,
     isEmergencyOpen,
     setScreen,
-    setLockedFeature
+    setLockedFeature,
+    canUseGuided,
+    handlePaidFeatureClick
   });
 
   const {

@@ -36,7 +36,7 @@ export function analyzeMapInterference(nodes: MapNode[]): SyncInsight[] {
                 id: `tension-${ring}-${Date.now()}`,
                 type: "tension",
                 title: ring === "green" ? "اختراق في النواة!" : "تداخل كهرومغناطيسي",
-                body: `يا سيادة القائد، استشعر توتراً مضاعفاً في الدائرة ${ring === "green" ? "الخضراء" : ring}. وجود ${stressedInRing.length} أشخاص مستنزِفين في نفس المدار يهدد استقرار المنظومة.`,
+                body: `يا قيادة، استشعر توتراً مضاعفاً في الدائرة ${ring === "green" ? "الخضراء" : ring}. وجود ${stressedInRing.length} أشخاص مستنزِفين في نفس المدار يهدد استقرار المنظومة.`,
                 affectedNodes: stressedInRing.map(n => n.id),
                 severity: ring === "green" ? "high" : "medium"
             });

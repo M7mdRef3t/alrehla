@@ -23,7 +23,7 @@ interface UseAppMindSignalsParams {
   openPulseCheck?: () => void;
   /** يفتح ShareStats overlay للمشاركة */
   openShareStats?: () => void;
-  /** يفتح سجل السيادة */
+  /** يفتح سجل القيادة */
   openChronicle?: () => void;
 }
 

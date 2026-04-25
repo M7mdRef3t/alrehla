@@ -113,7 +113,7 @@ export default function RepoIntelPanel() {
            color="teal" 
         />
         <HealthCard 
-           label="روابط السيادة (Edges)" 
+           label="روابط القيادة (Edges)" 
            value={graph?.stats.edgeCount ?? "--"} 
            icon={GitBranch} 
            color="indigo" 

@@ -102,6 +102,7 @@ export function buildBreadcrumb(screen: string): BreadcrumbItem[] {
     diplomacy:            "الدبلوماسية",
     armory:               "المستودع",
     enterprise:           "المؤسسة",
+    diagnosis:            "اعرف نفسك",
   };
 
   if (!screen || screen === "landing") {

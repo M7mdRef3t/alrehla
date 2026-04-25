@@ -29,7 +29,7 @@ export const LevelBanner = () => {
                 {/* Level Circle */}
                 <div className="relative shrink-0">
                     <div className="w-14 h-14 rounded-2xl bg-[var(--soft-teal)] flex flex-col items-center justify-center shadow-lg shadow-[var(--soft-teal)] border border-white/10">
-                        <span className="text-[10px] text-white/60 font-bold uppercase leading-tight">LVL</span>
+                        <span className="text-[10px] text-white/60 font-bold uppercase leading-tight">مستوى</span>
                         <span className="text-xl font-black text-white leading-tight">{level}</span>
                     </div>
                 </div>
@@ -41,7 +41,7 @@ export const LevelBanner = () => {
                             : <span className="text-[var(--soft-teal)]">{rank}</span>
                         </h3>
                         <span className="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
-                            {xp} XP
+                            {xp} نقطة
                         </span>
                     </div>
 
@@ -57,7 +57,7 @@ export const LevelBanner = () => {
 
                     <div className="flex items-center justify-between mt-1.5">
                         <span className="text-[10px] text-slate-500 font-medium">
-                             <span className="text-[var(--soft-teal)]">{nextLevelXP} XP</span>  
+                             <span className="text-[var(--soft-teal)]">{nextLevelXP} نقطة</span>  
                         </span>
                         <div className="flex -space-x-1">
                             {[1, 2, 3].map(i => (

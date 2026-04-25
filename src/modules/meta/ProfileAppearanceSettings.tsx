@@ -12,7 +12,7 @@ export const ProfileAppearanceSettings: React.FC = () => {
     const unlockedIds = useAchievementState((s) => s.unlockedIds);
     
     const [displayName, setDisplayName] = useState(profileDisplayName || "المسافر");
-    const [bio, setBio] = useState(profileBio || "أبحث عن النقاء الإدراكي والسيادة المعرفية في الفضاء الرقمي.");
+    const [bio, setBio] = useState(profileBio || "أبحث عن النقاء الإدراكي والقيادة المعرفية في الفضاء الرقمي.");
     
     const [activeTheme, setActiveTheme] = useState("nebula");
     const [badges, setBadges] = useState(unlockedIds.slice(0, 2));

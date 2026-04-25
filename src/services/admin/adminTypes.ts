@@ -12,8 +12,8 @@ import type {
   AdminBroadcast,
   JourneyPath,
   JourneyPathStep,
-  SovereignInsight,
-  SovereignStats,
+  CommandInsight,
+  CommandStats,
   PulseCopyOverrides,
 } from "@/domains/admin/store/admin.store";
 import type { MapNode } from "@/modules/map/mapTypes";
@@ -500,8 +500,8 @@ export type {
   AdminBroadcast,
   JourneyPath,
   JourneyPathStep,
-  SovereignInsight,
-  SovereignStats,
+  CommandInsight,
+  CommandStats,
   PulseCopyOverrides,
   PulseCheckMode,
   MapNode,

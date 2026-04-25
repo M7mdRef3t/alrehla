@@ -10,7 +10,7 @@ export function LevelGuide() {
           كيف تعمل المستويات؟
         </h3>
         <p className="text-sm font-medium text-white/60 leading-relaxed">
-          نظام المستويات مبني على <strong>نقاط الخبرة (XP)</strong> اللي بتجمعها من تفاعلك الحقيقي والواعي مع رحلتك على المنصة.
+          نظام المستويات مبني على <strong>نقاط الخبرة (نقاط)</strong> اللي بتجمعها من تفاعلك الحقيقي والواعي مع رحلتك على المنصة.
           عشان تطلع من المستوى ١ للمستوى ٢، محتاج تجمع ٢٠٠ نقطة. وكل مستوى جديد بيطلب ٥٠ نقطة زيادة عن اللي قبله (المستوى ٣ محتاج ٢٥٠، وهكذا).
         </p>
       </div>
@@ -68,7 +68,7 @@ export function LevelGuide() {
               <Flame className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-white mb-1">الاستمرار اليومي (Streak)</h4>
+              <h4 className="text-sm font-bold text-white mb-1">الاستمرار اليومي</h4>
               <p className="text-xs text-white/50 mb-2">التزامك برحلتك كل يوم بيبني زخم قوي.</p>
               <div className="flex gap-4">
                 <div className="text-xs font-black text-orange-400">٧ أيام متتالية: +١٠٠ نقطة</div>
@@ -95,7 +95,7 @@ export function LevelGuide() {
 
       {/* Ranks */}
       <div className="space-y-4">
-        <h3 className="text-lg font-black text-white px-2">الرتب والألقاب (Ranks)</h3>
+        <h3 className="text-lg font-black text-white px-2">الرتب والألقاب</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {["مستطلع جَدِيد", "كشاف ميداني", "ملازم تعافي", "نقيب حدود", "رائد استقرار", "عقيد حكمة", "عميد سلام", "مارشال الدواير"].map((rank) => (
             <div key={rank} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center text-center gap-2 group hover:bg-white/[0.05] transition-colors">

@@ -243,7 +243,7 @@ export default function AlertsPanel() {
                             <CheckCircle className="w-10 h-10 text-emerald-500" />
                         </div>
                         <p className="font-black text-xl text-white tracking-widest uppercase mb-2">النظام آمن ومستقر</p>
-                        <p className="text-sm font-medium text-emerald-500/70 tracking-wide uppercase">لم يرصد رادار السيادة أي اختراقات أو أعطال</p>
+                        <p className="text-sm font-medium text-emerald-500/70 tracking-wide uppercase">لم يرصد رادار القيادة أي اختراقات أو أعطال</p>
                     </div>
                 ) : (
                     <div className="space-y-4">

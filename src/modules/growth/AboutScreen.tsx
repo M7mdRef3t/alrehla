@@ -209,7 +209,7 @@ export const AboutScreen = memo(function AboutScreen({ onBack, onStart }: AboutS
             <p className="text-white text-2xl md:text-5xl leading-[1.6] md:leading-[1.6] font-black tracking-tight drop-shadow-xl">
               <span className="text-slate-500">هذا ليس تطبيقاً للإنتاجية.</span><br/><br/>
               لن نرسل لك إشعارات تافهة لتشرب الماء أو تنام مبكراً.<br/><br/>
-              لقد بنينا <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">نظام تشغيل عاطفي</span> لتستعيد سيادتك، وليس لنحتجز انتباهك.
+              لقد بنينا <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">نظام تشغيل عاطفي</span> لتستعيد قيادتك، وليس لنحتجز انتباهك.
             </p>
           </motion.div>
         </div>

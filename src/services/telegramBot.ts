@@ -221,7 +221,7 @@ ${recommendation.reasoning}
   async notifyAdminDecision(decision: any): Promise<void> {
     const p = decision.payload as any;
     const text = `
-🤖 **إخطار سيادي (Sovereign Alert)**
+🤖 **إخطار قيادي (Leadership Alert)**
 
 🧠 **النوع:** \`${decision.type}\`
 🎯 **التحليل:** ${decision.reasoning}
@@ -332,7 +332,7 @@ ${error.severity === "critical" ? "🛑 **يحتاج تدخل فوري!**" : "�
     insight: string;
   }): Promise<void> {
     const text = `
-🎯 **تنبيه سيادي: اختراق حيوية (A/B Test) 🎯**
+🎯 **تنبيه قيادي: اختراق حيوية (A/B Test) 🎯**
 
 🧠 **التجربة:** ${params.testName}
 👑 **النسخة المتفوقة:** Variant ${params.winningVariant}

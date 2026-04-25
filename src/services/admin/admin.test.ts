@@ -16,7 +16,7 @@ vi.mock("@/domains/auth/store/auth.store", () => ({
 
 vi.mock("@/domains/admin/store/admin.store", () => ({
   useAdminState: {
-    getState: () => ({ adminCode: null })
+    getState: () => ({ })
   }
 }));
 

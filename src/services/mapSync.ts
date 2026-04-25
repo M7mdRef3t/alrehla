@@ -232,8 +232,9 @@ function initializeMapSync(): void {
 }
 
 /**
- * Fetch the latest Map/State from the cloud.
- * Useful for Hub-and-Spoke cross-device recovery.
+ * Fetch ALL Maps from the cloud and merge nodes.
+ * Deduplicates by label (person name), keeping the richest version.
+ * Ensures no person added in any previous session is ever lost.
  */
 export async function fetchCloudMap(): Promise<StoredState | null> {
   if (!isSupabaseReady || !supabase) return null;
@@ -241,22 +242,60 @@ export async function fetchCloudMap(): Promise<StoredState | null> {
   if (!user) return null;
 
   try {
-    const { data, error } = await supabase
+    // 1. Fetch ALL sessions (latest first for metadata priority)
+    const { data: rows, error } = await supabase
       .from(SUPABASE_MAPS_TABLE)
-      .select("nodes, map_type, feeling_results, transformation_diagnosis, ai_interpretation")
+      .select("nodes, map_type, feeling_results, transformation_diagnosis, ai_interpretation, updated_at")
       .eq("user_id", user.id)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .single();
+      .order("updated_at", { ascending: false });
 
-    if (error || !data) return null;
+    if (error || !rows || rows.length === 0) return null;
+
+    // 2. Use latest session's metadata (map_type, feelings, diagnosis, etc.)
+    const latest = rows[0];
+
+    // 3. Merge all nodes across all sessions, dedup by label
+    const nodesByLabel = new Map<string, any>();
+    // Traverse newest → oldest so the latest version wins ties
+    for (const row of rows) {
+      if (!Array.isArray(row.nodes)) continue;
+      for (const node of row.nodes) {
+        if (!node || !node.label) continue;
+        const label = String(node.label).trim();
+        if (!label) continue;
+        // Skip test/junk labels
+        if (/^[0-9]+$/.test(label) || label.length <= 1) continue;
+        
+        const existing = nodesByLabel.get(label);
+        if (!existing) {
+          nodesByLabel.set(label, node);
+        } else {
+          // Keep the version with more data (more JSON keys = richer)
+          const existingKeys = Object.keys(existing).length;
+          const candidateKeys = Object.keys(node).length;
+          if (candidateKeys > existingKeys) {
+            nodesByLabel.set(label, node);
+          }
+        }
+      }
+    }
+
+    // 4. Re-assign clean sequential IDs to avoid collisions
+    const mergedNodes = Array.from(nodesByLabel.values()).map((node, idx) => ({
+      ...node,
+      id: String(idx + 1)
+    }));
+
+    if (runtimeEnv.isDev) {
+      console.log(`[MapSync] Cloud merge: ${rows.length} sessions → ${mergedNodes.length} unique people`);
+    }
 
     return {
-      nodes: data.nodes,
-      mapType: data.map_type,
-      feelingResults: data.feeling_results,
-      transformationDiagnosis: data.transformation_diagnosis,
-      aiInterpretation: data.ai_interpretation
+      nodes: mergedNodes,
+      mapType: latest.map_type,
+      feelingResults: latest.feeling_results,
+      transformationDiagnosis: latest.transformation_diagnosis,
+      aiInterpretation: latest.ai_interpretation
     };
   } catch (err) {
     if (runtimeEnv.isDev) logger.error("[MapSync] Error fetching cloud map:", err);

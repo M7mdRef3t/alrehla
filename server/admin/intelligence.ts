@@ -157,7 +157,7 @@ export async function handleOraclePulse(req: any, res: any) {
     const activeNow = pulseStats?.[0]?.active_now_estimate || 0;
 
     // 5. AI Generation
-    const insights = await OracleService.generateSovereignInsights({
+    const insights = await OracleService.generateCommandInsights({
         recentTruths: truths || [],
         eventCounts,
         activeNow,

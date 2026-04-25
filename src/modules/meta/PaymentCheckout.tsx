@@ -222,7 +222,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-teal-400/90 to-emerald-600/90 flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(20,184,166,0.3)] border border-teal-300/20 backdrop-blur-xl">
             <ShieldCheck className="w-8 h-8 text-slate-950" />
           </div>
-          <h3 className="text-xl font-black text-white mb-1 tracking-tight">تأكيد المرور السيادي</h3>
+          <h3 className="text-xl font-black text-white mb-1 tracking-tight">تأكيد مرورك القيادي</h3>
           <p className="text-xs text-teal-100/70 font-medium">
             {TIER_LABELS.premium} — {localPriceLabel} أو ${price.monthly}/شهر
           </p>

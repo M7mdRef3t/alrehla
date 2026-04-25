@@ -132,7 +132,7 @@ export const GamificationNudgeToast: FC = () => {
                 {activeNudge.title}
                 {activeNudge.type === 'points' && activeNudge.value && (
                   <span className="text-xs font-black px-1.5 py-0.5 rounded-md bg-indigo-500/30 text-indigo-300">
-                    +{activeNudge.value} XP
+                    +{activeNudge.value} نقطة
                   </span>
                 )}
               </h4>

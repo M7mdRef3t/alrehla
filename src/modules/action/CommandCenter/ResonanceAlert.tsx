@@ -88,7 +88,7 @@ export const ResonanceAlert: React.FC = () => {
                             </h2>
 
                             <p className="text-xs text-slate-400 font-medium italic">
-                                "السرب تحت ضغط عالي.. موجة مغناطيسية هترفع صعوبة المهام لأقصى درجة. السيادة مش بس في الراحة، السيادة في العاصفة."
+                                "السرب تحت ضغط عالي.. موجة مغناطيسية هترفع صعوبة المهام لأقصى درجة. القيادة مش بس في الراحة، القيادة في العاصفة."
                             </p>
 
                             <div className="pt-3 flex items-center justify-between border-t border-white/5 mt-2">

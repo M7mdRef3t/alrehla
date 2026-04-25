@@ -22,7 +22,7 @@ function AddXpModal({ onClose }: { onClose: () => void }) {
         </div>
         <input value={label} onChange={e => setLabel(e.target.value)} placeholder="ماذا فعلت؟ مثال: تأمل 10 دقائق" className="w-full bg-slate-900/50 border border-slate-700/30 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-600 mb-2 outline-none" />
         <div className="mb-3">
-          <span className="text-[9px] text-slate-500 font-bold block mb-1">النقاط: {amount} XP</span>
+          <span className="text-[9px] text-slate-500 font-bold block mb-1">النقاط: {amount} نقطة</span>
           <div className="flex gap-2">
             {[5, 10, 15, 25, 50].map(v => (
               <button key={v} onClick={() => setAmount(v)} className="flex-1 py-2 rounded-lg text-xs font-bold transition-all" style={{ background: amount === v ? `${meta.color}15` : "rgba(30,41,59,0.4)", border: `1px solid ${amount === v ? `${meta.color}30` : "rgba(51,65,85,0.2)"}`, color: amount === v ? meta.color : "#64748b" }}>+{v}</button>
@@ -67,10 +67,10 @@ export default function RaseedScreen() {
           <div className="absolute top-0 right-0 w-40 h-40 blur-3xl rounded-full -mr-16 -mt-16 bg-amber-500/8" />
           <div className="relative z-10 flex items-center justify-between mb-3">
             <div><span className="text-[8px] font-black text-amber-400 uppercase tracking-widest">المستوى</span><div className="text-4xl font-black text-white mt-1">{level}</div></div>
-            <div className="text-left"><span className="text-[8px] font-black text-amber-400 uppercase tracking-widest">الرصيد الكلي</span><div className="text-2xl font-black text-amber-400 mt-1">{xp.toLocaleString()} <span className="text-sm">XP</span></div></div>
+            <div className="text-left"><span className="text-[8px] font-black text-amber-400 uppercase tracking-widest">الرصيد الكلي</span><div className="text-2xl font-black text-amber-400 mt-1">{xp.toLocaleString()} <span className="text-sm">نقطة</span></div></div>
           </div>
           <div className="relative z-10">
-            <div className="flex justify-between text-[8px] text-slate-500 mb-1"><span>المستوى التالي</span><span>{xpNext.current}/{xpNext.needed} XP</span></div>
+            <div className="flex justify-between text-[8px] text-slate-500 mb-1"><span>المستوى التالي</span><span>{xpNext.current}/{xpNext.needed} نقطة</span></div>
             <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${xpNext.progress}%` }} transition={{ duration: 1 }} className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-400" /></div>
           </div>
         </div>

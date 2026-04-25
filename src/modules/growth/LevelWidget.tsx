@@ -87,7 +87,7 @@ export const LevelWidget: FC = () => {
                         </div>
                         <div className="text-right">
                             <span className="text-xl font-bold text-slate-100">{xp}</span>
-                            <span className="text-xs text-indigo-400 ml-1">XP</span>
+                            <span className="text-xs text-indigo-400 ml-1">نقطة</span>
                         </div>
                     </div>
 

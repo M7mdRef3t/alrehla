@@ -36,7 +36,7 @@ export const AscensionRitual: React.FC = () => {
             icon: <Shield className="w-12 h-12 text-amber-400" />
         },
         {
-            title: "مسؤولية السيادة",
+            title: "مسؤولية القيادة",
             content: "رتبة الـ Oracle تمنحك حق رؤية خريطة السرب بالكامل، لكنها تضع تكاملك السلوكي تحت مجهر النزاهة الدائم. التراجع يعني الهبوط.",
             icon: <Flame className="w-12 h-12 text-amber-600" />
         }

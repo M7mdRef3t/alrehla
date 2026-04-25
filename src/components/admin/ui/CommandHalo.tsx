@@ -21,7 +21,7 @@ import { AdminTab, NAV_ITEMS, CLEAN_NAV_LABELS } from "../adminNavigation";
 import { createCurrentUrl, pushUrl } from "@/services/navigation";
 import { useLockdownState } from "@/domains/admin/store/lockdown.store";
 import { useAdminState } from "@/domains/admin/store/admin.store";
-import { SovereignOrchestrator } from "@/services/sovereignOrchestrator";
+import { CommandOrchestrator as SovereignOrchestrator } from "@/services/commandOrchestrator";
 import { AlertTriangle, Fingerprint } from "lucide-react";
 
 export const CommandHalo: React.FC = () => {
@@ -74,7 +74,7 @@ export const CommandHalo: React.FC = () => {
       subtitle: isLockedDown ? "استعادة العمليات الحيوية" : "إيقاف العمليات مؤقتاً لحماية النظام" 
     },
     { id: "broadcast-all", label: "بث استغاثة (Emergency Broadcast)", icon: <Activity className="h-4 w-4" />, type: "action" as const, actionId: "broadcast-all", subtitle: "رسالة لكل المستخدمين" },
-    { id: "audit-system", label: "تدقيق السيادة (Sovereign Audit)", icon: <Shield className="h-4 w-4" />, type: "action" as const, actionId: "audit-system", subtitle: "فحص أمان النظام" },
+    { id: "audit-system", label: "تدقيق القيادة (Sovereign Audit)", icon: <Shield className="h-4 w-4" />, type: "action" as const, actionId: "audit-system", subtitle: "فحص أمان النظام" },
     ...aiInterventions.map(ai => ({
       ...ai,
       id: ai.id,
@@ -164,7 +164,7 @@ export const CommandHalo: React.FC = () => {
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="استدعاء السيادة... (Enter للحفظ، / للأوامر)"
+                placeholder="استدعاء القيادة... (Enter للحفظ، / للأوامر)"
                 className="flex-1 bg-transparent border-none outline-none text-lg text-slate-100 placeholder:text-slate-500 font-display font-medium"
               />
               <div className="flex items-center gap-2">
@@ -278,7 +278,7 @@ export const CommandHalo: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-slate-300 font-bold">لا توجد بيانات مطابقة</p>
-                    <p className="text-xs text-slate-500 mt-1">حاول البحث بكلمات مفتاحية مختلفة لنظام السيادة.</p>
+                    <p className="text-xs text-slate-500 mt-1">حاول البحث بكلمات مفتاحية مختلفة لنظام القيادة.</p>
                   </div>
                 </div>
               )}

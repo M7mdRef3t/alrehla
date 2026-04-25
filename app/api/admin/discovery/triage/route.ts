@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/infrastructure/database/client";
+import { requireAdmin } from "@/server/requireAdmin";
 import { aiGateway } from "@/infrastructure/ai/gateway";
 import { DiscoveryItem } from "@/types/discovery";
 
@@ -7,10 +8,8 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-    const adminCode = process.env.VITE_ADMIN_ACCESS_CODE;
-
-    if (!adminCode || authHeader !== `Bearer ${adminCode}`) {
+    const adminUser = await requireAdmin(req);
+    if (!adminUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

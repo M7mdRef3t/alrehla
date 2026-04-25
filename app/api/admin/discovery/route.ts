@@ -103,3 +103,29 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+
+  try {
+    if (!supabaseAdmin)
+      return NextResponse.json({ error: "DB not initialized" }, { status: 500 });
+
+    const id = req.nextUrl.searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
+    }
+
+    const { error } = await supabaseAdmin
+      .from("discovery_items")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to delete discovery item:", error);
+    return NextResponse.json({ error: "Failed to delete item" }, { status: 500 });
+  }
+}

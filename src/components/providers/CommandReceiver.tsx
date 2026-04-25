@@ -1,0 +1,59 @@
+'use client';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect } from 'react';
+import { supabase } from '@/services/supabaseClient';
+import { consciousnessTheme } from '@/ai/consciousnessThemeEngine';
+import { useThemeState } from '@/domains/consciousness/store/theme.store';
+import { injectWhisper } from '@/components/ui/WhisperOverlay';
+import { triggerHapticIntervention } from '@/components/providers/sensoryHaptics';
+
+export function CommandReceiver() {
+  useEffect(() => {
+    // 1. Subscribe to the global 'command_control' channel
+    // In a prod environment, this should be scoped: e.g., `command_control_${clientId}`
+    if (!supabase) return;
+    const channel = supabase.channel('command_control');
+    let isSubscribed = false;
+
+    channel
+      .on('broadcast', { event: 'OVERRIDE' }, (payload) => {
+        const cmd = payload.payload;
+
+        if (cmd.type === 'FORCE_STATE') {
+          // Send direct state application to Theme Engine
+          // generate a synthetic theme ignoring local emotion
+          const fakeTheme = consciousnessTheme.generate({
+            emotion: { state: cmd.state as any, tension: 0, shadow: 0, engagement: 0 },
+            timeOfDay: 'afternoon',
+            sessionMinutes: 30,
+            mode: 'auto'
+          });
+          consciousnessTheme.apply(fakeTheme, { smooth: true });
+          
+          // Also explicitly update the Atmoshere Engine custom tokens to ZERO for absolute clarity
+          useThemeState.getState().updateTokens({
+            vignetteStrength: 0,
+            grainOpacity: 0,
+            chromaticAberration: 0
+          });
+        } else if (cmd.type === 'INJECT_WHISPER') {
+          injectWhisper(cmd.text);
+        } else if (cmd.type === 'TRIGGER_HAPTIC') {
+          triggerHapticIntervention(cmd.severity || 'crisis');
+        }
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') isSubscribed = true;
+      });
+
+    return () => {
+      // Cleanup on unmount, but only if we actually joined to prevent WS warnings
+      if (isSubscribed && supabase) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, []);
+
+  return null;
+}

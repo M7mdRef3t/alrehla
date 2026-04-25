@@ -78,7 +78,7 @@ export function ChronicleOverlay() {
               className="flex items-center justify-center gap-2"
             >
                <div className="h-px w-8 bg-white/10" />
-               <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">سجل السيادة</span>
+               <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">سجل القيادة</span>
                <div className="h-px w-8 bg-white/10" />
             </motion.div>
             

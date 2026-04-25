@@ -318,7 +318,7 @@ export const Landing: FC<LandingProps> = ({
               <span className="inline-block mt-4 sm:mt-6 text-teal-400 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-sky-300">نحن نضيء لك خريطة طاقتك.</span>
             </h2>
             <p className="text-base sm:text-xl max-w-[55ch] mx-auto text-slate-300 leading-relaxed font-medium">
-              "الرحلة" ليست مجرد منصة، هي بوصلتك وعدستك لرؤية ما خفي عنك. نكشف لك مسارات طاقتك، من يمنحك النور، ومن يسحب منك الحياة، لتسترد سيادتك على مسارك.
+              "الرحلة" ليست مجرد منصة، هي بوصلتك وعدستك لرؤية ما خفي عنك. نكشف لك مسارات طاقتك، من يمنحك النور، ومن يسحب منك الحياة، لتسترد قيادتك على مسارك.
             </p>
           </div>
 
@@ -343,8 +343,8 @@ export const Landing: FC<LandingProps> = ({
                 borderGlow: "group-hover/card:border-sky-500/30"
               },
               { 
-                title: "درع السيادة والحماية", 
-                desc: "عُدّة مسافر متكاملة لبناء أسوار حصينة تحمي سلامك النفسي وتضمن سيادتك الكاملة على قرارك.", 
+                title: "درع القيادة والحماية", 
+                desc: "عُدّة مسافر متكاملة لبناء أسوار حصينة تحمي سلامك النفسي وتضمن قيادتك الكاملة على قرارك.", 
                 icon: <ShieldCheck className="w-8 h-8 text-indigo-300 relative z-10" />,
                 bgIcon: <ShieldCheck className="w-24 h-24 text-indigo-500/10 absolute -right-4 -bottom-4 group-hover/card:scale-110 transition-transform duration-700" />,
                 accent: "rgba(129, 140, 248, 0.15)",
@@ -477,7 +477,7 @@ export const Landing: FC<LandingProps> = ({
           viewport={{ once: true }}
           className="max-w-3xl mx-auto"
         >
-          <h2 className="text-4xl sm:text-6xl font-black text-white mb-8">جاهز تسترد سيادتك؟</h2>
+          <h2 className="text-4xl sm:text-6xl font-black text-white mb-8">جاهز تسترد قيادتك؟</h2>
           <motion.button
             onClick={handleStart}
             whileHover={{ scale: 1.05 }}

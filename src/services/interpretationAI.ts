@@ -2,7 +2,7 @@ import { geminiClient } from "./geminiClient";
 import type { TransformationDiagnosis } from "@/modules/transformationEngine/interpretationEngine";
 import { nexusService } from "./nexusService";
 
-export interface SovereignInsightRequest {
+export interface CommandInsightRequest {
   diagnosis: TransformationDiagnosis;
   painDump?: string;
   userName?: string;
@@ -15,14 +15,14 @@ export interface SovereignInsightRequest {
 }
 
 /**
- * محرك الرؤية السِيادية
+ * محرك الرؤية القيادية
  * يستخدم بيانات المسافر لإنتاج تشخيص عميق من المبادئ الأولى (First Principles)
  */
-export async function generateSovereignInsight(request: SovereignInsightRequest): Promise<string> {
+export async function generateCommandInsight(request: CommandInsightRequest): Promise<string> {
   const { diagnosis, painDump, metrics, userName } = request;
 
   const prompt = `
-أنت "محرك التحول" في منصة "الرحلة". مهمتك هي تقديم "رؤية سِيادية" (Sovereign Insight) للمسافر بناءً على بياناته الحالية.
+أنت "محرك التحول" في منصة "الرحلة". مهمتك هي تقديم "رؤية قيادية" (Command Insight) للمسافر بناءً على بياناته الحالية.
 
 **الفلسفة:**
 - "الرحلة" هي رحلة حياة الإنسان نفسها.
@@ -39,7 +39,7 @@ export async function generateSovereignInsight(request: SovereignInsightRequest)
 
 **المطلوب هو رد مركّز جداً بالعامية المصرية يتبع هيكل "حقيقة - فعل - سؤال":**
 1. **الرؤية (Insight):** جملة أو جملتين تخترق الدفاعات النفسية وتكشف "النمط" اللي بيتحكم فيه دلوقتي. اذكر حالته (مثلاً: ${diagnosis.state}) بطريقة فيها استبصار.
-2. **الفعل (Action):** "أبسط" فعل ممكن وصغير جداً يعمله "دلوقتي" (Commitment Pledge) عشان يبدأ يسترد سيادته على حياته.
+2. **الفعل (Action):** "أبسط" فعل ممكن وصغير جداً يعمله "دلوقتي" (Commitment Pledge) عشان يبدأ يسترد قيادته على حياته.
 3. **السؤال (Question):** سؤال واحد صادم بصدقه، يخليه يواجه نفسه.
 
 **قواعد صارمة:**
@@ -56,7 +56,7 @@ export async function generateSovereignInsight(request: SovereignInsightRequest)
       throw new Error("Empty response from Gemini");
     }
 
-    // [SOVEREIGN SYNC] حفظ البصيرة في الخزنة السيادية في الخلفية
+    // [COMMAND SYNC] حفظ البصيرة في الخزنة القيادية في الخلفية
     void nexusService.saveUserInsight({
       content: response,
       category: diagnosis.state || "عام",
@@ -66,7 +66,7 @@ export async function generateSovereignInsight(request: SovereignInsightRequest)
 
     return response;
   } catch (error) {
-    console.error("Error generating sovereign insight:", error);
+    console.error("Error generating command insight:", error);
     return "الرؤية لسه بتتكون في الضباب.. الأهم دلوقتي إنك بدأت الرحلة والبيانات محفوظة. خد نفس عميق وكمل، والوعي هييجي في وقته.";
   }
 }

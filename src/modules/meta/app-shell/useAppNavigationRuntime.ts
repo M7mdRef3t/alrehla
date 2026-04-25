@@ -18,6 +18,8 @@ interface UseAppNavigationRuntimeParams {
   isEmergencyOpen: boolean;
   setScreen: (screen: AppScreen) => void;
   setLockedFeature: (feature: FeatureFlagKey | null) => void;
+  canUseGuided: boolean;
+  handlePaidFeatureClick: (feature: string) => void;
 }
 
 export function useAppNavigationRuntime({
@@ -32,7 +34,9 @@ export function useAppNavigationRuntime({
   showCocoon,
   isEmergencyOpen,
   setScreen,
-  setLockedFeature
+  setLockedFeature,
+  canUseGuided,
+  handlePaidFeatureClick
 }: UseAppNavigationRuntimeParams) {
   const navigateToScreen = useCallback((target: AppScreen): boolean => {
     const result = resolveNavigation({
@@ -47,11 +51,16 @@ export function useAppNavigationRuntime({
       return false;
     }
 
+    if (result.kind === "navigate" && result.screen === "guided" && !canUseGuided) {
+      handlePaidFeatureClick("guided");
+      return false;
+    }
+
     startTransition(() => {
       setScreen(result.screen);
     });
     return result.kind === "navigate";
-  }, [canUseJourneyTools, canUseMap, isLockedPhaseOne, setLockedFeature, setScreen]);
+  }, [canUseJourneyTools, canUseMap, isLockedPhaseOne, setLockedFeature, setScreen, canUseGuided, handlePaidFeatureClick]);
 
   const resolveEdgeSwipeBackTarget = useCallback((): AppScreen | null => {
     if (showAuthModal || showPulseCheck || showBreathing || showCocoon || isEmergencyOpen) return null;

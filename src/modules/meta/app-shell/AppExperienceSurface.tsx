@@ -173,7 +173,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
       <Suspense fallback={null}>
         <NotificationEnableButton />
       </Suspense>
-      {screen !== "landing" && screen !== "ecosystem-hub" && screen !== "kharita" && (
+      {screen !== "landing" && screen !== "ecosystem-hub" && screen !== "kharita" && screen !== "diagnosis" && screen !== "survey" && screen !== "goal" && (
         <>
           <div
             className={`fixed right-0 ${sidebarExpanded ? "md:right-72" : "md:right-0"} left-0 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500 ${scrolled ? "top-16" : "top-20"}`}
@@ -274,7 +274,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                             <button onClick={onOpenConsciousnessArchive} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-teal-400 border border-teal-500/20 rounded-xl hover:bg-teal-500/10 text-right">Archive</button>
                             <button onClick={onOpenAmbientReality} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/10 text-right">Ambient</button>
                             <button onClick={onOpenTimeCapsuleVault} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-amber-400 border border-amber-500/20 rounded-xl hover:bg-amber-500/10 text-right">Vault</button>
-                            <button onClick={onOpenOracleDashboard} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/20 rounded-xl hover:bg-blue-500/10 text-right">رادار السيادة</button>
+                            <button onClick={onOpenOracleDashboard} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/20 rounded-xl hover:bg-blue-500/10 text-right">رادار القيادة</button>
                           </motion.div>
                         )}
                       </AnimatePresence>

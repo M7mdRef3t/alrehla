@@ -21,14 +21,14 @@ export interface WhatsAppMessagePayload {
       };
     };
   } | null;
-  gateway?: 'meta' | 'ultramsg' | 'other';
+  gateway?: 'meta' | 'other';
 }
 
 export type WhatsAppIntent = 'payment_requested' | 'info_requested' | 'support_needed' | 'frustrated' | 'appreciation' | 'generic' | 'spam';
 
 class WhatsAppAutomationService {
   private readonly paymentKeywords = ['اشتراك', 'اشترك', 'سعر', 'سعر الاشتراك', 'بكام', 'ادفع', 'دفع', 'تحويل', 'فودافون كاش', 'باقة', 'سعر الرحلة', 'حجز', 'تفاصيل الدفع'];
-  private readonly infoKeywords = ['تفاصيل', 'معلومات', 'ايه ده', 'بتعملوا ايه', 'ازاي', 'شرح', 'فهموني', 'يعني ايه', 'منصة', 'ممكن افهم'];
+  private readonly infoKeywords = ['تفاصيل', 'معلومات', 'ايه ده', 'بتعملوا ايه', 'ازاي', 'شرح', 'فهموني', 'يعني ايه', 'منصة', 'ممكن افهم', 'توضيح', 'شرح أكتر'];
   private readonly supportKeywords = ['مشكلة', 'مش عارف', 'مش شغال', 'يوزر', 'باسورد', 'دخول', 'مش بيفتح', 'مساعدة', 'علق', 'وقفت', 'مش بيدخل', 'نسيت'];
   private readonly frustratedKeywords = ['نصب', 'زهقت', 'مش معقول', 'بطيء', 'نصيحة', 'تعبت', 'مخنوق', 'قرف', 'مش فاهم حاجة', 'مفيش فايدة', 'غالي'];
   private readonly appreciationKeywords = ['شكرا', 'تسلم', 'عاش', 'الله ينور', 'حلو جدا', 'مبسوط', 'رائعة', 'ممتاز', 'شكراً', 'طاقة', 'تغيير'];
@@ -247,7 +247,7 @@ class WhatsAppAutomationService {
     if (this.frustratedKeywords.some(keyword => lowerText.includes(keyword))) {
       return {
         reasoning: "نبض المستخدم به شحنة غضب أو إحباط (Frustration). قد يكون ناتج عن مقاومة للرحلة أو تسرب طاقة.",
-        suggestion: "رد باحتواء وهدوء شديد (Sovereign Neutrality)، لا تُجادله بل أسحب التوتر باعتراف صريح بمشكلته، واعرض حلاً فورياً دون تعقيد."
+        suggestion: "رد باحتواء وهدوء شديد (Command Neutrality)، لا تُجادله بل أسحب التوتر باعتراف صريح بمشكلته، واعرض حلاً فورياً دون تعقيد."
       };
     }
     
@@ -281,7 +281,7 @@ class WhatsAppAutomationService {
 
     return {
       reasoning: "تفاعل عام أو تحية.",
-      suggestion: "رد بتحية 'سوفيرين' وادعوه لاستكشاف الخريطة."
+      suggestion: "رد بتحية 'قيادية' وادعوه لاستكشاف الخريطة."
     };
   }
 

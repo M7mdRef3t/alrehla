@@ -63,7 +63,7 @@ export type DecisionType =
   | "subscription_cancelled"
 
   // ── تدخلات حاسمة (Direct Interventions) ──
-  | "sovereign_intervention_deployed"
+  | "command_intervention_deployed"
   | "tactical_preset_deployed"
   | "market_ignition_campaign"
   | "ignite_market"
@@ -137,7 +137,7 @@ export const DECISION_RULES: Record<DecisionType, AutonomyLevel> = {
   subscription_cancelled: "AUTONOMOUS_WITH_LOG",
 
   // ── تدخلات حاسمة ── (تحتاج تصديق إلا الأوامر السريعة)
-  sovereign_intervention_deployed: "REQUIRES_APPROVAL", // الافتراضي للتدخلات عالية التأثير
+  command_intervention_deployed: "REQUIRES_APPROVAL", // الافتراضي للتدخلات عالية التأثير
   tactical_preset_deployed: "AUTONOMOUS_WITH_LOG",     // الأوامر النصية المجهزة مسبقا يتم تسجيلها
   market_ignition_campaign: "REQUIRES_APPROVAL",       // الحملات الإعلانية الجديدة تحتاج موافقة
   ignite_market: "AUTONOMOUS_WITH_LOG",                // الأوراكل يستطيع إطلاق شرارة للسوق 
@@ -439,7 +439,7 @@ export class DecisionEngine {
     if (isNew) {
       const notifyTypes: DecisionType[] = [
         "lock_gateway", 
-        "sovereign_intervention_deployed", 
+        "command_intervention_deployed", 
         "tactical_preset_deployed", 
         "ignite_market", 
         "scale_energy", 

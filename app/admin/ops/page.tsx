@@ -17,6 +17,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { runtimeEnv } from "@/config/runtimeEnv";
+import { safeGetSession } from "@/services/supabaseClient";
 
 type OpsCounts = {
   pending_proofs: number;
@@ -58,9 +59,10 @@ export default function OpsCockpit() {
   const fetchCounts = useCallback(async () => {
     setCountsLoading(true);
     try {
-      const adminCode = runtimeEnv.adminCode ?? "";
+      const session = await safeGetSession();
+      const token = session?.access_token ?? "";
       const res = await fetch("/api/admin/ops/counts", {
-        headers: { Authorization: `Bearer ${adminCode}` },
+        headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
       });
       if (res.ok) {
@@ -77,9 +79,10 @@ export default function OpsCockpit() {
   const fetchCapiStats = useCallback(async () => {
     setCapiLoading(true);
     try {
-      const adminCode = runtimeEnv.adminCode ?? "";
+      const session = await safeGetSession();
+      const token = session?.access_token ?? "";
       const res = await fetch("/api/admin/ops/capi-stats", {
-        headers: { Authorization: `Bearer ${adminCode}` },
+        headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
       });
       if (res.ok) {

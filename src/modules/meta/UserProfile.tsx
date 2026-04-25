@@ -339,7 +339,7 @@ function StatsRow({ xp, achievements, quizCount, level }: {
   xp: number; achievements: number; quizCount: number; level: number;
 }) {
   const items = [
-    { value: xp, label: "طاقة XP", color: "#2dd4bf", icon: <Zap size={15} /> },
+    { value: xp, label: "نقاط الخبرة", color: "#2dd4bf", icon: <Zap size={15} /> },
     { value: achievements, label: "بصائر", color: "#fbbf24", icon: <Award size={15} /> },
     { value: quizCount, label: "وقفات", color: "#60a5fa", icon: <BarChart3 size={15} /> },
     { value: level, label: "مرتبة", color: "#c084fc", icon: <Orbit size={15} /> },
@@ -776,8 +776,8 @@ export function UserProfile({ onBack }: UserProfileProps) {
         {/* Footer Signature */}
         <div className="mt-12 text-center opacity-70">
           <Orbit className="w-6 h-6 text-teal-500/50 mx-auto mb-3 animate-spin duration-1000" style={{ animationDuration: '20s' }} />
-          <p className="text-[10px] font-bold tracking-widest uppercase text-slate-500">
-            SAFE HAVEN SOVEREIGNTY ENGINE OS V1.0
+          <p className="text-[10px] font-black tracking-widest uppercase text-slate-500">
+            SAFE HAVEN COMMAND ENGINE OS V1.0
           </p>
         </div>
 

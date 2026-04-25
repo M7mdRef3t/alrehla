@@ -65,7 +65,7 @@ export const OrbitalFeedWidget: React.FC = () => {
                     id: Math.random().toString(36).substr(2, 9),
                     orbitName: `مدار ${newOrbit}`,
                     action: "أكمل تمرين رسم الحدود (Boundaries Simulator)",
-                    value: "+200 XP",
+                    value: "+200 نقطة",
                     icon: <Sparkles className="w-4 h-4" />,
                     colorClass: "text-violet-400 bg-violet-400/10 border-violet-500/20",
                     timestamp: new Date(),
