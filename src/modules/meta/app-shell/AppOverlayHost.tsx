@@ -84,6 +84,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
   const role = useAuthState(getEffectiveRoleFromState);
+  const authUser = useAuthState((s) => s.user);
 
   const canUsePulseCheck = useMemo(
     () =>
@@ -155,22 +156,31 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     setShowPulseCheck: (val) => setPulseCheck(val, pulseCheckState.context),
     pulseCheckContext: pulseCheckState.context,
     setPulseCheckContext: (ctx) => setPulseCheck(pulseCheckState.isOpen, ctx),
+    previewedFeature: null,
+    forcePulsePreviewOpen: false,
+    clearPulseCheckPreview: () => undefined,
     showBreathing: flags.breathing,
     setShowBreathing: (val) => setOverlay("breathing", val),
     setShowCocoon: (val) => setOverlay("cocoon", val),
     theme,
     setTheme: setTheme,
+    authUserId: authUser?.id,
+    shouldPromptAuthAfterPulse: false,
     logPulse,
+    capturePulseReflection: () => undefined,
     snoozeNotifications,
     openOverlay: (id) => setOverlay(id, true),
     closeOverlay: (id) => setOverlay(id, false),
     navigateToScreen: (s) => { setScreen(s); return true; },
     openDefaultGoalMap: () => setScreen("map"),
+    openDawayirSetup: () => setScreen("map"),
     goToGoals: () => setScreen("tools"),
     setStartRecoveryIntent: (p) => setPulseCheck(pulseCheckState.isOpen, pulseCheckState.context, p),
     setLoginIntent: () => setAuthIntent({ kind: "login", createdAt: Date.now() }),
     setShowAuthModal: (val) => setOverlay("authModal", val),
     clearPostAuthState: () => setAuthIntent(null),
+    showNoiseSessionToast: () => undefined,
+    showBreathingSessionToast: () => undefined,
     skipNextPulseCheck,
     completeDailyQuest: gamification.completeDailyQuest
   });
