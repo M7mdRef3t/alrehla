@@ -20,6 +20,8 @@ import { deriveOrbitDriftReplay } from "@/utils/orbitDriftReplay";
 import { OrbitDriftReplayCard } from '@/components/OrbitDriftReplayCard';
 import { PersonalizedTraining } from "./PersonalizedTraining";
 import { SymptomsChecklist } from "./SymptomsChecklist";
+import { ReciprocityMeter } from "./ReciprocityMeter";
+import { recordTruthEvent } from "@/services/truthScoreEngine";
 
 interface ViewPersonModalProps {
   nodeId: string;
@@ -121,6 +123,8 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
       return;
     }
     useMapState.getState().archiveNode(node.id);
+    // ⚔️ Truth Score: +15 for making a hard decision
+    recordTruthEvent("hard_decision", `أرشف "${node.label}" — قرار صعب لكن صادق`);
     setShowShareCard({
       title: "حررت مساحتي الخاصة!",
       desc: "قمت بتجميد علاقة مستنزفة ونقلها إلى المدار الصفري للحفاظ على سلامي الداخلي.",
@@ -234,6 +238,9 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               </div>
             </button>
           )}
+
+          {/* ⚔️ ميزان الحقيقة — Reciprocity Meter */}
+          <ReciprocityMeter node={node} />
 
           <button onClick={handleArchiveToggle} className={`w-full rounded-2xl border p-5 transition-all backdrop-blur-md ${node.isNodeArchived ? "border-[var(--page-border)] bg-[var(--page-surface-2)] text-[var(--consciousness-text-muted)]" : "border-orange-500/20 bg-orange-500/5 text-orange-400"}`}>
             <div className="flex items-center justify-between">

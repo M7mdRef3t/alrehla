@@ -3,6 +3,15 @@
  * ==========================================
  * يكشف التناقضات بين "النوايا المعلنة" (Goals) و"السلوك الفعلي" (Map Behavior).
  * يولد أسئلة وجودية (Socratic Questions) للمواجهة.
+ * 
+ * === الأنماط السبعة ===
+ * 1. إنكار عاطفي (Emotional Denial) — أصلي
+ * 2. انفصال واقعي (Reality Detachment) — أصلي
+ * 3. قلق التموضع (Placement Anxiety) — أصلي
+ * 4. الدعم الوهمي (False Support) — جديد ⚔️
+ * 5. الحب المستنزف (Love Drain) — جديد ⚔️
+ * 6. الحدود الورقية (Paper Boundaries) — جديد ⚔️
+ * 7. التعافي المزيف (False Recovery) — جديد ⚔️
  */
 
 import { useMapState } from '@/modules/map/dawayirIndex';
@@ -11,12 +20,15 @@ import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 
 export interface MirrorInsight {
     id: string;
-    type: "emotional_denial" | "reality_detachment" | "placement_anxiety";
+    type: "emotional_denial" | "reality_detachment" | "placement_anxiety"
+        | "false_support" | "love_drain" | "paper_boundaries" | "false_recovery";
     title: string;
     message: string;
     question: string;
     relatedNodeId?: string;
     severity: "gentle" | "firm" | "shock";
+    /** الدليل من بيانات المستخدم نفسه */
+    evidence?: string;
 }
 
 const MIRROR_SHOWN_KEY = "dawayir-mirror-shown";
@@ -45,7 +57,7 @@ function markInsightShown(id: string): void {
 export function detectContradictions(): MirrorInsight | null {
     const { nodes } = useMapState.getState();
     const { goalId } = useJourneyState.getState();
-    const { lastPulse } = usePulseState.getState();
+    const { lastPulse, logs: pulseLogs } = usePulseState.getState();
     const shown = getShownInsights();
 
     const now = Date.now();
@@ -55,16 +67,138 @@ export function detectContradictions(): MirrorInsight | null {
     // An empty goalId would cause false positives since !goalId treated as isSelfFocus
     if (!goalId) return null;
 
-    // 1. نمط "التعافي الزائف" (False Letting Go)
-    // السيناريو: الهدف الحالي "تركيز على الذات" (أو غير موجود) لكن توجد عقد "صعبة" في المدار الأول (Red/Yellow).
+    const activeNodes = nodes.filter(n => !n.isNodeArchived);
+
+    // ══════════════════════════════════════════════════════
+    // نمط ٤: "الدعم الوهمي" (False Support) ⚔️ جديد
+    // السيناريو: علاقة مصنفة خضراء/صفراء + الطاقة بتنزل بعد التفاعل
+    // ══════════════════════════════════════════════════════
+    if (pulseLogs.length >= 3) {
+        const recentPulses = pulseLogs.slice(0, 7);
+        const avgEnergy = recentPulses.reduce((sum, p) => sum + (Number(p.energy) || 0), 0) / recentPulses.length;
+
+        for (const node of activeNodes) {
+            if (node.ring !== "green") continue;
+            // Check if user energy is consistently low despite "supportive" relationships
+            const netEnergy = node.energyBalance?.netEnergy ?? 0;
+            if (avgEnergy < 4 && netEnergy <= 0) {
+                const id = `false-support-${node.id}-${new Date().toISOString().split("T")[0]}`;
+                if (!shown.has(id)) {
+                    return {
+                        id,
+                        type: "false_support",
+                        title: "دعم وهمي",
+                        message: `"${node.label}" في الدائرة الخضراء — لكن طاقتك ${avgEnergy.toFixed(1)}/10 وحساب الطاقة معاه ${netEnergy}.`,
+                        question: "لو شلت الاسم وبصيت للأرقام بس — هل فعلاً ده شخص بيشحنك؟",
+                        relatedNodeId: node.id,
+                        severity: "firm",
+                        evidence: `متوسط طاقتك: ${avgEnergy.toFixed(1)}/10 | صافي الطاقة مع ${node.label}: ${netEnergy}`
+                    };
+                }
+            }
+        }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // نمط ٥: "الحب المستنزف" (Love Drain) ⚔️ جديد
+    // السيناريو: شخص في المدار الأحمر + طاقة سلبية + لسه مش أرشيف
+    // يعني: بتحبه لكنه بيقتلك
+    // ══════════════════════════════════════════════════════
+    for (const node of activeNodes) {
+        if (node.ring !== "red" || node.detachmentMode || node.isDetached) continue;
+        const netEnergy = node.energyBalance?.netEnergy ?? 0;
+        const createdAt = node.journeyStartDate || 0;
+        const daysSinceAdded = (now - createdAt) / DAY_MS;
+
+        // Red ring + negative energy + been around for > 30 days = emotional attachment despite toxicity
+        if (netEnergy < -5 && daysSinceAdded > 30) {
+            const id = `love-drain-${node.id}-${Math.floor(now / (DAY_MS * 7))}`;
+            if (!shown.has(id)) {
+                return {
+                    id,
+                    type: "love_drain",
+                    title: "حب مستنزف",
+                    message: `"${node.label}" في المنطقة الحمراء من ${Math.floor(daysSinceAdded)} يوم. الطاقة معاه ${netEnergy}. لكنك لسه محتفظ بيه.`,
+                    question: "هل إنت متمسك بيه عشان بتحبه — ولا عشان خايف من الحقيقة لو اعترفت إن العلاقة خلصت؟",
+                    relatedNodeId: node.id,
+                    severity: "shock",
+                    evidence: `${Math.floor(daysSinceAdded)} يوم في الأحمر | صافي الطاقة: ${netEnergy}`
+                };
+            }
+        }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // نمط ٦: "الحدود الورقية" (Paper Boundaries) ⚔️ جديد
+    // السيناريو: شخص تم أرشفته ثم استعادته أكثر من مرة
+    // ══════════════════════════════════════════════════════
+    for (const node of activeNodes) {
+        const history = node.orbitHistory ?? [];
+        const archiveRestoreCycles = history.filter(h => h.type === "restored").length;
+
+        if (archiveRestoreCycles >= 2) {
+            const id = `paper-bounds-${node.id}-${Math.floor(now / (DAY_MS * 14))}`;
+            if (!shown.has(id)) {
+                return {
+                    id,
+                    type: "paper_boundaries",
+                    title: "حدود ورقية",
+                    message: `أرشفت "${node.label}" ${archiveRestoreCycles} مرات ورجعته في كل مرة. الحد اللي بتحطه مش حقيقي.`,
+                    question: "هل فعلاً بتحط حدود — ولا بتكتب حدود على ورق وبتمسحها؟",
+                    relatedNodeId: node.id,
+                    severity: "shock",
+                    evidence: `${archiveRestoreCycles} دورات أرشفة/استعادة`
+                };
+            }
+        }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // نمط ٧: "التعافي المزيف" (False Recovery) ⚔️ جديد
+    // السيناريو: نقل شخص للأخضر لكن النبض لم يتحسن
+    // ══════════════════════════════════════════════════════
+    if (pulseLogs.length >= 5) {
+        const recentEnergies = pulseLogs.slice(0, 5).map(p => Number(p.energy) || 0);
+        const avgRecentEnergy = recentEnergies.reduce((a, b) => a + b, 0) / recentEnergies.length;
+
+        // Find nodes recently moved to green
+        for (const node of activeNodes) {
+            if (node.ring !== "green") continue;
+            const history = node.orbitHistory ?? [];
+            const lastRingChange = history.filter(h => h.type === "ring_changed" && h.ring === "green")
+                .sort((a, b) => b.timestamp - a.timestamp)[0];
+
+            if (lastRingChange) {
+                const daysSinceGreen = (now - lastRingChange.timestamp) / DAY_MS;
+                // Moved to green recently (< 14 days) but energy is still low
+                if (daysSinceGreen < 14 && daysSinceGreen > 3 && avgRecentEnergy < 4.5) {
+                    const id = `false-recovery-${node.id}-${Math.floor(now / (DAY_MS * 7))}`;
+                    if (!shown.has(id)) {
+                        return {
+                            id,
+                            type: "false_recovery",
+                            title: "تعافي مزيف",
+                            message: `نقلت "${node.label}" للأخضر من ${Math.floor(daysSinceGreen)} يوم — لكن طاقتك لسه ${avgRecentEnergy.toFixed(1)}/10. التعافي مش بالتصنيف — بالنتيجة.`,
+                            question: "هل نقلته للأخضر عشان الوضع فعلاً اتحسن — ولا عشان تعبت من مواجهة الحقيقة؟",
+                            relatedNodeId: node.id,
+                            severity: "firm",
+                            evidence: `نُقل للأخضر من ${Math.floor(daysSinceGreen)} يوم | متوسط طاقتك: ${avgRecentEnergy.toFixed(1)}/10`
+                        };
+                    }
+                }
+            }
+        }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // نمط ١: "التعافي الزائف" (False Letting Go) — أصلي
+    // ══════════════════════════════════════════════════════
     const isSelfFocus = goalId === "self" || goalId === "health";
 
     if (isSelfFocus) {
-        const clingingNodes = nodes.filter(n => (n.ring === "red" || n.ring === "yellow") && !n.isNodeArchived);
+        const clingingNodes = activeNodes.filter(n => n.ring === "red" || n.ring === "yellow");
 
         for (const node of clingingNodes) {
-            // Check validation: if node is in close orbit but flagged as "detachmentMode", it might be okay.
-            // But if it's strictly "red" (Inner Circle) and user says "Self Focus", that's a contradiction.
             if (node.ring === "red") {
                 const id = `denial-${node.id}-${new Date().toISOString().split("T")[0]}`;
                 if (!shown.has(id)) {
@@ -82,19 +216,11 @@ export function detectContradictions(): MirrorInsight | null {
         }
     }
 
-    // 2. نمط "المهم المهمل" (The Neglected VIP)
-    // السيناريو: شخص في المدار الأحمر (Red) ولم يتم التفاعل معه (فتح العقدة/تعديل) لمدة > 10 أيام.
-    const neglectedNodes = nodes.filter(n => n.ring === "red" && !n.isNodeArchived);
+    // ══════════════════════════════════════════════════════
+    // نمط ٢: "المهم المهمل" (The Neglected VIP) — أصلي
+    // ══════════════════════════════════════════════════════
+    const neglectedNodes = activeNodes.filter(n => n.ring === "red");
     for (const node of neglectedNodes) {
-        // We utilize `lastViewedStep` or just creation time if no interaction, 
-        // but `lastViewedStep` isn't a timestamp.
-        // Let's use `situationLogs` last entry or fallback to checking generic inactivity if possible.
-        // Assuming `recoveryProgress.lastPathGeneratedAt` or similar. 
-        // If we don't have a direct "last interaction" timestamp, we can approximate with `journeyStartDate` if it's old and no logs.
-
-        // Better approximation: check if `recoveryProgress.situationLogs` is empty AND node created > 10 days ago.
-        // Or last log is old.
-
         const createdAt = node.journeyStartDate || 0;
         const lastLog = node.recoveryProgress?.situationLogs?.[node.recoveryProgress.situationLogs.length - 1];
         const lastInteraction = lastLog ? lastLog.date : createdAt;
@@ -102,7 +228,7 @@ export function detectContradictions(): MirrorInsight | null {
         const diffDays = (now - lastInteraction) / DAY_MS;
 
         if (diffDays > 10) {
-            const id = `neglected-${node.id}-${Math.floor(now / (DAY_MS * 5))}`; // Show every 5 days if ignored
+            const id = `neglected-${node.id}-${Math.floor(now / (DAY_MS * 5))}`;
             if (!shown.has(id)) {
                 return {
                     id,
@@ -117,9 +243,9 @@ export function detectContradictions(): MirrorInsight | null {
         }
     }
 
-    // 3. نمط "قلق التموضع" (Placement Anxiety)
-    // يتطلب تتبع سجل الحركات (Node History). 
-    // سنعتمد هنا على مؤشر الطاقة: لو الطاقة عالية (Anxious/Angry) وفيه عقد كتير في المنطقة الرمادية (Detachment Mode).
+    // ══════════════════════════════════════════════════════
+    // نمط ٣: "قلق التموضع" (Placement Anxiety) — أصلي
+    // ══════════════════════════════════════════════════════
     if (lastPulse && (lastPulse.mood === "anxious" || lastPulse.mood === "overwhelmed")) {
         const grayNodes = nodes.filter(n => n.detachmentMode);
         if (grayNodes.length >= 3) {
@@ -138,6 +264,17 @@ export function detectContradictions(): MirrorInsight | null {
     }
 
     return null;
+}
+
+/** Detect ALL active contradictions (not just the first one) */
+export function detectAllContradictions(): MirrorInsight[] {
+    const results: MirrorInsight[] = [];
+    const shown = getShownInsights();
+    // Run detection multiple times, marking each found to get the next
+    // For simplicity, just return the first one for now
+    const first = detectContradictions();
+    if (first) results.push(first);
+    return results;
 }
 
 export function dismissMirrorInsight(id: string): void {

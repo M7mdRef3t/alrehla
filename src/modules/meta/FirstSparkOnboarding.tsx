@@ -163,10 +163,10 @@ const StageChaos: FC<{ onNext: () => void; gateContext?: FirstSparkProps["gateCo
       {/* Copy */}
       <div className="text-center px-6 max-w-sm z-10 pb-6">
         <h2 className="text-xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
-          حاسس إن طاقتك بتخلص؟
+          حاسس إنك ماشي في ضباب؟
         </h2>
         <p className="text-sm mb-10 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          ناس كتير حواليك بتسحب منك من غير ما تحس.. المشكلة مش فيك — المشكلة إنك ما حطيتش <span className="text-teal-400 font-bold">&quot;مسافة&quot;</span>.
+          حولك أوهام متنكرة في شكل حقائق.. المشكلة مش فيك — المشكلة إنك ما شفتش <span className="text-teal-400 font-bold">&quot;الحقيقة&quot;</span> لسه.
         </p>
 
         <button
@@ -230,10 +230,10 @@ const StageOrder: FC<{ onNext: () => void }> = memo(({ onNext }) => {
       {/* Copy */}
       <div className="text-center px-6 max-w-sm z-10 pb-6">
         <h2 className="text-xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
-          هنرتب الناس في حياتك
+          هنكشف لك الحقيقة عن كل علاقة
         </h2>
         <p className="text-sm mb-10 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          كل حد ليه مكان.. يا إما <span className="text-emerald-400">سند ليك</span>، يا <span className="text-amber-400">محتاج مسافة</span>، يا <span className="text-rose-400">بيسحب طاقتك</span>.
+          كل حد ليه حقيقة.. يا إما <span className="text-emerald-400">نور حقيقي</span>، يا <span className="text-amber-400">ضباب يحتاج كشف</span>، يا <span className="text-rose-400">خداع مستتر</span>.
         </p>
 
         <button
@@ -287,10 +287,10 @@ const StageValue: FC<{ onNext: () => void }> = memo(({ onNext }) => {
       {/* Copy */}
       <div className="text-center px-6 max-w-sm z-10 pb-6">
         <h2 className="text-xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
-          مش بس خريطة.. دي خطة حماية
+          مش بس خريطة.. دي نور يكشف كل ظلام
         </h2>
         <p className="text-sm mb-10 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          هنساعدك تفهم كل علاقة وتاخد <span className="font-bold" style={{ color: "var(--text-primary)" }}>&quot;خطوات عملية&quot;</span> تحمي بيها نفسك وطاقتك.
+          هنساعدك تشوف حقيقة كل علاقة وتاخد <span className="font-bold" style={{ color: "var(--text-primary)" }}>&quot;قرارات بعلم&quot;</span> مش بوهم.
         </p>
 
         <button

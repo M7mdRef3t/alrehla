@@ -3,6 +3,8 @@ import type { Nudge } from "@/services/nudgeEngine";
 import { getNextNudge, dismissNudge } from "@/services/nudgeEngine";
 import { detectContradictions, dismissMirrorInsight, type MirrorInsight } from "@/services/mirrorLogic";
 import { calculateEntropy } from "@/services/predictiveEngine";
+import { detectCognitiveBiases, type CognitiveBiasAlert } from "@/services/cognitiveBiasEngine";
+import { checkPulseConsistency, checkRingInstability } from "@/services/truthScoreEngine";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
@@ -47,6 +49,7 @@ export function useAppMindSignals({
   const lastNewChronicle = useGamificationState((s) => s.lastNewChronicle);
   const [activeNudge, setActiveNudge] = useState<Nudge | null>(null);
   const [activeMirrorInsight, setActiveMirrorInsight] = useState<MirrorInsight | null>(null);
+  const [activeBiasAlerts, setActiveBiasAlerts] = useState<CognitiveBiasAlert[]>([]);
   const sessionStartRef = useRef(Date.now());
   const { sendNotification } = useNotifications();
 
@@ -96,6 +99,30 @@ export function useAppMindSignals({
 
     return () => clearTimeout(timer);
   }, [nodes, openOverlay, storedGoalId, activeFlows]);
+
+  // ⚔️ Cognitive Bias Detection (fires after mirror, with longer delay)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const timer = setTimeout(() => {
+      if (activeFlows || runtimeEnv.isDemoMode) return;
+      if (Date.now() - sessionStartRef.current < 3 * 60 * 1000) return;
+      const alerts = detectCognitiveBiases();
+      if (alerts.length > 0) {
+        setActiveBiasAlerts(alerts);
+      }
+    }, 12000);
+    return () => clearTimeout(timer);
+  }, [nodes, activeFlows]);
+
+  // ⚔️ Truth Score auto-checks (pulse consistency + ring instability)
+  useEffect(() => {
+    if (typeof window === "undefined" || runtimeEnv.isDemoMode) return;
+    const timer = setTimeout(() => {
+      checkPulseConsistency();
+      checkRingInstability();
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [lastPulse, nodes]);
 
   useEffect(() => {
     // لا تُطلق حتى chaos nudge لو في flow نشط أو فيه nudge طالع فعلاً
@@ -172,6 +199,7 @@ export function useAppMindSignals({
   return useMemo(() => ({
     activeNudge,
     activeMirrorInsight,
+    activeBiasAlerts,
     handleNudgeToastClose,
     handleNudgeCtaAction,
     handleMirrorResolve,
@@ -179,6 +207,7 @@ export function useAppMindSignals({
   }), [
     activeNudge,
     activeMirrorInsight,
+    activeBiasAlerts,
     handleNudgeToastClose,
     handleNudgeCtaAction,
     handleMirrorResolve,

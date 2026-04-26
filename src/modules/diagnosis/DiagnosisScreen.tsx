@@ -65,7 +65,7 @@ function OptionBtn({ label, sub, emoji, selected, color = "#2dd4bf", onClick }: 
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
       dir="ltr"
-      className="w-full flex flex-row items-center gap-3 px-4 py-3.5 rounded-2xl transition-all"
+      className="w-full flex flex-row items-center gap-3 px-4 py-4 rounded-2xl transition-all"
       style={{
         background: selected ? `${color}18` : "rgba(255,255,255,0.03)",
         border: `1.5px solid ${selected ? color : "rgba(255,255,255,0.08)"}`,
@@ -81,7 +81,7 @@ function OptionBtn({ label, sub, emoji, selected, color = "#2dd4bf", onClick }: 
           {label}
         </span>
         {sub && (
-          <span className="text-[10px] mt-0.5 block w-full" style={{ color: "rgba(148,163,184,0.7)" }}>
+          <span className="text-[10px] mt-1.5 block w-full leading-relaxed" style={{ color: "rgba(148,163,184,0.7)" }}>
             {sub}
           </span>
         )}
@@ -287,7 +287,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
   return (
     <div
       className="min-h-screen w-full overflow-y-auto ob-dark-force"
-      style={{ background: "#020408", display: "grid", gridTemplateColumns: "1fr", justifyItems: "center" }}
+      style={{ background: "#020408", display: "flex", justifyContent: "center" }}
       dir="rtl"
     >
       {/* Background Orbs */}
@@ -313,11 +313,14 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 w-full flex flex-col items-center gap-6 mx-auto" style={{ maxWidth: "28rem", padding: "15rem 1.25rem 4rem" }}>
+      <div
+        className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center gap-6 mx-auto"
+        style={{ maxWidth: "30rem", padding: "7rem 1.25rem 4rem", boxSizing: "border-box" }}
+      >
 
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
+        <div className="relative flex w-full items-center justify-center text-center">
+          <div className="flex flex-col items-center gap-1">
             <h1 className="text-base font-extrabold text-white">
               {result ? "نتيجة التشخيص" : "اعرف نفسك الأول"}
             </h1>
@@ -330,7 +333,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
           {onSkip && !result && (
             <button
               onClick={onSkip}
-              className="text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:text-slate-400 transition-colors"
+              className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full border border-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 transition-colors hover:border-white/20 hover:text-slate-300"
             >
               تخطي
             </button>

@@ -188,6 +188,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   const {
     activeNudge,
     activeMirrorInsight,
+    activeBiasAlerts,
     handleNudgeToastClose,
     handleNudgeCtaAction,
     handleMirrorResolve
@@ -274,6 +275,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
         isVisible={isVisible} 
         activeNudge={activeNudge}
         activeMirrorInsight={activeMirrorInsight}
+        activeBiasAlerts={activeBiasAlerts}
         handleNudgeToastClose={handleNudgeToastClose}
         handleNudgeCtaAction={handleNudgeCtaAction}
         handleMirrorResolve={handleMirrorResolve}

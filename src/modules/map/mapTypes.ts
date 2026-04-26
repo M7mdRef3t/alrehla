@@ -238,4 +238,14 @@ export interface MapNode {
   /** النقطة الأولى المختارة من الـ 10-Second Mirror (تستخدم لإضافة Aura بصري مخصص) */
   isMirrorNode?: boolean;
   isPinned?: boolean;
+
+  /** ⚔️ ميزان الحقيقة: تتبع العطاء والأخذ الفعلي في العلاقة */
+  reciprocity?: {
+    givenCount: number;      // عدد مرات العطاء
+    receivedCount: number;   // عدد مرات الأخذ
+    lastGivenAt?: number;    // تاريخ آخر عطاء
+    lastReceivedAt?: number; // تاريخ آخر أخذ
+    brokenPromises: number;  // وعود مكسورة
+    cancelledMeets: number;  // لقاءات ملغية
+  };
 }

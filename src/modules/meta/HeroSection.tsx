@@ -281,7 +281,8 @@ const HERO_STYLES = `
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
     gap: 0;
     overflow: visible;
     font-family: var(--font-alexandria), sans-serif;
@@ -639,7 +640,7 @@ const HERO_STYLES = `
   .hero-canvas {
     position: absolute;
     inset: 0;
-    overflow: visible;
+    overflow: hidden;
     pointer-events: none;
     background: transparent;
   }
@@ -788,8 +789,8 @@ const HERO_STYLES = `
     background-clip: text;
     filter: drop-shadow(0 0 24px rgba(45,212,191,0.28));
     display: inline-block;
-    padding: 0 0.5em;
-    margin: 0 -0.5em;
+    padding: 0;
+    margin: 0;
   }
 
   /* --- Rotating word --- */
@@ -1165,44 +1166,45 @@ const stagger = {
 const RotatingWord: FC = () => {
   const [index, setIndex] = useState(0);
   const reduceMotion = useReducedMotion();
-  // Start with null to avoid SSR/hydration mismatch
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
     const isSmallOrTouch = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024;
     setIsMobile(isSmallOrTouch);
-    if (isSmallOrTouch) return;
 
     const id = setInterval(() => {
       setIndex(i => (i + 1) % ROTATING_WORDS.length);
-    }, 5000);
+    }, 4500);
     return () => clearInterval(id);
   }, []);
 
-  // Use minimal y animation on mobile to prevent jank. Disable if reduceMotion.
   const mobile = isMobile ?? false;
   const yAmount = reduceMotion ? 0 : mobile ? 6 : 10;
   const dur = reduceMotion ? 0.01 : 0.5;
 
   return (
-    <span className="rotating-word-wrapper relative inline-flex items-center" style={{ minHeight: '1.2em' }}>
-      {/* Invisible spacer to hold layout — uses the longest word to prevent layout shift */}
-      <span className="invisible select-none pointer-events-none whitespace-nowrap opacity-0" aria-hidden>
+    <span 
+      className="rotating-word-wrapper inline-grid max-w-full" 
+      style={{ gridTemplateColumns: '1fr', gridTemplateRows: '1fr' }}
+    >
+      <span 
+        className="invisible select-none pointer-events-none whitespace-normal opacity-0" 
+        style={{ gridArea: '1 / 1' }} 
+        aria-hidden
+      >
         {ROTATING_WORDS.reduce((a, b) => a.length > b.length ? a : b)}
       </span>
       
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence mode="wait">
         <motion.span
           key={index}
           initial={{ opacity: 0, y: yAmount }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -yAmount }}
-          transition={{ 
-            duration: dur, 
-            ease: [0.23, 1, 0.32, 1] 
-          }}
-          className="absolute inset-0 flex items-center justify-center sm:justify-start headline-accent whitespace-nowrap leading-[1.2] overflow-visible font-normal"
+          transition={{ duration: dur, ease: [0.23, 1, 0.32, 1] }}
+          className="headline-accent whitespace-normal leading-[1.2] overflow-visible font-normal text-right flex items-start justify-start"
           style={{
+            gridArea: '1 / 1',
             fontFamily: 'var(--font-display)',
             willChange: 'opacity, transform',
             WebkitFontSmoothing: 'antialiased',

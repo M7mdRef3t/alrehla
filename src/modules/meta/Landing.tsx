@@ -310,24 +310,24 @@ export const Landing: FC<LandingProps> = ({
             >
               <Sparkles className="w-4 h-4 text-teal-500 opacity-80" />
               <p className="text-[10px] font-black tracking-[0.5em] uppercase text-teal-500 opacity-80 m-0 leading-none">
-                عُدَّة المَسَافِر
+                أسلحة البصيرة
               </p>
               <Sparkles className="w-4 h-4 text-teal-500 opacity-80" />
             </motion.div>
             <h2 className="text-4xl sm:text-6xl font-black mb-8 landing-principles-title tracking-tight !text-white leading-tight">
               لا تمشِ في الظلام.<br />
-              <span className="inline-block mt-4 sm:mt-6 text-teal-400 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-sky-300">نحن نضيء لك خريطة طاقتك.</span>
+              <span className="inline-block mt-4 sm:mt-6 text-teal-400 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-sky-300">نحن نكشف لك الحقيقة.</span>
             </h2>
             <p className="text-base sm:text-xl max-w-[55ch] mx-auto text-slate-300 leading-relaxed font-medium">
-              <AlrehlaWordmark height={20} color="var(--teal-400)" className="inline-block mx-1 relative top-[-1px]" /> ليست مجرد منصة، هي بوصلتك وعدستك لرؤية ما خفي عنك. نكشف لك مسارات طاقتك، من يمنحك النور، ومن يسحب منك الحياة، لتسترد قيادتك على مسارك.
+              <AlrehlaWordmark height={20} color="var(--teal-400)" className="inline-block mx-1 relative top-[-1px]" /> ليست مجرد منصة، هي بصيرتك في ظلام الأوهام. نكشف لك الحقيقة عن نفسك وعن مَن حولك — من يمنحك النور، ومن يُغرقك في الضباب — لتسترد سيادتك على قراراتك.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-right relative z-10" dir="rtl">
             {[
               { 
-                title: "كشف الثقوب السوداء", 
-                desc: "نضيء لك الأماكن الخفية التي تتسرب منها طاقة حياتك، لتوقف النزيف قبل أن تفقد شغفك.", 
+                title: "كاشف الأوهام", 
+                desc: "نكشف لك الأكاذيب التي تُخبرك بها نفسك — الأوهام المريحة التي تمنعك من رؤية حقيقتك ومواجهة ما تهرب منه.", 
                 icon: <Fingerprint className="w-8 h-8 text-teal-300 relative z-10" />,
                 bgIcon: <Fingerprint className="w-24 h-24 text-teal-500/10 absolute -right-4 -bottom-4 group-hover/card:scale-110 transition-transform duration-700" />,
                 accent: "rgba(45, 212, 191, 0.15)",
@@ -335,8 +335,8 @@ export const Landing: FC<LandingProps> = ({
                 borderGlow: "group-hover/card:border-teal-500/30"
               },
               { 
-                title: "رادار الطاقة والنبض", 
-                desc: "رسم حي لنبض علاقاتك؛ ترى بوضوح من يمدك بالحياة ومن يطفئ نورك في كل دائرة.", 
+                title: "رادار الحقيقة", 
+                desc: "رسم حي يكشف حقيقة كل علاقة في حياتك — ترى بوضوح من يمنحك النور ومن يخدعك باسم الحب.", 
                 icon: <Activity className="w-8 h-8 text-sky-300 relative z-10" />,
                 bgIcon: <Activity className="w-24 h-24 text-sky-500/10 absolute -right-4 -bottom-4 group-hover/card:scale-110 transition-transform duration-700" />,
                 accent: "rgba(56, 189, 248, 0.15)",
@@ -344,8 +344,8 @@ export const Landing: FC<LandingProps> = ({
                 borderGlow: "group-hover/card:border-sky-500/30"
               },
               { 
-                title: "درع القيادة والحماية", 
-                desc: "عُدّة مسافر متكاملة لبناء أسوار حصينة تحمي سلامك النفسي وتضمن قيادتك الكاملة على قرارك.", 
+                title: "درع البصيرة", 
+                desc: "سلاح معرفي يحميك من كل أشكال الخداع — يبني لك حصانة ضد الأوهام ويضمن أن قراراتك مبنية على علم لا وهم.", 
                 icon: <ShieldCheck className="w-8 h-8 text-indigo-300 relative z-10" />,
                 bgIcon: <ShieldCheck className="w-24 h-24 text-indigo-500/10 absolute -right-4 -bottom-4 group-hover/card:scale-110 transition-transform duration-700" />,
                 accent: "rgba(129, 140, 248, 0.15)",
@@ -478,7 +478,7 @@ export const Landing: FC<LandingProps> = ({
           viewport={{ once: true }}
           className="max-w-3xl mx-auto"
         >
-          <h2 className="text-4xl sm:text-6xl font-black text-white mb-8">جاهز تسترد قيادتك؟</h2>
+          <h2 className="text-4xl sm:text-6xl font-black text-white mb-8">جاهز تشوف الحقيقة؟</h2>
           <motion.button
             onClick={handleStart}
             whileHover={{ scale: 1.05 }}

@@ -424,49 +424,49 @@ export const SystemOverclockSection: FC<{
       <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 mb-4" aria-hidden="true">
         <Sparkles className="h-4 w-4 text-indigo-400 animate-pulse" />
         <span className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-300">
-          ما وراء السطح
+          ما وراء الأوهام
         </span>
       </div>
-      <h2 id="system-overclock-heading" className="text-3xl font-black text-white mb-3">الوعي الخفي للمكان</h2>
+      <h2 id="system-overclock-heading" className="text-3xl font-black text-white mb-3">النور الخفي</h2>
       <p className="text-sm text-slate-400 max-w-[50ch] mx-auto">
-        هذه المساحة ليست صماء؛ إنها كيان حي يراقب مسارك، يشعر بتذبذب طاقتك، ويعيد تشكيل نفسه ليسندك حين تميل.
+        هذه المساحة ليست صماء؛ إنها كيان حي يكشف لك الحقائق الخفية، يشعر بتذبذب وعيك، ويعيد تشكيل نفسه لينير لك ما انطفأ.
       </p>
     </div>
 
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {[
         {
-          title: "رصد الأثر الصامت",
-          desc: "يقرأ ما بين السطور في أفعالك، ليربط بين خطواتك ومزاجك دون أن تتحدث.",
+          title: "كاشف الأنماط الخفية",
+          desc: "يقرأ ما بين السطور في أفعالك، ليكشف الأنماط الخفية التي تخدعك عن حقيقتك.",
           icon: Brain,
-          stat: "وعي مستمر",
+          stat: "كشف مستمر",
           color: "text-teal-400",
           bg: "bg-teal-500/5",
           border: "border-teal-500/20"
         },
         {
-          title: "ميزان التشتت",
-          desc: "يراقب صخبك الداخلي، ويفعّل «وضع الاحتواء» ليهدئ المكان من حولك إن لزم الأمر.",
+          title: "ميزان الحقيقة",
+          desc: "يراقب التناقضات بين ما تقوله وما تفعله، ويُنبهك حين تبتعد عن الحقيقة.",
           icon: Activity,
-          stat: "توازن تلقائي",
+          stat: "ميزان ذكي",
           color: "text-amber-400",
           bg: "bg-amber-500/5",
           border: "border-amber-500/20"
         },
         {
           title: "مرآة الحقيقة",
-          desc: "لا تجاملك؛ تواجهك بتناقضاتك بلطف لتكسر دوائر الوهم والتفكير الزائد.",
+          desc: "لا تجاملك؛ تواجهك بتناقضاتك بلطف لتكسر دوائر الوهم وتقتل الدجل بالعلم.",
           icon: Eye,
-          stat: "مواجهة هادئة",
+          stat: "مواجهة صادقة",
           color: "text-rose-400",
           bg: "bg-rose-500/5",
           border: "border-rose-500/20"
         },
         {
-          title: "العلاج بالتشكيل",
-          desc: "ألوان ومسافات المكان تتنفس وتتغير لحظياً لتسكين قلقك واستعادة توازنك البصري.",
+          title: "النور البصري",
+          desc: "ألوان ومسافات المكان تتنفس وتتغير لحظياً لإضاءة طريقك وتبديد الظلام.",
           icon: Layers,
-          stat: "احتواء بصري",
+          stat: "إضاءة حية",
           color: "text-indigo-400",
           bg: "bg-indigo-500/5",
           border: "border-indigo-500/20"
