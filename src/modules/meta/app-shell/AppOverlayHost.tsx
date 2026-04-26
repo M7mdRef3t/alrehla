@@ -242,7 +242,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
         agentSystemPrompt={agentSystemPrompt}
         onNavigateToMap={() => setScreen("map")}
         onOnboardingComplete={onOnboardingComplete}
-        storedMirrorName={storedMirrorName}
+        storedMirrorName={storedMirrorName ?? undefined}
         isEmergencyOpen={isEmergencyOpen}
         closeEmergency={closeEmergency}
         setSelectedNodeId={setSelectedNodeId}
