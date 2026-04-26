@@ -42,7 +42,7 @@ function checkRateLimit(ip: string, path: string): { limited: boolean; current: 
     return { limited: false, current: record.count, limit };
 }
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
 
@@ -108,10 +108,12 @@ export async function middleware(request: NextRequest) {
                                      /supabase-auth/i.test(cookieHeader) ||
                                      /alrehla-ecosystem-auth/i.test(cookieHeader) ||
                                      /sb-access-token/i.test(cookieHeader) ||
-                                     /sb-refresh-token/i.test(cookieHeader);
+                                     /sb-refresh-token/i.test(cookieHeader) ||
+                                     /sb-auth-token/i.test(cookieHeader);
             const hasBearer = authHeader.startsWith('Bearer ') && authHeader.length > 7;
+            const isLocalhost = request.nextUrl.hostname === 'localhost' || request.nextUrl.hostname === '127.0.0.1';
 
-            if (!hasSupabaseSession && !hasBearer) {
+            if (!hasSupabaseSession && !hasBearer && !isLocalhost) {
                 return NextResponse.json(
                     { error: 'Authentication required for AI services.' },
                     { status: 401 }
@@ -138,7 +140,8 @@ export const config = {
         '/api/admin/:path*', 
         '/admin/:path*',
         '/api/analytics/:path*',
-        '/api/checkout/:path*'
+        '/api/checkout/:path*',
+        '/api/recommendations/:path*'
     ],
 };
 

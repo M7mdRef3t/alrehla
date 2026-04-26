@@ -10,6 +10,7 @@ import {
   recordAIFallback,
   runWithAIGuardrails
 } from "./aiGuardrails";
+import { safeGetSession } from "./supabaseClient";
 
 /**
  * ترتيب الموديلات النصية — من الأفضل للاحتياط. مرجع كامل: docs/GEMINI_MODELS.md
@@ -169,21 +170,29 @@ class GeminiClient {
     try {
       data = await runWithAIGuardrails(
         "generate",
-        async (signal) => fetchJsonWithResilience<GenerateResponse>(
-          "/api/gemini/generate",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              prompt,
-              generationConfig: GENERATION_CONFIG,
-              modelOrder: TEXT_MODEL_FALLBACK_ORDER,
-              feature
-            }),
-            signal
-          },
-          { retries: 1, breaker: this.generateBreaker, timeoutMs: 25_000 }
-        ),
+        async (signal) => {
+          const session = await safeGetSession();
+          const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
+          if (session?.access_token) {
+            authHeaders["Authorization"] = `Bearer ${session.access_token}`;
+          }
+          
+          return fetchJsonWithResilience<GenerateResponse>(
+            "/api/gemini/generate",
+            {
+              method: "POST",
+              headers: authHeaders,
+              body: JSON.stringify({
+                prompt,
+                generationConfig: GENERATION_CONFIG,
+                modelOrder: TEXT_MODEL_FALLBACK_ORDER,
+                feature
+              }),
+              signal
+            },
+            { retries: 1, breaker: this.generateBreaker, timeoutMs: 25_000 }
+          );
+        },
         {
           timeoutMs: 30_000,
           inputChars: 0,
@@ -273,16 +282,24 @@ class GeminiClient {
       }
       const res = await runWithAIGuardrails(
         "stream",
-        async (signal) => fetch("/api/gemini/stream", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt,
-            generationConfig: GENERATION_CONFIG,
-            modelOrder: TEXT_MODEL_FALLBACK_ORDER
-          }),
-          signal
-        }),
+        async (signal) => {
+          const session = await safeGetSession();
+          const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
+          if (session?.access_token) {
+            authHeaders["Authorization"] = `Bearer ${session.access_token}`;
+          }
+
+          return fetch("/api/gemini/stream", {
+            method: "POST",
+            headers: authHeaders,
+            body: JSON.stringify({
+              prompt,
+              generationConfig: GENERATION_CONFIG,
+              modelOrder: TEXT_MODEL_FALLBACK_ORDER
+            }),
+            signal
+          });
+        },
         {
           timeoutMs: 20_000,
           inputChars: prompt.length,
@@ -347,22 +364,30 @@ class GeminiClient {
       try {
         const responsePayload = await runWithAIGuardrails(
           "tool",
-          async (signal) => fetchJsonWithResilience<ToolResponse>(
-            "/api/gemini/tool",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: currentContents,
-                tools,
-                systemInstruction,
-                generationConfig: GENERATION_CONFIG,
-                modelOrder: TEXT_MODEL_FALLBACK_ORDER
-              }),
-              signal
-            },
-            { retries: 1, breaker: this.toolBreaker }
-          ),
+          async (signal) => {
+            const session = await safeGetSession();
+            const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
+            if (session?.access_token) {
+              authHeaders["Authorization"] = `Bearer ${session.access_token}`;
+            }
+
+            return fetchJsonWithResilience<ToolResponse>(
+              "/api/gemini/tool",
+              {
+                method: "POST",
+                headers: authHeaders,
+                body: JSON.stringify({
+                  contents: currentContents,
+                  tools,
+                  systemInstruction,
+                  generationConfig: GENERATION_CONFIG,
+                  modelOrder: TEXT_MODEL_FALLBACK_ORDER
+                }),
+                signal
+              },
+              { retries: 1, breaker: this.toolBreaker }
+            );
+          },
           {
             timeoutMs: 12_000,
             inputChars: 0,
@@ -420,19 +445,27 @@ class GeminiClient {
     try {
       data = await runWithAIGuardrails(
         "embed",
-        async (signal) => fetchJsonWithResilience<{ embedding: number[] }>(
-          "/api/gemini/embed",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text,
-              model: "text-embedding-004"
-            }),
-            signal
-          },
-          { retries: 1, breaker: this.embedBreaker }
-        ),
+        async (signal) => {
+          const session = await safeGetSession();
+          const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
+          if (session?.access_token) {
+            authHeaders["Authorization"] = `Bearer ${session.access_token}`;
+          }
+
+          return fetchJsonWithResilience<{ embedding: number[] }>(
+            "/api/gemini/embed",
+            {
+              method: "POST",
+              headers: authHeaders,
+              body: JSON.stringify({
+                text,
+                model: "text-embedding-004"
+              }),
+              signal
+            },
+            { retries: 1, breaker: this.embedBreaker }
+          );
+        },
         {
           timeoutMs: 8_000,
           inputChars: text.length,

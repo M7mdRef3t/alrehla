@@ -98,27 +98,32 @@ export function useAppMindSignals({
   }, [nodes, openOverlay, storedGoalId, activeFlows]);
 
   useEffect(() => {
-    // لا تُطلق حتى chaos nudge لو في flow نشط
-    if (activeFlows) return;
-    const insight = calculateEntropy();
-    if (insight.state === "CHAOS" && !showBreathing && !showCocoon) {
-      const nudge = {
-        id: `chaos-containment-${Date.now()}`,
-        type: "streak_risk" as const,
-        title: "محتاج تاخد نَفَس 🍃",
-        message: "حاسين إنك مضغوط شوية دلوقتي.. خد دقيقة لنفسك.",
-        cta: "افصل شوية",
-        ctaAction: "dismiss_only" as const,
-        priority: 1 as const,
-        icon: "🍃"
-      };
-      setActiveNudge(nudge);
-      openOverlay("nudgeToast");
-      if (typeof document !== 'undefined' && document.hidden) {
-        sendNotification(nudge.title, { body: nudge.message });
+    // لا تُطلق حتى chaos nudge لو في flow نشط أو فيه nudge طالع فعلاً
+    if (activeFlows || activeNudge) return;
+
+    const timer = setTimeout(() => {
+      const insight = calculateEntropy();
+      if (insight.state === "CHAOS" && !showBreathing && !showCocoon) {
+        const nudge = {
+          id: `chaos-containment-${Date.now()}`,
+          type: "streak_risk" as const,
+          title: "محتاج تاخد نَفَس 🍃",
+          message: "حاسين إنك مضغوط شوية دلوقتي.. خد دقيقة لنفسك.",
+          cta: "افصل شوية",
+          ctaAction: "dismiss_only" as const,
+          priority: 1 as const,
+          icon: "🍃"
+        };
+        setActiveNudge(nudge);
+        openOverlay("nudgeToast");
+        if (typeof document !== 'undefined' && document.hidden) {
+          sendNotification(nudge.title, { body: nudge.message });
+        }
       }
-    }
-  }, [goalId, lastPulse, nodes, openOverlay, showBreathing, showCocoon, activeFlows, sendNotification]);
+    }, 5000); // Wait 5 seconds before checking for chaos to avoid noise
+
+    return () => clearTimeout(timer);
+  }, [goalId, lastPulse, nodes, openOverlay, showBreathing, showCocoon, activeFlows, sendNotification, activeNudge]);
 
   const handleNudgeDismiss = useCallback(() => {
     if (activeNudge) {

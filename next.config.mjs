@@ -13,7 +13,6 @@ const nextConfig = {
   ...(isVercel ? { output: "standalone" } : {}),
   ...(isDev && !isVercel ? { distDir: ".next-dev" } : {}),
   reactStrictMode: !isDev, // Disabled in dev to prevent double-invoke Fast Refresh loops
-  swcMinify: true,
   ...(isVercel ? {
     compiler: {
       removeConsole: { exclude: ["error", "warn"] }
@@ -139,7 +138,11 @@ if (process.env.SENTRY_AUTH_TOKEN || process.env.NEXT_PUBLIC_SENTRY_DSN) {
     hideSourceMaps: true,
     
     // Automatically tree-shake Sentry logger statements to reduce bundle size
-    disableLogger: true,
+    webpack: {
+      treeshake: {
+        removeDebugLogging: true,
+      },
+    },
   });
 }
 

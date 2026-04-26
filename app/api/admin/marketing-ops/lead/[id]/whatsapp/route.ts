@@ -5,15 +5,15 @@ import { getSupabaseAdminClient } from "../../../../../_lib/supabaseAdmin";
 // Fetches the whatsapp message events associated with a lead
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: leadId } = await params;
     const supabase = getSupabaseAdminClient();
     if (!supabase) {
       return NextResponse.json({ ok: false, error: "Missing supabase admin" }, { status: 500 });
     }
 
-    const leadId = params.id;
 
     // We can also fetch the lead to get its phone number and query by phone,
     // just in case of events without lead_id.
@@ -52,12 +52,12 @@ export async function GET(
 // Sends a manual free-text message to the lead
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: leadId } = await params;
     const body = await req.json();
     const { message } = body;
-    const leadId = params.id;
 
     if (!message || !message.trim()) {
       return NextResponse.json({ ok: false, error: "Empty message" }, { status: 400 });

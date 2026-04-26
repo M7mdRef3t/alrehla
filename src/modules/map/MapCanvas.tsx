@@ -1040,6 +1040,8 @@ interface MapCanvasProps {
 }
 
 
+const EMPTY_ARRAY: any[] = [];
+
 export const MapCanvas: FC<MapCanvasProps> = ({
   onNodeClick,
   onAddNode,
@@ -1059,7 +1061,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   const activeNodes = isSimulation ? simulatedNodes : allNodes;
 
   // ── Active Illusion Logic ──
-  const topScenarios = useAdminState((s) => s.liveStatsCache?.data?.stats?.topScenarios ?? []);
+  const topScenarios = useAdminState((s) => s.liveStatsCache?.data?.stats?.topScenarios ?? EMPTY_ARRAY);
   const [destroyedIllusions, setDestroyedIllusions] = useState<Set<string>>(new Set());
 
   // ── Bio-Feedback Engine ──
@@ -1111,14 +1113,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   }, []);
 
   const nodes = useMemo(() => {
-    const filtered = filterNodesByContext(activeNodes, goalIdFilter, galaxyGoalIds).filter((n) => !n.isNodeArchived);
-    console.log("[MapCanvas Debug] allNodes:", allNodes.length, "activeNodes:", activeNodes.length, "filteredNodes:", filtered.length, "goalIdFilter:", goalIdFilter);
-    if (allNodes.length > 0 && filtered.length === 0) {
-      console.warn("[MapCanvas Debug] Nodes exist in store but none passed the filter!");
-      console.log("[MapCanvas Debug] Sample node goalIds:", allNodes.slice(0, 5).map(n => n.goalId));
-    }
-    return filtered;
-  }, [activeNodes, goalIdFilter, galaxyGoalIds, allNodes]);
+    return filterNodesByContext(activeNodes, goalIdFilter, galaxyGoalIds).filter((n) => !n.isNodeArchived);
+  }, [activeNodes, goalIdFilter, galaxyGoalIds]);
 
 
   const archivedNodes = useMemo(() => {

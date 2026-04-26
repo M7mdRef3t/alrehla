@@ -98,8 +98,9 @@ export async function GET() {
   );
 }
 
-export async function POST(req: NextRequest, { params }: { params: { action: string } }) {
-  const action = params.action;
+export async function POST(req: NextRequest, { params }: { params: Promise<{ action: string }> }) {
+  const { action } = await params;
+  console.log(`[Recommendations API] Action: ${action}, URL: ${req.url}`);
 
   let parsedBody: unknown = null;
   try {
