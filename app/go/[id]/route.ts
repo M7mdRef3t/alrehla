@@ -3,8 +3,8 @@ import { getSupabaseAdminClient } from "../../api/_lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.alrehla.app").replace(/\/$/, "");
   
   const supabase = getSupabaseAdminClient();

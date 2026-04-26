@@ -104,7 +104,7 @@ export async function handleTicketsResolve(req: any, res: any) {
             // 3. Send Meta CAPI event
             if (email || phone) {
                 try {
-                    const headersList = headers();
+                    const headersList = await headers();
                     const clientIp = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || headersList.get("x-real-ip") || "";
                     const clientUserAgent = headersList.get("user-agent") || "";
                     

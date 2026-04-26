@@ -5,8 +5,9 @@ export const revalidate = 60;
 export default async function PlasmicMarketingPage({
   params,
 }: {
-  params: { catchall: string[] };
+  params: Promise<{ catchall: string[] }>;
 }) {
+  const resolvedParams = await params;
   const plasmicEnabled = process.env.ENABLE_PLASMIC_MARKETING === "true";
   if (!plasmicEnabled) {
     notFound();
@@ -17,7 +18,7 @@ export default async function PlasmicMarketingPage({
     import("@plasmicapp/loader-nextjs"),
   ]);
 
-  const plasmicPath = "/" + (params.catchall?.join("/") || "");
+  const plasmicPath = "/" + (resolvedParams.catchall?.join("/") || "");
   const plasmicData = await PLASMIC.maybeFetchComponentData(plasmicPath);
 
   if (!plasmicData) {

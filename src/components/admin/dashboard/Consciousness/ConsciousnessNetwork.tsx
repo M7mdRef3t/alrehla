@@ -123,7 +123,7 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
 
     // Generate Connections Efficiently
     const connections = useMemo(() => {
-        const lines: JSX.Element[] = [];
+        const lines: React.JSX.Element[] = [];
         nodes.forEach((node, i) => {
             for (let j = i + 1; j < nodes.length; j++) {
                 const other = nodes[j];

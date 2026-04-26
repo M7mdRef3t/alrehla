@@ -77,36 +77,43 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
                   import("@/services/soundManager").then(m => m.soundManager.playEffect("cosmic_pulse"));
                   onTitleSelect(suggestion.label);
                 }}
-                className={`group relative w-full h-full min-h-0 flex flex-col items-center justify-center gap-3 rounded-2xl border transition-all duration-500 focus-visible:outline-none p-4 overflow-hidden ${isSelected
+                className={`group relative w-full h-full min-h-0 flex flex-col items-center justify-center gap-3 rounded-2xl border transition-all duration-500 focus-visible:outline-none p-4 overflow-hidden hover:-translate-y-1 ${isSelected
                     ? "bg-teal-500/10 border-teal-400/50 shadow-[0_0_40px_rgba(45,212,191,0.15)]"
-                    : "bg-[var(--page-surface-2)] border-[var(--page-border-soft)] hover:border-[var(--consciousness-primary)] hover:bg-[var(--page-bg-alt)]"
+                    : "bg-[var(--page-surface-2)] border-[var(--page-border-soft)] hover:border-[var(--consciousness-primary)] hover:bg-[var(--page-bg-alt)] hover:shadow-lg hover:shadow-teal-900/10"
                   }`}
                 title={`اختيار "${suggestion.label}"`}
-                whileHover={{ scale: isSelected ? 1 : 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
                 {/* HUD Corners */}
-                <div className={`absolute top-0 left-0 w-3 h-3 border-t border-l rounded-tl-lg transition-colors duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/30"}`} />
-                <div className={`absolute top-0 right-0 w-3 h-3 border-t border-r rounded-tr-lg transition-colors duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/30"}`} />
-                <div className={`absolute bottom-0 left-0 w-3 h-3 border-b border-l rounded-bl-lg transition-colors duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/30"}`} />
-                <div className={`absolute bottom-0 right-0 w-3 h-3 border-b border-r rounded-br-lg transition-colors duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/30"}`} />
+                <div className={`absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 rounded-tl-lg transition-all duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/40 group-hover:w-4 group-hover:h-4"}`} />
+                <div className={`absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 rounded-tr-lg transition-all duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/40 group-hover:w-4 group-hover:h-4"}`} />
+                <div className={`absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 rounded-bl-lg transition-all duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/40 group-hover:w-4 group-hover:h-4"}`} />
+                <div className={`absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 rounded-br-lg transition-all duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/40 group-hover:w-4 group-hover:h-4"}`} />
+
+                {/* Scanning Line Effect */}
+                <motion.div 
+                  className="absolute inset-x-0 h-[1px] bg-teal-400/20 z-0 pointer-events-none"
+                  initial={{ top: "0%" }}
+                  animate={{ top: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                />
 
                 {isSelected && (
                   <motion.div 
-                    className="absolute inset-0 bg-teal-400/[0.03] pointer-events-none"
-                    animate={{ opacity: [0.2, 0.5, 0.2] }}
+                    className="absolute inset-0 bg-teal-400/[0.05] pointer-events-none"
+                    animate={{ opacity: [0.2, 0.6, 0.2] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   />
                 )}
 
                 <div
-                  className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center transition-all duration-500 ${isSelected ? "bg-teal-400/20 shadow-[0_0_20px_rgba(45,212,191,0.3)] rotate-0" : "bg-white/5 group-hover:bg-white/10 rotate-[-5deg] group-hover:rotate-0"
+                  className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center transition-all duration-500 z-10 ${isSelected ? "bg-teal-400/20 shadow-[0_0_30px_rgba(45,212,191,0.4)] rotate-0" : "bg-white/5 group-hover:bg-white/10 rotate-[-5deg] group-hover:rotate-0"
                     }`}
                 >
-                  <Icon className={`${isSelected ? "text-teal-300" : "text-slate-500 group-hover:text-slate-300"} w-7 h-7 transition-colors duration-500`} strokeWidth={1.5} />
+                  <Icon className={`${isSelected ? "text-teal-300" : "text-slate-500 group-hover:text-slate-200"} w-7 h-7 transition-colors duration-500`} strokeWidth={1.5} />
                 </div>
                 <div
-                  className={`min-h-9 flex items-center justify-center text-center font-black tracking-tight ${isSelected ? "text-teal-500 dark:text-teal-300 drop-shadow-[0_0_10px_rgba(45,212,191,0.5)]" : "text-[var(--consciousness-text-muted)] group-hover:text-[var(--consciousness-text)]"
+                  className={`min-h-9 flex items-center justify-center text-center font-black tracking-tight z-10 ${isSelected ? "text-teal-500 dark:text-teal-300 drop-shadow-[0_0_10px_rgba(45,212,191,0.5)]" : "text-[var(--consciousness-text-muted)] group-hover:text-[var(--consciousness-text)]"
                     } text-xs sm:text-sm line-clamp-2 transition-colors duration-500`}
                 >
                   {suggestion.label}
@@ -117,18 +124,17 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           <motion.button
             type="button"
             onClick={() => onTitleSelect("__custom__")}
-            className={`group relative w-full h-full min-h-0 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed transition-all duration-300 focus-visible:outline-none p-4 overflow-hidden ${showCustomTitleInput && customTitleInput.trim()
-                ? "bg-slate-800/80 border-slate-500"
-                : "bg-slate-900/40 border-slate-700 hover:border-slate-500"
+            className={`group relative w-full h-full min-h-0 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed transition-all duration-500 focus-visible:outline-none p-4 overflow-hidden hover:-translate-y-1 ${showCustomTitleInput
+                ? "bg-teal-500/5 border-teal-400/40 shadow-[0_0_30px_rgba(45,212,191,0.1)]"
+                : "bg-white/[0.02] border-white/10 hover:border-teal-500/50 hover:bg-white/[0.05] hover:shadow-lg hover:shadow-teal-900/10"
               }`}
             title="إضافة مسمى مخصص"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.98 }}
           >
-            <div className="w-12 h-12 shrink-0 rounded-full bg-[var(--page-bg-alt)] group-hover:bg-[var(--consciousness-primary)]/20 flex items-center justify-center transition-colors">
-              <span className="text-[var(--consciousness-text-muted)] group-hover:text-[var(--consciousness-primary)] text-2xl font-light leading-none">+</span>
+            <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center transition-all duration-500 ${showCustomTitleInput ? "bg-teal-400/20 rotate-0" : "bg-white/5 group-hover:bg-teal-500/10 rotate-[-5deg] group-hover:rotate-0"}`}>
+              <span className={`text-2xl font-light leading-none transition-colors duration-500 ${showCustomTitleInput ? "text-teal-300" : "text-slate-500 group-hover:text-teal-400"}`}>+</span>
             </div>
-            <div className="min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-bold text-[var(--consciousness-text-muted)] group-hover:text-[var(--consciousness-primary)] tracking-wide transition-colors">
+            <div className={`min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-black tracking-tight transition-colors duration-500 ${showCustomTitleInput ? "text-teal-300" : "text-[var(--consciousness-text-muted)] group-hover:text-[var(--consciousness-text)]"}`}>
               <EditableText id="add_person_select_other" defaultText="مسمى آخر" page="add_person" showEditIcon={false} />
             </div>
           </motion.button>

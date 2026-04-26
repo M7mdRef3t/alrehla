@@ -27,7 +27,7 @@ interface Step1ViewProps {
   setTopics: (updater: (prev: string[]) => string[]) => void;
   notes: string;
   setNotes: (notes: string | ((prev: string) => string)) => void;
-  notesRef: React.RefObject<HTMLTextAreaElement>;
+  notesRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
 export function Step1View({

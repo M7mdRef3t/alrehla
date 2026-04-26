@@ -1282,7 +1282,7 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
               animate={reduceMotion || isMobile ? {} : { rotate: i % 2 === 0 ? 360 : -360 }}
               transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
               className="orbit-ring"
-              transformOrigin="190px 190px"
+              style={{ transformOrigin: "190px 190px" }}
             />
             {!reduceMotion && !isMobile && (
               <SafeMotionCircle
@@ -1294,7 +1294,7 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
                 animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
                 transition={{ duration: ring.dur * 0.4, repeat: Infinity, ease: "linear" }}
                 className="orbit-ring orbit-ring--glow"
-                transformOrigin="190px 190px"
+                style={{ transformOrigin: "190px 190px" }}
               />
             )}
           </g>
@@ -1313,7 +1313,7 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
             transition={{
               opacity: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 },
             }}
-            transformOrigin={`${node.cx}px ${node.cy}px`}
+            style={{ transformOrigin: `${node.cx}px ${node.cy}px` }}
             cursor="pointer"
             className="node-group"
           >
@@ -1323,7 +1323,7 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
                 fill="none" stroke={node.color} strokeWidth={1.5}
                 opacity={0.4}
                 className="pulse-ring"
-                transformOrigin={`${node.cx}px ${node.cy}px`}
+                style={{ transformOrigin: `${node.cx}px ${node.cy}px` }}
               />
             )}
             <SafeMotionCircle cx={node.cx} cy={node.cy} r={node.r + 8} fill={node.color} opacity={0.07} />
@@ -1359,7 +1359,7 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
           animate={reduceMotion ? {} : { scale: [1, 1.18, 1], opacity: [0.9, 1, 0.9] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
           className="center-core"
-          transformOrigin="190px 190px"
+          style={{ transformOrigin: "190px 190px" }}
         >
           <SafeMotionCircle cx={190} cy={190} r={22} fill="rgba(0, 240, 255, 0.15)" />
           <SafeMotionCircle cx={190} cy={190} r={14} fill="var(--teal)" className="center-core__glow" />

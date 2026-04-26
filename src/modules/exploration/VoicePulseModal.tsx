@@ -20,7 +20,7 @@ export const VoicePulseModal: React.FC<VoicePulseModalProps> = ({ onClose }) => 
 
     // Canvas ref for visualizer
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const animationRef = useRef<number>();
+    const animationRef = useRef<number | undefined>(undefined);
 
     useEffect(() => {
         let interval: number;
@@ -67,11 +67,17 @@ export const VoicePulseModal: React.FC<VoicePulseModalProps> = ({ onClose }) => 
             }
 
         } else {
-            if (animationRef.current) cancelAnimationFrame(animationRef.current);
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+                animationRef.current = undefined;
+            }
         }
         return () => {
             clearInterval(interval);
-            if (animationRef.current) cancelAnimationFrame(animationRef.current);
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+                animationRef.current = undefined;
+            }
         };
     }, [phase]);
 

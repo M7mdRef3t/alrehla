@@ -1,4 +1,3 @@
-import { Client } from "@botpress/client";
 import { runtimeEnv } from "@/config/runtimeEnv";
 
 export interface BotpressMessagePayload {
@@ -13,9 +12,9 @@ export interface BotpressMessagePayload {
  * Uses the official Botpress Client SDK for advanced automation.
  */
 export class BotpressService {
-  private static client: Client | null = null;
+  private static client: any = null;
 
-  private static getClient() {
+  private static async getClient() {
     if (this.client) return this.client;
     
     const token = runtimeEnv.botpressToken;
@@ -31,12 +30,18 @@ export class BotpressService {
       return null;
     }
 
-    this.client = new Client({
-      token,
-      workspaceId,
-      botId,
-    });
-    return this.client;
+    try {
+      const { Client } = await import("@botpress/client");
+      this.client = new Client({
+        token,
+        workspaceId,
+        botId,
+      });
+      return this.client;
+    } catch (err) {
+      console.error("[BotpressService] Failed to load SDK:", err);
+      return null;
+    }
   }
 
   /**
@@ -59,7 +64,7 @@ export class BotpressService {
     }
 
     // Server-side: use SDK
-    const client = this.getClient();
+    const client = await this.getClient();
     if (!client) return { success: false, error: "not_configured" };
 
     try {
@@ -97,7 +102,7 @@ export class BotpressService {
    * List conversations for a specific user.
    */
   static async listUserConversations(userId: string) {
-    const client = this.getClient();
+    const client = await this.getClient();
     if (!client) return [];
     
     try {

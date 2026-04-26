@@ -18,7 +18,7 @@ const nextConfig = {
       removeConsole: { exclude: ["error", "warn"] }
     }
   } : {}),
-  transpilePackages: ["@alrehla/atmosfera", "@alrehla/dawayir", "@alrehla/masarat"],
+  transpilePackages: ["@alrehla/atmosfera", "@alrehla/dawayir", "@alrehla/masarat", "@botpress/client"],
   poweredByHeader: false,
   experimental: {
     esmExternals: true,

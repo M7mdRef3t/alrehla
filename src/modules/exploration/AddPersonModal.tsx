@@ -442,11 +442,11 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
           <button
             type="button"
             onClick={() => handleCloseAttempt("close_button")}
-            className="absolute top-4 left-4 w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10 z-10 shrink-0"
-            style={{ color: "rgba(148,163,184,0.6)", border: "1px solid rgba(255,255,255,0.07)" }}
+            className="absolute top-5 left-5 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 hover:bg-white/10 bg-black/40 backdrop-blur-md z-[100] shrink-0"
+            style={{ color: "rgba(255,255,255,0.9)", border: "1px solid rgba(255,255,255,0.15)" }}
             aria-label="إغلاق"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         )}
       </motion.div>

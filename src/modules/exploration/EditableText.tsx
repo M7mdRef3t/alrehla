@@ -6,7 +6,7 @@ import { useAppContentState } from '@/modules/map/dawayirIndex';
 import { isSupabaseReady } from "@/services/supabaseClient";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 
-type EditableTag = keyof JSX.IntrinsicElements;
+type EditableTag = keyof React.JSX.IntrinsicElements;
 
 export interface EditableTextProps {
   id: string;

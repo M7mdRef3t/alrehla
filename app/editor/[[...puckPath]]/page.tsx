@@ -2,8 +2,9 @@ import { EditorClient } from "./client";
 import { supabaseAdmin } from "../../../src/services/supabaseClient";
 import { getEditorTemplate } from "../../../src/editor/editorTemplates";
 
-export default async function EditorPage({ params }: { params: { puckPath: string[] } }) {
-  const path = `/${params.puckPath?.join("/") || ""}`;
+export default async function EditorPage({ params }: { params: Promise<{ puckPath: string[] }> }) {
+  const resolvedParams = await params;
+  const path = `/${resolvedParams.puckPath?.join("/") || ""}`;
 
   let initialData = getEditorTemplate(path);
 

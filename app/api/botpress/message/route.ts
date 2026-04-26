@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { BotpressService } from "@/services/botpressService";
 import { safeGetSession } from "@/services/supabaseClient";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     // Optional: add rate limiting or require user auth here
