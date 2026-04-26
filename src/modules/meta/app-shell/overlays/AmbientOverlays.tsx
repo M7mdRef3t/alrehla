@@ -2,6 +2,8 @@ import { lazy, Suspense, memo } from "react";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { Z_LAYERS } from "@/config/zIndices";
+import type { Nudge } from "@/services/nudgeEngine";
+import type { MirrorInsight } from "@/services/mirrorLogic";
 
 const AmbientRealityMode = lazy(() => import('@/modules/exploration/AmbientRealityMode').then((m) => ({ default: m.AmbientRealityMode })));
 const TimeCapsuleVault = lazy(() => import('@/modules/action/TimeCapsuleVault').then((m) => ({ default: m.TimeCapsuleVault })));
@@ -13,11 +15,11 @@ const GamificationNudgeToast = lazy(() => import('@/modules/growth/GamificationN
 
 interface AmbientOverlaysProps {
   isVisible: (id: string) => boolean;
-  activeNudge: any;
-  activeMirrorInsight: any;
+  activeNudge: Nudge | null;
+  activeMirrorInsight: MirrorInsight | null;
   handleNudgeToastClose: () => void;
   handleNudgeCtaAction: () => void;
-  handleMirrorResolve: () => void;
+  handleMirrorResolve: (insight: MirrorInsight) => void;
 }
 
 export const AmbientOverlays = memo(function AmbientOverlays({ 
