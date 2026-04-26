@@ -982,7 +982,7 @@ const HERO_STYLES = `
       box-sizing: border-box;
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
-      transform: translate3d(0, 0, 0);
+      transform: none;
     }
     
     .headline-line {
@@ -1087,6 +1087,8 @@ const HERO_STYLES = `
       .hero-nebula,
       .hero-starfield,
       .neural-dust-field,
+      .hero-scan-line,
+      .pulse-ring,
       .metric-card,
       .node-core {
         animation: none !important;
@@ -1098,6 +1100,14 @@ const HERO_STYLES = `
       .hero-content-wrapper {
         transform: none;
         will-change: auto;
+      }
+
+      .hero-scan-line {
+        display: none !important;
+      }
+
+      .pulse-badge__dot {
+        opacity: 1 !important;
       }
     }
 
@@ -1151,6 +1161,8 @@ const RotatingWord: FC = () => {
   useEffect(() => {
     const mql = window.matchMedia("(pointer: coarse)");
     setIsMobile(mql.matches);
+    if (mql.matches) return;
+
     const id = setInterval(() => {
       setIndex(i => (i + 1) % ROTATING_WORDS.length);
     }, 5000);
@@ -1264,7 +1276,7 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
               className="orbit-line"
             />
             {/* Neural Pulse - Data traveling from core to node */}
-            {Number.isFinite(n.cx) && Number.isFinite(n.cy) && (
+            {!isMobile && Number.isFinite(n.cx) && Number.isFinite(n.cy) && (
               <SafeMotionCircle
                 r={1.5}
                 fill={n.color}
@@ -1373,7 +1385,7 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
         ))}
 
         <motion.g
-          animate={reduceMotion ? {} : { scale: [1, 1.18, 1], opacity: [0.9, 1, 0.9] }}
+          animate={reduceMotion || isMobile ? {} : { scale: [1, 1.18, 1], opacity: [0.9, 1, 0.9] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
           className="center-core"
           style={{ transformOrigin: "190px 190px" }}
@@ -1411,7 +1423,7 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
             <motion.div
               key={dot}
               className="metric-card-dot"
-              animate={{ opacity: [0.4, 1, 0.4] }}
+              animate={isMobile ? {} : { opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 2, repeat: Infinity, delay: dot * 0.3 }}
             />
           ))}
