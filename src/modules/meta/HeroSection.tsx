@@ -21,14 +21,14 @@ interface HeroSectionProps {
 
 /* --- Constants --- */
 const ROTATING_WORDS = [
-  "بتحس إنك خلصت شحن؟",
-  "بتتحرج تكسفهم؟",
-  "رهين الانتظار؟",
-  "نسيت نفسك عشانهم؟",
-  "خايف تقول لأ؟",
-  "شايل شيلة غيرك؟",
+  "شايف الحقيقة ولا ماشي في الوهم؟",
+  "عارف مين فعلاً جنبك؟",
+  "عايش في ضباب ولا وضوح؟",
+  "مين بيقودك من غير ما تحس؟",
+  "بتصدق أكاذيب مريحة؟",
+  "فاكر ده حب ولا استنزاف؟",
   "تايه في رحلتك؟",
-  "عايز تسترد قيادتك؟"
+  "جاهز تواجه الحقيقة؟"
 ];
 
 /* --- Styles --- */
@@ -1014,15 +1014,19 @@ const HERO_STYLES = `
       margin-right: auto;
       margin-top: 0.25rem;
       width: 100%;
+      min-height: 1.35em;
       /* Isolate layout: prevents reflow from propagating upward */
       contain: layout style;
-      transform: translateZ(0);
-      -webkit-transform: translateZ(0);
+      transform: none;
+      -webkit-transform: none;
     }
 
     .rotating-word-wrapper > .headline-accent {
-      position: relative !important;
-      display: inline-block !important;
+      position: absolute !important;
+      inset: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
       width: 100% !important;
       text-align: center !important;
     }
@@ -1159,9 +1163,9 @@ const RotatingWord: FC = () => {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const mql = window.matchMedia("(pointer: coarse)");
-    setIsMobile(mql.matches);
-    if (mql.matches) return;
+    const isSmallOrTouch = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024;
+    setIsMobile(isSmallOrTouch);
+    if (isSmallOrTouch) return;
 
     const id = setInterval(() => {
       setIndex(i => (i + 1) % ROTATING_WORDS.length);
@@ -1241,13 +1245,13 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
   ];
 
   const nodes = [
-    { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "علاقة بموزانها",  w: 1.2 },
-    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "دعم قيادي",    w: 0.8 },
-    { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "نبض متذبذب",  w: 1.5 },
-    { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "تشويش روح",   w: 0.9 },
-    { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "احتواء حقيقي",w: 1.1 },
-    { cx: 190 - 28, cy: 190 - 148, r: 12, color: "#ff0055", label: "نزيف طاقة",   w: 2.0 },
-    { cx: 190 + 118, cy: 190 - 100, r: 11, color: "#ff0044", label: "حدود مهدورة", w: 1.7 },
+    { cx: 190, cy: 190 - 68,  r: 13, color: "#00f0ff", label: "حقيقة واضحة",  w: 1.2 },
+    { cx: 190 + 62, cy: 190 - 34, r: 11, color: "#00eeff", label: "نور حقيقي",    w: 0.8 },
+    { cx: 190 + 110, cy: 190 + 55, r: 14, color: "#f5a623", label: "غموض يحتاج كشف",  w: 1.5 },
+    { cx: 190 - 60, cy: 190 + 104, r: 10, color: "#fbbf24", label: "ضباب يحتاج إضاءة",   w: 0.9 },
+    { cx: 190 - 130, cy: 190 - 65, r: 16, color: "#00d0ff", label: "بصيرة صادقة",w: 1.1 },
+    { cx: 190 - 28, cy: 190 - 148, r: 12, color: "#ff0055", label: "خداع مستتر",   w: 2.0 },
+    { cx: 190 + 118, cy: 190 - 100, r: 11, color: "#ff0044", label: "حدود مخترقة", w: 1.7 },
   ];
 
 
@@ -1397,7 +1401,7 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
       </svg>
 
       <div className="metric-card metric-card--health">
-        <p className="metric-card-label">صحتك الداخلية</p>
+        <p className="metric-card-label">مستوى بصيرتك</p>
         <div className="metric-card-values">
           <span className="metric-card-value">٧٨</span>
           <span className="metric-card-text">/ ١٠٠</span>
@@ -1413,10 +1417,10 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
       </div>
 
       <div className="metric-card metric-card--drain">
-        <p className="metric-card-label metric-card-label--alert">نزيف طاقة</p>
+        <p className="metric-card-label metric-card-label--alert">مناطق الضباب</p>
         <div className="metric-card-values metric-card-values--inline">
           <span className="metric-card-value metric-card-value--small">٣</span>
-          <span className="metric-card-text">مصادر الاستنزاف</span>
+          <span className="metric-card-text">مصادر الخداع</span>
         </div>
         <div className="metric-card-dots">
           {[1, 2, 3].map((dot) => (
@@ -1607,7 +1611,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             </motion.div>
 
             <motion.h1 variants={fadeUp} className="headline-static hero-headline">
-              <span ref={headlineLineRef} className="headline-line headline-glow">أنت لست مرهقاً</span>
+              <span ref={headlineLineRef} className="headline-line headline-glow">أنت لست ضائعاً</span>
               <span className="headline-inline-row mt-4">
                 <span className="headline-subline">أنت فقط</span>
                 <RotatingWord />
@@ -1617,7 +1621,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             <motion.div variants={fadeUp} className="hero-divider" />
 
             <motion.p variants={fadeUp} className={`hero-body ${hideCta ? 'hero-body--no-cta' : ''}`}>
-              هدئ السرعة. لست بحاجة للركض والمزيد من السعي، بل إلى المزيد من الوضوح. مشكلتك ليست في كثرة المهام بل في ضبابية الطريق. نحول شتات ذهنك إلى لوحة بصرية واحدة تكشف لك جذور استنزافك، وترسم لك خريطة العودة لقلبك واستعادة السيطرة على طاقتك.
+              توقف. مشكلتك ليست التعب — مشكلتك أنك ماشي في ضباب وفاكر ده هو الطريق. حولك أوهام متنكرة في شكل حقائق، وعلاقات متنكرة في شكل حب. نحن نكشف لك ما خفي عنك — نُنير لك الحقيقة عن نفسك وعن مَن حولك، لتأخذ قراراتك بعلم لا بوهم.
             </motion.p>
 
             <div className={`hero-cta-container ${hideCta ? 'hidden md:hidden max-md:block' : ''}`}>
@@ -1716,7 +1720,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                 <Zap className="warp-icon" />
               </div>
               <p className="warp-text">
-                جاري تحليل وعيك...
+                جاري كشف الحقيقة...
               </p>
             </motion.div>
           </motion.div>
