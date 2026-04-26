@@ -935,7 +935,6 @@ const HERO_STYLES = `
       overflow-x: hidden;
       width: 100%;
       min-height: 100vh;
-      min-height: 100dvh;
       overflow-y: visible;
       transform-style: flat;
     }
@@ -947,7 +946,6 @@ const HERO_STYLES = `
       padding: 8rem 1rem 6rem;
       width: 100%;
       min-height: 100vh;
-      min-height: 100dvh;
       max-width: 100vw;
       box-sizing: border-box;
       overflow-x: hidden;
@@ -1076,6 +1074,14 @@ const HERO_STYLES = `
 
     /* Mobile Performance Optimizations */
     @media (max-width: 1024px) {
+      .hero-root *,
+      .hero-root *::before,
+      .hero-root *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+
       .hero-command-bar, 
       .pulse-badge, 
       .trust-pill, 
