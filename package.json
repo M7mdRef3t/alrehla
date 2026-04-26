@@ -164,7 +164,7 @@
     "lightningcss-linux-x64-musl": "1.30.2"
   },
   "overrides": {
-    "react": "$react",
-    "react-dom": "$react-dom"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }
