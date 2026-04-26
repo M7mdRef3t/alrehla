@@ -2,6 +2,7 @@
 
 import type { FC } from "react";
 import { ArrowRight, ShieldCheck, ScrollText } from "lucide-react";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { privacyCopy, termsCopy } from "@/copy/legal";
@@ -124,7 +125,7 @@ export const LegalPage: FC<LegalPageProps> = ({ type }) => {
           className="mt-24 pt-12 border-t border-white/10 text-center"
         >
           <p className="text-teal-400 font-bold text-lg mb-2">{copy.contact}</p>
-          <p className="text-slate-500 text-sm">شكرًا لثقتك في الرحلة.</p>
+          <p className="text-slate-500 text-sm flex items-center justify-center gap-1">شكرًا لثقتك في <AlrehlaWordmark height={12} color="currentColor" />.</p>
         </motion.footer>
 
         <div className="h-24" />

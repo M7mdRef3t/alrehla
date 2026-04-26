@@ -36,7 +36,7 @@ export const DiagnosisSection: FC<DiagnosisSectionProps> = ({
   onShowScripts
 }) => {
   return (
-    <div className="flex flex-col gap-10 w-full animate-in fade-in slide-in-from-bottom-10 duration-1000">
+    <div className="flex flex-col gap-12 w-full animate-in fade-in slide-in-from-bottom-10 duration-1000">
       <div ref={shareCardRef}>
         <ResultVerdict 
           commandScore={result.commandScore}

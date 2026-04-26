@@ -2,6 +2,7 @@
 
 import type { FC } from "react";
 import { AlrehlaLogo } from "./logo/AlrehlaLogo";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 import { SocialLinks } from '@/modules/growth/SocialLinks';
 
 interface PlatformFooterProps {
@@ -207,10 +208,10 @@ export const PlatformFooter: FC<PlatformFooterProps> = ({
         {/* Bottom text */}
         <div className="platform-footer-bottom">
           <span className="platform-footer-tagline">
-            الرحلة — ارتفع فوق حياتك، شوف الصورة الكاملة، واتحرك بوعي.
+            <AlrehlaWordmark height={14} color="#64748b" className="inline-block mx-1" /> — ارتفع فوق حياتك، شوف الصورة الكاملة، واتحرك بوعي.
           </span>
           <p className="platform-footer-copy">
-            © {year} الرحلة — جميع الحقوق محفوظة
+            © {year} <AlrehlaWordmark height={12} color="#475569" className="inline-block mx-1" /> — جميع الحقوق محفوظة
           </p>
         </div>
 

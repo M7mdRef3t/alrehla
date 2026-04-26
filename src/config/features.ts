@@ -36,7 +36,7 @@ export interface FeatureFlagDefinition {
 export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   {
     key: "dawayir_map",
-    label: "خريطة الدوائر",
+    label: "خريطة الرحلة",
     description: "تشغيل/إيقاف خريطة العلاقات الأساسية",
     group: "Core"
   },

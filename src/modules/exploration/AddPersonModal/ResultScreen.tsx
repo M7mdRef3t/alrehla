@@ -192,15 +192,15 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   };
 
   return (
-    <div className={`w-full relative z-10 flex flex-col items-center justify-start px-4 ${summaryOnly ? "mt-8" : "py-12 md:py-20"}`}>
+    <div className={`w-full relative z-10 flex flex-col items-center justify-start px-4 pb-28 ${summaryOnly ? "mt-8" : "py-12 md:py-20"}`}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 30, filter: "blur(15px)" }}
         animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-2xl space-y-8 mx-auto"
+        className="w-full max-w-2xl space-y-12 mx-auto"
       >
         {/* Section 1: The Diagnostic Verdict */}
-        <div id="diagnosis" className="space-y-8">
+        <div id="diagnosis" className="space-y-10">
           <DiagnosisSection 
             shareCardRef={shareCardRef}
             result={result}
@@ -220,8 +220,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
         {!summaryOnly && (
           <div id="roadmap" className="space-y-10 pt-8 border-t border-[var(--page-border-soft)]">
             <div className="text-right">
-              <h3 className="text-2xl font-black text-[var(--consciousness-text)] mb-2">🎯 طريقك للتعافي</h3>
-              <p className="text-sm text-[var(--consciousness-text-muted)] font-medium tracking-wide">خطوات عملية لفك الارتباط واستعادة توازنك</p>
+              <h3 className="text-2xl font-black text-white mb-2">🎯 طريقك للتعافي</h3>
+              <p className="text-sm text-slate-400 font-medium tracking-wide">خطوات عملية لفك الارتباط واستعادة توازنك</p>
             </div>
             <RoadmapSection 
               addedNode={addedNode}
@@ -248,8 +248,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
         {!summaryOnly && (
           <div id="tools" className="space-y-10 pt-8 border-t border-[var(--page-border-soft)]">
             <div className="text-right">
-              <h3 className="text-2xl font-black text-[var(--consciousness-text)] mb-2">🎒 حقيبة الرحلة</h3>
-              <p className="text-sm text-[var(--consciousness-text-muted)] font-medium tracking-wide">أدوات مساعدة وأعراض محتملة للتعامل الواعي</p>
+              <h3 className="text-2xl font-black text-white mb-2">🎒 حقيبة الرحلة</h3>
+              <p className="text-sm text-slate-400 font-medium tracking-wide">أدوات مساعدة وأعراض محتملة للتعامل الواعي</p>
             </div>
             <ToolsSection 
               summaryOnly={summaryOnly}
@@ -268,17 +268,17 @@ export const ResultScreen: FC<ResultScreenProps> = ({
         )}
 
         {/* Sticky Command Bar */}
-        <div className="sticky bottom-4 left-0 right-0 z-50 mt-12 p-3 rounded-[2rem] bg-[var(--consciousness-background)]/80 backdrop-blur-3xl border border-[var(--page-border)] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] flex flex-col gap-3">
+        <div className="sticky bottom-0 left-0 right-0 z-50 mt-16 p-4 rounded-2xl bg-[var(--consciousness-background)]/90 backdrop-blur-3xl border border-[var(--page-border)] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] flex flex-col gap-4">
           
           {isEmergency && (
-            <div className="rounded-[1.5rem] border border-rose-500/40 bg-rose-950/40 p-5 text-right relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="rounded-sm border border-rose-500/40 bg-rose-950/40 p-5 text-right relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-[50px] pointer-events-none" />
               <div className="relative z-10 flex flex-col gap-1 items-center sm:items-start text-center sm:text-right">
                 <p className="text-lg font-black text-rose-300 flex items-center gap-2">
                   <ShieldAlert className="w-5 h-5 text-[var(--consciousness-critical)]" />
                   سلامتك أولاً (مسار طوارئ)
                 </p>
-                <p className="text-xs text-rose-200/80 font-bold max-w-sm">
+                <p className="text-xs text-rose-200 font-bold max-w-sm">
                   هذا الكيان يشكل خطراً مباشراً على استقرارك. استعن بغرفة الطوارئ أو خطوط الدعم.
                 </p>
               </div>
@@ -312,12 +312,12 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                 onOpenMission?.(addedNodeId);
                 onClose?.();
               }}
-              className="flex-1 rounded-2xl bg-[var(--consciousness-primary)] text-[var(--ds-color-space-deep)] px-6 py-4 sm:py-5 text-lg font-black hover:opacity-90 hover:shadow-[0_0_30px_var(--ds-color-primary-glow)] active:scale-95 transition-all shadow-[0_10px_30px_rgba(45,212,191,0.2)] tracking-widest uppercase relative overflow-hidden group"
+              className="flex-1 rounded-sm bg-[var(--consciousness-primary)] text-[var(--ds-color-space-deep)] px-6 py-4 sm:py-5 text-lg font-black hover:opacity-90 hover:shadow-[0_0_30px_var(--ds-color-primary-glow)] active:scale-95 transition-all shadow-[0_10px_30px_rgba(45,212,191,0.2)] relative overflow-hidden group font-alexandria"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
               <span className="relative z-10 flex items-center justify-center gap-2">
                 {isEmergency ? `🛡️ ابدأ حماية نفسك من ${displayName}` : `🚀 ابدأ مسار التغيير مع ${displayName}`}
-                {ctaStatus && <span className="text-xs font-medium opacity-80">({ctaStatus})</span>}
+                {ctaStatus && <span className="text-xs font-medium">({ctaStatus})</span>}
               </span>
             </button>
 
@@ -325,14 +325,14 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               <button
                 type="button"
                 onClick={() => onClose?.(addedNodeId)}
-                className="w-full sm:w-48 shrink-0 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 sm:py-5 text-sm font-black text-slate-300 hover:bg-white/10 hover:text-white active:scale-95 transition-all uppercase tracking-widest"
+                className="w-full sm:w-48 shrink-0 rounded-sm border border-white/10 bg-white/[0.03] px-4 py-4 sm:py-5 text-sm font-black text-slate-300 hover:bg-white/10 hover:text-white active:scale-95 transition-all font-tajawal"
               >
                 رجوع للخريطة
               </button>
             )}
             {isForcedCtaMode && (
-              <div className="hidden sm:flex w-48 shrink-0 items-center justify-center border border-white/5 rounded-2xl bg-black/20">
-                 <p className="text-[9px] text-slate-600 text-center font-black tracking-[0.2em] uppercase">مسار_إلزامي</p>
+              <div className="hidden sm:flex w-48 shrink-0 items-center justify-center border border-white/5 rounded-sm bg-black/20">
+                 <p className="text-[9px] text-slate-600 text-center font-black font-tajawal">مسار_إلزامي</p>
               </div>
             )}
           </div>
@@ -364,5 +364,3 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     </div>
   );
 };
-
-

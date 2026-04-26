@@ -23,10 +23,10 @@ export const ResultVerdict: FC<ResultVerdictProps> = ({
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-12 flex flex-col items-center"
+        className="mb-16 flex flex-col items-center"
       >
         {/* Sovereignty Gauge - High Fidelity */}
-        <div className="relative w-72 h-36 mb-8 flex items-center justify-center">
+        <div className="relative w-72 h-36 mb-10 flex items-center justify-center">
            {/* Ambient Glow */}
            <motion.div 
              className="absolute inset-0 rounded-full blur-[60px] opacity-20 pointer-events-none"
@@ -80,22 +80,12 @@ export const ResultVerdict: FC<ResultVerdictProps> = ({
                 transition={{ delay: 0.5 }}
                 className="relative"
               >
-                <motion.span 
-                  animate={{ 
-                    textShadow: [
-                      "0 0 10px rgba(45,212,191,0.5)",
-                      "2px 0 2px rgba(244,63,94,0.5), -2px 0 2px rgba(45,212,191,0.5)",
-                      "0 0 10px rgba(45,212,191,0.5)"
-                    ]
-                  }}
-                  transition={{ duration: 0.2, repeat: Infinity, repeatDelay: 3 }}
-                  className="text-6xl font-black text-white"
-                >
+                <span className="text-6xl font-black text-white font-alexandria">
                   {commandScore}
-                </motion.span>
+                </span>
                 <span className="text-xl text-teal-400 font-bold ml-1">%</span>
               </motion.div>
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-teal-500/50 mt-2">Personal Sovereignty</span>
+              <span className="text-[10px] font-black text-teal-500 mt-3 font-tajawal tracking-widest">السيادة الشخصية</span>
            </div>
         </div>
 
@@ -105,13 +95,13 @@ export const ResultVerdict: FC<ResultVerdictProps> = ({
           transition={{ delay: 0.8 }}
           className="space-y-4"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-[10px] font-black text-teal-400 tracking-[0.3em] uppercase">
-            الخلاصة الاستراتيجية
+          <span className="inline-block px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-xs font-bold text-teal-400 font-tajawal">
+            الخلاصة
           </span>
-          <h2 className="text-4xl sm:text-5xl font-black text-[var(--consciousness-text)] leading-tight tracking-tight px-4 blur-none">
+          <h2 className="text-4xl sm:text-5xl font-black text-white leading-tight tracking-tight px-4">
             {isEmotionalPrisoner ? stateLabel : title}
           </h2>
-          <p className="text-xl text-[var(--consciousness-text-muted)] font-medium max-w-lg mx-auto leading-relaxed">
+          <p className="text-xl text-slate-300 font-medium max-w-lg mx-auto leading-relaxed mt-2">
             {goalLabel}
           </p>
         </motion.div>

@@ -1,7 +1,8 @@
 import type { FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock } from "lucide-react";
+import { Lock, Sparkles } from "lucide-react";
 import { FEATURE_FLAGS, type FeatureFlagKey } from "@/config/features";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 
 interface FeatureLockedModalProps {
   isOpen: boolean;
@@ -47,20 +48,33 @@ export const FeatureLockedModal: FC<FeatureLockedModalProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 16, scale: 0.96 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md rounded-3xl bg-white p-6 text-center space-y-4"
+          className="w-full max-w-sm rounded-[2.5rem] p-8 text-center space-y-6 relative overflow-hidden glass-premium border border-white/10"
         >
-          <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
-            <Lock className="w-6 h-6" />
+          <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
+          
+          <div className="w-16 h-16 rounded-3xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto border border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+            <Lock className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900">{feature.label}</h2>
-          <p className="text-sm text-slate-600">{message}</p>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full rounded-full bg-slate-900 text-white py-3 text-sm font-semibold hover:bg-slate-800"
-          >
-            تمام
-          </button>
+
+          <div>
+            <AlrehlaWordmark height={16} className="text-amber-500/40 mb-3" />
+            <h2 className="text-2xl font-black text-white tracking-tight">{feature.label}</h2>
+            <p className="text-sm text-slate-400 mt-2 leading-relaxed">{message}</p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 py-4 text-sm font-black hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-900/20 flex items-center justify-center gap-2"
+            >
+              فهمت الرحلة
+            </button>
+            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest flex items-center justify-center gap-1.5">
+              <Sparkles className="w-3 h-3" />
+              تحديث قادم من لوحة التحكم
+            </p>
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>

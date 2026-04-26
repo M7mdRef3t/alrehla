@@ -71,7 +71,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "مركز القيادة (Alpha)",
     items: [
-      { id: "command", label: "القيادة والنبض الاستباقي", icon: <ShieldCheck className="h-4 w-4 text-amber-500" /> },
+      { id: "command", label: "غرفة القيادة", icon: <ShieldCheck className="h-4 w-4 text-amber-500" /> },
       { id: "exec-overview", label: "نبض الإبداع والمنظومة", icon: <Sparkles className="h-4 w-4 text-rose-400" /> },
       { id: "flow-map", label: "خريطة التدفق الحي", icon: <Workflow className="h-4 w-4 text-sky-400" /> },
       { id: "dawayir-live", label: "دوائر لايف (Live)", icon: <Zap className="h-4 w-4 text-amber-400" /> },
@@ -133,7 +133,7 @@ export const NAV_GROUPS: NavGroup[] = [
 export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
 
 export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
-  command: "القيادة والنبض الاستباقي",
+  command: "غرفة القيادة",
   entity: "كيان الرحلة (DNA)",
   "governance-ledger": "سجل الحوكمة",
   "design-lab": "مختبر التصميم",

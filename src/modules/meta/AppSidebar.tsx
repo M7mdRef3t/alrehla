@@ -63,6 +63,7 @@ import { useLayoutState } from "@/modules/map/store/layout.store";
 import type { RecoveryPlanOpenWith } from '@/modules/map/dawayirIndex';
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { AlrehlaIcon } from "./logo/AlrehlaIcon";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 import { Z_LAYERS } from "@/config/zIndices";
 import { trackingService } from "@/domains/journey";
 import { HealthBar } from "./HealthBar";
@@ -937,9 +938,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 className="flex items-center gap-2 group transition-all"
               >
                 <AlrehlaIcon size={32} className="group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-sky-500 dark:from-teal-400 dark:to-sky-400">
-                  الرحلة
-                </span>
+                <AlrehlaWordmark height={18} color="white" className="opacity-90 group-hover:opacity-100 transition-opacity" />
               </button>
               <span className="text-[9px] text-slate-500 tracking-[0.2em] font-medium uppercase">
                 ذكاء القيادة
@@ -1272,9 +1271,7 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
                     className="flex items-center gap-2 transition-all"
                   >
                     <AlrehlaIcon size={36} />
-                    <span className="text-base font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-sky-400">
-                      الرحلة
-                    </span>
+                    <AlrehlaWordmark height={20} color="white" />
                   </button>
                   <span className="text-[10px] text-slate-600 tracking-[0.25em] font-medium uppercase">
                     Command Intelligence

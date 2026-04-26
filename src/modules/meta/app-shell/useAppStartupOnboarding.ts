@@ -8,6 +8,7 @@ import type { AppScreen } from "@/navigation/navigationMachine";
 import type { AppOverlayFlag } from "@/domains/consciousness/store/overlay.store";
 import type { LandingIntent } from "@/domains/journey/store/journey.store";
 import { ensureValidJourneyState } from "@/utils/journeyState";
+import { isAdminPath } from "@/services/navigation";
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
@@ -98,6 +99,8 @@ export function useAppStartupOnboarding({
   useEffect(() => {
     const windowRef = getWindowOrNull();
     if (!windowRef) return;
+
+    if (isAdminPath()) return;
 
     const bootAction = windowRef.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
     if (!bootAction) return;

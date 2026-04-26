@@ -639,6 +639,10 @@ export const AnalyticsEvents = {
   NODE_ADDED: "node_added",
   AI_CHAT_USED: "ai_chat_used",
   BREATHING_OPENED: "breathing_opened",
+
+  // --- Relationship Map Events ---
+  RELATIONSHIP_MAP_FIRST_VIEWED: "relationship_map_first_viewed",
+  RELATIONSHIP_MAP_ADD_PERSON_CLICKED: "relationship_map_add_person_clicked",
   EMERGENCY_OPENED: "emergency_opened",
 
   // --- Consciousness Architecture (v1.0) Events ---

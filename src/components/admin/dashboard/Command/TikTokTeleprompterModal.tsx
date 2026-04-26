@@ -23,7 +23,33 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
 
   const handleCopy = () => {
     if (!scriptData) return;
-    const fullText = `HOOK:\n${scriptData.hook}\n\nSCRIPT:\n${scriptData.scriptBlocks.map(b => b.text).join(" ")}\n\nCAPTION:\n${scriptData.caption}`;
+    
+    const blocksText = scriptData.scriptBlocks.map((b, i) => 
+      `SCENE ${i+1}:\n[TEXT]: ${b.text}\n[CUE]: ${b.cue || 'None'}\n[IMAGE PROMPT]: ${b.imagePrompt || 'N/A'}\n[MOTION PROMPT]: ${b.motionPrompt || 'N/A'}`
+    ).join("\n\n");
+
+    const fullText = `
+STUDIO REPORT: ${illusionName}
+PLATFORM: ${scriptData.platform.toUpperCase()}
+FORMAT: ${scriptData.format.toUpperCase()}
+RATIONALE: ${scriptData.rationale}
+
+VISUAL CONCEPT:
+${scriptData.visualConcept}
+
+---------------------------------------------------
+HOOK (First 3 Seconds):
+${scriptData.hook}
+---------------------------------------------------
+
+STORYBOARD / SCRIPT:
+${blocksText}
+
+---------------------------------------------------
+CAPTION & HASHTAGS:
+${scriptData.caption}
+`.trim();
+
     navigator.clipboard.writeText(fullText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -56,8 +82,11 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
                 <div>
                   <h3 className="font-black text-white text-lg tracking-wide flex items-center gap-2">
                     استوديو صناعة المحتوى
-                    <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 text-[10px] font-bold uppercase tracking-widest border border-rose-500/30">
-                      TikTok
+                    <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-[10px] font-bold uppercase tracking-widest border border-cyan-500/30">
+                      {scriptData?.platform ?? 'Social'}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold uppercase tracking-widest border border-amber-500/30">
+                      {scriptData?.format ?? 'Post'}
                     </span>
                   </h3>
                   <p className="text-xs text-slate-400 font-medium">تفكيك وهم: {illusionName}</p>
@@ -92,25 +121,34 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
                     <Sparkles className="w-6 h-6 text-cyan-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
                   </div>
                   <p className="text-cyan-400 font-bold mt-6 text-lg">جاري كتابة السكريبت والتوجيه البصري...</p>
-                  <p className="text-sm text-slate-500 mt-2 font-mono">Applying First Principles. Injecting Truth.</p>
+                  <p className="text-sm text-slate-500 mt-2 font-mono">تطبيق المبادئ الأولى. حقن الحقيقة.</p>
                 </div>
               ) : scriptData ? (
                 <div className="p-6 sm:p-8 max-w-3xl mx-auto space-y-8">
                   
-                  {/* Visual Metadata Panel */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-slate-800/40 border border-indigo-500/20 p-4 rounded-2xl flex items-start gap-3">
-                      <Camera className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="text-xs font-bold text-indigo-300 mb-1 tracking-widest uppercase">التوجيه البصري (Camera & Lighting)</h4>
-                        <p className="text-sm text-slate-300 leading-relaxed font-medium">{scriptData.visualConcept}</p>
+                  {/* Rationale & Visual Metadata */}
+                  <div className="bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 border border-white/10 p-5 rounded-2xl">
+                    <h4 className="text-xs font-bold text-cyan-400 mb-2 tracking-widest uppercase flex items-center gap-2">
+                      <Sparkles className="w-3 h-3" />
+                      لماذا هذا المحتوى؟ (AI Rationale)
+                    </h4>
+                    <p className="text-sm text-slate-200 leading-relaxed font-bold mb-4 italic">
+                      "{scriptData.rationale}"
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-4">
+                      <div className="flex items-start gap-3">
+                        <Camera className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-[10px] font-bold text-indigo-300 mb-1 tracking-widest uppercase">التوجيه البصري (Camera & Lighting)</h4>
+                          <p className="text-xs text-slate-300 leading-relaxed">{scriptData.visualConcept}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-slate-800/40 border border-emerald-500/20 p-4 rounded-2xl flex items-start gap-3">
-                      <Hash className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="text-xs font-bold text-emerald-300 mb-1 tracking-widest uppercase">الكابشن المنصوح بيه</h4>
-                        <p className="text-sm text-slate-300 leading-relaxed font-medium">{scriptData.caption}</p>
+                      <div className="flex items-start gap-3">
+                        <Hash className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-[10px] font-bold text-emerald-300 mb-1 tracking-widest uppercase">الكابشن المنصوح بيه</h4>
+                          <p className="text-xs text-slate-300 leading-relaxed">{scriptData.caption}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -124,7 +162,7 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
                     <div className="mt-6 space-y-8">
                       {/* HOOK */}
                       <div className="group relative">
-                        <div className="absolute -left-4 top-2 text-[10px] font-bold text-rose-500/50 -rotate-90 origin-right uppercase tracking-[0.2em]">HOOK</div>
+                        <div className="absolute -left-4 top-2 text-[10px] font-bold text-rose-500/50 -rotate-90 origin-right uppercase tracking-[0.2em]">HOOK / البداية</div>
                         <p className="text-3xl md:text-5xl font-black text-white leading-[1.3] drop-shadow-lg" style={{ wordSpacing: '0.1em' }}>
                           {scriptData.hook}
                         </p>
@@ -146,6 +184,26 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
                            <p className="text-2xl md:text-3xl font-bold text-slate-200 leading-[1.6]">
                              {block.text}
                            </p>
+
+                           {/* Storyboard Prompts */}
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                             {block.imagePrompt && (
+                               <div className="p-3 rounded-xl bg-slate-800/60 border border-white/5">
+                                 <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-500 uppercase tracking-tighter mb-1">
+                                   <Camera className="w-3 h-3" /> Image Prompt
+                                 </div>
+                                 <p className="text-[10px] text-slate-400 italic line-clamp-2 hover:line-clamp-none transition-all">{block.imagePrompt}</p>
+                               </div>
+                             )}
+                             {block.motionPrompt && (
+                               <div className="p-3 rounded-xl bg-slate-800/60 border border-white/5">
+                                 <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-500 uppercase tracking-tighter mb-1">
+                                   <Video className="w-3 h-3" /> Motion Prompt
+                                 </div>
+                                 <p className="text-[10px] text-slate-400 italic line-clamp-2 hover:line-clamp-none transition-all">{block.motionPrompt}</p>
+                               </div>
+                             )}
+                           </div>
                         </div>
                       ))}
                     </div>

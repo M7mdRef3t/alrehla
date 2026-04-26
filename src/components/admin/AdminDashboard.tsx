@@ -30,8 +30,14 @@ import {
   MapPin,
   PanelRightClose,
   PanelRightOpen,
+  PanelTopClose,
+  PanelTopOpen,
   Bot,
-  Wind
+  Wind,
+  ChevronUp,
+  ChevronDown,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
@@ -147,7 +153,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
-    const allowedRoles = (runtimeEnv.adminAllowedRoles || "admin,owner,superadmin,developer")
+    const allowedRoles = "owner,superadmin"
       .split(",")
       .map((r: string) => r.trim().toLowerCase())
       .filter(Boolean);
@@ -356,13 +362,16 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const [showAccount, setShowAccount] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDesktopSidebarVisible, setIsDesktopSidebarVisible] = useState<boolean>(true);
+  const [isHeaderVisible, setIsHeaderVisible] = useState<boolean>(true);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
     setTab(getTabFromLocation());
-    const storedValue = window.localStorage.getItem(ADMIN_SIDEBAR_VISIBILITY_KEY);
-    setIsDesktopSidebarVisible(storedValue !== "hidden");
+    const storedSidebar = window.localStorage.getItem(ADMIN_SIDEBAR_VISIBILITY_KEY);
+    setIsDesktopSidebarVisible(storedSidebar !== "hidden");
+    const storedHeader = window.localStorage.getItem("admin-dashboard-header-visible");
+    setIsHeaderVisible(storedHeader !== "hidden");
   }, []);
   const authUser = useAuthState((s) => s.user);
   const adminAccess = useAdminState((s) => s.adminAccess);
@@ -454,6 +463,14 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
       isDesktopSidebarVisible ? "visible" : "hidden"
     );
   }, [isDesktopSidebarVisible]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(
+      "admin-dashboard-header-visible",
+      isHeaderVisible ? "visible" : "hidden"
+    );
+  }, [isHeaderVisible]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -646,92 +663,125 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
         )}
 
         <main
-          className={`flex-1 min-w-0 flex flex-col h-screen overflow-hidden transition-[padding,max-width] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+          className={`flex-1 min-w-0 flex flex-col h-screen overflow-hidden transition-[padding,max-width] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] relative ${
             isDesktopSidebarVisible ? "lg:pr-0" : "lg:pr-6"
           }`}
         >
-          <header
-            className={`h-20 lg:h-28 border-b bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl flex items-center justify-between px-6 lg:px-12 flex-shrink-0 z-10 transition-[border-color,background-color,box-shadow] duration-500 shadow-sm ${
-              isDesktopSidebarHidden
-                ? "border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.3)]"
-                : "border-white/5"
-            }`}
-          >
-            <div className="flex items-center gap-4 lg:gap-8">
-              <button
-                type="button"
-                className="lg:hidden p-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-all shadow-sm"
-                onClick={() => setIsSidebarOpen(true)}
+          {!isHeaderVisible && (
+            <div className="absolute top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
+              <motion.button
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="mt-2 p-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-full text-slate-400 hover:text-white backdrop-blur-xl pointer-events-auto transition-all shadow-2xl group"
+                onClick={() => setIsHeaderVisible(true)}
+                title="إظهار الهيدر"
               >
-                <Menu className="w-6 h-6" />
-              </button>
-              {isDesktopSidebarVisible && (
-                <button
-                  type="button"
-                  className="hidden lg:flex items-center justify-center p-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:border-rose-300 dark:hover:border-rose-500/30 hover:shadow-[0_0_15px_rgba(244,63,94,0.15)] transition-all duration-300 group active:scale-95"
-                  onClick={() => setIsDesktopSidebarVisible(false)}
-                  aria-label="إخفاء القائمة الجانبية"
-                  title="إخفاء القائمة الجانبية (Ctrl+B أو [)"
-                >
-                  <PanelRightClose className="w-5 h-5 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:translate-x-1" />
-                </button>
-              )}
-              <div className="flex flex-col">
-                <h2 className="text-xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1 font-sans">
-                  {activeTabItem?.label || "لوحة القيادة"}
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-teal-500 animate-[pulse-ring_2s_infinite]" />
-                  <span className="text-xs font-bold text-teal-600 dark:text-teal-400/80 uppercase tracking-widest hidden sm:inline-block">تم تأسيس اتصال القيادة</span>
+                <PanelTopOpen className="w-5 h-5 transition-transform group-hover:translate-y-0.5" />
+              </motion.button>
+            </div>
+          )}
+
+          <AnimatePresence>
+            {isHeaderVisible && (
+              <motion.header
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                className={`border-b bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl flex items-center justify-between px-6 lg:px-12 flex-shrink-0 z-10 transition-[border-color,background-color,box-shadow] duration-500 shadow-sm overflow-hidden ${
+                  isDesktopSidebarHidden
+                    ? "border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.3)]"
+                    : "border-white/5"
+                }`}
+              >
+                <div className="flex items-center gap-4 lg:gap-8 py-6 lg:py-8">
+                  <button
+                    type="button"
+                    className="lg:hidden p-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-all shadow-sm"
+                    onClick={() => setIsSidebarOpen(true)}
+                  >
+                    <Menu className="w-6 h-6" />
+                  </button>
+                  {isDesktopSidebarVisible && (
+                    <button
+                      type="button"
+                      className="hidden lg:flex items-center justify-center p-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:border-rose-300 dark:hover:border-rose-500/30 hover:shadow-[0_0_15px_rgba(244,63,94,0.15)] transition-all duration-300 group active:scale-95"
+                      onClick={() => setIsDesktopSidebarVisible(false)}
+                      aria-label="إخفاء القائمة الجانبية"
+                      title="إخفاء القائمة الجانبية (Ctrl+B أو [)"
+                    >
+                      <PanelRightClose className="w-5 h-5 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:translate-x-1" />
+                    </button>
+                  )}
+                  
+                  <button
+                    type="button"
+                    className="flex items-center justify-center p-2.5 lg:p-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-xl lg:rounded-2xl text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:border-amber-300 dark:hover:border-amber-500/30 transition-all duration-300 group active:scale-95"
+                    onClick={() => setIsHeaderVisible(false)}
+                    title="إخفاء الهيدر"
+                  >
+                    <PanelTopClose className="w-5 h-5 transition-transform group-hover:-translate-y-0.5" />
+                  </button>
+
+                  <div className="flex flex-col">
+                    <h2 className="text-xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1 font-sans">
+                      {activeTabItem?.label || "لوحة القيادة"}
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-teal-500 animate-[pulse-ring_2s_infinite]" />
+                      <span className="text-xs font-bold text-teal-600 dark:text-teal-400/80 uppercase tracking-widest hidden sm:inline-block">تم تأسيس اتصال القيادة</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-4 lg:gap-6">
-              <CommandHUD />
+                  <div className="flex items-center gap-4 lg:gap-5">
+                    <CommandHUD />
 
-              <div className="h-8 w-px bg-slate-800 hidden lg:block mx-2" />
+                    <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden lg:block mx-1" />
 
-              <AdminTooltip content={isContentEditingEnabled ? "إيقاف التحرير المباشر" : "تفعيل التحرير المباشر في الموقع"} position="bottom">
-                <button
-                  onClick={() => {
-                    const newValue = !isContentEditingEnabled;
-                    toggleContentEditing(newValue);
-                    if (newValue) {
-                      window.open("/", "_blank");
-                    }
-                  }}
-                  className={`p-3 lg:p-4 rounded-xl lg:rounded-2xl border transition-all active:scale-95 group shadow-lg ${isContentEditingEnabled
-                    ? "bg-teal-500/20 border-teal-500/50 text-teal-600 dark:text-teal-300 ring-1 ring-teal-500/30"
-                    : "bg-slate-100 dark:bg-[#111827] border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600"
-                    }`}
-                >
-                  <Pencil className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
-                </button>
-              </AdminTooltip>
+                    <AdminTooltip content={isContentEditingEnabled ? "إيقاف التحرير المباشر" : "تفعيل التحرير المباشر في الموقع"} position="bottom">
+                      <button
+                        onClick={() => {
+                          const newValue = !isContentEditingEnabled;
+                          toggleContentEditing(newValue);
+                          if (newValue) {
+                            window.open("/", "_blank");
+                          }
+                        }}
+                        className={`p-3 lg:p-4 rounded-xl lg:rounded-2xl border transition-all active:scale-95 group shadow-lg ${isContentEditingEnabled
+                          ? "bg-teal-500/20 border-teal-500/50 text-teal-600 dark:text-teal-300 ring-1 ring-teal-500/30"
+                          : "bg-slate-100 dark:bg-[#111827] border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600"
+                          }`}
+                      >
+                        <Pencil className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
+                      </button>
+                    </AdminTooltip>
 
-              <AdminTooltip content="المساعد الإداري (Copilot): استعلم سريعًا عن حالة المنصة والأرقام والشكاوى." position="bottom">
-                <button
-                  onClick={() => useAdminState.getState().setCopilotOpen(true)}
-                  className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-teal-300 dark:hover:border-teal-500/50 transition-all active:scale-95 group shadow-lg"
-                >
-                  <Bot className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </button>
-              </AdminTooltip>
+                    <AdminTooltip content="المساعد الإداري (Copilot): استعلم سريعًا عن حالة المنصة والأرقام والشكاوى." position="bottom">
+                      <button
+                        onClick={() => useAdminState.getState().setCopilotOpen(true)}
+                        className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-teal-300 dark:hover:border-teal-500/50 transition-all active:scale-95 group shadow-lg"
+                      >
+                        <Bot className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                      </button>
+                    </AdminTooltip>
 
-              <AdminTooltip content="إدارة بيانات النظام (Data Management): لوحة للنسخ الاحتياطي (JSON/PDF) ومزامنة البيانات محليًا أو سحابيًا." position="bottom">
-                <button
-                  onClick={() => setShowAccount(true)}
-                  className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all active:scale-95 group shadow-lg"
-                >
-                  <Database className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                </button>
-              </AdminTooltip>
+                    <AdminTooltip content="إدارة بيانات النظام (Data Management): لوحة للنسخ الاحتياطي (JSON/PDF) ومزامنة البيانات محليًا أو سحابيًا." position="bottom">
+                      <button
+                        onClick={() => setShowAccount(true)}
+                        className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all active:scale-95 group shadow-lg"
+                      >
+                        <Database className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                      </button>
+                    </AdminTooltip>
 
-              <div className="h-8 w-px bg-slate-800 hidden lg:block mx-1" />
-              <ThemeToggle />
-            </div>
-          </header>
+                    <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden lg:block mx-1" />
+                    
+                    <ThemeToggle />
+                  </div>
+                </motion.header>
+              )}
+            </AnimatePresence>
 
           <div className="flex-1 overflow-y-auto p-6 lg:p-12 custom-scrollbar relative bg-[#030712] inset-shadow-sm transition-colors duration-500">
             {/* The Architectural Grid Pattern */}

@@ -22,6 +22,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { AlrehlaIcon } from "./logo/AlrehlaIcon";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 import { useAuthState, getEffectiveRoleFromState } from "@/domains/auth/store/auth.store";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useNotificationState } from "@/domains/notifications/store/notification.store";
@@ -304,9 +305,13 @@ export const PlatformHeader = memo(function PlatformHeader({
              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
            />
         </motion.div>
-        <span className={`font-black tracking-tight text-white transition-all duration-500 ${isMinimal || scrolled ? 'text-lg' : 'text-xl'}`} style={{ fontFamily: "var(--font-display)" }}>
-          <span className="group-hover:text-[var(--horus-gold,#C9A84C)] transition-colors duration-500">الرحلة</span>
-        </span>
+        <div className="flex items-center">
+          <AlrehlaWordmark 
+            height={isMinimal || scrolled ? 17 : 22} 
+            className="transition-all duration-500 group-hover:opacity-80" 
+            color="white"
+          />
+        </div>
       </button>
 
       {/* Spirit Line - The Glowing Border */}

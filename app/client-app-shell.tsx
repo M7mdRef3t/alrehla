@@ -263,15 +263,10 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
     const originalSetAttributeNS = Element.prototype.setAttributeNS;
 
     const patchedSetAttribute = function (this: Element, name: string, value: string) {
-      if (
-        this instanceof SVGCircleElement &&
-        name === "r" &&
-        isInvalidSvgRadiusValue(String(value))
-      ) {
-        // Silenced: SVG radius is patched to 0 automatically — no action needed in dev
-        // (geometry NaN/undefined values are sanitized upstream in the rendering pipeline)
-
-        return originalSetAttribute.call(this, name, "0");
+      if (this instanceof SVGCircleElement && (name === "r" || name === "cx" || name === "cy") && isInvalidSvgRadiusValue(String(value))) {
+        // Silenced: Invalid SVG attributes are patched to 0/100 automatically — no action needed in dev
+        const fallback = name === "r" ? "0" : "100";
+        return originalSetAttribute.call(this, name, fallback);
       }
 
       return originalSetAttribute.call(this, name, value);
@@ -283,10 +278,9 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
       name: string,
       value: string
     ) {
-      if (this instanceof SVGCircleElement && name === "r" && isInvalidSvgRadiusValue(String(value))) {
-        // Silenced: SVG radius is patched to 0 automatically — no action needed in dev
-
-        return originalSetAttributeNS.call(this, namespace, name, "0");
+      if (this instanceof SVGCircleElement && (name === "r" || name === "cx" || name === "cy") && isInvalidSvgRadiusValue(String(value))) {
+        const fallback = name === "r" ? "0" : "100";
+        return originalSetAttributeNS.call(this, namespace, name, fallback);
       }
 
       return originalSetAttributeNS.call(this, namespace, name, value);

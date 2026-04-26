@@ -35,6 +35,11 @@ const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 
 function getInitialScreen(): AppShellScreen {
   if (typeof window === "undefined") return "landing";
+
+  // Admin routes have their own navigation; don't let stale boot actions
+  // set an initial screen that would hide the admin dashboard.
+  if (window.location.pathname.startsWith("/admin")) return "landing";
+
   const bootAction = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
   if (!bootAction) return "landing";
   

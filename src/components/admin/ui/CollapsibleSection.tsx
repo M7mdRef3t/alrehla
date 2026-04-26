@@ -12,6 +12,7 @@ export function CollapsibleSection({
   children,
   headerColors = "border-white/10 bg-white/5 text-slate-300",
   headerAction,
+  needsAttention = false,
 }: {
   title: string;
   icon?: React.ReactNode;
@@ -22,6 +23,7 @@ export function CollapsibleSection({
   children: React.ReactNode;
   headerColors?: string;
   headerAction?: React.ReactNode;
+  needsAttention?: boolean;
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
@@ -55,6 +57,12 @@ export function CollapsibleSection({
           )}
         </div>
         <div className="flex items-center gap-3">
+          {needsAttention && !expanded && (
+            <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 animate-pulse">
+              <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
+              <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest">مطلوب تدخل</span>
+            </div>
+          )}
           {badge}
           {expanded ? <ChevronUp className="w-4 h-4 opacity-70" /> : <ChevronDown className="w-4 h-4 opacity-70" />}
         </div>

@@ -15,7 +15,7 @@ export const ScientificDiagnosticHUD: React.FC<ScientificDiagnosticHUDProps> = (
   personName
 }) => {
   const [scanProgress, setScanProgress] = useState(0);
-  const [statusText, setStatusText] = useState("بدء الربط العصبي...");
+  const [statusText, setStatusText] = useState("بنجمع البيانات...");
 
   useEffect(() => {
     // Initial Radar Ping
@@ -24,17 +24,17 @@ export const ScientificDiagnosticHUD: React.FC<ScientificDiagnosticHUDProps> = (
     // Start Scanning Sound
     soundManager.playScanning();
     
-    const duration = 2800; // 2.8 seconds of cinematic glory
+    const duration = 1800; // 1.8 seconds — fast and purposeful
     const interval = 50;
     const steps = duration / interval;
     let currentStep = 0;
 
     const statuses = [
-      `رصد نواة ${personName}...`,
-      "مسح البنية العلائقية...",
-      "تحليل البصمة الشعورية...",
-      "حساب مدى الأمان...",
-      "مزامنة بيانات القيادة..."
+      `بنتعرف على ${personName}...`,
+      "بنفهم طبيعة العلاقة...",
+      "بنحلل مشاعرك...",
+      "بنحسب مدى الأمان...",
+      "بنجهزلك النتيجة..."
     ];
 
     const timer = setInterval(() => {
@@ -56,27 +56,12 @@ export const ScientificDiagnosticHUD: React.FC<ScientificDiagnosticHUDProps> = (
 
   return (
     <div className="flex flex-col h-full bg-[var(--consciousness-background)] text-[var(--ds-theme-text-primary)] overflow-hidden font-sans select-none relative items-center justify-center p-8">
-      {/* Background Matrix-like Binary Stream */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none overflow-hidden font-mono text-[8px] leading-none select-none flex flex-wrap gap-1 p-2">
-        {Array.from({ length: 400 }).map((_, i) => (
-          <motion.span 
-            key={i}
-            animate={{ opacity: [0.2, 1, 0.2] }}
-            transition={{ duration: Math.random() * 3 + 2, repeat: Infinity }}
-          >
-            {Math.random() > 0.5 ? "1" : "0"}
-          </motion.span>
-        ))}
-      </div>
-
-      {/* Background Grid */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       
-      {/* Scan Beam */}
+      {/* Subtle pulse effect */}
       <motion.div 
-        className="absolute inset-x-0 h-[2px] bg-teal-400 opacity-40 z-10 shadow-[0_0_30px_#2dd4bf]"
+        className="absolute inset-x-0 h-[1px] bg-teal-400/10 z-10"
         animate={{ top: ["0%", "100%", "0%"] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
       />
 
       <motion.div 
@@ -90,45 +75,37 @@ export const ScientificDiagnosticHUD: React.FC<ScientificDiagnosticHUDProps> = (
         }}
         className="text-center space-y-10 flex flex-col items-center relative z-20"
       >
-        {/* Core HUD Element */}
-        <div className="relative w-48 h-48 flex items-center justify-center">
+        {/* Core HUD Element — simplified */}
+        <div className="relative w-40 h-40 flex items-center justify-center">
           {/* Outer Ring */}
           <motion.div 
             animate={{ rotate: 360 }}
             transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-0 rounded-full border border-teal-500/10 border-t-teal-400/60 shadow-[0_0_15px_rgba(45,212,191,0.1)]"
+            className="absolute inset-0 rounded-full border border-teal-500/15 border-t-teal-400/50"
           />
-          {/* Middle Dotted Ring */}
+          {/* Inner Ring */}
           <motion.div 
             animate={{ rotate: -360 }}
             transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-4 rounded-full border-2 border-dashed border-teal-500/20"
+            className="absolute inset-4 rounded-full border border-dashed border-teal-500/10"
           />
-          {/* Hexagon/Geometric element */}
+          {/* Pulse */}
           <motion.div 
-             className="absolute inset-8 border border-teal-500/30 opacity-50"
-             animate={{ rotate: 45, scale: [0.9, 1.1, 0.9] }}
-             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-             style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}
-          />
-          {/* Inner Pulse */}
-          <motion.div 
-            animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.5, 0.2] }}
+            animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.35, 0.15] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-12 rounded-full bg-teal-500/10 border border-teal-400/40 shadow-[0_0_50px_rgba(45,212,191,0.3)]"
+            className="absolute inset-10 rounded-full bg-teal-500/8 border border-teal-400/20"
           />
-          
-          {/* Percent Text */}
-          <div className="relative z-10 font-mono text-5xl font-black tracking-tighter text-teal-400 drop-shadow-[0_0_15px_rgba(45,212,191,0.8)]">
-            {Math.floor(scanProgress)}<span className="text-xl opacity-50 ml-1">%</span>
+          {/* Percent */}
+          <div className="relative z-10 font-alexandria text-4xl font-black text-teal-400">
+            {Math.floor(scanProgress)}<span className="text-lg text-teal-600 ml-0.5">%</span>
           </div>
         </div>
 
         {/* Status Text Block */}
         <div className="space-y-4 w-64">
-           <div className="flex justify-between text-[10px] uppercase font-black tracking-[0.1em] text-[var(--consciousness-primary)]/40 px-1" dir="rtl">
-             <span>قيد المسح الفحصي</span>
-             <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.5, repeat: Infinity }}>نشط</motion.span>
+           <div className="flex justify-between text-xs font-bold text-teal-500 px-1 font-tajawal" dir="rtl">
+             <span>جاري التحليل</span>
+             <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1, repeat: Infinity }} className="text-teal-400">✦</motion.span>
            </div>
            
            {/* Progress Bar Container */}
@@ -152,19 +129,12 @@ export const ScientificDiagnosticHUD: React.FC<ScientificDiagnosticHUDProps> = (
              </motion.p>
            </AnimatePresence>
 
-           <p className="text-[10px] text-[var(--consciousness-text-muted)] opacity-50 font-mono tracking-widest pt-2" dir="ltr">
-              سلامة الإشارة: 0.984_NX
+           <p className="text-xs text-zinc-500 font-tajawal pt-2" dir="rtl">
+              بنجهزلك النتيجة...
            </p>
         </div>
       </motion.div>
 
-      {/* Decorative corners */}
-      <div className="absolute top-8 left-8 w-8 h-8 border-t-2 border-l-2 border-white/10 rounded-tl-xl" />
-      <div className="absolute top-8 right-8 w-8 h-8 border-t-2 border-r-2 border-white/10 rounded-tr-xl" />
-      <div className="absolute bottom-8 left-8 w-8 h-8 border-b-2 border-l-2 border-white/10 rounded-bl-xl" />
-      <div className="absolute bottom-8 right-8 w-8 h-8 border-b-2 border-r-2 border-white/10 rounded-br-xl" />
     </div>
   );
 };
-
-

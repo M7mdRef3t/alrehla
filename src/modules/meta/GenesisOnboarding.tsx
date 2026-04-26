@@ -6,6 +6,7 @@ import { useKineticSensors } from "@/hooks/useKineticSensors";
 import { supabase } from "@/services/supabaseClient";
 import { isPublicPaymentsEnabled } from "@/config/payments";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 
 interface GenesisOnboardingProps {
   userId: string;
@@ -99,7 +100,7 @@ export function GenesisOnboarding({ userId, onCompleted }: GenesisOnboardingProp
     setSaving(false);
 
     if (rpcError || !data) {
-      setError(rpcError?.message || "تعذر تأكيد بداية الرحلة.");
+      setError(rpcError?.message || <span>تعذر تأكيد بداية <AlrehlaWordmark height={10} color="currentColor" />.</span> as any);
       return;
     }
 
@@ -130,7 +131,7 @@ export function GenesisOnboarding({ userId, onCompleted }: GenesisOnboardingProp
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-8 text-center"
         >
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-teal-300 mb-4">بداية الرحلة</p>
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-teal-300 mb-4">بداية <AlrehlaWordmark height={10} color="currentColor" /></p>
           <h2 className="text-2xl font-black text-white mb-2">{title}</h2>
           <p className="text-sm text-slate-400 mb-8">اسحب الدائرة إلى منطقة الإفلات. هذه أول بصمة وعي في رحلتك.</p>
 

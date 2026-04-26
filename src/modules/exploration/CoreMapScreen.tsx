@@ -1,5 +1,5 @@
 import type { ComponentProps, FC } from "react";
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { MapCanvas } from "../map/MapCanvas";
 import { FamilyTreeView } from "./FamilyTreeView";
@@ -513,32 +513,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     if (selectedNodeId && showPlacementTooltip) dismissPlacementTooltip();
   }, [selectedNodeId, showPlacementTooltip, dismissPlacementTooltip]);
 
-  useEffect(() => {
-    if (mirrorName && activeNodes.length === 0 && !showOnboarding) {
-      const nodeId = useMapState.getState().addNode(
-        mirrorName, 
-        "yellow", 
-        undefined, 
-        goalId, 
-        undefined, 
-        undefined, 
-        undefined, 
-        undefined, 
-        undefined, 
-        undefined, 
-        false, 
-        true
-      );
-      journey.consumeMirrorName();
-      onSelectNode(nodeId);
-      
-      import("@/domains/gamification/store/achievement.store").then(m => {
-        m.useAchievementState.getState().unlock("mirror_discovery");
-      });
+  const firstViewTracked = useRef(false);
 
-      void analyticsService.track(AnalyticsEvents.NODE_ADDED, { label: mirrorName, source: "mirror_hook" });
+  useEffect(() => {
+    if (!firstViewTracked.current && activeNodes.length === 0 && !showOnboarding) {
+      analyticsService.track(AnalyticsEvents.RELATIONSHIP_MAP_FIRST_VIEWED);
+      firstViewTracked.current = true;
     }
-  }, [goalId, activeNodes.length, journey, mirrorName, onSelectNode, showOnboarding]);
+  }, [activeNodes.length, showOnboarding]);
 
   const canCompleteJourneyStep =
     journeyMode &&
@@ -624,6 +606,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     if (sub.tier === "basic" && activeNodes.length >= 4) {
       setIsUpgradeOpen(true);
     } else {
+      analyticsService.track(AnalyticsEvents.RELATIONSHIP_MAP_ADD_PERSON_CLICKED);
       setShowAddPerson(true);
     }
   };

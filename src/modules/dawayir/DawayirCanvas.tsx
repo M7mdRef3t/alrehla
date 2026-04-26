@@ -143,28 +143,17 @@ const MeNodeCenter: FC = memo(() => {
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
       
-      {/* Core "Me" */}
+      {/* Core "Me" — dark fill so it blends with the canvas, teal stroke for identity */}
       <SafeMotionCircle 
         r={6} 
-        fill="var(--space-950)" 
-        stroke="var(--ring-safe)" 
-        strokeOpacity="0.6"
+        fill="#0f172a"
+        stroke="rgba(45, 212, 191, 0.85)" 
         strokeWidth={0.8} 
         animate={{ scale: [1, 1.05, 1] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
       />
       
-      {/* Drop-shadow Text Effect */}
-      <text 
-        textAnchor="middle" 
-        dy="1.2" 
-        fontSize="2.8" 
-        fontWeight="black" 
-        fill="white"
-        className="pointer-events-none drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]"
-      >
-        أنت
-      </text>
+      {/* No text label here — label is rendered as HTML overlay in DawayirCanvas */}
 
       {/* Asset Indicators around the Me Node */}
       {indicators.map((asset) => (
@@ -352,7 +341,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       ) : (
         <circle 
           cx={baseX} cy={baseY} r={4} 
-          fill="var(--space-950)" 
+          fill="#0f172a"
           stroke={node.isAnalyzing ? "var(--soft-teal)" : ringColors[node.ring]} 
           strokeOpacity={node.isAnalyzing ? 0.4 : 1}
           strokeWidth={0.8} 
@@ -742,6 +731,35 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
             </motion.g>
           )}
         </svg>
+
+        {/* ── "أنت" Label — HTML overlay, always centered below the MeNode orb ── */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, calc(7.5vmin + 12px))",
+            pointerEvents: "none",
+            zIndex: 10,
+            textAlign: "center",
+          }}
+        >
+          <span
+            style={{
+              display: "block",
+              fontSize: "clamp(12px, 2vmin, 17px)",
+              fontWeight: 800,
+              color: "rgba(255, 255, 255, 0.95)",
+              letterSpacing: "0.2em",
+              textShadow: "0 0 12px rgba(45, 212, 191, 0.8), 0 0 24px rgba(45, 212, 191, 0.3)",
+              whiteSpace: "nowrap",
+              direction: "rtl",
+            }}
+          >
+            أنت
+          </span>
+        </div>
 
         {/* See and Decide Overlay */}
         <AnimatePresence>

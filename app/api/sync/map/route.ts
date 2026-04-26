@@ -21,21 +21,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Supabase Admin Client not initialized (check env vars)" }, { status: 500 });
     }
 
-    const payload = await req.json();
+    const payload = await req.json().catch(() => null);
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+    }
     
     // Basic validation
     if (!payload.session_id || !payload.nodes) {
       return NextResponse.json({ error: "Invalid payload format" }, { status: 400 });
     }
 
-    // Auto-Diagnosis Logic (Sovereign Engine)
+    // Auto-Diagnosis Logic (Sovereign Engine) - Guarded
     let autoDiagnosis = payload.transformation_diagnosis;
     if (!autoDiagnosis && Array.isArray(payload.nodes)) {
-      const redCount = payload.nodes.filter((n: any) => n.ring === "red").length;
-      const yellowCount = payload.nodes.filter((n: any) => n.ring === "yellow").length;
-      const greenCount = payload.nodes.filter((n: any) => n.ring === "green").length;
-      
-      autoDiagnosis = classifyState("", { red: redCount, yellow: yellowCount, green: greenCount });
+      try {
+        const redCount = payload.nodes.filter((n: any) => n && (n.ring === "red" || n.color === "red")).length;
+        const yellowCount = payload.nodes.filter((n: any) => n && (n.ring === "yellow" || n.color === "yellow")).length;
+        const greenCount = payload.nodes.filter((n: any) => n && (n.ring === "green" || n.color === "green")).length;
+        
+        autoDiagnosis = classifyState("", { red: redCount, yellow: yellowCount, green: greenCount });
+      } catch (diagError) {
+        console.warn("[MapSync API] Auto-diagnosis logic failure:", diagError);
+      }
     }
 
     // Extract expected fields, ignoring potentially dangerous injection attempts
@@ -60,13 +67,29 @@ export async function POST(req: Request) {
       });
 
     if (error) {
-      console.error("[MapSync API] Upsert Error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("[MapSync API] Upsert Error:", {
+        code: error.code,
+        message: error.message,
+        sessionId: payload.session_id,
+        nodesCount: Array.isArray(payload.nodes) ? payload.nodes.length : 0
+      });
+      return NextResponse.json({ 
+        error: "Database ingestion failed", 
+        details: error.message,
+        code: error.code 
+      }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, status: "synced_anonymously" });
   } catch (error: any) {
-    console.error("[MapSync API] Server error:", error.message);
-    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
+    console.error("[MapSync API] CRITICAL_FAILURE:", {
+      message: error?.message,
+      stack: error?.stack,
+      error
+    });
+    return NextResponse.json({ 
+      error: "Sovereign Ingestion Failure", 
+      message: error.message 
+    }, { status: 500 });
   }
 }

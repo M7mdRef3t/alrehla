@@ -25,6 +25,8 @@ import {
 } from '@/modules/action/WeeklyJourneySummary';
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { useJourneyProgress } from "@/domains/journey";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
+import { AlrehlaIcon } from "./logo/AlrehlaIcon";
 
 /*  DASHBOARD SCREEN  غرفة اعات
     */
@@ -249,12 +251,12 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
         transition={{ delay: 0.1, duration: 0.5 }}
       >
         <div className="text-right">
-          <p className="text-[10px] font-black text-teal-500/80 uppercase tracking-[0.25em] mb-3">
-            مساحتك الآمنة
-          </p>
-          <h1 className="cosmic-editorial-900 text-[clamp(2.5rem,6vw,4rem)] mb-4">
-            {greeting}
-          </h1>
+          <div className="flex flex-col gap-2 mb-6">
+            <AlrehlaWordmark height={28} className="text-teal-400 opacity-90" />
+            <h1 className="cosmic-editorial-900 text-[clamp(2.2rem,6vw,3.5rem)] leading-tight text-white">
+              {greeting}
+            </h1>
+          </div>
           <p className="text-sm md:text-base text-white/40 leading-relaxed max-w-[30ch]">خذ نفساً عميقاً.. نحن هنا لترتيب الفوضى.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -416,16 +418,18 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
             className="absolute z-10"
             style={{ left: "50%", top: "42%", transform: "translate(-50%,-50%)" }}
           >
-            <motion.div
-              className="rounded-full"
-              style={{
-                width: 14, height: 14,
-                background: "rgba(45,212,191,0.9)",
-                boxShadow: "0 0 18px rgba(45,212,191,0.6)",
-              }}
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            />
+              <motion.div
+                className="rounded-full flex items-center justify-center"
+                style={{
+                  width: 16, height: 16,
+                  background: "rgba(201, 168, 76, 0.9)",
+                  boxShadow: "0 0 15px rgba(201, 168, 76, 0.6)",
+                }}
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <AlrehlaIcon size={10} className="text-white" />
+              </motion.div>
           </div>
 
           {/* Floating nodes */}

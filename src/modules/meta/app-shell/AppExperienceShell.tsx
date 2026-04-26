@@ -300,7 +300,9 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       screen === "resources" ||
       screen === "settings" ||
       screen === "diagnosis" ||
-      screen === "life-os";
+      screen === "life-os" ||
+      isAdminRoute ||
+      isAnalyticsRoute;
 
     if (isRevenueMode && !isWhitelisted && !goalId && !storedGoalId) {
       void setScreen("goal");

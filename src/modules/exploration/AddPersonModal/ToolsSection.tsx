@@ -69,7 +69,7 @@ export const ToolsSection: FC<ToolsSectionProps> = ({
             {/* HUD Corners */}
             <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-amber-500/20 rounded-br-3xl" />
 
-            <h3 className="text-[10px] font-black text-amber-500/60 mb-8 flex items-center gap-3 uppercase tracking-[0.4em]">
+            <h3 className="text-[10px] font-black text-amber-600 mb-8 flex items-center gap-3 font-tajawal">
               <span className="w-2 h-2 rounded-full bg-amber-500" /> أدواتك المطلوبة
             </h3>
             <ul className="grid grid-cols-1 gap-4 text-sm text-slate-300">
@@ -107,9 +107,9 @@ export const ToolsSection: FC<ToolsSectionProps> = ({
                     {detachmentReasons.map((r, i) => <li key={i} className="flex items-start gap-3"><span className="text-amber-500 mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />{r}</li>)}
                   </ul>
                 ) : (
-                  <p className="font-medium leading-relaxed opacity-90">ورقة مكتوب فيها «ليه بعدت عنهم؟» — تكتبها في خطة التعافي (مرساة الواقع) وتقرأها وقت الضعف لتثبيت عقلك.</p>
+                  <p className="font-medium leading-relaxed">ورقة مكتوب فيها «ليه بعدت عنهم؟» — تكتبها في خطة التعافي (مرساة الواقع) وتقرأها وقت الضعف لتثبيت عقلك.</p>
                 )}
-                <button type="button" onClick={() => setShowRealityPopup(false)} className="mt-6 text-sm font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest border-b border-amber-500/20">إغلاق التلميح</button>
+                <button type="button" onClick={() => setShowRealityPopup(false)} className="mt-6 text-sm font-black text-amber-500 hover:text-amber-400 font-tajawal border-b border-amber-500/20">إغلاق التلميح</button>
               </motion.div>
             )}
             {showDopaminePopup && (
@@ -119,8 +119,8 @@ export const ToolsSection: FC<ToolsSectionProps> = ({
                 className="mt-6 rounded-3xl border border-amber-500/30 bg-amber-950/40 backdrop-blur-3xl p-8 text-right text-lg text-amber-100 shadow-[0_0_50px_rgba(245,158,11,0.1)] relative z-20"
               >
                 <p className="font-black text-amber-400 mb-4 text-xl tracking-tight">بديل الدوبامين</p>
-                <p className="font-medium leading-relaxed opacity-90 text-lg">نشاط ممتع جاهز فوراً لما الفكرة تهاجمك — مثلاً: مشي، مكالمة صديق، لعبة، أو أي شيء يخلّيك تركز في الحاضر وتكسر حلقة التفكير.</p>
-                <button type="button" onClick={() => setShowDopaminePopup(false)} className="mt-6 text-sm font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest border-b border-amber-500/20">إغلاق التلميح</button>
+                <p className="font-medium leading-relaxed text-lg">نشاط ممتع جاهز فوراً لما الفكرة تهاجمك — مثلاً: مشي، مكالمة صديق، لعبة، أو أي شيء يخلّيك تركز في الحاضر وتكسر حلقة التفكير.</p>
+                <button type="button" onClick={() => setShowDopaminePopup(false)} className="mt-6 text-sm font-black text-amber-500 hover:text-amber-400 font-tajawal border-b border-amber-500/20">إغلاق التلميح</button>
               </motion.div>
             )}
           </div>
@@ -129,7 +129,7 @@ export const ToolsSection: FC<ToolsSectionProps> = ({
             {/* Ambient Glow */}
             <div className="absolute bottom-0 right-0 w-32 h-32 bg-rose-500/10 blur-[100px] rounded-full pointer-events-none" />
             
-            <h3 className="text-[10px] font-black text-rose-400/60 mb-8 flex items-center gap-3 uppercase tracking-[0.4em]">
+            <h3 className="text-[10px] font-black text-rose-400 mb-8 flex items-center gap-3 font-tajawal">
               <span className="w-2 h-2 rounded-full bg-rose-500" /> التحديات المتوقعة
             </h3>
             <ul className="space-y-6">

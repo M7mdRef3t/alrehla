@@ -1,6 +1,6 @@
 /**
  * Recovery Plan Email Template (Arabic/Egyptian Direct Response)
- * High-fidelity HTML template for the "Al-Dawayir" onboarding experience.
+ * High-fidelity HTML template for the "Al-Alrehla" onboarding experience.
  */
 
 export interface RecoveryPlanData {

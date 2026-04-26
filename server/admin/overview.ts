@@ -249,7 +249,7 @@ const SCENARIO_LABELS: Record<string, string> = {
   active_battlefield: "استنزاف نشط",
   eggshells: "علاقة مشروطة",
   safe_harbor: "ميناء آمن",
-  fading_echo: "صدى ذاهب"
+  fading_echo: "علاقة منقطعة"
 };
 
 function resolveScenario(node: Record<string, unknown>): string {

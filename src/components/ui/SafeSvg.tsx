@@ -40,14 +40,31 @@ export const toSafeSvgNumber = (value: unknown, fallback: number): number => {
 export const sanitizeCircleMotionState = <T,>(state: T): T => {
   if (!state || typeof state !== "object" || Array.isArray(state)) return state;
   const record = state as Record<string, unknown>;
-  if (!Object.prototype.hasOwnProperty.call(record, "r")) return state;
+  
+  const result = { ...record };
+  
+  if (Object.prototype.hasOwnProperty.call(record, "r")) {
+    const rawR = record.r;
+    result.r = Array.isArray(rawR) 
+      ? rawR.map(v => toSafeSvgRadius(v, 0))
+      : toSafeSvgRadius(rawR, 0);
+  }
 
-  const rawR = record.r;
-  const safeR = Array.isArray(rawR)
-    ? rawR.map((value) => toSafeSvgRadius(value, 0))
-    : toSafeSvgRadius(rawR, 0);
+  if (Object.prototype.hasOwnProperty.call(record, "cx")) {
+    const rawCX = record.cx;
+    result.cx = Array.isArray(rawCX)
+      ? rawCX.map(v => toSafeSvgCoordinate(v, 150))
+      : toSafeSvgCoordinate(rawCX, 150);
+  }
 
-  return { ...record, r: safeR } as T;
+  if (Object.prototype.hasOwnProperty.call(record, "cy")) {
+    const rawCY = record.cy;
+    result.cy = Array.isArray(rawCY)
+      ? rawCY.map(v => toSafeSvgCoordinate(v, 150))
+      : toSafeSvgCoordinate(rawCY, 150);
+  }
+
+  return result as T;
 };
 
 export type SafeMotionCircleProps = ComponentProps<typeof motion.circle> & {

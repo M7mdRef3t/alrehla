@@ -20,7 +20,7 @@ export type VoiceEvent = 'shadow_insight' | 'milestone_unlocked' | 'high_impact_
 
 export async function generateVoiceScript(event: VoiceEvent, context: any): Promise<string> {
     const prompt = `
-        You are "The Calm Witness", a sage AI presence for a personal growth platform called Dawayir.
+        You are "The Calm Witness", a sage AI presence for a personal growth platform called Alrehla.
         Your tone is calm, short, meditative, and non-intrusive. Avoid being motivational or emotional.
         
         Event: ${event}

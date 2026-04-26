@@ -17,6 +17,7 @@ import { safeGetSession } from "./supabaseClient";
  */
 const TEXT_MODEL_FALLBACK_ORDER: string[] = [
   "gemini-2.5-flash",
+  "gemini-3.1-flash-lite-preview",
   "gemini-2.0-flash",
   "gemini-flash-latest"
 ];
@@ -64,10 +65,10 @@ class GeminiClient {
   private serverAvailable = true;
   private unavailableUntil = 0;
   private lastUnavailableToastAt = 0;
-  private readonly generateBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
-  private readonly toolBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
-  private readonly embedBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
-  private readonly streamBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
+  private readonly generateBreaker = new CircuitBreaker({ failureThreshold: 5, cooldownMs: 20_000 });
+  private readonly toolBreaker = new CircuitBreaker({ failureThreshold: 5, cooldownMs: 20_000 });
+  private readonly embedBreaker = new CircuitBreaker({ failureThreshold: 5, cooldownMs: 20_000 });
+  private readonly streamBreaker = new CircuitBreaker({ failureThreshold: 5, cooldownMs: 20_000 });
   private guardHydrated = false;
 
   private ensureGuardHydrated(): void {
@@ -205,8 +206,9 @@ class GeminiClient {
       return null;
     }
     if (!data) {
-      // No response at all = network/server error → mark unavailable
-      console.warn(`[GeminiClient] Browser fetch returned null (network/server error). Feature: ${feature}`);
+      // No response at all = network/server error or Circuit Breaker Open
+      const isBreakerOpen = this.generateBreaker && !this.generateBreaker.canRequest();
+      console.warn(`[GeminiClient] Browser fetch returned null (network/server error or Circuit Open). Feature: ${feature}. BreakerOpen: ${isBreakerOpen}`);
       this.markServerUnavailable();
       recordAIFallback();
       return null;

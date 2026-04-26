@@ -77,7 +77,7 @@ const DEFAULT_CERTIFICATES: Certificate[] = [
   // Depth
   { id: "first-journal", title: "أول كلمة", description: "كتبت أول إدخال في الوثيقة", emoji: "✍️", tier: "bronze", category: "depth", requirement: "إدخال واحد في وثيقة", unlocked: false, unlockedAt: null, progress: 0, maxProgress: 1 },
   { id: "deep-diver", title: "الغوّاص", description: "10 إدخالات في الوثيقة", emoji: "🌊", tier: "silver", category: "depth", requirement: "10 إدخالات", unlocked: false, unlockedAt: null, progress: 0, maxProgress: 10 },
-  { id: "soul-mapper", title: "رسّام الروح", description: "أكملت خريطة الدوائر كاملة", emoji: "🗺️", tier: "gold", category: "depth", requirement: "خريطة دوائر كاملة", unlocked: false, unlockedAt: null, progress: 0, maxProgress: 100 },
+  { id: "soul-mapper", title: "رسّام الروح", description: "أكملت خريطة الرحلة كاملة", emoji: "🗺️", tier: "gold", category: "depth", requirement: "خريطة رحلة كاملة", unlocked: false, unlockedAt: null, progress: 0, maxProgress: 100 },
   { id: "mirror-gazer", title: "ناظر المرآة", description: "استخدمت مرايا 5 مرات", emoji: "🪞", tier: "silver", category: "depth", requirement: "5 جلسات مرايا", unlocked: false, unlockedAt: null, progress: 0, maxProgress: 5 },
 
   // Courage

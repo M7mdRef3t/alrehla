@@ -107,16 +107,26 @@ export async function POST(req: Request) {
         const { error: insertError } = await supabase.from("routing_events").insert(eventData);
 
         if (insertError) {
+            // Handle Duplicate Event
             if (insertError.code === "23505") {
                 return NextResponse.json({ status: "success", duplicate: true });
             }
             
+            // Handle Missing Column Fallback (occurred_at vs created_at)
             if (insertError.code === "42703" && insertError.message.includes("occurred_at")) {
                 console.warn("[Analytics Ingestion] occurred_at missing, retrying with created_at fallback");
                 delete eventData.occurred_at;
                 eventData.created_at = new Date().toISOString();
                 const { error: retryError } = await supabase.from("routing_events").insert(eventData);
                 if (!retryError) return NextResponse.json({ status: "success", fallback: true });
+            }
+
+            // Handle Foreign Key Violation (e.g. lead_id doesn't exist)
+            if (insertError.code === "23503") {
+                console.warn("[Analytics Ingestion] Foreign key violation (likely lead_id). Retrying without lead link.");
+                const { lead_id, ...eventWithoutLead } = eventData;
+                const { error: fkRetryError } = await supabase.from("routing_events").insert(eventWithoutLead);
+                if (!fkRetryError) return NextResponse.json({ status: "success", lead_stitching_failed: true });
             }
 
             console.error(`[Analytics Ingestion] Database Error [${insertError.code}]:`, insertError.message);

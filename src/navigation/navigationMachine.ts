@@ -111,9 +111,6 @@ export function resolveNavigation(input: NavigationInput): NavigationResult {
     return { kind: "redirect", screen: "map" };
   }
 
-  if (target === "oracle-dashboard" && input.isLockedPhaseOne) {
-    return { kind: "redirect", screen: "map" };
-  }
 
   return { kind: "navigate", screen: target };
 }

@@ -307,7 +307,13 @@ export function AppRuntimeControllers({
 
   useEffect(() => {
     if (runtimeEnv.isDev) return;
-    if (screen === "landing" || screen === "enterprise") return;
+    if (
+      screen === "landing" || 
+      screen === "enterprise" || 
+      screen === "oracle-dashboard" || 
+      isAdminRoute
+    ) return;
+    
     if (hasCompletedJourneyOnboarding()) return;
     
     // Wait until map is hydrated before deciding on onboarding
@@ -320,7 +326,7 @@ export function AppRuntimeControllers({
     }
 
     openOverlay("onboarding");
-  }, [openOverlay, screen, isMapHydrated, mapNodeCount]);
+  }, [openOverlay, screen, isMapHydrated, mapNodeCount, isAdminRoute]);
 
   useEffect(() => {
     if (runtimeEnv.isDev) return;

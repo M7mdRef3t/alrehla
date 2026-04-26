@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Share2, X, Zap, Wifi, Download, Smartphone } from "lucide-react";
 import { usePWAInstall } from "@/contexts/PWAInstallContext";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 
 const BENEFITS = [
   { icon: Zap, label: "سرعة فائقة دون تحميل" },
@@ -69,7 +70,7 @@ export const InstallHintBanner: FC = () => {
                 </div>
                 <div>
                   <p className="text-white font-black text-base leading-tight">
-                    احصل على تطبيق الرحلة
+                    احصل على تطبيق <AlrehlaWordmark height={14} color="currentColor" />
                   </p>
                   <p className="text-teal-400 text-xs font-semibold mt-0.5">
                     مجاني — بدون متجر تطبيقات

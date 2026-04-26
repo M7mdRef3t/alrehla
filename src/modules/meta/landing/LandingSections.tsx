@@ -21,6 +21,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { LiveStatusBar } from "../shared/LiveStatusBar";
+import { AlrehlaWordmark } from "../logo/AlrehlaWordmark";
 import type { LiveMetrics } from '@/architecture/landingLiveData';
 import { isUserMode } from "@/config/appEnv";
 
@@ -270,7 +271,11 @@ export const MetricsSection: FC<{
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
           <div>
             <LiveStatusBar
-              title={liveEnabled ? "أثر الرحلة" : "يقين المسافر"}
+              title={liveEnabled ? (
+                <div className="flex items-center gap-2">
+                  أثر <AlrehlaWordmark height={16} color="var(--gold)" />
+                </div>
+              ) : "يقين المسافر"}
               mode={metricsState.mode}
               isLoading={metricsState.isLoading && liveEnabled}
               lastUpdatedAt={metricsState.lastUpdatedAt}
@@ -388,7 +393,10 @@ export const FinalReadinessSection: FC<{
       <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-teal-300">جاهزية البدء</p>
       <h2 className="mb-3 text-2xl font-black text-white sm:text-3xl">قرارك هو البداية.</h2>
       <p className="mx-auto max-w-[44ch] text-sm leading-7 text-slate-300">
-        "الرحلة" ليست مجرد أداة، بل هي قرار باستعادة زمام الأمور والقيادة على طاقتك. نحن هنا لنمسك بيدك في أول خطوة نحو الوضوح.
+        <span className="inline-block relative top-[3px] mx-1">
+          <AlrehlaWordmark height={14} color="var(--gold)" />
+        </span>
+        ليست مجرد أداة، بل هي قرار باستعادة زمام الأمور والقيادة على طاقتك. نحن هنا لنمسك بيدك في أول خطوة نحو الوضوح.
       </p>
       {lastGoalLabel && (
         <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-slate-200">

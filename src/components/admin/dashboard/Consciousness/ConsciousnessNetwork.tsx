@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { SafeCircle } from "@/components/ui/SafeSvg";
 
 interface Node {
     id: number;
@@ -210,12 +211,14 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
                     const currentX = startNode.x + (endNode.x - startNode.x) * flow.progress;
                     const currentY = startNode.y + (endNode.y - startNode.y) * flow.progress;
 
+                    if (!Number.isFinite(currentX) || !Number.isFinite(currentY)) return null;
+
                     return (
-                        <circle
+                        <SafeCircle
                             key={flow.id}
                             cx={`${currentX}%`}
                             cy={`${currentY}%`}
-                            r="1.5"
+                            r={1.5}
                             fill="white"
                             className="drop-shadow-[0_0_5px_rgba(255,255,255,1)] opacity-40"
                         />

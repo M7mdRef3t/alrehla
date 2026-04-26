@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Shield, Star, Zap, Award, Target } from "lucide-react";
 import { useGamificationState } from "@/services/gamificationEngine";
 import { useMapState } from "@/modules/map/store/map.store";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 
 const RANK_DATA: Record<string, { label: string; icon: any; color: string; bg: string }> = {
 // ... existing rank data ...
@@ -50,7 +51,7 @@ export const LeadershipProfile: React.FC = () => {
                         </div>
 
                         <div className="flex items-end justify-between mb-1.5">
-                            <h3 className="text-sm font-black text-white truncate">ملف الرحلة</h3>
+                             <h3 className="text-sm font-black text-white truncate flex items-center gap-1">ملف <AlrehlaWordmark height={10} color="currentColor" /></h3>
                             <span className="text-xs font-bold text-[var(--soft-teal)]">{xp} نقطة</span>
                         </div>
 

@@ -3,6 +3,7 @@ import { getSupabaseAdminClient } from "../../app/api/_lib/supabaseAdmin";
 
 export const DEFAULT_MODEL_ORDER: string[] = [
   "gemini-2.5-flash",
+  "gemini-3.1-flash-lite-preview",
   "gemini-2.0-flash",
   "gemini-flash-latest"
 ];

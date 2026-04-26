@@ -40,7 +40,7 @@ const RANK_COLORS: Record<string, string> = {
   "رائد استقرار": "#f97316",
   "عقيد حكمة": "#a855f7",
   "عميد سلام": "#ec4899",
-  "مارشال الدواير": "#ef4444",
+  "مارشال الرحلة": "#ef4444",
 };
 
 const MOOD_WEIGHTS: Record<PulseMood, number> = {
@@ -427,7 +427,7 @@ export const MizanScreen: FC = () => {
             <Heart className="w-3 h-3" /> صحة العلاقات
           </p>
           {relationshipData.total === 0 ? (
-            <p className="text-xs text-slate-700 text-center py-4">أضف علاقات في خريطة دواير أولاً</p>
+            <p className="text-xs text-slate-700 text-center py-4">أضف علاقات في خريطة الرحلة أولاً</p>
           ) : (
             <>
               {/* Ring distribution bar */}

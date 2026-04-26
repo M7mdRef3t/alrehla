@@ -223,7 +223,7 @@ export const TaqrirScreen: FC = () => {
       `🤝 رفاق نشطين: ${rifaqData.total}`,
       ``,
       `━━━━━━━━━━━━━━━━━━`,
-      `🧭 من منصة الرحلة — alrehla.com`,
+      `🧭 من الرحلة — alrehla.com`,
     ];
     navigator.clipboard?.writeText(lines.join("\n"));
     setCopied(true);

@@ -118,10 +118,10 @@ export class RoutingEngine {
         satellite: 'dawayir',
         actionType: 'diagnose',
         priority: isBaselineDone ? 'high' : 'normal', // Higher priority if baseline is already done
-        title: isBaselineDone ? 'ارسم خريطة وعيك' : 'اكتشف دوائرك',
+        title: isBaselineDone ? 'ارسم خريطة وعيك' : 'اكتشف خريطتك',
         description: isBaselineDone 
           ? 'لقد انتهيت من التقييم، الآن حوّل البيانات لرؤية بصرية واضحة.'
-          : 'لم ترسم أي خريطة لعلاقاتك بعد. ابدأ برسم وتصنيف دوائر تأثيرك لاكتشاف الأنماط الخفية.',
+          : 'لم ترسم أي خريطة لعلاقاتك بعد. ابدأ برسم وتصنيف خريطتك لاكتشاف الأنماط الخفية.',
         ctaText: 'ارسم أول خريطة',
         targetPath: '/onboarding?force=1',
         reasoning: isBaselineDone 

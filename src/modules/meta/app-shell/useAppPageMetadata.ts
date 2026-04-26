@@ -112,7 +112,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   profile: { title: "Profile | Alrehla", description: "Review your progress, achievements, and personal bio." },
   sanctuary: { title: "Sanctuary | Alrehla", description: "A private space for reflection and restoration." },
   "life-os": { title: "Life OS | Alrehla", description: "Your unified operating system for self-growth and decisions." },
-  dawayir: { title: "خريطة الدوائر | Alrehla", description: "Visualize your relationship circles and social intelligence." },
+  dawayir: { title: "الخريطة | Alrehla", description: "Visualize your journey map and social intelligence." },
   maraya: { title: "مرايا — التوأم الرقمي | Alrehla", description: "Explore your digital twin and uncover hidden patterns." },
   "session-intake": { title: "جلسة خاصة | Alrehla", description: "Request a private coaching or therapy session." },
   "session-console": { title: "لوحة تحكم الكوتش | Alrehla", description: "SessionOS Coach Console — manage intake, AI Pre-Brief, and sessions." },

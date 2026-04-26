@@ -9,6 +9,7 @@ import {
   Zap as Sparkles, Orbit, Rocket, Compass, CalendarDays, Wind,
   Brain
 } from "lucide-react";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 import { useGamificationState } from "@/services/gamificationEngine";
 import { useAchievementState } from "@/domains/gamification/store/achievement.store";
 import { useAuthState, updateBio } from "@/domains/auth/store/auth.store";
@@ -459,7 +460,7 @@ function ActiveSatellites() {
   const activeSatellites = useAuthState((s) => s.ecosystemData?.active_satellites) ?? ["alrehla"];
   
   const satellites = [
-    { id: "alrehla", name: "الرحلة", color: "#14b8a6", icon: <Rocket size={16} /> },
+    { id: "alrehla", name: <AlrehlaWordmark height={10} color="currentColor" />, color: "#14b8a6", icon: <Rocket size={16} /> },
     { id: "dawayir", name: "دواير", color: "#f5a623", icon: <Map size={16} /> },
     { id: "masarat", name: "مسارات", color: "#10b981", icon: <Compass size={16} /> },
     { id: "sessions", name: "جلسات", color: "#3b82f6", icon: <CalendarDays size={16} /> },

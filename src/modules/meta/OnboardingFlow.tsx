@@ -8,7 +8,8 @@ import { useMapState, useToastState } from '@/modules/map/dawayirIndex';
 import { useJourneyProgress } from "@/domains/journey";
 import { setInLocalStorage, getFromLocalStorage, removeFromLocalStorage } from "@/services/browserStorage";
 import { trackingService } from "@/domains/journey";
-import { type PulseEntry } from "@/domains/consciousness/store/pulse.store";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { soundManager } from "@/services/soundManager";
 import { analyticsService, AnalyticsEvents, generateUUID } from "@/domains/analytics";
@@ -765,7 +766,7 @@ const StepContactCapture: FC<{
       </div>
       
       <div className="space-y-1.5 mb-2">
-        <h2 className="text-[20px] font-extrabold text-white tracking-wide">روشتة الدواير جاهزة</h2>
+        <h2 className="text-[20px] font-extrabold text-white tracking-wide">روشتة الرحلة جاهزة</h2>
         <p className="text-[11px] text-slate-300 leading-relaxed font-medium px-2">
           سيب بياناتك عشان نبعتلك <span className="text-teal-400 font-bold">خريطة وعيك المصورة</span> وتفاصيل أول خطوة في التعافي فوراً على الواتساب.
         </p>
@@ -1006,8 +1007,8 @@ const StepResultsScreen: FC<{
         <div className="w-16 h-16 bg-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-2 border border-teal-500/30">
            <ShieldCheck className="w-8 h-8 text-teal-400" />
         </div>
-        <h2 className="text-2xl font-black text-white tracking-tight">رؤيتك الخاصة جاهزة!</h2>
-        <p className="text-xs text-slate-400">تم تحليل مسارك وفك شفرات الطاقة في رحلتك.</p>
+          <p className="text-xl md:text-2xl font-black text-slate-100 mb-2">روشتة الرحلة جاهزة</p>
+        <p className="text-xs text-slate-400">تم تحليل مسارك وفك شفرات الطاقة في <AlrehlaWordmark height={10} color="currentColor" />.</p>
       </div>
 
       <div className="space-y-4">
@@ -1069,7 +1070,7 @@ const StepResultsScreen: FC<{
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-bold text-teal-100 tracking-wide">جاري استحضار الرؤية القيادية...</p>
-                <p className="text-[10px] text-teal-500/60 font-medium">نحلل أنماط الطاقة في دوائرك الآن</p>
+                <p className="text-[10px] text-teal-500/60 font-medium">نحلل أنماط الطاقة في رحلتك الآن</p>
               </div>
             </motion.div>
           ) : aiInterpretation ? (
@@ -1150,7 +1151,7 @@ const StepSafetyTriage = () => (
       </ul>
     </div>
     <p className="text-xs text-slate-500 italic">
-      "رحلتك" منصة توعوية وليست بديلاً عن العلاج الطبي أو التدخل في الأزمات.
+      <AlrehlaWordmark height={10} color="currentColor" /> منصة توعوية وليست بديلاً عن العلاج الطبي أو التدخل في الأزمات.
     </p>
   </div>
 );
@@ -1171,7 +1172,7 @@ const SENTIENT_MESSAGES: Record<number, string> = {
   0: "أهلاً بك. أنا هنا لأرشدك في استكشاف خريطة وعيك. دعنا نبدأ بتصفية الضجيج.",
   1: "كل حرف تكتبه هنا هو خطوة نحو الوضوح. لا تتردد، أفرغ ما في قلبك.",
   2: "الآن، دعنا نحدد من هم رفاق طريقك في هذه المرحلة.",
-  3: "توزيع الدوائر يساعدك على رؤية حدودك. من يشحنك؟ ومن يستنزفك؟",
+  3: "توزيع الخريطة يساعدك على رؤية حدودك. من يشحنك؟ ومن يستنزفك؟",
   4: "هذه الأنماط التي نراها هي مفتاح استعادة قيادتك.",
   5: "بقي القليل لنجهز لك بوصلتك الخاصة.. كيف يمكننا البقاء على اتصال؟",
   6: "رؤيتك أصبحت جاهزة. هذه هي خارطة طريقك نحو السكينة."

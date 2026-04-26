@@ -90,7 +90,11 @@ export function AppShellRouteGate({
     );
   }
 
-  const isToolActive = isAdminRoute && screen && (screen as string) !== "landing" && (screen as string) !== "goal";
+  // A tool is "active over admin" only when the admin intentionally opened it
+  // (e.g. via a hash navigation). A stale `screen` value in the zustand store
+  // (e.g. "map" from a previous `start_recovery`) must NOT hide the dashboard.
+  const hasExplicitToolHash = typeof window !== "undefined" && window.location.hash.length > 1;
+  const isToolActive = isAdminRoute && screen && (screen as string) !== "landing" && (screen as string) !== "goal" && (!isAdminPathname || hasExplicitToolHash);
 
   return (
     <>

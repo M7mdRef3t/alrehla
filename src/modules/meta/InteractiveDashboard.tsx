@@ -942,7 +942,7 @@ function RelationshipOrbitMap({ nodes }: { nodes: MapNode[] }) {
             خريطة العلاقات التفاعلية
           </p>
           <p style={{ margin: "1px 0 0", fontSize: 9, color: "#475569" }}>
-            توزيع الطاقة العاطفية في دوائرك
+            توزيع الطاقة في خريطتك
           </p>
         </div>
         <div style={{ display: "flex", gap: 4 }}>

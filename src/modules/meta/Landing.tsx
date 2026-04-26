@@ -22,6 +22,7 @@ import { getGoalLabel, getLastGoalMeta } from "@/utils/goalLabel";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
 import { landingCopy } from "@/copy/landing";
 import { HeroSection } from "./HeroSection";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 import { useAdminState } from "@/domains/admin/store/admin.store";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 
@@ -318,7 +319,7 @@ export const Landing: FC<LandingProps> = ({
               <span className="inline-block mt-4 sm:mt-6 text-teal-400 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-sky-300">نحن نضيء لك خريطة طاقتك.</span>
             </h2>
             <p className="text-base sm:text-xl max-w-[55ch] mx-auto text-slate-300 leading-relaxed font-medium">
-              "الرحلة" ليست مجرد منصة، هي بوصلتك وعدستك لرؤية ما خفي عنك. نكشف لك مسارات طاقتك، من يمنحك النور، ومن يسحب منك الحياة، لتسترد قيادتك على مسارك.
+              <AlrehlaWordmark height={20} color="var(--teal-400)" className="inline-block mx-1 relative top-[-1px]" /> ليست مجرد منصة، هي بوصلتك وعدستك لرؤية ما خفي عنك. نكشف لك مسارات طاقتك، من يمنحك النور، ومن يسحب منك الحياة، لتسترد قيادتك على مسارك.
             </p>
           </div>
 
@@ -484,7 +485,7 @@ export const Landing: FC<LandingProps> = ({
             whileTap={{ scale: 0.95 }}
             className="group relative inline-flex items-center gap-4 px-12 py-6 bg-white text-black rounded-2xl font-black text-xl shadow-[0_0_50px_rgba(255,255,255,0.2)]"
           >
-            اسمح للرحلة بالبدء
+            اسمح لـ <AlrehlaWordmark height={24} color="currentColor" className="mx-1" /> بالبدء
             <ArrowLeft className="w-6 h-6 transition-transform group-hover:-translate-x-2" />
           </motion.button>
         </motion.div>

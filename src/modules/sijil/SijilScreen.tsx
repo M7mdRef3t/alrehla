@@ -44,7 +44,7 @@ const SOURCE_META: Record<string, { label: string; emoji: string; color: string 
   baseera: { label: "بصيرة", emoji: "👁️", color: "#6366f1" },
   atmosfera: { label: "أتموسفيرا", emoji: "🌌", color: "#0ea5e9" },
   masarat: { label: "مسارات", emoji: "🛤️", color: "#10b981" },
-  dawayir: { label: "دوائر", emoji: "🔵", color: "#3b82f6" },
+  dawayir: { label: "الخريطة", emoji: "🔵", color: "#3b82f6" },
   murshid: { label: "مرشد", emoji: "🧠", color: "#8b5cf6" },
   taqrir: { label: "تقرير", emoji: "📊", color: "#06b6d4" },
   gamification: { label: "أوسمة", emoji: "🏅", color: "#fbbf24" },

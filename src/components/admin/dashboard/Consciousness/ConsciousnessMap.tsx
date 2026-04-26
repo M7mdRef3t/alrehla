@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { useState } from "react";
 import { Brain, Activity, Zap, Layers, Share2, MoreHorizontal } from "lucide-react";
 import { ConsciousnessNetwork } from "./ConsciousnessNetwork";
+import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { motion } from "framer-motion";
 
 export const ConsciousnessMap: FC = () => {
@@ -29,17 +30,26 @@ export const ConsciousnessMap: FC = () => {
         </div>
 
         <div className="flex gap-8 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-md">
-          <div className="text-center">
+          <div className="text-center relative group/stat flex flex-col items-center justify-center">
+            <div className="absolute -top-1 -right-2">
+              <AdminTooltip content="مدى تشابك وترابط العلاقات داخل الخريطة. الزيادة تعني أن المستخدمين يبنون علاقات حقيقية ومترابطة ببعضها." position="bottom" />
+            </div>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">كثافة الخريطة</p>
             <p className="text-lg font-black text-white">عالية <span className="text-[10px] text-emerald-400 align-top">+12%</span></p>
           </div>
           <div className="w-px bg-slate-800" />
-          <div className="text-center">
+          <div className="text-center relative group/stat flex flex-col items-center justify-center">
+            <div className="absolute -top-1 -right-2">
+              <AdminTooltip content="مؤشر يوضح نسبة الأشخاص الفريدين مقارنة بإجمالي الجلسات (مثال: 32 شخص من 37 جلسة). يعكس مدى تفاعل المستخدمين الفعليين." position="bottom" />
+            </div>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">درجة الترابط</p>
             <p className="text-lg font-black text-teal-400">0.89</p>
           </div>
           <div className="w-px bg-slate-800" />
-          <div className="text-center">
+          <div className="text-center relative group/stat flex flex-col items-center justify-center">
+            <div className="absolute -top-1 -right-2">
+              <AdminTooltip content="عدد العقد (الأشخاص) النشطة حالياً والتي يتم التفاعل معها أو تعديلها في الجلسات الحية." position="bottom" />
+            </div>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">عقد نشطة</p>
             <p className="text-lg font-black text-amber-400">24</p>
           </div>

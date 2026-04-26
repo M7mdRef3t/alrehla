@@ -47,6 +47,8 @@ function inferCognitiveLoadFromDecision(decision: NextStepDecisionV1): number {
   return 3;
 }
 
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
+
 export function useNextStepRouting({
   screen,
   goalId,
@@ -233,6 +235,15 @@ export function useNextStepRouting({
   }, []);
 
   useEffect(() => {
+    // Guard: Don't run decision logic if we are in a special overlay (like admin dashboard)
+    // to prevent background redirects that can interrupt owner operations
+    const overlayFlags = useAppOverlayState.getState().flags;
+    if (overlayFlags.atlasDashboard || overlayFlags.trackingDashboard) {
+      nextStepTelemetry.clearSession();
+      setNextStepDecision(null);
+      return;
+    }
+
     if (screen !== "map" && screen !== "tools") {
       nextStepTelemetry.clearSession();
       setNextStepDecision(null);

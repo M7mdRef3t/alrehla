@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import type { FC, ReactNode } from "react";
 
 const LIVE_STATUS = {
   live: { label: "مباشر", color: "text-teal-300", bg: "bg-teal-500/15 border-teal-500/30" },
@@ -6,7 +6,7 @@ const LIVE_STATUS = {
 } as const;
 
 interface LiveStatusBarProps {
-  title: string;
+  title: ReactNode;
   mode: keyof typeof LIVE_STATUS;
   isLoading: boolean;
   lastUpdatedAt: number | null;

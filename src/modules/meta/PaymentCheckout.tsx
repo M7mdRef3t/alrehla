@@ -30,6 +30,7 @@ import { telegramBot } from "@/services/telegramBot";
 import { supabase } from "@/services/supabaseClient";
 import * as analyticsService from "@/services/analytics";
 import { useEffect } from "react";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 
 // ═══════════════════════════════════════════════════════════════════
 // Types
@@ -178,6 +179,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           <Check className="w-12 h-12 text-emerald-400 relative z-10 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
         </motion.div>
 
+        <AlrehlaWordmark height={24} className="mb-4 text-emerald-400 opacity-60" />
         <h3 className="text-2xl font-black text-white mb-2 tracking-tight">تم إرسال الإشارة! 🎉</h3>
         <p className="text-sm text-emerald-100/70 leading-relaxed max-w-xs mb-8">
           البوابة استقبلت طلبك. هنتواصل معاك خلال دقائق لتأكيد الدفع وفتح المسار.
@@ -219,10 +221,10 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
         {/* Header */}
         <div className="text-center mb-6 relative">
           <div className="absolute inset-0 bg-teal-500/10 blur-[40px] rounded-full" />
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-teal-400/90 to-emerald-600/90 flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(20,184,166,0.3)] border border-teal-300/20 backdrop-blur-xl">
-            <ShieldCheck className="w-8 h-8 text-slate-950" />
+          <div className="flex flex-col items-center gap-3 relative mb-4">
+            <AlrehlaWordmark height={22} className="text-teal-400" />
+            <h3 className="text-xl font-black text-white tracking-tight">تأكيد مرورك القيادي</h3>
           </div>
-          <h3 className="text-xl font-black text-white mb-1 tracking-tight">تأكيد مرورك القيادي</h3>
           <p className="text-xs text-teal-100/70 font-medium">
             {TIER_LABELS.premium} — {localPriceLabel} أو ${price.monthly}/شهر
           </p>

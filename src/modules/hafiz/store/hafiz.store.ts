@@ -165,3 +165,23 @@ export const useHafizState = create<HafizState>()(
     { name: "alrehla-hafiz", storage: zustandIdbStorage }
   )
 );
+
+/**
+ * Calculates the "Spiritual Resonance" (Vertical Connection Strength)
+ * Based on recent (last 7 days) Wird activity and Gratitude moments.
+ */
+export const calculateVerticalResonance = (memories: Memory[]): number => {
+  const recentDays = 7;
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+  
+  const recentMemories = memories.filter(m => (now - m.timestamp) < (recentDays * dayMs));
+  
+  const wirdCount = recentMemories.filter(m => m.source === 'wird').length;
+  const gratitudeCount = recentMemories.filter(m => m.tags.includes('gratitude')).length;
+  
+  // Base connection of 0.4 (The innate Fitra)
+  // Each activity adds 10% up to a maximum of 1.0
+  const strength = 0.4 + (wirdCount * 0.1) + (gratitudeCount * 0.1);
+  return Math.min(1, strength);
+};

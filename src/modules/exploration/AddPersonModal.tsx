@@ -241,43 +241,106 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
     setSelectedTitle(title);
   };
 
-  const dynamicBorder = isEmergency ? "var(--consciousness-critical)" : "var(--consciousness-primary)";
-  const dynamicGlow = isEmergency ? "var(--ds-color-primary-glow)" : "var(--ds-color-primary-glow)";
+  const accentColor = isEmergency ? "var(--consciousness-critical)" : "var(--consciousness-primary)";
+
+  // Progress tracking for the journey steps
+  const STEP_ORDER: AddPersonStep[] = ["select", "quickQuestions", "feeling", "position", "diagnostic", "result"];
+  const currentStepIndex = STEP_ORDER.indexOf(step);
+  const totalVisibleSteps = 5; // don't count diagnostic as a visible step
   
   return (
     <div
       className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
-      style={{ background: "color-mix(in srgb, var(--consciousness-background) 92%, transparent)", backdropFilter: "blur(40px)" }}
+      style={{ background: "rgba(5, 8, 18, 0.92)", backdropFilter: "blur(40px)" }}
       onClick={() => handleCloseAttempt("backdrop")}
       aria-labelledby="add-person-title"
       role="dialog"
       aria-modal="true"
     >
       <motion.div
-        className={`relative w-full min-h-0 flex flex-col text-[var(--consciousness-text)] ${step === "result" ? "" : "max-w-2xl overflow-hidden rounded-3xl px-6 py-8"}`}
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        className={`relative w-full min-h-0 flex flex-col text-[var(--consciousness-text)] ${
+          step === "result"
+            ? "h-full overflow-y-auto overflow-x-hidden scrollbar-hide"
+            : "max-w-2xl overflow-hidden rounded-3xl px-6 py-6 pb-12 sm:px-8 sm:py-8 sm:pb-12"
+        }`}
+        initial={{ scale: 0.95, opacity: 0, y: 30 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 10 }}
-        transition={{ type: "spring", damping: 30, stiffness: 100, mass: 1.2 }}
+        exit={{ scale: 0.97, opacity: 0, y: 15 }}
+        transition={{ type: "spring", damping: 28, stiffness: 200, mass: 0.8 }}
         style={{
           ...(step === "result" ? {
             maxHeight: "100%",
             height: "100%",
-            overflow: "hidden"
           } : {
-            height: "min(92vh, fit-content)",
-            maxHeight: "92vh",
-            background: "var(--consciousness-background)",
-            border: `1px solid color-mix(in srgb, ${dynamicBorder} 40%, transparent)`,
-            boxShadow: `0 40px 120px rgba(0,0,0,1), 0 0 0 1px rgba(255,255,255,0.02), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 100px color-mix(in srgb, ${dynamicBorder} 10%, transparent)`,
+            height: "min(90vh, fit-content)",
+            maxHeight: "90vh",
+            background: "rgba(15, 20, 35, 0.85)",
+            backdropFilter: "blur(60px) saturate(1.5)",
+            border: `1px solid rgba(255,255,255,0.08)`,
+            boxShadow: `0 25px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03) inset`,
           })
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* ═══ Top Bar: Progress + Close ═══ */}
+        {step !== "result" && (
+          <div className="flex items-center justify-between mb-6 shrink-0 relative z-50">
+            {/* Progress Dots */}
+            <div className="flex items-center gap-2" dir="ltr">
+              {["select", "quickQuestions", "feeling", "position", "result"].map((s, i) => {
+                const stepIdx = STEP_ORDER.indexOf(s as AddPersonStep);
+                const isActive = currentStepIndex >= stepIdx;
+                const isCurrent = step === s || (step === "diagnostic" && s === "result");
+                return (
+                  <div
+                    key={s}
+                    className={`rounded-full transition-all duration-500 ${
+                      isCurrent
+                        ? `w-6 h-2 ${isEmergency ? "bg-rose-400" : "bg-teal-400"} shadow-[0_0_12px_rgba(45,212,191,0.5)]`
+                        : isActive
+                          ? `w-2 h-2 ${isEmergency ? "bg-rose-600" : "bg-teal-600"}`
+                          : "w-2 h-2 bg-zinc-800"
+                    }`}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Close Button */}
+            {!isForcedResultGate && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); handleCloseAttempt("close_button"); }}
+                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 hover:rotate-90 bg-zinc-800 hover:bg-zinc-700 text-white z-[200] group border border-white/20 shadow-lg"
+                aria-label="إغلاق"
+              >
+                <span className="text-xl font-black leading-none">✕</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ═══ Close button for result step ═══ */}
+        {step === "result" && !isForcedResultGate && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); handleCloseAttempt("close_button"); }}
+            className="fixed top-6 left-6 w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 hover:rotate-90 bg-zinc-900 hover:bg-zinc-800 text-white z-[250] border border-white/30 backdrop-blur-3xl shadow-2xl"
+            aria-label="إغلاق"
+          >
+            <span className="text-3xl font-black leading-none">✕</span>
+          </button>
+        )}
+
+        {/* ═══ Accent line ═══ */}
+        {step !== "result" && (
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-[2px] rounded-full" style={{ background: accentColor, boxShadow: `0 0 20px ${accentColor}` }} />
+        )}
+
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
-            className="flex-auto min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-teal-500/20 scrollbar-track-transparent flex flex-col pt-1 pr-1"
+            className="flex-auto min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide flex flex-col pt-1 pr-1"
             initial={{ opacity: 0, x: 30, filter: "blur(10px)" }}
             animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, x: -30, filter: "blur(10px)" }}
@@ -432,23 +495,6 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
           </motion.div>
         </AnimatePresence>
 
-        {/* Top accent line */}
-        <div
-          className="absolute top-0 left-8 right-8 h-[2px] rounded-full transition-colors duration-500"
-          style={{ background: `linear-gradient(90deg, transparent, ${dynamicBorder}, transparent)` }}
-        />
-
-        {!isForcedResultGate && (
-          <button
-            type="button"
-            onClick={() => handleCloseAttempt("close_button")}
-            className="absolute top-5 left-5 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 hover:bg-white/10 bg-black/40 backdrop-blur-md z-[100] shrink-0"
-            style={{ color: "rgba(255,255,255,0.9)", border: "1px solid rgba(255,255,255,0.15)" }}
-            aria-label="إغلاق"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
       </motion.div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DiscoveryItem } from "@/types/discovery";
+import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { sendAdminTelegramNotice } from "@/server/telegramNotifier";
 import { requireAdmin } from "@/server/requireAdmin";
@@ -13,8 +13,36 @@ const supabaseAdmin =
       )
     : null;
 
-// Suppress unused import warning (DiscoveryItem used for type inference)
-void (null as unknown as DiscoveryItem);
+const discoveryItemSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional().default(""),
+  source: z.string().min(1, "Source is required"),
+  stage: z.enum([
+    "Inbox",
+    "Needs Evidence",
+    "Validated",
+    "Prioritized",
+    "In Delivery",
+    "Shipped",
+    "Dropped",
+  ]).optional().default("Inbox"),
+  priority: z.enum(["low", "medium", "high", "critical"]).optional().default("medium"),
+  facts: z.array(z.string()).optional().default([]),
+  interpretations: z.array(z.string()).optional().default([]),
+  jira_issue_url: z.string().url().optional().or(z.literal("")).nullable(),
+  signal_source: z.string().optional().nullable(),
+  funnel_stage: z.string().optional().nullable(),
+  business_goal: z.string().optional().nullable(),
+  confidence: z.number().min(0).max(100).optional().nullable(),
+  evidence: z.array(z.string()).optional().default([]),
+  hypothesis: z.string().optional().nullable(),
+  risk: z.string().optional().nullable(),
+  next_step: z.string().optional().nullable(),
+  execution_link: z.string().url().optional().or(z.literal("")).nullable(),
+  tags: z.array(z.string()).optional().default([]),
+});
+
+const discoveryUpdateSchema = discoveryItemSchema.partial();
 
 export async function GET(req: NextRequest) {
   const denied = await requireAdmin(req);
@@ -45,27 +73,16 @@ export async function POST(req: NextRequest) {
 
     const rawItem = await req.json();
     
-    // Whitelist allowed fields for creation
-    const item = {
-      title: rawItem.title,
-      description: rawItem.description,
-      source: rawItem.source,
-      stage: rawItem.stage || "Inbox",
-      priority: rawItem.priority || "medium",
-      facts: Array.isArray(rawItem.facts) ? rawItem.facts : [],
-      interpretations: Array.isArray(rawItem.interpretations) ? rawItem.interpretations : [],
-      jira_issue_url: rawItem.jira_issue_url,
-      signal_source: rawItem.signal_source,
-      funnel_stage: rawItem.funnel_stage,
-      business_goal: rawItem.business_goal,
-      confidence: typeof rawItem.confidence === 'number' ? rawItem.confidence : null,
-      evidence: Array.isArray(rawItem.evidence) ? rawItem.evidence : [],
-      hypothesis: rawItem.hypothesis,
-      risk: rawItem.risk,
-      next_step: rawItem.next_step,
-      execution_link: rawItem.execution_link,
-      tags: Array.isArray(rawItem.tags) ? rawItem.tags : [],
-    };
+    // Parse and validate via Zod
+    const result = discoveryItemSchema.safeParse(rawItem);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: "Validation failed", issues: result.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const item = result.data;
 
     const { data, error } = await supabaseAdmin
       .from("discovery_items")
@@ -98,24 +115,30 @@ export async function PATCH(req: NextRequest) {
     if (!supabaseAdmin)
       return NextResponse.json({ error: "DB not initialized" }, { status: 500 });
 
-    const { id, updates: rawUpdates } = await req.json();
+    const body = await req.json();
+    const { id, updates: rawUpdates } = body || {};
 
     if (!id || typeof id !== 'string') {
         return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
     }
 
-    // Whitelist allowed fields for update
-    const updates: Record<string, any> = {};
-    const allowedFields = [
-      'title', 'description', 'source', 'stage', 'priority', 'facts', 'interpretations', 
-      'jira_issue_url', 'signal_source', 'funnel_stage', 'business_goal', 'confidence', 
-      'evidence', 'hypothesis', 'risk', 'next_step', 'execution_link', 'tags'
-    ];
-    
-    for (const field of allowedFields) {
-      if (rawUpdates[field] !== undefined) {
-        updates[field] = rawUpdates[field];
-      }
+    if (!rawUpdates || typeof rawUpdates !== 'object') {
+        return NextResponse.json({ error: "Invalid or missing updates object" }, { status: 400 });
+    }
+
+    // Parse and validate via Zod
+    const result = discoveryUpdateSchema.safeParse(rawUpdates);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: "Validation failed", issues: result.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const updates = result.data;
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
     }
 
     const { data, error } = await supabaseAdmin

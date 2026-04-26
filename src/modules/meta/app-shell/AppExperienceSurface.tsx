@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Cpu } from "lucide-react";
 import { ErrorBoundary } from '@/modules/action/ErrorBoundary';
 import { InstallHintBanner } from '@/modules/meta/InstallHintBanner';
+import { AlrehlaWordmark } from "../logo/AlrehlaWordmark";
 
 
 import { AppChromeShell } from "./AppChromeShell";
@@ -59,6 +60,7 @@ const GlobalToast = lazy(() => import("../../growth/GlobalToast").then((m) => ({
 const AtmosphereSensoryLayer = lazy(() => import("@/components/layout/AtmosphereSensoryLayer").then(m => ({ default: m.AtmosphereSensoryLayer })));
 
 const NotificationEnableButton = lazy(() => import("../NotificationEnableButton").then((m) => ({ default: m.NotificationEnableButton })));
+const CompassionAtmosphere = lazy(() => import("./CompassionAtmosphere").then(m => ({ default: m.CompassionAtmosphere })));
 
 
 type TransientChromeProps = ComponentProps<typeof AppTransientChromeHost>;
@@ -158,6 +160,9 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   return (
     <>
       <TravelerPreviewBanner />
+      <Suspense fallback={null}>
+        <CompassionAtmosphere />
+      </Suspense>
       <div className="system-experience-surface min-h-screen w-full overflow-x-hidden bg-[#02040a]" style={{ isolation: 'isolate' }}>
       <PlatformHeader
         activeScreen={screen}
@@ -242,7 +247,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                 fallback={
                   <div className="min-h-[260px] w-full flex items-center justify-center p-6">
                     <div className="text-center space-y-3">
-                      <h3 className="text-lg font-bold text-orange-400">حدث خطأ في مسار الرحلة</h3>
+                      <h3 className="text-lg font-bold text-orange-400">حدث خطأ في مسار <AlrehlaWordmark height={14} color="currentColor" /></h3>
                       <p className="text-sm text-slate-400">جلسة دواير معزولة. تقدر ترجع للخريطة فورًا بدون إعادة تحميل.</p>
                       <button
                         type="button"

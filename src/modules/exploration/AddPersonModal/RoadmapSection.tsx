@@ -109,7 +109,7 @@ export const RoadmapSection: FC<RoadmapSectionProps> = ({
                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden flex-1">
                       <div className="h-full bg-teal-500" style={{ width: `${(completedSteps / totalSteps) * 100}%` }} />
                    </div>
-                  <span className="text-[10px] font-black text-teal-400 tracking-widest uppercase shrink-0">{completedSteps}/{totalSteps}</span>
+                  <span className="text-[10px] font-black text-teal-400 font-tajawal shrink-0">{completedSteps}/{totalSteps}</span>
                 </div>
               )}
             </div>
@@ -119,7 +119,7 @@ export const RoadmapSection: FC<RoadmapSectionProps> = ({
             {/* HUD Corners */}
             <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-teal-500/20 rounded-tr-3xl" />
             
-            <h3 className="text-[10px] font-black text-teal-500/60 mb-8 flex items-center gap-3 uppercase tracking-[0.4em]">
+            <h3 className="text-[10px] font-black text-teal-600 mb-8 flex items-center gap-3 font-tajawal">
               <span className="w-2 h-2 rounded-full bg-teal-500" /> خطة الخطوة الأولى
             </h3>
             <ol className="space-y-4 relative">

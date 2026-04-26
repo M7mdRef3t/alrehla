@@ -24,6 +24,7 @@ import { useJourneyProgress } from "@/domains/journey";
 import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { ProfileService } from "@/services/profileService";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 
 
 type SettingsSection = "main" | "language" | "b2b" | "referral" | "subscription" | "culture" | "privacy" | "appearance";
@@ -340,7 +341,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
 
                             <div className="mt-8 text-center">
                                 <p className="text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>
-                                    الرحلة v2.0 · صُنع بـ ❤️ للعالم العربي
+                                    <AlrehlaWordmark height={10} color="currentColor" className="inline-block" /> v2.0 · صُنع بـ ❤️ للعالم العربي
                                 </p>
                             </div>
                         </motion.div>

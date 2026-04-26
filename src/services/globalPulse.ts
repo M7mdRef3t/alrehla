@@ -20,6 +20,7 @@ export interface HarmonyPulse {
 }
 
 let sovereignOverride: number | null = null;
+let compassionProtocolActive = false;
 
 // Real-time listener for Sovereign Override
 if (isSupabaseReady && supabase) {
@@ -39,14 +40,38 @@ if (isSupabaseReady && supabase) {
   // Initial fetch
   void supabase
     .from("system_settings")
-    .select("value")
-    .eq("key", "global_harmony_override")
-    .maybeSingle()
+    .select("key, value")
+    .in("key", ["global_harmony_override", "compassion_protocol_active"])
     .then(({ data }) => {
-      if (data && typeof data.value === "number") {
-        sovereignOverride = data.value;
+      if (data) {
+        data.forEach(item => {
+          if (item.key === "global_harmony_override" && typeof item.value === "number") {
+            sovereignOverride = item.value;
+          }
+          if (item.key === "compassion_protocol_active") {
+            compassionProtocolActive = !!item.value;
+          }
+        });
       }
     });
+
+  // Listen for Compassion Protocol
+  supabase
+    .channel("compassion_changes")
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "system_settings", filter: "key=eq.compassion_protocol_active" },
+      (payload) => {
+        if (payload.new) {
+          compassionProtocolActive = !!payload.new.value;
+          // Trigger global style updates if needed
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("alrehla-compassion-sync", { detail: { active: compassionProtocolActive } }));
+          }
+        }
+      }
+    )
+    .subscribe();
 }
 
 export const getGlobalHarmony = (): HarmonyPulse => {
@@ -54,7 +79,8 @@ export const getGlobalHarmony = (): HarmonyPulse => {
   const hours = now.getHours();
   
   // Use override if available, otherwise use simulation
-  let baseScore = sovereignOverride !== null ? sovereignOverride : 0.8;
+  // CRITICAL: Compassion Protocol forces 1.0
+  let baseScore = compassionProtocolActive ? 1.0 : (sovereignOverride !== null ? sovereignOverride : 0.8);
   
   if (sovereignOverride === null) {
     if (hours >= 9 && hours <= 17) {

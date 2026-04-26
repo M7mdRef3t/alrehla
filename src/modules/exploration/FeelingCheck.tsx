@@ -68,83 +68,91 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
       className="mt-0 text-center h-full min-h-0 flex flex-col relative px-4"
       aria-labelledby="feeling-title"
     >
-      {/* Cinematic Background Layer */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2rem]">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f766e10_1px,transparent_1px),linear-gradient(to_bottom,#0f766e10_1px,transparent_1px)] bg-[size:40px_40px]" />
+      {/* Cinematic Tactical Background Layer */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-none border border-white/5 bg-black/40">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjMDAwIiBmaWxsLW9wYWNpdHk9IjAiLz4KPHBhdGggZD0iTTAgMEg0IiBzdHJva2U9IiMyZGQ0YmYiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-30" />
         <motion.div
           animate={{ top: ["0%", "100%", "0%"] }}
-          transition={{ duration: 10, ease: "linear", repeat: Infinity }}
-          className="absolute left-0 right-0 h-[1px] bg-teal-500/10 shadow-[0_0_15px_rgba(20,184,166,0.2)] z-0"
+          transition={{ duration: 8, ease: "linear", repeat: Infinity }}
+          className="absolute left-0 right-0 h-[2px] bg-teal-500/20 shadow-[0_0_20px_rgba(45,212,191,0.3)] z-0"
         />
+        {/* HUD Corner Decorators */}
+        <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-teal-500/50" />
+        <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-teal-500/50" />
+        <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-teal-500/50" />
+        <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-teal-500/50" />
       </div>
 
       {isChaos && (
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 bg-rose-950/30 border border-rose-500/30 backdrop-blur-xl rounded-[1.5rem] p-5 flex flex-col items-center text-center relative z-10 shadow-[0_0_40px_rgba(244,63,94,0.1)]"
+          className="mb-6 bg-rose-950/40 border-r-4 border-rose-500 rounded-none p-4 flex flex-col items-center text-center relative z-10 shadow-[inset_-20px_0_40px_-20px_rgba(225,29,72,0.3)]"
         >
-          <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center mb-3 border border-rose-500/30">
-            <AlertCircle className="w-6 h-6 text-rose-400 animate-pulse" />
+          <div className="flex items-center gap-3 mb-2">
+            <AlertCircle className="w-5 h-5 text-rose-400 animate-pulse" />
+            <h3 className="text-[10px] font-bold text-rose-300 uppercase tracking-[0.2em] font-tajawal">[ تحذير: زيادة_العشوائية ]</h3>
           </div>
-          <h3 className="text-xs font-black text-rose-300 mb-2 uppercase tracking-[0.2em]">⚠️ الرادار الإدراكي: تحذير فوضى</h3>
-          <p className="text-sm text-rose-100/70 max-w-sm font-bold leading-relaxed">
+          <p className="text-xs text-rose-200 max-w-sm font-bold leading-relaxed tracking-wide">
             مؤشرات الفوضى مرتفعة الآن ({prediction.entropyScore}%). يُنصح بتأجيل القرارات الكبرى والتعامل من مساحة "مراقبة" فقط لتجنب استنزاف الطاقة.
           </p>
         </motion.div>
       )}
 
-      <div className="relative z-10 mb-2">
-        <h2 id="feeling-title" className="text-2xl font-black text-[var(--consciousness-text)] mb-2 tracking-tight">
+      <div className="relative z-10 mb-4 pt-6">
+        <p className="text-[10px] text-teal-600 uppercase tracking-[0.3em] mb-2 font-bold animate-pulse">
+          [ مسح_الرنين_الشعوري ]
+        </p>
+        <h2 id="feeling-title" className="text-2xl font-black text-white mb-2 tracking-tight uppercase font-alexandria">
           <EditableText id="feeling_title" defaultText={feelingCopy.title} page="feeling" />
         </h2>
-        <p className="text-sm font-bold text-[var(--consciousness-text-muted)] leading-relaxed px-4 opacity-80">
-          <EditableText id="feeling_body" defaultText={feelingCopy.body} page="feeling" multiline showEditIcon={false} />{" "}
-          <span className="text-teal-500 dark:text-teal-400 drop-shadow-[0_0_10px_rgba(45,212,191,0.3)]">({personLabel})</span>
-        </p>
+        <div className="inline-flex items-center gap-2 bg-teal-500/10 px-3 py-1 rounded-sm border border-teal-500/20 mb-2">
+           <span className="text-xs text-teal-700 uppercase tracking-widest font-tajawal">الهدف:</span>
+           <span className="text-sm font-bold text-teal-400 drop-shadow-[0_0_8px_rgba(45,212,191,0.5)] tracking-widest font-tajawal">{personLabel}</span>
+        </div>
       </div>
 
-      {/* Progress Bar — dir=ltr to prevent RTL confusion */}
-      <div className="flex items-center gap-2 mb-6 relative z-10" dir="ltr">
+      {/* Progress Bar — Tactical Segments */}
+      <div className="flex items-center gap-1 mb-8 relative z-10 mx-auto w-full max-w-xs" dir="ltr">
         {[0, 1, 2].map((idx) => (
           <div
             key={idx}
-            className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
+            className={`h-1 flex-1 transition-all duration-500 border-l-2 border-r-2 border-black ${
               idx < internalStep
                 ? "bg-teal-500 shadow-[0_0_10px_#2dd4bf]"
                 : idx === internalStep
-                  ? "bg-teal-500/40"
-                  : "bg-[var(--page-surface-2)] border border-[var(--page-border-soft)]"
+                  ? "bg-teal-500/50 animate-pulse"
+                  : "bg-white/10"
             }`}
           />
         ))}
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto pr-1 relative z-10 flex flex-col justify-center">
+      <div className="flex-1 min-h-0 relative z-10 flex flex-col justify-start">
         <AnimatePresence mode="wait">
           <motion.div
             key={internalStep}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
-            className="flex flex-col h-full justify-center space-y-8"
+            className="flex flex-col h-full space-y-6"
           >
-            <h3 className="text-2xl sm:text-3xl font-black text-center tracking-tight leading-relaxed text-[var(--consciousness-text)]">
+            <h3 className="text-lg sm:text-2xl font-black text-center tracking-tight leading-relaxed text-white font-alexandria">
               <EditableText id={`feeling_q${internalStep + 1}`} defaultText={feelingCopy[`q${internalStep + 1}` as keyof typeof feelingCopy] as string} page="feeling" showEditIcon={false} />
             </h3>
             
-            <div className="flex flex-col gap-3 max-w-md mx-auto w-full">
+            <div className="flex flex-col gap-3 pb-8 max-w-md mx-auto w-full">
               {OPTIONS.map((opt) => {
                 const currentKey = `q${internalStep + 1}` as keyof FeelingAnswers;
                 const isSelected = answers[currentKey] === opt;
                 const label = feelingCopy.options[opt];
                 const tier = impactTier[opt] ?? "amber";
                 
-                let activeStyle = "bg-[var(--page-surface-2)] border-[var(--page-border-soft)] text-[var(--consciousness-text-muted)] hover:border-[var(--page-border)] hover:bg-[var(--page-bg-alt)]";
+                let activeStyle = "bg-white/[0.02] border-white/5 text-slate-400 hover:bg-white/[0.05] hover:border-teal-500/30 hover:text-white";
                 if (isSelected) {
-                   if (tier === "green") activeStyle = "bg-teal-500 text-white border-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.3)] scale-[1.02]";
-                   else if (tier === "amber") activeStyle = "bg-amber-500 text-white border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)] scale-[1.02]";
-                   else if (tier === "red") activeStyle = "bg-rose-500 text-white border-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.3)] scale-[1.02]";
+                   if (tier === "green") activeStyle = "bg-teal-900/40 text-teal-300 border-teal-500 shadow-[inset_-20px_0_40px_-20px_rgba(45,212,191,0.4)]";
+                   else if (tier === "amber") activeStyle = "bg-amber-900/40 text-amber-300 border-amber-500 shadow-[inset_-20px_0_40px_-20px_rgba(245,158,11,0.4)]";
+                   else if (tier === "red") activeStyle = "bg-rose-900/40 text-rose-300 border-rose-500 shadow-[inset_-20px_0_40px_-20px_rgba(225,29,72,0.4)]";
                 }
 
                 return (
@@ -152,12 +160,12 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
                     key={opt}
                     type="button"
                     onClick={() => handleAnswer(currentKey, opt, internalStep)}
-                    className={`w-full flex items-center p-5 text-base sm:text-lg font-bold transition-all duration-500 rounded-2xl border ${activeStyle}`}
+                    className={`group w-full flex items-center p-5 text-sm font-black transition-all duration-300 rounded-none border-r-2 overflow-hidden font-tajawal ${activeStyle} ${!isSelected && 'hover:pr-6'}`}
                   >
-                    <div className={`w-4 h-4 rounded-full mr-4 rtl:ml-4 rtl:mr-0 border-2 flex items-center justify-center transition-colors ${isSelected ? "border-white" : "border-slate-500"}`}>
-                       {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                    <div className={`font-mono text-xs mr-4 rtl:ml-4 rtl:mr-0 transition-colors ${isSelected ? "text-white" : "text-slate-600 group-hover:text-slate-400"}`}>
+                       {isSelected ? "[X]" : "[ ]"}
                     </div>
-                    {label}
+                    <span className="tracking-wide text-right flex-1">{label}</span>
                   </button>
                 );
               })}

@@ -1,4 +1,5 @@
 import { logger } from "@/services/logger";
+import { SafeCircle, SafeMotionCircle, toSafeSvgRadius, toSafeSvgCoordinate } from "@/components/ui/SafeSvg";
 import type { ComponentProps, FC } from "react";
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,9 +30,11 @@ import { useLongPress } from "@/hooks/useLongPress";
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { useGamification } from "@/domains/gamification";
 import { Zap, Flame } from "lucide-react";
-import { useSynthesisState } from "@/domains/consciousness/store/synthesis.store";
 import { Typewriter } from "@/modules/meta/UI/Typewriter";
-import { SafeMotionCircle, toSafeSvgRadius, toSafeSvgCoordinate } from "@/components/ui/SafeSvg";
+import { DivineConnection } from "./DivineConnection";
+import { useHafizState, calculateVerticalResonance } from "@/modules/hafiz/store/hafiz.store";
+import { useSynthesisState } from "@/domains/consciousness/store/synthesis.store";
+
 
 function isLegacyMapUiEnabled(): boolean {
   return false;
@@ -67,99 +70,108 @@ interface RingProps {
 const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor, breatheDuration }) => {
   const { audioIntensity } = useSynthesisState();
   const safeRadius = toSafeSvgRadius(radius, 0);
-  const filterId = ring === "red" ? "neonGlowRed" : ring === "yellow" ? "neonGlowWarning" : "neonGlowSafe";
+  // Enhance glow filter for a cosmic/neon energy feel
   const fillId = ring === "red" ? "ringFillRed" : ring === "yellow" ? "ringFillYellow" : "ringFillGreen";
-  const dotCount = ring === "green" ? 2 : ring === "yellow" ? 3 : 2;
+  const dotCount = ring === "green" ? 3 : ring === "yellow" ? 4 : 5;
   const dotAngles = Array.from({ length: dotCount }, (_, i) => (360 / dotCount) * i);
 
   return (
     <g aria-label={label}>
-      {/* Glass fill zone */}
-      <SafeMotionCircle cx={50} cy={50} r={safeRadius} fill={`url(#${fillId})`} className="pointer-events-none" />
+      {/* Deep Glass Background Zone */}
+      <SafeMotionCircle cx={50} cy={50} r={safeRadius} fill={`url(#${fillId})`} opacity={0.15} className="pointer-events-none" />
 
-      {/* Outer ambient halo */}
+      {/* Atmospheric Halo / Gravity Well */}
       <SafeMotionCircle
-        cx={50} cy={50} r={safeRadius + 1.5}
-        fill="none" stroke={color} strokeWidth={2.5} opacity={0.08}
+        cx={50} cy={50} r={safeRadius + 2.5}
+        fill="none" stroke={color} strokeWidth={4} opacity={0.03}
         animate={{ 
-          opacity: [0.05, 0.18 + audioIntensity * 0.1, 0.05],
-          scale: [1, 1 + audioIntensity * 0.02, 1] 
+          opacity: [0.02, 0.12 + audioIntensity * 0.1, 0.02],
+          scale: [0.98, 1.02 + audioIntensity * 0.01, 0.98] 
         }}
-        transition={{ duration: breatheDuration * 3, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration: breatheDuration * 4, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Main neon ring — thick, glowing, without SVG filter to prevent gray box artifacts */}
+      {/* Primary Energy Trail - Core Glow */}
       <SafeMotionCircle
         cx={50} cy={50} r={safeRadius}
         fill="none" stroke={color}
         animate={{ 
-          strokeWidth: [3, 5 + audioIntensity * 3, 3], 
-          opacity: [0.15, 0.3 + audioIntensity * 0.2, 0.15] 
+          strokeWidth: [1.5, 3 + audioIntensity * 2, 1.5], 
+          opacity: [0.4, 0.8 + audioIntensity * 0.2, 0.4] 
         }}
         transition={{ duration: breatheDuration * 2, repeat: Infinity, ease: "easeInOut" }}
+        style={{ filter: `drop-shadow(0 0 4px ${color})` }}
         className="pointer-events-none"
       />
+
+      {/* Primary Energy Trail - Sharp Core */}
       <SafeMotionCircle
         cx={50} cy={50} r={safeRadius}
-        fill="none" stroke={color}
+        fill="none" stroke="#ffffff"
         animate={{ 
-          strokeWidth: [1.4, 2.4 + audioIntensity, 1.4], 
-          opacity: [0.65, 1, 0.65] 
+          strokeWidth: [0.3, 0.8 + audioIntensity * 0.5, 0.3], 
+          opacity: [0.3, 0.9, 0.3] 
         }}
         transition={{ duration: breatheDuration * 2, repeat: Infinity, ease: "easeInOut" }}
         className="orbital-ring"
       />
 
-      {/* Inner dashed shimmer */}
+      {/* Secondary Ethereal Resonance (Dashed) */}
       <SafeMotionCircle
-        cx={50} cy={50} r={safeRadius - 0.8}
-        fill="none" stroke={color} strokeWidth={0.5} opacity={0.3}
-        strokeDasharray="2 5"
-        animate={{ strokeDashoffset: [0, -20] }}
-        transition={{ duration: breatheDuration * 1.5, repeat: Infinity, ease: "linear" }}
+        cx={50} cy={50} r={safeRadius - 1.2}
+        fill="none" stroke={color} strokeWidth={0.8} opacity={0.4}
+        strokeDasharray="4 8"
+        animate={{ strokeDashoffset: [0, -30], rotate: [0, 5] }}
+        style={{ transformOrigin: "50px 50px" }}
+        transition={{ duration: breatheDuration * 3, repeat: Infinity, ease: "linear" }}
       />
 
-      {/* Chromatic aberration — danger ring only */}
+      {/* Chromatic Disturbance for Danger Zone */}
       {ring === "red" && (
         <SafeMotionCircle
-          cx={50} cy={50} r={safeRadius + 0.8}
-          fill="none" stroke="rgba(244,63,94,0.3)" strokeWidth={4}
-          animate={{ opacity: [0, 0.5, 0], scale: [0.97, 1.03, 0.97] }}
+          cx={50} cy={50} r={safeRadius + 1.2}
+          fill="none" stroke="rgba(244,63,94,0.4)" strokeWidth={3}
+          strokeDasharray="10 30"
+          animate={{ opacity: [0, 0.6, 0], scale: [0.96, 1.04, 0.96], rotate: [0, -15] }}
           style={{ transformOrigin: "50px 50px" }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         />
       )}
 
-      {/* Orbiting light dots */}
+      {/* Cosmic Dust Orbits (Light dots) */}
       {dotAngles.map((startAngle, i) => (
         <motion.g
           key={i}
           style={{ transformOrigin: "50px 50px" }}
           animate={{ rotate: [startAngle, startAngle + 360] }}
-          transition={{ duration: breatheDuration * 5 + i * 2, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: breatheDuration * 8 + i * 3, repeat: Infinity, ease: "linear" }}
         >
           <SafeMotionCircle
             cx={50 + safeRadius}
             cy={50}
-            r={ring === "red" ? 0.9 : 0.7}
-            fill={color}
-            style={{ filter: `drop-shadow(0 0 2px ${color})` }}
+            r={0.6 + Math.random() * 0.5}
+            fill="#ffffff"
+            style={{ filter: `drop-shadow(0 0 3px ${color})` }}
+            animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.5, 0.8] }}
+            transition={{ duration: 1.5 + i, repeat: Infinity, ease: "easeInOut" }}
           />
         </motion.g>
       ))}
-      {/* Ring label — subtle text above ring */}
+
+      {/* Label - Cinematic typography */}
       <text
         x={50}
-        y={50 - safeRadius - 1.5}
+        y={50 - safeRadius - 2.5}
         textAnchor="middle"
         dominantBaseline="middle"
         style={{
-          fontSize: "2.2px",
+          fontSize: "2.4px",
           fill: color,
-          opacity: 0.4,
-          fontWeight: 700,
-          letterSpacing: "0.4em",
+          opacity: 0.5,
+          fontWeight: 800,
+          letterSpacing: "0.5em",
           pointerEvents: "none",
+          filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.8))`
         }}
       >
         {label.toUpperCase()}
@@ -256,7 +268,7 @@ const IllusionEntityView: FC<{ scenario: any; index: number; total: number; onDi
         whileHover={{ scale: 1.15 }}
       >
         {/* Core dark asteroid body */}
-        <circle cx={cx} cy={cy} r={2.5} className="fill-slate-900 dark:fill-slate-950" stroke="#4c1d95" strokeWidth={0.6} />
+        <SafeCircle cx={cx} cy={cy} r={2.5} className="fill-slate-900 dark:fill-slate-950" stroke="#4c1d95" strokeWidth={0.6} />
         
         {/* Breathing toxic glow */}
               <SafeMotionCircle
@@ -294,8 +306,8 @@ const IllusionEntityView: FC<{ scenario: any; index: number; total: number; onDi
 
 const RING_COLORS = {
   safe: { stroke: "var(--consciousness-primary)", glow: "var(--ds-color-primary-glow)" },
-  caution: { stroke: "var(--consciousness-accent)", glow: "color-mix(in srgb, var(--consciousness-accent) 35%, transparent)" },
-  danger: { stroke: "var(--consciousness-critical)", glow: "color-mix(in srgb, var(--consciousness-critical) 45%, transparent)" },
+  caution: { stroke: "var(--consciousness-accent)", glow: "color-mix(in srgb, var(--consciousness-accent) 35%, rgba(0,0,0,0))" },
+  danger: { stroke: "var(--consciousness-critical)", glow: "color-mix(in srgb, var(--consciousness-critical) 45%, rgba(0,0,0,0))" },
   detached: { stroke: "var(--ds-theme-text-muted)", glow: "rgba(148, 163, 184, 0.15)" }
 } as const;
 
@@ -426,10 +438,10 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     : isVampire
       ? { stroke: "rgba(153,27,27,0.6)", bg: "linear-gradient(135deg, rgba(153,27,27,0.1), rgba(0,0,0,0.4))", glow: "rgba(185,28,28,0.1)", accent: "var(--consciousness-critical)", shadow: "rgba(185,28,28,0.2)" }
       : node.ring === "red"
-        ? { stroke: "rgba(244,63,94,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-critical)", shadow: "color-mix(in srgb, var(--consciousness-critical) 12%, transparent)" }
+        ? { stroke: "rgba(244,63,94,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-critical)", shadow: "color-mix(in srgb, var(--consciousness-critical) 12%, rgba(0,0,0,0))" }
         : node.ring === "yellow"
-          ? { stroke: "rgba(251,191,36,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-accent)", shadow: "color-mix(in srgb, var(--consciousness-accent) 12%, transparent)" }
-          : { stroke: "rgba(45,212,191,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-primary)", shadow: "color-mix(in srgb, var(--consciousness-primary) 12%, transparent)" };
+          ? { stroke: "rgba(251,191,36,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-accent)", shadow: "color-mix(in srgb, var(--consciousness-accent) 12%, rgba(0,0,0,0))" }
+          : { stroke: "rgba(45,212,191,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-primary)", shadow: "color-mix(in srgb, var(--consciousness-primary) 12%, rgba(0,0,0,0))" };
 
   const auraColor = isDetached
     ? "rgba(71,85,105,0.08)"
@@ -545,16 +557,14 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           // onTap is only triggered if it's not a drag
           handleClick();
         }}
-        className={`relative z-10 select-none flex items-center gap-1 pr-1.5 transition-all rounded-full overflow-hidden cursor-pointer outline-none focus:outline-none focus-visible:outline-none ${
-          isDragging ? "opacity-90 scale-[1.04] shadow-[0_24px_60px_rgba(0,0,0,0.95)]" : ""
-        } ${isDetached ? "opacity-40 grayscale-[70%] saturate-50" : ""} ${hasMismatch ? "!border-amber-400/60" : ""}`}
+        className={`relative z-10 select-none flex flex-col items-center gap-2 transition-all cursor-pointer outline-none focus:outline-none focus-visible:outline-none ${
+          isDragging ? "opacity-90 scale-[1.04]" : ""
+        } ${isDetached ? "opacity-40 grayscale-[70%] saturate-50" : ""} ${hasMismatch ? "drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" : ""}`}
         style={{
-          background: ringPalette.bg,
-          border: `1.5px solid ${hasMismatch ? "rgba(251,191,36,0.6)" : ringBorderColor}`,
-          boxShadow: isDragging
-            ? `0 0 40px ${ringPalette.shadow}, inset 0 0 20px ${ringBgColor}`
-            : `0 4px 24px ${ringPalette.shadow}, inset 0 0 12px ${ringBgColor}`,
-          backdropFilter: "blur(12px)",
+          ...style,
+          filter: isExploding ? "brightness(3) contrast(2) blur(8px) url(#vampireDistortion)" : isVampire ? "url(#vampireDistortion)" : undefined,
+          pointerEvents: isExploding ? "none" : "auto",
+          WebkitTapHighlightColor: "transparent",
         }}
         animate={!isDragging && !reduceMotion ? {
           y: isDetached ? [0, -3, 2, -1, 0] : [0, -1.5, 0.8, 0],
@@ -568,43 +578,39 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           delay: (nodeIndex % 7) * 0.5
         }}
         whileHover={reduceMotion ? undefined : {
-          boxShadow: `0 0 32px ${ringPalette.shadow}, 0 0 64px ${ringBgColor}, inset 0 0 16px ${ringBgColor}`,
-          scale: 1.03,
+          scale: 1.05,
         }}
       >
-        {/* Neon shine streak — top highlight */}
-        <div
-          className="absolute inset-x-0 top-0 h-px pointer-events-none"
-          style={{ background: `linear-gradient(to right, transparent, ${ringPalette.accent}, transparent)`, opacity: 0.5 }}
-        />
-
-        {/* Avatar — cosmic circle with ring-colored glow */}
+        {/* Avatar — Ethereal Cosmic Orb */}
         <span
-          className="shrink-0 w-9 h-9 rounded-full overflow-hidden flex items-center justify-center font-black relative"
+          className="shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden flex items-center justify-center font-black relative"
           style={{
             background: isVampire
-              ? `radial-gradient(circle, #080808 20%, rgba(153,27,27,${0.4 + vampireIntensity * 0.6}) 100%)`
+              ? `radial-gradient(circle at 30% 30%, #080808 20%, rgba(153,27,27,${0.4 + vampireIntensity * 0.6}) 100%)`
               : isDetached
                 ? "rgba(71, 85, 105, 0.4)"
-                : `radial-gradient(circle, rgba(255,255,255,0.08) 0%, ${ringBgColor} 100%)`,
-            color: isVampire ? "rgba(255,255,255,0.7)" : ringPalette.accent,
-            border: `1.5px solid ${ringBorderColor}`,
-            boxShadow: isVampire
-              ? `inset 0 0 ${6 + vampireIntensity * 12}px #000, 0 0 ${vampireIntensity * 18}px rgba(153,27,27,0.6)`
-              : `inset 0 0 8px ${ringBgColor}, 0 0 10px ${ringPalette.shadow}`,
-            fontSize: "13px",
+                : `radial-gradient(circle at 35% 35%, rgba(255,255,255,0.15) 0%, ${ringBgColor} 50%, rgba(0,0,0,0.5) 100%)`,
+            color: isVampire ? "rgba(255,255,255,0.7)" : "var(--text-primary)",
+            border: `1.5px solid ${hasMismatch ? "rgba(251,191,36,0.6)" : ringBorderColor}`,
+            boxShadow: isDragging
+              ? `0 0 40px ${ringPalette.shadow}, inset 0 0 25px ${ringBgColor}`
+              : isVampire
+                ? `inset 0 0 ${6 + vampireIntensity * 12}px #000, 0 0 ${vampireIntensity * 18}px rgba(153,27,27,0.6)`
+                : `inset 0 0 15px ${ringBgColor}, 0 0 20px ${ringPalette.shadow}`,
+            fontSize: "16px",
+            backdropFilter: "blur(12px)",
           }}
         >
           {node.avatarUrl ? (
-            <img src={node.avatarUrl} alt="" className="w-full h-full object-cover pointer-events-none" />
+            <img src={node.avatarUrl} alt="" className="w-full h-full object-cover pointer-events-none mix-blend-overlay opacity-80" />
           ) : (
-            <span aria-hidden className="pointer-events-none">{node.label.trim() ? node.label.trim()[0].toUpperCase() : ""}</span>
+            <span aria-hidden className="pointer-events-none drop-shadow-md">{node.label.trim() ? node.label.trim()[0].toUpperCase() : ""}</span>
           )}
         </span>
 
-        {/* Clickable label */}
+        {/* Clickable label underneath orb */}
         <motion.div
-
+          className="flex flex-col items-center text-center px-3 py-1 rounded-full bg-slate-950/40 border border-slate-700/30 backdrop-blur-md"
           style={{ color: "var(--text-primary)", letterSpacing: "0.02em" }}
           title={
             hasMismatch
@@ -615,20 +621,17 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
                 ? `اضغط لرؤية تفاصيل ${node.label}`
                 : "التفاصيل موقفة حالياً"
           }
-          whileHover={reduceMotion ? undefined : { x: -1 }}
-          whileTap={reduceMotion ? undefined : { scale: 0.97 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
         >
-          <span className="flex flex-col items-start gap-0.5">
+          <span className="flex flex-col items-center gap-0.5">
             <span
-              className="text-xs md:text-sm font-bold leading-tight tracking-wide"
+              className="text-xs md:text-sm font-bold leading-tight tracking-wide drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
               style={{ color: isHighlighted ? ringPalette.accent : "var(--text-primary)" }}
             >
               {node.label}
             </span>
             {missionBadge ? (
               <span
-                className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wide"
+                className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wide mt-1"
                 style={{
                   background: missionBadge.tone === "done"
                     ? "rgba(45,212,191,0.18)"
@@ -999,18 +1002,18 @@ const DroppableRing: FC<{ id: Ring | "grey"; sizePct: number; zIndex: number }> 
 const ME_CENTER_STYLES: Record<string, { fill: string; glow: string; pulseScale: number[] }> = {
   drained: {
     fill: "url(#meDrained)",
-    glow: "rgba(100, 116, 139, 0.3)",
-    pulseScale: [1, 1.03, 1]
+    glow: "rgba(100, 116, 139, 0.25)",
+    pulseScale: [1, 1.02, 1]
   },
   okay: {
-    fill: "url(#meOkay)",
-    glow: "rgba(45, 212, 191, 0.3)",
-    pulseScale: [1, 1.06, 1]
+    fill: "url(#horusGoldGradient)",
+    glow: "rgba(201, 168, 76, 0.4)",
+    pulseScale: [1, 1.08, 1]
   },
   charged: {
-    fill: "url(#meCharged)",
-    glow: "rgba(45, 212, 191, 0.6)",
-    pulseScale: [1, 1.1, 1]
+    fill: "url(#luminousGoldGradient)",
+    glow: "rgba(201, 168, 76, 0.7)",
+    pulseScale: [1, 1.15, 1]
   }
 };
 
@@ -1666,34 +1669,34 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               <defs>
                 {/* ── Me Center Gradients ── */}
                 <radialGradient id="meDrained" cx="50%" cy="40%" r="60%">
-                  <stop offset="0%" stopColor="#94a3b8" />
-                  <stop offset="70%" stopColor="#475569" />
-                  <stop offset="100%" stopColor="#1e293b" />
+                  <stop offset="0%" stopColor="#475569" />
+                  <stop offset="70%" stopColor="#1e293b" />
+                  <stop offset="100%" stopColor="#0f172a" />
                 </radialGradient>
                 <radialGradient id="meOkay" cx="50%" cy="38%" r="65%">
-                  <stop offset="0%" stopColor="#5eead4" />
-                  <stop offset="50%" stopColor="#2dd4bf" />
-                  <stop offset="100%" stopColor="#0d9488" />
+                  <stop offset="0%" stopColor="#fcd34d" />
+                  <stop offset="50%" stopColor="#fbbf24" />
+                  <stop offset="100%" stopColor="#d97706" />
                 </radialGradient>
                 <radialGradient id="meCharged" cx="50%" cy="35%" r="65%">
-                  <stop offset="0%" stopColor="#99f6e4" />
-                  <stop offset="35%" stopColor="#5eead4" />
-                  <stop offset="70%" stopColor="#2dd4bf" />
-                  <stop offset="100%" stopColor="#0f766e" />
+                  <stop offset="0%" stopColor="#fde68a" />
+                  <stop offset="35%" stopColor="#f59e0b" />
+                  <stop offset="70%" stopColor="#b45309" />
+                  <stop offset="100%" stopColor="#78350f" />
                 </radialGradient>
                 {/* Deep void space: layered cosmic core */}
                 <radialGradient id="soulCore" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.9" />
-                  <stop offset="40%" stopColor="#0d9488" stopOpacity="0.6" />
-                  <stop offset="70%" stopColor="#042F2E" stopOpacity="0.5" />
+                  <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.85" />
+                  <stop offset="40%" stopColor="#d97706" stopOpacity="0.5" />
+                  <stop offset="70%" stopColor="#4338ca" stopOpacity="0.3" />
                   <stop offset="100%" stopColor="transparent" stopOpacity="0" />
                 </radialGradient>
                 {/* Corona outer ring gradient */}
                 <radialGradient id="soulCorona" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stopColor="transparent" />
-                  <stop offset="55%" stopColor="#2dd4bf" stopOpacity="0.08" />
-                  <stop offset="75%" stopColor="#2dd4bf" stopOpacity="0.15" />
-                  <stop offset="85%" stopColor="#2dd4bf" stopOpacity="0.06" />
+                  <stop offset="55%" stopColor="#f59e0b" stopOpacity="0.08" />
+                  <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.15" />
+                  <stop offset="85%" stopColor="#f59e0b" stopOpacity="0.06" />
                   <stop offset="100%" stopColor="transparent" />
                 </radialGradient>
                 {/* Ring glass fills — inner glow zones */}
@@ -1714,7 +1717,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 </radialGradient>
                 {/* Center halo for reveal state */}
                 <radialGradient id="centerHaloGradient" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="rgba(45,212,191,0.3)" />
+                  <stop offset="0%" stopColor="rgba(245,158,11,0.3)" />
                   <stop offset="100%" stopColor="transparent" />
                 </radialGradient>
                 {/* ── Sovereign Fluid Dynamics & Glitch Filters ── */}
@@ -1767,7 +1770,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 {/* Center mega glow */}
                 <filter id="centerMegaGlow" x="-100%" y="-100%" width="300%" height="300%">
                   <feGaussianBlur stdDeviation="6" result="blur" />
-                  <feFlood floodColor="#2DD4BF" floodOpacity="0.6" result="glowColor" />
+                  <feFlood floodColor="#F59E0B" floodOpacity="0.6" result="glowColor" />
                   <feComposite in="glowColor" in2="blur" operator="in" result="glow" />
                   <feMerge>
                     <feMergeNode in="glow" />
@@ -1941,7 +1944,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                     style={{ transformOrigin: "50px 50px" }}
                   >
-                    <circle cx="50" cy="50" r="16" fill="url(#centerHaloGradient)" className="pointer-events-none" />
+                    <SafeCircle cx="50" cy="50" r="16" fill="url(#centerHaloGradient)" className="pointer-events-none" />
                   </motion.g>
                 )}
               </AnimatePresence>
@@ -2025,7 +2028,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   <SafeMotionCircle
                     cx="50" cy="50" r={13}
                     fill="none"
-                    stroke={battery === "drained" ? "rgba(148,163,184,0.3)" : "rgba(45,212,191,0.35)"}
+                    stroke={battery === "drained" ? "rgba(148,163,184,0.3)" : "rgba(245,158,11,0.35)"}
                     strokeWidth={2.5}
                     filter="url(#centerMegaGlow)"
                     animate={{ opacity: [0.4, 0.9, 0.4], strokeWidth: [2, 3.5, 2] }}
@@ -2033,28 +2036,28 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   />
                 )}
 
-                {/* 5 expanding heartbeat waves — synchronized pulse */}
+                {/* 5 expanding heartbeat waves — synchronized pulse (Horus Gold) */}
                 {!shouldReduceMotion && [0, 1.2, 2.4, 3.6, 4.8].map((delay, i) => (
                   <SafeMotionCircle
                     key={`wave-${i}`}
                     cx="50" cy="50" r={8}
-                    stroke={battery === "drained" ? "rgba(148,163,184,0.6)" : battery === "charged" ? "rgba(94,234,212,0.7)" : "rgba(45,212,191,0.6)"}
-                    strokeWidth={i === 0 ? 0.8 : 0.4}
+                    stroke={battery === "drained" ? "rgba(148,163,184,0.4)" : battery === "charged" ? "rgba(252,211,77,0.6)" : "rgba(201, 168, 76, 0.5)"}
+                    strokeWidth={i === 0 ? 0.6 : 0.3}
                     fill="none"
-                    animate={{ r: [8, 14 + i * 4], opacity: [0.7 - i * 0.12, 0] }}
-                    transition={{ duration: battery === "charged" ? 2.5 : 3.5, repeat: Infinity, ease: "easeOut", delay }}
+                    animate={{ r: [8, 16 + i * 5], opacity: [0.6 - i * 0.1, 0] }}
+                    transition={{ duration: battery === "charged" ? 2 : 3, repeat: Infinity, ease: "easeOut", delay }}
                   />
                 ))}
 
-                {/* Main Orb — the planet itself */}
+                {/* Main Orb — The Horus Core */}
                 <motion.g
                   filter="url(#centerMegaGlow)"
                   animate={shouldReduceMotion ? undefined : {
                     scale: meStyle.pulseScale,
-                    opacity: battery === "drained" ? [0.65, 0.85, 0.65] : [0.9, 1, 0.9]
+                    opacity: battery === "drained" ? [0.6, 0.8, 0.6] : [0.9, 1, 0.9]
                   }}
                   transition={shouldReduceMotion ? undefined : {
-                    duration: battery === "charged" ? 2.2 : 3.5,
+                    duration: battery === "charged" ? 1.8 : 2.8,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
@@ -2062,31 +2065,22 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 >
                   {/* Outer orb body */}
                   <SafeMotionCircle cx="50" cy="50" r={8.5} fill={meStyle.fill} />
-                  {/* Inner highlight — the "eye" of the planet */}
-                  <SafeMotionCircle cx="50" cy="50" r={3.5} fill="#ffffff" style={{ filter: "blur(1px)", opacity: 0.9 }} />
+                  
+                  {/* Horus Falcon Symbol (Centered) */}
+                  <g transform="translate(44, 44) scale(0.012)">
+                     <path fill="white" opacity="0.9" d="M587.15,162.87l-31.13,2.29,16.28-9.17,23.71-14.09c15.65-10.71,28.25-24.02,37.37-40.31l34.33-16.98c20.85-10.31,39.06-23.94,56.7-39.1,15.48-13.3,27.82-27.95,39.76-44.77-3.5,12.7-8.63,23.07-14.29,34.31-15.21,28.26-34.34,53.04-57.28,75.72l-62.29,20.58-15.24,4.98c-1.2,1.21-2.94,3.74-3.89,5.53l-10.15,19.12-13.89,1.88Z"/>
+                     <path fill="white" opacity="0.9" d="M200.88,164.77l-11.8-.75-25.29-2.48-12.46-24.18-78.37-26.29C41.01,80.24,14.98,42.47,0,0c32.51,47.4,79.41,78.45,131.41,101.75,17.96,32.66,46.27,46.11,77.55,63.34l-8.08-.33Z"/>
+                     <path fill="white" opacity="0.9" d="M413.22,259.33c-8.93,9.87-16.75,19.21-22.83,30.67l-8.28,21.33c-3.29-16.08-12.46-30.08-22.09-42.62-11.18-12.3-22.64-23.06-35.89-33.45,1.97-11.56,4.75-21.76,8.71-33.8,12.61,8.74,23.41,18.45,33.53,29.93,6.87,7.8,11.48,16.97,15.84,26.77,5.17-12.72,13.06-24.22,23-34.25,8.35-8.16,16.39-15.19,26.66-22.47,3.52,11.38,6.17,21.82,7.87,33.59l-26.52,24.3Z"/>
+                  </g>
+
                   {/* Specular highlight dot */}
-                  <SafeMotionCircle cx="48" cy="47.5" r={1.2} fill="#ffffff" opacity={0.7} />
+                  <SafeMotionCircle cx="48" cy="47.5" r={1} fill="#ffffff" opacity={0.6} />
                 </motion.g>
 
-                {/* "أنا" label */}
-                <text
-                  x="50"
-                  y="62"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className="select-none pointer-events-none"
-                  style={{
-                    fontSize: "3px",
-                    fontWeight: 900,
-                    fill: "var(--soft-teal)",
-                    opacity: battery === "drained" ? 0.5 : 1,
-                    letterSpacing: "0.15em",
-                    filter: "drop-shadow(0 0 3px var(--soft-teal-glow))"
-                  }}
-                >
-                  ◈ أنت ◈
-                </text>
               </g>
+
+              {/* ─── "◈ أنت ◈" label rendered OUTSIDE svg as HTML overlay ─── */}
+
 
               {/*  Drag Assist Hint  */}
               <AnimatePresence>
@@ -2125,7 +2119,49 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   </motion.g>
                 )}
               </AnimatePresence>
+            {/*  Illusion Embodiment (Shadow Asteroids)  */}
+            <AnimatePresence>
+              {activeIllusions.map((scenario: any, index: number) => (
+                <IllusionEntityView
+                  key={scenario.key}
+                  scenario={scenario}
+                  index={index}
+                  total={activeIllusions.length}
+                  onDismantle={handleDestroyIllusion}
+                />
+              ))}
+            </AnimatePresence>
+
+            {/* ◈ العلاقة الرأسية: الاتصال بالمصدر ◈ */}
+            <DivineConnection strength={calculateVerticalResonance(useHafizState(s => s.memories))} />
+
             </motion.svg>
+
+            {/* ─── "◈ أنت ◈" Label — HTML overlay, always below orb ─── */}
+            <div
+              className="absolute pointer-events-none select-none"
+              style={{
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, 5vmin)",
+                zIndex: 15,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "clamp(9px, 1.1vmin, 13px)",
+                  fontWeight: 900,
+                  color: battery === "drained" ? "rgba(201, 168, 76, 0.4)" : "#C9A84C",
+                  letterSpacing: "0.25em",
+                  textShadow: "0 0 8px rgba(201, 168, 76, 0.5)",
+                  fontFamily: "inherit",
+                  display: "block",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                ◈ أنت ◈
+              </span>
+            </div>
 
             {/*  Node Overlays  */}
             <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 20 }}>
@@ -2222,18 +2258,6 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             <DroppableRing id="yellow" sizePct={58} zIndex={11} />
             <DroppableRing id="green" sizePct={36} zIndex={12} />
 
-            {/*  Illusion Embodiment (Shadow Asteroids)  */}
-            <AnimatePresence>
-              {activeIllusions.map((scenario: any, index: number) => (
-                <IllusionEntityView
-                  key={scenario.key}
-                  scenario={scenario}
-                  index={index}
-                  total={activeIllusions.length}
-                  onDismantle={handleDestroyIllusion}
-                />
-              ))}
-            </AnimatePresence>
 
             {/*  Me click zone — tap = profile, long-press = Battery State  */}
             {onMeClick ? (
@@ -2274,6 +2298,11 @@ export const MapCanvas: FC<MapCanvasProps> = ({
           animate={{ background: vignetteGradient }}
           transition={{ duration: 4 }}
         />
+
+        {/* ── Deep Void Indigo Overlay ── */}
+        <div className="absolute inset-0 pointer-events-none mix-blend-overlay z-0" style={{
+          background: 'radial-gradient(circle at 50% 50%, rgba(49,46,129,0.1) 0%, rgba(30,27,75,0.4) 60%, rgba(2,6,23,0.8) 100%)'
+        }} />
 
         {/* ── Energy Crisis Warning (Glassmorphic) ── */}
         <AnimatePresence>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from "react";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 import { motion, useInView, type Variants } from "framer-motion";
 
 /* ─── Contact channels ─────────────────────────────────────── */
@@ -38,7 +39,7 @@ const CHANNELS = [
     subtitle: "تابعنا وشاركنا رحلتك",
     value: "@alrehla.app",
     href: "https://instagram.com/alrehla.app",
-    cta: "تابع الرحلة",
+    cta: <span>تابع <AlrehlaWordmark height={10} color="currentColor" /></span> as any,
     gradient: "from-rose-500/20 to-purple-600/10",
     border: "border-rose-500/20",
     glow: "hover:shadow-rose-500/10",
@@ -512,7 +513,7 @@ export default function ContactPage() {
             <span style={{ color: "#14b8a6", fontWeight: 800 }}>٢٤ ساعة</span>{" "}
             في أيام العمل.
             <br />
-            كل رسالة تُقرأ بعناية — لأن رحلتك تستحق ذلك.
+            كل رسالة تُقرأ بعناية — لأن <AlrehlaWordmark height={10} color="currentColor" className="inline-block" /> تستحق ذلك.
           </p>
         </motion.section>
 

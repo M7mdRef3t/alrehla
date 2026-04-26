@@ -1,6 +1,6 @@
 import { logger } from "@/services/logger";
 import React, { type FC, useState } from "react";
-import { AlertTriangle, TrendingUp, Zap as Sparkles } from "lucide-react";
+import { AlertTriangle, TrendingUp, Zap as Sparkles, HelpCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import type { TopScenario } from "@/services/admin/adminTypes";
 import { marketingCopywriter, type TikTokScriptGeneration } from "@/ai/aiMarketingCopy";
@@ -10,6 +10,15 @@ interface IllusionRadarProps {
   scenarios: TopScenario[] | null;
   isLoading: boolean;
 }
+
+const SCENARIO_HINTS: Record<string, string> = {
+  "طوارئ": "حالات حرجة جداً، وجع عالي وضرر نفسي واضح بيحتاج تدخل فوري.",
+  "سجين ذهني": "المستخدم حاسس إنه محبوس في العلاقة، وجع كتير بس مش عارف ياخد خطوة أو يتواصل.",
+  "استنزاف نشط": "خناقات وتفاعل كتير بس كلها سلبية وبتسحب طاقة المستخدم الأرض.",
+  "علاقة مشروطة": "علاقة ماشية بس على 'قشر بيض'، فيها شروط وتهديد دائم للأمان.",
+  "ميناء آمن": "علاقة صحية، وجع قليل وأمان عالي، دي اللي بنطمح ليها.",
+  "علاقة منقطعة": "علاقة انتهت فعلياً ومفيش فيها أي تواصل، مجرد ذكرى بتشغل حيز من الوعي."
+};
 
 export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -22,7 +31,8 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
     setGeneratedScript(null);
     try {
       const result = await marketingCopywriter.generateIllusionDismantlingScript({
-        illusionName
+        illusionName,
+        description: SCENARIO_HINTS[illusionName] || ""
       });
       if (result) {
         setGeneratedScript(result);
@@ -39,7 +49,7 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <div className="w-12 h-12 rounded-full border-2 border-rose-500/20 border-t-rose-500 animate-spin" />
         <div className="text-rose-500/50 text-[10px] font-black animate-pulse font-mono tracking-[0.3em] uppercase">
-          Scanning Frequencies...
+          جارٍ مسح الترددات...
         </div>
       </div>
     );
@@ -59,7 +69,7 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" dir="rtl">
           {safeScenarios.length > 0 ? (
             safeScenarios.map((scenario, idx) => {
               const scenarioPercent = scenario.percent ?? scenario.percentage ?? scenario.share ?? 0;
@@ -78,6 +88,7 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
               return (
                 <motion.div
                   key={scenarioKey}
+                  dir="rtl"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.1 }}
@@ -91,37 +102,46 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
                     />
                   )}
 
-                  <div className="flex items-center justify-between z-10 relative flex-row-reverse text-right">
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2 opacity-50 flex-row-reverse">
+                  <div className="flex items-center justify-between z-10 relative">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2 opacity-50">
                       <TrendingUp className={`w-3 h-3 ${iconColor}`} />
-                      Illusion Node
+                      نقطة وهم
                     </span>
-                    <div className="flex flex-col items-start">
+                    <div className="flex flex-col items-start text-right" dir="rtl">
                       <span className="font-mono text-xl font-black drop-shadow-lg">{Math.round(scenarioPercent)}%</span>
-                      <span className="text-[8px] uppercase tracking-widest opacity-40">Frequency</span>
+                      <span className="text-[8px] uppercase tracking-widest opacity-40">تردد الظهور</span>
                     </div>
                   </div>
 
-                  <div className="z-10 relative space-y-4 text-right">
-                    <div>
-                      <h4 className="text-lg font-black leading-tight text-white group-hover:text-rose-500 transition-colors">
-                        {scenario.label}
-                      </h4>
-                      <p className="text-[10px] font-bold opacity-40 mt-1 flex items-center gap-1 flex-row-reverse">
-                         <span className="w-1 h-1 rounded-full bg-current" />
-                         {scenario.count} Souls Affected
+                  <div className="z-10 relative space-y-4">
+                      <div className="flex items-center gap-2 justify-start mb-1">
+                        <h4 className="text-lg font-black leading-tight text-white group-hover:text-rose-500 transition-colors">
+                          {scenario.label}
+                        </h4>
+                        {SCENARIO_HINTS[scenario.label] && (
+                          <div className="group/hint relative">
+                            <HelpCircle className="w-3 h-3 text-white/20 hover:text-white/60 transition-colors cursor-help" />
+                            <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-slate-900 border border-white/10 rounded-lg text-[10px] text-slate-300 opacity-0 group-hover/hint:opacity-100 transition-opacity pointer-events-none z-50 text-right leading-relaxed shadow-2xl">
+                              {SCENARIO_HINTS[scenario.label]}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-[10px] font-bold opacity-40 mt-1 flex items-center gap-1 justify-start" dir="rtl">
+                        <span className="w-1 h-1 rounded-full bg-current" />
+                        {scenario.count} نفس متأثرة
                       </p>
                     </div>
 
                     <button
                       onClick={() => handleDismantle(scenario.label)}
                       disabled={isGenerating}
-                      className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest group/btn"
+                      className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest group/btn relative z-10 cursor-pointer"
                     >
                       {isGenerating && selectedIllusion === scenario.label ? (
                         <div className="flex items-center gap-2">
                            <div className="w-3 h-3 rounded-full border border-t-transparent border-white animate-spin" />
-                           <span>Dismantling...</span>
+                           <span>جارٍ التفكيك...</span>
                         </div>
                       ) : (
                         <>
@@ -130,14 +150,14 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
                         </>
                       )}
                     </button>
-                  </div>
+
                 </motion.div>
               );
             })
           ) : (
             <div className="col-span-full py-20 text-center border border-dashed border-white/5 rounded-[40px] bg-white/2">
               <Sparkles className="w-8 h-8 text-slate-800 mx-auto mb-4" />
-              <span className="text-slate-600 text-xs font-black uppercase tracking-widest italic">The Sea of Consciousness is Pure...</span>
+              <span className="text-slate-600 text-xs font-black uppercase tracking-widest italic">بحر الوعي صافي.. مفيش أوهام مرصودة حالياً</span>
             </div>
           )}
         </div>

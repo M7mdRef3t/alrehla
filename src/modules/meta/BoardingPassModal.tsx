@@ -53,7 +53,7 @@ export const BoardingPassModal: FC<BoardingPassModalProps> = ({ isOpen, onClose,
 
       const url = canvas.toDataURL("image/png");
       const link = document.createElement("a");
-      link.download = `Dawayir-Founding-Member-${userName || 'Pass'}.png`;
+      link.download = `Alrehla-Founding-Member-${userName || 'Pass'}.png`;
       link.href = url;
       link.click();
     } catch (err) {
@@ -118,7 +118,7 @@ export const BoardingPassModal: FC<BoardingPassModalProps> = ({ isOpen, onClose,
               transition={{ delay: 0.5 }}
               className="text-slate-400 text-sm md:text-base max-w-md mx-auto mb-10 leading-relaxed"
             >
-              إنت الآن جزء من الدفعة التأسيسية لمنصة دوائر. رحلتك نحو القيادة النفسية والوعي الكامل بدأت رسمياً.
+              إنت الآن جزء من الدفعة التأسيسية في الرحلة. رحلتك نحو القيادة النفسية والوعي الكامل بدأت رسمياً.
             </motion.p>
 
             {/* The Ticket / Boarding Pass Visual */}

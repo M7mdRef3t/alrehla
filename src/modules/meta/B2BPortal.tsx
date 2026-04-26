@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, UserPlus, Copy, Check, Shield, Briefcase, Link2, Loader2, ArrowRight } from "lucide-react";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 import { supabase } from "@/services/supabaseClient";
 import {
     registerAsCoach,
@@ -154,12 +155,10 @@ export const B2BPortal: FC = () => {
                         exit={{ opacity: 0, y: -12 }}
                     >
                         {/* Header */}
-                        <div className="text-center mb-6">
-                            <div className="w-14 h-14 rounded-2xl bg-[var(--soft-teal)]/20 flex items-center justify-center mx-auto mb-3">
-                                <Briefcase className="w-7 h-7 text-[var(--soft-teal)]" />
-                            </div>
-                            <h1 className="text-xl font-black text-white">رحلة الاحتراف والتشجيع</h1>
-                            <p className="text-sm text-slate-400 mt-1">منصة الدعم النفسي والإرشاد الاحترافي</p>
+                        <div className="text-center mb-8">
+                            <AlrehlaWordmark height={20} className="text-[var(--soft-teal)] mb-3" />
+                            <h1 className="text-xl font-black text-white tracking-tight">للاحتراف والتشجيع</h1>
+                            <p className="text-xs text-slate-400 mt-2 font-medium opacity-60">بوابة الدعم النفسي والإرشاد الاحترافي</p>
                         </div>
 
                         {/* Features */}

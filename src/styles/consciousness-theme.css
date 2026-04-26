@@ -159,7 +159,6 @@
    CONSCIOUSNESS STATES
    ════════════════════════════════════════════════ */
 [data-consciousness-state="crisis"] {
-  --text-opacity: 0.85;
   --border-opacity: 0.15;
   --shadow-opacity: 0.05;
 }
@@ -173,7 +172,6 @@
 }
 
 [data-consciousness-state="flow"] {
-  --text-opacity: 1;
   --border-opacity: 0.5;
   --shadow-opacity: 0.2;
 }
@@ -205,7 +203,6 @@ button:not(.unstyled) {
 
 .text-primary {
   color: var(--consciousness-text);
-  opacity: var(--text-opacity, 1);
 }
 
 .bordered {
@@ -368,3 +365,14 @@ button:not(.unstyled) {
   --atmosphere-grain:      0;
   --atmosphere-aberration: 0.2;
 }
+
+/* ════════════════════════════════════════════════
+   UTILITIES
+   ════════════════════════════════════════════════ */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

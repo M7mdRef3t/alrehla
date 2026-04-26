@@ -36,14 +36,14 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ title, description
     };
 
     const handleShare = async () => {
-        const shareText = `رحلتي في #دوائر — وعي أعمق وعلاقات أوضح.\n\n${title}\n${description}\n\nابدأ رحلتك: https://alrehla.app`;
+        const shareText = `رحلتي في #الرحلة — وعي أعمق وعلاقات أوضح.\n\n${title}\n${description}\n\nابدأ رحلتك: https://alrehla.app`;
 
         try {
             if (navigator.share) {
                 await navigator.share({
-                    title: 'محطة في رحلتي — دوائر',
+                    title: 'محطة في رحلتي — الرحلة',
                     text: shareText,
-                    url: 'https://dawayir.app',
+                    url: 'https://alrehla.app',
                 });
                 trackShareSuccess();
             } else {
@@ -101,7 +101,7 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ title, description
                             )}
 
                             <div className="mt-6 pt-6 border-t border-white/10 flex items-center justify-center gap-2">
-                                <span className="font-mono text-xs text-slate-400 tracking-widest">DAWAYIR.APP</span>
+                                <span className="font-mono text-xs text-slate-400 tracking-widest">ALREHLA.APP</span>
                             </div>
                         </div>
                     </div>

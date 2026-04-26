@@ -1,6 +1,8 @@
 import React, { type FC, useEffect, useState, useCallback, useMemo, useLayoutEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowLeft, Zap, Shield, Heart } from "lucide-react";
+import { AlrehlaIcon } from "./logo/AlrehlaIcon";
+import { AlrehlaWordmark } from "./logo/AlrehlaWordmark";
 import { soundManager } from "@/services/soundManager";
 import { SafeMotionCircle, toSafeSvgRadius } from "@/components/ui/SafeSvg";
 
@@ -25,7 +27,7 @@ const ROTATING_WORDS = [
   "نسيت نفسك عشانهم؟",
   "خايف تقول لأ؟",
   "شايل شيلة غيرك؟",
-  "تايه في دوائرك؟",
+  "تايه في رحلتك؟",
   "عايز تسترد قيادتك؟"
 ];
 
@@ -1012,13 +1014,17 @@ const HERO_STYLES = `
       margin-right: auto;
       margin-top: 0.25rem;
       width: 100%;
+      /* Isolate layout: prevents reflow from propagating upward */
+      contain: layout style;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
 
     .rotating-word-wrapper > .headline-accent {
-      right: 0 !important;
-      left: 0 !important;
-      margin: 0 auto !important;
-      justify-content: center;
+      position: relative !important;
+      display: inline-block !important;
+      width: 100% !important;
+      text-align: center !important;
     }
 
     .hero-copy-column .hero-body {
@@ -1138,45 +1144,56 @@ const stagger = {
 /* --- Rotating Headline Word --- */
 const RotatingWord: FC = () => {
   const [index, setIndex] = useState(0);
-  const [show, setShow] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const reduceMotion = useReducedMotion();
+  // Start with null to avoid SSR/hydration mismatch
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
+    const mql = window.matchMedia("(pointer: coarse)");
+    setIsMobile(mql.matches);
     const id = setInterval(() => {
-      setShow(false);
-      setTimeout(() => {
-        setIndex(i => (i + 1) % ROTATING_WORDS.length);
-        setShow(true);
-      }, 450);
+      setIndex(i => (i + 1) % ROTATING_WORDS.length);
     }, 5000);
     return () => clearInterval(id);
   }, []);
 
+  // Use minimal y animation on mobile to prevent jank. Disable if reduceMotion.
+  const mobile = isMobile ?? false;
+  const yAmount = reduceMotion ? 0 : mobile ? 6 : 10;
+  const dur = reduceMotion ? 0.01 : 0.5;
+
   return (
-    <span className="rotating-word-wrapper relative inline-block w-full max-w-full">
-      {/* wrapper  Time Complexity */}
-      <span className="invisible select-none block whitespace-nowrap" aria-hidden>
+    <span className="rotating-word-wrapper relative inline-flex items-center" style={{ minHeight: '1.2em' }}>
+      {/* Invisible spacer to hold layout — uses the longest word to prevent layout shift */}
+      <span className="invisible select-none pointer-events-none whitespace-nowrap opacity-0" aria-hidden>
         {ROTATING_WORDS.reduce((a, b) => a.length > b.length ? a : b)}
       </span>
-      <AnimatePresence mode="wait">
-        {show && (
-          <motion.span
-            key={index}
-            initial={{ opacity: 0, y: isMobile ? 6 : 12, clipPath: isMobile ? "none" : "polygon(-50% 150%, 150% 150%, 150% 150%, -50% 150%)" }}
-            animate={{ opacity: 1, y: 0, clipPath: isMobile ? "none" : "polygon(-50% -100%, 150% -100%, 150% 200%, -50% 200%)" }}
-            exit={{ opacity: 0, y: isMobile ? -6 : -12, clipPath: isMobile ? "none" : "polygon(-50% -100%, 150% -100%, 150% -100%, -50% -100%)" }}
-            transition={{ duration: 0.45, ease: techEase }}
-            /* placeholder  Time Complexity */
-            className="absolute right-0 top-0 flex items-center headline-accent w-fit h-fit whitespace-nowrap leading-[1.2] overflow-visible box-content pt-0 pb-0 mt-0 mb-0 align-middle font-normal" style={{ fontFamily: 'var(--font-display)' }}
-          >
-            {ROTATING_WORDS[index]}
-          </motion.span>
-        )}
+      
+      <AnimatePresence mode="popLayout">
+        <motion.span
+          key={index}
+          initial={{ opacity: 0, y: yAmount }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -yAmount }}
+          transition={{ 
+            duration: dur, 
+            ease: [0.23, 1, 0.32, 1] 
+          }}
+          className="absolute inset-0 flex items-center justify-center sm:justify-start headline-accent whitespace-nowrap leading-[1.2] overflow-visible font-normal"
+          style={{
+            fontFamily: 'var(--font-display)',
+            willChange: 'opacity, transform',
+            WebkitFontSmoothing: 'antialiased',
+            backfaceVisibility: 'hidden'
+          }}
+        >
+          {ROTATING_WORDS[index]}
+        </motion.span>
       </AnimatePresence>
     </span>
   );
 };
+
 
 /* --- Leadership Map --- */
 const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
@@ -1572,7 +1589,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             <motion.div variants={fadeUp} className="hero-eyebrow-row">
               <span className="hero-badge">
                 <span className="hero-badge__dot" />
-                DAWAYIR — الرحلة
+                <AlrehlaWordmark height={14} color="var(--gold)" className="inline-block" />
               </span>
               <PulseBadge count={pulseCount} />
             </motion.div>
