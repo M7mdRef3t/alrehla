@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../_lib/supabaseAdmin";
+import crypto from "crypto";
 
 /**
  * Meta WhatsApp Webhook
@@ -27,7 +28,40 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  // Capture raw text for HMAC signature validation
+  const rawBody = await req.text();
+
+  // Validate X-Hub-Signature-256
+  const signature = req.headers.get("x-hub-signature-256");
+  const appSecret = process.env.META_APP_SECRET;
+
+  if (appSecret) {
+    if (!signature) {
+      console.warn("[WhatsAppWebhook] Missing X-Hub-Signature-256 header. Rejecting payload.");
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const expectedSignature = `sha256=${crypto
+      .createHmac("sha256", appSecret)
+      .update(rawBody)
+      .digest("hex")}`;
+
+    if (signature !== expectedSignature) {
+      console.warn("[WhatsAppWebhook] Invalid X-Hub-Signature-256. Potential spoofing attempt.");
+      return new Response("Unauthorized", { status: 401 });
+    }
+  } else {
+    console.warn("[WhatsAppWebhook] Warning: META_APP_SECRET not configured. Skipping signature validation.");
+  }
+
+  let body;
+  try {
+    body = JSON.parse(rawBody);
+  } catch (error) {
+    console.error("[WhatsAppWebhook] Failed to parse JSON body", error);
+    return new Response("Bad Request", { status: 400 });
+  }
+
   const supabaseAdmin = getSupabaseAdminClient();
 
   if (!supabaseAdmin) {

@@ -1,9 +1,7 @@
-import { logger } from "@/services/logger";
 import React, { type FC, useState } from "react";
 import { AlertTriangle, TrendingUp, Zap as Sparkles, HelpCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import type { TopScenario } from "@/services/admin/adminTypes";
-import { marketingCopywriter, type TikTokScriptGeneration } from "@/ai/aiMarketingCopy";
 import { TikTokTeleprompterModal } from "./TikTokTeleprompterModal";
 
 interface IllusionRadarProps {
@@ -21,27 +19,17 @@ const SCENARIO_HINTS: Record<string, string> = {
 };
 
 export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) => {
-  const [isGenerating, setIsGenerating] = useState(false);
   const [selectedIllusion, setSelectedIllusion] = useState<string | null>(null);
-  const [generatedScript, setGeneratedScript] = useState<TikTokScriptGeneration | null>(null);
+  const [isStudioOpen, setIsStudioOpen] = useState(false);
 
-  const handleDismantle = async (illusionName: string) => {
-    setIsGenerating(true);
+  const handleOpenStudio = (illusionName: string) => {
     setSelectedIllusion(illusionName);
-    setGeneratedScript(null);
-    try {
-      const result = await marketingCopywriter.generateIllusionDismantlingScript({
-        illusionName,
-        description: SCENARIO_HINTS[illusionName] || ""
-      });
-      if (result) {
-        setGeneratedScript(result);
-      }
-    } catch (e) {
-      logger.error(e);
-    } finally {
-      setIsGenerating(false);
-    }
+    setIsStudioOpen(true);
+  };
+
+  const handleCloseStudio = () => {
+    setIsStudioOpen(false);
+    setSelectedIllusion(null);
   };
 
   if (isLoading) {
@@ -134,21 +122,11 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
                     </div>
 
                     <button
-                      onClick={() => handleDismantle(scenario.label)}
-                      disabled={isGenerating}
-                      className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest group/btn relative z-10 cursor-pointer"
+                      onClick={() => handleOpenStudio(scenario.label)}
+                      className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white transition-all flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest group/btn relative z-10 cursor-pointer"
                     >
-                      {isGenerating && selectedIllusion === scenario.label ? (
-                        <div className="flex items-center gap-2">
-                           <div className="w-3 h-3 rounded-full border border-t-transparent border-white animate-spin" />
-                           <span>جارٍ التفكيك...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4 text-cyan-400 group-hover/btn:rotate-12 transition-transform" />
-                          <span>تفكيك الوهم</span>
-                        </>
-                      )}
+                      <Sparkles className="w-4 h-4 text-cyan-400 group-hover/btn:rotate-12 transition-transform" />
+                      <span>تفكيك الوهم</span>
                     </button>
 
                 </motion.div>
@@ -164,11 +142,10 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
       </div>
 
       <TikTokTeleprompterModal
-        isOpen={!!generatedScript || (isGenerating && !!selectedIllusion)}
-        onClose={() => { setGeneratedScript(null); setSelectedIllusion(null); }}
-        isGenerating={isGenerating}
-        scriptData={generatedScript}
+        isOpen={isStudioOpen}
+        onClose={handleCloseStudio}
         illusionName={selectedIllusion || ""}
+        illusionDescription={selectedIllusion ? (SCENARIO_HINTS[selectedIllusion] || "") : ""}
       />
     </>
   );

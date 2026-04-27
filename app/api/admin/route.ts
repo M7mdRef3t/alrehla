@@ -16,6 +16,7 @@ import { handleSessionEvents } from "../../../server/admin/session-events";
 import { handleCopilot } from "../../../server/admin/copilot";
 import { handleOraclePulse } from "../../../server/admin/intelligence";
 import { handleTicketsResolve } from "../../../server/admin/tickets";
+import { handleWhatsAppWebhookOps } from "../../../server/admin/ops-whatsapp";
 import { recordAdminAudit, verifyAdmin } from "../../../server/admin/_shared";
 
 export const dynamic = "force-dynamic";
@@ -52,7 +53,8 @@ const ROUTES: Record<string, AdminHandler> = {
     "session-events": handleSessionEvents,
     copilot: handleCopilot,
     "oracle-pulse": handleOraclePulse,
-    "tickets/resolve": handleTicketsResolve
+    "tickets/resolve": handleTicketsResolve,
+    "ops/whatsapp-webhook": handleWhatsAppWebhookOps
 };
 
 const AUTH_WINDOW_MS = 10 * 60 * 1000;
