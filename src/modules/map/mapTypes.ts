@@ -255,6 +255,8 @@ export interface MapNode {
   lastTruthContract?: {
     summary: string;
     score: number;
+    actionPoints?: string[];
+    reminder?: string;
     timestamp: number;
   };
 }

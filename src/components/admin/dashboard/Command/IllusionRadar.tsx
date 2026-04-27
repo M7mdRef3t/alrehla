@@ -20,10 +20,14 @@ const SCENARIO_HINTS: Record<string, string> = {
 
 export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) => {
   const [selectedIllusion, setSelectedIllusion] = useState<string | null>(null);
+  const [selectedPercent, setSelectedPercent] = useState(0);
+  const [selectedCount, setSelectedCount] = useState(0);
   const [isStudioOpen, setIsStudioOpen] = useState(false);
 
-  const handleOpenStudio = (illusionName: string) => {
+  const handleOpenStudio = (illusionName: string, percent: number, count: number) => {
     setSelectedIllusion(illusionName);
+    setSelectedPercent(percent);
+    setSelectedCount(count);
     setIsStudioOpen(true);
   };
 
@@ -122,7 +126,7 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
                     </div>
 
                     <button
-                      onClick={() => handleOpenStudio(scenario.label)}
+                      onClick={() => handleOpenStudio(scenario.label, scenarioPercent, scenario.count)}
                       className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white transition-all flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest group/btn relative z-10 cursor-pointer"
                     >
                       <Sparkles className="w-4 h-4 text-cyan-400 group-hover/btn:rotate-12 transition-transform" />
@@ -146,6 +150,8 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
         onClose={handleCloseStudio}
         illusionName={selectedIllusion || ""}
         illusionDescription={selectedIllusion ? (SCENARIO_HINTS[selectedIllusion] || "") : ""}
+        illusionPercent={selectedPercent}
+        illusionCount={selectedCount}
       />
     </>
   );

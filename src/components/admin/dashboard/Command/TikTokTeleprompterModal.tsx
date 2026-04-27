@@ -1,6 +1,6 @@
-import React, { type FC, useRef, useState, useCallback } from "react";
+import React, { type FC, useRef, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Zap as Sparkles, Copy, Video, Hash, Camera, Check, Play, Pause, ImagePlus, Loader2, Brain, ShieldAlert, Zap, ChevronLeft, ThumbsUp, ThumbsDown } from "lucide-react";
+import { X, Zap as Sparkles, Copy, Video, Hash, Camera, Check, Play, Pause, ImagePlus, Loader2, Brain, ShieldAlert, Zap, ChevronLeft, ThumbsUp, ThumbsDown, Users, TrendingUp } from "lucide-react";
 import type { TikTokScriptGeneration } from "@/ai/aiMarketingCopy";
 import { marketingCopywriter } from "@/ai/aiMarketingCopy";
 import { logger } from "@/services/logger";
@@ -19,21 +19,33 @@ interface TikTokTeleprompterModalProps {
   onClose: () => void;
   illusionName: string;
   illusionDescription?: string;
+  illusionPercent?: number;
+  illusionCount?: number;
   /** Legacy support: if scriptData is passed, skip to result */
   scriptData?: TikTokScriptGeneration | null;
   isGenerating?: boolean;
 }
 
+// Auto-detect topic from illusion name
+const ILLUSION_TOPIC_MAP: Record<string, StudioTopic> = {
+  "طوارئ": "energy",
+  "سجين ذهني": "mindset",
+  "استنزاف نشط": "energy",
+  "علاقة مشروطة": "toxic",
+  "ميناء آمن": "mindset",
+  "علاقة منقطعة": "toxic",
+};
+
+const TOPIC_LABELS: Record<StudioTopic, { label: string; icon: React.ReactNode }> = {
+  energy: { label: "الطاقة والاحتراق", icon: <Zap className="w-3.5 h-3.5" /> },
+  toxic: { label: "العلاقات والحدود", icon: <ShieldAlert className="w-3.5 h-3.5" /> },
+  mindset: { label: "المبادئ والوعي", icon: <Brain className="w-3.5 h-3.5" /> },
+};
+
 const TONE_OPTIONS: { id: StudioTone; label: string; desc: string }[] = [
   { id: "deep", label: "عميق وهادي", desc: "بيبني مفاهيم بدل ما يهدم" },
   { id: "direct", label: "مباشر وتحدي", desc: "بيفوق اللي قدامه" },
   { id: "sarcastic", label: "ساخر وصادم", desc: "بيضرب الدجل بذكاء" },
-];
-
-const TOPIC_OPTIONS: { id: StudioTopic; label: string; icon: React.ReactNode; color: string }[] = [
-  { id: "energy", label: "الطاقة", icon: <Zap className="w-4 h-4" />, color: "amber" },
-  { id: "toxic", label: "الحدود", icon: <ShieldAlert className="w-4 h-4" />, color: "rose" },
-  { id: "mindset", label: "المبادئ", icon: <Brain className="w-4 h-4" />, color: "teal" },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -42,12 +54,20 @@ const TOPIC_OPTIONS: { id: StudioTopic; label: string; icon: React.ReactNode; co
 
 export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
   isOpen, onClose, illusionName, illusionDescription,
+  illusionPercent, illusionCount,
   scriptData: externalScriptData, isGenerating: externalIsGenerating,
 }) => {
   // Studio State
   const [step, setStep] = useState<StudioStep>(externalScriptData ? "result" : "customize");
   const [tone, setTone] = useState<StudioTone>("direct");
   const [topic, setTopic] = useState<StudioTopic>("energy");
+
+  // Auto-detect topic from illusion name
+  useEffect(() => {
+    if (illusionName && ILLUSION_TOPIC_MAP[illusionName]) {
+      setTopic(ILLUSION_TOPIC_MAP[illusionName]);
+    }
+  }, [illusionName]);
   const [copied, setCopied] = useState(false);
   const [internalScript, setInternalScript] = useState<TikTokScriptGeneration | null>(null);
   const [internalGenerating, setInternalGenerating] = useState(false);
@@ -214,33 +234,48 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
             <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10" ref={scrollRef}>
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none" />
 
-              {/* STEP 1: Customize */}
+              {/* STEP 1: Customize — Illusion Context + Tone Selection */}
               {step === "customize" && (
                 <div className="p-6 sm:p-10 max-w-2xl mx-auto space-y-8" dir="rtl">
-                  <div className="text-center space-y-2 mb-8">
-                    <h2 className="text-2xl font-black text-white">خصّص المحتوى قبل التفكيك</h2>
-                    <p className="text-sm text-slate-400 font-bold">اختار النبرة والموضوع — الذكاء الاصطناعي هيصمم السكريبت والستوري بورد</p>
-                  </div>
 
-                  {/* Topic */}
-                  <div className="space-y-3">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider">موضوع الفيديو</label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {TOPIC_OPTIONS.map(t => (
-                        <button key={t.id} onClick={() => setTopic(t.id)}
-                          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all ${topic === t.id
-                            ? `bg-${t.color}-500/10 border-${t.color}-500/50 text-${t.color}-400 shadow-lg shadow-${t.color}-500/10`
-                            : "bg-slate-800/50 border-slate-700/50 text-slate-400 hover:bg-slate-800"}`}>
-                          {t.icon}
-                          <span className="text-xs font-black">{t.label}</span>
-                        </button>
-                      ))}
+                  {/* ── Illusion Context Card ── */}
+                  <div className="relative overflow-hidden rounded-3xl border border-rose-500/20 bg-gradient-to-br from-rose-500/10 via-slate-900/80 to-slate-900 p-6">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-fuchsia-600" />
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-rose-400/60 uppercase tracking-[0.2em]">الوهم المرصود</p>
+                        <h3 className="text-xl font-black text-white">{illusionName}</h3>
+                      </div>
+                      {illusionPercent != null && illusionPercent > 0 && (
+                        <div className="flex flex-col items-center bg-rose-500/15 px-4 py-2 rounded-2xl border border-rose-500/20">
+                          <span className="font-mono text-2xl font-black text-rose-300">{Math.round(illusionPercent)}%</span>
+                          <span className="text-[8px] font-bold text-rose-400/50 uppercase tracking-wider">تردد الظهور</span>
+                        </div>
+                      )}
+                    </div>
+                    {illusionDescription && (
+                      <p className="text-sm text-slate-300/70 leading-relaxed mb-4 font-bold">{illusionDescription}</p>
+                    )}
+                    <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500">
+                      {illusionCount != null && illusionCount > 0 && (
+                        <span className="flex items-center gap-1.5">
+                          <Users className="w-3 h-3" />
+                          {illusionCount} نفس متأثرة
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1.5">
+                        {TOPIC_LABELS[topic].icon}
+                        تم تحديد المحور تلقائياً: {TOPIC_LABELS[topic].label}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Tone */}
+                  {/* ── Tone Selection ── */}
                   <div className="space-y-3">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider">نبرة الصوت</label>
+                    <div className="text-center space-y-1 mb-2">
+                      <h2 className="text-lg font-black text-white">اختار النبرة</h2>
+                      <p className="text-xs text-slate-500 font-bold">ده القرار الإبداعي الوحيد — الباقي الذكاء الاصطناعي هيتكفل بيه</p>
+                    </div>
                     <div className="space-y-2">
                       {TONE_OPTIONS.map(t => (
                         <button key={t.id} onClick={() => setTone(t.id)}

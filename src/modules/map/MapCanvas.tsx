@@ -520,8 +520,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         />
       )}
 
-      {/* Sovereign Crown (Elite Indicator) */}
-      {node.isMirrorNode && isSovereign && (
+      {/* Sovereign Crown (Elite Indicator) removed per user request */}
+      {/* node.isMirrorNode && isSovereign && (
         <motion.div
            className="absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none"
            initial={{ opacity: 0, y: 10 }}
@@ -530,7 +530,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         >
            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_10px_#fbbf24]" />
         </motion.div>
-      )}
+      ) */}
 
       {/* Breathing aura ring */}
       <motion.div
@@ -2094,8 +2094,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                      <path fill="white" opacity="0.9" d="M413.22,259.33c-8.93,9.87-16.75,19.21-22.83,30.67l-8.28,21.33c-3.29-16.08-12.46-30.08-22.09-42.62-11.18-12.3-22.64-23.06-35.89-33.45,1.97-11.56,4.75-21.76,8.71-33.8,12.61,8.74,23.41,18.45,33.53,29.93,6.87,7.8,11.48,16.97,15.84,26.77,5.17-12.72,13.06-24.22,23-34.25,8.35-8.16,16.39-15.19,26.66-22.47,3.52,11.38,6.17,21.82,7.87,33.59l-26.52,24.3Z"/>
                   </g>
 
-                  {/* Specular highlight dot */}
-                  <SafeMotionCircle cx="48" cy="47.5" r={1} fill="#ffffff" opacity={0.6} />
+                  {/* Specular highlight dot removed per user request */}
                 </motion.g>
 
               </g>

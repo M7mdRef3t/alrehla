@@ -275,13 +275,14 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
     if (nodeId) {
       useMapState.getState().registerLiveSession(nodeId, {
         summary: summary?.headline || summary?.title || copy.sessionFallback,
+        score: metrics?.equilibriumScore || 0,
         truthContract: truthArtifact?.content ? {
           actionPoints: coerceStringArray((truthArtifact.content as any).promises),
           reminder: coerceString((truthArtifact.content as any).reminder, ""),
         } : undefined
       });
     }
-  }, [detail, dominantNodeId, summary, truthArtifact, copy.sessionFallback]);
+  }, [detail, dominantNodeId, summary, truthArtifact, copy.sessionFallback, metrics]);
 
   useEffect(() => {
     if (!truthArtifact?.created_at || truthMarkedDone) {
