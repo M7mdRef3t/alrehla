@@ -89,8 +89,64 @@ export class WhatsAppCloudService {
   }
 
   /**
+   * Sends a template message to a phone number.
+   * Useful for initiating conversations outside the 24-hour window.
+   */
+  static async sendTemplate(phone: string, leadId: string, templateName: string, lang: string = "ar"): Promise<WhatsAppValidationResult> {
+    const phoneNumberId = process.env.META_WA_PHONE_NUMBER_ID;
+    const accessToken = process.env.META_WA_ACCESS_TOKEN;
+
+    if (!phoneNumberId || !accessToken) {
+      return { success: false, error: "missing_credentials" };
+    }
+
+    try {
+      const cleanPhone = phone.replace(/\D/g, "");
+      const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
+      
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: cleanPhone,
+          type: "template",
+          template: {
+            name: templateName,
+            language: { code: lang },
+          },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("[WhatsAppCloud] Template Error:", result);
+        return { success: false, error: result.error };
+      }
+
+      await this.logMessage({
+        lead_id: leadId,
+        whatsapp_message_id: result.messages?.[0]?.id,
+        from_phone: process.env.META_WA_BUSINESS_PHONE_NUMBER || "system",
+        to_phone: cleanPhone,
+        message_body: `[Template] ${templateName}`,
+        message_type: "template",
+        direction: "outbound"
+      });
+
+      return { success: true, message_id: result.messages?.[0]?.id };
+    } catch (error) {
+      console.error("[WhatsAppCloud] Template Internal Error:", error);
+      return { success: false, error };
+    }
+  }
+
+  /**
    * Sends a free-form text message to a phone number.
-   * Requires an active 24-hour window from the customer.
    */
   static async sendFreeText(phone: string, leadId: string, text: string): Promise<WhatsAppValidationResult> {
     const phoneNumberId = process.env.META_WA_PHONE_NUMBER_ID;

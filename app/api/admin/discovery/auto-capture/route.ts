@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const isAuthorized = authHeader === `Bearer ${secret}` || authHeader === secret;
     
     if (!isAuthorized) {
-      return NextResponse.json({ error: "Unauthorized Access" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized Access FROM AUTO CAPTURE" }, { status: 401 });
     }
 
     if (!supabaseAdmin) {

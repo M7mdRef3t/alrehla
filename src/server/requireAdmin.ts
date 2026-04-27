@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { isDevMode } from '../config/appEnv';
 
 export async function requireAdmin(req: Request | any) {
+  // 0. Development Bypass (Local Testing)
+  const adminSecret = req.headers.get("x-admin-secret");
+  console.log("[requireAdmin] isDevMode:", isDevMode, "adminSecret:", !!adminSecret);
+  if (isDevMode && adminSecret && adminSecret === process.env.ADMIN_API_SECRET) {
+    console.log("[requireAdmin] BYPASS GRANTED");
+    return null;
+  }
   const authHeader = req.headers.get("authorization");
   
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

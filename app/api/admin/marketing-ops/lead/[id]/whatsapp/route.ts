@@ -57,11 +57,7 @@ export async function POST(
   try {
     const { id: leadId } = await params;
     const body = await req.json();
-    const { message } = body;
-
-    if (!message || !message.trim()) {
-      return NextResponse.json({ ok: false, error: "Empty message" }, { status: 400 });
-    }
+    const { message, action, templateName } = body;
 
     const { WhatsAppCloudService } = await import("@/services/whatsappCloudService");
     const supabase = getSupabaseAdminClient();
@@ -80,11 +76,29 @@ export async function POST(
       return NextResponse.json({ ok: false, error: "Lead phone number not found" }, { status: 404 });
     }
 
-    // 2. Send via Meta API
+    // --- Action: Send Template ---
+    if (action === "send_template") {
+      const tName = templateName || process.env.META_WA_HANDSHAKE_TEMPLATE || "alrehla_welcome_handshake";
+      const result = await WhatsAppCloudService.sendTemplate(lead.phone_normalized, leadId, tName);
+      
+      if (!result.success) {
+        return NextResponse.json({ 
+          ok: false, 
+          error: result.error?.message || "Meta API error",
+          errorCode: result.error?.code 
+        }, { status: 400 });
+      }
+      return NextResponse.json({ ok: true, messageId: result.message_id });
+    }
+
+    // --- Default: Send Free Text ---
+    if (!message || !message.trim()) {
+      return NextResponse.json({ ok: false, error: "Empty message" }, { status: 400 });
+    }
+
     const result = await WhatsAppCloudService.sendFreeText(lead.phone_normalized, leadId, message);
 
     if (!result.success) {
-      // If Meta returns error 131047, it means the 24h window is closed
       const isWindowClosed = result.error?.code === 131047;
       return NextResponse.json({ 
         ok: false, 

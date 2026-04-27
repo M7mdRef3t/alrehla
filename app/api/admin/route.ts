@@ -166,7 +166,7 @@ async function runHandler(req: NextRequest) {
                 windowMs: AUTH_WINDOW_MS,
                 status
             });
-            return NextResponse.json(jsonResponse || { error: "Unauthorized" }, { status: status || 401 });
+            return NextResponse.json(jsonResponse || { error: "Unauthorized FROM ADMIN BRIDGE" }, { status: status || 401 });
         }
     }
 

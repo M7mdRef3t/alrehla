@@ -58,6 +58,7 @@ export function WhatsAppThreadModal({
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isWindowClosed, setIsWindowClosed] = useState(false);
   const showToast = useToastState((s) => s.showToast);
 
   const fetchEvents = async () => {
@@ -92,6 +93,33 @@ export function WhatsAppThreadModal({
     if (inputRef.current) {
       inputRef.current.value = text;
       inputRef.current.focus();
+    }
+  };
+
+  const handleSendTemplate = async () => {
+    if (!leadId || loading) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/marketing-ops/lead/${leadId}/whatsapp`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          authorization: `Bearer ${getBearerToken()}` 
+        },
+        body: JSON.stringify({ action: "send_template" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast("تم إرسال القالب بنجاح ✅", "success");
+        setIsWindowClosed(false);
+        await fetchEvents();
+      } else {
+        showToast(`فشل إرسال القالب: ${data.error}`, "error");
+      }
+    } catch (err) {
+      showToast("خطأ في الاتصال", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -292,12 +320,14 @@ export function WhatsAppThreadModal({
                    
                    if (!res.ok) {
                      if (data.isWindowClosed) {
-                       showToast("النافذة مقفولة: لازم العميل يبعت رسالة الأول عشان تعرف ترد.", "warning");
+                       setIsWindowClosed(true);
+                       showToast("النافذة مقفولة: لازم تبعت Template الأول.", "warning");
                      } else {
                        showToast(`فشلت المهمة: ${data.error || "خطأ غير معروف"}`, "error");
                      }
                    } else {
                      input.value = "";
+                     setIsWindowClosed(false);
                      await fetchEvents();
                      showToast("تم إرسال الرسالة بنجاح", "success");
                    }
@@ -313,17 +343,30 @@ export function WhatsAppThreadModal({
                  ref={inputRef}
                  name="message"
                  type="text" 
-                 placeholder="اكتب ردك هنا وتوكل على الله..." 
+                 placeholder={isWindowClosed ? "النافذة مقفولة.. أرسل قالباً أولاً" : "اكتب ردك هنا وتوكل على الله..."} 
                  className="flex-1 bg-transparent text-sm text-slate-300 placeholder:text-slate-600 focus:outline-none"
                  autoComplete="off"
+                 disabled={isWindowClosed}
                />
-               <button 
-                 type="submit"
-                 disabled={loading}
-                 className="p-2 text-emerald-500 hover:text-emerald-400 active:scale-95 transition-all disabled:opacity-30"
-               >
-                 {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-               </button>
+               {isWindowClosed ? (
+                  <button 
+                    type="button"
+                    onClick={handleSendTemplate}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black rounded-lg transition-all animate-pulse shadow-lg shadow-indigo-900/20"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    إرسال قالب ترحيبي
+                  </button>
+                ) : (
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="p-2 text-emerald-500 hover:text-emerald-400 active:scale-95 transition-all disabled:opacity-30"
+                  >
+                    {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  </button>
+                )}
              </form>
           </div>
         </motion.div>

@@ -66,17 +66,7 @@ export const DivineConnection: FC<DivineConnectionProps> = ({
           animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
-        {/* Core Star — color reflects resonance */}
-        <SafeMotionCircle
-          cx={0} cy={0} r={0.8}
-          fill={levelColor}
-          animate={{ 
-            opacity: [0.6, 1, 0.6],
-            filter: [`drop-shadow(0 0 2px ${levelColor})`, `drop-shadow(0 0 8px ${levelColor})`, `drop-shadow(0 0 2px ${levelColor})`]
-          }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
-
+        {/* Core Star — removed per user request (small dot above orb) */}
         {/* Label */}
         {showLabel && (
           <text
@@ -179,8 +169,8 @@ export const DivineConnection: FC<DivineConnectionProps> = ({
         transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
       />
 
-      {/* Subtle Energy Pulses Moving Upwards */}
-      {[0, 1, 2].map((i) => (
+      {/* Subtle Energy Pulses Moving Upwards (removed per user request to clean UI) */}
+      {/* {[0, 1, 2].map((i) => (
         <motion.circle
           key={i}
           cx={50}
@@ -199,7 +189,7 @@ export const DivineConnection: FC<DivineConnectionProps> = ({
             ease: "easeOut"
           }}
         />
-      ))}
+      ))} */}
 
       {/* Connection Anchor to "You" Orb (removed per user request to clean UI) */}
       {/* <SafeMotionCircle

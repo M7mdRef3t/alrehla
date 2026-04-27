@@ -27,7 +27,7 @@ export interface WhatsAppMessagePayload {
 export type WhatsAppIntent = 'payment_requested' | 'info_requested' | 'support_needed' | 'frustrated' | 'appreciation' | 'generic' | 'spam';
 
 class WhatsAppAutomationService {
-  private readonly paymentKeywords = ['اشتراك', 'اشترك', 'سعر', 'سعر الاشتراك', 'بكام', 'ادفع', 'دفع', 'تحويل', 'فودافون كاش', 'باقة', 'سعر الرحلة', 'حجز', 'تفاصيل الدفع'];
+  private readonly paymentKeywords = ['اشتراك', 'اشترك', 'سعر', 'سعر الاشتراك', 'بكام', 'ادفع', 'دفع', 'تحويل', 'فودافون كاش', 'باقة', 'باقات', 'سعر الرحلة', 'حجز', 'تفاصيل الدفع', 'الاستكشافية', 'القائد', 'explorer', 'leader', 'basic', 'التأسيسي'];
   private readonly infoKeywords = ['تفاصيل', 'معلومات', 'ايه ده', 'بتعملوا ايه', 'ازاي', 'شرح', 'فهموني', 'يعني ايه', 'منصة', 'ممكن افهم', 'توضيح', 'شرح أكتر'];
   private readonly supportKeywords = ['مشكلة', 'مش عارف', 'مش شغال', 'يوزر', 'باسورد', 'دخول', 'مش بيفتح', 'مساعدة', 'علق', 'وقفت', 'مش بيدخل', 'نسيت'];
   private readonly frustratedKeywords = ['نصب', 'زهقت', 'مش معقول', 'بطيء', 'نصيحة', 'تعبت', 'مخنوق', 'قرف', 'مش فاهم حاجة', 'مفيش فايدة', 'غالي'];
@@ -221,7 +221,8 @@ class WhatsAppAutomationService {
       // 4. Automated Responses with Link Chaining
       if (!activated) {
         let repliedLocally = false;
-        if (intent === 'payment_requested') {
+        const autoTriggers = ["payment_requested", "info_requested", "pricing_requested"];
+        if (autoTriggers.includes(intent)) {
           await this.handleAutoReply(phoneNormalized, leadId, intent, payload.name, attributionData.utm?.ctwa_clid);
           repliedLocally = true;
         }
@@ -258,6 +259,13 @@ class WhatsAppAutomationService {
     const lowerText = text.toLowerCase();
 
     if (intent === 'payment_requested') {
+      const isAskingAboutPackages = ['باقة', 'باقات', 'سعر', 'بكام', 'الاستكشافية', 'القائد'].some(k => lowerText.includes(k));
+      if (isAskingAboutPackages) {
+        return {
+          reasoning: "المستخدم يسأل عن 'خيارات العبور' (الأسعار والباقات). يحتاج لمعرفة الفرق بين الوعي الاستكشافي والقيادي.",
+          suggestion: "اشرح له باختصار الفرق بين الباقة الاستكشافية والقائد، وأرسل له رابط الباقات فوراً ليختار مساره."
+        };
+      }
       return {
         reasoning: "المستخدم في مرحلة 'الالتزام'. يحتاج إلى تأكيد الأمان والسرعة.",
         suggestion: "وجهه فوراً للتحويل البنكي أو فودافون كاش، وأكد إن العملية بتخلص في دقيقة."
