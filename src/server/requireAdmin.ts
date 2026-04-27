@@ -27,7 +27,12 @@ export async function requireAdmin(req: Request | any) {
     return NextResponse.json({ error: "Unauthorized - Invalid token" }, { status: 401 });
   }
 
-  const allowedRolesStr = process.env.ADMIN_ALLOWED_ROLES || "owner,superadmin";
+  const allowedRolesStr = process.env.ADMIN_ALLOWED_ROLES;
+  
+  if (!allowedRolesStr) {
+    return NextResponse.json({ error: "Server Configuration Error - Admin roles not defined" }, { status: 500 });
+  }
+
   const allowedRoles = allowedRolesStr.split(",").map(r => r.trim());
   
   const userRole = user.app_metadata?.role;
