@@ -130,7 +130,7 @@ export const ProfileAppearanceSettings: React.FC = () => {
                                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px]">
                                         <div className="flex flex-col items-center gap-1">
                                             <Lock size={16} className="text-slate-400" />
-                                            <span className="text-[8px] font-bold text-slate-300">يفتح بالمستوى {theme.minLevel}</span>
+                                            <span className="text-[8px] font-bold text-slate-300">يفتح بمرحلة الأجنحة {theme.minLevel}</span>
                                         </div>
                                     </div>
                                 )}
@@ -202,8 +202,8 @@ export const ProfileAppearanceSettings: React.FC = () => {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-semibold text-slate-200">إظهار المرتبة (Level)</p>
-                            <p className="text-[10px] text-slate-400">السماح للمراقبين برؤية مستوى تقدمك</p>
+                            <p className="text-sm font-semibold text-slate-200">إظهار الأجنحة (Wings)</p>
+                            <p className="text-[10px] text-slate-400">السماح للمراقبين برؤية نمو أجنحتك</p>
                         </div>
                         <button 
                             onClick={() => setToggles({...toggles, showLevel: !toggles.showLevel})}

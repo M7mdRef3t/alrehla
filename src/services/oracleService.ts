@@ -51,7 +51,7 @@ export class OracleService {
       ${currentKnotsSummary || 'No high-friction nodes detected.'}
 
       ◈ المحور الرأسي (حالة الاتصال بالمصدر):
-      - المستوى: ${resonance.label} (${Math.round(resonance.strength * 100)}%)
+      - الأجنحة: ${resonance.label} (${Math.round(resonance.strength * 100)}%)
       - أيام الورد المتتالية: ${resonance.daysActive}
       - ملحوظة: البشر مرايات تعكس جودة اتصال المستخدم بالمصدر. أي عقدة أفقية ممكن تكون عرض لانقطاع رأسي.
 

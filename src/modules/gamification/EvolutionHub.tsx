@@ -110,7 +110,7 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
                         >
                             {level}
                         </motion.span>
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">المستوى</span>
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">الأجنحة</span>
                     </div>
                     {/* Pulse Glow */}
                     <div className={`absolute inset-0 rounded-full transition-all duration-500 bg-indigo-500/5 blur-xl group-hover:bg-indigo-500/20 group-hover:blur-2xl`} />
@@ -315,15 +315,15 @@ export function TajmeedHub({ onClose }: { onClose: () => void }) {
                   <div className="absolute inset-0 rounded-full bg-white/20 animate-ping" />
                </motion.div>
 
-               <h2 className="text-5xl font-black text-white mb-4 uppercase tracking-tighter">ارتقاء قيادي!</h2>
+               <h2 className="text-5xl font-black text-white mb-4 uppercase tracking-tighter">أجنحتك كبرت! 🦅</h2>
                <p className="text-xl font-medium text-slate-400 mb-12">
-                  لقد وصلت لمستوى القيادة <span className="text-indigo-400 font-black">{level}</span>
+                  لقد نمت أجنحتك للمرحلة <span className="text-indigo-400 font-black">{level}</span>
                </p>
 
                <div className="flex gap-4">
                   <div className="px-6 py-4 rounded-3xl bg-white/5 border border-white/10">
                      <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">+500 عملة</div>
-                     <div className="text-sm font-black text-emerald-400">مكافأة المستوى</div>
+                     <div className="text-sm font-black text-emerald-400">مكافأة الأجنحة</div>
                   </div>
                   <div className="px-6 py-4 rounded-3xl bg-white/5 border border-white/10">
                      <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">دليل قيادي جديد</div>

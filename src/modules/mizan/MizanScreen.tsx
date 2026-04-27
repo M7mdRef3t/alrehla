@@ -240,7 +240,7 @@ export const MizanScreen: FC = () => {
       { icon: Star, label: "10 نبضات", value: "سجّل 10 Pulses", color: "#fbbf24", achieved: pulseAnalytics.total >= 10 },
       { icon: Shield, label: "3 حدود", value: "حدد 3 حدود", color: "#10b981", achieved: relationshipData.green >= 3 },
       { icon: Brain, label: "وعي عميق", value: "10 نقاط وعي", color: "#8b5cf6", achieved: consciousness.length >= 10 },
-      { icon: Crown, label: "المستوى 5", value: "وصلت Level 5", color: "#f59e0b", achieved: level >= 5 },
+      { icon: Crown, label: "الأجنحة 5", value: "نمو الأجنحة 5", color: "#f59e0b", achieved: level >= 5 },
     ];
     return m;
   }, [pulseAnalytics.total, journalData.total, relationshipData, streak, consciousness, level]);
@@ -361,7 +361,7 @@ export const MizanScreen: FC = () => {
             <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(168,85,247,0.1)" }}>
               <div className="h-full rounded-full bg-purple-500" style={{ width: `${Math.round(levelProgress.progress * 100)}%` }} />
             </div>
-            <p className="text-[9px] text-slate-600 mt-1">المستوى {level} ← {level + 1}</p>
+            <p className="text-[9px] text-slate-600 mt-1">الأجنحة {level} ← {level + 1}</p>
           </div>
 
           {/* Streak */}
@@ -539,9 +539,9 @@ export const MizanScreen: FC = () => {
           </p>
           <p className="text-sm text-white/70 leading-relaxed font-medium relative z-10">
             {overallScore >= 70
-              ? `رحلتك مبهرة — ${formatNumber(xp)} نقطة خبرة، ${streak} يوم متواصل، و${journalData.total} تدوينة. أنت في المستوى ${level} (${rank}). الأرقام بتقول إنك جاد في التغيير.`
+              ? `رحلتك مبهرة — ${formatNumber(xp)} نقطة خبرة، ${streak} يوم متواصل، و${journalData.total} تدوينة. أنت في مرحلة الأجنحة ${level} (${rank}). الأرقام بتقول إنك جاد في التغيير.`
               : overallScore >= 40
-              ? `أنت في الطريق الصح — المستوى ${level} مع ${formatNumber(xp)} نقطة. كل يوم بتقرّب أكتر. استمر في التوثيق والنبض.`
+              ? `أنت في الطريق الصح — أجنحتك في المرحلة ${level} مع ${formatNumber(xp)} نقطة. كل يوم بتقرّب أكتر. استمر في التوثيق والنبض.`
               : overallScore >= 10
               ? `بدأت رحلتك — وده أهم خطوة. سجّل نبضك يومياً، اكتب في وثيقة، وشوف الميزان بيتحرك.`
               : `لسه ما بدأتش — اكتب أول تدوينة، سجّل أول نبضة، أضف أول علاقة. الميزان مستنيك.`

@@ -136,7 +136,7 @@ function DashboardGreeting({ xp, level, moodToday }: { xp: number; level: number
             {text}
           </p>
           <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 900, color: "#e2e8f0" }}>
-            لوحة تحكمك ✨
+            برج حورس ✨
           </h2>
           <p style={{ margin: 0, fontSize: 11, color: "#475569" }}>
             كل يوم خطوة نحو التوازن الحقيقي
@@ -172,7 +172,7 @@ function DashboardGreeting({ xp, level, moodToday }: { xp: number; level: number
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <Zap size={11} color="#14B8A6" />
-            <span style={{ fontSize: 10, color: "#14B8A6", fontWeight: 700 }}>المستوى {level}</span>
+            <span style={{ fontSize: 10, color: "#14B8A6", fontWeight: 700 }}>الأجنحة {level}</span>
           </div>
           <span style={{ fontSize: 10, color: "#475569" }}>{xp} نقطة</span>
         </div>

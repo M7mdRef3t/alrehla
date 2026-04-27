@@ -99,7 +99,7 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
                   <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
                     <Bell className="w-5 h-5 text-teal-600" />
                   </div>
-                  <h2 className="text-lg font-bold text-slate-900">الإشعارات</h2>
+                  <h2 className="text-lg font-bold text-slate-900">نداء حورس</h2>
                 </div>
                 <button
                   type="button"
@@ -121,9 +121,9 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
                       <BellOff className="w-5 h-5 text-slate-400" />
                     )}
                     <div>
-                      <p className="font-semibold text-slate-900">تفعيل الإشعارات</p>
+                      <p className="font-semibold text-slate-900">تفعيل نداء حورس</p>
                       <p className="text-xs text-slate-500">
-                        {settings.enabled ? "الإشعارات مفعّلة" : "الإشعارات متوقفة"}
+                        {settings.enabled ? "نداء حورس مفعّل" : "نداء حورس متوقف"}
                       </p>
                     </div>
                   </div>

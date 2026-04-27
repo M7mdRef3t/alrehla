@@ -110,7 +110,7 @@ export const CommandOracle: FC = () => {
                         <Info className="w-3 h-3 text-blue-400" />
                         <span className="text-[10px] text-slate-400">القيادة القتالية</span>
                     </div>
-                    <div className="text-sm font-bold text-slate-200">المستوى {metrics.level}</div>
+                    <div className="text-sm font-bold text-slate-200">الأجنحة {metrics.level}</div>
                 </div>
             </div>
 

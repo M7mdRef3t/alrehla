@@ -64,8 +64,8 @@ export const LevelWidget: FC = () => {
                             className="text-white text-center"
                         >
                             <ChevronUp className="w-12 h-12 text-indigo-400 mx-auto mb-2" />
-                            <h3 className="text-2xl font-black text-indigo-300">ارتقاء مستوى!</h3>
-                            <p className="text-sm font-bold text-slate-200">أنت الآن في المستوى {level}</p>
+                            <h3 className="text-2xl font-black text-indigo-300">أجنحتك كبرت! 🦅</h3>
+                            <p className="text-sm font-bold text-slate-200">أنت الآن في مرحلة الأجنحة {level}</p>
                         </motion.div>
                     </motion.div>
                 )}
@@ -82,7 +82,7 @@ export const LevelWidget: FC = () => {
                             </div>
                             <div>
                                 <h3 className="text-sm font-bold text-slate-200">مركز الوعي الطاقي</h3>
-                                <p className="text-xs text-slate-400 mt-1">المستوى الحالي</p>
+                                <p className="text-xs text-slate-400 mt-1">اكتمال الأجنحة</p>
                             </div>
                         </div>
                         <div className="text-right">

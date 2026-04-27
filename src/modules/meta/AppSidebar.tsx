@@ -756,7 +756,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               {isOwner && (
                 <SidebarSector title="القيادة" icon={<ShieldCheck className="w-3.5 h-3.5" />} color="crimson">
                   <SidebarItem
-                    label="لوحة التحكم القيادية"
+                    label="برج حورس"
                     icon={<Settings className="w-3.5 h-3.5" />}
                     onClick={() => setShowCommandControl(true)}
                     color="#ff0055"
@@ -921,7 +921,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 )}
                 {activeSatellites.includes("masarat") && (
                   <SidebarItem
-                    label="مسارات"
+                    label="ريشة ماعت (توازن)"
                     icon={<Compass className="w-4 h-4" />}
                     onClick={() => navigateProductScreen("masarat")}
                     color="#f59e0b"
@@ -1013,7 +1013,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 
                 <SidebarSector title="الاستكشاف" icon={<Compass className="w-4 h-4" />} color="teal">
                   <SidebarItem
-                    label="الخريطة (فهم الذات)"
+                    label="عين حورس (رؤية المسار)"
                     icon={<Map className="w-5 h-5 outline-none" />}
                     onClick={() => { navigateProductScreen("map"); handleClose(); }}
                     active={window.location.pathname === "/"}
@@ -1202,7 +1202,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     color="#2dd4bf"
                   />
                   <SidebarItem
-                    label="مسارات"
+                    label="ريشة ماعت (توازن)"
                     icon={<Compass className="w-5 h-5" />}
                     onClick={() => { navigateProductScreen("masarat"); handleClose(); }}
                     color="#f59e0b"
@@ -1232,7 +1232,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
                 <SidebarSector title="القيادة" icon={<ShieldCheck className="w-4 h-4" />} color="slate">
                   <SidebarItem
-                    label="الإشعار"
+                    label="نداء حورس (تنبيه)"
                     icon={<Bell className="w-5 h-5" />}
                     onClick={() => { setShowNotificationSettings(true); handleClose(); }}
                     color="#14b8a6"
@@ -1472,13 +1472,13 @@ className="w-full py-4 rounded-2xl bg-teal-600 text-white font-bold flex items-c
             style={{ zIndex: Z_LAYERS.TACTICAL_CONTENT }}
             role="dialog"
             aria-modal="true"
-            aria-label="لوحة التحكم القيادية"
+            aria-label="برج حورس"
           >
             <button
               type="button"
               onClick={() => setShowCommandControl(false)}
               className="fixed top-4 left-4 z-[220] p-3 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors"
-              aria-label="إغلاق لوحة التحكم القيادية"
+              aria-label="إغلاق برج حورس"
             >
               <X className="w-5 h-5" />
             </button>

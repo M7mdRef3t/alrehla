@@ -66,11 +66,11 @@ export default function RaseedScreen() {
         <div className="rounded-2xl p-5 relative overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.06), rgba(234,179,8,0.03))", border: "1px solid rgba(245,158,11,0.15)" }}>
           <div className="absolute top-0 right-0 w-40 h-40 blur-3xl rounded-full -mr-16 -mt-16 bg-amber-500/8" />
           <div className="relative z-10 flex items-center justify-between mb-3">
-            <div><span className="text-[8px] font-black text-amber-400 uppercase tracking-widest">المستوى</span><div className="text-4xl font-black text-white mt-1">{level}</div></div>
+            <div><span className="text-[8px] font-black text-amber-400 uppercase tracking-widest">الأجنحة</span><div className="text-4xl font-black text-white mt-1">{level}</div></div>
             <div className="text-left"><span className="text-[8px] font-black text-amber-400 uppercase tracking-widest">الرصيد الكلي</span><div className="text-2xl font-black text-amber-400 mt-1">{xp.toLocaleString()} <span className="text-sm">نقطة</span></div></div>
           </div>
           <div className="relative z-10">
-            <div className="flex justify-between text-[8px] text-slate-500 mb-1"><span>المستوى التالي</span><span>{xpNext.current}/{xpNext.needed} نقطة</span></div>
+            <div className="flex justify-between text-[8px] text-slate-500 mb-1"><span>اكتمال الجناح التالي</span><span>{xpNext.current}/{xpNext.needed} نقطة</span></div>
             <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${xpNext.progress}%` }} transition={{ duration: 1 }} className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-400" /></div>
           </div>
         </div>

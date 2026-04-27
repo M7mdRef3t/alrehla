@@ -12,11 +12,14 @@ export async function GET(req: Request) {
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
+  const expectedToken = process.env.META_WA_VERIFY_TOKEN || "alrehla_handshake";
+
   if (mode && token) {
-    if (mode === "subscribe" && token === process.env.META_WA_VERIFY_TOKEN) {
+    if (mode === "subscribe" && token === expectedToken) {
       console.log("[WhatsAppWebhook] Webhook verified successfully.");
       return new Response(challenge, { status: 200 });
     } else {
+      console.warn("[WhatsAppWebhook] Verification failed. Expected:", expectedToken, "Got:", token);
       return new Response("Forbidden", { status: 403 });
     }
   }
