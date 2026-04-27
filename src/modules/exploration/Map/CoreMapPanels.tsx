@@ -137,7 +137,7 @@ export function MapOperationalStrip({
                 window.location.assign(url.toString());
               }}
               className="h-full px-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col items-center justify-center hover:bg-amber-500/20 transition-all group relative"
-              title="رحلة العبور — لوحة التحكم بالبيانات"
+              title="رحلة العبور — مرصد البيانات"
             >
               <ShieldCheck className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform mb-0.5" />
               <span className="text-[9px] font-black uppercase tracking-tight text-amber-500/80">Owner Hub</span>

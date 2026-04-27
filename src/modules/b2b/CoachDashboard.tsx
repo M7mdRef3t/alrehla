@@ -84,7 +84,7 @@ export default function CoachDashboard() {
     };
 
     if (isLoading) {
-        return <div className="min-h-screen bg-white flex items-center justify-center font-bold text-slate-400">جاري تحميل لوحة التحكم...</div>;
+        return <div className="min-h-screen bg-white flex items-center justify-center font-bold text-slate-400">جاري تجهيز المرصد...</div>;
     }
 
     const handleLogout = async () => {
@@ -147,7 +147,7 @@ export default function CoachDashboard() {
                 </div>
                 <h1 className="text-3xl font-black text-gray-900 mb-4">الوصول للمدربين فقط</h1>
                 <p className="text-gray-600 max-w-md leading-relaxed mb-8">
-                    حسابك الحالي لا يحتوي على باقة الكوتش. فعّل باقة المدرب لفتح لوحة التحكم وإدارة العملاء.
+                    حسابك الحالي لا يحتوي على باقة الكوتش. فعّل باقة المدرب لفتح مرصد الإشراف وإدارة العملاء.
                 </p>
                 <div className="flex gap-4">
                     <a href="/" className="px-8 py-4 bg-white text-gray-900 border border-gray-200 rounded-2xl font-bold hover:bg-gray-50 transition">الرجوع للرئيسية</a>
@@ -168,7 +168,7 @@ export default function CoachDashboard() {
                         </div>
                         <div>
                             <h1 className="font-black text-slate-900 tracking-tight">Dawayir<span className="text-[var(--soft-teal)]">Pro</span></h1>
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Clinical Dashboard</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">مرصد الكوتش السيادي</p>
                         </div>
                     </div>
                 </div>

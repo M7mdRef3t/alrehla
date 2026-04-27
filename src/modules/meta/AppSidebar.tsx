@@ -768,7 +768,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     color="#6366f1"
                   />
                   <SidebarItem
-                    label="لوحة البيانات القديمة"
+                    label="أرشيف القيادة (القديم)"
                     icon={<BarChart3 className="w-3.5 h-3.5" />}
                     onClick={openAdminDashboard}
                     color="#64748b"
@@ -904,7 +904,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                       color="#60a5fa"
                     />
                     <SidebarItem
-                      label="لوحة الكوتش"
+                      label="مرصد الكوتش"
                       icon={<MessageCircle className="w-4 h-4" />}
                       onClick={() => navigateProductScreen("session-console")}
                       color="#14b8a6"
@@ -1190,7 +1190,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     color="#a78bfa"
                   />
                   <SidebarItem
-                    label="لوحة الكوتش"
+                    label="مرصد الكوتش"
                     icon={<MessageCircle className="w-5 h-5" />}
                     onClick={() => { navigateProductScreen("session-console"); handleClose(); }}
                     color="#14b8a6"

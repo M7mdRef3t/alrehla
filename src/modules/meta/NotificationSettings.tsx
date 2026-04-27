@@ -294,7 +294,7 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
                   </div>
                   {!canUsePulseCheck && (
                     <p className="text-[11px] text-slate-500 mt-2">
-                      رحلة النبض مقفولة حالياً من لوحة التحكم.
+                      رحلة النبض مقفولة حالياً من مرصد القيادة.
                     </p>
                   )}
                 </div>

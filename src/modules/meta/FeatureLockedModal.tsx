@@ -72,7 +72,7 @@ export const FeatureLockedModal: FC<FeatureLockedModalProps> = ({
             </button>
             <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest flex items-center justify-center gap-1.5">
               <Sparkles className="w-3 h-3" />
-              تحديث قادم من لوحة التحكم
+              تحديث قادم من المرصد السيادي
             </p>
           </div>
         </motion.div>

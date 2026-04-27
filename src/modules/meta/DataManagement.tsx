@@ -504,7 +504,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                         {canViewAsUser && accountOnly && (
                           <button onClick={openRoleSwitchInAdmin} className="w-full py-2 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs transition-colors flex items-center justify-center gap-2">
                             <Shield className="w-3 h-3" />
-                            لوحة التحكم
+                             مرصد القيادة
                           </button>
                         )}
                         <button onClick={handleSignOut} disabled={authLoading} className="w-full py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold transition-colors flex items-center justify-center gap-2">

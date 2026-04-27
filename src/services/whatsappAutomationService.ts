@@ -220,21 +220,28 @@ class WhatsAppAutomationService {
 
       // 4. Automated Responses with Link Chaining
       if (!activated) {
-        await this.handleAutoReply(phoneNormalized, leadId, intent, payload.name, attributionData.utm?.ctwa_clid);
+        let repliedLocally = false;
+        if (intent === 'payment_requested') {
+          await this.handleAutoReply(phoneNormalized, leadId, intent, payload.name, attributionData.utm?.ctwa_clid);
+          repliedLocally = true;
+        }
         
-        // 5. Forward to Botpress for AI Processing
-        const { BotpressService } = await import("./botpressService");
-        console.log(`[WhatsAppAutomation] Forwarding message to Botpress AI for ${phoneNormalized}`);
-        await BotpressService.sendMessage({
-          userId: phoneNormalized,
-          text: payload.text || "[Media Message]",
-          metadata: { 
-            source: "whatsapp", 
-            messageId: payload.messageId, 
-            leadId: leadId,
-            intent: intent 
-          }
-        });
+        // 5. Forward to Botpress for AI Processing only if we didn't auto-reply
+        if (!repliedLocally) {
+          const { BotpressService } = await import("./botpressService");
+          console.log(`[WhatsAppAutomation] Forwarding message to Botpress AI for ${phoneNormalized}`);
+          await BotpressService.sendMessage({
+            userId: phoneNormalized,
+            text: payload.text || "[Media Message]",
+            metadata: { 
+              source: "whatsapp", 
+              messageId: payload.messageId, 
+              leadId: leadId,
+              intent: intent,
+              oracle_strategy: oracleStrategy
+            }
+          });
+        }
       }
 
       return { success: true, intent, leadId };

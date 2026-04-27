@@ -4,7 +4,7 @@
  * ⚔️ TruthScoreWidget — ويدجت نقطة الصفر
  * ========================================
  * دائرة بصرية تعرض مقياس الصدق الذاتي.
- * لون يتغير حسب المستوى + trend indicator + tooltip.
+ * لون يتغير حسب الأجنحة + trend indicator + tooltip.
  */
 
 import { useState, useEffect, type FC } from "react";

@@ -7,9 +7,9 @@ export function AlrehlaWordmark({ className, color = "white", height = 24 }: { c
   // Wordmark paths are scaled/translated in the logo, here we render them in their own container
   return (
     <svg
-      width={(height * 505) / 165}
+      width={(height * 505) / 200}
       height={height}
-      viewBox="0 20 505 165"
+      viewBox="0 0 505 200"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
