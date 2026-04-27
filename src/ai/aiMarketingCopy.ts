@@ -759,7 +759,7 @@ ${toneDirective}${topicDirective}
 \`\`\`
 `;
 
-    const result = await geminiClient.generateJSON<TikTokScriptGeneration>(prompt);
+    const result = await geminiClient.generateJSON<TikTokScriptGeneration>(prompt, "illusion_dismantling");
 
     if (!result || !result.scriptBlocks) {
       console.warn("❌ Failed to generate dismantling script");

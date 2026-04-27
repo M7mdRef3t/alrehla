@@ -8,13 +8,13 @@ import { generateImage } from '@/lib/maraya/imagen';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { imagePrompt, sceneId } = body;
+    const { imagePrompt, sceneId, aspectRatio } = body;
 
     if (!imagePrompt || typeof imagePrompt !== 'string') {
       return NextResponse.json({ success: false, error: 'imagePrompt is required' }, { status: 400 });
     }
 
-    const image = await generateImage(imagePrompt);
+    const image = await generateImage(imagePrompt, aspectRatio || '16:9');
 
     return NextResponse.json({
       success: true,

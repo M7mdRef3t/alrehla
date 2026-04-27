@@ -36,10 +36,10 @@ function shouldRetryWithAnotherModel(error: Error) {
   return message.includes('not found') || message.includes('unsupported') || message.includes('invalid argument') || message.includes('no image');
 }
 
-async function generateWithImagenModel(model: string, prompt: string) {
+async function generateWithImagenModel(model: string, prompt: string, aspectRatio: string) {
   const response = await ai.models.generateImages({
     model, prompt: `${prompt}, photorealistic, cinematic composition, ultra high quality`,
-    config: { numberOfImages: 1, aspectRatio: '16:9' },
+    config: { numberOfImages: 1, aspectRatio },
   });
   if (response.generatedImages && response.generatedImages.length > 0) {
     return { base64: response.generatedImages[0].image.imageBytes, mimeType: 'image/png' };
@@ -47,10 +47,11 @@ async function generateWithImagenModel(model: string, prompt: string) {
   return null;
 }
 
-async function generateWithGeminiImageModel(model: string, prompt: string) {
+async function generateWithGeminiImageModel(model: string, prompt: string, aspectRatio: string) {
+  const orientation = aspectRatio === '9:16' ? 'vertical 9:16 portrait' : 'horizontal 16:9 landscape';
   const response = await ai.models.generateContent({
     model,
-    contents: [{ role: 'user', parts: [{ text: `Create one cinematic 16:9 still image only. ${prompt}` }] }],
+    contents: [{ role: 'user', parts: [{ text: `Create one cinematic ${orientation} still image only. ${prompt}` }] }],
     config: { responseModalities: ['IMAGE'], temperature: 0.8 },
   });
   const parts = response?.candidates?.[0]?.content?.parts || [];
@@ -73,9 +74,9 @@ function buildStrategyCandidates(): Strategy[] {
   ];
 }
 
-async function runStrategy(strategy: Strategy, prompt: string) {
-  if (strategy.type === 'imagen') return generateWithImagenModel(strategy.model, prompt);
-  return generateWithGeminiImageModel(strategy.model, prompt);
+async function runStrategy(strategy: Strategy, prompt: string, aspectRatio: string) {
+  if (strategy.type === 'imagen') return generateWithImagenModel(strategy.model, prompt, aspectRatio);
+  return generateWithGeminiImageModel(strategy.model, prompt, aspectRatio);
 }
 
 export interface GeneratedImage {
@@ -83,7 +84,7 @@ export interface GeneratedImage {
   mimeType: string;
 }
 
-export async function generateImage(prompt: string): Promise<GeneratedImage | null> {
+export async function generateImage(prompt: string, aspectRatio = '16:9'): Promise<GeneratedImage | null> {
   ensureInit();
   if (Date.now() < globalBackoffUntil) return null;
 
@@ -92,7 +93,7 @@ export async function generateImage(prompt: string): Promise<GeneratedImage | nu
 
     if (activeStrategy) {
       try {
-        const image = await runStrategy(activeStrategy, prompt);
+        const image = await runStrategy(activeStrategy, prompt, aspectRatio);
         if (image) return image;
       } catch (error) {
         if (!shouldRetryWithAnotherModel(error as Error)) throw error;
@@ -102,7 +103,7 @@ export async function generateImage(prompt: string): Promise<GeneratedImage | nu
 
     for (const strategy of queue) {
       try {
-        const image = await runStrategy(strategy, prompt);
+        const image = await runStrategy(strategy, prompt, aspectRatio);
         if (image) { activeStrategy = strategy; return image; }
       } catch (error) {
         if (!shouldRetryWithAnotherModel(error as Error)) throw error;

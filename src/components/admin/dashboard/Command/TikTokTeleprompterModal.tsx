@@ -1,6 +1,6 @@
 import React, { type FC, useRef, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Zap as Sparkles, Copy, Video, Hash, Camera, Check, Play, Pause, ImagePlus, Loader2, Brain, ShieldAlert, Zap, ChevronLeft, ThumbsUp, ThumbsDown, Users, TrendingUp } from "lucide-react";
+import { X, Zap as Sparkles, Copy, Video, Hash, Camera, Check, Play, Pause, ImagePlus, Loader2, Brain, ShieldAlert, Zap, ChevronLeft, ThumbsUp, ThumbsDown, Users, TrendingUp, Download } from "lucide-react";
 import type { TikTokScriptGeneration } from "@/ai/aiMarketingCopy";
 import { marketingCopywriter } from "@/ai/aiMarketingCopy";
 import { logger } from "@/services/logger";
@@ -69,6 +69,7 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
     }
   }, [illusionName]);
   const [copied, setCopied] = useState(false);
+  const [copiedPrompts, setCopiedPrompts] = useState<Record<number, boolean>>({});
   const [internalScript, setInternalScript] = useState<TikTokScriptGeneration | null>(null);
   const [internalGenerating, setInternalGenerating] = useState(false);
   const [autoScroll, setAutoScroll] = useState(false);
@@ -122,13 +123,23 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
   };
 
   // ── Image Generation ──
+  const getAspectRatio = () => {
+    const platform = scriptData?.platform?.toLowerCase() ?? "";
+    const format = scriptData?.format?.toLowerCase() ?? "";
+    // Instagram/TikTok video/reels → portrait 9:16
+    if ((platform === "instagram" || platform === "tiktok") && (format === "video" || format === "reel")) {
+      return "9:16";
+    }
+    return "16:9";
+  };
+
   const handleGenerateImage = async (idx: number, prompt: string) => {
     setGeneratingImages(prev => ({ ...prev, [idx]: true }));
     try {
       const res = await fetch("/api/maraya/image/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imagePrompt: prompt, sceneId: `scene-${idx}` }),
+        body: JSON.stringify({ imagePrompt: prompt, sceneId: `scene-${idx}`, aspectRatio: getAspectRatio() }),
       });
       const data = await res.json();
       if (data.success && data.image?.base64) {
@@ -139,6 +150,23 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
     } finally {
       setGeneratingImages(prev => ({ ...prev, [idx]: false }));
     }
+  };
+
+  const handleDownloadImage = (idx: number) => {
+    const src = generatedImages[idx];
+    if (!src) return;
+    const a = document.createElement("a");
+    a.href = src;
+    a.download = `scene-${idx + 1}-${illusionName.replace(/\s+/g, "-")}.png`;
+    a.click();
+  };
+
+  const handleCopyPrompt = async (idx: number, prompt: string) => {
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setCopiedPrompts(prev => ({ ...prev, [idx]: true }));
+      setTimeout(() => setCopiedPrompts(prev => ({ ...prev, [idx]: false })), 2000);
+    } catch { /* ignore */ }
   };
 
   // ── Auto-scroll ──
@@ -365,26 +393,50 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
                           )}
                           <p className="text-2xl md:text-3xl font-bold text-slate-200 leading-[1.6]">{block.text}</p>
 
-                          {/* Image + Motion Prompts with Generation */}
+                           {/* Image + Motion Prompts with Generation */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                             {block.imagePrompt && (
                               <div className="p-3 rounded-xl bg-slate-800/60 border border-white/5 space-y-3">
+                                {/* Header row */}
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
                                     <Camera className="w-3 h-3" /> Image Prompt
                                   </div>
-                                  <button onClick={() => handleGenerateImage(idx, block.imagePrompt!)}
-                                    disabled={generatingImages[idx] || !!generatedImages[idx]}
-                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[9px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                                    {generatingImages[idx] ? <Loader2 className="w-3 h-3 animate-spin" /> : generatedImages[idx] ? <Check className="w-3 h-3" /> : <ImagePlus className="w-3 h-3" />}
-                                    {generatingImages[idx] ? "جارٍ..." : generatedImages[idx] ? "تم" : "ولّد"}
-                                  </button>
+                                  <div className="flex items-center gap-1.5">
+                                    {/* Copy prompt */}
+                                    <button
+                                      onClick={() => handleCopyPrompt(idx, block.imagePrompt!)}
+                                      title="نسخ الـ Prompt كاملاً"
+                                      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-700/60 hover:bg-slate-700 border border-white/10 text-slate-400 hover:text-white text-[9px] font-bold transition-all">
+                                      {copiedPrompts[idx] ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                      {copiedPrompts[idx] ? "تم" : "Prompt"}
+                                    </button>
+                                    {/* Generate image */}
+                                    <button onClick={() => handleGenerateImage(idx, block.imagePrompt!)}
+                                      disabled={generatingImages[idx] || !!generatedImages[idx]}
+                                      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[9px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                                      {generatingImages[idx] ? <Loader2 className="w-3 h-3 animate-spin" /> : generatedImages[idx] ? <Check className="w-3 h-3" /> : <ImagePlus className="w-3 h-3" />}
+                                      {generatingImages[idx] ? "جارٍ..." : generatedImages[idx] ? "تم" : "ولّد"}
+                                    </button>
+                                  </div>
                                 </div>
-                                <p className="text-[10px] text-slate-400 italic line-clamp-2 hover:line-clamp-none transition-all">{block.imagePrompt}</p>
+                                <p className="text-[10px] text-slate-400 italic line-clamp-2 hover:line-clamp-none transition-all cursor-default">{block.imagePrompt}</p>
                                 {generatedImages[idx] && (
-                                  <motion.img initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                                    src={generatedImages[idx]} alt={`Scene ${idx + 1}`}
-                                    className="w-full rounded-lg border border-white/10 shadow-lg" />
+                                  <div className="relative group/img">
+                                    <motion.img
+                                      initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                                      src={generatedImages[idx]} alt={`Scene ${idx + 1}`}
+                                      className={`w-full rounded-lg border border-white/10 shadow-lg object-cover ${
+                                        getAspectRatio() === "9:16" ? "aspect-[9/16]" : "aspect-video"
+                                      }`} />
+                                    {/* Download overlay */}
+                                    <button
+                                      onClick={() => handleDownloadImage(idx)}
+                                      className="absolute top-2 left-2 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center gap-1 px-2 py-1.5 rounded-lg bg-black/70 backdrop-blur text-white text-[9px] font-black border border-white/10 hover:bg-black/90">
+                                      <Download className="w-3 h-3" />
+                                      تنزيل
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             )}

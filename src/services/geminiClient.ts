@@ -81,9 +81,16 @@ class GeminiClient {
     return runtimeEnv.geminiEnabled !== "false";
   }
 
-  private canAttemptServerRequest(): boolean {
+  private canAttemptServerRequest(bypassCooldown = false): boolean {
+    if (bypassCooldown) return true;
     return Date.now() >= this.unavailableUntil;
   }
+
+  /** Features that must never be blocked by the server-unavailable cooldown */
+  private readonly HIGH_PRIORITY_FEATURES = new Set([
+    "illusion_dismantling",
+    "script_generation",
+  ]);
 
   private notifyTemporarilyUnavailable(): void {
     const now = Date.now();
@@ -123,7 +130,8 @@ class GeminiClient {
       console.warn(`[GeminiClient] Disabled via runtimeEnv.geminiEnabled. Feature: ${feature}`);
       return null;
     }
-    if (!this.canAttemptServerRequest()) {
+    const isHighPriority = this.HIGH_PRIORITY_FEATURES.has(feature);
+    if (!this.canAttemptServerRequest(isHighPriority)) {
       const remainingMs = Math.max(0, this.unavailableUntil - Date.now());
       console.warn(`[GeminiClient] Server unavailable — cooldown ${Math.ceil(remainingMs / 1000)}s remaining. Feature: ${feature}`);
       this.notifyTemporarilyUnavailable();
@@ -245,14 +253,28 @@ class GeminiClient {
       const customMatch = result.match(/\[BEGIN JSON\]\n?([\s\S]*?)\n?\[END JSON\]/i);
       const markdownMatch = result.match(/```json\n([\s\S]*?)\n```/i) || result.match(/```\n([\s\S]*?)\n```/i);
       
-      const jsonText = customMatch ? customMatch[1] : (markdownMatch ? markdownMatch[1] : result);
+      const rawJson = customMatch ? customMatch[1] : (markdownMatch ? markdownMatch[1] : result);
+
+      // Sanitize Unicode smart/curly quotes that models sometimes place INSIDE JSON strings.
+      // These look like " " (U+201C / U+201D) and break JSON.parse when inside a quoted value.
+      const jsonText = rawJson
+        .replace(/\u201c/g, '\\"')  // LEFT DOUBLE QUOTATION MARK → escaped quote
+        .replace(/\u201d/g, '\\"')  // RIGHT DOUBLE QUOTATION MARK → escaped quote
+        .replace(/\u2018/g, "'")    // LEFT SINGLE QUOTATION MARK → plain apostrophe
+        .replace(/\u2019/g, "'");   // RIGHT SINGLE QUOTATION MARK → plain apostrophe
       
       try {
         return JSON.parse(jsonText.trim());
       } catch (parseError) {
-        console.warn("[GeminiClient] JSON Parse Error. Raw Text:", jsonText);
-        console.warn("[GeminiClient] Full Model Output:", result);
-        return null;
+        // Second attempt: strip any remaining unescaped control characters
+        try {
+          const sanitized = jsonText.replace(/[\u0000-\u001F\u007F-\u009F]/g, " ").trim();
+          return JSON.parse(sanitized);
+        } catch {
+          console.warn("[GeminiClient] JSON Parse Error. Raw Text:", rawJson);
+          console.warn("[GeminiClient] Full Model Output:", result);
+          return null;
+        }
       }
     } catch (err) {
       console.warn("[GeminiClient] Extraction Error:", err);

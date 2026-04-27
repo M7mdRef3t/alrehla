@@ -201,15 +201,15 @@ export const DivineConnection: FC<DivineConnectionProps> = ({
         />
       ))}
 
-      {/* Connection Anchor to "You" Orb */}
-      <SafeMotionCircle
+      {/* Connection Anchor to "You" Orb (removed per user request to clean UI) */}
+      {/* <SafeMotionCircle
         cx={50} cy={50} r={2}
         fill="none"
         stroke={levelColor}
         strokeWidth={0.1}
         animate={{ scale: [1, 1.2, 1], opacity: [0, 0.2 * strength, 0] }}
         transition={{ duration: 3, repeat: Infinity }}
-      />
+      /> */}
     </g>
   );
 };
