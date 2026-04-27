@@ -695,8 +695,24 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
   async generateIllusionDismantlingScript(params: {
     illusionName: string;
     description?: string;
+    tone?: 'deep' | 'direct' | 'sarcastic';
+    topic?: 'energy' | 'toxic' | 'mindset';
   }): Promise<TikTokScriptGeneration | null> {
     console.warn("🛡️ Generating Illusion Dismantling Script...", params);
+
+    const toneLabels: Record<string, string> = {
+      deep: "هادي وعميق نفسياً — بتبني مفاهيم بدل ما تهدم",
+      direct: "مباشر وتحدي واضح — بيفوق اللي قدامه",
+      sarcastic: "ساخر وصادم — بيضرب الدجل بذكاء",
+    };
+    const topicLabels: Record<string, string> = {
+      energy: "نزيف الطاقة والاحتراق النفسي",
+      toxic: "العلاقات السامة واختراق الحدود",
+      mindset: "تصحيح مفاهيم التنمية البشرية بالمبادئ الأولى",
+    };
+
+    const toneDirective = params.tone ? `\n# نبرة الأداء\n${toneLabels[params.tone]}\n` : "";
+    const topicDirective = params.topic ? `\n# المحور المستهدف\n${topicLabels[params.topic]}\n` : "";
 
     const prompt = `
 أنت معماري أنظمة (System Architect) وعالم نفس طبي إسلامي، مهمتك "قتل الدجال بالعلم" عبر منصة الرحلة (Alrehla).
@@ -705,7 +721,7 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
 # الوهم الحالي المستهدف
 "${params.illusionName}"
 ${params.description ? `(تفاصيل عن الوهم في النظام: ${params.description})` : ""}
-
+${toneDirective}${topicDirective}
 # القواعد الصارمة (First Principles)
 1. **اللغة:** عامية مصرية، صارمة، مباشرة، كاريزمية (أداء "محمد"). تجنب المصطلحات المعقدة مثل "السيستم" أو "المحور الأفقي".
 2. **الربط الروحي:** أي وجع سببه "علاقة بشرية" هو في الحقيقة عرض لضعف "علاقتك بالله/المصدر". اشرح إن البشر "مرايات" مش مصادر طاقة. لو العلاقة انقطعت، المصدر لسه موجود.

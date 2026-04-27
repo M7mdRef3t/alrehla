@@ -199,7 +199,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const mirrorName = journey.mirrorName;
 
   const [showAddPerson, setShowAddPerson] = useState(false);
-  const [segmentedView, setSegmentedView] = useState<"network" | "stability" | "metrics">("network");
+  const [segmentedView, setSegmentedView] = useState<"network" | "stability" | "metrics" | "live">("network");
   const [isCloudAuthOpen, setIsCloudAuthOpen] = useState(false);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const user = useAuthState(s => s.user);

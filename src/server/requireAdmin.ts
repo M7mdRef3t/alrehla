@@ -35,10 +35,14 @@ export async function requireAdmin(req: Request | any) {
 
   const allowedRoles = allowedRolesStr.split(",").map(r => r.trim());
   
-  const userRole = user.app_metadata?.role;
+  const userRole = 
+    user.app_metadata?.role ?? 
+    user.user_metadata?.role ?? 
+    user.app_metadata?.user_role ?? 
+    user.user_metadata?.user_role;
   
   if (!userRole || !allowedRoles.includes(userRole)) {
-     return NextResponse.json({ error: "Forbidden - Admin role required" }, { status: 403 });
+     return NextResponse.json({ error: `Forbidden - Admin role required (got: ${userRole || 'none'})` }, { status: 403 });
   }
 
   return null; // authorized

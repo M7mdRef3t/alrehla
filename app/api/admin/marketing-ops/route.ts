@@ -13,24 +13,27 @@ function buildClient() {
   );
 }
 
-async function checkAuth(req: Request): Promise<boolean> {
+async function checkAuth(req: Request): Promise<NextResponse | null> {
   const secret = process.env.CRON_SECRET || process.env.MARKETING_DEBUG_KEY || process.env.ADMIN_API_SECRET;
   const auth = req.headers.get("authorization");
 
   // 1. Secret/Cron/Admin Auth
-  if (secret && auth === `Bearer ${secret}`) return true;
+  if (secret && auth === `Bearer ${secret}`) return null; // Authorized
 
   // 2. Head-less requireAdmin check
-  const denied = await requireAdmin(req);
-  if (!denied) return true;
+  const deniedResponse = await requireAdmin(req);
+  if (deniedResponse) {
+    return deniedResponse;
+  }
 
-  return false;
+  return null; // Authorized
 }
 
 // ─── GET — stats + quick-send leads ─────────────────────────────────────────
 export async function GET(req: Request) {
-  if (!(await checkAuth(req))) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const authError = await checkAuth(req);
+  if (authError) {
+    return authError;
   }
 
   const supabase = buildClient();
@@ -452,8 +455,9 @@ function normalizeEgyptianPhone(phone: string): string {
 
 // ─── POST — actions ───────────────────────────────────────────────────────────
 export async function POST(req: Request) {
-  if (!(await checkAuth(req))) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const authError = await checkAuth(req);
+  if (authError) {
+    return authError;
   }
 
   const body = (await req.json().catch(() => ({}))) as {

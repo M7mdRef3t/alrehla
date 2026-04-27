@@ -474,6 +474,27 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
       onMouseEnter={() => setShowDelete(true)}
       onMouseLeave={() => setShowDelete(false)}
     >
+      {/* ── Resonance Pulse (Live Session) ── */}
+      {node.lastLiveSessionAt && (new Date().getTime() - new Date(node.lastLiveSessionAt).getTime() < 86400000) && (
+        <motion.div
+          className="absolute -inset-8 rounded-full pointer-events-none"
+          style={{
+            zIndex: -2,
+            border: "2px solid rgba(168,85,247,0.4)",
+            boxShadow: "0 0 30px rgba(168,85,247,0.2)"
+          }}
+          animate={{
+            scale: [0.8, 1.4, 1.6],
+            opacity: [0.8, 0.3, 0],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeOut",
+          }}
+        />
+      )}
+
       {/* ── Mirror & Sovereign Aura: The Soul Connection ── */}
       {node.isMirrorNode && (
         <motion.div

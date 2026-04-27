@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Activity, ChevronDown, Orbit, ShieldCheck, Zap as Sparkles, Zap, Volume2, VolumeX, Headset } from "lucide-react";
+import { Activity, ChevronDown, Orbit, ShieldCheck, Zap as Sparkles, Zap, Volume2, VolumeX, Headset, Mic, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 import { mapCopy } from "@/copy/map";
 import { TEIWidget } from "../TEIWidget";
@@ -12,7 +12,11 @@ import { RelationshipPulse } from "../RelationshipPulse";
 import type { ContextAtlasKey, ContextAtlasSnapshot } from "@/utils/contextAtlas";
 import type { RelationshipWeatherSnapshot } from "@/utils/relationshipWeather";
 
-type AnalyticalView = "network" | "stability" | "metrics";
+import { useMapState } from "@/modules/map/dawayirIndex";
+import { formatDistanceToNow } from "date-fns";
+import { ar } from "date-fns/locale";
+
+type AnalyticalView = "network" | "stability" | "metrics" | "live";
 
 interface MapOperationalStripProps {
   activeNodesCount: number;
@@ -46,7 +50,8 @@ interface MapSupportPanelProps {
 const analyticalTabs: Array<{ id: AnalyticalView; label: string; caption: string }> = [
   { id: "network", label: "الشبكة", caption: "مين بيسند ومين بيستنزف" },
   { id: "stability", label: "الاستقرار", caption: "رصد الذبذبة والاحتكاك" },
-  { id: "metrics", label: "المؤشارات", caption: "قياسات أعمق للخريطة" }
+  { id: "metrics", label: "المؤشرات", caption: "قياسات أعمق للخريطة" },
+  { id: "live", label: "الجلسات", caption: "تفكيك عقد العلاقات" }
 ];
 
 /* ── STAT CELL (Sovereign Telemetry) ── */
@@ -164,6 +169,52 @@ export function MapOperationalStrip({
   );
 }
 
+function LiveSessionsView() {
+  const nodes = useMapState(s => s.nodes);
+  const sessionNodes = nodes.filter(n => n.lastLiveSessionAt).sort((a, b) => 
+    new Date(b.lastLiveSessionAt!).getTime() - new Date(a.lastLiveSessionAt!).getTime()
+  );
+
+  if (sessionNodes.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="h-16 w-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 text-purple-400">
+          <Mic size={32} />
+        </div>
+        <p className="text-white/60 text-sm font-medium">مفيش جلسات حية لسه</p>
+        <p className="text-white/30 text-[10px] mt-2 leading-relaxed">افتح أي شخص في الخريطة<br />وابدأ معاه جلسة "مرآة الوعي"</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {sessionNodes.map(node => (
+        <div key={node.id} className="group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.03] p-4 transition-all hover:bg-white/[0.06]">
+          <div className="flex items-center justify-between">
+             <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400">
+                  <Mic size={20} />
+                </div>
+                <div className="text-right">
+                   <h4 className="text-sm font-black text-white">{node.label}</h4>
+                   <p className="text-[10px] text-white/40">
+                     {node.lastLiveSessionAt ? formatDistanceToNow(new Date(node.lastLiveSessionAt), { addSuffix: true, locale: ar }) : ''}
+                   </p>
+                </div>
+             </div>
+          </div>
+          {node.lastTruthContract && (
+            <div className="mt-3 text-[11px] leading-relaxed text-purple-200/60 border-t border-white/5 pt-3 text-right">
+              <span className="font-bold text-purple-300">آخر عقد حقيقة:</span> {node.lastTruthContract.actionPoints[0]}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function MapAnalyticalPanel({ segmentedView, onSegmentChange }: MapAnalyticalPanelProps) {
   const activeTab = analyticalTabs.find((tab) => tab.id === segmentedView) ?? analyticalTabs[0];
 
@@ -200,7 +251,7 @@ export function MapAnalyticalPanel({ segmentedView, onSegmentChange }: MapAnalyt
             <p className="mt-1 text-xs leading-6 text-white/55">{activeTab.caption}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-2 text-white/65">
-            {segmentedView === "metrics" ? <Sparkles className="h-4 w-4" /> : segmentedView === "network" ? <Orbit className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+            {segmentedView === "metrics" ? <Sparkles className="h-4 w-4" /> : segmentedView === "network" ? <Orbit className="h-4 w-4" /> : segmentedView === "live" ? <Mic className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
           </div>
         </div>
 
@@ -218,6 +269,7 @@ export function MapAnalyticalPanel({ segmentedView, onSegmentChange }: MapAnalyt
             )}
             {segmentedView === "network" && <InfluenceNetwork />}
             {segmentedView === "stability" && <StabilityHeatmap />}
+            {segmentedView === "live" && <LiveSessionsView />}
         </div>
       </div>
     </motion.div>

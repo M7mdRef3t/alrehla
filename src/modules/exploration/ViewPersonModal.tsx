@@ -22,6 +22,12 @@ import { PersonalizedTraining } from "./PersonalizedTraining";
 import { SymptomsChecklist } from "./SymptomsChecklist";
 import { ReciprocityMeter } from "./ReciprocityMeter";
 import { recordTruthEvent } from "@/services/truthScoreEngine";
+import { useAdminState } from "@/domains/admin/store/admin.store";
+import { getDawayirLiveLaunchHref, getDawayirLivePath } from "@/utils/dawayirLiveJourney";
+import { assignUrl } from "@/services/navigation";
+import { useAuthState } from "@/domains/auth/store/auth.store";
+import { canSendAIMessage } from "@/services/subscriptionManager";
+import { Mic } from "lucide-react";
 
 interface ViewPersonModalProps {
   nodeId: string;
@@ -51,6 +57,9 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   } | null>(null);
   const [showTraining, setShowTraining] = useState(false);
   const openEmergency = useEmergencyState((state) => state.open);
+  const user = useAuthState(s => s.user);
+  const journeyPaths = useAdminState((s) => s.journeyPaths);
+  const livePath = useMemo(() => getDawayirLivePath(journeyPaths), [journeyPaths]);
   
   const returnAlarm = useMemo(
     () => (node ? deriveRedReturnAlarm(node, node.label) : null),
@@ -226,6 +235,40 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               <button onClick={() => useMapState.getState().addEnergyTransaction(node.id, -5, "استنزاف طاقي")} className="flex-1 rounded-2xl py-3 text-sm font-black transition-all bg-rose-500/10 border border-rose-500/20 text-rose-400">استنزاف (-5)</button>
             </div>
           </div>
+
+          {/* 🎙️ Dawayir Live Session Launcher */}
+          <button 
+            onClick={() => {
+              if (!canSendAIMessage()) {
+                setIsUpgradeOpen(true);
+                return;
+              }
+              assignUrl(
+                getDawayirLiveLaunchHref(livePath, {
+                  surface: "node-modal",
+                  nodeId: node.id,
+                  nodeLabel: node.label,
+                  goalId: node.goalId
+                })
+              );
+            }} 
+            className="w-full group relative overflow-hidden rounded-3xl border border-purple-500/30 bg-purple-600/10 p-6 text-purple-400 shadow-[0_0_40px_rgba(168,85,247,0.15)] transition-all hover:bg-purple-600/20 active:scale-[0.98] backdrop-blur-xl"
+          >
+            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-purple-500/10 blur-3xl group-hover:bg-purple-500/20 transition-colors" />
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="text-right">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="h-2 w-2 rounded-full bg-purple-400 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400/80">Mirror Session</span>
+                </div>
+                <span className="block text-xl font-black text-purple-100 mb-1">جلسة "مرآة الوعي" المباشرة</span>
+                <span className="text-sm text-purple-300/60 leading-relaxed block">تحدث مع {node.label} عبر الذكاء الاصطناعي لتفكيك عقدة العلاقة.</span>
+              </div>
+              <div className="h-14 w-14 flex items-center justify-center rounded-2xl bg-purple-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] group-hover:scale-110 transition-transform">
+                <Mic size={28} strokeWidth={2.5} />
+              </div>
+            </div>
+          </button>
 
           {node.ring === "green" && (
             <button onClick={() => useMapState.getState().togglePowerBank(node.id)} className={`w-full rounded-2xl p-5 border transition-all backdrop-blur-md ${node.isPowerBank ? "border-teal-500/50 bg-teal-600/20 text-[var(--consciousness-text)] shadow-[0_0_30px_rgba(20,184,166,0.3)]" : "border-[var(--page-border-soft)] bg-[var(--page-surface-2)] text-[var(--consciousness-text-muted)]"}`}>

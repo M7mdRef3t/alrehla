@@ -112,6 +112,8 @@ interface MapState {
   addEnergyTransaction: (nodeId: string, amount: number, note?: string) => void;
   /** تحويل العلاقة إلى بطارية بشرية للطوارئ */
   togglePowerBank: (nodeId: string) => void;
+  /** تسجيل جلسة حية للشخص لتحديث الرنين */
+  registerLiveSession: (nodeId: string, summary: string, score: number) => void;
   /** مزامنة الحالة الكاملة للتخزين المحلي */
   syncMapStorage: () => void;
 }
@@ -1041,6 +1043,24 @@ export const useMapState = create<MapState>((set, get) => ({
     if (isNowPowerBank) {
       useGamificationState.getState().addXP(15, "تفعيل بطارية الطوارئ");
     }
+  },
+  registerLiveSession: (nodeId, summary, score) => {
+    const timestamp = Date.now();
+    const nextNodes = get().nodes.map((node) =>
+      node.id === nodeId
+        ? {
+          ...node,
+          lastLiveSessionAt: timestamp,
+          lastTruthContract: {
+            summary,
+            score,
+            timestamp
+          }
+        }
+        : node
+    );
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
   },
   syncMapStorage: () => {
     const s = get();

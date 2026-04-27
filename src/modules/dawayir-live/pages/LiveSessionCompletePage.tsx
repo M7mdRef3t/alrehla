@@ -23,6 +23,7 @@ import WeeklyPatternCard from '@/modules/dawayir-live/components/WeeklyPatternCa
 import type { LiveSessionArtifactRecord, LiveSessionDetail, LiveSessionSummary } from '../types';
 import type { AgentActions, AgentContext } from '@/agent/types';
 import { saveSessionSummary } from '@/modules/dawayir-live/utils/sessionHistory';
+import { useMapState } from "@/modules/map/dawayirIndex";
 
 function findArtifact(artifacts: LiveSessionArtifactRecord[], type: string) {
   return artifacts.find((artifact) => artifact.artifact_type === type);
@@ -266,6 +267,21 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
     });
     window.localStorage.setItem(key, "saved");
   }, [detail, dominantNodeId, metrics?.clarityDelta, metrics?.overloadIndex, sessionId, transitionCount]);
+
+  useEffect(() => {
+    if (!detail) return;
+
+    const nodeId = (detail.session.goal_context as any)?.nodeId || String(dominantNodeId);
+    if (nodeId) {
+      useMapState.getState().registerLiveSession(nodeId, {
+        summary: summary?.headline || summary?.title || copy.sessionFallback,
+        truthContract: truthArtifact?.content ? {
+          actionPoints: coerceStringArray((truthArtifact.content as any).promises),
+          reminder: coerceString((truthArtifact.content as any).reminder, ""),
+        } : undefined
+      });
+    }
+  }, [detail, dominantNodeId, summary, truthArtifact, copy.sessionFallback]);
 
   useEffect(() => {
     if (!truthArtifact?.created_at || truthMarkedDone) {

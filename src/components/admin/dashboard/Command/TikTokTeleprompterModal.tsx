@@ -81,20 +81,11 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
     setInternalScript(null);
     setGeneratedImages({});
     try {
-      const toneMap: Record<StudioTone, string> = {
-        deep: "هادي وعميق نفسياً",
-        direct: "مباشر وتحدي واضح",
-        sarcastic: "ساخر وصادم بيضرب الدجل بذكاء",
-      };
-      const topicMap: Record<StudioTopic, string> = {
-        energy: "نزيف الطاقة والاحتراق النفسي",
-        toxic: "العلاقات السامة واختراق الحدود",
-        mindset: "تصحيح مفاهيم بالمبادئ الأولى",
-      };
-      const enrichedDesc = `${illusionDescription || ""}\nالموضوع المستهدف: ${topicMap[topic]}.\nالنبرة المطلوبة: ${toneMap[tone]}.`;
       const result = await marketingCopywriter.generateIllusionDismantlingScript({
         illusionName,
-        description: enrichedDesc,
+        description: illusionDescription || "",
+        tone,
+        topic,
       });
       if (result) {
         setInternalScript(result);

@@ -248,4 +248,13 @@ export interface MapNode {
     brokenPromises: number;  // وعود مكسورة
     cancelledMeets: number;  // لقاءات ملغية
   };
+
+  /** رنين الجلسة الحية: آخر مرة تم فيها عمل Mirror لهذا الشخص */
+  lastLiveSessionAt?: number;
+  /** لقطة من آخر عقد حقيقة تم توقيعه في الجلسة الحية */
+  lastTruthContract?: {
+    summary: string;
+    score: number;
+    timestamp: number;
+  };
 }
