@@ -21,14 +21,13 @@ interface HeroSectionProps {
 
 /* --- Constants --- */
 const ROTATING_WORDS = [
-  "شايف الحقيقة ولا ماشي في الوهم؟",
-  "عارف مين فعلاً جنبك؟",
-  "عايش في ضباب ولا وضوح؟",
-  "مين بيقودك من غير ما تحس؟",
-  "بتصدق أكاذيب مريحة؟",
-  "فاكر ده حب ولا استنزاف؟",
-  "تايه في رحلتك؟",
-  "جاهز تواجه الحقيقة؟"
+  "مش شايف الحقيقة",
+  "ماشي في الضباب",
+  "بتصدق أوهام",
+  "محتاج وضوح",
+  "مستنزف طاقياً",
+  "تايه في رحلتك",
+  "جاهز للحقيقة"
 ];
 
 /* --- Styles --- */
@@ -101,7 +100,7 @@ const HERO_STYLES = `
     max-width: 600px;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 0.25rem; /* Minimized gap */
   }
 
   .hero-eyebrow-row {
@@ -123,8 +122,8 @@ const HERO_STYLES = `
 
   .headline-line {
     display: block;
-    line-height: 1.2;
-    margin-bottom: 0.1em;
+    line-height: 1; /* Tightest */
+    margin-bottom: 0; /* Removed margin */
     color: var(--amber-500);
     font-family: var(--font-display);
     font-size: clamp(2.8rem, 6.5vw, 4.8rem);
@@ -135,7 +134,7 @@ const HERO_STYLES = `
   .headline-subline {
     display: inline-block;
     width: auto;
-    line-height: 1.2;
+    line-height: 1; /* Tightest */
     color: var(--color-amber-50);
     font-size: clamp(2.2rem, 5vw, 3.8rem);
     font-weight: 600;
@@ -149,6 +148,9 @@ const HERO_STYLES = `
     max-width: 60%;
     background: linear-gradient(90deg, var(--cyan-glow), var(--gold-glow), transparent);
     border-radius: 1px;
+    margin-top: 0rem; 
+    margin-bottom: 0.25rem;
+    opacity: 0.5;
   }
 
   .hero-command-bar {
@@ -286,9 +288,9 @@ const HERO_STYLES = `
     gap: 0;
     overflow: visible;
     font-family: var(--font-alexandria), sans-serif;
-    line-height: 1.4;
-    padding-top: 0.2em;
-    padding-bottom: 0.2em;
+    line-height: 1; /* Tightest from 1.4 */
+    padding-top: 0;
+    padding-bottom: 0;
     color: var(--text-main);
     text-shadow: 0 0 40px rgba(0, 240, 255, 0.15);
   }
@@ -298,6 +300,11 @@ const HERO_STYLES = `
     flex-direction: column;
     align-items: flex-start;
     gap: 0;
+    margin-top: -0.5rem; /* Force pull up */
+  }
+
+  .rotating-word-wrapper {
+    margin-top: -0.8rem; /* Force pull up to "أنت فقط" */
   }
 
   .hero-copy-column .hero-body {
@@ -805,7 +812,7 @@ const HERO_STYLES = `
     white-space: nowrap;
     box-sizing: content-box;
     font-family: var(--font-display);
-    line-height: 1.2;
+    line-height: 1.4; /* Increased from 1.2 */
     vertical-align: middle;
     text-align: right;
   }
@@ -818,6 +825,7 @@ const HERO_STYLES = `
     width: 100%;
     text-align: justify;
     text-align-last: right;
+    margin-top: -0.25rem; /* Pull up closer to headline */
   }
 
   /* --- Trust pills --- */
@@ -935,7 +943,7 @@ const HERO_STYLES = `
     .hero-root {
       overflow-x: hidden;
       width: 100%;
-      min-height: 100vh;
+      min-height: 100svh;
       overflow-y: visible;
       transform-style: flat;
     }
@@ -943,10 +951,10 @@ const HERO_STYLES = `
     .hero-content-wrapper {
       flex-direction: column;
       align-items: center;
-      gap: 2rem;
-      padding: 8rem 1rem 6rem;
+      gap: 1.5rem; /* Reduced from 2rem */
+      padding: 6rem 1rem 4rem; /* Reduced padding */
       width: 100%;
-      min-height: 100vh;
+      min-height: 100svh;
       max-width: 100vw;
       box-sizing: border-box;
       overflow-x: hidden;
@@ -995,14 +1003,14 @@ const HERO_STYLES = `
       text-align: center;
       white-space: normal;
       margin-top: 0;
-      font-size: clamp(1.7rem, 6.5vw, 2.4rem);
+      font-size: clamp(1.4rem, 6vw, 2.1rem);
     }
 
     .headline-inline-row {
       flex-direction: column;
       align-items: center;
       gap: 0;
-      margin-top: 1.25rem;
+      margin-top: 0.75rem; /* Reduced from 1.25rem */
     }
 
     .rotating-word-wrapper {
@@ -1011,11 +1019,13 @@ const HERO_STYLES = `
       text-align: center !important;
       margin-left: auto;
       margin-right: auto;
-      margin-top: 0.25rem;
+      margin-top: 0rem; /* Reduced from 0.25rem */
       width: 100%;
+      max-width: 100%;
       min-height: 1.35em;
       /* Isolate layout: prevents reflow from propagating upward */
       contain: layout style;
+      overflow: hidden;
       transform: none;
       -webkit-transform: none;
     }
@@ -1067,7 +1077,7 @@ const HERO_STYLES = `
     .map-area {
       width: 100%;
       max-width: min(85vw, 320px);
-      margin: 0rem auto 0rem;
+      margin: -0.5rem auto 0rem; /* Pull up slightly */
       padding-bottom: 0;
       box-sizing: border-box;
       overflow: visible;
@@ -1078,8 +1088,6 @@ const HERO_STYLES = `
       .hero-root *,
       .hero-root *::before,
       .hero-root *::after {
-        animation: none !important;
-        transition: none !important;
         scroll-behavior: auto !important;
       }
 
@@ -1088,9 +1096,9 @@ const HERO_STYLES = `
       .trust-pill, 
       .metric-card, 
       .node-tooltip-body {
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        background: rgba(8, 12, 22, 0.9) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        background: rgba(8, 12, 22, 0.85) !important;
       }
 
       .ambient-orb,
@@ -1098,18 +1106,12 @@ const HERO_STYLES = `
       .hero-nebula,
       .hero-starfield,
       .neural-dust-field,
-      .hero-scan-line,
-      .pulse-ring,
-      .metric-card,
-      .node-core {
-        animation: none !important;
-        will-change: auto !important;
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
+      .hero-scan-line {
+        animation-duration: 15s !important; /* Slow down instead of killing */
       }
       
       .hero-content-wrapper {
-        transform: none;
+        transform: none !important;
         will-change: auto;
       }
 
@@ -1163,15 +1165,11 @@ const stagger = {
 };
 
 /* --- Rotating Headline Word --- */
-const RotatingWord: FC = () => {
+const RotatingWord: FC<{ isMobile?: boolean }> = ({ isMobile }) => {
   const [index, setIndex] = useState(0);
   const reduceMotion = useReducedMotion();
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const isSmallOrTouch = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024;
-    setIsMobile(isSmallOrTouch);
-
     const id = setInterval(() => {
       setIndex(i => (i + 1) % ROTATING_WORDS.length);
     }, 4500);
@@ -1202,7 +1200,7 @@ const RotatingWord: FC = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -yAmount }}
           transition={{ duration: dur, ease: [0.23, 1, 0.32, 1] }}
-          className="headline-accent whitespace-normal leading-[1.2] overflow-visible font-normal text-right flex items-start justify-start"
+          className="headline-accent whitespace-nowrap leading-[1.4] py-2 font-normal text-right flex items-start justify-start"
           style={{
             gridArea: '1 / 1',
             fontFamily: 'var(--font-display)',
@@ -1220,8 +1218,7 @@ const RotatingWord: FC = () => {
 
 
 /* --- Leadership Map --- */
-const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
-  const [isMobile, setIsMobile] = useState(false);
+const LeadershipMap: FC<{ reduceMotion: boolean | null; isMobile: boolean }> = ({ reduceMotion, isMobile }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const springX = useSpring(mouseX, { stiffness: 120, damping: 50, mass: 1.5 });
@@ -1234,13 +1231,11 @@ const LeadershipMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =
     // Discretize mapping for robotic snap feeling
     const rawX = (e.clientX - cx) / 90;
     const rawY = (e.clientY - cy) / 90;
-    const step = 0.5;
     mouseX.set(rawX);
     mouseY.set(rawY);
   }, [reduceMotion, isMobile, mouseX, mouseY]);
 
   useEffect(() => {
-    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [handleMouseMove]);
@@ -1620,9 +1615,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
             <motion.h1 variants={fadeUp} className="headline-static hero-headline">
               <span ref={headlineLineRef} className="headline-line headline-glow">أنت لست ضائعاً</span>
-              <span className="headline-inline-row mt-4">
+              <span className="headline-inline-row mt-1">
                 <span className="headline-subline">أنت فقط</span>
-                <RotatingWord />
+                <RotatingWord isMobile={isMobile} />
               </span>
             </motion.h1>
 
@@ -1690,7 +1685,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             transition={{ duration: 1.1, ease: techEase, delay: 0.35 }}
           >
-            <LeadershipMap reduceMotion={reduceMotion} />
+            <LeadershipMap reduceMotion={reduceMotion} isMobile={isMobile} />
           </motion.div>
         </div>
 

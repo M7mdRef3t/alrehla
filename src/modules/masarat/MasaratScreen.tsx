@@ -94,8 +94,9 @@ export default function MasaratScreen() {
 
   // ─── Render modes ───────────────────────────────────
   return (
-    <div style={S.page}>
-      {/* Header */}
+    <div style={S.pageWrapper}>
+      <div style={S.pageContainer}>
+        {/* Header */}
       <header style={S.header}>
         {mode !== "home" && (
           <button style={S.backBtn} onClick={() => {
@@ -144,6 +145,7 @@ export default function MasaratScreen() {
       {mode === "result" && resolvedPath && (
         <PathResult pathId={resolvedPath} onSave={handleSaveActivePath} />
       )}
+      </div>
     </div>
   );
 }
@@ -308,7 +310,7 @@ function FinderMode({
   setSelectedRing: (r: Ring) => void;
   selectedContact: ContactLevel | null;
   setSelectedContact: (c: ContactLevel) => void;
-  onResolve: () => void;
+  onResolve: (ring?: Ring, contact?: ContactLevel) => void;
   canResolve: boolean;
 }) {
   return (
@@ -360,7 +362,7 @@ function FinderMode({
                 onClick={() => {
                   setSelectedContact(c);
                   // ⚡ الانتقال التلقائي: تأخير بسيط عشان يلحق يشوف الاختيار
-                  setTimeout(onResolve, 400);
+                  setTimeout(() => onResolve(selectedRing!, c), 400);
                 }}
               >
                 <span style={{ fontSize: 20 }}>{CONTACT_LABELS[c].icon}</span>
@@ -445,16 +447,18 @@ function ModeCard({ icon, title, subtitle, color, onClick }: {
 
 // ─── Styles ────────────────────────────────────────────
 const S: Record<string, React.CSSProperties> = {
-  page: {
+  pageWrapper: {
     minHeight: "100vh",
     background: "linear-gradient(135deg, #0a0e1f 0%, #0f172a 100%)",
     color: "#e2e8f0",
     fontFamily: "'Tajawal', 'Inter', sans-serif",
     direction: "rtl",
-    maxWidth: 640,
-    margin: "0 auto",
     paddingTop: 80,
     paddingBottom: 80,
+  },
+  pageContainer: {
+    maxWidth: 640,
+    margin: "0 auto",
   },
   header: {
     padding: "20px 20px 12px",

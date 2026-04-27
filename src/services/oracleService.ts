@@ -2,6 +2,7 @@ import { logger } from "@/services/logger";
 import { geminiClient } from "./geminiClient";
 import { Dream } from "@/types/dreams";
 import { useMapState } from '@/modules/map/dawayirIndex';
+import { useHafizState, getVerticalResonanceState } from '@/modules/hafiz/store/hafiz.store';
 
 export type OracleGrade = 'S' | 'A' | 'B' | 'C' | 'F' | 'Test';
 
@@ -34,6 +35,9 @@ export class OracleService {
      */
     static async analyzeDream(title: string, description: string = ""): Promise<Partial<Dream>> {
         const nodes = useMapState.getState().nodes;
+        const memories = useHafizState.getState().memories;
+        const resonance = getVerticalResonanceState(memories);
+        
         const currentKnotsSummary = nodes
             .filter(n => (n.analysis && n.analysis.score > 4) || n.ring === 'red')
             .map(n => `NodeID: ${n.id}, Label: ${n.label}, Ring: ${n.ring}, Diagnosis: ${n.analysis?.insights?.diagnosisSummary || 'Relationship friction'}`)
@@ -41,10 +45,15 @@ export class OracleService {
 
         const prompt = `
       أنت "الأوراكل" (The Oracle) ومحلل النظم الخبير في منصة الرحلة. 
-      مهمتك هي ربط أحلام المستخدم بحالته العلائقية.
+      مهمتك هي ربط أحلام المستخدم بحالته العلائقية والروحية.
 
       الخريطة الحالية:
       ${currentKnotsSummary || 'No high-friction nodes detected.'}
+
+      ◈ المحور الرأسي (حالة الاتصال بالمصدر):
+      - المستوى: ${resonance.label} (${Math.round(resonance.strength * 100)}%)
+      - أيام الورد المتتالية: ${resonance.daysActive}
+      - ملحوظة: البشر مرايات تعكس جودة اتصال المستخدم بالمصدر. أي عقدة أفقية ممكن تكون عرض لانقطاع رأسي.
 
       الحلم: ${title} (${description})
 
@@ -52,6 +61,7 @@ export class OracleService {
       1. اكتشف الـ "عُقد" (Knots) المعطلة.
       2. حدد "مصاصي الطاقة" (Energy Vampires) من الخريطة.
       3. حدد "درجة التوافق" (0-1).
+      4. لو الاتصال الروحي ضعيف، اربط الحلم بهذا الانقطاع في التحليل.
 
       رجع JSON فقط:
       {

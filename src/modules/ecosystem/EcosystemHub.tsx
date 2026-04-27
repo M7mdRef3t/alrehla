@@ -18,6 +18,7 @@ import { useSullamState } from "@/modules/sullam/store/sullam.store";
 import { useBathraState } from "@/modules/bathra/store/bathra.store";
 import { useWasiyyaState } from "@/modules/wasiyya/store/wasiyya.store";
 import { useKhalwaState } from "@/modules/khalwa/store/khalwa.store";
+import { useWirdState } from "@/modules/wird/store/wird.store";
 
 /* ═══════════════════════════════════════════ */
 /*               TYPES                        */
@@ -56,7 +57,7 @@ export default function EcosystemHub({ onNavigate }: EcosystemHubProps) {
   const khalwaSessions = useKhalwaState((s) => s.sessions);
   const khalwaMinutes = useKhalwaState((s) => s.getTotalMinutes());
 
-  const wirdStreak = 0;
+  const wirdStreak = useWirdState((s) => s.getStreak());
 
   const ecosystemData = useAuthState((s) => s.ecosystemData);
   const activeSatellites = ecosystemData?.active_satellites ?? ["alrehla"];

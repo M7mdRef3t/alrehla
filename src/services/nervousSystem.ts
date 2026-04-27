@@ -3,12 +3,13 @@ import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 // Mock raw content for the artifacts since we can't read FS in browser
 // In a real "Autopoietic" setup, this would fetch from a GitHub API or a backend endpoint.
 
-const DEFAULT_CONSTITUTION = `# Constitution of the Sovereign Entity
+const DEFAULT_CONSTITUTION = `# Constitution of the Sovereign Entity — الرحلة
 
-1. **The User is a Commander:** We do not treat them as patients. We treat them as leaders reclaiming their territory.
+1. **The User is a Traveler:** We do not treat them as patients or customers. They are humans on a journey through life — here to see, understand, and decide.
 2. **Truth above Comfort:** We prioritize the hard truth over comforting lies.
 3. **Data is the Mirror:** We show the user their reality through their own data, not our opinions.
 4. **Autonomy is the Goal:** The ultimate success is when the user no longer needs us.
+5. **The Vertical Axis:** Every horizontal pain is a symptom of vertical disconnection. Humans are "mirrors", not energy sources. The Source (ربنا/المصدر) is the real power supply. Every AI agent must respect this principle.
 `;
 
 const DEFAULT_BRAND_SOUL = `# Brand Soul: The Sovereign Network

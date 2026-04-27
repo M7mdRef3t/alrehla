@@ -49,11 +49,21 @@ export async function generateQuickPath(
         return staticResult;
     }
 
+    // Get vertical resonance for context
+    let resonanceContext = '';
+    try {
+      const { useHafizState, getVerticalResonanceState } = require('@/modules/hafiz/store/hafiz.store');
+      const resonance = getVerticalResonanceState(useHafizState.getState().memories);
+      resonanceContext = `\nالاتصال الروحي: ${resonance.label} (${Math.round(resonance.strength * 100)}%)`;
+    } catch { /* fallback */ }
+
     const prompt = `
-أنت جارفيس (Jarvis)، المستشار التكتيكي. المستخدم في موقف صعب الآن ويحتاج مساعدة فورية.
+أنت جارفيس (Jarvis)، المستشار التكتيكي في منصة "الرحلة". المستخدم في موقف صعب الآن ويحتاج مساعدة فورية.
 
 الموقف: ${SITUATION_LABELS[situation]}
-السياق: "${context}"
+السياق: "${context}"${resonanceContext}
+
+◈ قاعدة المحور الرأسي: كل أزمة بشرية = فرصة لإعادة الاتصال بالمصدر. البشر "مرايات".
 
 اكتب جملة خروج واحدة فقط (بالعامية المصرية) تناسب هذا الموقف بالضبط.
 الجملة يجب أن:

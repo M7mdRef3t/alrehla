@@ -34,7 +34,7 @@ export function getRelationshipWeatherEntryHref(path: JourneyPath | null): strin
 
 export function getRelationshipWeatherPrimaryLabel(path: JourneyPath | null): string {
   const configuredLabel = path?.primaryActionLabel?.trim();
-  return configuredLabel || "ابدأ دواير وارسم خريطتك";
+  return configuredLabel || "ابدأ رحلتك وارسم خريطتك";
 }
 
 export function getRelationshipWeatherTargetLabel(path: JourneyPath | null, weatherLevel?: string): string {
@@ -71,7 +71,7 @@ export function getRelationshipWeatherTargetDescription(path: JourneyPath | null
     if (weatherLevel === "wind" || weatherLevel === "sun") {
       return "ميزان: وحدة الاتزان الصحي وقياس جودة العلاقات لضمان استقرار طاقتك الذهنية.";
     }
-    return "دواير بتخليك تشوف كل دوائر حياتك على خريطة تفاعلية وتعرف مين بياخد وإيه نمط العلاقة.";
+    return "الخريطة بتخليك تشوف كل دوائر حياتك على خريطة تفاعلية وتعرف مين بياخد وإيه نمط العلاقة.";
   }
 
   if (target === "sanctuary") {

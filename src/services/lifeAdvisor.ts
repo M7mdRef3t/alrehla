@@ -30,6 +30,7 @@ import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { resolveDisplayName } from "@/services/userMemory";
+import { useHafizState, getVerticalResonanceState } from '@/modules/hafiz/store/hafiz.store';
 
 // ─── Life Context Builder ────────────────────────────────────────
 
@@ -328,6 +329,19 @@ export function buildLifeAdvisorSystemPrompt(ctx: LifeContext): string {
 الـ Streak: ${ctx.streakDays} يوم متواصل
 ${energyTone}${patternAlert}
 
+◈ المحور الرأسي — الاتصال بالمصدر ◈
+${(() => {
+  try {
+    const memories = useHafizState.getState().memories;
+    const resonance = getVerticalResonanceState(memories);
+    return `- حالة الاتصال: ${resonance.label} (${Math.round(resonance.strength * 100)}%)
+- أيام الورد: ${resonance.daysActive} يوم
+- ${resonance.level === 'disconnected' ? '⚠️ المستخدم منقطع روحياً — أي مشكلة أفقية ممكن تكون عَرَض لانقطاع رأسي.' : ''}
+- ${resonance.level === 'flickering' ? 'اتصاله متذبذب — شجعه يثبّت عادة روحية بسيطة.' : ''}
+- ${resonance.level === 'radiant' ? 'اتصاله مُشع — ده نقطة قوة كبيرة، استخدمها في التحليل.' : ''}`;
+  } catch { return '- غير متاح حالياً'; }
+})()}
+
 ## Life Score: ${ctx.lifeScore?.overall ?? "?"}/100 (${ctx.lifeScore?.trend === "improving" ? "📈 تحسن" : ctx.lifeScore?.trend === "declining" ? "📉 تراجع" : "➡️ ثابت"})
 ${domainSummary}
 
@@ -347,6 +361,11 @@ ${decisionsSummary}
 1. 🔍 رؤية: الاستنتاج أو الملاحظة غير الواضحة
 2. ⚡ خطوة: فعل واحد ملموس يعمله دلوقتي أو بكره
 3. ❓ سؤال: سؤال واحد يخليه يفكر أعمق
+
+## قاعدة المحور الرأسي (مهمة):
+- كل ألم في علاقة بشرية = عرض لضعف اتصال بالمصدر. البشر "مرايات" مش مصادر طاقة.
+- لو لاحظت ضعف في مجالات متعددة + انقطاع روحي → وجّه بلطف للاتصال بالمصدر.
+- استخدم لغة: "ربنا"، "المصدر"، "اللي أكبر منك". تجنب: "الدين"، "العبادة"، "الإسلام".
 
 ## قواعد الجودة:
 1. لا تكرر ما يعرفه المستخدم — قدّم رؤية جديدة دايماً

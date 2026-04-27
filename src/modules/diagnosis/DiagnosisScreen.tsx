@@ -11,7 +11,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { computeDiagnosis, USER_STATE_RESULT_LABELS, MAIN_PAIN_RESULT_LABELS, RECOMMENDED_PRODUCT_LABELS } from "./diagnosisEngine";
 import { saveDiagnosisState } from "./types";
-import type { DiagnosisAnswers, UserStateObject, MainPain, RecommendedProduct } from "./types";
+import type { DiagnosisAnswers, UserStateObject, MainPain, RecommendedProduct, UserStateType } from "./types";
 import { ConversionOfferCard } from "../conversion/ConversionOfferCard";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { analyticsService } from "@/domains/analytics";
@@ -40,6 +40,74 @@ import type { FC } from "react";
 // ════════════════════════════════════════════════
 
 const STEPS = 5;
+
+type FeelingOption = {
+  value: UserStateType;
+  label: string;
+  sub: string;
+  emoji: string;
+  color: string;
+};
+
+type BlockerOption = {
+  value: NonNullable<DiagnosisAnswers["q4_blocker"]>;
+  label: string;
+  sub: string;
+  emoji: string;
+};
+
+type GoalOption = {
+  value: MainPain;
+  label: string;
+  sub: string;
+  emoji: string;
+};
+
+const DEFAULT_FEELING_OPTIONS: FeelingOption[] = [
+  { value: "overwhelmed", label: "مضغوط ومشغول الدنيا", sub: "كل حاجة نازلة عليّا مرة واحدة", emoji: "🌊", color: "#f87171" },
+  { value: "stuck", label: "واقف بس مش مطلّع", sub: "أفكر كتير وما بتحركش", emoji: "🪨", color: "#f59e0b" },
+  { value: "lost", label: "تايه ومش عارف من فين أبدأ", sub: "مفيش خريطة واضحة جوايا", emoji: "🌫️", color: "#94a3b8" },
+  { value: "anxious", label: "قلقان ومشدود", sub: "خايف من حاجة مش واضحة", emoji: "⚡", color: "#a78bfa" },
+  { value: "ready", label: "جاهز وعايز أتحرك", sub: "محتاج بس خطة واضحة", emoji: "🚀", color: "#2dd4bf" },
+  { value: "ununderstood", label: "محدش فاهمني", sub: "الإحساس أعمق من كل ده", emoji: "🌑", color: "#6366f1" },
+];
+
+const FAMILY_FEELING_OPTIONS: FeelingOption[] = [
+  { value: "overwhelmed", label: "شايل فوق طاقتي", sub: "طلبات وتوقعات كتير ومفيش مساحة ليا", emoji: "🌊", color: "#f87171" },
+  { value: "stuck", label: "محشور بين الذنب وراحتي", sub: "لو قربت بتتعب، ولو بعدت بتتلام", emoji: "🪨", color: "#f59e0b" },
+  { value: "lost", label: "مش عارف أتعامل معاهم إزاي", sub: "كل تصرف بيحسسك إنك غلطان", emoji: "🌫️", color: "#94a3b8" },
+  { value: "anxious", label: "متوتر قبل أي كلام أو زيارة", sub: "جسمك بيستعد للمواجهة قبل ما تحصل", emoji: "⚡", color: "#a78bfa" },
+  { value: "ready", label: "عايز حدود واضحة من غير حرب", sub: "مش عايز تقطع، عايز تعرف تقف", emoji: "🚀", color: "#2dd4bf" },
+  { value: "ununderstood", label: "حاسس إن صوتك مش واصل", sub: "بتشرح كتير وبرضه محدش شايفك", emoji: "🌑", color: "#6366f1" },
+];
+
+const DEFAULT_BLOCKER_OPTIONS: BlockerOption[] = [
+  { value: "dont_know", label: "مش عارف من فين أبدأ", sub: "مفيش خطوة واضحة", emoji: "🗺️" },
+  { value: "afraid", label: "خايف", sub: "من الفشل أو من ردود الفعل", emoji: "😰" },
+  { value: "not_ready", label: "مش وقته", sub: "فيه حاجات تانية أهم دلوقتي", emoji: "⏳" },
+  { value: "not_sure", label: "بصراحة مش متأكد", sub: "ممكن أبالغ في الموضوع", emoji: "🤔" },
+];
+
+const FAMILY_BLOCKER_OPTIONS: BlockerOption[] = [
+  { value: "dont_know", label: "مش عارف أبدأ منين معاهم", sub: "كل طريق حاسس إنه هيولّع الموضوع", emoji: "🧭" },
+  { value: "afraid", label: "خايف من رد فعلهم", sub: "زعل، لوم، ضغط، أو قلب الترابيزة عليك", emoji: "🛡️" },
+  { value: "not_ready", label: "لسه مش قادر أحط حدود", sub: "عارف إن في حاجة غلط بس المواجهة تقيلة", emoji: "⏳" },
+  { value: "not_sure", label: "مش متأكد حقي أطلب ده", sub: "جزء منك بيقول يمكن أنا اللي مكبرها", emoji: "⚖️" },
+];
+
+const DEFAULT_GOAL_OPTIONS: GoalOption[] = [
+  { value: "relationship", label: "أصلح أو أنهي علاقة مهمة", sub: "مع شخص بيشغل بالي", emoji: "💔" },
+  { value: "self", label: "أكون أنا أحسن", sub: "صحة نفسية أو تطوير الذات", emoji: "✨" },
+  { value: "work", label: "أحقق هدف في الشغل", sub: "إنجاز أو تغيير مسار", emoji: "🎯" },
+  { value: "family", label: "أحسّن وضعي مع عيلتي", sub: "حدود أو علاقات أفضل", emoji: "🌱" },
+];
+
+const FAMILY_GOAL_OPTIONS: GoalOption[] = [
+  { value: "family", label: "أحط حدود من غير قطيعة", sub: "أتعامل من غير ما أخسر نفسي أو أفتح حرب", emoji: "🛡️" },
+  { value: "relationship", label: "أفهم النمط اللي بيتكرر", sub: "مين بيضغط؟ إمتى؟ وإيه اللي بيشدني لنفس الدوامة", emoji: "🔎" },
+  { value: "self", label: "أرجّع مساحتي الداخلية", sub: "أقلل الذنب والخوف وأسمع نفسي بوضوح", emoji: "✨" },
+  { value: "work", label: "أخفف أثرهم على يومي", sub: "مايبقاش توتر العيلة سايق شغلي وطاقتي وقراراتي", emoji: "🎯" },
+];
 
 interface DiagnosisScreenProps {
   onComplete: (state: UserStateObject, product?: RecommendedProduct) => void;
@@ -208,6 +276,31 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<DiagnosisAnswers>({});
   const [result, setResult] = useState<UserStateObject | null>(null);
+  const isFamilyPain = answers.q1_pain === "family";
+  const feelingStepTitle = isFamilyPain ? "إيه اللي بيحصل جواك ناحية العيلة؟" : "إيه الإحساس الأكتر؟";
+  const feelingStepDescription = isFamilyPain
+    ? "اختار أقرب إحساس للعلاقة دي. مش مطلوب تشرح لهم دلوقتي، المطلوب نفهم أثرهم عليك."
+    : "الوصف اللي لو قلته لحد آمن بره الدوامة هيفهم حالتك بسرعة.";
+  const feelingOptions = isFamilyPain ? FAMILY_FEELING_OPTIONS : DEFAULT_FEELING_OPTIONS;
+  const blockerStepTitle = isFamilyPain ? "إيه اللي موقفك معاهم؟" : "إيه اللي بيوقفك؟";
+  const blockerStepDescription = isFamilyPain
+    ? "مش بندور على مين الغلطان. بندور على أول عقدة محتاجة تتفك عشان ترجع تمسك حدودك."
+    : "كن صريح مع نفسك — الإجابة دي بتفرق.";
+  const blockerOptions = isFamilyPain ? FAMILY_BLOCKER_OPTIONS : DEFAULT_BLOCKER_OPTIONS;
+  const goalStepTitle = isFamilyPain ? "إيه أول هدف واقعي مع العيلة؟" : "لو هتختار هدف واحد…";
+  const goalStepDescription = isFamilyPain
+    ? "اختار اتجاه عملي للخريطة الجاية. مش قرار نهائي، ده أول خيط نمسكه."
+    : "مش لازم يبقى كبير — اللي حاسس إنه الأهم دلوقتي.";
+  const goalOptions = isFamilyPain ? FAMILY_GOAL_OPTIONS : DEFAULT_GOAL_OPTIONS;
+  const stepGuideMessage =
+    step === 1 ? "خليك صريح مع نفسك، دي البداية عشان تسترد قيادتك." :
+    step === 2 && isFamilyPain ? "إحساسك مع العيلة مش حكم عليهم، ده مؤشر على اللي محتاج حدود أو وضوح." :
+    step === 2 ? "المشاعر دي رسائل، مهم نفهم هي عايزة تقول إيه." :
+    step === 3 ? "الوقت بيفرق في تحليل الأنماط المتكررة." :
+    step === 4 && isFamilyPain ? "العيلة بتلمس مناطق حساسة: الذنب، الخوف، والحق في المساحة. خلينا نحدد العقدة بالظبط." :
+    step === 4 ? "الخوف طبيعي، بس الوضوح هو اللي بيكسره." :
+    step === 5 && isFamilyPain ? "آخر خطوة: نختار اتجاه يخلّي الخريطة تساعدك وسط العلاقة، مش ترميك في قرار متسرع." :
+    "آخر خطوة، عشان نبني خريطة طريق تناسبك بجد.";
 
   const setAnswer = useCallback(<K extends keyof DiagnosisAnswers>(key: K, value: DiagnosisAnswers[K]) => {
     setAnswers((prev) => ({ ...prev, [key]: value }));
@@ -346,13 +439,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
             <ProgressBar step={step} total={STEPS} />
             <div className="mt-4">
               <SentientGuide 
-                message={
-                  step === 1 ? "خليك صريح مع نفسك، دي البداية عشان تسترد قيادتك." :
-                  step === 2 ? "المشاعر دي رسائل، مهم نفهم هي عايزة تقول إيه." :
-                  step === 3 ? "الوقت بيفرق في تحليل الأنماط المتكررة." :
-                  step === 4 ? "الخوف طبيعي، بس الوضوح هو اللي بيكسره." :
-                  "أخر خطوة، عشان نبني خريطة طريق تناسبك بجد."
-                } 
+                message={stepGuideMessage} 
               />
             </div>
           </>
@@ -404,18 +491,11 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
               {step === 2 && (
                 <>
                   <div className="space-y-1 mb-1 flex flex-col items-start w-full text-right">
-                    <h2 className="text-[18px] font-extrabold text-white">إيه الإحساس الأكتر؟</h2>
-                    <p className="text-[12px] text-slate-400 leading-relaxed">الوصف اللي لو قلته لحد قريب هيفهمك على طول.</p>
+                    <h2 className="text-[18px] font-extrabold text-white">{feelingStepTitle}</h2>
+                    <p className="text-[12px] text-slate-400 leading-relaxed">{feelingStepDescription}</p>
                   </div>
                   <div className="space-y-2.5">
-                    {([
-                      { value: "overwhelmed", label: "مضغوط ومشغول الدنيا", sub: "كل حاجة نازلة عليّا مرة واحدة", emoji: "🌊", color: "#f87171" },
-                      { value: "stuck", label: "واقف بس مش مطلّع", sub: "أفكر كتير وما بتحركش", emoji: "🪨", color: "#f59e0b" },
-                      { value: "lost", label: "تايه ومش عارف من فين أبدأ", sub: "مفيش خريطة واضحة جوايا", emoji: "🌫️", color: "#94a3b8" },
-                      { value: "anxious", label: "قلقان ومشدود", sub: "خايف من حاجة مش واضحة", emoji: "⚡", color: "#a78bfa" },
-                      { value: "ready", label: "جاهز وعايز أتحرك", sub: "محتاج بس خطة واضحة", emoji: "🚀", color: "#2dd4bf" },
-                      { value: "ununderstood", label: "محدش فاهمني", sub: "الإحساس أعمق من كل ده", emoji: "🌑", color: "#6366f1" },
-                    ] as { value: string; label: string; sub: string; emoji: string; color: string }[]).map((opt) => (
+                    {feelingOptions.map((opt) => (
                       <OptionBtn
                         key={opt.value}
                         label={opt.label}
@@ -423,7 +503,7 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
                         emoji={opt.emoji}
                         selected={answers.q2_feeling === opt.value}
                         color={opt.color}
-                        onClick={() => { setAnswer("q2_feeling", opt.value as DiagnosisAnswers["q2_feeling"]); setTimeout(next, 200); }}
+                        onClick={() => { setAnswer("q2_feeling", opt.value); setTimeout(next, 200); }}
                       />
                     ))}
                   </div>
@@ -460,23 +540,18 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
               {step === 4 && (
                 <>
                   <div className="space-y-1 mb-1 flex flex-col items-start w-full text-right">
-                    <h2 className="text-[18px] font-extrabold text-white">إيه اللي بيوقفك؟</h2>
-                    <p className="text-[12px] text-slate-400 leading-relaxed">كن صريح مع نفسك — الإجابة دي بتفرق.</p>
+                    <h2 className="text-[18px] font-extrabold text-white">{blockerStepTitle}</h2>
+                    <p className="text-[12px] text-slate-400 leading-relaxed">{blockerStepDescription}</p>
                   </div>
                   <div className="space-y-2.5">
-                    {([
-                      { value: "dont_know", label: "مش عارف من فين أبدأ", sub: "مفيش خطوة واضحة", emoji: "🗺️" },
-                      { value: "afraid", label: "خايف", sub: "من الفشل أو من ردود الفعل", emoji: "😰" },
-                      { value: "not_ready", label: "مش وقته", sub: "فيه حاجات تانية أهم دلوقتي", emoji: "⏳" },
-                      { value: "not_sure", label: "بصراحة مش متأكد", sub: "ممكن أبالغ في الموضوع", emoji: "🤔" },
-                    ] as { value: string; label: string; sub: string; emoji: string }[]).map((opt) => (
+                    {blockerOptions.map((opt) => (
                       <OptionBtn
                         key={opt.value}
                         label={opt.label}
                         sub={opt.sub}
                         emoji={opt.emoji}
                         selected={answers.q4_blocker === opt.value}
-                        onClick={() => { setAnswer("q4_blocker", opt.value as DiagnosisAnswers["q4_blocker"]); setTimeout(next, 200); }}
+                        onClick={() => { setAnswer("q4_blocker", opt.value); setTimeout(next, 200); }}
                       />
                     ))}
                   </div>
@@ -487,16 +562,11 @@ export function DiagnosisScreen({ onComplete, onSkip }: DiagnosisScreenProps) {
               {step === 5 && (
                 <>
                   <div className="space-y-1 mb-1 flex flex-col items-start w-full text-right">
-                    <h2 className="text-[18px] font-extrabold text-white">لو هتختار هدف واحد…</h2>
-                    <p className="text-[12px] text-slate-400 leading-relaxed">مش لازم يبقى كبير — اللي حاسس إنه الأهم دلوقتي.</p>
+                    <h2 className="text-[18px] font-extrabold text-white">{goalStepTitle}</h2>
+                    <p className="text-[12px] text-slate-400 leading-relaxed">{goalStepDescription}</p>
                   </div>
                   <div className="space-y-2.5">
-                    {([
-                      { value: "relationship", label: "أصلح أو أنهي علاقة مهمة", sub: "مع شخص بيشغل بالي", emoji: "💔" },
-                      { value: "self", label: "أكون أنا أحسن", sub: "صحة نفسية أو تطوير الذات", emoji: "✨" },
-                      { value: "work", label: "أحقق هدف في الشغل", sub: "إنجاز أو تغيير مسار", emoji: "🎯" },
-                      { value: "family", label: "أحسّن وضعي مع عيلتي", sub: "حدود أو علاقات أفضل", emoji: "🌱" },
-                    ] as { value: MainPain; label: string; sub: string; emoji: string }[]).map((opt) => (
+                    {goalOptions.map((opt) => (
                       <OptionBtn
                         key={opt.value}
                         label={opt.label}

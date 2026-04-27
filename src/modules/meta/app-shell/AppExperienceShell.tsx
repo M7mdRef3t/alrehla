@@ -202,6 +202,23 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     onExitToLanding();
   }, [screen, onExitToLanding, showAuthModal]);
 
+  // ── URL SYNC (Mirror state to browser address bar) ──
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith("/admin") || currentPath === "/analytics") return;
+    
+    if (screen === "map" && currentPath !== "/map") {
+      window.history.pushState(null, "", "/map");
+    } else if (screen === "landing" && currentPath !== "/") {
+      window.history.pushState(null, "", "/");
+    } else if (screen !== "map" && screen !== "landing" && currentPath !== "/app") {
+      // For all other app screens, keep it at /app unless we want dedicated routes for them too
+      window.history.pushState(null, "", "/app");
+    }
+  }, [screen]);
+
   const tier = useAuthState((s) => s.tier);
   const transformationDiagnosis = useMapState((s) => s.transformationDiagnosis);
   const [isBoardingPassOpen, setIsBoardingPassOpen] = useState(false);

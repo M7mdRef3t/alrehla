@@ -1,7 +1,7 @@
 {
   "name": "الرحلة",
   "short_name": "الرحلة",
-  "description": "الرحلة بوصلتك لفهم علاقاتك وحدودك بوضوح. دواير هي أول محطة في رحلتك.",
+  "description": "الرحلة بوصلتك لفهم علاقاتك وحدودك بوضوح. خريطة العلاقات هي أول محطة في رحلتك.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
@@ -67,7 +67,7 @@
       "src": "/screenshots/hero-1.png",
       "sizes": "1200x628",
       "type": "image/png",
-      "label": "خريطة دواير — واجهة"
+      "label": "خريطة العلاقات — واجهة"
     },
     {
       "src": "/screenshots/hero-2.png",
@@ -85,7 +85,7 @@
   "shortcuts": [
     {
       "name": "ابدأ رحلتك",
-      "short_name": "دواير",
+      "short_name": "الخريطة",
       "description": "ابدأ رحلتك في فهم وترتيب علاقاتك",
       "url": "./?action=start",
       "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]

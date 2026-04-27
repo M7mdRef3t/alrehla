@@ -167,21 +167,143 @@ export const useHafizState = create<HafizState>()(
 );
 
 /**
+ * ◈ Vertical Resonance State ◈
+ * Rich state object for the Divine Connection.
+ * Used by AI agents, components, and scoring systems.
+ */
+export interface VerticalResonanceState {
+  /** Connection strength (0 to 1) */
+  strength: number;
+  /** Human-readable level */
+  level: 'disconnected' | 'flickering' | 'steady' | 'radiant';
+  /** Arabic label for the level */
+  label: string;
+  /** Consecutive days of Wird activity */
+  daysActive: number;
+  /** Timestamp of last spiritual activity */
+  lastActivity: number | null;
+  /** Days since last activity (0 = today) */
+  daysSinceLastActivity: number;
+  /** Today's total dhikr count */
+  todayCount: number;
+}
+
+/**
  * Calculates the "Spiritual Resonance" (Vertical Connection Strength)
  * Based on recent (last 7 days) Wird activity and Gratitude moments.
+ * ⚠️ Legacy: uses hafiz memories. For accurate data use getVerticalResonanceState().
  */
 export const calculateVerticalResonance = (memories: Memory[]): number => {
-  const recentDays = 7;
+  // Try to get real Wird data first (lazy import to avoid circular deps)
+  try {
+    const { useWirdState } = require('@/modules/wird/store/wird.store');
+    const wirdState = useWirdState.getState();
+    const streak = wirdState.getStreak();
+    const todayTotal = wirdState.getDailyTotal();
+    
+    // Base connection of 0.4 (Fitra)
+    // Streak adds 5% per day (max 6 days = +30%)
+    // Today's activity adds bonus (max 30%)
+    const streakBonus = Math.min(streak * 0.05, 0.3);
+    const todayBonus = Math.min(todayTotal / 100, 0.3);
+    return Math.min(1, 0.4 + streakBonus + todayBonus);
+  } catch {
+    // Fallback to hafiz memories
+    const recentDays = 7;
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    const recentMemories = memories.filter(m => (now - m.timestamp) < (recentDays * dayMs));
+    const wirdCount = recentMemories.filter(m => m.source === 'wird').length;
+    const gratitudeCount = recentMemories.filter(m => m.tags.includes('gratitude')).length;
+    const strength = 0.4 + (wirdCount * 0.1) + (gratitudeCount * 0.1);
+    return Math.min(1, strength);
+  }
+};
+
+/**
+ * ◈ Get Vertical Resonance State ◈
+ * Returns a rich state object that AI agents and components can consume.
+ * This is the "system-wide signal" for the Divine Connection.
+ * 
+ * Reads from BOTH wird.store (primary) and hafiz.store (supplementary).
+ */
+export const getVerticalResonanceState = (memories: Memory[]): VerticalResonanceState => {
+  let streak = 0;
+  let todayTotal = 0;
+  let lastWirdDate: string | null = null;
+  
+  // Read from Wird store (the actual source of truth)
+  try {
+    const { useWirdState } = require('@/modules/wird/store/wird.store');
+    const wirdState = useWirdState.getState();
+    streak = wirdState.getStreak();
+    todayTotal = wirdState.getDailyTotal();
+    
+    // Find last activity date from progress
+    const progress = wirdState.progress || [];
+    if (progress.length > 0) {
+      const sorted = [...progress].sort((a: any, b: any) => b.date.localeCompare(a.date));
+      lastWirdDate = sorted[0]?.date;
+    }
+  } catch {
+    // wird store not available, fall through
+  }
+  
+  // Supplement with hafiz memories (gratitude)
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
+  const gratitudeMemories = memories
+    .filter(m => m.tags.includes('gratitude'))
+    .sort((a, b) => b.timestamp - a.timestamp);
+  const gratitudeCount = gratitudeMemories
+    .filter(m => (now - m.timestamp) < (7 * dayMs)).length;
   
-  const recentMemories = memories.filter(m => (now - m.timestamp) < (recentDays * dayMs));
+  // Calculate strength
+  // Base: 0.4 (Fitra) + streak bonus + today bonus + gratitude bonus
+  const streakBonus = Math.min(streak * 0.05, 0.3);
+  const todayBonus = Math.min(todayTotal / 100, 0.2);
+  const gratitudeBonus = Math.min(gratitudeCount * 0.05, 0.1);
+  const strength = Math.min(1, 0.4 + streakBonus + todayBonus + gratitudeBonus);
+
+  // Calculate days since last activity
+  let daysSinceLastActivity = 999;
+  let lastActivity: number | null = null;
   
-  const wirdCount = recentMemories.filter(m => m.source === 'wird').length;
-  const gratitudeCount = recentMemories.filter(m => m.tags.includes('gratitude')).length;
+  if (lastWirdDate) {
+    const lastDate = new Date(lastWirdDate).getTime();
+    daysSinceLastActivity = Math.floor((now - lastDate) / dayMs);
+    lastActivity = lastDate;
+  } else if (gratitudeMemories.length > 0) {
+    lastActivity = gratitudeMemories[0].timestamp;
+    daysSinceLastActivity = Math.floor((now - lastActivity) / dayMs);
+  }
+
+  // Determine level
+  let level: VerticalResonanceState['level'];
+  let label: string;
   
-  // Base connection of 0.4 (The innate Fitra)
-  // Each activity adds 10% up to a maximum of 1.0
-  const strength = 0.4 + (wirdCount * 0.1) + (gratitudeCount * 0.1);
-  return Math.min(1, strength);
+  if (strength >= 0.85) {
+    level = 'radiant';
+    label = 'مُشِع';
+  } else if (strength >= 0.6) {
+    level = 'steady';
+    label = 'مستقر';
+  } else if (strength >= 0.45) {
+    level = 'flickering';
+    label = 'متذبذب';
+  } else {
+    level = 'disconnected';
+    label = 'منقطع';
+  }
+
+  return {
+    strength,
+    level,
+    label,
+    daysActive: streak,
+    lastActivity,
+    daysSinceLastActivity,
+    todayCount: todayTotal,
+  };
 };
+

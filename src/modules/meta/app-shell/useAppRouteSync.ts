@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState, startTransition } from "react";
+import { usePathname } from "next/navigation";
 import type { FeatureFlagKey } from "@/config/features";
 import { resolveNavigation, type AppScreen } from "@/navigation/navigationMachine";
 import {
   getPathname,
   getHash,
-  isAdminPath,
-  isAnalyticsPath,
   pushUrl,
   replaceUrl,
   subscribePopstate
@@ -59,6 +58,11 @@ export function useAppRouteSync({
   setScreen,
   setLockedFeature
 }: UseAppRouteSyncParams) {
+  const nextPathname = usePathname();
+  const currentPathname = nextPathname || getPathname() || "";
+  const isAdminPath = () => currentPathname.startsWith("/admin");
+  const isAnalyticsPath = () => currentPathname === "/analytics";
+
   const [isAdminRoute, setIsAdminRoute] = useState(() => isAdminPath());
   const [isAnalyticsRoute, setIsAnalyticsRoute] = useState(() => isAnalyticsPath());
   const fromPopStateRef = useRef(false);
@@ -70,8 +74,9 @@ export function useAppRouteSync({
       setIsAnalyticsRoute(isAnalyticsPath());
     };
     handler();
-    return subscribePopstate(handler);
-  }, []);
+    const unsubscribe = subscribePopstate(handler);
+    return () => unsubscribe();
+  }, [currentPathname]);
 
   useEffect(() => {
     if (isAdminPath()) return;

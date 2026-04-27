@@ -253,9 +253,32 @@ function extractDreamsSignals(): number {
   return average([ritualScore, achievementScore]);
 }
 
-/** Extract "spirit" signals from spirit-tagged rituals (prayer, meditation) */
+/** Extract "spirit" signals from Wird store + spirit rituals */
 function extractSpiritSignals(): number {
-  return getRitualCompletionScore(["spirit"]);
+  const signals: number[] = [];
+
+  // Spirit rituals completion
+  signals.push(getRitualCompletionScore(["spirit"]));
+
+  // Wird store data (the real spiritual activity)
+  try {
+    const { useWirdState } = require('@/modules/wird/store/wird.store');
+    const wirdState = useWirdState.getState();
+    const streak = wirdState.getStreak();
+    const todayTotal = wirdState.getDailyTotal();
+
+    // Streak → score: each day adds ~8pts (max 100 at ~12 days)
+    const streakScore = clamp(streak * 8, 0, 100);
+    signals.push(streakScore);
+
+    // Today's dhikr count → score (100 dhikr = 100 pts)
+    const todayScore = clamp(todayTotal, 0, 100);
+    signals.push(todayScore);
+  } catch {
+    // Wird store unavailable — just use ritual score
+  }
+
+  return average(signals);
 }
 
 /** Extract "knowledge" signals from learning rituals */
@@ -332,6 +355,25 @@ export function calculateLifeScore(
   // Calculate per-domain score
   for (const domainId of domainIds) {
     domainScores[domainId] = calculateDomainScore(domainId, assessments);
+  }
+
+  // ◈ Vertical Axis Modifier ◈
+  // The spirit domain (vertical axis) affects all other domains.
+  // When spiritual connection is weak → all domains suffer (~10%)
+  // When spiritual connection is strong → slight boost
+  const spiritScore = domainScores["spirit"] || 50;
+  // spiritScore ranges 0-100, normalize to -0.1 to +0.05
+  // At 50 (neutral) → modifier = 0
+  // At 0 (disconnected) → modifier = -0.10 (loses 10%)
+  // At 100 (radiant) → modifier = +0.05 (gains 5%)
+  const verticalModifier = ((spiritScore - 50) / 50) * 0.10;
+
+  // Apply modifier to all non-spirit domains
+  for (const domainId of domainIds) {
+    if (domainId !== "spirit") {
+      const modified = domainScores[domainId] * (1 + verticalModifier);
+      domainScores[domainId] = clamp(Math.round(modified), 0, 100);
+    }
   }
 
   // Calculate overall weighted score

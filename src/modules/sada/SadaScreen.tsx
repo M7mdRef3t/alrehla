@@ -64,20 +64,43 @@ function useNudgeGenerator() {
     const now = new Date();
     const hour = now.getHours();
 
-    // ── Morning Brief (6am-11am) ──
+    // ── Morning Brief (6am-11am) — Now Axis-Aware ──
     if (hour >= 6 && hour <= 11 && isEnabled("morning_brief")) {
       const wirdEnabled = wirdState.rituals.filter((r) => r.enabled).length;
       const todayLogs = logs.filter((l) => new Date(l.timestamp).toDateString() === now.toDateString());
 
+      // Get vertical resonance for morning context
+      let resonanceLabel = 'متذبذب';
+      let resonanceLevel = 'flickering';
+      let morningSpiritual = '';
+      try {
+        const { getVerticalResonanceState } = require('@/modules/hafiz/store/hafiz.store');
+        const { useHafizState } = require('@/modules/hafiz/store/hafiz.store');
+        const resonance = getVerticalResonanceState(useHafizState.getState().memories);
+        resonanceLabel = resonance.label;
+        resonanceLevel = resonance.level;
+      } catch { /* fallback */ }
+
+      // Spiritual context in morning brief
+      if (resonanceLevel === 'disconnected') {
+        morningSpiritual = ' اتصالك بالمصدر محتاج منك لحظة — حتى تسبيحة واحدة.';
+      } else if (resonanceLevel === 'flickering') {
+        morningSpiritual = ' اتصالك متذبذب — النهاردة فرصة تثبّته.';
+      } else if (resonanceLevel === 'radiant') {
+        morningSpiritual = ' اتصالك مُشِع — حافظ على النور ده.';
+      }
+
+      const baseMessage = todayLogs.length > 0
+        ? `سجّلت ${todayLogs.length} نبضة اليوم. وِردك فيه ${wirdEnabled} طقس ينتظرك.`
+        : `يوم جديد. عندك ${wirdEnabled} طقس في الوِرد — ابدأ بالنبضة الأولى.`;
+
       newNudges.push({
         type: "morning_brief",
-        emoji: "🌅",
-        title: "صباح الخير — ملخصك",
-        message: todayLogs.length > 0
-          ? `سجّلت ${todayLogs.length} نبضة اليوم. وِردك فيه ${wirdEnabled} طقس ينتظرك.`
-          : `يوم جديد. عندك ${wirdEnabled} طقس في الوِرد — ابدأ بالنبضة الأولى.`,
-        action: { label: "ابدأ يومك", route: "wird" },
-        priority: "medium",
+        emoji: resonanceLevel === 'radiant' ? '✨' : resonanceLevel === 'disconnected' ? '🌑' : '🌅',
+        title: `صباح الخير — اتصالك ${resonanceLabel}`,
+        message: baseMessage + morningSpiritual,
+        action: { label: "ابدأ وِردك", route: "wird" },
+        priority: resonanceLevel === 'disconnected' ? 'high' : 'medium',
       });
     }
 

@@ -461,7 +461,7 @@ function ActiveSatellites() {
   
   const satellites = [
     { id: "alrehla", name: <AlrehlaWordmark height={10} color="currentColor" />, color: "#14b8a6", icon: <Rocket size={16} /> },
-    { id: "dawayir", name: "دواير", color: "#f5a623", icon: <Map size={16} /> },
+    { id: "dawayir", name: "الدوائر", color: "#f5a623", icon: <Map size={16} /> },
     { id: "masarat", name: "مسارات", color: "#10b981", icon: <Compass size={16} /> },
     { id: "sessions", name: "جلسات", color: "#3b82f6", icon: <CalendarDays size={16} /> },
     { id: "atmosfera", name: "أتموسفيرا", color: "#8b5cf6", icon: <Wind size={16} /> },

@@ -24,6 +24,10 @@ export interface LifeDomainConfig {
   color: string;        // Primary color for UI
   colorLight: string;   // Lighter variant
   description: string;
+  /** هل هذا هو المحور الرأسي اللي بيأثر على كل الـ domains التانية؟ */
+  isVerticalAxis?: boolean;
+  /** هل بيأثر على كل الـ domains? (للمحور الرأسي فقط) */
+  affectsAll?: boolean;
   /** أسئلة سريعة لتقييم المجال (1-10) */
   quickAssessmentQuestions: string[];
 }
@@ -121,11 +125,13 @@ export const LIFE_DOMAINS: LifeDomainConfig[] = [
     icon: "🌙",
     color: "#6366f1",
     colorLight: "#a5b4fc",
-    description: "إيمانك، سلامك الداخلي، وهدفك الأعلى",
+    description: "اتصالك بالمصدر، سلامك الداخلي، وهدفك الأعلى — ده المحور اللي كل حاجة تانية بتدور حواليه",
+    isVerticalAxis: true,
+    affectsAll: true,
     quickAssessmentQuestions: [
       "حاسس بسلام داخلي؟",
-      "عندك اتصال بهدف أكبر من نفسك؟",
-      "بتاخد وقت للتأمل أو العبادة؟"
+      "عندك اتصال بحاجة أكبر من نفسك؟",
+      "بتاخد وقت للسكون أو الذكر أو الامتنان؟"
     ]
   },
   {

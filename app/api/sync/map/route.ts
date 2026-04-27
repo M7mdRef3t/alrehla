@@ -2,7 +2,23 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../_lib/supabaseAdmin";
 import { classifyState } from "@/modules/transformationEngine/interpretationEngine";
 
+export async function GET() {
+  console.log("[MapSync API] GET request received");
+  return NextResponse.json({ ok: true, message: "Sync Map API is alive (use POST to sync)" });
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
+
 export async function POST(req: Request) {
+  console.log("[MapSync API] POST request received at", new Date().toISOString());
   try {
     const supabaseAdmin = getSupabaseAdminClient();
     if (!supabaseAdmin) {

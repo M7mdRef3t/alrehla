@@ -44,7 +44,64 @@ interface DawayirCanvasProps {
   isSelectionMode?: boolean;
 }
 
+/* ── Cinematic Constants ── */
+const STAR_COUNT = 45;
+const STAR_DATA = Array.from({ length: STAR_COUNT }, (_, i) => ({
+  id: i,
+  cx: (i * 13 + 7) % 100,
+  cy: (i * 23 + 3) % 100,
+  r: i % 7 === 0 ? 0.3 : i % 3 === 0 ? 0.2 : 0.1,
+  opacity: 0.1 + (i % 5) * 0.05,
+  animDelay: (i * 0.4) % 5,
+  animDuration: 3 + (i % 6),
+}));
+
 /* ─── Components ───────────────────────────────────────────────────────────── */
+
+const CinematicBackground: FC = memo(() => (
+  <g className="pointer-events-none">
+    <defs>
+      <radialGradient id="nebula-grad-1" cx="20%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="var(--ring-safe)" stopOpacity="0.08" />
+        <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+      </radialGradient>
+      <radialGradient id="nebula-grad-2" cx="80%" cy="70%" r="70%">
+        <stop offset="0%" stopColor="var(--ring-danger)" stopOpacity="0.05" />
+        <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+      </radialGradient>
+      <filter id="starGlow">
+        <feGaussianBlur stdDeviation="0.2" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
+    </defs>
+    
+    {/* Nebula Clouds */}
+    <rect width="100" height="100" fill="url(#nebula-grad-1)" />
+    <rect width="100" height="100" fill="url(#nebula-grad-2)" />
+
+    {/* Twinkling Stars */}
+    {STAR_DATA.map((star) => (
+      <SafeMotionCircle
+        key={star.id}
+        cx={star.cx}
+        cy={star.cy}
+        r={star.r}
+        fill="#ffffff"
+        style={{ filter: "url(#starGlow)" }}
+        animate={{ 
+          opacity: [star.opacity, star.opacity * 2.5, star.opacity],
+          scale: [1, 1.2, 1]
+        }}
+        transition={{ 
+          duration: star.animDuration, 
+          repeat: Infinity, 
+          delay: star.animDelay,
+          ease: "easeInOut" 
+        }}
+      />
+    ))}
+  </g>
+));
 
 const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ radius, label, ring }) => {
   const colors = {
@@ -69,11 +126,19 @@ const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ r
         stroke={colors[ring]}
         strokeOpacity="0.15"
         strokeWidth={0.2}
-        strokeDasharray="1 2"
-        style={{
-          transformOrigin: '50% 50%',
-          animation: 'rotate-ring 60s linear infinite'
-        }}
+      />
+      
+      {/* Animated Energy Trail */}
+      <SafeMotionCircle
+        cx={50} cy={50} r={safeRadius}
+        fill="none"
+        stroke={colors[ring]}
+        strokeWidth={0.3}
+        strokeOpacity={0.4}
+        strokeDasharray={`${safeRadius * 0.5} ${safeRadius * 1.5}`}
+        animate={{ rotate: 360 }}
+        transition={{ duration: ring === 'green' ? 20 : ring === 'yellow' ? 30 : 40, repeat: Infinity, ease: "linear" }}
+        style={{ transformOrigin: "50px 50px" }}
       />
     </g>
   );
@@ -135,23 +200,78 @@ const MeNodeCenter: FC = memo(() => {
 
   return (
     <g transform="translate(50, 50)">
-      {/* Halo Effect */}
-      <SafeMotionCircle
-        r={8}
-        fill="rgba(45, 212, 191, 0.05)"
-        animate={{ scale: [1, 1.1, 1] }}
+      {/* Ambient background grid / pattern */}
+      <defs>
+        <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+          <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(45, 212, 191, 0.03)" strokeWidth="0.1"/>
+        </pattern>
+        <radialGradient id="meGradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#5eead4" stopOpacity="0.4" />
+          <stop offset="70%" stopColor="#0f172a" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="meCoreGrad" cx="35%" cy="35%" r="60%">
+          <stop offset="0%" stopColor="#99f6e4" />
+          <stop offset="100%" stopColor="#0d9488" />
+        </radialGradient>
+      </defs>
+      
+      {/* Cinematic Aura Layers */}
+      <SafeMotionCircle 
+        cx={0} cy={0} r={18} 
+        fill="url(#meGradient)" 
+        animate={{ 
+          scale: [1, 1.4, 1],
+          opacity: [0.3, 0.6, 0.3]
+        }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
-      
-      {/* Core "Me" — dark fill so it blends with the canvas, teal stroke for identity */}
       <SafeMotionCircle 
-        r={6} 
-        fill="#0f172a"
-        stroke="rgba(45, 212, 191, 0.85)" 
-        strokeWidth={0.8} 
-        animate={{ scale: [1, 1.05, 1] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        cx={0} cy={0} r={25} 
+        fill="none"
+        stroke="#5eead4"
+        strokeWidth={0.05}
+        strokeOpacity={0.2}
+        animate={{ scale: [0.8, 1.2, 0.8], opacity: [0, 0.4, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
       />
+      
+      <SafeMotionCircle 
+        r={7} 
+        fill="url(#meCoreGrad)"
+        stroke="rgba(255,255,255,0.2)" 
+        strokeWidth={0.3} 
+        style={{ filter: "drop-shadow(0 0 12px rgba(94, 234, 212, 0.8))" }}
+        animate={{ scale: [1, 1.03, 1] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <g className="pointer-events-none" style={{ filter: "drop-shadow(0 0 3px rgba(255,255,255,0.8))" }}>
+        {/* Human Icon inside the center node */}
+        <circle cx={0} cy={-1.4} r={1.6} fill="#ffffff" />
+        <path 
+          d="M -2.5 2.2 Q 0 -0.2 2.5 2.2" 
+          fill="none" 
+          stroke="#ffffff" 
+          strokeWidth={0.9} 
+          strokeLinecap="round"
+        />
+        
+        {/* "أنت" Label — Repositioned for new radii */}
+        <text 
+          y={15.5} 
+          textAnchor="middle" 
+          fontSize="4" 
+          fontWeight="900" 
+          fill="#5eead4"
+          style={{ 
+            letterSpacing: "0.15em",
+            filter: "drop-shadow(0 0 6px rgba(45, 212, 191, 0.9))" 
+          }}
+        >
+          أنت
+        </text>
+      </g>
       
       {/* No text label here — label is rendered as HTML overlay in DawayirCanvas */}
 
@@ -170,6 +290,11 @@ const MeNodeCenter: FC = memo(() => {
             initial={{ opacity: 0 }}
             animate={{ opacity: asset.opacity }}
           />
+          <foreignObject x="-1.2" y="-1.2" width="2.4" height="2.4">
+            <div className={`w-full h-full flex items-center justify-center ${asset.color}`}>
+              <asset.icon style={{ width: '1.2px', height: '1.2px' }} strokeWidth={3} />
+            </div>
+          </foreignObject>
         </g>
       ))}
     </g>
@@ -211,7 +336,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   }, [archiveNode, node.id]);
 
   // Calculate base position if no drag is happening
-  const radius = node.ring === "green" ? 15 : node.ring === "yellow" ? 27 : 38;
+  const radius = node.ring === "green" ? 20 : node.ring === "yellow" ? 35 : 50;
   const angle = (index / Math.max(total, 1)) * 2 * Math.PI - Math.PI / 2;
   const rawX = 50 + radius * Math.cos(angle);
   const rawY = 50 + radius * Math.sin(angle);
@@ -223,9 +348,15 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   } : undefined;
 
   const ringColors = {
-    green: "var(--ring-safe)",
-    yellow: "var(--ring-caution)",
-    red: "var(--ring-danger)",
+    green: "url(#grad-green)",
+    yellow: "url(#grad-yellow)",
+    red: "url(#grad-red)",
+  };
+
+  const ringGlows = {
+    green: "rgba(45, 212, 191, 0.4)",
+    yellow: "rgba(234, 179, 8, 0.4)",
+    red: "rgba(244, 63, 94, 0.4)",
   };
 
   return (
@@ -339,14 +470,21 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
           />
         </g>
       ) : (
-        <circle 
-          cx={baseX} cy={baseY} r={4} 
-          fill="#0f172a"
-          stroke={node.isAnalyzing ? "var(--soft-teal)" : ringColors[node.ring]} 
-          strokeOpacity={node.isAnalyzing ? 0.4 : 1}
-          strokeWidth={0.8} 
-          className="transition-colors duration-300"
-        />
+        <g>
+          <circle 
+            cx={baseX} cy={baseY} r={4.2} 
+            fill={ringColors[node.ring]}
+            stroke="rgba(255,255,255,0.2)" 
+            strokeWidth={0.2} 
+            style={{ filter: `drop-shadow(0 0 8px ${ringGlows[node.ring]})` }}
+          />
+          {/* Glossy Overlay */}
+          <circle 
+            cx={baseX - 1} cy={baseY - 1} r={1.5} 
+            fill="rgba(255,255,255,0.3)" 
+            style={{ filter: "blur(1px)" }}
+          />
+        </g>
       )}
 
       {node.avatarUrl ? (
@@ -380,11 +518,13 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       
       {/* Label under the node */}
       <text 
-        x={baseX} y={baseY + 7} 
+        x={baseX} y={baseY + 7.5} 
         textAnchor="middle" 
-        fontSize="2" 
-        fill="rgba(255,255,255,0.6)"
-        className="pointer-events-none font-medium"
+        fontSize="2.2" 
+        fontWeight="800"
+        fill="rgba(255,255,255,0.85)"
+        className="pointer-events-none tracking-wider"
+        style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.5))" }}
       >
         {node.label}
       </text>
@@ -586,36 +726,24 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
   }, [groupedNodes]);
 
   const ghostNodePosition = useMemo(() => {
-    // If map has no active nodes, put it prominently but safely below center
+    // Positioning at bottom-right (45 deg) to avoid overlap with "You" label
+    const angle = Math.PI / 4; 
+    
     if (activeNodesCount === 0) {
-      return { x: 50, y: 72 };
+      const radius = 22;
+      return {
+        x: 50 + radius * Math.cos(angle),
+        y: 50 + radius * Math.sin(angle)
+      };
     }
 
-    // Default position if something goes wrong
-    let pos = { x: 50, y: 80 };
-
-    // Find the first ring that isn't "full"
-    const rings: ("green" | "yellow" | "red")[] = ["green", "yellow", "red"];
-    for (const r of rings) {
-      const ringNodes = groupedNodes[r];
-      const maxInRing = r === "green" ? 8 : r === "yellow" ? 12 : 16;
-      
-      if (ringNodes.length < maxInRing) {
-        const radius = r === "green" ? 15 : r === "yellow" ? 27 : 38;
-        const index = ringNodes.length;
-        const total = ringNodes.length + 1;
-        const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
-        const rawX = 50 + radius * Math.cos(angle);
-        const rawY = 50 + radius * Math.sin(angle);
-        pos = {
-          x: Number.isFinite(rawX) ? rawX : 50,
-          y: Number.isFinite(rawY) ? rawY : 50
-        };
-        break;
-      }
-    }
-    return pos;
-  }, [activeNodesCount, groupedNodes]);
+    // Find a radius based on rings
+    const radius = activeNodesCount < 8 ? 28 : 38;
+    return {
+      x: 50 + radius * Math.cos(angle),
+      y: 50 + radius * Math.sin(angle)
+    };
+  }, [activeNodesCount]);
 
   const { entropyMap, isLoading: aiLoading } = useMasafatyAnalysis();
   const [selectedEntropyNode, setSelectedEntropyNode] = useState<string | null>(null);
@@ -643,13 +771,27 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
               <stop offset="0%" stopColor="#f43f5e" stopOpacity="1" />
               <stop offset="100%" stopColor="#4c0519" stopOpacity="0" />
             </radialGradient>
-          </defs>
-          <rect width="100" height="100" fill="url(#grid)" />
 
-          {/* Rings */}
-          <OrbitalRing radius={38} label="Danger" ring="red" />
-          <OrbitalRing radius={27} label="Caution" ring="yellow" />
-          <OrbitalRing radius={15} label="Safe" ring="green" />
+            {/* Premium Node Gradients */}
+            <radialGradient id="grad-green" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#2dd4bf" />
+              <stop offset="100%" stopColor="#0f766e" />
+            </radialGradient>
+            <radialGradient id="grad-yellow" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="100%" stopColor="#b45309" />
+            </radialGradient>
+            <radialGradient id="grad-red" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#fb7185" />
+              <stop offset="100%" stopColor="#9f1239" />
+            </radialGradient>
+          </defs>
+          <OrbitalRing radius={50} label="Danger" ring="red" />
+          <OrbitalRing radius={35} label="Caution" ring="yellow" />
+          <OrbitalRing radius={20} label="Safe" ring="green" />
+
+          {/* Cinematic Background Layer */}
+          <CinematicBackground />
 
           {/* Center Me */}
           <MeNodeCenter />
@@ -678,53 +820,61 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
               <SafeMotionCircle
                 cx={ghostNodePosition.x}
                 cy={ghostNodePosition.y}
-                r={6}
+                r={7}
                 fill="none"
-                stroke="rgba(45, 212, 191, 0.3)"
-                strokeWidth={0.2}
-                strokeDasharray="1 1"
+                stroke="var(--soft-teal)"
+                strokeWidth={0.15}
+                strokeDasharray="2 2"
                 animate={{ 
-                   scale: [1, 1.3, 1],
-                   opacity: [0.2, 0.5, 0.2],
-                   rotate: 360
+                   rotate: 360,
+                   opacity: [0.2, 0.6, 0.2]
                 }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
               />
               
               {/* Interaction Area (Invisible but large enough) */}
               <circle
                 cx={ghostNodePosition.x}
                 cy={ghostNodePosition.y}
-                r={7}
+                r={10}
                 fill="transparent"
               />
 
-              {/* Empty Person Shell */}
+              {/* Potential Node Shell */}
               <circle
                 cx={ghostNodePosition.x}
                 cy={ghostNodePosition.y}
                 r={4.5}
-                fill="rgba(45, 212, 191, 0.15)"
-                fillOpacity="1"
-                stroke="rgba(45, 212, 191, 0.6)"
-                strokeOpacity="1"
-                strokeWidth={0.4}
+                fill="rgba(45, 212, 191, 0.05)"
+                stroke="var(--soft-teal)"
+                strokeOpacity={0.4}
+                strokeWidth={0.3}
+                strokeDasharray="1 1.5"
+                className="animate-spin-slow"
+                style={{ transformOrigin: `${ghostNodePosition.x}px ${ghostNodePosition.y}px` }}
               />
               
-              {/* Plus Icon inside (Pure Native Paths) - Higher Visibility */}
+              {/* Plus Icon inside - Premium Style */}
               <g transform={`translate(${ghostNodePosition.x}, ${ghostNodePosition.y})`}>
-                <line x1="-2" y1="0" x2="2" y2="0" stroke="#2dd4bf" strokeWidth="1" strokeLinecap="round" />
-                <line x1="0" y1="-2" x2="0" y2="2" stroke="#2dd4bf" strokeWidth="1" strokeLinecap="round" />
+                <circle r={2} fill="rgba(45, 212, 191, 0.1)" />
+                <line x1="-1.2" y1="0" x2="1.2" y2="0" stroke="var(--soft-teal)" strokeWidth="0.6" strokeLinecap="round" />
+                <line x1="0" y1="-1.2" x2="0" y2="1.2" stroke="var(--soft-teal)" strokeWidth="0.6" strokeLinecap="round" />
               </g>
 
               {/* Label */}
               <text
                 x={ghostNodePosition.x}
-                y={ghostNodePosition.y + 8}
+                y={ghostNodePosition.y + 8.5}
                 textAnchor="middle"
                 fontSize="2.4"
-                fill="#2dd4bf"
-                style={{ fontWeight: "bold", opacity: 0.9, pointerEvents: "none" }}
+                fill="var(--soft-teal)"
+                style={{ 
+                  fontWeight: "900", 
+                  opacity: 0.8, 
+                  pointerEvents: "none",
+                  letterSpacing: "0.05em",
+                  filter: "drop-shadow(0 0 2px rgba(45, 212, 191, 0.3))"
+                }}
               >
                 إضافة شخص
               </text>
@@ -732,34 +882,6 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
           )}
         </svg>
 
-        {/* ── "أنت" Label — HTML overlay, always centered below the MeNode orb ── */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: "50%",
-            transform: "translate(-50%, calc(7.5vmin + 12px))",
-            pointerEvents: "none",
-            zIndex: 10,
-            textAlign: "center",
-          }}
-        >
-          <span
-            style={{
-              display: "block",
-              fontSize: "clamp(12px, 2vmin, 17px)",
-              fontWeight: 800,
-              color: "rgba(255, 255, 255, 0.95)",
-              letterSpacing: "0.2em",
-              textShadow: "0 0 12px rgba(45, 212, 191, 0.8), 0 0 24px rgba(45, 212, 191, 0.3)",
-              whiteSpace: "nowrap",
-              direction: "rtl",
-            }}
-          >
-            أنت
-          </span>
-        </div>
 
         {/* See and Decide Overlay */}
         <AnimatePresence>

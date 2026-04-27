@@ -195,7 +195,7 @@ export function buildDecisionPrompt(
   const domainConfig = decision.domainId ? getDomainConfig(decision.domainId) : null;
   const impacted = identifyImpactedDomains(decision, options);
 
-  return `أنت مستشار قرارات ذكي. حلل القرار التالي:
+  return `أنت مستشار قرارات ذكي في منصة "الرحلة". حلل القرار التالي:
 
 القرار: ${decision.content ?? "غير محدد"}
 المجال: ${domainConfig?.label ?? "غير محدد"} (${domainConfig?.description ?? ""})
@@ -213,11 +213,14 @@ ${options.map((o, i) => `${i + 1}. ${o.label}
 - مشاكل مفتوحة: ${lifeScore?.activeProblems ?? 0}
 - المجالات المتأثرة: ${impacted.map(d => getDomainConfig(d).label).join("، ")}
 
+◈ المحور الرأسي: كل قرار صعب ممكن يكون عرض لانقطاع عن المصدر. البشر "مرايات". لو القرار متعلق بعلاقة بشرية، فكر: هل الجذر أفقي ولا رأسي؟
+
 قدم تحليل مختصر يتضمن:
 1. توصية بالخيار الأفضل مع السبب
 2. المخاطر المحتملة
 3. التأثير طويل المدى
 4. نقاط عمياء قد يكون المستخدم غافل عنها
+5. لو لاحظت تردد مزمن — لمّح بلطف لأهمية الاتصال بالمصدر (ربنا/اللي أكبر منك)
 
 اكتب بالعامية المصرية. كن مباشر وعملي.`;
 }
@@ -233,7 +236,7 @@ export function buildProblemPrompt(
 ): string {
   const domainConfig = getDomainConfig(domainId);
 
-  return `أنت محلل مشاكل ذكي. شخّص المشكلة التالية:
+  return `أنت محلل مشاكل ذكي في منصة "الرحلة". شخّص المشكلة التالية:
 
 المشكلة: ${content}
 المجال: ${domainConfig.label} (${domainConfig.description})
@@ -246,8 +249,10 @@ export function buildProblemPrompt(
 مشاكل/أفكار مشابهة سابقة:
 ${relatedEntries.length > 0 ? relatedEntries.map((e, i) => `${i + 1}. ${e}`).join("\n") : "لا يوجد"}
 
+◈ المحور الرأسي: كل مشكلة أفقية (شغل، صحة، علاقة) ممكن تكون عرض لانقطاع رأسي (ضعف اتصال بالمصدر/ربنا). البشر "مرايات" مش مصادر طاقة.
+
 قدم تشخيص يتضمن:
-1. السبب الجذري (الحقيقي مش السطحي)
+1. السبب الجذري (الحقيقي مش السطحي) — هل هو أفقي ولا رأسي؟
 2. هل دي مشكلة فعلية ولا عرض لمشكلة أعمق؟
 3. 3 خطوات عملية مرتبة حسب الأولوية
 4. ابدأ بأيه — أول خطوة يعملها دلوقتي

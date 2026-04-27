@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     "AI psychology",
     "mental health arabic",
     "تحليل الشخصية",
-    "دوائر العلاقات",
+    "خريطة العلاقات",
     "طقس العلاقات",
     "نشرة طقس علاقاتك",
   ],
@@ -234,7 +234,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     "availability": "https://schema.org/InStock"
                   },
                   "inLanguage": "ar",
-                  "description": "أداة مجانية لاكتشاف علاقاتك وتحليل ديناميكياتها بالذكاء الاصطناعي — خريطة دواير، نشرة طقس العلاقات، ومرآة الذات",
+                  "description": "أداة مجانية لاكتشاف علاقاتك وتحليل ديناميكياتها بالذكاء الاصطناعي — خريطة الرحلة، نشرة طقس العلاقات، ومرآة الذات",
                   "aggregateRating": {
                     "@type": "AggregateRating",
                     "ratingValue": "4.8",

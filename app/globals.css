@@ -80,6 +80,167 @@
     font-weight: 600 !important;
     color: var(--page-text-muted) !important;
   }
+
+  /* Hero headline layout tweaks (kept outside src/modules/meta/HeroSection.tsx) */
+  @media (min-width: 1024px) {
+    .hero-headline {
+      margin-top: 2.6rem;
+    }
+  }
+
+  .hero-headline .headline-inline-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0 !important;
+    margin-top: 0.2rem !important;
+  }
+
+  .hero-headline .headline-subline {
+    display: inline-block !important;
+    margin-top: 0.35rem !important;
+    transform: none !important;
+  }
+
+  .hero-headline .rotating-word-wrapper {
+    min-height: 1.18em !important;
+    height: auto !important;
+    width: max-content !important;
+    line-height: 1.18 !important;
+    display: inline-grid !important;
+    overflow: visible !important;
+    margin-top: 0.25rem !important;
+  }
+
+  .hero-headline .rotating-word-wrapper > .invisible {
+    display: none !important;
+  }
+
+  .hero-headline .rotating-word-wrapper .headline-accent {
+    display: inline-block !important;
+    line-height: 1.18 !important;
+    padding-block: 0.08em !important;
+    transform: none !important;
+    overflow: visible !important;
+  }
+
+  .hero-copy-column .hero-divider {
+    margin-top: 1.1rem !important;
+  }
+
+  .hero-copy-column .hero-body {
+    margin-top: 0.65rem !important;
+  }
+
+  .hero-copy-column .hero-command-bar {
+    max-width: 590px !important;
+    min-height: 72px;
+    margin-top: 1.85rem !important;
+    padding: 8px !important;
+    gap: 10px !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(45, 212, 191, 0.28) !important;
+    background:
+      linear-gradient(135deg, rgba(45, 212, 191, 0.1), rgba(245, 166, 35, 0.035)),
+      rgba(3, 10, 18, 0.72) !important;
+    box-shadow:
+      0 18px 48px rgba(0, 0, 0, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    overflow: visible !important;
+  }
+
+  .hero-copy-column .hero-command-bar:focus-within {
+    transform: translateY(-1px) !important;
+    border-color: rgba(45, 212, 191, 0.58) !important;
+    background:
+      linear-gradient(135deg, rgba(45, 212, 191, 0.14), rgba(245, 166, 35, 0.055)),
+      rgba(3, 10, 18, 0.82) !important;
+  }
+
+  .hero-copy-column .hero-command-input {
+    min-height: 54px;
+    padding: 0 22px !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.045) !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+  }
+
+  .hero-copy-column .hero-command-input::placeholder {
+    color: rgba(226, 232, 240, 0.72) !important;
+  }
+
+  .hero-copy-column .hero-command-btn {
+    min-height: 54px;
+    padding: 0 30px !important;
+    border-radius: 999px !important;
+    background:
+      linear-gradient(135deg, #5eead4 0%, #2dd4bf 42%, #f5a623 135%) !important;
+    color: #041013 !important;
+    box-shadow:
+      0 10px 24px rgba(20, 184, 166, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+  }
+
+  .hero-copy-column .hero-command-btn:hover {
+    transform: translateY(-1px) !important;
+    filter: saturate(1.08) brightness(1.05) !important;
+  }
+
+  @media (max-width: 640px) {
+    .hero-copy-column .hero-command-bar {
+      border-radius: 24px !important;
+      padding: 10px !important;
+    }
+
+    .hero-copy-column .hero-command-btn,
+    .hero-copy-column .hero-command-input {
+      width: 100% !important;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .hero-root .map-area {
+      margin-top: -2.1rem !important;
+    }
+
+    .hero-root .leadership-map .legend {
+      bottom: -2.9rem !important;
+    }
+
+    .hero-headline .headline-inline-row {
+      align-items: center !important;
+      margin-top: 0.75rem !important;
+      width: 100% !important;
+    }
+
+    .hero-headline .rotating-word-wrapper {
+      position: relative !important;
+      display: grid !important;
+      place-items: center !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-height: 1.45em !important;
+      margin-top: 0.35rem !important;
+      overflow: visible !important;
+      contain: none !important;
+      text-align: center !important;
+    }
+
+    .hero-headline .rotating-word-wrapper .headline-accent {
+      position: relative !important;
+      inset: auto !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: auto !important;
+      max-width: 100% !important;
+      text-align: center !important;
+      white-space: normal !important;
+    }
+  }
 }
 
 @import "../src/styles/consciousness-theme.css";

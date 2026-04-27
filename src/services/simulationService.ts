@@ -67,11 +67,14 @@ export class SimulationService {
 
             // 3. Construct Simulation Prompt (First Principles Logic)
             const prompt = `
-        بصفتك System Architect لـ "الرحلة"، قم بمحاكاة تحقيق الحلم التالي:
+        بصفتك System Architect لمنصة "الرحلة"، قم بمحاكاة تحقيق الحلم التالي:
         الحلم: ${dream.title}
         الوصف: ${dream.description}
         العقد الحالية (Knots): ${JSON.stringify(dream.knots)}
         حالة المستخدم الحالية: ${JSON.stringify(stateSnapshot)}
+
+        ◈ المحور الرأسي: كل حلم بشري = مسار في الرحلة. لو الطاقة منخفضة والفوضى عالية، ممكن الجذر يكون انقطاع روحي.
+        البشر "مرايات" مش مصادر طاقة. لو الحلم متعلق بعلاقة بشرية، فكر: هل الجذر أفقي ولا رأسي؟
 
         المطلوب تحليل السيناريو الأمثل للكفاءة القصوى وتوقع النتائج بناءً على حالة الوعي (Energy & Pulse & Nodes).
         الرد يجب أن يكون بتنسيق JSON ويحتوي بوضوح على المفاتيح التالية (بدون أي نصوص إضافية):

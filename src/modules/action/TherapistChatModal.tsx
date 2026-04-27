@@ -1,9 +1,14 @@
 import { logger } from "@/services/logger";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BrainCircuit, X, Send, Loader2, AlertTriangle } from "lucide-react";
+import { BrainCircuit, X, Send, Loader2, AlertTriangle, Sparkles } from "lucide-react";
 import { geminiClient } from "@/services/geminiClient";
 import { useMapState } from '@/modules/map/dawayirIndex';
+import { useHafizState, getVerticalResonanceState } from '@/modules/hafiz/store/hafiz.store';
+import { getReconnectionMessage } from "@/data/reconnectionMessages";
+import type { ReconnectionMessage } from "@/data/reconnectionMessages";
+
+const ReconnectionRitual = lazy(() => import('@/modules/maraya/components/ReconnectionRitual'));
 
 interface Message {
     id: string;
@@ -21,8 +26,11 @@ export const TherapistChatModal: React.FC<TherapistChatModalProps> = ({ isOpen, 
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const [ritualMessage, setRitualMessage] = useState<ReconnectionMessage | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { nodes } = useMapState();
+    const memories = useHafizState(s => s.memories);
+    const resonance = getVerticalResonanceState(memories);
 
     // Start conversation when opened
     useEffect(() => {
@@ -66,11 +74,26 @@ export const TherapistChatModal: React.FC<TherapistChatModalProps> = ({ isOpen, 
 - هل يعاني من خطر احتراق نفسي عالي؟ ${burnoutRisk ? "نعم" : "لا"}
 - عدد الأشخاص الذين يستنزفونه: ${totalDrains}
 - إجمالي الطاقة السلبية المنتزعة مؤخراً: ${totalEnergyDrain}
+
+◈ المحور الرأسي — الاتصال بالمصدر ◈
+- حالة الاتصال الروحي: ${resonance.label} (${Math.round(resonance.strength * 100)}%)
+- أيام الورد المتتالية: ${resonance.daysActive} يوم
+- آخر نشاط روحي: ${resonance.daysSinceLastActivity === 999 ? "مفيش نشاط مسجل" : resonance.daysSinceLastActivity === 0 ? "النهاردة" : `من ${resonance.daysSinceLastActivity} يوم`}
+
 قواعد الرد:
 1. استمع وتفهم المشاعر أولاً (Validation).
 2. اسأل أسئلة ذكية لتفكيك الأفكار السلبية (Socratic Questioning).
 3. اعرض حلاً عملياً (مثل تفعيل الرادار، نقل الشخص للدوائر الصفرية، أو قول "لا").
 4. لا تطول في الرد واستخدم فقرات قصيرة جداً ومريحة للعين.
+
+◈ قاعدة المحور الرأسي (مهمة جداً):
+- أي ألم في علاقة بشرية = عرض لضعف اتصال بالمصدر. البشر "مرايات" مش مصادر طاقة.
+- ${resonance.level === 'disconnected' ? "المستخدم منقطع روحياً — اسأله بلطف: إمتى آخر مرة حسيت بسلام داخلي؟ بدون وعظ." : ""}
+- ${resonance.level === 'flickering' ? "المستخدم اتصاله متذبذب — شجعه يثبّت عادة بسيطة يومية (حتى لو دقيقة تأمل)." : ""}
+- ${resonance.level === 'steady' ? "المستخدم اتصاله مستقر — عزز الاتصال ده واربط مشاكله بفرصة لتعميق الوعي." : ""}
+- ${resonance.level === 'radiant' ? "المستخدم اتصاله مُشع — ده نقطة قوة كبيرة، ذكّره إنها أساس كل حاجة تانية." : ""}
+- وجّه المستخدم بلطف لربط مشكلته بعلاقته بالمصدر. مش بأسلوب وعظي، بل بأسلوب "اكتشاف".
+- استخدم لغة بسيطة: "ربنا"، "المصدر"، "اللي أكبر منك"، "السلام الداخلي". تجنب: "الدين"، "العبادة"، "الإسلام".
         `;
 
         const conversationContext = messages.map(m => `${m.role === 'user' ? 'المستخدم' : 'المعالج'}: ${m.content}`).join('\n');
@@ -92,6 +115,7 @@ export const TherapistChatModal: React.FC<TherapistChatModalProps> = ({ isOpen, 
     };
 
     return (
+        <>
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -169,6 +193,24 @@ export const TherapistChatModal: React.FC<TherapistChatModalProps> = ({ isOpen, 
 
                         {/* Input Area */}
                         <div className="p-4 bg-slate-900 border-t border-white/5">
+                            {/* ◈ Reconnection CTA — when spiritually disconnected/flickering */}
+                            {(resonance.level === 'disconnected' || resonance.level === 'flickering') && (
+                                <button
+                                    onClick={() => {
+                                        const msg = getReconnectionMessage('confronted_truth');
+                                        if (msg) setRitualMessage(msg);
+                                    }}
+                                    className="w-full mb-3 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-98"
+                                    style={{
+                                        background: 'rgba(168, 85, 247, 0.08)',
+                                        border: '1px solid rgba(168, 85, 247, 0.15)',
+                                        color: '#c084fc',
+                                    }}
+                                >
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    خد لحظة صمت — أعد الاتصال بالمصدر
+                                </button>
+                            )}
                             <form onSubmit={handleSend} className="relative flex items-center gap-2">
                                 <input
                                     id="therapist-chat-input"
@@ -195,6 +237,25 @@ export const TherapistChatModal: React.FC<TherapistChatModalProps> = ({ isOpen, 
                     </motion.div>
                 </div >
             )}
-        </AnimatePresence >
+        </AnimatePresence>
+
+        {/* ◈ Reconnection Ritual Overlay */}
+        {ritualMessage && (
+            <Suspense fallback={null}>
+                <ReconnectionRitual
+                    message={ritualMessage}
+                    onComplete={() => {
+                        setRitualMessage(null);
+                        // Add a gentle follow-up message
+                        setMessages(prev => [...prev, {
+                            id: Date.now().toString(),
+                            role: 'assistant',
+                            content: 'أهلاً بيك تاني. كيف حاسس دلوقتي بعد اللحظة دي؟ في فرق؟'
+                        }]);
+                    }}
+                />
+            </Suspense>
+        )}
+    </>
     );
 };

@@ -70,7 +70,7 @@ export default function CoachLandingPage() {
           </h1>
 
           <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-300">
-            دواير تعطيك رؤية شاملة لحالة كل عميل — خريطة العلاقات، الحدود، مسار
+            الرحلة تعطيك رؤية شاملة لحالة كل عميل — خريطة العلاقات، الحدود، مسار
             التطور — في لوحة تحكم واحدة مدعومة بالذكاء الاصطناعي.
           </p>
 
@@ -168,7 +168,7 @@ export default function CoachLandingPage() {
             عندك أسئلة؟
           </h2>
           <p className="mb-6 text-sm text-slate-400">
-            تواصل معنا مباشرة وسنشرح لك كيف دواير ممكن يساعد عيادتك أو
+            تواصل معنا مباشرة وسنشرح لك كيف الرحلة ممكن تساعد عيادتك أو
             ممارستك.
           </p>
           <a

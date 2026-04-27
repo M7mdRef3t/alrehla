@@ -1,6 +1,6 @@
 /**
  * نصوص قانونية — سياسة الخصوصية وشروط الاستخدام
- * منصة الرحلة (دواير) — https://www.alrehla.app
+ * منصة الرحلة — https://www.alrehla.app
  */
 
 const lastUpdated = "٢٠٢٤/٠٤/٢٤";

@@ -15,13 +15,15 @@ export async function augmentInsightWithAi(insight: CommandInsight): Promise<Par
 أنت الأوراكل القيادي (Command Oracle) لمنصة "الرحلة". 
 بصفتك System Architect يحلل الأمور من "المبادئ الأولى" (First Principles)، قدم تحليلاً معمارياً عميقاً للتوجيه التالي.
 
+◈ المحور الرأسي: كل توجيه قيادي لازم يراعي إن البشر "مرايات" والمصدر الحقيقي للطاقة هو ربنا/المصدر. كل أزمة أفقية = عرض لانقطاع رأسي محتمل.
+
 التوجيه: "${insight.message}"
 نوع التوجيه: ${insight.type}
 
 المطلوب:
 1. rationale: شرح للمنطق القيادي وراء هذا التوجيه بالعامية المصرية بأسلوب ذكي وعملي (بدون زخرفة كلامية زايدة).
 2. confidence: نسبة الثقة في هذا التحليل (رقم بين 85 و 99).
-3. tag: وسم تقني/معماري بالإنجليزية يصف الحالة (مثل: Entropy Equilibrium, Cognitive Friction, Relational Gravity).
+3. tag: وسم تقني/معماري بالإنجليزية يصف الحالة (مثل: Entropy Equilibrium, Cognitive Friction, Relational Gravity, Vertical Disconnection).
 
 رد بصيغة JSON فقط كالتالي:
 {

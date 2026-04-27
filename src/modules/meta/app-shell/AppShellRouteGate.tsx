@@ -1,4 +1,5 @@
 import { Suspense, lazy, type ReactNode } from "react"; // Cache buster to clear stale LogoLab.tsx import
+import { usePathname } from "next/navigation";
 import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { getHref, getPathname, pushUrl } from "@/services/navigation";
 import type { AppScreen } from "@/navigation/navigationMachine";
@@ -36,7 +37,8 @@ export function AppShellRouteGate({
   screen,
   children
 }: AppShellRouteGateProps) {
-  const pathname = getPathname();
+  const nextPathname = usePathname();
+  const pathname = nextPathname || getPathname();
   const isDawayirRoute = pathname === "/dawayir" || pathname === "/dawayir/";
   const isAdminPathname = pathname.startsWith("/admin");
   const isAnalyticsPathname = pathname === "/analytics";

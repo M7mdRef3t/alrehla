@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     url: "https://www.alrehla.app/go",
     siteName: "الرحلة",
     title: "صديقك يدعوك لاكتشاف خريطة علاقاتك",
-    description: "ابدأ رحلتك في 3 دقائق — اكتشف خريطة دوائرك وافهم علاقاتك بوضوح.",
+    description: "ابدأ رحلتك في 3 دقائق — اكتشف خريطة علاقاتك وافهم علاقاتك بوضوح.",
     images: [
       {
         url: "/api/og?type=referral",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "صديقك يدعوك لاكتشاف خريطة علاقاتك",
-    description: "ابدأ رحلتك في 3 دقائق — اكتشف خريطة دوائرك.",
+    description: "ابدأ رحلتك في 3 دقائق — اكتشف خريطة علاقاتك.",
     images: ["/api/og?type=referral"]
   }
 };

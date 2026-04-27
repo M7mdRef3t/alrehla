@@ -81,7 +81,11 @@ export function ConversionOfferCard({
       user_state_type: userState.type,
       readiness: userState.readiness,
     });
-    onSelectFree(userState.recommendedProduct);
+    if (source === "diagnosis") {
+      onSelectFree("dawayir");
+    } else {
+      onSelectFree(userState.recommendedProduct);
+    }
   };
 
   const handleSession = () => {
@@ -172,29 +176,31 @@ export function ConversionOfferCard({
               boxShadow: `0 4px 20px ${product.color}35`,
             }}
           >
-            {FREE_CTA_LABELS[userState.recommendedProduct]}
+            {source === "diagnosis" ? "ارسم خريطتك مجاناً" : FREE_CTA_LABELS[userState.recommendedProduct]}
           </motion.button>
 
           {/* Session CTA — Secondary Paid */}
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={handleSession}
-            className="w-full py-3 rounded-2xl text-[13px] font-bold transition-all flex items-center justify-center gap-2"
-            style={{
-              background: "rgba(245,158,11,0.08)",
-              border: "1px solid rgba(245,158,11,0.25)",
-              color: "#f59e0b",
-            }}
-          >
-            <span>🎙️</span>
-            <span>احجز جلسة مباشرة</span>
-            <span
-              className="text-[9px] px-1.5 py-0.5 rounded-full font-black"
-              style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b" }}
+          {source !== "diagnosis" && (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={handleSession}
+              className="w-full py-3 rounded-2xl text-[13px] font-bold transition-all flex items-center justify-center gap-2"
+              style={{
+                background: "rgba(245,158,11,0.08)",
+                border: "1px solid rgba(245,158,11,0.25)",
+                color: "#f59e0b",
+              }}
             >
-              PREMIUM
-            </span>
-          </motion.button>
+              <span>🎙️</span>
+              <span>احجز جلسة مباشرة</span>
+              <span
+                className="text-[9px] px-1.5 py-0.5 rounded-full font-black"
+                style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b" }}
+              >
+                PREMIUM
+              </span>
+            </motion.button>
+          )}
         </div>
 
         {/* Trust Signal */}

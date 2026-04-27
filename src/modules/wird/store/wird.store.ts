@@ -183,12 +183,33 @@ export const useWirdState = create<WirdState>()(
         set((s) => {
           const existing = s.progress.find((p) => p.dhikrId === dhikrId && p.date === today);
           let progress: DhikrProgress[];
+          let justCompleted = false;
           if (existing) {
             const newCount = existing.count + 1;
-            progress = s.progress.map((p) => p.dhikrId === dhikrId && p.date === today ? { ...p, count: newCount, completedAt: newCount >= (dhikr?.target || 33) && !p.completedAt ? Date.now() : p.completedAt } : p);
+            const wasComplete = existing.completedAt !== null;
+            const isNowComplete = newCount >= (dhikr?.target || 33);
+            justCompleted = isNowComplete && !wasComplete;
+            progress = s.progress.map((p) => p.dhikrId === dhikrId && p.date === today ? { ...p, count: newCount, completedAt: isNowComplete && !p.completedAt ? Date.now() : p.completedAt } : p);
           } else {
             progress = [...s.progress, { dhikrId, count: 1, date: today, completedAt: null }].slice(0, 2000);
           }
+
+          // ◈ Wird → Hafiz Memory Bridge
+          // When a dhikr is completed, record it as a spiritual memory
+          if (justCompleted && dhikr) {
+            try {
+              const { useHafizState } = require('@/modules/hafiz/store/hafiz.store');
+              const addMemory = useHafizState.getState().addMemory;
+              if (addMemory) {
+                addMemory({
+                  text: `أتممت "${dhikr.text}" — ${dhikr.target} مرة`,
+                  type: 'gratitude',
+                  source: 'wird',
+                });
+              }
+            } catch { /* hafiz unavailable */ }
+          }
+
           return {
             progress,
             streak: calculateStreak(progress, s.adhkar),
