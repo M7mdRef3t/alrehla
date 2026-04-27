@@ -129,7 +129,7 @@ function generateGamificationInsights(): MurshidInsight[] {
     insights.push({
       id: "gam-month-streak", type: "celebration", priority: 10,
       title: "شهر كامل! 👑",
-      message: "30 يوم متواصل. أنت من الـ 1% اللي وصلوا لهنا. ده مستوى التزام استثنائي.",
+      message: "30 يوم متواصل. أنت من الـ 1% اللي وصلوا لهنا. ده تحليق استثنائي.",
       emoji: "👑", color: "#f59e0b", source: "Tajmeed",
       timestamp: Date.now(),
     });
@@ -141,8 +141,8 @@ function generateGamificationInsights(): MurshidInsight[] {
     const remaining = progress.requiredForLevel - progress.xpInCurrent;
     insights.push({
       id: "gam-almost-levelup", type: "nudge", priority: 7,
-      title: "قريب من المستوى الجديد!",
-      message: `باقي ${remaining} نقطة فقط للمستوى ${level + 1}. سجّل نبضة أو اكتب تدوينة وهتوصل.`,
+      title: "أجنحتك على وشك أن تكبر!",
+      message: `باقي ${remaining} نقطة فقط لاكتمال الجناح التالي (الجناح ${level + 1}). سجّل نبضة أو اكتب تدوينة وهتوصل.`,
       emoji: "⬆️", color: "#a855f7", source: "Tajmeed",
       actionLabel: "سجّل نبضة", actionScreen: "landing",
       timestamp: Date.now(),
@@ -169,7 +169,7 @@ function generateGamificationInsights(): MurshidInsight[] {
       insights.push({
         id: "gam-new-badge", type: "celebration", priority: 7,
         title: `وسام جديد: ${latest.name}`,
-        message: `${latest.description} — كل وسام هو محطة في رحلتك.`,
+        message: `${latest.description} — كل وسام هو ريشة جديدة في أجنحة وعيك.`,
         emoji: latest.icon, color: "#fbbf24", source: "Tajmeed",
         timestamp: Date.now(),
       });

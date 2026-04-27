@@ -213,7 +213,7 @@ export const TaqrirScreen: FC = () => {
       ].join("\n") : "⚡ لا توجد بيانات نبض",
       ``,
       `🔥 Streak: ${streak} يوم`,
-      `⭐ المستوى: ${level} (${xp} نقطة)`,
+      `⭐ الجناح: ${level} (${xp} نقطة)`,
       `🏅 الأوسمة: ${badges.length}`,
       ``,
       `💚 علاقات صحية: ${relData.green}/${relData.total}`,
@@ -389,7 +389,7 @@ export const TaqrirScreen: FC = () => {
           <p className="text-xl font-black text-white">{streak}</p>
           <p className="text-[9px] text-slate-500 font-bold">يوم متواصل</p>
           <p className="text-[8px] text-slate-600 mt-1">
-            مستوى {level} · {xp} نقطة
+            الجناح {level} · {xp} نقطة
           </p>
         </div>
 
@@ -533,7 +533,7 @@ export const TaqrirScreen: FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className={`w-4 h-4 ${crashProbability > 0.7 ? "text-red-400" : crashProbability > 0.4 ? "text-amber-400" : "text-emerald-400"}`} />
-            <p className="text-xs font-bold text-white">مستوى الاستقرار</p>
+            <p className="text-xs font-bold text-white">استقرار التحليق</p>
           </div>
           <span className="text-xs font-black" style={{ color: crashProbability > 0.7 ? "#ef4444" : crashProbability > 0.4 ? "#fbbf24" : "#10b981" }}>
             {crashProbability > 0.7 ? "خطر" : crashProbability > 0.4 ? "متوسط" : "مستقر"}
@@ -567,7 +567,7 @@ export const TaqrirScreen: FC = () => {
               <div className="space-y-2 text-[11px] text-slate-300 leading-relaxed">
                 <p>• <strong>الطاقة:</strong> {pulseData ? `${pulseData.avgEnergy}/10 (${pulseData.energyTrend === "up" ? "صاعد" : pulseData.energyTrend === "down" ? "هابط" : "مستقر"})` : "لم يسجّل بعد"}</p>
                 <p>• <strong>المزاج السائد:</strong> {pulseData?.topMood ? MOOD_LABELS[pulseData.topMood] : "—"} ({pulseData?.positivityRatio ?? 0}% إيجابية)</p>
-                <p>• <strong>الالتزام:</strong> {streak} يوم متواصل, مستوى {level}</p>
+                <p>• <strong>الالتزام:</strong> {streak} يوم متواصل, الجناح {level}</p>
                 <p>• <strong>العلاقات:</strong> {relData.green} آمنة, {relData.yellow} محايدة, {relData.red} سامة</p>
                 <p>• <strong>الاستقرار:</strong> احتمال انهيار {Math.round(crashProbability * 100)}%</p>
                 <p>• <strong>التوثيق:</strong> {journalData.recent} تدوينة هذه الفترة</p>

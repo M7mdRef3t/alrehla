@@ -69,7 +69,7 @@ export const MonthlyReadingPlanModal: FC<MonthlyReadingPlanModalProps> = ({
                        {rank}
                      </span>
                      <span className="text-[10px] font-bold tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                       <Sparkles className="w-3 h-3" /> Insight Level {level}
+                       <Sparkles className="w-3 h-3" /> أجنحة الوعي {level}
                      </span>
                   </div>
                   <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
@@ -213,7 +213,7 @@ export const MonthlyReadingPlanModal: FC<MonthlyReadingPlanModalProps> = ({
                         </div>
                         <div>
                            <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">الوعي المترابط</h4>
-                           <p className="text-xs text-slate-500 mt-1">المستوى 5 - تقدم: {level}/5</p>
+                           <p className="text-xs text-slate-500 mt-1">اكتمال الجناح 5 - تقدم: {level}/5</p>
                         </div>
                      </div>
                      {/* Milestone 3 */}
@@ -223,7 +223,7 @@ export const MonthlyReadingPlanModal: FC<MonthlyReadingPlanModalProps> = ({
                         </div>
                         <div>
                            <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">الغواص العميق</h4>
-                           <p className="text-xs text-slate-500 mt-1">{level >= 15 ? "تم الفتح" : "الوصول للمستوى 15"}</p>
+                           <p className="text-xs text-slate-500 mt-1">{level >= 15 ? "تم الفتح" : "التحليق للجناح 15"}</p>
                         </div>
                      </div>
                   </div>

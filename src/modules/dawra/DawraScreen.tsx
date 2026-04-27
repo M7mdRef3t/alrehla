@@ -23,7 +23,7 @@ function AddCycleModal({ onClose }: { onClose: () => void }) {
           ); })}
         </div>
         <div className="mb-3">
-          <div className="flex justify-between text-[9px] text-slate-500 font-bold mb-1"><span>المستوى</span><span style={{ color: meta.color }}>{value}/10</span></div>
+          <div className="flex justify-between text-[9px] text-slate-500 font-bold mb-1"><span>الشدة</span><span style={{ color: meta.color }}>{value}/10</span></div>
           <input type="range" min={1} max={10} value={value} onChange={e => setValue(Number(e.target.value))} className="w-full accent-amber-500 h-2" />
           <div className="flex justify-between text-[7px] text-slate-600 mt-0.5"><span>أدنى</span><span>أعلى</span></div>
         </div>

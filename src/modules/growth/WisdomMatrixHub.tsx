@@ -82,10 +82,10 @@ export function WisdomMatrixHub() {
               <h1 className="text-3xl font-extrabold text-white mb-1 tracking-tight flex items-center gap-3">
                 مصفوفة الحكمة
                 <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-500/30">
-                  مستوى الإدراك ٢
+                  أجنحة الإدراك ٢
                 </span>
               </h1>
-              <p className="text-slate-400 text-sm font-medium">تتولد المعرفة والترسانة الفكرية بناءً على مستوى وعيك وتقدمك الحالي في مسار التأهيل.</p>
+              <p className="text-slate-400 text-sm font-medium">تتولد المعرفة والترسانة الفكرية بناءً على مدى نمو أجنحتك وتقدمك الحالي في مسار التأهيل.</p>
             </div>
           </div>
           
@@ -180,7 +180,7 @@ export function WisdomMatrixHub() {
                         </div>
                       )}
                       {resource.isLocked && (
-                        <span className="text-xs font-medium text-slate-600 bg-slate-800/80 px-2 py-1 rounded-md">يُفتح في المستوى ٣</span>
+                        <span className="text-xs font-medium text-slate-600 bg-slate-800/80 px-2 py-1 rounded-md">يُفتح عند اكتمال الجناح ٣</span>
                       )}
                     </div>
                   </motion.div>

@@ -53,7 +53,7 @@ export const ExperienceTrajectory: React.FC<ExperienceTrajectoryProps> = ({ traj
                 </div>
                 <div className="text-right">
                     <div className="text-2xl font-black text-slate-900">{trajectory.riskProbability}%</div>
-                    <div className="text-[10px] text-slate-400 font-bold uppercase">المستوى الحالي</div>
+                    <div className="text-[10px] text-slate-400 font-bold uppercase">الوضع الحالي</div>
                 </div>
             </div>
 
