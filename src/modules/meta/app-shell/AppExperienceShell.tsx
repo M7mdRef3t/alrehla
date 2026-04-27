@@ -4,6 +4,7 @@ import { syncMemoryFromSupabase } from "@/services/userMemory";
 import { syncSubscription } from "@/services/subscriptionManager";
 import { syncLiveSessionsFromSupabase } from "@/modules/dawayir-live/utils/sessionHistory";
 import { useCallback, useEffect, useMemo, useRef, useState, startTransition } from "react";
+import { usePathname } from "next/navigation";
 import { isPhaseOneUserFlow, isUserMode, isRevenueMode } from "@/config/appEnv";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import {
@@ -203,10 +204,12 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
   }, [screen, onExitToLanding, showAuthModal]);
 
   // ── URL SYNC (Mirror state to browser address bar) ──
+  const nextPathname = usePathname();
+  
   useEffect(() => {
     if (typeof window === "undefined") return;
     
-    const currentPath = window.location.pathname;
+    const currentPath = nextPathname || window.location.pathname;
     if (currentPath.startsWith("/admin") || currentPath === "/analytics") return;
     
     if (screen === "map" && currentPath !== "/map") {
