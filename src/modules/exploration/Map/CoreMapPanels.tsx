@@ -206,7 +206,7 @@ function LiveSessionsView() {
           </div>
           {node.lastTruthContract && (
             <div className="mt-3 text-[11px] leading-relaxed text-purple-200/60 border-t border-white/5 pt-3 text-right">
-              <span className="font-bold text-purple-300">آخر عقد حقيقة:</span> {node.lastTruthContract.actionPoints[0]}
+              <span className="font-bold text-purple-300">آخر عقد حقيقة:</span> {node.lastTruthContract.actionPoints?.[0] || node.lastTruthContract.summary}
             </div>
           )}
         </div>
