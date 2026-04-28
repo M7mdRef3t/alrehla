@@ -189,7 +189,7 @@ function readServerOnlyEnv(...keys: string[]): string | undefined {
 }
 
 const penv = safeProcessEnv();
-const processNodeEnv = typeof penv.NODE_ENV === "string" ? penv.NODE_ENV : undefined;
+const processNodeEnv = typeof process !== "undefined" && process.env && process.env.NODE_ENV ? process.env.NODE_ENV : "development";
 
 export const runtimeEnv = {
   isDev: processNodeEnv !== "production",
