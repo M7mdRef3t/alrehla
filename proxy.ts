@@ -70,9 +70,7 @@ export default async function proxy(request: NextRequest) {
             .filter((value): value is string => Boolean(value && value.trim()))
             .map((value) => value.trim());
 
-        const xAdminSecret = request.headers.get('x-admin-secret');
-        const isSecretMatch = allowedSecrets.some((secret) => authHeader === `Bearer ${secret}`) || 
-                             (xAdminSecret && xAdminSecret === process.env.ADMIN_API_SECRET);
+        const isSecretMatch = allowedSecrets.some((secret) => authHeader === `Bearer ${secret}`);
 
         if (!isSecretMatch) {
             // The cookie name pattern is `sb-<ref>-auth-token` OR the custom ecosystem key

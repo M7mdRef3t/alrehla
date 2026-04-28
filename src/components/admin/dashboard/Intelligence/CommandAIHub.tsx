@@ -13,6 +13,7 @@ import {
   Radio,
   Eye,
   ChevronRight,
+  BarChart3,
 } from "lucide-react";
 import { AwarenessSkeleton } from "@/modules/meta/AwarenessSkeleton";
 
@@ -24,9 +25,10 @@ const DreamsMatrixPanel = lazy(() => import("./DreamsMatrixPanel").then(m => ({ 
 const RepoIntelPanel   = lazy(() => import("./RepoIntelPanel"));
 const FleetCommander   = lazy(() => import("../Fleet/FleetCommander").then(m => ({ default: m.FleetCommander })));
 const AIDecisionLog    = lazy(() => import("../../AIDecisionLog").then(m => ({ default: m.AIDecisionLog })));
+const CreativeDashboard = lazy(() => import("./CreativeDashboard").then(m => ({ default: m.CreativeDashboard })));
 
 // ─── Tab definition ───────────────────────────────────────────────────────────
-type HubTab = "orchestrator" | "crucible" | "dreams" | "simulator" | "fleet" | "repo" | "decisions";
+type HubTab = "orchestrator" | "creative" | "crucible" | "dreams" | "simulator" | "fleet" | "repo" | "decisions";
 
 interface TabConfig {
   id: HubTab;
@@ -47,6 +49,15 @@ const TABS: TabConfig[] = [
     accent: "teal",
     glow: "rgba(20,184,166,0.15)",
     description: "محرك الذكاء التوليفي — يجمع الإشارات ويُصدر الأوامر",
+  },
+  {
+    id: "creative",
+    label: "Impact Radar",
+    arabicLabel: "رادار التأثير",
+    icon: <BarChart3 className="w-4 h-4" />,
+    accent: "cyan",
+    glow: "rgba(6,182,212,0.15)",
+    description: "قياس أثر المحتوى — من التوليد للنشر للتحويل",
   },
   {
     id: "crucible",
@@ -106,6 +117,7 @@ const TABS: TabConfig[] = [
 
 const ACCENT_CLASSES: Record<string, { border: string; text: string; bg: string; ring: string }> = {
   teal:    { border: "border-teal-500/30",    text: "text-teal-400",    bg: "bg-teal-500/10",    ring: "ring-teal-500/40" },
+  cyan:    { border: "border-cyan-500/30",    text: "text-cyan-400",    bg: "bg-cyan-500/10",    ring: "ring-cyan-500/40" },
   rose:    { border: "border-rose-500/30",    text: "text-rose-400",    bg: "bg-rose-500/10",    ring: "ring-rose-500/40" },
   indigo:  { border: "border-indigo-500/30",  text: "text-indigo-400",  bg: "bg-indigo-500/10",  ring: "ring-indigo-500/40" },
   amber:   { border: "border-amber-500/30",   text: "text-amber-400",   bg: "bg-amber-500/10",   ring: "ring-amber-500/40" },
@@ -238,6 +250,7 @@ export const CommandAIHub: FC = () => {
         >
           <Suspense fallback={<AwarenessSkeleton />}>
             {activeTab === "orchestrator" && <AIStudioPanel />}
+            {activeTab === "creative"     && <CreativeDashboard />}
             {activeTab === "crucible"     && <TheCrucible />}
             {activeTab === "dreams"       && <DreamsMatrixPanel />}
             {activeTab === "simulator"    && <AISimulatorPanel />}

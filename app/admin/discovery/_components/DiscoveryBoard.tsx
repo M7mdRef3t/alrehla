@@ -164,6 +164,7 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem }: Discove
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذه الإشارة؟")) return;
     try {
       const session = await safeGetSession();
       const token = session?.access_token ?? "";
@@ -180,13 +181,36 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem }: Discove
     }
   };
 
+  const handleArchive = async (id: string) => {
+    try {
+      const session = await safeGetSession();
+      const token = session?.access_token ?? "";
+      const res = await fetch("/api/admin/discovery", {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ id, updates: { stage: "Dropped" } })
+      });
+      if (res.ok) {
+        setItems((prev) => 
+          prev.map(item => item.id === id ? { ...item, stage: "Dropped" as DiscoveryStage } : item)
+        );
+      }
+    } catch (err) {
+      console.error("Archive failed:", err);
+    }
+  };
+
   const activeItem = activeId ? items.find((i) => i.id === activeId) : null;
 
   if (loading) {
     return <div className="p-12 text-center text-neutral-500 animate-pulse">Loading signals pipeline...</div>;
   }
 
-  const totalSignals = items.length;
+  const activeItems = items.filter(i => i.stage !== "Dropped");
+  const totalSignals = activeItems.length;
   const prioritized = items.filter(i => i.stage === "Prioritized").length;
   const shipped = items.filter(i => i.stage === "Shipped").length;
   const validated = items.filter(i => ["Validated", "Prioritized", "In Delivery", "Shipped"].includes(i.stage)).length;
@@ -203,7 +227,7 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem }: Discove
       <div className="px-6 pt-4 pb-2">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div className="bg-neutral-800/50 border border-white/5 rounded-xl p-4">
-            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Total Signals</p>
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Active Signals</p>
             <p className="text-2xl font-black text-white">{totalSignals}</p>
           </div>
           <div className="bg-neutral-800/50 border border-white/5 rounded-xl p-4">
@@ -238,6 +262,8 @@ export default function DiscoveryBoard({ searchQuery = "", latestItem }: Discove
                       key={item.id} 
                       item={item} 
                       onClick={setSelectedItem}
+                      onDelete={handleDelete}
+                      onArchive={handleArchive}
                     />
                   ))}
                 </div>

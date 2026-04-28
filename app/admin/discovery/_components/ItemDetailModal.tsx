@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Save, Trash2, Loader2, Star, Plus, Minus } from "lucide-react";
-import { DiscoveryItem } from "@/types/discovery";
-import { runtimeEnv } from "@/config/runtimeEnv";
-import { getAuthToken } from "@/domains/auth/store/auth.store";
+import { X, Save, Trash2, Loader2, Plus, Minus, Hash, AlertCircle, Quote, ClipboardList } from "lucide-react";
+import { DiscoveryItem, DiscoveryStage } from "@/types/discovery";
+import { safeGetSession } from "@/services/supabaseClient";
 
 type ItemDetailModalProps = {
   item: DiscoveryItem;
@@ -14,7 +13,13 @@ type ItemDetailModalProps = {
 };
 
 export default function ItemDetailModal({ item, onClose, onUpdate, onDelete }: ItemDetailModalProps) {
-  const [form, setForm] = useState<DiscoveryItem>({ ...item });
+  const [form, setForm] = useState<DiscoveryItem>({ 
+    ...item,
+    facts: item.facts || [],
+    interpretations: item.interpretations || [],
+    tags: item.tags || [],
+    confidence: item.confidence ?? 50
+  });
   const [isSaving, setIsSaving] = useState(false);
 
   const set = <K extends keyof DiscoveryItem>(key: K, val: DiscoveryItem[K]) =>
@@ -23,14 +28,16 @@ export default function ItemDetailModal({ item, onClose, onUpdate, onDelete }: I
   const handleSave = async () => {
     setIsSaving(true);
     try {
-
+      const session = await safeGetSession();
+      const token = session?.access_token ?? "";
+      
       const { id, created_at: _, updated_at: __, ...updates } = form;
       
       const res = await fetch("/api/admin/discovery", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getAuthToken()}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ id, updates }),
       });
@@ -46,33 +53,55 @@ export default function ItemDetailModal({ item, onClose, onUpdate, onDelete }: I
     }
   };
 
-  const addEvidence = () => {
-    const ev = form.evidence || [];
-    set("evidence", [...ev, ""]);
+  const updateList = (key: 'facts' | 'interpretations' | 'tags' | 'evidence', idx: number, val: string) => {
+    const list = [...(form[key] || [])] as string[];
+    list[idx] = val;
+    set(key, list);
   };
 
-  const updateEvidence = (idx: number, val: string) => {
-    const ev = [...(form.evidence || [])];
-    ev[idx] = val;
-    set("evidence", ev);
+  const addToList = (key: 'facts' | 'interpretations' | 'tags' | 'evidence') => {
+    const list = [...(form[key] || [])] as string[];
+    set(key, [...list, ""]);
   };
 
-  const removeEvidence = (idx: number) => {
-    const ev = (form.evidence || []).filter((_, i) => i !== idx);
-    set("evidence", ev);
+  const removeFromList = (key: 'facts' | 'interpretations' | 'tags' | 'evidence', idx: number) => {
+    const list = (form[key] || []).filter((_, i) => i !== idx);
+    set(key, list);
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200" dir="ltr">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200" dir="ltr">
       <div 
-        className="w-full max-w-2xl bg-neutral-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-3xl bg-neutral-900 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-white/5 bg-white/[0.02]">
-          <div>
-            <h3 className="text-xl font-bold text-white leading-tight">{form.title}</h3>
-            <p className="text-xs text-neutral-500 mt-1 uppercase tracking-widest">{form.stage} — {form.id.slice(0, 8)}</p>
+        <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-white/[0.02]">
+          <div className="flex items-center gap-4">
+            <div className={`w-3 h-12 rounded-full ${(form.confidence ?? 50) > 75 ? 'bg-emerald-500' : (form.confidence ?? 50) > 40 ? 'bg-blue-500' : 'bg-amber-500'} shadow-[0_0_15px_rgba(168,85,247,0.2)]`} />
+            <div>
+              <input 
+                value={form.title}
+                onChange={(e) => set("title", e.target.value)}
+                className="text-2xl font-black text-white bg-transparent border-none outline-none focus:ring-0 p-0 w-full mb-1"
+              />
+              <div className="flex items-center gap-2">
+                <select 
+                  value={form.stage}
+                  onChange={(e) => set("stage", e.target.value as DiscoveryStage)}
+                  className="text-[10px] font-black uppercase tracking-widest text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded-full px-3 py-1 outline-none"
+                >
+                  <option value="Inbox">Inbox</option>
+                  <option value="Needs Evidence">Needs Evidence</option>
+                  <option value="Validated">Validated</option>
+                  <option value="Prioritized">Prioritized</option>
+                  <option value="In Delivery">In Delivery</option>
+                  <option value="Shipped">Shipped</option>
+                  <option value="Dropped">Dropped</option>
+                </select>
+                <span className="text-[10px] text-neutral-600 font-mono">ID: {form.id.slice(0, 8)}</span>
+              </div>
+            </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-neutral-400 hover:text-white transition-all">
             <X className="w-6 h-6" />
@@ -80,169 +109,166 @@ export default function ItemDetailModal({ item, onClose, onUpdate, onDelete }: I
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
-          {/* Main Info Section */}
-          <section className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-2">Description</label>
-              <textarea 
-                value={form.description}
-                onChange={(e) => set("description", e.target.value)}
-                className="w-full bg-neutral-800/50 border border-white/5 rounded-2xl px-5 py-4 text-sm text-neutral-200 focus:outline-none focus:border-purple-500/50 transition-all resize-none min-h-[100px]"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-2">Confidence Level</label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((lvl) => (
-                    <button
-                      key={lvl}
-                      onClick={() => set("confidence", lvl)}
-                      className={`p-2 rounded-xl border transition-all ${
-                        (form.confidence || 0) >= lvl 
-                          ? "bg-purple-500/20 border-purple-500/40 text-purple-400" 
-                          : "bg-neutral-800 border-white/5 text-neutral-600 hover:text-neutral-400"
-                      }`}
-                    >
-                      <Star className={`w-5 h-5 ${ (form.confidence || 0) >= lvl ? "fill-current" : ""}`} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-2">Priority</label>
-                <select 
-                  value={form.priority}
-                  onChange={(e) => set("priority", e.target.value as DiscoveryItem["priority"])}
-                  className="w-full bg-neutral-800/50 border border-white/5 rounded-2xl px-5 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500/50"
-                  dir="ltr"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
-                </select>
-              </div>
-            </div>
+        <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
+          {/* Main Description */}
+          <section>
+            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-3">
+              <Quote className="w-3 h-3" /> Description & Observation
+            </label>
+            <textarea 
+              value={form.description}
+              onChange={(e) => set("description", e.target.value)}
+              className="w-full bg-neutral-800/40 border border-white/5 rounded-2xl px-6 py-4 text-[15px] text-neutral-200 leading-relaxed focus:outline-none focus:border-purple-500/40 transition-all resize-none min-h-[120px]"
+              placeholder="What did you see?"
+            />
           </section>
+
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-2 gap-8">
+            <section>
+              <div className="flex justify-between items-center mb-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Confidence ({form.confidence ?? 50}%)</label>
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded ${(form.confidence ?? 50) > 75 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                  {(form.confidence ?? 50) > 75 ? 'High Certainty' : 'Research Required'}
+                </span>
+              </div>
+              <input 
+                type="range"
+                min="0" max="100" step="5"
+                value={form.confidence ?? 50}
+                onChange={(e) => set("confidence", parseInt(e.target.value))}
+                className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
+              />
+            </section>
+            <section>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-3">Priority Level</label>
+              <select 
+                value={form.priority}
+                onChange={(e) => set("priority", e.target.value as any)}
+                className="w-full bg-neutral-800/40 border border-white/5 rounded-2xl px-5 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500/40 transition-all"
+              >
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+                <option value="critical">Critical Path</option>
+              </select>
+            </section>
+          </div>
+
+          {/* Discovery Analysis: Facts & Interpretations */}
+          <div className="grid grid-cols-2 gap-8">
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-500">
+                  <ClipboardList className="w-3 h-3 text-cyan-400" /> Facts
+                </label>
+                <button onClick={() => addToList('facts')} className="p-1 hover:bg-white/10 rounded text-cyan-400"><Plus className="w-3 h-3" /></button>
+              </div>
+              <div className="space-y-2">
+                {form.facts?.map((fact, idx) => (
+                  <div key={idx} className="flex gap-2 group">
+                    <input 
+                      value={fact} 
+                      onChange={(e) => updateList('facts', idx, e.target.value)}
+                      className="flex-1 bg-black/20 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-neutral-300 focus:border-cyan-500/30 outline-none"
+                    />
+                    <button onClick={() => removeFromList('facts', idx)} className="opacity-0 group-hover:opacity-100 text-neutral-600 hover:text-red-400"><Minus className="w-3 h-3" /></button>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-500">
+                  <Quote className="w-3 h-3 text-purple-400" /> Interpretations
+                </label>
+                <button onClick={() => addToList('interpretations')} className="p-1 hover:bg-white/10 rounded text-purple-400"><Plus className="w-3 h-3" /></button>
+              </div>
+              <div className="space-y-2">
+                {form.interpretations?.map((interp, idx) => (
+                  <div key={idx} className="flex gap-2 group">
+                    <input 
+                      value={interp} 
+                      onChange={(e) => updateList('interpretations', idx, e.target.value)}
+                      className="flex-1 bg-black/20 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-neutral-300 focus:border-purple-500/30 outline-none"
+                    />
+                    <button onClick={() => removeFromList('interpretations', idx)} className="opacity-0 group-hover:opacity-100 text-neutral-600 hover:text-red-400"><Minus className="w-3 h-3" /></button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
 
           {/* Strategic Context */}
-          <section className="bg-white/[0.01] border border-white/5 rounded-3xl p-6 space-y-6">
-            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-400 mb-2">Strategic Context</h4>
-            
+          <section className="bg-white/[0.01] border border-white/5 rounded-[2rem] p-8 space-y-6">
+            <h4 className="text-xs font-black uppercase tracking-[0.3em] text-neutral-500 mb-2">Strategic Resonance</h4>
             <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-600 mb-2">Business Goal</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-600">Business Goal</label>
                 <input 
-                  type="text" 
                   value={form.business_goal || ""} 
                   onChange={(e) => set("business_goal", e.target.value)}
-                  placeholder="e.g. Increase conversion"
-                  className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-sm text-neutral-300 focus:outline-none focus:border-purple-500/30"
+                  className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-sm text-neutral-300 focus:border-purple-500/20 outline-none"
                 />
               </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-600 mb-2">Signal Source</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-600">Signal Source</label>
                 <input 
-                  type="text" 
                   value={form.signal_source || ""} 
                   onChange={(e) => set("signal_source", e.target.value)}
-                  placeholder="e.g. Hotjar session #423"
-                  className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-sm text-neutral-300 focus:outline-none focus:border-purple-500/30"
+                  className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-sm text-neutral-300 focus:border-purple-500/20 outline-none"
                 />
               </div>
             </div>
-
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-600 mb-2">Hypothesis</label>
-              <textarea 
-                value={form.hypothesis || ""} 
-                onChange={(e) => set("hypothesis", e.target.value)}
-                placeholder="If we build X, then Y will happen because Z..."
-                className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-sm text-neutral-300 focus:outline-none focus:border-purple-500/30 resize-none"
-                rows={2}
-              />
-            </div>
           </section>
 
-          {/* Evidence List */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500">Documented Evidence</label>
-              <button 
-                onClick={addEvidence}
-                className="flex items-center gap-1.5 text-[10px] font-bold text-purple-400 hover:text-purple-300 uppercase h-6 px-3 rounded-full bg-purple-500/10 border border-purple-500/20"
-              >
-                <Plus className="w-3 h-3" /> Add Link/Proof
-              </button>
-            </div>
-            
-            <div className="space-y-2">
-              {(form.evidence || []).map((ev, idx) => (
-                <div key={idx} className="flex gap-2 group">
+          {/* Tags */}
+          <section>
+            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-3">
+              <Hash className="w-3 h-3" /> Taxonomy & Tags
+            </label>
+            <div className="flex flex-wrap gap-2 p-4 bg-black/20 border border-white/5 rounded-2xl min-h-[60px]">
+              {form.tags?.map((tag, idx) => (
+                <div key={idx} className="flex items-center gap-1 bg-neutral-800 border border-white/5 rounded-lg px-2 py-1 text-[10px] text-neutral-400">
                   <input 
-                    type="text" 
-                    value={ev} 
-                    onChange={(e) => updateEvidence(idx, e.target.value)}
-                    placeholder="URL or specific observation..."
-                    className="flex-1 bg-neutral-800/30 border border-white/5 rounded-xl px-4 py-3 text-sm text-neutral-400 focus:outline-none focus:border-purple-500/30"
+                    value={tag} 
+                    onChange={(e) => updateList('tags', idx, e.target.value)}
+                    className="bg-transparent border-none outline-none w-16"
                   />
-                  <button 
-                    onClick={() => removeEvidence(idx)}
-                    className="p-3 text-neutral-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
+                  <button onClick={() => removeFromList('tags', idx)} className="hover:text-red-400"><X className="w-2.5 h-2.5" /></button>
                 </div>
               ))}
-              {(form.evidence || []).length === 0 && (
-                <p className="text-xs text-neutral-600 italic">No evidence linked yet. This signal is currently anecdotal.</p>
-              )}
+              <button onClick={() => addToList('tags')} className="flex items-center gap-1 px-3 py-1 rounded-lg border border-dashed border-white/10 text-[10px] text-neutral-500 hover:text-white hover:border-white/20 transition-all">
+                <Plus className="w-3 h-3" /> Add Tag
+              </button>
             </div>
-          </section>
-
-          {/* Next Steps */}
-          <section>
-             <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-2">Defined Next Step</label>
-             <input 
-              type="text" 
-              value={form.next_step || ""} 
-              onChange={(e) => set("next_step", e.target.value)}
-              placeholder="What is the immediate action?"
-              className="w-full bg-neutral-800/50 border border-white/5 rounded-2xl px-5 py-4 text-sm text-teal-300 font-bold focus:outline-none focus:border-teal-500/50"
-            />
           </section>
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
-          <div className="text-rose-500/80">
-            {onDelete && (
-                <button 
-                    onClick={() => { if(confirm("Are you sure?")) onDelete(form.id); }}
-                    className="flex items-center gap-2 text-xs font-bold hover:text-rose-400 transition-colors"
-                >
-                    <Trash2 className="w-4 h-4" /> Delete Signal
-                </button>
-            )}
-          </div>
+        <div className="px-8 py-6 border-t border-white/5 bg-black/40 flex items-center justify-between">
+          <button 
+            onClick={() => { if(confirm("Are you sure?")) onDelete?.(form.id); }}
+            className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-neutral-600 hover:text-red-500 transition-all"
+          >
+            <Trash2 className="w-4 h-4" /> Delete Signal
+          </button>
           
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <button 
               onClick={onClose}
-              className="px-6 py-3 rounded-2xl text-sm font-bold text-neutral-500 hover:text-white transition-all"
+              className="px-6 py-3 text-xs font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-all"
             >
-              Discard Changes
+              Cancel
             </button>
             <button 
               disabled={isSaving}
               onClick={handleSave}
-              className="flex items-center gap-2 px-8 py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-bold rounded-2xl transition-all shadow-xl shadow-purple-900/40 active:scale-95"
+              className="flex items-center gap-2 px-10 py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-purple-900/40 active:scale-95"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {isSaving ? "Saving..." : "Apply Changes"}
+              {isSaving ? "Syncing..." : "Commit Changes"}
             </button>
           </div>
         </div>

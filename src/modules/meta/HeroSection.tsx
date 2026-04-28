@@ -1485,6 +1485,10 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const [isWarping, setIsWarping] = useState(false);
   const headlineLineRef = useRef<HTMLSpanElement | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [dynamicHeadline, setDynamicHeadline] = useState<string | null>(null);
+  const [dynamicSubline, setDynamicSubline] = useState<string | null>(null);
+  const [dynamicCta, setDynamicCta] = useState<string | null>(null);
+  const [targetRedirect, setTargetRedirect] = useState<string | null>(null);
 
   useEffect(() => {
     const check = () => setIsMobile(
@@ -1493,6 +1497,68 @@ export const HeroSection: FC<HeroSectionProps> = ({
     check();
     window.addEventListener("resize", check, { passive: true });
     return () => window.removeEventListener("resize", check);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const h = params.get("h");
+      const s = params.get("s");
+      const c = params.get("c");
+      const utmContent = params.get("utm_content");
+
+      if (utmContent) {
+        const illusionMap: Record<string, { h: string, s: string, c: string }> = {
+          'sunk-cost': {
+            h: "لسه مكمل في طريق الغلط؟",
+            s: "سمعتني وأنا بتكلم عن مغالطة التكلفة الغارقة، وعرفت إن استمرارك في علاقة أو قرار عشان استثمرت فيه كتير هو أكبر فخ. أنت مش محتاج تخسر أكتر من كده.",
+            c: "اكتشف حجم تورطك"
+          },
+          'confirmation': {
+            h: "بتدور على اللي يرضيك بس؟",
+            s: "تحيز التأكيد بيخليك تشوف بس اللي يثبت وجهة نظرك وتتجاهل الحقيقة. سمعت الفخ في الفيديو، ودلوقتي جه وقت المواجهة.",
+            c: "اختبر تحيزاتك"
+          },
+          'familiarity': {
+            h: "متعلق باللي تعرفه؟",
+            s: "تأثير الألفة بيخليك تفضل المألوف حتى لو مؤذي وترفض الجديد حتى لو فيه نجاتك. زي ما قلت لك، مش كل مألوف أمان.",
+            c: "اكتشف منطقة الراحة"
+          },
+          'illusion-of-control': {
+            h: "فاكر إنك متحكم في كل حاجة؟",
+            s: "وهم السيطرة بيخليك تفتكر إنك سايق، لكن الحقيقة إنك بتستنزف طاقتك في حاجات برا إرادتك. وقف استنزاف وابدأ تفهم.",
+            c: "اكتشف دايرة تحكمك"
+          },
+          'optimism': {
+            h: "فاكر إن الوحش مش هيصيبك؟",
+            s: "تحيز التفاؤل بيعميك عن الاستعداد للصدمات ويخليك فاكر إنك محصن. المواجهة دلوقتي أفضل من الصدمة بعدين.",
+            c: "واجه الحقيقة"
+          },
+          'status-quo': {
+            h: "خايف من التغيير؟",
+            s: "تحيز الوضع الراهن بيربطك بمكانك عشان خايف تخسر، بس الحقيقة إنك بتخسر عمرك وأنت واقف. آن الأوان تتحرك.",
+            c: "اكسر حاجز الثبات"
+          },
+          'blind-spot': {
+            h: "شايف عيوب الكل إلا نفسك؟",
+            s: "تحيز النقطة العمياء بيخلينا دايماً شايفين الغلط في غيرنا ونبرر لنفسنا. أول خطوة في الرحلة إنك تشوف صورتك الحقيقية.",
+            c: "أضئ نقطتك العمياء"
+          }
+        };
+
+        if (illusionMap[utmContent]) {
+          setDynamicHeadline(illusionMap[utmContent].h);
+          setDynamicSubline(illusionMap[utmContent].s);
+          setDynamicCta(illusionMap[utmContent].c);
+          setTargetRedirect(`/go/illusion/${utmContent}`);
+          return;
+        }
+      }
+
+      if (h) setDynamicHeadline(h);
+      if (s) setDynamicSubline(s);
+      if (c) setDynamicCta(c);
+    }
   }, []);
 
 
@@ -1530,8 +1596,12 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const handleStart = useCallback(() => {
     soundManager.playEffect("cosmic_pulse");
     setIsWarping(true);
-    setTimeout(onStartJourney, 900);
-  }, [onStartJourney]);
+    if (targetRedirect) {
+      setTimeout(() => { window.location.href = targetRedirect; }, 900);
+    } else {
+      setTimeout(onStartJourney, 900);
+    }
+  }, [onStartJourney, targetRedirect]);
 
 
 
@@ -1614,17 +1684,21 @@ export const HeroSection: FC<HeroSectionProps> = ({
             </motion.div>
 
             <motion.h1 variants={fadeUp} className="headline-static hero-headline">
-              <span ref={headlineLineRef} className="headline-line headline-glow">أنت لست ضائعاً</span>
-              <span className="headline-inline-row mt-1">
-                <span className="headline-subline">أنت فقط</span>
-                <RotatingWord isMobile={isMobile} />
+              <span ref={headlineLineRef} className="headline-line headline-glow">
+                {dynamicHeadline || "أنت لست ضائعاً"}
               </span>
+              {!dynamicHeadline && (
+                <span className="headline-inline-row mt-1">
+                  <span className="headline-subline">أنت فقط</span>
+                  <RotatingWord isMobile={isMobile} />
+                </span>
+              )}
             </motion.h1>
 
             <motion.div variants={fadeUp} className="hero-divider" />
 
             <motion.p variants={fadeUp} className={`hero-body ${hideCta ? 'hero-body--no-cta' : ''}`}>
-              توقف. مشكلتك ليست التعب — مشكلتك أنك ماشي في ضباب وفاكر ده هو الطريق. حولك أوهام متنكرة في شكل حقائق، وعلاقات متنكرة في شكل حب. نحن نكشف لك ما خفي عنك — نُنير لك الحقيقة عن نفسك وعن مَن حولك، لتأخذ قراراتك بعلم لا بوهم.
+              {dynamicSubline || "توقف. مشكلتك ليست التعب — مشكلتك أنك ماشي في ضباب وفاكر ده هو الطريق. حولك أوهام متنكرة في شكل حقائق، وعلاقات متنكرة في شكل حب. نحن نكشف لك ما خفي عنك — نُنير لك الحقيقة عن نفسك وعن مَن حولك، لتأخذ قراراتك بعلم لا بوهم."}
             </motion.p>
 
             <div className={`hero-cta-container ${hideCta ? 'hidden md:hidden max-md:block' : ''}`}>
@@ -1641,7 +1715,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                       animate={isMobile ? {} : { boxShadow: ["0 4px 15px rgba(20, 184, 166, 0.3)", "0 4px 30px rgba(20, 184, 166, 0.8)", "0 4px 15px rgba(20, 184, 166, 0.3)"] }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      <span className="relative z-10 font-black tracking-wide">{ctaJourney}</span>
+                      <span className="relative z-10 font-black tracking-wide">{dynamicCta || ctaJourney}</span>
                       <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow relative z-10 transition-transform duration-300 group-hover:-translate-x-2" />
                     </motion.button>
                   </div>
@@ -1670,7 +1744,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                       animate={isMobile ? {} : { boxShadow: ["0 4px 15px rgba(20, 184, 166, 0.3)", "0 4px 30px rgba(20, 184, 166, 0.8)", "0 4px 15px rgba(20, 184, 166, 0.3)"] }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      <span className="relative z-10 font-black tracking-wide">{ctaJourney}</span>
+                      <span className="relative z-10 font-black tracking-wide">{dynamicCta || ctaJourney}</span>
                       <ArrowLeft className="hero-cta-icon hero-cta-icon--arrow relative z-10 transition-transform duration-300 group-hover:-translate-x-2" />
                     </motion.button>
                   </div>

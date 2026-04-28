@@ -1,6 +1,6 @@
 import React, { type FC, useRef, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Zap as Sparkles, Copy, Video, Hash, Camera, Check, Play, Pause, ImagePlus, Loader2, Brain, ShieldAlert, Zap, ChevronLeft, ThumbsUp, ThumbsDown, Users, TrendingUp, Download } from "lucide-react";
+import { X, Zap as Sparkles, Copy, Video, Hash, Camera, Check, Play, Pause, ImagePlus, Loader2, Brain, ShieldAlert, Zap, ChevronLeft, ThumbsUp, ThumbsDown, Users, TrendingUp, Download, RefreshCcw } from "lucide-react";
 import type { TikTokScriptGeneration } from "@/ai/aiMarketingCopy";
 import { marketingCopywriter } from "@/ai/aiMarketingCopy";
 import { logger } from "@/services/logger";
@@ -70,6 +70,10 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
   }, [illusionName]);
   const [copied, setCopied] = useState(false);
   const [copiedPrompts, setCopiedPrompts] = useState<Record<number, boolean>>({});
+  const [intentCopied, setIntentCopied] = useState(false);
+  const [publishedUrl, setPublishedUrl] = useState("");
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
   const [internalScript, setInternalScript] = useState<TikTokScriptGeneration | null>(null);
   const [internalGenerating, setInternalGenerating] = useState(false);
   const [autoScroll, setAutoScroll] = useState(false);
@@ -88,12 +92,46 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
     setStep("customize");
     setInternalScript(null);
     setFeedback(null);
+    setPublishedUrl("");
+    setIsPublished(false);
     setGeneratedImages({});
     setGeneratingImages({});
     setAutoScroll(false);
     if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
     onClose();
   }, [isGenerating, onClose]);
+
+  // ── Persistence ──
+  useEffect(() => {
+    if (isOpen && illusionName) {
+      const saved = localStorage.getItem(`studio_draft_${illusionName}`);
+      if (saved) {
+        try {
+          const { script, images, tone: savedTone, topic: savedTopic } = JSON.parse(saved);
+          if (script) setInternalScript(script);
+          if (images) setGeneratedImages(images);
+          if (savedTone) setTone(savedTone);
+          if (savedTopic) setTopic(savedTopic);
+          if (script) setStep("result");
+        } catch (e) {
+          console.error("[Studio] Failed to load draft", e);
+        }
+      }
+    }
+  }, [isOpen, illusionName]);
+
+  useEffect(() => {
+    if (isOpen && (internalScript || Object.keys(generatedImages).length > 0)) {
+      const data = {
+        script: internalScript,
+        images: generatedImages,
+        tone,
+        topic,
+        updatedAt: Date.now()
+      };
+      localStorage.setItem(`studio_draft_${illusionName}`, JSON.stringify(data));
+    }
+  }, [internalScript, generatedImages, tone, topic, illusionName, isOpen]);
 
   // ── Generate ──
   const handleGenerate = async () => {
@@ -111,6 +149,14 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
       if (result) {
         setInternalScript(result);
         setStep("result");
+        
+        // Log script generation
+        feedbackService.logAiGeneration({
+          prompt: `Illusion: ${illusionName}, Tone: ${tone}, Topic: ${topic}`,
+          response: JSON.stringify(result),
+          source: "tiktok_studio_script",
+          metadata: { illusionName, tone, topic }
+        });
       } else {
         setStep("customize");
       }
@@ -126,11 +172,19 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
   const getAspectRatio = () => {
     const platform = scriptData?.platform?.toLowerCase() ?? "";
     const format = scriptData?.format?.toLowerCase() ?? "";
-    // Instagram/TikTok video/reels → portrait 9:16
-    if ((platform === "instagram" || platform === "tiktok") && (format === "video" || format === "reel")) {
-      return "9:16";
-    }
-    return "16:9";
+    const rationale = scriptData?.rationale?.toLowerCase() ?? "";
+    
+    // Improved detection for portrait modes
+    const isPortrait = 
+      platform.includes("instagram") || 
+      platform.includes("tiktok") || 
+      format.includes("reel") || 
+      format.includes("short") || 
+      format.includes("story") ||
+      rationale.includes("طولي") || 
+      rationale.includes("portrait");
+
+    return isPortrait ? "9:16" : "16:9";
   };
 
   const handleGenerateImage = async (idx: number, prompt: string) => {
@@ -143,7 +197,16 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
       });
       const data = await res.json();
       if (data.success && data.image?.base64) {
-        setGeneratedImages(prev => ({ ...prev, [idx]: `data:${data.image.mimeType};base64,${data.image.base64}` }));
+        const base64 = `data:${data.image.mimeType};base64,${data.image.base64}`;
+        setGeneratedImages(prev => ({ ...prev, [idx]: base64 }));
+
+        // Log image generation
+        feedbackService.logAiGeneration({
+          prompt,
+          response: "[Base64 Image Generated]",
+          source: "tiktok_studio_image",
+          metadata: { sceneIdx: idx, illusionName, aspectRatio: getAspectRatio() }
+        });
       }
     } catch (e) {
       logger.error("[Studio] Image generation failed", e);
@@ -194,6 +257,45 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // ── Copy Intent Link ──
+  const handleCopyIntentLink = () => {
+    if (!scriptData) return;
+    const baseUrl = window.location.origin;
+    // Generate slug from illusion name
+    const slugMap: Record<string, string> = {
+      'مغالطة التكلفة الغارقة': 'sunk-cost', 'تحيز التأكيد': 'confirmation',
+      'تأثير الألفة': 'familiarity', 'وهم السيطرة': 'illusion-of-control',
+      'تحيز التفاؤل': 'optimism', 'تحيز الوضع الراهن': 'status-quo',
+      'تحيز النقطة العمياء': 'blind-spot',
+    };
+    const slug = slugMap[illusionName] || illusionName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    const utm = `utm_source=content_studio&utm_medium=${scriptData.platform || 'social'}&utm_campaign=illusion_dismantling&utm_content=${slug}`;
+    const intentUrl = `${baseUrl}/go/illusion/${slug}?${utm}`;
+    
+    navigator.clipboard.writeText(intentUrl);
+    setIntentCopied(true);
+    setTimeout(() => setIntentCopied(false), 2000);
+  };
+
+  // ── Submit Video URL ──
+  const handlePublishDismantle = async () => {
+    if (!publishedUrl.trim()) return;
+    setIsPublishing(true);
+    try {
+      await feedbackService.submit({
+        content: publishedUrl,
+        rating: 'up',
+        source: 'illusion_dismantled_video',
+        metadata: { illusionName, topic, tone, rationale: scriptData?.rationale }
+      });
+      setIsPublished(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   // ═══════════════════════════════════════════════════════════════
   // Render
   // ═══════════════════════════════════════════════════════════════
@@ -237,6 +339,10 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
                     <button onClick={toggleAutoScroll} className="hidden sm:flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-colors border border-white/10">
                       {autoScroll ? <Pause className="w-4 h-4 text-amber-400" /> : <Play className="w-4 h-4" />}
                       {autoScroll ? "إيقاف" : "تلقين"}
+                    </button>
+                    <button onClick={handleCopyIntentLink} className="hidden sm:flex items-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold rounded-xl transition-colors border border-rose-500/20">
+                      {intentCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                      {intentCopied ? "تم النسخ!" : "رابط المنصة الذكي"}
                     </button>
                     <button onClick={handleCopy} className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-colors border border-white/10">
                       {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -422,20 +528,38 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
                                 </div>
                                 <p className="text-[10px] text-slate-400 italic line-clamp-2 hover:line-clamp-none transition-all cursor-default">{block.imagePrompt}</p>
                                 {generatedImages[idx] && (
-                                  <div className="relative group/img">
-                                    <motion.img
-                                      initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                                      src={generatedImages[idx]} alt={`Scene ${idx + 1}`}
-                                      className={`w-full rounded-lg border border-white/10 shadow-lg object-cover ${
-                                        getAspectRatio() === "9:16" ? "aspect-[9/16]" : "aspect-video"
-                                      }`} />
-                                    {/* Download overlay */}
-                                    <button
-                                      onClick={() => handleDownloadImage(idx)}
-                                      className="absolute top-2 left-2 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center gap-1 px-2 py-1.5 rounded-lg bg-black/70 backdrop-blur text-white text-[9px] font-black border border-white/10 hover:bg-black/90">
-                                      <Download className="w-3 h-3" />
-                                      تنزيل
-                                    </button>
+                                  <div className="space-y-2">
+                                    <div className="relative group/img overflow-hidden rounded-lg border border-white/10 shadow-lg">
+                                      <motion.img
+                                        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                                        src={generatedImages[idx]} alt={`Scene ${idx + 1}`}
+                                        className={`w-full object-cover ${
+                                          getAspectRatio() === "9:16" ? "aspect-[9/16]" : "aspect-video"
+                                        }`} />
+                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                         <button
+                                          onClick={() => handleDownloadImage(idx)}
+                                          className="p-2 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur text-white transition-all"
+                                          title="تنزيل الصورة">
+                                          <Download className="w-5 h-5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() => handleDownloadImage(idx)}
+                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black border border-white/5 transition-all">
+                                        <Download className="w-3.5 h-3.5" />
+                                        تنزيل
+                                      </button>
+                                      <button
+                                        onClick={() => handleGenerateImage(idx, block.imagePrompt!)}
+                                        disabled={generatingImages[idx]}
+                                        className="flex items-center justify-center p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-white/5 transition-all disabled:opacity-40"
+                                        title="إعادة التوليد">
+                                        {generatingImages[idx] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                                      </button>
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -460,12 +584,74 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">هل السكريبت عجبك؟</span>
                     <div className="flex gap-3">
                       <button onClick={() => { setFeedback("up"); if (scriptData) feedbackService.submit({ content: scriptData.hook, rating: 'up', source: 'content_studio', metadata: { illusionName, topic, tone } }); }} disabled={!!feedback}
-                        className={`p-2 rounded-lg border transition-all ${feedback === "up" ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400" : "bg-slate-800/30 border-slate-700/50 text-slate-400 hover:text-emerald-400"}`}>
-                        <ThumbsUp className="w-3.5 h-3.5" />
+                        className={`p-2 rounded-xl transition-all ${feedback === "up" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-white/5"}`}>
+                        <ThumbsUp className="w-4 h-4" />
                       </button>
                       <button onClick={() => { setFeedback("down"); if (scriptData) feedbackService.submit({ content: scriptData.hook, rating: 'down', source: 'content_studio', metadata: { illusionName, topic, tone } }); }} disabled={!!feedback}
-                        className={`p-2 rounded-lg border transition-all ${feedback === "down" ? "bg-rose-500/20 border-rose-500/50 text-rose-400" : "bg-slate-800/30 border-slate-700/50 text-slate-400 hover:text-rose-400"}`}>
-                        <ThumbsDown className="w-3.5 h-3.5" />
+                        className={`p-2 rounded-xl transition-all ${feedback === "down" ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" : "bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-white/5"}`}>
+                        <ThumbsDown className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Submit Video URL */}
+                  <div className="mt-8 pt-6 border-t border-dashed border-slate-700/50">
+                    <div className="flex flex-col gap-3">
+                      <label className="text-xs font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
+                        <Check className="w-4 h-4" /> تم النشر؟ اربط الفيديو بالوهم
+                      </label>
+                      <p className="text-[10px] text-slate-400 mb-2 leading-relaxed">
+                        لو نشرت الفيديو، حط الرابط هنا عشان نربطه ببيانات الوهم ونقيس تأثير "الرحلة" الحقيقي.
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          placeholder="https://tiktok.com/@user/video/..."
+                          className="flex-1 px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50"
+                          value={publishedUrl}
+                          onChange={(e) => setPublishedUrl(e.target.value)}
+                          disabled={isPublished}
+                        />
+                        <button
+                          onClick={handlePublishDismantle}
+                          disabled={isPublishing || isPublished || !publishedUrl.trim()}
+                          className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${
+                            isPublished
+                              ? 'bg-emerald-600 text-white cursor-default'
+                              : 'bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-40'
+                          }`}
+                        >
+                          {isPublishing ? '...' : isPublished ? '✅ تم الربط!' : 'ربط الفيديو'}
+                        </button>
+                      </div>
+                      {isPublished && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-3 flex items-center gap-2 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
+                        >
+                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <p className="text-xs text-emerald-300 font-bold">
+                            تم ربط الفيديو بالوهم "{illusionName}" بنجاح — هيظهر في رادار التأثير خلال ثوانٍ.
+                          </p>
+                        </motion.div>
+                      )}
+                    </div>
+
+                    <div className="mt-8 flex justify-center">
+                      <button
+                        onClick={() => {
+                          localStorage.removeItem(`studio_draft_${illusionName}`);
+                          setInternalScript(null);
+                          setStep("customize");
+                          setInternalGenerating(false);
+                          setFeedback(null);
+                          setPublishedUrl("");
+                        }}
+                        className="flex items-center gap-2 text-[10px] font-black text-slate-600 hover:text-rose-400 transition-all uppercase tracking-widest"
+                      >
+                        <RefreshCcw className="w-3 h-3" />
+                        ابدأ من جديد (مسح المسودة)
                       </button>
                     </div>
                   </div>
@@ -480,6 +666,11 @@ export const TikTokTeleprompterModal: FC<TikTokTeleprompterModalProps> = ({
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition-colors">
                   {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                   {copied ? "تم!" : "نسخ"}
+                </button>
+                <button onClick={handleCopyIntentLink}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-rose-500/20 text-rose-300 font-bold rounded-xl border border-rose-500/20 transition-colors">
+                  {intentCopied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5" />}
+                  {intentCopied ? "تم!" : "رابط ذكي"}
                 </button>
                 <button onClick={toggleAutoScroll}
                   className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 text-white font-bold rounded-xl border border-white/10">

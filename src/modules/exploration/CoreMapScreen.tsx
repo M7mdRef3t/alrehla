@@ -919,19 +919,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                       transition={{ duration: 3.2, repeat: Infinity, ease: "easeOut", delay }}
                     />
                   ))}
-                  <SafeMotionCircle
-                    cx={60} cy={60} r={15}
-                    fill="url(#emptyStateGrad)"
-                    animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
-                    style={{ transformOrigin: "60px 60px" }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                  <defs>
-                    <radialGradient id="emptyStateGrad" cx="50%" cy="40%" r="60%">
-                      <stop offset="0%" stopColor="#5eead4" />
-                      <stop offset="100%" stopColor="#0d9488" />
-                    </radialGradient>
-                  </defs>
                 </svg>
               </div>
             </motion.div>

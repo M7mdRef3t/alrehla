@@ -13,6 +13,11 @@ type FormState = {
   priority: Priority;
   signal_source: string;
   business_goal: string;
+  stage: string;
+  facts: string;
+  interpretations: string;
+  confidence: number;
+  tags: string;
 };
 
 const INITIAL: FormState = {
@@ -22,11 +27,16 @@ const INITIAL: FormState = {
   priority: "medium",
   signal_source: "",
   business_goal: "",
+  stage: "Inbox",
+  facts: "",
+  interpretations: "",
+  confidence: 50,
+  tags: "",
 };
 
 type CaptureSignalModalProps = {
   onClose: () => void;
-  onSuccess: (item: unknown) => void;
+  onSuccess: (item: any) => void;
 };
 
 export default function CaptureSignalModal({ onClose, onSuccess }: CaptureSignalModalProps) {
@@ -48,26 +58,31 @@ export default function CaptureSignalModal({ onClose, onSuccess }: CaptureSignal
     try {
       const session = await safeGetSession();
       const token = session?.access_token ?? "";
+      
+      const payload = {
+        ...form,
+        facts: form.facts.split(",").map(s => s.trim()).filter(Boolean),
+        interpretations: form.interpretations.split(",").map(s => s.trim()).filter(Boolean),
+        tags: form.tags.split(",").map(s => s.trim()).filter(Boolean),
+      };
+
       const res = await fetch("/api/admin/discovery", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...form,
-          stage: "Inbox",
-          facts: [],
-          interpretations: [],
-          tags: [],
-        }),
+        body: JSON.stringify(payload),
       });
+      
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.error ?? `HTTP ${res.status}`);
       }
+      
       const data = await res.json();
-      onSuccess(data.item);
+      // The API returns the item directly
+      onSuccess(data);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "فشل الحفظ. حاول تاني.");
@@ -81,9 +96,9 @@ export default function CaptureSignalModal({ onClose, onSuccess }: CaptureSignal
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-lg bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-2xl bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 flex-none">
           <div className="flex items-center gap-2 text-purple-400">
             <Zap className="w-5 h-5" />
             <h2 className="text-lg font-bold text-white">Capture Signal</h2>
@@ -97,19 +112,36 @@ export default function CaptureSignalModal({ onClose, onSuccess }: CaptureSignal
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Title */}
-          <div>
-            <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
-              العنوان *
-            </label>
-            <input
-              type="text"
-              value={form.title}
-              onChange={(e) => set("title", e.target.value)}
-              placeholder="اسم الإشارة أو الملاحظة..."
-              className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500/60 transition-colors"
-            />
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+          {/* Title & Stage Row */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="col-span-2">
+              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
+                العنوان *
+              </label>
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => set("title", e.target.value)}
+                placeholder="اسم الإشارة..."
+                className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500/60 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
+                المرحلة (Stage)
+              </label>
+              <select
+                value={form.stage}
+                onChange={(e) => set("stage", e.target.value)}
+                className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500/60 transition-colors"
+              >
+                <option value="Inbox">Inbox</option>
+                <option value="Needs Evidence">Needs Evidence</option>
+                <option value="Validated">Validated</option>
+                <option value="Prioritized">Prioritized</option>
+              </select>
+            </div>
           </div>
 
           {/* Description */}
@@ -118,10 +150,10 @@ export default function CaptureSignalModal({ onClose, onSuccess }: CaptureSignal
               الوصف *
             </label>
             <textarea
-              rows={3}
+              rows={2}
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
-              placeholder="ماذا لاحظت؟ ما السياق؟"
+              placeholder="ماذا لاحظت؟"
               className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500/60 transition-colors resize-none"
             />
           </div>
@@ -162,30 +194,97 @@ export default function CaptureSignalModal({ onClose, onSuccess }: CaptureSignal
             </div>
           </div>
 
-          {/* Signal Source */}
+          {/* Confidence Row */}
           <div>
-            <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
-              Signal Source (اختياري)
-            </label>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                Confidence Level ({form.confidence}%)
+              </label>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                form.confidence > 75 ? 'bg-emerald-500/20 text-emerald-400' :
+                form.confidence > 40 ? 'bg-blue-500/20 text-blue-400' :
+                'bg-amber-500/20 text-amber-400'
+              }`}>
+                {form.confidence > 75 ? 'High' : form.confidence > 40 ? 'Medium' : 'Low'}
+              </span>
+            </div>
             <input
-              type="text"
-              value={form.signal_source}
-              onChange={(e) => set("signal_source", e.target.value)}
-              placeholder="مثال: مستخدم A، Hotjar session، NPS comment"
-              className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500/60 transition-colors"
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={form.confidence}
+              onChange={(e) => set("confidence", parseInt(e.target.value))}
+              className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
             />
           </div>
 
-          {/* Business Goal */}
+          {/* Facts & Interpretations */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
+                Facts (مفصول بفصلة)
+              </label>
+              <textarea
+                rows={2}
+                value={form.facts}
+                onChange={(e) => set("facts", e.target.value)}
+                placeholder="حقيقة 1, حقيقة 2..."
+                className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500/60 transition-colors resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
+                Interpretations (مفصول بفصلة)
+              </label>
+              <textarea
+                rows={2}
+                value={form.interpretations}
+                onChange={(e) => set("interpretations", e.target.value)}
+                placeholder="تفسير 1, تفسير 2..."
+                className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500/60 transition-colors resize-none"
+              />
+            </div>
+          </div>
+
+          {/* Signal Source & Business Goal row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
+                Signal Source
+              </label>
+              <input
+                type="text"
+                value={form.signal_source}
+                onChange={(e) => set("signal_source", e.target.value)}
+                placeholder="مثال: NPS comment"
+                className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500/60 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
+                Business Goal
+              </label>
+              <input
+                type="text"
+                value={form.business_goal}
+                onChange={(e) => set("business_goal", e.target.value)}
+                placeholder="مثال: churn reduction"
+                className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500/60 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Tags */}
           <div>
             <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
-              Business Goal (اختياري)
+              Tags (مفصول بفصلة)
             </label>
             <input
               type="text"
-              value={form.business_goal}
-              onChange={(e) => set("business_goal", e.target.value)}
-              placeholder="مثال: زيادة conversion، تقليل churn"
+              value={form.tags}
+              onChange={(e) => set("tags", e.target.value)}
+              placeholder="UI, Performance, Mobile..."
               className="w-full bg-neutral-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-purple-500/60 transition-colors"
             />
           </div>
@@ -198,7 +297,7 @@ export default function CaptureSignalModal({ onClose, onSuccess }: CaptureSignal
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-1">
+          <div className="flex gap-3 pt-2 sticky bottom-0 bg-neutral-900 pb-2">
             <button
               type="button"
               onClick={onClose}

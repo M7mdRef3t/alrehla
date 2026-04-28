@@ -14,7 +14,7 @@ import {
 } from "@dnd-kit/core";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { Ring, MapNode as MapNodeType } from "../map/mapTypes";
-import { User, Clock, Zap, Coins, Maximize, GripVertical, Plus, AlertCircle, Info, X, Scissors } from "lucide-react";
+import { GripVertical, Plus, AlertCircle, Info, X, Scissors } from "lucide-react";
 import { useMasafatyAnalysis, EntropyLevel } from "./hooks/useMasafatyAnalysis";
 import { Button } from '@/modules/meta/UI/Button';
 import { SafeMotionCircle, toSafeSvgRadius, toSafeSvgCoordinate } from "@/components/ui/SafeSvg";
@@ -198,29 +198,6 @@ const EntropyGlow: FC<{ x: number; y: number; level: EntropyLevel }> = memo(({ x
 });
 
 const MeNodeCenter: FC = memo(() => {
-  const feelingResults = useMapState((s) => s.feelingResults);
-  
-  // Memoize assets mapping to avoid recalculations every render
-  const indicators = useMemo(() => {
-    const assets = [
-      { id: "body", icon: User, color: "text-blue-400" },
-      { id: "time", icon: Clock, color: "text-purple-400" },
-      { id: "energy", icon: Zap, color: "text-yellow-400" },
-      { id: "money", icon: Coins, color: "text-emerald-400" },
-      { id: "space", icon: Maximize, color: "text-rose-400" },
-    ];
-
-    return assets.map((asset, i) => {
-      const angle = (i * (360 / assets.length) * Math.PI) / 180;
-      const x = Math.cos(angle) * 10;
-      const y = Math.sin(angle) * 10;
-      const val = feelingResults?.[asset.id as keyof typeof feelingResults] || 50;
-      const opacity = 0.2 + (val / 100) * 0.8;
-
-      return { ...asset, x, y, val, opacity };
-    });
-  }, [feelingResults]);
-
   return (
     <g transform="translate(50, 50)">
       {/* Ambient background grid / pattern */}
@@ -233,12 +210,12 @@ const MeNodeCenter: FC = memo(() => {
           <stop offset="70%" stopColor="#0f172a" stopOpacity="0.1" />
           <stop offset="100%" stopColor="transparent" stopOpacity="0" />
         </radialGradient>
-        <radialGradient id="meCoreGrad" cx="35%" cy="32%" r="68%">
-          <stop offset="0%" stopColor="#eafffb" />
-          <stop offset="38%" stopColor="#5eead4" />
-          <stop offset="76%" stopColor="#0f766e" />
-          <stop offset="100%" stopColor="#082f34" />
-        </radialGradient>
+        <linearGradient id="meCoreGrad" x1="22%" y1="12%" x2="72%" y2="88%">
+          <stop offset="0%" stopColor="#8ffdf0" />
+          <stop offset="45%" stopColor="#2dd4bf" />
+          <stop offset="78%" stopColor="#0f766e" />
+          <stop offset="100%" stopColor="#05292d" />
+        </linearGradient>
       </defs>
       
       {/* Cinematic Aura Layers */}
@@ -272,26 +249,17 @@ const MeNodeCenter: FC = memo(() => {
       />
 
       <g className="pointer-events-none" style={{ filter: "drop-shadow(0 0 3px rgba(255,255,255,0.8))" }}>
-        {/* Human Icon inside the center node */}
-        <circle cx={0} cy={-1.6} r={1.8} fill="#ffffff" />
-        <path 
-          d="M -3.1 2.8 Q 0 -0.2 3.1 2.8" 
-          fill="none" 
-          stroke="#ffffff" 
-          strokeWidth={1.05} 
-          strokeLinecap="round"
-        />
-        
-        {/* "أنت" Label — Repositioned for new radii */}
         <text 
-          y={17.5} 
+          y={0} 
           textAnchor="middle" 
+          dominantBaseline="middle"
+          direction="rtl"
           fontSize="4.35" 
           fontWeight="900" 
-          fill="#5eead4"
+          fill="#ffffff"
           style={{ 
             letterSpacing: "0.15em",
-            filter: "drop-shadow(0 0 6px rgba(45, 212, 191, 0.9))" 
+            filter: "drop-shadow(0 0 7px rgba(255, 255, 255, 0.75))" 
           }}
         >
           أنت
@@ -300,28 +268,6 @@ const MeNodeCenter: FC = memo(() => {
       
       {/* No text label here — label is rendered as HTML overlay in DawayirCanvas */}
 
-      {/* Asset Indicators around the Me Node */}
-      {indicators.map((asset) => (
-        <g key={asset.id} transform={`translate(${asset.x}, ${asset.y})`}>
-          <circle r={2} fill="rgba(15, 23, 42, 0.8)" stroke="rgba(255,255,255,0.1)" strokeWidth={0.2} />
-          <SafeMotionCircle 
-            r={2} 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth={0.3}
-            strokeDasharray="12.56" // 2 * PI * 2
-            strokeDashoffset={12.56 * (1 - asset.val / 100)}
-            className={asset.color}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: asset.opacity }}
-          />
-          <foreignObject x="-1.2" y="-1.2" width="2.4" height="2.4">
-            <div className={`w-full h-full flex items-center justify-center ${asset.color}`}>
-              <asset.icon style={{ width: '1.2px', height: '1.2px' }} strokeWidth={3} />
-            </div>
-          </foreignObject>
-        </g>
-      ))}
     </g>
   );
 });
@@ -529,8 +475,6 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
         </>
       ) : (
         <g className="pointer-events-none">
-          {/* Native SVG Human Icon - High Contrast */}
-          <circle cx={baseX} cy={baseY - 1.2} r={1.4} fill="#ffffff" />
           <path 
             d={`M ${baseX - 2.2} ${baseY + 1.8} Q ${baseX} ${baseY - 0.2} ${baseX + 2.2} ${baseY + 1.8}`} 
             fill="none" 
