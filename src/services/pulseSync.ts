@@ -14,6 +14,10 @@ export async function pushPulseLog(entry: PulseEntry): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession();
   const authenticatedUserId = session?.user?.id || null;
 
+  if (runtimeEnv.isDev) {
+    console.log(`[PulseSync] Pushing pulse: mode=${mode}, user=${authenticatedUserId}, session=${sessionId}`);
+  }
+
   const basePayload = {
     session_id: sessionId,
     user_id: authenticatedUserId,

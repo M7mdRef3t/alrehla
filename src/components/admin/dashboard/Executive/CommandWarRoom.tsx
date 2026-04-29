@@ -11,6 +11,7 @@ import { SecuritySentinel } from "../Overview/components/SecuritySentinel";
 import { SystemHealth } from "../Overview/components/SystemHealth";
 import { RecoveryWidget } from "../Overview/components/RecoveryWidget";
 import { OpsInsights } from "../Overview/components/OpsInsights";
+import { TruthCallerMiniFeed } from "../Users/TruthCallerMiniFeed";
 
 import { fetchOverviewStats } from "@/services/admin/adminAnalytics";
 import { fetchSystemHealth, fetchOwnerOpsReport, fetchOpsInsights } from "@/services/admin/adminReports";
@@ -70,6 +71,9 @@ export const CommandWarRoom: FC = () => {
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto" dir="rtl">
+            
+            {/* Proactive Intervention Radar */}
+            <TruthCallerMiniFeed />
             
             {/* Primary Radar - Alerts */}
             <AlertsPanel />

@@ -9,6 +9,17 @@
    LIGHT MODE — (Default / :root)
    ════════════════════════════════════════════════ */
 :root {
+  background-color: var(--space-void);
+  color: var(--consciousness-text);
+}
+
+html, body {
+  background-color: #02040a !important;
+  color: var(--consciousness-text);
+  min-height: 100vh;
+}
+
+:root {
   /* 🎨 Space Palette — Light */
   --space-void:    #f1f5f9;   /* slate-100 — الخلفية الرئيسية */
   --space-950:     #e2e8f0;   /* slate-200 */

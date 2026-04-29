@@ -36,6 +36,8 @@ import {
   Wind,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Maximize2,
   Minimize2
 } from "lucide-react";
@@ -86,6 +88,7 @@ const HealthMonitorPanel = lazy(() => import("./HealthMonitorPanel").then(m => (
 const CreativeDashboard = lazy(() => import("./dashboard/Intelligence/CreativeDashboard").then(m => ({ default: m.CreativeDashboard })));
 const SalesEnablementPanel = lazy(() => import("./dashboard/Intelligence/SalesEnablementPanel").then(m => ({ default: m.SalesEnablementPanel })));
 const ConsciousnessGraph = lazy(() => import("./dashboard/Intelligence/ConsciousnessGraph").then(m => ({ default: m.ConsciousnessGraph })));
+const MarkazScreen = lazy(() => import("@/modules/markaz/MarkazScreen"));
 // ── Unified AI Command Hub (replaces 7 individual AI panels) ──────────────────
 const CommandAIHub = lazy(() => import("./dashboard/Intelligence/CommandAIHub").then(m => ({ default: m.CommandAIHub })));
 
@@ -313,19 +316,36 @@ const CollapsibleSidebarGroup: FC<{
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            <div className="space-y-1.5 pt-1.5 pb-2">
+            <motion.div 
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: {
+                  transition: {
+                    staggerChildren: 0.05
+                  }
+                }
+              }}
+              className="space-y-1.5 pt-1.5 pb-2"
+            >
               {visibleItemsInGroup.map((item) => {
                 const isActive = effectiveTab === item.id;
                 return (
-                  <button
+                  <motion.button
                     key={item.id}
+                    variants={{
+                      hidden: { opacity: 0, x: 20 },
+                      visible: { opacity: 1, x: 0 }
+                    }}
+                    whileHover={{ scale: 1.02, x: -4 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handleTabChange(item.id)}
                     className={`relative w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 group/item cursor-pointer overflow-hidden ${
                       isActive
-                        ? "bg-white/10 border border-white/20 text-white shadow-[0_0_20px_rgba(20,184,166,0.15)]"
+                        ? "bg-gradient-to-l from-white/10 to-white/5 border border-white/20 text-white shadow-[0_0_20px_rgba(20,184,166,0.15)]"
                         : "border border-transparent text-slate-400 hover:text-slate-100 hover:bg-white/5 hover:border-white/10"
                     }`}
                   >
@@ -336,7 +356,7 @@ const CollapsibleSidebarGroup: FC<{
                       />
                     )}
                     <div className="flex items-center gap-4 relative z-10">
-                      <div className={`p-2 rounded-xl transition-all duration-300 ${isActive ? "text-teal-300 bg-teal-500/20 ring-1 ring-teal-500/50 shadow-[0_0_15px_rgba(20,184,166,0.3)]" : "text-slate-500 group-hover/item:text-slate-300 bg-black/20 shadow-inner border border-white/5 group-hover/item:border-white/10"}`}>
+                      <div className={`p-2.5 rounded-2xl transition-all duration-500 ${isActive ? "text-slate-950 bg-white shadow-[0_0_25px_rgba(255,255,255,0.4)]" : "text-slate-500 group-hover/item:text-slate-300 bg-black/40 shadow-inner border border-white/5 group-hover/item:border-white/10"}`}>
                         {item.icon}
                       </div>
                       <span className={`text-sm font-black tracking-wide transition-all duration-300 ${isActive ? "text-white" : "group-hover/item:-translate-x-1"}`}>
@@ -346,10 +366,10 @@ const CollapsibleSidebarGroup: FC<{
                     <div className={`mr-auto transition-opacity duration-300 flex items-center z-20 ${isActive ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'}`} onClick={(e) => e.stopPropagation()}>
                       <AdminTooltip content={NAV_TOOLTIPS[item.id] || "القسم مخصص للإدارة المركزية"} position="bottom" />
                     </div>
-                  </button>
+                  </motion.button>
                 );
               })}
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -364,6 +384,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const [isDesktopSidebarVisible, setIsDesktopSidebarVisible] = useState<boolean>(true);
   const [isHeaderVisible, setIsHeaderVisible] = useState<boolean>(true);
   const [isMounted, setIsMounted] = useState(false);
+  const [activeGroupTitle, setActiveGroupTitle] = useState<string>("");
 
   useEffect(() => {
     setIsMounted(true);
@@ -546,7 +567,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     <AdminGate>
       <CommandHalo />
       <AdminCopilotModal />
-      <div className="admin-cockpit command-pulse-fast min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-200 flex flex-col lg:flex-row relative isolate selection:bg-teal-500/30 font-sans overflow-hidden transition-colors duration-500">
+      <div dir="rtl" className="admin-cockpit command-pulse-fast min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-200 flex flex-col lg:flex-row relative isolate selection:bg-teal-500/30 font-sans overflow-hidden transition-colors duration-500 w-full">
         
         {/* Mobile Top Stats Bar */}
         <div className="lg:hidden w-full flex justify-between items-center bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-2 px-4 shadow-sm text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest z-10 shrink-0 transition-colors">
@@ -569,19 +590,25 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           aria-hidden="true"
         />
 
-        <aside
-          className={`
-            admin-sidebar fixed lg:sticky top-0 right-0 h-screen flex-shrink-0 border-l border-white/10 bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl
-            flex flex-col z-50 overflow-hidden select-none shadow-[0_0_60px_rgba(0,0,0,0.5)]
-            transition-[transform,width,opacity,border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
-            ${
-              isSidebarOpen
-                ? "translate-x-0 w-72 border-r border-white/5 opacity-100 lg:translate-x-0"
-                : "translate-x-full w-72 border-transparent opacity-0 pointer-events-none lg:pointer-events-auto"
-            }
-            ${isDesktopSidebarVisible ? "lg:w-72 lg:translate-x-0 lg:opacity-100 lg:border-white/5" : "lg:w-0 lg:translate-x-full lg:opacity-0 lg:border-transparent"}
-          `}
-        >
+          {/* 🔱 Navigation Drawer (Sovereign OS Style) */}
+          <motion.aside
+            dir="rtl"
+            initial={false}
+            animate={{ 
+              x: isDesktopSidebarVisible || isSidebarOpen ? 0 : "120%",
+              opacity: isDesktopSidebarVisible || isSidebarOpen ? 1 : 0,
+              scale: isDesktopSidebarVisible || isSidebarOpen ? 1 : 0.95,
+            }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 280, 
+              damping: 28,
+              mass: 0.8
+            }}
+            className={`fixed top-0 right-0 z-[60] h-full w-[280px] lg:w-[320px] bg-slate-900/60 dark:bg-[#030712]/80 backdrop-blur-3xl border-l border-white/5 shadow-[0_0_100px_rgba(0,0,0,0.5)] flex flex-col transition-shadow duration-700 ${
+              isDesktopSidebarVisible ? "md:relative md:translate-x-0" : "md:fixed"
+            }`}
+          >
           <div className="pointer-events-none absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-teal-400/20 to-transparent opacity-70" />
           <div className="p-6 lg:p-8 border-b border-white/5 relative group flex items-center justify-between bg-transparent transition-colors duration-500">
             <div className="flex items-center gap-4">
@@ -596,19 +623,19 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
             <button
               className="p-2 bg-slate-800/50 rounded-lg text-slate-300 hover:text-white transition-colors border border-slate-700/50"
               onClick={() => {
-                if (window.innerWidth >= 1024) {
+                if (window.innerWidth >= 768) {
                   setIsDesktopSidebarVisible(false);
                   return;
                 }
                 setIsSidebarOpen(false);
               }}
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 text-rose-500" />
             </button>
           </div>
 
           <nav className="flex-1 overflow-y-auto p-4 py-8 space-y-8 custom-scrollbar">
-            {NAV_GROUPS.map((group) => {
+            {NAV_GROUPS.filter(g => !activeGroupTitle || g.title === activeGroupTitle).map((group) => {
               const visibleItemsInGroup = canSeeAdvancedTabs
                 ? group.items
                 : group.items.filter((item) => !DEVELOPER_PLUS_TABS.includes(item.id));
@@ -648,18 +675,22 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
               <span>قطع الاتصال</span>
             </button>
           </footer>
-        </aside>
+        </motion.aside>
 
         {!isDesktopSidebarVisible && (
-          <button
+          <motion.button
             type="button"
+            initial={{ x: 40, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            whileHover={{ x: -5, width: 60 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setIsDesktopSidebarVisible(true)}
-            className="hidden lg:flex fixed right-0 top-6 z-40 items-center justify-center rounded-l-xl border-y border-l border-slate-200 dark:border-slate-700/70 bg-white dark:bg-[#0B0F19] p-3 text-slate-400 dark:text-slate-500 shadow-[0_4px_24px_rgba(0,0,0,0.05)] transition-all duration-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-500/30 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:pr-4 group active:scale-95 origin-right"
-            aria-label="إظهار القائمة الجانبية"
-            title="إظهار القائمة الجانبية (Ctrl+B أو [)"
+            className="flex fixed right-0 top-1/2 -translate-x-0 -translate-y-1/2 z-[70] items-center justify-center rounded-l-3xl border-y border-l border-amber-500/30 bg-[#0B0F19]/90 backdrop-blur-3xl p-5 text-amber-400 shadow-[0_0_50px_rgba(245,158,11,0.2)] transition-all duration-500 hover:text-white group overflow-hidden pointer-events-auto"
+            aria-label="فتح لوحة التحكم"
           >
-            <PanelRightOpen className="w-5 h-5 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:-translate-x-1" />
-          </button>
+            <ChevronLeft size={24} strokeWidth={2.5} className="transition-transform duration-500 group-hover:scale-110" />
+            <div className="absolute inset-y-0 right-0 w-1 bg-gradient-to-b from-amber-400 to-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.6)]" />
+          </motion.button>
         )}
 
         <main
@@ -670,13 +701,17 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           {!isHeaderVisible && (
             <div className="absolute top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
               <motion.button
-                initial={{ y: -20, opacity: 0 }}
+                type="button"
+                initial={{ y: -40, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="mt-2 p-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-full text-slate-400 hover:text-white backdrop-blur-xl pointer-events-auto transition-all shadow-2xl group"
+                whileHover={{ y: 5, height: 45 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setIsHeaderVisible(true)}
-                title="إظهار الهيدر"
+                className="flex fixed top-0 left-1/2 -translate-x-1/2 z-[70] items-center justify-center rounded-b-3xl border-x border-b border-amber-500/30 bg-[#0B0F19]/90 backdrop-blur-3xl px-8 py-3 text-amber-400 shadow-[0_0_50px_rgba(245,158,11,0.2)] transition-all duration-500 hover:text-white group overflow-hidden pointer-events-auto"
+                aria-label="فتح القائمة العلوية"
               >
-                <PanelTopOpen className="w-5 h-5 transition-transform group-hover:translate-y-0.5" />
+                <ChevronDown size={24} strokeWidth={2.5} className="transition-transform duration-500 group-hover:scale-110" />
+                <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-amber-400 to-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.6)]" />
               </motion.button>
             </div>
           )}
@@ -684,13 +719,13 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           <AnimatePresence>
             {isHeaderVisible && (
               <motion.header
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                className={`border-b bg-white/70 dark:bg-[#0B0F19]/60 backdrop-blur-3xl flex items-center justify-between px-6 lg:px-12 flex-shrink-0 z-10 transition-[border-color,background-color,box-shadow] duration-500 shadow-sm overflow-hidden ${
+                initial={{ y: -100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -100, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                className={`border-b bg-white/70 dark:bg-[#0B0F19]/80 backdrop-blur-3xl flex items-center justify-between px-6 lg:px-12 flex-shrink-0 z-[50] transition-all duration-500 shadow-xl overflow-hidden ${
                   isDesktopSidebarHidden
-                    ? "border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.3)]"
+                    ? "border-amber-500/20 shadow-[0_10px_40px_rgba(245,158,11,0.1)]"
                     : "border-white/5"
                 }`}
               >
@@ -701,26 +736,6 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                     onClick={() => setIsSidebarOpen(true)}
                   >
                     <Menu className="w-6 h-6" />
-                  </button>
-                  {isDesktopSidebarVisible && (
-                    <button
-                      type="button"
-                      className="hidden lg:flex items-center justify-center p-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:border-rose-300 dark:hover:border-rose-500/30 hover:shadow-[0_0_15px_rgba(244,63,94,0.15)] transition-all duration-300 group active:scale-95"
-                      onClick={() => setIsDesktopSidebarVisible(false)}
-                      aria-label="إخفاء القائمة الجانبية"
-                      title="إخفاء القائمة الجانبية (Ctrl+B أو [)"
-                    >
-                      <PanelRightClose className="w-5 h-5 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:translate-x-1" />
-                    </button>
-                  )}
-                  
-                  <button
-                    type="button"
-                    className="flex items-center justify-center p-2.5 lg:p-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-xl lg:rounded-2xl text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:border-amber-300 dark:hover:border-amber-500/30 transition-all duration-300 group active:scale-95"
-                    onClick={() => setIsHeaderVisible(false)}
-                    title="إخفاء الهيدر"
-                  >
-                    <PanelTopClose className="w-5 h-5 transition-transform group-hover:-translate-y-0.5" />
                   </button>
 
                   <div className="flex flex-col">
@@ -734,7 +749,18 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                   </div>
                 </div>
 
-                  <div className="flex items-center gap-4 lg:gap-5">
+                <div className="hidden xl:flex items-center">
+                  {/* <AdminTabs 
+                    tabs={[
+                      { id: "", label: "الكل" },
+                      ...NAV_GROUPS.map(g => ({ id: g.title, label: g.title }))
+                    ]}
+                    activeTab={activeGroupTitle}
+                    onChange={(id) => setActiveGroupTitle(id)}
+                  /> */}
+                </div>
+
+                <div className="flex items-center gap-4 lg:gap-5 flex-shrink-0">
                     <CommandHUD />
 
                     <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden lg:block mx-1" />
@@ -750,7 +776,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                         }}
                         className={`p-3 lg:p-4 rounded-xl lg:rounded-2xl border transition-all active:scale-95 group shadow-lg ${isContentEditingEnabled
                           ? "bg-teal-500/20 border-teal-500/50 text-teal-600 dark:text-teal-300 ring-1 ring-teal-500/30"
-                          : "bg-slate-100 dark:bg-[#111827] border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600"
+                          : "bg-white dark:bg-[#111827] border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600"
                           }`}
                       >
                         <Pencil className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
@@ -773,6 +799,34 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                       >
                         <Database className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                       </button>
+                    </AdminTooltip>
+
+                    <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden lg:block mx-1" />
+                    
+                    {/* 🔱 Sidebar Toggle (Desktop/Mid) */}
+                    <AdminTooltip content={isDesktopSidebarVisible ? "طي القائمة (Ctrl+B)" : "توسيع القائمة (Ctrl+B)"} position="bottom">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setIsDesktopSidebarVisible(!isDesktopSidebarVisible)}
+                        style={{ backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
+                        className="hidden md:flex flex-shrink-0 items-center justify-center w-10 h-10 lg:w-12 lg:h-12 rounded-2xl border text-slate-500 dark:text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/30 transition-colors shadow-lg"
+                      >
+                        {isDesktopSidebarVisible ? <ChevronRight size={24} strokeWidth={2.5} /> : <ChevronLeft size={24} strokeWidth={2.5} />}
+                      </motion.button>
+                    </AdminTooltip>
+
+                    {/* 🔱 Header Toggle (Desktop/Mid Only - Controls Header Vis) */}
+                    <AdminTooltip content="طي القائمة العلوية" position="bottom">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setIsHeaderVisible(false)}
+                        style={{ backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
+                        className="flex flex-shrink-0 items-center justify-center w-10 h-10 lg:w-12 lg:h-12 rounded-2xl border text-slate-500 dark:text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/30 transition-colors shadow-lg"
+                      >
+                        <ChevronUp size={24} strokeWidth={2.5} />
+                      </motion.button>
                     </AdminTooltip>
 
                     <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden lg:block mx-1" />
@@ -809,6 +863,12 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "flow-map" && (
                   <div className="space-y-12">
                     <ConsciousnessMap />
+                  </div>
+                )}
+
+                {effectiveTab === "markaz" && (
+                  <div className="bg-[#030712] rounded-[3rem] overflow-hidden border border-white/5 shadow-2xl">
+                    <MarkazScreen />
                   </div>
                 )}
 

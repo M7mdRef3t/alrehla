@@ -247,6 +247,7 @@ export function useNextStepRouting({
     if (screen !== "map" && screen !== "tools") {
       nextStepTelemetry.clearSession();
       setNextStepDecision(null);
+      setActiveIntervention(null); // clear modal when leaving map/tools
       return;
     }
 

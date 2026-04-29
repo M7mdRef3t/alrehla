@@ -16,10 +16,10 @@ import { AwarenessSkeleton } from "@/modules/meta/AwarenessSkeleton";
 const UsersPanel                = lazy(() => import("../Users/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const UserStatePanel            = lazy(() => import("../Data/UserStatePanel").then(m => ({ default: m.UserStatePanel })));
 const ConsciousnessArchivePanel = lazy(() => import("../Consciousness/ConsciousnessArchivePanel").then(m => ({ default: m.ConsciousnessArchivePanel })));
-const SurveyResultsPanel        = lazy(() => import("../Data/SurveyResultsPanel").then(m => ({ default: m.SurveyResultsPanel })));
+const TruthCallerPanel          = lazy(() => import("../Users/TruthCallerPanel").then(m => ({ default: m.TruthCallerPanel })));
 
 // ─── Tab definition ───────────────────────────────────────────────────────────
-type PeopleTab = "travelers" | "pulse" | "archive" | "surveys";
+type PeopleTab = "travelers" | "pulse" | "archive" | "surveys" | "call-of-truth";
 
 interface TabConfig {
   id: PeopleTab;
@@ -68,6 +68,15 @@ const TABS: TabConfig[] = [
     glow: "rgba(14,165,233,0.15)",
     description: "نتائج الاستبيانات وردود أفعال المسافرين",
   },
+  {
+    id: "call-of-truth",
+    label: "Call of Truth",
+    arabicLabel: "نداء حق",
+    icon: <Sparkles className="w-4 h-4" />,
+    accent: "indigo",
+    glow: "rgba(99,102,241,0.15)",
+    description: "محرك التدخل الروحي والتحليل الاستباقي للرنين الرقمي",
+  },
 ];
 
 const ACCENT_CLASSES: Record<string, { border: string; text: string; bg: string; ring: string }> = {
@@ -75,6 +84,7 @@ const ACCENT_CLASSES: Record<string, { border: string; text: string; bg: string;
   rose:    { border: "border-rose-500/30",  text: "text-rose-400",  bg: "bg-rose-500/10",  ring: "ring-rose-500/40" },
   amber:   { border: "border-amber-500/30", text: "text-amber-400", bg: "bg-amber-500/10", ring: "ring-amber-500/40" },
   sky:     { border: "border-sky-500/30",   text: "text-sky-400",   bg: "bg-sky-500/10",   ring: "ring-sky-500/40" },
+  indigo:  { border: "border-indigo-500/30", text: "text-indigo-400", bg: "bg-indigo-500/10", ring: "ring-indigo-500/40" },
 };
 
 export const CommandPeopleHub: FC = () => {
@@ -178,7 +188,7 @@ export const CommandPeopleHub: FC = () => {
             {activeTab === "travelers" && <UsersPanel />}
             {activeTab === "pulse"     && <UserStatePanel />}
             {activeTab === "archive"   && <ConsciousnessArchivePanel />}
-            {activeTab === "surveys"   && <SurveyResultsPanel />}
+            {activeTab === "call-of-truth" && <TruthCallerPanel />}
           </Suspense>
         </motion.div>
       </AnimatePresence>

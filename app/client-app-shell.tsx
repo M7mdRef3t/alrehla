@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, Suspense, useState } from "react";
+import { useCallback, useEffect, Suspense, useState, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AwarenessSkeleton } from "@/modules/meta/AwarenessSkeleton";
 import { ErrorBoundary } from "@/modules/action/ErrorBoundary";
@@ -250,6 +251,20 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
   const [shouldLoadFullApp, setShouldLoadFullApp] = useState(!forceLanding);
   const [lockFullAppMode, setLockFullAppMode] = useState(!forceLanding);
   const [landingAuthIntent, setLandingAuthIntent] = useState<PostAuthIntent | null>(null);
+  const [activePathname, setActivePathname] = useState("/");
+  const nextPathname = usePathname();
+
+  useEffect(() => {
+    setActivePathname(nextPathname || "/");
+  }, [nextPathname]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setActivePathname(window.location.pathname);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof Element === "undefined" || typeof SVGCircleElement === "undefined") return;
@@ -496,7 +511,9 @@ export function ClientAppShell({ onBeforeInit, puckData, forceLanding = false }:
         )}
         <AnalyticsConsentBanner />
         <AnalyticsDiagnosticsOverlay />
-        <FloatingWhatsApp placement={shouldLoadFullApp ? "global_fab_app" : "global_fab_landing"} />
+        {!(activePathname.includes("/admin") || activePathname.includes("/owner") || activePathname.includes("/analytics") || activePathname.includes("/coach") || nextPathname?.includes("/admin")) && (
+          <FloatingWhatsApp placement={shouldLoadFullApp ? "global_fab_app" : "global_fab_landing"} />
+        )}
         {runtimeEnv.isProd && (
           <Suspense fallback={<AwarenessSkeleton />}>
             <Analytics />

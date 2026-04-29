@@ -5,6 +5,18 @@
    This must match next-themes attribute="class" in layout.tsx */
 @custom-variant dark (&:where(.dark, .dark *));
 
+html {
+  direction: ltr; /* scrollbar on RIGHT — content uses dir="rtl" on components */
+  overflow-y: scroll; /* Always reserve scrollbar track to prevent horizontal layout shift */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #02040a !important;
+  color: #f8fafc;
+}
+
 @theme {
   --color-space-void: var(--space-void, #0a0e1f);
   --color-space-950: var(--space-950, #0f1629);
@@ -65,6 +77,10 @@
 }
 
 @layer base {
+  html {
+    /* scrollbar always visible (overflow-y: scroll on root) - see rule above */
+  }
+  
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
@@ -272,14 +288,21 @@
   width: 100%;
   height: 100%;
   background-image:
-    linear-gradient(rgba(20,184,166,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(20,184,166,0.025) 1px, transparent 1px);
-  background-size: 50px 50px;
+    linear-gradient(rgba(0, 240, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.12) 1px, transparent 1px);
+  background-size: 60px 60px;
   background-position: center bottom;
-  mask-image: radial-gradient(ellipse 70% 50% at 50% 50%, black 15%, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 50% at 50% 50%, black 10%, transparent 70%);
   will-change: transform;
+  opacity: 0.8;
   transform-origin: center center;
   transition: transform 1.5s cubic-bezier(0.2, 1, 0.3, 1);
+  animation: map-grid-drift 60s linear infinite;
+}
+
+@keyframes map-grid-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 60px 60px; }
 }
 
 .map-nebula {
@@ -287,16 +310,31 @@
   inset: -50%;
   width: 200%;
   height: 200%;
-  /* Fallback gradients if no variable is passed */
   background-image: 
-    radial-gradient(circle at 40% 60%, var(--nebula-color-1, rgba(20,184,166,0.08)) 0%, transparent 45%),
-    radial-gradient(circle at 60% 40%, var(--nebula-color-2, rgba(79,70,229,0.05)) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, var(--nebula-color-3, rgba(245,158,11,0.04)) 0%, transparent 60%);
-  filter: blur(50px);
+    radial-gradient(circle at 40% 60%, var(--nebula-color-1, rgba(0, 240, 255, 0.14)) 0%, transparent 45%),
+    radial-gradient(circle at 60% 40%, var(--nebula-color-2, rgba(245, 166, 35, 0.08)) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, var(--nebula-color-3, rgba(0, 240, 255, 0.06)) 0%, transparent 60%);
+  filter: blur(45px);
   will-change: transform;
-  opacity: 0.7;
+  opacity: 0.9;
   pointer-events: none;
   transition: background-image 2s ease-in-out;
+}
+
+/* ─── Ambient Orb Drift Animations (shared Hero + Map) ─── */
+@keyframes orb-drift1 {
+  0%   { transform: translate(0%, 0%) scale(1); }
+  50%  { transform: translate(-6%, 8%) scale(1.15); }
+  100% { transform: translate(4%, -5%) scale(0.85); }
+}
+@keyframes orb-drift2 {
+  0%   { transform: translate(0%, 0%) scale(1); }
+  50%  { transform: translate(8%, -10%) scale(1.2); }
+  100% { transform: translate(-5%, 6%) scale(0.9); }
+}
+@keyframes orb-drift3 {
+  0%   { transform: translate(0%, 0%) scale(1); }
+  100% { transform: translate(10%, -15%) scale(1.2); }
 }
 
 .maraya-fallback {

@@ -55,8 +55,9 @@ export type AdminTab =
   | "support-tickets"
   | "success-stories"
   | "command-funnel"
+  | "people-hub"
   | "growth-hub"
-  | "people-hub";
+  | "markaz";
 
 export type NavGroup = {
   title: string;
@@ -73,6 +74,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "command", label: "غرفة القيادة", icon: <ShieldCheck className="h-4 w-4 text-amber-500" /> },
       { id: "exec-overview", label: "نبض الإبداع والمنظومة", icon: <Sparkles className="h-4 w-4 text-rose-400" /> },
+      { id: "markaz", label: "برج حورس (نداء الحق)", icon: <Target className="h-4 w-4 text-emerald-400" /> },
       { id: "flow-map", label: "خريطة التدفق الحي", icon: <Workflow className="h-4 w-4 text-sky-400" /> },
       { id: "dawayir-live", label: "دوائر لايف (Live)", icon: <Zap className="h-4 w-4 text-amber-400" /> },
     ],
@@ -164,6 +166,7 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "command-funnel": "مسار التحويل المتقدم (Funnel)",
   "growth-hub": "رادار التوسع والنمو",
   "people-hub": "مركز المسافرين والوعي",
+  "markaz": "برج حورس (المركز التنفيذي)",
 };
 
 export const DEVELOPER_PLUS_TABS: AdminTab[] = ["ai-studio"];
@@ -200,4 +203,5 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "command-funnel": "مسار التحويل المتقدم: تحليل السقوط والنجاح داخل Funnel المنصة.",
   "growth-hub": "محرك التوسع: رادار شامل للنمو، الإيرادات، قصص النجاح، وحملات الانتشار.",
   "people-hub": "مركز المسافرين: إدارة شاملة للمسافرين، نبض الوعي، وأرشيف الإدراك الجماعي.",
+  "markaz": "برج حورس: غرفة العمليات التنفيذية لنداء الحق والتدخلات المباشرة مع المسافرين.",
 };

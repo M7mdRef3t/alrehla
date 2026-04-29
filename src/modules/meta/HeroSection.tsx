@@ -60,6 +60,7 @@ const HERO_STYLES = `
     align-items: center;
     overflow: hidden;
     background: var(--void);
+    /* Mobile: will be overridden to flat + contain */
   }
 
   .hero-layer {
@@ -624,6 +625,7 @@ const HERO_STYLES = `
   }
 
   .neural-dust-field {
+    display: none; /* Removed per user request */
     position: absolute;
     inset: -20%;
     background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px);
@@ -737,6 +739,7 @@ const HERO_STYLES = `
   }
 
   .hero-starfield {
+    display: none; /* Removed per user request */
     position: absolute;
     inset: -50%;
     width: 200%;
@@ -944,8 +947,18 @@ const HERO_STYLES = `
       overflow-x: hidden;
       width: 100%;
       min-height: 100svh;
-      overflow-y: visible;
-      transform-style: flat;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      transform-style: flat !important;
+      perspective: none !important;
+      contain: layout style;
+    }
+
+    .hero-root *,
+    .hero-root *::before,
+    .hero-root *::after {
+      transform-style: flat !important;
+      perspective: none !important;
     }
 
     .hero-content-wrapper {
@@ -1083,7 +1096,11 @@ const HERO_STYLES = `
       overflow: visible;
     }
 
-    /* Mobile Performance Optimizations */
+    /* ══════════════════════════════════════════════════════════
+       Mobile Performance Optimizations (Deep GPU Fix)
+       Root cause: backdrop-filter compositing + active CSS
+       animations + preserve-3d = GPU thrashing on mobile.
+       ══════════════════════════════════════════════════════════ */
     @media (max-width: 1024px) {
       .hero-root *,
       .hero-root *::before,
@@ -1091,36 +1108,81 @@ const HERO_STYLES = `
         scroll-behavior: auto !important;
       }
 
+      /* Kill ALL backdrop-filter on mobile — this is the #1 cause of jitter */
       .hero-command-bar, 
       .pulse-badge, 
       .trust-pill, 
       .metric-card, 
-      .node-tooltip-body {
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-        background: rgba(8, 12, 22, 0.85) !important;
+      .node-tooltip-body,
+      .hero-badge {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(8, 12, 22, 0.92) !important;
       }
 
+      /* Kill all background CSS animations — not just slow them */
       .ambient-orb,
+      .ambient-orb-1,
+      .ambient-orb-2,
+      .ambient-orb-3 {
+        animation: none !important;
+        will-change: auto !important;
+        transform: none !important;
+      }
+
       .hero-grid,
       .hero-nebula,
       .hero-starfield,
-      .neural-dust-field,
-      .hero-scan-line {
-        animation-duration: 15s !important; /* Slow down instead of killing */
-      }
-      
-      .hero-content-wrapper {
-        transform: none !important;
-        will-change: auto;
+      .neural-dust-field {
+        animation: none !important;
+        will-change: auto !important;
       }
 
       .hero-scan-line {
         display: none !important;
       }
 
+      /* Kill all will-change on background layers */
+      .hero-layer,
+      .hero-layer--nebula,
+      .hero-layer--starfield,
+      .hero-layer--grid,
+      .hero-layer--dust {
+        will-change: auto !important;
+        transform: none !important;
+      }
+
+      .hero-grid-wrapper {
+        perspective: none !important;
+      }
+
+      .hero-grid {
+        transform: rotateX(45deg) scale(1.2) !important;
+        will-change: auto !important;
+      }
+
+      .hero-content-wrapper {
+        transform: none !important;
+        will-change: auto !important;
+      }
+
       .pulse-badge__dot {
+        animation: none !important;
         opacity: 1 !important;
+      }
+
+      /* Kill the grain overlay — it's expensive */
+      .hero-grain {
+        display: none !important;
+      }
+
+      /* Reduce filter usage */
+      .hero-nebula {
+        filter: blur(30px) !important;
+      }
+
+      .leadership-map__atmosphere {
+        filter: blur(30px) !important;
       }
     }
 
@@ -1637,30 +1699,55 @@ export const HeroSection: FC<HeroSectionProps> = ({
       >
         {/* --- Ambient canvas --- */}
         <div className="hero-canvas" aria-hidden>
-          {/* Layer 3: Deep Nebula */}
-          <motion.div className="hero-layer hero-layer--nebula" style={{ x: nebulaX, y: nebulaY }}>
-            <div className="hero-nebula" />
-            <div className="ambient-orb ambient-orb-3" />
-          </motion.div>
+          {/* Layer 3: Deep Nebula — parallax disabled on mobile via static div */}
+          {isMobile ? (
+            <div className="hero-layer hero-layer--nebula">
+              <div className="hero-nebula" />
+              <div className="ambient-orb ambient-orb-3" />
+            </div>
+          ) : (
+            <motion.div className="hero-layer hero-layer--nebula" style={{ x: nebulaX, y: nebulaY }}>
+              <div className="hero-nebula" />
+              <div className="ambient-orb ambient-orb-3" />
+            </motion.div>
+          )}
 
           {/* Layer 2: Starfield */}
-          <motion.div className="hero-layer hero-layer--starfield" style={{ x: starX, y: starY }}>
-            <div className="hero-starfield" />
-            <div className="ambient-orb ambient-orb-2" />
-          </motion.div>
+          {isMobile ? (
+            <div className="hero-layer hero-layer--starfield">
+              <div className="hero-starfield" />
+              <div className="ambient-orb ambient-orb-2" />
+            </div>
+          ) : (
+            <motion.div className="hero-layer hero-layer--starfield" style={{ x: starX, y: starY }}>
+              <div className="hero-starfield" />
+              <div className="ambient-orb ambient-orb-2" />
+            </motion.div>
+          )}
 
           {/* Layer 1: Foreground Grid */}
-          <motion.div className="hero-layer hero-layer--grid" style={{ x: gridX, y: gridY }}>
-            <div className="hero-grid-wrapper">
-              <div className="hero-grid" />
+          {isMobile ? (
+            <div className="hero-layer hero-layer--grid">
+              <div className="hero-grid-wrapper">
+                <div className="hero-grid" />
+              </div>
+              <div className="ambient-orb ambient-orb-1" />
             </div>
-            <div className="ambient-orb ambient-orb-1" />
-          </motion.div>
+          ) : (
+            <motion.div className="hero-layer hero-layer--grid" style={{ x: gridX, y: gridY }}>
+              <div className="hero-grid-wrapper">
+                <div className="hero-grid" />
+              </div>
+              <div className="ambient-orb ambient-orb-1" />
+            </motion.div>
+          )}
 
-          {/* Layer 4: Neural Dust (Near plane) */}
-          <motion.div className="hero-layer hero-layer--dust" style={{ x: dustX, y: dustY }}>
-            <div className="neural-dust-field" />
-          </motion.div>
+          {/* Layer 4: Neural Dust (Near plane) — skip entirely on mobile */}
+          {!isMobile && (
+            <motion.div className="hero-layer hero-layer--dust" style={{ x: dustX, y: dustY }}>
+              <div className="neural-dust-field" />
+            </motion.div>
+          )}
 
           <div className="hero-grain" />
           <div className="hero-screen-vignette" />

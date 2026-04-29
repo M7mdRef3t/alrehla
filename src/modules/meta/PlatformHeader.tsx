@@ -202,7 +202,12 @@ export const PlatformHeader = memo(function PlatformHeader({
 
   useEffect(() => {
     setHidden(false);
-    window.scrollTo({ top: 0, behavior: "instant" });
+    // Only scroll to top when navigating TO scrollable screens.
+    // landing/map/survey/protocol/diagnosis manage their own scroll context.
+    const NON_SCROLL_SCREENS = ["landing", "map", "dawayir", "survey", "protocol", "diagnosis"];
+    if (!NON_SCROLL_SCREENS.includes(activeScreen ?? "")) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
     lastScrollY.current = 0;
     setScrolled(false);
   }, [activeScreen]);
@@ -264,12 +269,12 @@ export const PlatformHeader = memo(function PlatformHeader({
 
   const headerClassName = `fixed top-0 right-0 left-0 transition-all duration-700 transform ${
     hidden ? "-translate-y-full" : "translate-y-0"
-  } ${
+  } h-14 md:h-16 ${
     isMinimal 
-      ? "h-14 md:h-16 bg-[rgba(3,7,18,0.4)] border-b border-white/5 backdrop-blur-md" 
+      ? "bg-[rgba(3,7,18,0.4)] border-b border-white/5 backdrop-blur-md" 
       : scrolled
-        ? "backdrop-blur-3xl border-b border-white/[0.08] h-16 bg-[rgba(11,15,25,0.82)] shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
-        : "h-20 bg-transparent border-b border-transparent"
+        ? "backdrop-blur-3xl border-b border-white/[0.08] bg-[rgba(11,15,25,0.82)] shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+        : "bg-transparent border-b border-transparent"
   }`;
 
   return (
@@ -294,7 +299,7 @@ export const PlatformHeader = memo(function PlatformHeader({
           whileTap={{ scale: 0.9 }}
           className="relative"
         >
-           <AlrehlaIcon size={isMinimal || scrolled ? 32 : 42} className="transition-all duration-700" />
+           <AlrehlaIcon size={32} className="transition-all duration-700" />
            <motion.div 
              className="absolute inset-0 blur-2xl rounded-full -z-10"
              style={{ backgroundColor: "rgba(201, 168, 76, 0.3)" }}
@@ -307,7 +312,7 @@ export const PlatformHeader = memo(function PlatformHeader({
         </motion.div>
         <div className="flex items-center">
           <AlrehlaWordmark 
-            height={isMinimal || scrolled ? 17 : 22} 
+            height={17} 
             className="transition-all duration-500 group-hover:opacity-80" 
             color="white"
           />

@@ -9,12 +9,11 @@ import ChatInterface from '@/modules/action/Chat/ChatInterface';
 import CanvasComponent from '@/modules/exploration/Canvas/CanvasComponent';
 import FacilitatorChat from '@/modules/action/Chat/FacilitatorChat';
 import { useDawayirEngine, NodeData } from '@/hooks/useDawayirEngine';
-import { Zap as Sparkles, AlertCircle, Heart, ArrowLeft, Loader2, Save, Check, Share2, Activity, Zap, Shield, Clock, Terminal, Brain, ClipboardList } from 'lucide-react';
+import { Zap as Sparkles, Zap } from 'lucide-react';
 import { supabase } from '@/services/supabaseClient';
 import { AutomagicEventPopup } from '@/modules/exploration/Map/AutomagicEventPopup';
 import { AccessManager, SubscriptionInfo } from '../billing/AccessManager';
 import { SymptomSimulation } from '@/modules/action/Chat/SymptomSimulation';
-import { Typewriter } from '@/modules/meta/UI/Typewriter';
 import { useAIOrchestration } from '@/hooks/useAIOrchestration';
 import { useGestureSanctuary } from '@/hooks/useGestureSanctuary';
 import { GenesisOnboarding } from '@/modules/meta/GenesisOnboarding';
@@ -22,10 +21,8 @@ import { signInWithGoogleAtPath } from '@/services/authService';
 
 import { PaywallModal } from './components/PaywallModal';
 import { OracleModal, type OraclePrediction } from './components/OracleModal';
-import { TacticalHUD } from './components/TacticalHUD';
 import { ActionPlanDrawer } from './components/ActionPlanDrawer';
 import { TimelineDrawer } from './components/TimelineDrawer';
-import { MapControlDock } from './components/MapControlDock';
 import { MapSettingsModal } from './components/MapSettingsModal';
 
 export default function DawayirApp() {
@@ -36,16 +33,14 @@ export default function DawayirApp() {
     const [showPaywall, setShowPaywall] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [hasActiveCoach, setHasActiveCoach] = useState(false);
-    const [isShared, setIsShared] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
-    const [sourceStory, setSourceStory] = useState<string | null>(null);
     const [subInfo, setSubInfo] = useState<SubscriptionInfo | null>(null);
     const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
     const [awarenessTokens, setAwarenessTokens] = useState<number | null>(null);
 
     // Predictive AI State
     const [isOracleLoading, setIsOracleLoading] = useState(false);
-    const [oraclePrediction, setOraclePrediction] = useState<any>(null); // To store burnout_probability etc.
+    const [oraclePrediction, setOraclePrediction] = useState<any>(null); 
     const [showOracleModal, setShowOracleModal] = useState(false);
     const [showSimulation, setShowSimulation] = useState(false);
     const [showActionPlan, setShowActionPlan] = useState(false);
@@ -70,17 +65,12 @@ export default function DawayirApp() {
     };
 
     useEffect(() => {
-        // Check for URL parameters
         if (typeof window !== 'undefined') {
             const searchParams = new URLSearchParams(window.location.search);
-            const source = searchParams.get('source');
-            if (source) {
-                setSourceStory(source);
-            }
+            // ... source logic
         }
     }, []);
 
-    // Hook-to-Convo Bridge (Weather -> Dawayir) — Enhanced with Pattern Context
     useEffect(() => {
         if (typeof window === 'undefined') return;
         
@@ -93,7 +83,6 @@ export default function DawayirApp() {
                     if (weatherCtx && weatherCtx.weatherLevel) {
                         window.sessionStorage.removeItem('weather_context');
                         
-                        // Build rich, pattern-aware context for the AI
                         const patternLine = weatherCtx.patternName
                             ? `النمط السلوكي المكتشف: "${weatherCtx.patternName}" — ${weatherCtx.patternDescription || ''}`
                             : `مستوى الاستنزاف: ${weatherCtx.overallHeadline}`;
@@ -113,7 +102,6 @@ export default function DawayirApp() {
                         
                         analyzeAnswers(aiAnswers, subInfo?.features.maxMapNodes || 7);
 
-                        // Bridge Analytics: Track successful landing and context transfer
                         analyticsService.track('weather_bridge_landed', {
                             status: 'success',
                             level: weatherCtx.weatherLevel,
@@ -124,10 +112,6 @@ export default function DawayirApp() {
                     }
                 } catch (e) {
                     logger.error("Failed to parse weather context", e);
-                    analyticsService.track('weather_bridge_failed', {
-                        reason: e instanceof Error ? e.message : 'parse_error',
-                        surface: 'weather-funnel'
-                    });
                 }
             }
         }
@@ -160,7 +144,6 @@ export default function DawayirApp() {
                 ]);
                 setSubInfo(info);
                 await checkCoachConnection(userId);
-                // تحميل الخريطة المحفوظة تلقائياً عند بدء الجلسة
                 await loadMap(userId);
             };
 
@@ -226,31 +209,13 @@ export default function DawayirApp() {
             setShowOracleModal(true);
         } catch (error) {
             logger.error("Failed to query the Oracle:", error);
-            alert("حدث خطأ أثناء تحليل المسار الزمني الخاص بك.");
         } finally {
             setIsOracleLoading(false);
         }
     };
 
-    const handleShareWithCoach = async () => {
-        if (!data?.id || !supabase) return;
-        setIsSharing(true);
-        const { error } = await supabase
-            .from('dawayir_maps')
-            .update({ shared_with_coach: true })
-            .eq('id', data.id);
-
-        setIsSharing(false);
-        if (!error) setIsShared(true);
-    };
-
     const handleNotifyCoach = async () => {
         if (!user || !oraclePrediction || !supabase) return;
-
-        // This is a "Zero-Touch" proactive alert. 
-        // We add a record to a notifications or alerts table that the coach dashboard can listen to.
-        // For the MVP, we can reuse the dawayir_maps metadata or a separate alert.
-        // Let's assume a simple update to the map that flags it as 'urgent_alert'.
 
         setIsSharing(true);
         const { error } = await supabase
@@ -288,14 +253,6 @@ export default function DawayirApp() {
     };
     const shouldBlockForGenesis = Boolean(user && isOnboarded === false);
     const isOnboardingStateLoading = Boolean(user && isOnboarded === null);
-    const tokenDisplay = typeof awarenessTokens === 'number' ? Math.max(awarenessTokens, 0) : null;
-    const tokenToneClass = tokenDisplay === null
-        ? 'bg-white/5 border-white/10 text-slate-300'
-        : tokenDisplay <= 20
-            ? 'bg-rose-500/15 border-rose-400/40 text-rose-200'
-            : tokenDisplay <= 40
-                ? 'bg-amber-500/15 border-amber-400/40 text-amber-200'
-                : 'bg-teal-500/15 border-teal-400/40 text-teal-200';
 
     return (
         <div
@@ -303,7 +260,6 @@ export default function DawayirApp() {
             style={{ background: "#020408", colorScheme: "dark" }}
             {...gestureHandlers}
         >
-            {/* Sanctuary Overlay — Cinematic Void */}
             <AnimatePresence>
                 {isSanctuary && (
                     <motion.div
@@ -316,9 +272,7 @@ export default function DawayirApp() {
                         onClick={exitSanctuary}
                         dir="rtl"
                     >
-                        {/* Ambient teal orb */}
                         <div aria-hidden style={{ position:"absolute", width:480, height:480, borderRadius:"50%", background:"radial-gradient(circle, rgba(45,212,191,0.06) 0%, transparent 65%)", top:"50%", left:"50%", transform:"translate(-50%,-50%)", pointerEvents:"none" }} />
-
                         <motion.div
                             initial={{ scale: 0.85, opacity: 0, filter: "blur(8px)" }}
                             animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
@@ -326,7 +280,6 @@ export default function DawayirApp() {
                             className="text-center space-y-6 p-8 max-w-xs"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* Pulse rings */}
                             <div className="relative flex items-center justify-center mx-auto" style={{ width: 96, height: 96 }}>
                                 <motion.div
                                     className="absolute rounded-full"
@@ -347,14 +300,12 @@ export default function DawayirApp() {
                                     <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "#2dd4bf", boxShadow: "0 0 14px rgba(45,212,191,0.9)" }} />
                                 </div>
                             </div>
-
                             <div className="space-y-3">
                                 <h2 className="text-2xl font-black text-white tracking-tight">الكون واقف معاك</h2>
                                 <p className="text-sm leading-relaxed font-medium" style={{ color: "rgba(148,163,184,0.65)" }}>
                                     كل حاجة متوقفة دلوقتي. خذ نفسًا وارجع لما تكون جاهز.
                                 </p>
                             </div>
-
                             <button
                                 onClick={exitSanctuary}
                                 className="text-[11px] font-black uppercase tracking-[0.28em] transition-colors"
@@ -369,7 +320,6 @@ export default function DawayirApp() {
                 )}
             </AnimatePresence>
 
-            {/* Cinematic ambient background */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
                 <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"radial-gradient(circle, rgba(20,184,166,0.11) 0%, transparent 70%)", top:"-15%", right:"-8%", animation:"av-orb-drift 38s ease-in-out infinite alternate" }} />
                 <div style={{ position:"absolute", width:560, height:560, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%)", bottom:"-18%", left:"-10%", animation:"av-orb-drift 52s ease-in-out infinite alternate-reverse" }} />
@@ -377,94 +327,28 @@ export default function DawayirApp() {
                 <div style={{ position:"absolute", inset:0, backgroundImage:"linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px)", backgroundSize:"68px 68px", WebkitMaskImage:"radial-gradient(ellipse 85% 80% at 50% 50%, black 20%, transparent 100%)", maskImage:"radial-gradient(ellipse 85% 80% at 50% 50%, black 20%, transparent 100%)", opacity:0.55 }} />
             </div>
 
-            {/* Navbar — fixed 60px */}
-            <div className="absolute top-0 left-0 w-full h-[60px] px-4 sm:px-6 flex justify-between items-center z-40 pointer-events-auto" style={{ background:"rgba(2,4,8,0.88)", backdropFilter:"blur(20px)", borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-500/30 flex items-center justify-center">
-                        <Activity className="w-4 h-4 text-teal-400" />
-                    </div>
-                    <h1 className="text-xl font-black text-white tracking-tight">دواير</h1>
-                    {/* Timeline Button */}
-                    {user && data && (
-                        <button
-                            onClick={() => setShowTimeline(true)}
-                            className="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center hover:bg-indigo-500/25 transition-all"
-                            title="خط الزمن"
-                        >
-                            <Clock className="w-4 h-4 text-indigo-400" />
-                        </button>
-                    )}
-                </div>
-                <div className="flex items-center gap-4">
-                    {user ? (
-                        <>
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-md ${tokenToneClass}`}>
-                                <span className="text-xs font-black font-mono tracking-tight">{`${tokenDisplay ?? '--'}/100 طاقة`}</span>
-                            </div>
-                            <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-                                <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
-                                <span className="text-xs font-bold text-slate-300 font-mono tracking-tighter uppercase">{user.email?.split('@')[0]}</span>
-                            </div>
-                        </>
-                    ) : (
-                        <button onClick={handleGoogleLogin} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2 backdrop-blur-sm">
-                            <span className="tracking-wide">تسجيل الدخول</span> <ArrowLeft className="w-4 h-4" />
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* Content area — below navbar */}
-            <div className="w-full flex flex-col overflow-hidden relative" style={{ height:"calc(100vh - 60px)", marginTop:"60px" }}>
+            <div className="w-full h-full flex flex-col overflow-hidden relative">
                 {shouldBlockForGenesis && user?.id && (
                     <GenesisOnboarding
                         userId={user.id}
                         onCompleted={() => {
                             setIsOnboarded(true);
-                            console.info("[GenesisFlow] guard_released", { userId: user.id });
                         }}
                     />
                 )}
 
-                {/* Error Handling */}
-                {!shouldBlockForGenesis && !isOnboardingStateLoading && error && (
-                    <div className="mb-6 px-4 py-3 bg-red-50 text-red-600 rounded-lg shadow-sm border border-red-100 text-sm max-w-md text-center">
-                        {error}
-                    </div>
-                )}
-                {!shouldBlockForGenesis && isOnboardingStateLoading && (
-                    <div className="px-5 py-3 rounded-2xl" style={{ background:"rgba(6,10,22,0.8)", border:"1px solid rgba(255,255,255,0.08)" }}>
-                        <span className="text-xs text-slate-400 tracking-wide">جاري تجهيز ملفك الشخصي...</span>
-                    </div>
-                )}
-
-                {/* Phase 1: The Chat Hook */}
                 {!shouldBlockForGenesis && !isOnboardingStateLoading && !data && (
                     <div className="flex-1 w-full flex items-center justify-center px-4 py-8 animate-in fade-in zoom-in duration-500 relative z-10">
                         <div className="w-full max-w-xl">
                             <div className="text-center mb-6">
-                                {sourceStory === 'story-1' ? (
-                                    <>
-                                        <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 leading-tight">
-                                            مرحباً بك في مساحة القيادة
-                                        </h2>
-                                        <p className="font-medium max-w-lg mx-auto" style={{ color:"#8faab8" }}>
-                                            استلهاماً من رحلة استعادة السيطرة، دعنا نرصد مواطن النزيف في مجالك...
-                                        </p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border mb-5" style={{ borderColor:"rgba(20,184,166,0.3)", background:"rgba(20,184,166,0.08)", color:"#5eead4" }}>
-                                            <Zap className="w-3 h-3" />
-                                            <span className="text-[10px] font-black tracking-[0.18em] uppercase">تشخيص سريع</span>
-                                        </div>
-                                        <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 leading-tight">اكتشف ثغرات طاقتك في 60 ثانية</h2>
-                                        <p className="font-medium" style={{ color:"#8faab8" }}>خذ وقتك. لا توجد إجابة صح أو غلط.</p>
-                                    </>
-                                )}
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border mb-5" style={{ borderColor:"rgba(20,184,166,0.3)", background:"rgba(20,184,166,0.08)", color:"#5eead4" }}>
+                                    <Zap className="w-3 h-3" />
+                                    <span className="text-[10px] font-black tracking-[0.18em] uppercase">تشخيص سريع</span>
+                                </div>
+                                <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 leading-tight">اكتشف ثغرات طاقتك في 60 ثانية</h2>
+                                <p className="font-medium" style={{ color:"#8faab8" }}>خذ وقتك. لا توجد إجابة صح أو غلط.</p>
                             </div>
                             <div className="rounded-[2rem] p-1 relative group overflow-hidden" style={{ border:"1px solid rgba(255,255,255,0.09)", background:"rgba(8,12,22,0.88)", backdropFilter:"blur(28px)" }}>
-                                <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-teal-500/25 to-transparent top-0 animate-scan" />
                                 <ChatInterface
                                     onAnalyze={(answers) => analyzeAnswers(answers, subInfo?.features.maxMapNodes || 7)}
                                     isLoading={isLoading}
@@ -474,32 +358,9 @@ export default function DawayirApp() {
                     </div>
                 )}
 
-                {/* Phase 2: The Canvas (Aha Moment) */}
                 {!shouldBlockForGenesis && !isOnboardingStateLoading && data && (
                     <div className="w-full h-full flex flex-col relative animate-in slide-in-from-bottom-8 fade-in duration-700">
-
-                        {/* Insight Card — dark glass */}
-                        <div className="absolute z-20 top-4 left-1/2 -translate-x-1/2 max-w-2xl w-[calc(100%-2rem)] shadow-2xl overflow-hidden rounded-2xl" style={{ background:"rgba(6,10,22,0.88)", border:"1px solid rgba(20,184,166,0.2)", backdropFilter:"blur(24px)" }}>
-                            <div className="absolute top-0 left-0 w-1 h-full bg-teal-500/40" />
-                            <div className="absolute top-0 right-0 w-1 h-full bg-teal-500/40" />
-                            <div className="flex items-start gap-4 text-right px-6 py-4" dir="rtl">
-                                <Activity className="w-5 h-5 text-teal-400 mt-1 shrink-0 animate-pulse" />
-                                <div className="space-y-1">
-                                    <span className="text-[10px] font-black tracking-[0.12em] block mb-1" style={{ color:"#5eead4" }}>تم استخلاص البصيرة</span>
-                                    <p className="text-white font-bold leading-relaxed text-sm">
-                                        <Typewriter text={data.insight_message} speed={40} />
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Tactical HUD Left — dark glass */}
-                        <TacticalHUD 
-                            nodesCount={data.nodes.length} 
-                            edgesCount={data.edges.length} 
-                        />
-
-                        <div className="w-full h-full overflow-hidden relative">
+                        <div className="w-full h-full overflow-hidden relative z-0">
                             <CanvasComponent
                                 data={data}
                                 onNodeClick={(node) => {
@@ -508,8 +369,17 @@ export default function DawayirApp() {
                                 pendingNodeUpdate={pendingNodeUpdate}
                                 settings={mapSettings}
                             />
+                        </div>
 
-                            {/* Phase 3: The AI Facilitator (Glass-morphic Chat) */}
+                        <div className="absolute inset-0 pointer-events-none z-50">
+                            <div className="absolute bottom-10 left-10 pointer-events-auto px-5 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-3">
+                                <div className="w-6 h-6 rounded-lg bg-teal-500/20 flex items-center justify-center">
+                                    <Zap size={14} className="text-teal-400" />
+                                </div>
+                                <span className="text-[11px] font-bold text-slate-300" dir="rtl">اسحب أي شخص لتغيير موقعه في الخريطة</span>
+                            </div>
+                        </div>
+                            {/* Phase 3: The AI Facilitator */}
                             {focusedNode && (
                                 <>
                                     <button
@@ -527,16 +397,6 @@ export default function DawayirApp() {
                                     />
                                 </>
                             )}
-
-                        {/* HUD Control Dock */}
-                        <MapControlDock
-                            onAnalyze={() => setShowOracleModal(true)}
-                            onPlan={() => setShowActionPlan(true)}
-                            onSettings={() => setShowMapSettings(true)}
-                            onSave={handleSave}
-                            isSaving={isSaving}
-                        />
-                        </div>
 
                         {/* Automagic Event Notification Popup */}
                         <AutomagicEventPopup />
@@ -617,7 +477,6 @@ export default function DawayirApp() {
                                 onClose={() => setShowSimulation(false)}
                                 onComplete={(score) => {
                                     console.warn("Training complete with score:", score);
-                                    // Could update user stats or meta-data here
                                 }}
                             />
                         </div>

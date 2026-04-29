@@ -39,6 +39,8 @@ function getInitialScreen(): AppShellScreen {
   // Admin routes have their own navigation; don't let stale boot actions
   // set an initial screen that would hide the admin dashboard.
   if (window.location.pathname.startsWith("/admin")) return "landing";
+  
+  if (window.location.pathname.startsWith("/dawayir")) return "dawayir";
 
   const bootAction = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
   if (!bootAction) return "landing";

@@ -65,6 +65,21 @@ export interface AlertIncident {
   evidence: unknown;
 }
 
+// ─── Interventions / Truth Caller ───────────────────────────────────
+export type InterventionStatus = "unread" | "sent" | "dismissed";
+
+export interface InterventionEntry {
+  id: string;
+  userId: string;
+  triggerReason: string;
+  aiMessage: string;
+  status: InterventionStatus;
+  metadata: Record<string, any> | null;
+  createdAt: string;
+  userName?: string;
+  userEmail?: string;
+}
+
 // ─── AI Logs ────────────────────────────────────────────────────────
 export interface AdminAiLog {
   id: string;

@@ -12,8 +12,34 @@ class SoundManager {
 
     constructor() {
         this.init();
+        this.setupResumeListeners();
     }
 
+    private setupResumeListeners() {
+        if (typeof window === "undefined") return;
+        
+        const resume = () => {
+            this.resumeContext();
+            // Remove listeners after first interaction
+            window.removeEventListener('click', resume);
+            window.removeEventListener('keydown', resume);
+            window.removeEventListener('touchstart', resume);
+        };
+
+        window.addEventListener('click', resume);
+        window.addEventListener('keydown', resume);
+        window.addEventListener('touchstart', resume);
+    }
+
+    public async resumeContext() {
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            try {
+                await this.audioContext.resume();
+            } catch (e) {
+                console.warn("Failed to resume AudioContext:", e);
+            }
+        }
+    }
     private init() {
         if (typeof window !== "undefined") {
             try {
@@ -46,6 +72,12 @@ class SoundManager {
 
     private createOscillator(type: OscillatorType, frequency: number, duration: number, startTime: number = 0) {
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
+
+        // If context is suspended, try to resume and return to avoid errors
+        if (this.audioContext.state === 'suspended') {
+            this.resumeContext();
+            return;
+        }
 
         const osc = this.audioContext.createOscillator();
         const gain = this.audioContext.createGain();
@@ -190,6 +222,12 @@ class SoundManager {
         if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
 
+        // Centralized check for suspended context
+        if (this.audioContext.state === 'suspended') {
+            this.resumeContext();
+            return;
+        }
+
         const now = this.audioContext.currentTime;
         if (type === 'gavel') this.playGavel(now);
         else if (type === 'heartbeat') this.playHeartbeat(now);
@@ -218,6 +256,12 @@ class SoundManager {
     public startAmbientCommunity() {
         if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled || !this.sensoryEnabled) return;
+        
+        if (this.audioContext.state === 'suspended') {
+            this.resumeContext();
+            return;
+        }
+
         if (this.ambientSource) return;
 
         const now = this.audioContext.currentTime;

@@ -27,6 +27,7 @@ const CollectivePulseWidget = lazy(() => import('@/modules/maraya/components/Col
 const ReconnectionRitual = lazy(() => import('@/modules/maraya/components/ReconnectionRitual'));
 
 interface AmbientOverlaysProps {
+  screen: string;
   isVisible: (id: string) => boolean;
   activeNudge: Nudge | null;
   activeMirrorInsight: MirrorInsight | null;
@@ -37,6 +38,7 @@ interface AmbientOverlaysProps {
 }
 
 export const AmbientOverlays = memo(function AmbientOverlays({ 
+  screen,
   isVisible,
   activeNudge,
   activeMirrorInsight,
@@ -142,21 +144,25 @@ export const AmbientOverlays = memo(function AmbientOverlays({
         </Suspense>
       )}
 
-      {/* ⚔️ Truth Engine: Truth Score + Prediction Journal — floating bottom-right */}
-      <Suspense fallback={null}>
-        <div 
-          className="fixed bottom-4 right-4 z-40 w-[320px] space-y-3 pointer-events-auto"
-          dir="rtl"
-        >
-          <TruthScoreWidget compact />
-          <PredictionJournalCard />
-        </div>
-      </Suspense>
+      {/* ⚔️ Truth Engine: Truth Score + Prediction Journal — only on map screens */}
+      {(screen === "map" || screen === "dawayir") && (
+        <Suspense fallback={null}>
+          <div 
+            className="fixed bottom-4 right-4 z-40 w-[320px] space-y-3 pointer-events-auto"
+            dir="rtl"
+          >
+            <TruthScoreWidget compact />
+            <PredictionJournalCard />
+          </div>
+        </Suspense>
+      )}
 
-      {/* 🌍 Collective Pulse Widget — floating bottom-left above bias cards */}
-      <Suspense fallback={null}>
-        <CollectivePulseWidget />
-      </Suspense>
+      {/* 🌍 Collective Pulse Widget — only on map screens */}
+      {(screen === "map" || screen === "dawayir") && (
+        <Suspense fallback={null}>
+          <CollectivePulseWidget />
+        </Suspense>
+      )}
 
       {/* 🕊️ Reconnection Ritual — fullscreen overlay */}
       {ritualMessage && (

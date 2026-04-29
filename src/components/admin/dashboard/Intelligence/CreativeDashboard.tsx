@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap as Sparkles, Send, ShieldCheck, Zap, RefreshCcw, CheckCircle2, AlertCircle, BarChart3, TrendingUp, Users, Video, Link as LinkIcon, Link2, Plus, ChevronDown } from 'lucide-react';
+import { Zap as Sparkles, Send, ShieldCheck, Zap, RefreshCcw, CheckCircle2, AlertCircle, BarChart3, TrendingUp, Users, Video, Link as LinkIcon, Link2, Plus, ChevronDown, Calendar, Eye, PenLine } from 'lucide-react';
 import { viralArchitect, ViralPost } from '@/ai/ViralContentManager';
 import { supabase, isSupabaseReady } from '@/services/supabaseClient';
 import { AdminTooltip } from '../Overview/components/AdminTooltip';
@@ -14,6 +14,8 @@ interface VideoAnalytics {
     publishedAt: string;
     estimatedClicks: number;
     platform: string;
+    description?: string;
+    views?: number;
 }
 
 export const CreativeDashboard: React.FC = () => {
@@ -39,19 +41,51 @@ export const CreativeDashboard: React.FC = () => {
     const [manualUrl, setManualUrl] = useState('');
     const [manualIllusion, setManualIllusion] = useState('مغالطة التكلفة الغارقة');
     const [manualTone, setManualTone] = useState('deep');
+    const [manualToneOverride, setManualToneOverride] = useState(false);
     const [manualType, setManualType] = useState('video');
+    const [manualPlatform, setManualPlatform] = useState('');
+    const [manualDescription, setManualDescription] = useState('');
+    const [manualPublishDate, setManualPublishDate] = useState(new Date().toISOString().slice(0, 10));
+    const [manualViews, setManualViews] = useState('');
     const [isSubmittingManual, setIsSubmittingManual] = useState(false);
     const [manualSuccess, setManualSuccess] = useState(false);
 
-    const ILLUSION_OPTIONS = [
-        'مغالطة التكلفة الغارقة', 'تحيز التأكيد', 'تأثير الألفة',
-        'وهم السيطرة', 'تحيز التفاؤل', 'تحيز الوضع الراهن', 'تحيز النقطة العمياء',
+    // ═══ Illusion Options (Grouped) ═══
+    const ILLUSION_GROUPS = [
+        { group: '⚔️ أوهام معرفية', items: [
+            'مغالطة التكلفة الغارقة', 'تحيز التأكيد', 'تأثير الألفة',
+            'وهم السيطرة', 'تحيز التفاؤل', 'تحيز الوضع الراهن', 'تحيز النقطة العمياء',
+        ]},
+        { group: '🪞 أنماط علاقات', items: [
+            'الإنكار العاطفي', 'الانفصال عن الواقع', 'قلق التموضع',
+            'الدعم الوهمي', 'الحب المستنزف', 'الحدود الورقية', 'التعافي المزيف',
+        ]},
+        { group: '🔥 إضافات', items: [
+            'علاقة منقطعة', 'الاعتمادية العاطفية', 'التلاعب النفسي', 'الحب النرجسي',
+        ]},
     ];
-    const TONE_OPTIONS = [
-        { value: 'deep', label: 'عميق 🎭' },
-        { value: 'direct', label: 'مباشر 🎯' },
-        { value: 'sarcastic', label: 'ساخر 😏' },
+
+    // ═══ Platform Options ═══
+    const PLATFORM_OPTIONS = [
+        { value: 'tiktok', label: '🎵 TikTok', color: '#ff0050' },
+        { value: 'instagram', label: '📸 Instagram', color: '#c13584' },
+        { value: 'youtube', label: '▶️ YouTube', color: '#ff0000' },
+        { value: 'twitter', label: '𝕏 Twitter', color: '#1da1f2' },
+        { value: 'threads', label: '🧵 Threads', color: '#a855f7' },
+        { value: 'other', label: '🌐 أخرى', color: '#64748b' },
     ];
+
+    // ═══ Tone Auto-Detect Map ═══
+    const TONE_MAP: Record<string, string> = {
+        'مغالطة التكلفة الغارقة': 'deep', 'تحيز التأكيد': 'direct', 'تأثير الألفة': 'deep',
+        'وهم السيطرة': 'deep', 'تحيز التفاؤل': 'sarcastic', 'تحيز الوضع الراهن': 'direct',
+        'تحيز النقطة العمياء': 'sarcastic', 'الإنكار العاطفي': 'deep', 'الانفصال عن الواقع': 'deep',
+        'قلق التموضع': 'direct', 'الدعم الوهمي': 'direct', 'الحب المستنزف': 'deep',
+        'الحدود الورقية': 'sarcastic', 'التعافي المزيف': 'direct', 'علاقة منقطعة': 'deep',
+        'الاعتمادية العاطفية': 'deep', 'التلاعب النفسي': 'deep', 'الحب النرجسي': 'sarcastic',
+    };
+    const TONE_LABELS: Record<string, string> = { deep: 'عميق 🎭', direct: 'مباشر 🎯', sarcastic: 'ساخر 😏' };
+
     const CONTENT_TYPE_OPTIONS = [
         { value: 'video', label: '🎬 فيديو', color: '#f43f5e' },
         { value: 'text', label: '📝 بوست نصي', color: '#06b6d4' },
@@ -59,20 +93,52 @@ export const CreativeDashboard: React.FC = () => {
         { value: 'carousel', label: '📸 كاروسيل', color: '#f59e0b' },
     ];
 
+    // Auto-detect tone when illusion changes
+    useEffect(() => {
+        if (!manualToneOverride) {
+            setManualTone(TONE_MAP[manualIllusion] || 'direct');
+        }
+    }, [manualIllusion, manualToneOverride]);
+
+    // Detect platform from URL as fallback
+    const detectPlatformFromUrl = (url: string): string => {
+        if (url.includes('tiktok.com')) return 'tiktok';
+        if (url.includes('instagram.com')) return 'instagram';
+        if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+        if (url.includes('twitter.com') || url.includes('x.com')) return 'twitter';
+        if (url.includes('threads.net')) return 'threads';
+        return 'other';
+    };
+
     const handleManualSubmit = async () => {
         if (!manualUrl.trim() || !isSupabaseReady || !supabase) return;
         setIsSubmittingManual(true);
         try {
             const { data: { user } } = await supabase.auth.getUser();
+            const resolvedPlatform = manualPlatform || detectPlatformFromUrl(manualUrl);
             await supabase.from('feedback').insert({
                 content: manualUrl.trim(),
                 rating: 'up',
                 source: 'illusion_dismantled_video',
                 user_id: user?.id || null,
-                metadata: { illusionName: manualIllusion, tone: manualTone, contentType: manualType, topic: 'تفكيك أوهام', manual: true },
+                metadata: {
+                    illusionName: manualIllusion,
+                    tone: manualTone,
+                    contentType: manualType,
+                    platform: resolvedPlatform,
+                    description: manualDescription.trim() || undefined,
+                    publishDate: manualPublishDate,
+                    views: manualViews ? Number(manualViews) : undefined,
+                    topic: 'تفكيك أوهام',
+                    manual: true,
+                },
             });
             setManualSuccess(true);
             setManualUrl('');
+            setManualDescription('');
+            setManualViews('');
+            setManualPlatform('');
+            setManualToneOverride(false);
             setTimeout(() => { setManualSuccess(false); setShowManualForm(false); fetchAnalytics(); }, 1500);
         } catch (e) {
             console.error('Manual video submit failed:', e);
@@ -121,16 +187,25 @@ export const CreativeDashboard: React.FC = () => {
             if (feedbackData) {
                 const formattedVideos: VideoAnalytics[] = feedbackData.map(f => {
                     const meta = f.metadata || {};
+                    // Platform: prefer metadata, fallback to URL detection
+                    const PLATFORM_LABEL_MAP: Record<string, string> = {
+                        tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube',
+                        twitter: 'X / Twitter', threads: 'Threads', other: 'أخرى',
+                    };
                     let platform = 'Unknown';
-                    if (f.content?.includes('tiktok.com')) platform = 'TikTok';
-                    else if (f.content?.includes('instagram.com')) platform = 'Instagram';
-                    else if (f.content?.includes('youtube.com')) platform = 'YouTube Shorts';
+                    if (meta.platform) {
+                        platform = PLATFORM_LABEL_MAP[meta.platform] || meta.platform;
+                    } else {
+                        if (f.content?.includes('tiktok.com')) platform = 'TikTok';
+                        else if (f.content?.includes('instagram.com')) platform = 'Instagram';
+                        else if (f.content?.includes('youtube.com')) platform = 'YouTube';
+                        else if (f.content?.includes('twitter.com') || f.content?.includes('x.com')) platform = 'X / Twitter';
+                    }
 
                     // Correlate clicks: count leads that arrived AFTER this video was published
-                    const videoDate = new Date(f.created_at || 0);
+                    const videoDate = new Date(meta.publishDate || f.created_at || 0);
                     const correlatedClicks = studioLeads.filter(lead => {
                         const leadDate = new Date(lead.created_at);
-                        // Count leads that arrived within 30 days after video publish
                         const diffDays = (leadDate.getTime() - videoDate.getTime()) / (1000 * 60 * 60 * 24);
                         return diffDays >= 0 && diffDays <= 30;
                     }).length;
@@ -140,9 +215,11 @@ export const CreativeDashboard: React.FC = () => {
                         topic: meta.topic || 'عام',
                         tone: meta.tone || 'غير محدد',
                         url: f.content || '',
-                        publishedAt: f.created_at || new Date().toISOString(),
+                        publishedAt: meta.publishDate || f.created_at || new Date().toISOString(),
                         platform,
-                        estimatedClicks: correlatedClicks
+                        estimatedClicks: correlatedClicks,
+                        description: meta.description,
+                        views: meta.views,
                     };
                 });
 
@@ -288,6 +365,24 @@ export const CreativeDashboard: React.FC = () => {
                                                         ))}
                                                     </div>
                                                 </div>
+                                                {/* Platform Selector */}
+                                                <div>
+                                                    <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-2">المنصة</label>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {PLATFORM_OPTIONS.map(p => (
+                                                            <button key={p.value} onClick={() => setManualPlatform(manualPlatform === p.value ? '' : p.value)}
+                                                                className={`px-4 py-2 rounded-xl text-xs font-black transition-all border ${
+                                                                    manualPlatform === p.value
+                                                                        ? 'text-white border-white/20'
+                                                                        : 'text-slate-500 border-white/5 hover:border-white/10'
+                                                                }`}
+                                                                style={manualPlatform === p.value ? { background: p.color + '20', borderColor: p.color + '40' } : {}}>
+                                                                {p.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    {!manualPlatform && <p className="text-[9px] text-slate-600 mt-1 font-mono">لو ما اخترتش — هيتحدد من الرابط تلقائياً</p>}
+                                                </div>
                                                 {/* URL */}
                                                 <div>
                                                     <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">رابط المحتوى</label>
@@ -295,21 +390,61 @@ export const CreativeDashboard: React.FC = () => {
                                                         placeholder={manualType === 'text' ? 'رابط البوست أو اتركه فارغ' : 'https://www.tiktok.com/@... أو أي رابط'}
                                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50 transition-colors" dir="ltr" />
                                                 </div>
-                                                {/* Illusion + Tone */}
+                                                {/* Illusion (grouped) + Tone (auto) */}
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div>
                                                         <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">الوهم المفكك</label>
-                                                        <select value={manualIllusion} onChange={e => setManualIllusion(e.target.value)}
+                                                        <select value={manualIllusion} onChange={e => { setManualIllusion(e.target.value); setManualToneOverride(false); }}
                                                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500/50 transition-colors appearance-none">
-                                                            {ILLUSION_OPTIONS.map(o => <option key={o} value={o} className="bg-slate-900">{o}</option>)}
+                                                            {ILLUSION_GROUPS.map(g => (
+                                                                <optgroup key={g.group} label={g.group} className="bg-slate-900 text-slate-400">
+                                                                    {g.items.map(o => <option key={o} value={o} className="bg-slate-900 text-white">{o}</option>)}
+                                                                </optgroup>
+                                                            ))}
                                                         </select>
                                                     </div>
                                                     <div>
-                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">النبرة</label>
-                                                        <select value={manualTone} onChange={e => setManualTone(e.target.value)}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500/50 transition-colors appearance-none">
-                                                            {TONE_OPTIONS.map(o => <option key={o.value} value={o.value} className="bg-slate-900">{o.label}</option>)}
-                                                        </select>
+                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">النبرة (تلقائي)</label>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm flex items-center justify-between">
+                                                                <span className="text-white font-bold">{TONE_LABELS[manualTone] || manualTone}</span>
+                                                                {!manualToneOverride && <span className="text-[8px] text-emerald-400 font-mono uppercase">AUTO</span>}
+                                                            </div>
+                                                            <button onClick={() => {
+                                                                if (manualToneOverride) {
+                                                                    setManualToneOverride(false);
+                                                                } else {
+                                                                    setManualToneOverride(true);
+                                                                    const tones = ['deep', 'direct', 'sarcastic'];
+                                                                    const next = tones[(tones.indexOf(manualTone) + 1) % tones.length];
+                                                                    setManualTone(next);
+                                                                }
+                                                            }}
+                                                                className="px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-bold text-slate-400 hover:text-white hover:bg-white/10 transition-colors whitespace-nowrap">
+                                                                {manualToneOverride ? '↺ تلقائي' : '✏️ تغيير'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {/* Description */}
+                                                <div>
+                                                    <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">وصف مختصر (اختياري)</label>
+                                                    <input type="text" value={manualDescription} onChange={e => setManualDescription(e.target.value)}
+                                                        placeholder="مثال: فيديو عن إزاي التعود بيخليك فاكر إنك محتاج حد"
+                                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50 transition-colors" dir="rtl" />
+                                                </div>
+                                                {/* Date + Views Row */}
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">تاريخ النشر</label>
+                                                        <input type="date" value={manualPublishDate} onChange={e => setManualPublishDate(e.target.value)}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500/50 transition-colors" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">المشاهدات (اختياري)</label>
+                                                        <input type="number" value={manualViews} onChange={e => setManualViews(e.target.value)}
+                                                            placeholder="مثال: 5000"
+                                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50 transition-colors" dir="ltr" />
                                                     </div>
                                                 </div>
                                                 {/* Submit */}

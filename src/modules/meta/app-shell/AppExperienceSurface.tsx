@@ -12,6 +12,7 @@ import { AppChromeShell } from "./AppChromeShell";
 import { AppMainExperienceContent } from "./AppMainExperienceContent";
 import { AppOverlayHost } from "./AppOverlayHost";
 import { AppTransientChromeHost } from "./AppTransientChromeHost";
+import { StandardLoadingFallback } from "./StandardLoadingFallback";
 import { PlatformHeader } from "../PlatformHeader";
 import { TravelerPreviewBanner } from "../TravelerPreviewBanner";
 import { PlatformTabBar } from "../PlatformTabBar";
@@ -21,6 +22,7 @@ import { type AppScreen } from "@/navigation/navigationMachine";
 import { AppSidebar } from "../AppSidebar";
 import { Z_LAYERS } from "@/config/zIndices";
 import { useLayoutState } from "@/modules/map/store/layout.store";
+import { useAppOverlayState } from "@/domains/consciousness/store/overlay.store";
 
 
 // ─── Module-level constants (created once, never re-allocated on render) ───
@@ -116,9 +118,25 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   onOpenLogin
 }: AppExperienceSurfaceProps) {
   const sidebarExpanded = useLayoutState((s) => s.sidebarExpanded);
+  const setSidebarExpanded = useLayoutState((s) => s.setSidebarExpanded);
+  const setFABOpen = useLayoutState((s) => s.toggleFAB);
+  const fabIsOpen = useLayoutState((s) => s.fabState.isOpen);
+  const resetOverlays = useAppOverlayState((s) => s.resetOverlays);
+  const setPulseCheck = useAppOverlayState((s) => s.setPulseCheck);
+
   const isLivePage = typeof window !== "undefined" && window.location.pathname.includes("dawayir-live");
   const actuallyShowingPulse = showPulseCheck && !isLivePage && !isLandingScreen;
   const breadcrumbItems = useMemo(() => buildBreadcrumb(screen), [screen]);
+
+  // ─── Reset all overlays & panels on any screen transition ───
+  useEffect(() => {
+    // We reset most things to ensure a clean slate on every "page"
+    // except for very specific flows if needed
+    resetOverlays();
+    setSidebarExpanded(false);
+    setPulseCheck(false);
+    if (fabIsOpen) setFABOpen(); // toggle OFF
+  }, [screen]);
 
   // ─── Scroll state for header-breadcrumb sync ───
   const [scrolled, setScrolled] = useState(false);
@@ -178,10 +196,10 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
       <Suspense fallback={null}>
         <NotificationEnableButton />
       </Suspense>
-      {screen !== "landing" && screen !== "ecosystem-hub" && screen !== "kharita" && screen !== "diagnosis" && screen !== "survey" && screen !== "goal" && (
+      {screen !== "landing" && screen !== "ecosystem-hub" && screen !== "kharita" && screen !== "map" && screen !== "markaz" && screen !== "bawsala" && screen !== "muhadatha" && screen !== "diagnosis" && screen !== "survey" && screen !== "goal" && (
         <>
           <div
-            className={`fixed right-0 ${sidebarExpanded ? "md:right-72" : "md:right-0"} left-0 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500 ${scrolled ? "top-16" : "top-20"}`}
+            className={`fixed right-0 ${sidebarExpanded ? "md:right-72" : "md:right-0"} left-0 px-6 lg:px-10 py-2 hidden md:block transition-[right] duration-500 top-14 md:top-16`}
             style={{ zIndex: Z_LAYERS.BREADCRUMBS }}
           >
             <PlatformBreadcrumb items={breadcrumbItems} onNavigate={handleHeaderNavigate} />
@@ -195,7 +213,11 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         </>
       )}
       <div
-        className={`min-h-screen flex flex-col transition-all duration-500 relative isolate ${screen !== "landing" ? (sidebarExpanded ? "overflow-x-hidden md:pr-72" : "overflow-x-hidden md:pr-0") : ""} bg-[var(--page-bg)]`}
+        className={`min-h-screen flex flex-col transition-[padding-right] duration-700 ease-[0.16,1,0.3,1] relative isolate ${
+          sidebarExpanded && (screen === "dawayir" || screen === "sanctuary") 
+            ? "overflow-x-hidden md:pr-72" 
+            : "overflow-x-hidden md:pr-0"
+        } bg-[#02040a]`}
         dir="rtl"
       >
         {isFeaturePreviewSession && (
@@ -242,7 +264,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                 </div>
               </div>
             )}
-            <Suspense fallback={<div className="text-sm text-[var(--text-muted)]">...جاري التحميل</div>}>
+            <Suspense fallback={<StandardLoadingFallback headerMode="standard" message="جاري تحضير المحطة التالية..." />}>
               <ErrorBoundary
                 fallback={
                   <div className="min-h-[260px] w-full flex items-center justify-center p-6">
@@ -261,7 +283,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                 }
               >
                 <div
-                  className={`min-w-0 flex transition-all duration-300 ease-in-out ${isLandingScreen ? "flex-col" : "flex-1 flex-col w-full h-full"}`}
+                  className="min-w-0 flex flex-1 flex-col w-full h-full"
                 >
                   {screen !== "map" && showSystemOverclockControls && (
                     <div 
@@ -305,17 +327,19 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
           <AscensionRitual />
         </Suspense>
       </div>
-      <AppSidebar
-        onOpenGym={() => mainContentProps.onNavigate?.("tools")}
-        onStartJourney={mainContentProps.onStartJourney}
-        onOpenBaseline={() => mainContentProps.onNavigate?.("baseline")}
-        onOpenGuidedJourney={() => mainContentProps.onNavigate?.("guided")}
-        onOpenDawayir={() => mainContentProps.onNavigate?.("dawayir")}
-        onOpenProtocol={() => mainContentProps.onNavigate?.("protocol")}
-        onFeatureLocked={mainContentProps.onFeatureLocked}
-        onOpenMission={mainContentProps.onOpenMission}
-        onNavigateAppScreen={mainContentProps.onNavigate}
-      />
+      {screen !== "landing" && (
+        <AppSidebar
+          onOpenGym={() => mainContentProps.onNavigate?.("tools")}
+          onStartJourney={mainContentProps.onStartJourney}
+          onOpenBaseline={() => mainContentProps.onNavigate?.("baseline")}
+          onOpenGuidedJourney={() => mainContentProps.onNavigate?.("guided")}
+          onOpenDawayir={() => mainContentProps.onNavigate?.("dawayir")}
+          onOpenProtocol={() => mainContentProps.onNavigate?.("protocol")}
+          onFeatureLocked={mainContentProps.onFeatureLocked}
+          onOpenMission={mainContentProps.onOpenMission}
+          onNavigateAppScreen={mainContentProps.onNavigate}
+        />
+      )}
         <Suspense fallback={null}>
           <GlobalToast />
           <GraphEventToast />

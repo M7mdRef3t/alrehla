@@ -35,6 +35,79 @@ import { DivineConnection } from "./DivineConnection";
 import { useHafizState, calculateVerticalResonance } from "@/modules/hafiz/store/hafiz.store";
 import { useSynthesisState } from "@/domains/consciousness/store/synthesis.store";
 
+const MAP_HERO_STYLES = `
+  .map-hero-grid-wrapper {
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    perspective: 1000px;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .map-hero-grid {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+      linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+    background-size: 60px 60px;
+    background-position: center bottom;
+    mask-image: radial-gradient(ellipse 80% 50% at 50% 50%, black 10%, transparent 70%);
+    will-change: transform;
+    opacity: 0.6;
+    transform: rotateX(60deg) scale(1.5);
+    transform-origin: center center;
+    animation: grid-drift 60s linear infinite;
+  }
+
+  @keyframes grid-drift {
+    from { background-position: 0 0; }
+    to { background-position: 60px 60px; }
+  }
+
+  .map-hero-atmosphere {
+    position: absolute;
+    inset: -20%;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, rgba(99, 102, 241, 0.03) 40%, transparent 75%);
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .map-hero-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 95% 85% at 50% 50%, transparent 35%, rgba(2,4,8,0.7) 100%);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .glass-premium {
+    background: radial-gradient(ellipse at 30% 0%, rgba(0, 240, 255, 0.06) 0%, transparent 55%),
+                rgba(5, 8, 22, 0.72);
+    -webkit-backdrop-filter: blur(40px) saturate(170%);
+    backdrop-filter: blur(40px) saturate(170%);
+    border: 1px solid rgba(45, 212, 191, 0.12);
+    box-shadow:
+      0 24px 80px -16px rgba(0, 0, 0, 0.85),
+      inset 0 1px 1px rgba(255, 255, 255, 0.06);
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  }
+
+  .glass-premium:hover {
+    border-color: rgba(45, 212, 191, 0.28);
+    box-shadow:
+      0 28px 90px -16px rgba(0, 0, 0, 0.9),
+      0 0 40px -10px rgba(0, 240, 255, 0.08),
+      inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  }
+`;
+
+
 
 function isLegacyMapUiEnabled(): boolean {
   return false;
@@ -44,17 +117,7 @@ const toSafeSvgNumber = (value: unknown, fallback: number): number => {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 };
 
-/* ── Star Field Generator ── */
-const STAR_COUNT = 55;
-const STAR_DATA = Array.from({ length: STAR_COUNT }, (_, i) => ({
-  id: i,
-  cx: (i * 17 + 3) % 100,
-  cy: (i * 31 + 7) % 100,
-  r: i % 5 === 0 ? 0.35 : i % 3 === 0 ? 0.25 : 0.15,
-  opacity: 0.08 + (i % 7) * 0.04,
-  animDelay: (i * 0.3) % 4,
-  animDuration: 3 + (i % 4),
-}));
+
 
 /*  Orbital Ring (Breathing)  */
 
@@ -336,9 +399,10 @@ interface NodeProps {
   isTouchDevice?: boolean;
   reduceMotion?: boolean;
   isSovereign?: boolean;
+  isHandToolActive?: boolean;
 }
 
-const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, canOpenDetails = true, justDraggedId, justAdded, isHighlighted, isTouchDevice = false, reduceMotion = false, isSovereign = false }) => {
+const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, canOpenDetails = true, justDraggedId, justAdded, isHighlighted, isTouchDevice = false, reduceMotion = false, isSovereign = false, isHandToolActive = false }) => {
   const { audioIntensity } = useSynthesisState();
   const [showDelete, setShowDelete] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -362,7 +426,10 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     }
   }, [justAdded]);
 
-  const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({ id: node.id });
+  const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({ 
+    id: node.id,
+    disabled: isHandToolActive 
+  });
 
   const hasMismatch = node.analysis?.recommendedRing && node.ring !== node.analysis.recommendedRing;
   const ringPos = useMemo(
@@ -1050,6 +1117,7 @@ interface MapCanvasProps {
   canOpenDetails?: boolean;
   goalIdFilter?: string;
   galaxyGoalIds?: string[];
+  isHandToolActive?: boolean;
   /** عد اضغط  اسج  اعدة تع بضة ب دارا */
   highlightNodeId?: string | null;
   isSovereign?: boolean;
@@ -1073,6 +1141,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   canOpenDetails = true,
   goalIdFilter,
   galaxyGoalIds,
+  isHandToolActive,
   highlightNodeId,
   isSovereign = false,
   aiState
@@ -1546,11 +1615,29 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   }, [highlightNodeId, nodes, nodePositions]);
 
   return (
-    <div className="absolute inset-0 z-0 pointer-events-auto flex flex-col items-center justify-center overflow-visible">
+    <div className="absolute inset-0 z-0 pointer-events-none flex flex-col items-center justify-center overflow-hidden">
       <div
-        className={`pointer-events-auto relative aspect-square w-[140vmin] h-[140vmin] max-w-none max-h-none transition-all duration-1000 ease-out opacity-90 mix-blend-lighten ${isSimulation ? "scale-[0.85] saturate-[0.8] brightness-125" : ""}`}
+        className={`pointer-events-auto relative aspect-square w-[110vmin] h-[110vmin] md:w-[95vmin] md:h-[95vmin] max-w-full max-h-full transition-all duration-1000 ease-out opacity-90 mix-blend-lighten ${isSimulation ? "scale-[0.85] saturate-[0.8] brightness-125" : ""}`}
+        style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
         id="map-canvas"
       >
+        <style dangerouslySetInnerHTML={{ __html: MAP_HERO_STYLES }} />
+        
+        {/* ── Map Aura & Scan Lines ── */}
+        <div className="map-hero-atmosphere" aria-hidden="true" />
+        <div className="map-hero-vignette" aria-hidden="true" />
+        
+        {/* Animated Scan Line (from Hero) */}
+        <motion.div 
+          className="absolute left-0 right-0 h-[1px] z-[5] pointer-events-none opacity-40"
+          initial={{ top: "-5%" }}
+          animate={{ top: "105%" }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+          style={{
+            background: "linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent)",
+          }}
+        />
+
         {/*  Reveal State Banner */}
         <AnimatePresence>
           {isRevealState && (
@@ -1577,11 +1664,14 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
-        {/* Phoenix Score — HIDDEN for clean map */}
+        {/* Phoenix Score — High Fidelity Widget */}
         {isLegacyMapUiEnabled() && !isSimulation && (
-          <div className="absolute top-2 right-2 z-[90] rounded-xl bg-slate-900/80 border border-teal-500/30 px-3 py-2 text-[11px] text-right backdrop-blur-md">
-            <div className="font-bold text-teal-200 flex items-center gap-1 justify-end">
-              <span>Phoenix Score:</span>
+          <div className="absolute top-2 right-2 z-[90] glass-premium px-4 py-3 rounded-2xl border border-teal-500/20 shadow-[0_0_30px_rgba(45,212,191,0.15)] group hover:scale-105 transition-transform duration-500">
+            <div className="font-alexandria font-black text-[10px] tracking-[0.2em] text-teal-400/80 mb-1 flex items-center gap-2 justify-end uppercase">
+              <Zap className="w-3 h-3 text-amber-400 animate-pulse" />
+              <span>Phoenix Score</span>
+            </div>
+            <div className="font-alexandria font-bold text-teal-50 flex items-center gap-2 justify-end text-lg">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span
                   key={optimisticPhoenixScore.toFixed(3)}
@@ -1631,21 +1721,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               animate={shouldReduceMotion ? undefined : { viewBox }}
               transition={shouldReduceMotion ? undefined : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* ── Nebula of Reclamation: Archived Stars ── */}
-              <g className="nebula-reclamation">
-                {archivedNodes.map((star) => (
-                  <SafeMotionCircle
-                    key={star.id}
-                    cx={star.x}
-                    cy={star.y}
-                    r={(() => {
-                      if (Number.isFinite(star.size)) return star.size;
-                      console.warn(`[MapCanvas] Invalid star size for node ${star.id}:`, star.size);
-                      return 0;
-                    })()}
-                    fill="rgba(255,255,255,1)"
-                    initial={{ opacity: 0 }}
-                    animate={{ 
+              {/* ── Nebula of Reclamation: Archived Stars - Removed per user request ── */}
+              {/* <g className="nebula-reclamation">
                       opacity: [star.opacity, star.opacity * 2, star.opacity],
                       scale: [1, 1.2, 1]
                     }}
@@ -1657,7 +1734,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     style={{ filter: "blur(0.4px)" }}
                   />
                 ))}
-              </g>
+              </g> */}
 
               {/* ── Pulse Echo: Ambient Heartbeat ── */}
               {!shouldReduceMotion && (
@@ -1806,24 +1883,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 </filter>
               </defs>
 
-              {/* ── Cosmic Star Field (Dark Mode Only) ── */}
-              <g className="pointer-events-none dark-visible hidden dark:block">
-                {STAR_DATA.map((s) => (
-                  <SafeMotionCircle
-                    key={s.id}
-                    cx={s.cx} cy={s.cy} r={Number.isFinite(s.r) ? s.r : 0}
-                    fill="white"
-                    opacity={s.opacity}
-                    animate={{ opacity: [s.opacity, s.opacity * 3, s.opacity] }}
-                    transition={{
-                      duration: s.animDuration,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      delay: s.animDelay,
-                    }}
-                  />
-                ))}
-              </g>
+
               {connectionThreads.map((line) => {
                 const isGreen = line.color?.includes("45, 212") || line.color?.includes("2dd4") || line.color?.includes("2DD4");
                 const isYellow = line.color?.includes("251, 191") || line.color?.includes("fbbf");
@@ -1837,53 +1897,92 @@ export const MapCanvas: FC<MapCanvasProps> = ({
 
                 return (
                   <g key={line.id}>
-                    {/* Outer glow halo */}
+                    {/* Outer glow halo — refined with better blend */}
                     <motion.line
                       x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2}
                       stroke={glowColor}
-                      strokeWidth={2}
+                      strokeWidth={1.5}
                       opacity={0}
-                      style={{ filter: "blur(2px)" }}
-                      animate={{ opacity: [0.04, 0.18, 0.04] }}
-                      transition={{ duration: 3 + (line.x1 % 2), repeat: Infinity, ease: "easeInOut" }}
+                      style={{ filter: "blur(3px)" }}
+                      animate={{ opacity: [0.03, 0.12, 0.03] }}
+                      transition={{ duration: 4 + (line.x1 % 3), repeat: Infinity, ease: "easeInOut" }}
                     />
-                    {/* Core laser line */}
+                    {/* Core laser line — thinner for precision */}
                     <motion.line
                       x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2}
                       stroke={threadColor}
-                      strokeWidth={0.8}
-                      strokeDasharray="3 6"
+                      strokeWidth={0.5}
+                      strokeDasharray="2 4"
                       animate={{
-                        opacity: [0.25, 0.7, 0.25],
-                        strokeDashoffset: [0, -18],
+                        opacity: [0.15, 0.45, 0.15],
+                        strokeDashoffset: [0, -12],
                       }}
                       transition={{
-                        duration: 2.5 + (line.y1 % 1.5),
+                        duration: 3 + (line.y1 % 2),
                         repeat: Infinity,
                         ease: "linear",
                       }}
                     />
-                    {/* Bright traveling particle */}
+                    {/* Neural Pulse — High Fidelity traveling energy */}
                     {!shouldReduceMotion && (
                       <SafeMotionCircle
-                        r={0.9}
+                        r={0.7}
                         fill={particleColor}
                         animate={{
                           offsetDistance: ["0%", "100%"],
                           opacity: [0, 1, 1, 0],
                         }}
                         transition={{
-                          duration: 2 + (line.x2 % 1.5),
+                          duration: 3 + (line.x2 % 2),
                           repeat: Infinity,
-                          ease: "linear",
-                          delay: (line.y2 % 2),
+                          ease: "easeInOut",
+                          delay: (line.y2 % 3),
                         }}
                         style={{
                           offsetPath: `path("M ${line.x1} ${line.y1} L ${line.x2} ${line.y2}")`,
-                          filter: `drop-shadow(0 0 2px ${particleColor})`,
+                          filter: `drop-shadow(0 0 3px ${particleColor})`,
+                          willChange: "offset-distance, opacity"
                         } as React.CSSProperties}
                       />
                     )}
+                  </g>
+                );
+              })}
+
+              {/* ── Core Neural Pulses: Connections to "Me" ── */}
+              {!shouldReduceMotion && ringNodes.map((node) => {
+                const pos = nodePositions[node.id];
+                if (!pos) return null;
+                const dist = Math.sqrt(Math.pow(pos.x - 50, 2) + Math.pow(pos.y - 50, 2));
+                if (dist < 10) return null; // Too close to center
+                
+                const ringKey = node.ring || "green";
+                const pColor = ringKey === "green" ? "#14b8a6" : ringKey === "yellow" ? "#f59e0b" : "#f43f5e";
+                
+                return (
+                  <g key={`pulse-me-${node.id}`} opacity={0.6}>
+                    <line 
+                      x1={50} y1={50} x2={pos.x} y2={pos.y} 
+                      stroke={pColor} strokeWidth={0.3} opacity={0.1} 
+                    />
+                    <SafeMotionCircle
+                      r={0.6}
+                      fill={pColor}
+                      animate={{
+                        offsetDistance: ["0%", "100%"],
+                        opacity: [0, 1, 0],
+                      }}
+                      transition={{
+                        duration: 3 + (dist / 15),
+                        repeat: Infinity,
+                        ease: "linear",
+                        delay: Math.random() * 5
+                      }}
+                      style={{
+                        offsetPath: `path("M 50 50 L ${pos.x} ${pos.y}")`,
+                        filter: `drop-shadow(0 0 2px ${pColor})`,
+                      } as React.CSSProperties}
+                    />
                   </g>
                 );
               })}
@@ -2206,6 +2305,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                         isTouchDevice={isTouchDevice}
                         reduceMotion={shouldReduceMotion}
                         isSovereign={isSovereign}
+                        isHandToolActive={isHandToolActive}
                       />
                     );
                   })}
@@ -2328,7 +2428,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         <AnimatePresence>
           {lastPulse && (lastPulse.energy <= 3 || lastPulse.mood === "overwhelmed") && (
             <motion.div
-              className="absolute top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none w-full max-w-sm px-4"
+              className="absolute top-[120px] left-1/2 -translate-x-1/2 z-50 pointer-events-none w-full max-w-sm px-4"
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}

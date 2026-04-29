@@ -216,7 +216,9 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       window.history.pushState(null, "", "/map");
     } else if (screen === "landing" && currentPath !== "/") {
       window.history.pushState(null, "", "/");
-    } else if (screen !== "map" && screen !== "landing" && currentPath !== "/app") {
+    } else if (screen === "dawayir" && currentPath !== "/dawayir") {
+      window.history.pushState(null, "", "/dawayir");
+    } else if (screen !== "map" && screen !== "landing" && screen !== "dawayir" && currentPath !== "/app") {
       // For all other app screens, keep it at /app unless we want dedicated routes for them too
       window.history.pushState(null, "", "/app");
     }
@@ -321,6 +323,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       screen === "settings" ||
       screen === "diagnosis" ||
       screen === "life-os" ||
+      screen === "dawayir" ||
       isAdminRoute ||
       isAnalyticsRoute;
 

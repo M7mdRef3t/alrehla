@@ -37,12 +37,26 @@ export const toSafeSvgNumber = (value: unknown, fallback: number): number => {
   return fallback;
 };
 
+
+// Color properties that framer-motion cannot animate reliably (CSS vars, oklab, etc.)
+// These should NEVER appear in animate/initial/exit states — pass them as static props only.
+const UNSAFE_MOTION_COLOR_PROPS = new Set([
+  "fill", "stroke", "stopColor", "strokeOpacity", "fillOpacity"
+]);
+
 export const sanitizeCircleMotionState = <T,>(state: T): T => {
   if (!state || typeof state !== "object" || Array.isArray(state)) return state;
   const record = state as Record<string, unknown>;
   
   const result = { ...record };
   
+  // Strip color props to prevent oklab/CSS-variable interpolation errors
+  for (const key of UNSAFE_MOTION_COLOR_PROPS) {
+    if (Object.prototype.hasOwnProperty.call(result, key)) {
+      delete result[key];
+    }
+  }
+
   if (Object.prototype.hasOwnProperty.call(record, "r")) {
     const rawR = record.r;
     result.r = Array.isArray(rawR) 
@@ -75,6 +89,7 @@ export type SafeMotionCircleProps = ComponentProps<typeof motion.circle> & {
 
 /**
  * 🛡️ SafeMotionCircle — يحمي الدوائر من أخطاء الـ NaN والـ undefined
+ * ويمنع framer-motion من محاولة animate ألوان CSS variables (oklab)
  */
 export const SafeMotionCircle: FC<SafeMotionCircleProps> = ({ cx = 0, cy = 0, r = 0, ...props }) => {
   const { initial, animate, exit, whileHover, whileTap, whileFocus, ...rest } = props;
@@ -93,6 +108,7 @@ export const SafeMotionCircle: FC<SafeMotionCircleProps> = ({ cx = 0, cy = 0, r 
     />
   );
 };
+
 
 export type SafeCircleProps = ComponentProps<"circle"> & {
   cx?: number | string;

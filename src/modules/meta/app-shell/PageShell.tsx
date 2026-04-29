@@ -21,6 +21,13 @@ interface PageShellProps {
   disableAnimation?: boolean;
   /** Whether the page should span the full width without padding or max-width constraints */
   fullWidth?: boolean;
+  /** Custom motion variants for the entrance animation */
+  animationVariants?: {
+    initial: any;
+    animate: any;
+    exit?: any;
+    transition?: any;
+  };
 }
 
 /**
@@ -35,15 +42,16 @@ export function PageShell({
   maxWidth = "max-w-[var(--phi-content-max)]", // Using the design system's content max width
   className = "",
   disableAnimation = false,
-  fullWidth = false
+  fullWidth = false,
+  animationVariants
 }: PageShellProps) {
   
   // padding-top logic based on header and breadcrumb presence
   // These values should match the fixed header/breadcrumb heights precisely.
   const getPaddingTop = () => {
     if (headerMode === "none") return "pt-0";
-    if (breadcrumbVisible) return "pt-[110px] md:pt-[140px]";
-    return "pt-[64px] md:pt-[80px]";
+    if (breadcrumbVisible) return "pt-[96px] md:pt-[104px]";
+    return "pt-[56px] md:pt-[64px]";
   };
 
   // padding-bottom logic based on mobile tab bar presence
@@ -64,12 +72,19 @@ export function PageShell({
     );
   }
 
+  const variants = animationVariants || {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.35, ease: "easeOut" }
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -15 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      initial={variants.initial}
+      animate={variants.animate}
+      exit={variants.exit}
+      transition={variants.transition}
       className={containerClasses}
     >
       {children}

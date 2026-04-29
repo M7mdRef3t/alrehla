@@ -12,6 +12,8 @@ const CoreMapScreen = lazy(() => import("../exploration/CoreMapScreen").then((m)
 const AIChatbot = lazy(() => import("../action/AIChatbot").then((m) => ({ default: m.AIChatbot })));
 const PulseCheckModal = lazy(() => import("../exploration/PulseCheckModal").then((m) => ({ default: m.PulseCheckModal })));
 
+import { StandardLoadingFallback } from "./app-shell/StandardLoadingFallback";
+
 
 // Extract prop types from components
 type CoreMapScreenProps = ComponentProps<typeof CoreMapScreen>;
@@ -22,17 +24,28 @@ type PulseCheckModalProps = ComponentProps<typeof PulseCheckModal>;
 export function SafeCoreMapScreen(props: CoreMapScreenProps) {
   return (
     <ErrorBoundary fallback={<MapErrorFallback />}>
-      <Suspense fallback={<div className="p-4 text-center">جاري تحميل الخريطة...</div>}>
+      <Suspense fallback={
+        <StandardLoadingFallback 
+          color="teal" 
+          message="جاري استحضار الخريطة..." 
+          headerMode="none"
+        />
+      }>
         <CoreMapScreen {...props} />
       </Suspense>
     </ErrorBoundary>
   );
 }
 
+// Preload CoreMapScreen to eliminate loading flicker on first navigation
+export function preloadCoreMapScreen() {
+  void import("../exploration/CoreMapScreen");
+}
+
 export function SafeAIChatbot(props: AIChatbotProps) {
   return (
     <ErrorBoundary fallback={<ChatErrorFallback />}>
-      <Suspense fallback={<div className="p-4 text-center">جاري تحميل المحادثة...</div>}>
+      <Suspense fallback={<StandardLoadingFallback color="indigo" message="جاري تحميل المحادثة..." fullScreen={false} />}>
         <AIChatbot {...props} />
       </Suspense>
     </ErrorBoundary>
@@ -42,7 +55,7 @@ export function SafeAIChatbot(props: AIChatbotProps) {
 export function SafePulseCheckModal(props: PulseCheckModalProps) {
   return (
     <ErrorBoundary fallback={<PulseErrorFallback />}>
-      <Suspense fallback={<div className="p-4 text-center">جاري تحميل البوصلة...</div>}>
+      <Suspense fallback={<StandardLoadingFallback color="orange" message="جاري تحميل البوصلة..." fullScreen={false} />}>
         <PulseCheckModal {...props} />
       </Suspense>
     </ErrorBoundary>

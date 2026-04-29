@@ -29,6 +29,7 @@ export type TelegramMessageType =
   | "critical_error_alert"
   | "admin_notification"
   | "ab_test_threshold_alert"
+  | "truth_caller_intervention"
   | "system_startup";
 
 export interface TelegramMessage {
@@ -65,11 +66,17 @@ export class TelegramBotService {
    * إرسال رسالة للتليجرام
    * ─────────────────────────────────────────────────────────────────
    */
-  async sendMessage(message: TelegramMessage): Promise<boolean> {
-    if (!this.isEnabled) {
+  async sendMessage(message: TelegramMessage, toChatId?: string): Promise<boolean> {
+    if (!this.isEnabled && !toChatId) {
       if (!runtimeEnv.isDev) {
         console.warn("📱 [Telegram Bot Disabled] Would send:", message.text);
       }
+      return false;
+    }
+
+    // Ensure we have a bot token even if we use a custom chatId
+    if (!TELEGRAM_CONFIG.botToken) {
+      console.warn("⚠️ Telegram Bot Token missing.");
       return false;
     }
 
@@ -80,7 +87,7 @@ export class TelegramBotService {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chat_id: TELEGRAM_CONFIG.chatId,
+          chat_id: toChatId || TELEGRAM_CONFIG.chatId,
           text: message.text,
           parse_mode: message.parseMode || "Markdown",
           reply_markup: message.replyMarkup,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, ClipboardList, Settings, Save, Loader2 } from 'lucide-react';
+import { Sparkles, ClipboardList, Settings, Save, Loader2, Hand } from 'lucide-react';
 
 interface MapControlDockProps {
   onAnalyze: () => void;
@@ -10,6 +10,8 @@ interface MapControlDockProps {
   isAnalyzing?: boolean;
   isSaving?: boolean;
   canSave?: boolean;
+  isHandToolActive?: boolean;
+  onToggleHandTool?: () => void;
 }
 
 export function MapControlDock({ 
@@ -19,7 +21,9 @@ export function MapControlDock({
   onSave,
   isAnalyzing,
   isSaving,
-  canSave = true
+  canSave = true,
+  isHandToolActive = false,
+  onToggleHandTool
 }: MapControlDockProps) {
   return (
     <div className="fixed bottom-28 md:bottom-8 left-1/2 -translate-x-1/2 z-40 px-4 w-full max-w-lg" dir="rtl">
@@ -41,6 +45,22 @@ export function MapControlDock({
             <Sparkles className="w-5 h-5 text-teal-400 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(45,212,191,0.5)] transition-all" />
           )}
           <span className="text-[10px] font-black text-slate-300">التحليل</span>
+        </button>
+
+        <div className="w-px h-8 bg-white/5" />
+
+        {/* Hand Tool (Pan Mode) */}
+        <button
+          onClick={onToggleHandTool}
+          title={isHandToolActive ? "وضع تحريك الخريطة (مفعل)" : "تفعيل تحريك الخريطة"}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-2xl transition-all group ${
+            isHandToolActive 
+              ? "bg-amber-500/20 border-t border-amber-500/50 shadow-[inset_0_4px_20px_rgba(245,158,11,0.2)]" 
+              : "hover:bg-white/5"
+          }`}
+        >
+          <Hand className={`w-5 h-5 transition-transform ${isHandToolActive ? "text-amber-400 scale-110 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "text-slate-400 group-hover:scale-110"}`} />
+          <span className={`text-[10px] font-black ${isHandToolActive ? "text-amber-300" : "text-slate-300"}`}>تحريك</span>
         </button>
 
         <div className="w-px h-8 bg-white/5" />

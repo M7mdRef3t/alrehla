@@ -10,9 +10,10 @@ import { type WelcomeSource } from "./OnboardingWelcomeBubble";
 
 import { type NextStepDecisionV1 } from "../recommendation";
 
-import { SafeCoreMapScreen } from "./WrappedComponents";
+import { SafeCoreMapScreen, preloadCoreMapScreen } from "./WrappedComponents";
 import type { CoreMapScreen } from "@/modules/exploration/CoreMapScreen";
 import { analyticsService, AnalyticsEvents } from "@/domains/analytics";
+import { useEffect } from "react";
 
 import { PageShell } from "./app-shell/PageShell";
 import { AdaptiveIntake } from "./AdaptiveIntake";
@@ -110,51 +111,54 @@ export function AppStartScreens({
   const [showReflection, setShowReflection] = useState(true);
   const detectedState = useJourneyState((s) => s.detectedState);
 
+  // Preload CoreMapScreen in background when user is on landing/goal screens
+  useEffect(() => {
+    if (screen === "landing" || screen === "goal" || screen === "survey") {
+      preloadCoreMapScreen();
+    }
+  }, [screen]);
+
   // ── Diagnosis Screen (Conversion Engine Entry Point) ──
   if (screen === "diagnosis") {
     return (
-      <PageShell headerMode="none" tabBarVisible={false} disableAnimation maxWidth="max-w-none px-0 sm:px-0 lg:px-0">
-        <DiagnosisScreen
-          onComplete={(state: UserStateObject, product?: RecommendedProduct) => {
-            trackingService.recordFlow("diagnosis_completed", {
-              meta: {
-                type: state.type,
-                mainPain: state.mainPain,
-                readiness: state.readiness,
-                recommendedProduct: state.recommendedProduct,
-                score: state.diagnosisScore,
-                overrideProduct: product,
-              }
-            });
-            if (onDiagnosisComplete) {
-              onDiagnosisComplete(state);
-            } else {
-              const productScreenMap: Record<RecommendedProduct, string> = {
-                dawayir: "map",
-                masarat: "masarat",
-                session: "session-intake",
-                atmosfera: "atmosfera",
-              };
-              const finalProduct = product || state.recommendedProduct;
-              _onNavigate?.(productScreenMap[finalProduct] ?? "map");
+      <DiagnosisScreen
+        onComplete={(state: UserStateObject, product?: RecommendedProduct) => {
+          trackingService.recordFlow("diagnosis_completed", {
+            meta: {
+              type: state.type,
+              mainPain: state.mainPain,
+              readiness: state.readiness,
+              recommendedProduct: state.recommendedProduct,
+              score: state.diagnosisScore,
+              overrideProduct: product,
             }
-          }}
-          onSkip={() => _onNavigate?.("landing")}
-        />
-      </PageShell>
+          });
+          if (onDiagnosisComplete) {
+            onDiagnosisComplete(state);
+          } else {
+            const productScreenMap: Record<RecommendedProduct, string> = {
+              dawayir: "map",
+              masarat: "masarat",
+              session: "session-intake",
+              atmosfera: "atmosfera",
+            };
+            const finalProduct = product || state.recommendedProduct;
+            _onNavigate?.(productScreenMap[finalProduct] ?? "map");
+          }
+        }}
+        onSkip={() => _onNavigate?.("landing")}
+      />
     );
   }
 
   if (screen === "landing") {
     return (
-      <PageShell headerMode="none" tabBarVisible={false} disableAnimation maxWidth="max-w-none px-0 sm:px-0 lg:px-0">
-        <Landing
-          onStartJourney={onStartJourney}
-          onOpenSurvey={onOpenSurvey}
-          ownerInstallRequestNonce={ownerInstallRequestNonce}
-          onOwnerInstallRequestHandled={onOwnerInstallRequestHandled}
-        />
-      </PageShell>
+      <Landing
+        onStartJourney={onStartJourney}
+        onOpenSurvey={onOpenSurvey}
+        ownerInstallRequestNonce={ownerInstallRequestNonce}
+        onOwnerInstallRequestHandled={onOwnerInstallRequestHandled}
+      />
     );
   }
 
@@ -204,7 +208,12 @@ export function AppStartScreens({
   }
 
   return (
-    <div className="w-full flex-1 flex flex-col overflow-hidden relative">
+    <PageShell 
+      headerMode="none" 
+      fullWidth 
+      className="p-0"
+      disableAnimation
+    >
       <SafeCoreMapScreen
         category={category}
         goalId={goalId}
@@ -237,6 +246,6 @@ export function AppStartScreens({
               _onNavigate?.("protocol");
           }} />
       )}
-    </div>
+    </PageShell>
   );
 }

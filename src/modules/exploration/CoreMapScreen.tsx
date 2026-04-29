@@ -63,6 +63,12 @@ import { LanternInsightModal } from "./LanternInsightModal";
 import { subscribeToDawayirSignals } from "@/modules/recommendation/recommendationBus";
 import { MapArchitectChat } from "@/modules/dawayir/components/MapArchitectChat";
 import { filterNodesByContext } from "@/modules/map/mapUtils";
+import { MapHUD } from "./Map/MapHUD";
+import { MapTopNav } from "@/modules/dawayir/components/MapTopNav";
+import { MapSidebar } from "@/modules/dawayir/components/MapSidebar";
+import { MapMetricsBar } from "@/modules/dawayir/components/MapMetricsBar";
+import { MapControlDock } from "@/modules/dawayir/components/MapControlDock";
+import { Zap as ZapIcon } from "lucide-react";
 
 const DawayirCanvas = lazy(() => import("@/modules/dawayir/DawayirCanvas").then(m => ({ default: m.DawayirCanvas })));
 const FeelingCheckModal = lazy(() => import("@/modules/dawayir/FeelingCheckModal").then(m => ({ default: m.FeelingCheckModal })));
@@ -81,12 +87,22 @@ import { MajazEngine } from "@/services/audio/MajazEngine";
     */
 
 const cosmicFade = {
-  hidden: { opacity: 0, y: 10, filter: "blur(4px)" },
+  hidden: { opacity: 0, scale: 0.96, filter: "blur(10px)" },
   visible: {
     opacity: 1,
-    y: 0,
+    scale: 1,
     filter: "blur(0px)",
-    transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
+    transition: { 
+      duration: 1.4, 
+      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+      opacity: { duration: 0.8 }
+    }
+  },
+  exit: {
+    opacity: 0,
+    scale: 1.04,
+    filter: "blur(8px)",
+    transition: { duration: 0.6, ease: "easeIn" as const }
   }
 };
 
@@ -202,6 +218,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [segmentedView, setSegmentedView] = useState<"network" | "stability" | "metrics" | "live">("network");
   const [isCloudAuthOpen, setIsCloudAuthOpen] = useState(false);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+  
+  // Premium HUD states
+  const [isHandToolActive, setIsHandToolActive] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showActionPlan, setShowActionPlan] = useState(false);
+  const [showMapSettings, setShowMapSettings] = useState(false);
+  const [isOracleLoading, setIsOracleLoading] = useState(false);
+
   const user = useAuthState(s => s.user);
   const role = useAuthState(s => getEffectiveRoleFromState(s));
   const isSovereign = (user?.email === "mohamedsamy@alrehla.app" || role === "owner" || role === "superadmin");
@@ -212,12 +236,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   const nodes = useMapState((s) => s.nodes);
   const mapType = useMapState((s) => s.mapType);
-  const [isExitingWarp, setIsExitingWarp] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsExitingWarp(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     analyticsService.track(AnalyticsEvents.SANCTUARY_LOADED);
@@ -419,8 +437,46 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const contextAtlas = useMemo(() => deriveContextAtlas(nodes), [nodes]);
 
   const { hasAnsweredToday } = useDailyQuestion();
-  const tei = useMemo(() => computeTEI(nodes).score, [nodes]);
+  const teiResult = useMemo(() => computeTEI(nodes), [nodes]);
+  const tei = teiResult.score;
   const shadowScore = useMemo(() => getShadowScore(), []);
+
+  // ── Real Metrics Computation (replacing hardcoded values) ──
+  const mapMetrics = useMemo(() => {
+    // 🔋 Energy: from lastPulse (1-10 scale → 0-100)
+    const rawEnergy = lastPulse?.energy ?? 5; // default mid if no pulse
+    const energy = Math.round(rawEnergy * 10); // 1-10 → 10-100
+
+    // 🛡️ Boundaries: ratio of safe (green) nodes to total active nodes
+    const totalActive = activeNodes.length;
+    const greenCount = activeNodes.filter(n => n.ring === "green" && !n.isDetached).length;
+    const redCount = activeNodes.filter(n => n.ring === "red" && !n.isDetached).length;
+    const boundaries = totalActive > 0
+      ? Math.round(((greenCount / totalActive) * 0.7 + ((totalActive - redCount) / Math.max(totalActive, 1)) * 0.3) * 100)
+      : 50; // default if no nodes
+
+    // 👁️ Clarity: inverted TEI score (TEI = chaos, clarity = peace)
+    const clarity = Math.max(0, 100 - teiResult.score);
+
+    return { energy, boundaries, clarity };
+  }, [lastPulse?.energy, activeNodes, teiResult.score]);
+
+  // 🪜 Journey Steps: how many nodes have analysis completed
+  const journeySteps = useMemo(() => {
+    const totalActive = activeNodes.length;
+    const analyzedCount = activeNodes.filter(n => n.analysis != null).length;
+    // Milestones: 1 for adding nodes, 1 for each analyzed, capped at meaningful number
+    const milestones = Math.min(totalActive > 0 ? 5 : 0, 5); // max 5 steps
+    const completed = totalActive === 0 ? 0 : Math.min(
+      (totalActive >= 1 ? 1 : 0) + // step 1: added at least 1 person
+      (totalActive >= 3 ? 1 : 0) + // step 2: added 3+ people
+      (analyzedCount >= 1 ? 1 : 0) + // step 3: diagnosed at least 1
+      (analyzedCount >= totalActive * 0.5 ? 1 : 0) + // step 4: diagnosed half
+      (analyzedCount >= totalActive ? 1 : 0), // step 5: diagnosed all
+      milestones
+    );
+    return { current: completed, total: milestones };
+  }, [activeNodes]);
   const sessionDuration = useMemo(() => {
     const sessionStart = parseInt(
       sessionStorage.getItem("dawayir-session-start") || String(Date.now())
@@ -656,6 +712,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             <div className="map-grid" style={{ transform: `rotateX(${gridRotateX}) scale(1.5)` }} />
           </div>
         </motion.div>
+
+        {/* Ambient Orbs — soft and cheerful */}
+        <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.1) 0%, transparent 60%)", animation: "orb-drift1 38s infinite ease-in-out alternate" }} />
+        <div className="absolute bottom-[-30%] left-[-15%] w-[900px] h-[900px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(251, 191, 36, 0.08) 0%, transparent 65%)", animation: "orb-drift2 52s infinite ease-in-out alternate" }} />
+        <div className="absolute top-[45%] left-[20%] w-[600px] h-[600px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(52, 211, 153, 0.04) 0%, transparent 70%)", animation: "orb-drift3 44s infinite ease-in-out alternate" }} />
       </div>
       <SovereignBroadcastOverlay message={sovereignMessage} />
       
@@ -695,7 +759,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* Header */}
       <motion.header 
         variants={staggerContainer}
-        className="relative z-20 text-center px-4 sm:px-6 pt-20 md:pt-24 pb-1 flex flex-col items-center gap-2 pointer-events-none"
+        className="relative z-20 text-center px-4 sm:px-6 pt-[110px] md:pt-[130px] pb-1 flex flex-col items-center gap-2 pointer-events-none"
       >
         {!isSacredIsolation && (
           <motion.div
@@ -788,9 +852,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             {galaxyMode && canUseGalaxyView && galaxySubView === "forest" ? (
               <motion.div
                 key="forest"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
+                variants={cosmicFade}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
                 className="min-h-[50vh] flex-1"
                 style={{
                   order: sectionOrder["map-canvas"],
@@ -802,9 +867,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             ) : galaxyMode ? (
               <motion.div
                 key="galaxy-map"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
+                variants={cosmicFade}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
                 className="absolute inset-0 w-full h-full z-0 flex flex-col items-center justify-center"
                 style={{
                   order: sectionOrder["map-canvas"],
@@ -812,6 +878,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 }}
               >
                 <MapCanvas
+                  isHandToolActive={isHandToolActive}
                   onNodeClick={handleNodeClick}
                   onAddNode={handleAddNodeClick}
                   canOpenDetails={canUseBasicDiagnosis}
@@ -834,9 +901,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             ) : !canUseFamilyTreeView || viewMode === "map" ? (
               <motion.div
                 key="single-map"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
+                variants={cosmicFade}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
                 className="absolute inset-0 w-full h-full z-0 flex flex-col items-center justify-center"
                 style={{
                   order: sectionOrder["map-canvas"],
@@ -846,6 +914,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 <Suspense fallback={null}>
                   {mapType === "masafaty" ? (
                     <DawayirCanvas 
+                      isHandToolActive={isHandToolActive}
                       nodes={activeNodes} // Only pass active filtered nodes
                       onNodeClick={(node) => onSelectNode(node.id)}
                       onAddNode={handleAddNodeClick}
@@ -853,6 +922,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     />
                   ) : (
                     <MapCanvas
+                      isHandToolActive={isHandToolActive}
                       onNodeClick={handleNodeClick}
                       onAddNode={handleAddNodeClick}
                       canOpenDetails={canUseBasicDiagnosis}
@@ -873,13 +943,53 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     />
                   )}
                 </Suspense>
+                
+                {/* 🧭 Integrated Premium Map HUD */}
+                <div className="absolute inset-0 pointer-events-none z-50">
+                    <MapTopNav 
+                        currentStep={journeySteps.current} 
+                        totalSteps={journeySteps.total} 
+                    />
+                    <MapSidebar 
+                        onAddPerson={() => setShowAddPerson(true)} 
+                        onRearrange={() => console.log('Rearrange')} 
+                        onSave={() => console.log('Save Map')}
+                        onShowOracle={() => console.log('Call Oracle')}
+                        onShowPlan={() => setShowActionPlan(true)}
+                        isSaving={isSaving}
+                        data={{ nodes, links: [] } as any}
+                    />
+                    <MapMetricsBar 
+                        energy={mapMetrics.energy} 
+                        boundaries={mapMetrics.boundaries} 
+                        clarity={mapMetrics.clarity} 
+                    />
+                    {/* Instruction Tip */}
+                    <div className="absolute bottom-10 left-10 pointer-events-auto px-5 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-3 hidden md:flex">
+                        <div className="w-6 h-6 rounded-lg bg-teal-500/20 flex items-center justify-center">
+                            <ZapIcon size={14} className="text-teal-400" />
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-300" dir="rtl">اسحب أي شخص لتغيير موقعه في الخريطة</span>
+                    </div>
+
+                    <MapControlDock 
+                        onAnalyze={() => console.log('Analyze')}
+                        onPlan={() => setShowActionPlan(true)}
+                        onSettings={() => setShowMapSettings(true)}
+                        onSave={() => console.log('Save')}
+                        isSaving={isSaving}
+                        isHandToolActive={isHandToolActive}
+                        onToggleHandTool={() => setIsHandToolActive(!isHandToolActive)}
+                    />
+                </div>
               </motion.div>
             ) : canUseFamilyTreeView && isFamily ? (
               <motion.div
                 key="family-tree"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
+                variants={cosmicFade}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
                 className="flex-1"
                 style={{
                   order: sectionOrder["map-canvas"],
@@ -930,37 +1040,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         <MapOnboardingOverlay onClose={() => setShowOnboarding(false)} />
       )}
 
-      {/* Ring Legend */}
-      {!journeyMode && activeNodes.length > 0 && (
-        <motion.div
-          className="fixed bottom-[calc(var(--bottom-nav-height,5rem)+0.75rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.4 }}
-        >
-          <div className="flex items-center gap-1 px-3 py-2 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-xl shadow-2xl">
-            {(["green", "yellow", "red"] as const).map((key, idx) => {
-              const isActive = legendTooltip === key;
-              const config = legendConfig[key];
-              return (
-                <div key={key} className="relative flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setLegendTooltip((prev) => (prev === key ? null : key))}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-all ${isActive ? 'bg-white/10' : ''}`}
-                  >
-                    <span className="block w-2 h-2 rounded-full" style={{ background: config.dotColor, boxShadow: `0 0 8px ${config.dotGlow}` }} />
-                    <span className="text-[10px] font-semibold text-white/60">
-                      <EditableText id={config.labelKey} defaultText={config.label} page="map" editOnClick={false} />
-                    </span>
-                  </button>
-                  {idx < 2 && <span className="w-px h-4 mx-1 bg-white/10" />}
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
+      {/* Ring Legend (Legacy removed, handled by MapHUD) */}
 
       {/* Modals & Overlays */}
       <AnimatePresence>
@@ -980,19 +1060,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           {showFeelingCheck && <FeelingCheckModal onClose={() => setShowFeelingCheck(false)} />}
         </AnimatePresence>
       </Suspense>
-
-      <AnimatePresence>
-        {isExitingWarp && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.2 }}
-            className="fixed inset-0 z-[200] bg-white pointer-events-none"
-            style={{ background: "radial-gradient(circle at center, white 0%, transparent 80%)" }}
-          />
-        )}
-      </AnimatePresence>
 
       {showAddPerson && (
         <AddPersonModal

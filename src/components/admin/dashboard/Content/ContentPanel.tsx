@@ -27,6 +27,7 @@ import type { PersonGender } from "@/utils/resultScreenAI";
 import type { QuickAnswer2 } from "@/utils/suggestInitialRing";
 import type { BroadcastAudience } from "@/utils/broadcastAudience";
 import { motion, AnimatePresence } from "framer-motion";
+import { AdminTabs } from "@/components/admin/ui/AdminTabs";
 
 // Types & Constants
 type ResultAnswerOption = "often" | "sometimes" | "rarely" | "never";
@@ -272,35 +273,27 @@ export const ContentPanel: FC = () => {
                     </div>
                 </div>
 
-                <div className="relative z-10 flex p-1 bg-slate-900/50 rounded-xl border border-white/5 overflow-x-auto">
-                    {([
+                <AdminTabs 
+                    tabs={[
                         { id: "cms", label: "نصوص المنصة", icon: <FileText className="w-4 h-4" /> },
                         { id: "simulation", label: "محاكاة النتائج", icon: <Cpu className="w-4 h-4" /> },
                         { id: "missions", label: "المهمات", icon: <ListTodo className="w-4 h-4" /> },
                         { id: "broadcasts", label: "البث المباشر", icon: <Radio className="w-4 h-4" /> }
-                    ] as const).map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`px-4 py-2 rounded-lg flex items-center gap-2 text-xs font-bold transition-all whitespace-nowrap ${activeTab === tab.id
-                                ? "bg-teal-500 text-slate-950 shadow-lg"
-                                : "text-slate-400 hover:text-teal-300"
-                                }`}
-                        >
-                            {tab.icon}
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
+                    ] as const}
+                    activeTab={activeTab}
+                    onChange={setActiveTab}
+                    className="w-full md:w-auto"
+                />
             </div>
 
             <AnimatePresence mode="wait">
-
-                {/* CMS Tab */}
                 {activeTab === "cms" && (
                     <motion.div
                         key="cms"
-                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                        initial={{ opacity: 0, x: 20, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, x: -20, filter: "blur(10px)" }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         className="space-y-6"
                     >
                         <div className="admin-glass-card p-5 space-y-4 sticky top-4 z-10 bg-slate-950/80 backdrop-blur-xl border border-teal-500/20 shadow-2xl">
@@ -435,7 +428,10 @@ export const ContentPanel: FC = () => {
                 {activeTab === "simulation" && (
                     <motion.div
                         key="simulation"
-                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                        initial={{ opacity: 0, x: 20, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, x: -20, filter: "blur(10px)" }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         className="grid lg:grid-cols-3 gap-6"
                     >
                         <div className="lg:col-span-1 space-y-6">
@@ -531,7 +527,14 @@ export const ContentPanel: FC = () => {
 
                 {/* Missions Tab */}
                 {activeTab === "missions" && (
-                    <motion.div key="missions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                    <motion.div 
+                        key="missions" 
+                        initial={{ opacity: 0, x: 20, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, x: -20, filter: "blur(10px)" }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        className="space-y-6"
+                    >
                         <div className="admin-glass-card p-5 border-l-4 border-l-purple-500">
                             <h3 className="text-sm font-bold text-white mb-4">إضافة مهمة جديدة</h3>
                             <div className="flex gap-4 items-end">
@@ -569,7 +572,14 @@ export const ContentPanel: FC = () => {
 
                 {/* Broadcasts Tab */}
                 {activeTab === "broadcasts" && (
-                    <motion.div key="broadcasts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                    <motion.div 
+                        key="broadcasts" 
+                        initial={{ opacity: 0, x: 20, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, x: -20, filter: "blur(10px)" }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        className="space-y-6"
+                    >
                         <div className="admin-glass-card p-5 border-l-4 border-l-amber-500 bg-amber-500/5">
                             <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                                 <Radio className="w-4 h-4 text-amber-500" />

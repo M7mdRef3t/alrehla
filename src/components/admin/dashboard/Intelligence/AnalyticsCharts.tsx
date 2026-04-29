@@ -219,6 +219,7 @@ export const GrowthChart: React.FC = () => {
 
 // ═══ BIAS catalog for calendar ═══
 const ALL_ILLUSIONS = [
+  // أوهام معرفية
   { key: 'sunk_cost', ar: 'مغالطة التكلفة الغارقة', slug: 'sunk-cost' },
   { key: 'confirmation', ar: 'تحيز التأكيد', slug: 'confirmation' },
   { key: 'familiarity', ar: 'تأثير الألفة', slug: 'familiarity' },
@@ -226,6 +227,19 @@ const ALL_ILLUSIONS = [
   { key: 'optimism', ar: 'تحيز التفاؤل', slug: 'optimism' },
   { key: 'status_quo', ar: 'تحيز الوضع الراهن', slug: 'status-quo' },
   { key: 'blind_spot', ar: 'تحيز النقطة العمياء', slug: 'blind-spot' },
+  // أنماط علاقات (Mirror Science)
+  { key: 'emotional_denial', ar: 'الإنكار العاطفي', slug: 'emotional-denial' },
+  { key: 'reality_detachment', ar: 'الانفصال عن الواقع', slug: 'reality-detachment' },
+  { key: 'placement_anxiety', ar: 'قلق التموضع', slug: 'placement-anxiety' },
+  { key: 'false_support', ar: 'الدعم الوهمي', slug: 'false-support' },
+  { key: 'love_drain', ar: 'الحب المستنزف', slug: 'love-drain' },
+  { key: 'paper_boundaries', ar: 'الحدود الورقية', slug: 'paper-boundaries' },
+  { key: 'false_recovery', ar: 'التعافي المزيف', slug: 'false-recovery' },
+  // إضافات
+  { key: 'disconnected', ar: 'علاقة منقطعة', slug: 'disconnected' },
+  { key: 'emotional_dependency', ar: 'الاعتمادية العاطفية', slug: 'emotional-dependency' },
+  { key: 'gaslighting', ar: 'التلاعب النفسي', slug: 'gaslighting' },
+  { key: 'narcissistic_love', ar: 'الحب النرجسي', slug: 'narcissistic-love' },
 ];
 
 // ═══ Dismantling Score ═══

@@ -272,6 +272,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
       />
 
       <AmbientOverlays 
+        screen={screen}
         isVisible={isVisible} 
         activeNudge={activeNudge}
         activeMirrorInsight={activeMirrorInsight}

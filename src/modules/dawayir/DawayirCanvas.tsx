@@ -14,7 +14,7 @@ import {
 } from "@dnd-kit/core";
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { Ring, MapNode as MapNodeType } from "../map/mapTypes";
-import { GripVertical, Plus, AlertCircle, Info, X, Scissors } from "lucide-react";
+import { GripVertical, Plus, Minus, Hand, Target, AlertCircle, Info, X, Scissors } from "lucide-react";
 import { useMasafatyAnalysis, EntropyLevel } from "./hooks/useMasafatyAnalysis";
 import { Button } from '@/modules/meta/UI/Button';
 import { SafeMotionCircle, toSafeSvgRadius, toSafeSvgCoordinate } from "@/components/ui/SafeSvg";
@@ -42,6 +42,7 @@ interface DawayirCanvasProps {
   onSelectNode?: (id: string | null) => void;
   onMoveNode?: (id: string, ring: Ring) => void;
   isSelectionMode?: boolean;
+  isHandToolActive?: boolean;
 }
 
 /* ── Cinematic Constants ── */
@@ -91,36 +92,14 @@ const CinematicBackground: FC = memo(() => (
         strokeWidth="0.12"
       />
     ))}
-
-    {/* Twinkling Stars */}
-    {STAR_DATA.map((star) => (
-      <SafeMotionCircle
-        key={star.id}
-        cx={star.cx}
-        cy={star.cy}
-        r={star.r}
-        fill="#ffffff"
-        style={{ filter: "url(#starGlow)" }}
-        animate={{ 
-          opacity: [star.opacity, star.opacity * 2.5, star.opacity],
-          scale: [1, 1.2, 1]
-        }}
-        transition={{ 
-          duration: star.animDuration, 
-          repeat: Infinity, 
-          delay: star.animDelay,
-          ease: "easeInOut" 
-        }}
-      />
-    ))}
   </g>
 ));
 
 const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ radius, label, ring }) => {
   const colors = {
-    green: "var(--ring-safe)",
-    yellow: "var(--ring-caution)",
-    red: "var(--ring-danger)",
+    green: "#34d399", // soft emerald
+    yellow: "#fbbf24", // soft amber
+    red: "#fb7185", // soft rose
   };
 
   const safeRadius = Number.isFinite(radius) && radius > 0 ? radius : 1;
@@ -206,15 +185,15 @@ const MeNodeCenter: FC = memo(() => {
           <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(45, 212, 191, 0.03)" strokeWidth="0.1"/>
         </pattern>
         <radialGradient id="meGradient" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#5eead4" stopOpacity="0.4" />
-          <stop offset="70%" stopColor="#0f172a" stopOpacity="0.1" />
+          <stop offset="0%" stopColor="#34d399" stopOpacity="0.3" />
+          <stop offset="70%" stopColor="#0f172a" stopOpacity="0.05" />
           <stop offset="100%" stopColor="transparent" stopOpacity="0" />
         </radialGradient>
         <linearGradient id="meCoreGrad" x1="22%" y1="12%" x2="72%" y2="88%">
-          <stop offset="0%" stopColor="#8ffdf0" />
-          <stop offset="45%" stopColor="#2dd4bf" />
-          <stop offset="78%" stopColor="#0f766e" />
-          <stop offset="100%" stopColor="#05292d" />
+          <stop offset="0%" stopColor="#a7f3d0" />
+          <stop offset="45%" stopColor="#34d399" />
+          <stop offset="78%" stopColor="#059669" />
+          <stop offset="100%" stopColor="#064e3b" />
         </linearGradient>
       </defs>
       
@@ -278,11 +257,13 @@ interface DraggableNodeProps {
   index: number;
   total: number;
   entropyLevel: EntropyLevel;
+  isHandToolActive?: boolean;
 }
 
-const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, total, entropyLevel }) => {
+const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, total, entropyLevel, isHandToolActive = false }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: node.id,
+    disabled: isHandToolActive
   });
 
   const archiveNode = useMapState((s) => s.archiveNode);
@@ -319,15 +300,15 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   } : undefined;
 
   const ringColors = {
-    green: "url(#grad-green)",
-    yellow: "url(#grad-yellow)",
-    red: "url(#grad-red)",
+    green: "#34d399",
+    yellow: "#fbbf24",
+    red: "#fb7185",
   };
 
   const ringGlows = {
-    green: "rgba(45, 212, 191, 0.4)",
-    yellow: "rgba(234, 179, 8, 0.4)",
-    red: "rgba(244, 63, 94, 0.4)",
+    green: "rgba(52, 211, 153, 0.4)",
+    yellow: "rgba(251, 191, 36, 0.4)",
+    red: "rgba(251, 113, 133, 0.4)",
   };
 
   return (
@@ -364,6 +345,15 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       {...attributes} 
       {...listeners}
     >
+      {/* Orbit Line from Center to Node */}
+      <line 
+        x1={50 - baseX} y1={50 - baseY} 
+        x2={0} y2={0} 
+        stroke={ringColors[node.ring as keyof typeof ringColors] || ringColors.green}
+        strokeWidth={0.1}
+        opacity={0.15}
+        className="pointer-events-none"
+      />
       {/* "Birth" Animation - A pulsing ring that appears only once on mount */}
       <SafeMotionCircle
         cx={baseX} cy={baseY} r={4}
@@ -624,7 +614,8 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
   nodes: passedNodes, 
   onNodeClick, 
   onAddNode, 
-  goalId = "all" 
+  goalId = "all",
+  isHandToolActive = false
 }) => {
   const storeNodes = useMapState((s) => s.nodes);
   const allNodes = passedNodes || storeNodes;
@@ -673,13 +664,46 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, delta } = event;
+
     const nodeId = active.id as string;
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
 
+    // Find the node's original SVG position (calculate inline without groupedNodes)
+    const nodesInSameRing = nodes.filter(n => n.ring === node.ring && !n.isNodeArchived);
+    const nodeIndex = nodesInSameRing.indexOf(node);
+    const totalInRing = nodesInSameRing.length || 1;
+    const baseRadius = node.ring === "green" ? 20 : node.ring === "yellow" ? 35 : 50;
+    const angle = (nodeIndex / Math.max(totalInRing, 1)) * 2 * Math.PI - Math.PI / 2;
+    const baseX = 50 + baseRadius * Math.cos(angle);
+    const baseY = 50 + baseRadius * Math.sin(angle);
+
+    // Convert pixel delta to approximate SVG units (canvas ~400px = 100 SVG units)
+    const svgDeltaX = delta.x * 0.25;
+    const svgDeltaY = delta.y * 0.25;
+
+    // New position and distance from center (50, 50)
+    const newX = baseX + svgDeltaX;
+    const newY = baseY + svgDeltaY;
+    const distFromCenter = Math.sqrt(Math.pow(newX - 50, 2) + Math.pow(newY - 50, 2));
+
+    let newRing: Ring = node.ring;
+    if (distFromCenter <= 27) {
+      newRing = 'green';
+    } else if (distFromCenter <= 42) {
+      newRing = 'yellow';
+    } else {
+      newRing = 'red';
+    }
+
+    if (newRing !== node.ring) {
+      moveNodeToRing(nodeId, newRing);
+    }
+
     // Haptic feedback
     if (window.navigator.vibrate) window.navigator.vibrate(10);
   };
+
 
   const groupedNodes = useMemo(() => {
     const groups = {
@@ -717,19 +741,137 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
   const { entropyMap, isLoading: aiLoading } = useMasafatyAnalysis();
   const [selectedEntropyNode, setSelectedEntropyNode] = useState<string | null>(null);
 
-  const getEntropyText = (level: EntropyLevel, ring: Ring) => {
-    if (level === 3) return "نزيف أصول: الشخص ده في الدائرة الخضراء بس بيستنزف طاقتك/جسمك جداً.";
-    if (level === 2) return "اختراق حدود: الشخص ده في الدائرة الحمراء بس لسا واخد وقت/مساحة كبيرة.";
-    if (level === 1) return "عبء مادي: الشخص ده في الدائرة الصفراء وفيه ضغط مادي واضح.";
-    return null;
+  // --- Zoom & Pan State ---
+  const [viewBoxX, setViewBoxX] = useState(0);
+  const [viewBoxY, setViewBoxY] = useState(0);
+  const [zoomScale, setZoomScale] = useState(1);
+  const [isPanMode, setIsPanMode] = useState(isHandToolActive); // Toggle Hand tool
+  const [isDraggingBg, setIsDraggingBg] = useState(false);
+  const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    setIsPanMode(isHandToolActive);
+  }, [isHandToolActive]);
+
+  const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    // Only initiate pan if we click directly on the SVG or if Pan Mode is forced
+    if (e.target === e.currentTarget || isPanMode) {
+      setIsDraggingBg(true);
+      setLastPos({ x: e.clientX, y: e.clientY });
+      (e.target as Element).setPointerCapture(e.pointerId);
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (isDraggingBg) {
+      const dx = e.clientX - lastPos.x;
+      const dy = e.clientY - lastPos.y;
+      const svgRect = e.currentTarget.getBoundingClientRect();
+      const ratioX = (100 / zoomScale) / svgRect.width;
+      const ratioY = (100 / zoomScale) / svgRect.height;
+      setViewBoxX(x => x - dx * ratioX);
+      setViewBoxY(y => y - dy * ratioY);
+      setLastPos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (isDraggingBg) {
+      setIsDraggingBg(false);
+      (e.target as Element).releasePointerCapture(e.pointerId);
+    }
+  };
+
+  const performZoom = (zoomMultiplier: number, relX: number = 0.5, relY: number = 0.5) => {
+    setZoomScale(currentZoom => {
+      let newZoom = currentZoom * zoomMultiplier;
+      newZoom = Math.max(0.3, Math.min(newZoom, 5));
+      if (newZoom === currentZoom) return currentZoom;
+      
+      const currentW = 100 / currentZoom;
+      const newW = 100 / newZoom;
+      
+      setViewBoxX(x => x + (currentW - newW) * relX);
+      setViewBoxY(y => y + (currentW - newW) * relY);
+      
+      return newZoom;
+    });
+  };
+
+  const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+    const zoomMultiplier = e.deltaY > 0 ? 0.9 : 1.1;
+    const svgRect = e.currentTarget.getBoundingClientRect();
+    const mouseX = e.clientX - svgRect.left;
+    const mouseY = e.clientY - svgRect.top;
+    
+    const relX = mouseX / svgRect.width;
+    const relY = mouseY / svgRect.height;
+    
+    performZoom(zoomMultiplier, relX, relY);
+  };
+
+  const zoomIn = () => performZoom(1.3);
+  const zoomOut = () => performZoom(0.7);
+  const centerView = () => {
+    setZoomScale(1);
+    setViewBoxX(0);
+    setViewBoxY(0);
   };
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-transparent">
+      {/* 🧭 Map Navigation Controls (Merged Premium Panel) */}
+      <div className="absolute top-32 left-6 z-50 flex flex-col gap-2">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex flex-col gap-1 p-2 rounded-2xl shadow-2xl pointer-events-auto"
+          style={{
+            background: "linear-gradient(145deg, rgba(15,23,42,0.85), rgba(30,41,59,0.95))",
+            backdropFilter: "blur(24px)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.05)"
+          }}
+        >
+          {/* Separator */}
+          <div className="h-px bg-white/10 my-1 mx-2" />
+
+          {/* Zoom Actions */}
+          <button
+            onClick={zoomIn}
+            className="p-3 rounded-xl hover:bg-white/10 transition-all duration-200 text-slate-300 hover:text-teal-400 group"
+            title="تكبير (Zoom In)"
+          >
+            <Plus size={20} strokeWidth={2.5} className="group-active:scale-90 transition-transform" />
+          </button>
+          
+          <button
+            onClick={zoomOut}
+            className="p-3 rounded-xl hover:bg-white/10 transition-all duration-200 text-slate-300 hover:text-teal-400 group"
+            title="تصغير (Zoom Out)"
+          >
+            <Minus size={20} strokeWidth={2.5} className="group-active:scale-90 transition-transform" />
+          </button>
+
+          <button
+            onClick={centerView}
+            className="p-3 rounded-xl hover:bg-white/10 transition-all duration-200 text-slate-300 hover:text-teal-400 group"
+            title="توسيط الخريطة (Reset View)"
+          >
+            <Target size={20} strokeWidth={2.5} className="group-active:scale-90 transition-transform" />
+          </button>
+        </motion.div>
+      </div>
+
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <svg 
-          viewBox="0 0 100 100" 
-          className="dawayir-map-svg w-full h-full touch-none"
+          viewBox={`${viewBoxX} ${viewBoxY} ${100 / zoomScale} ${100 / zoomScale}`} 
+          className={`dawayir-map-svg w-full h-full ${isPanMode ? 'cursor-grab' : 'touch-none'}`}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+          onWheel={handleWheel}
         >
           {/* Background Grid - subtle */}
           <defs>
@@ -767,13 +909,13 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
 
           {/* Nodes */}
           {groupedNodes.red.map((node, i) => (
-            <RelationshipNode key={node.id} node={node} index={i} total={groupedNodes.red.length} onClick={onNodeClick} entropyLevel={entropyMap[node.id] || 0} />
+            <RelationshipNode key={node.id} node={node} index={i} total={groupedNodes.red.length} onClick={onNodeClick} entropyLevel={entropyMap[node.id] || 0} isHandToolActive={isPanMode} />
           ))}
           {groupedNodes.yellow.map((node, i) => (
-            <RelationshipNode key={node.id} node={node} index={i} total={groupedNodes.yellow.length} onClick={onNodeClick} entropyLevel={entropyMap[node.id] || 0} />
+            <RelationshipNode key={node.id} node={node} index={i} total={groupedNodes.yellow.length} onClick={onNodeClick} entropyLevel={entropyMap[node.id] || 0} isHandToolActive={isPanMode} />
           ))}
           {groupedNodes.green.map((node, i) => (
-            <RelationshipNode key={node.id} node={node} index={i} total={groupedNodes.green.length} onClick={onNodeClick} entropyLevel={entropyMap[node.id] || 0} />
+            <RelationshipNode key={node.id} node={node} index={i} total={groupedNodes.green.length} onClick={onNodeClick} entropyLevel={entropyMap[node.id] || 0} isHandToolActive={isPanMode} />
           ))}
 
           {onAddNode && ghostNodePosition && (

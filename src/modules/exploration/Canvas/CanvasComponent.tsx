@@ -224,8 +224,9 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate, 
                 maxZoom={1.5}
             >
                 {settings?.showGrid !== false && <Background color="#111827" gap={40} size={1} variant={BackgroundVariant.Dots} />}
-                <Controls showInteractive={false} className="glass border-white/10 shadow-xl !bg-slate-900/50" />
+                <Controls position="top-left" showInteractive={true} className="glass border-white/10 shadow-xl !bg-slate-900/50" />
             </ReactFlow>
         </div>
+
     );
 }

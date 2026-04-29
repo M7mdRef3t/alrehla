@@ -85,6 +85,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   sila: "Sila Relationship Tracker",
   basma: "Basma Identity Fingerprint",
   qutb: "Qutb North Star",
+  muhadatha: "Muhadatha Conversation",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -167,6 +168,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   sila: { title: "صلة — جودة علاقاتك | Alrehla", description: "تتبع جودة التواصل مع أهم أشخاص حياتك." },
   basma: { title: "بصمة — هويتك الفريدة | Alrehla", description: "حمضك النفسي — سماتك وقيمك وبيانات هويتك." },
   qutb: { title: "قطب — نجمك القطبي | Alrehla", description: "الهدف الأعلى الذي يوجّه كل شيء في حياتك." },
+  muhadatha: { title: "محادثة — حوارك الذكي | Alrehla", description: "حوار مع الذكاء الاصطناعي لفهم رحلتك بشكل أعمق." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {

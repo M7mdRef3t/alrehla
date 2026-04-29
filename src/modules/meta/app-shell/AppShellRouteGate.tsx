@@ -102,7 +102,10 @@ export function AppShellRouteGate({
     <>
       {/* Admin Layer - Only rendered if we're on an admin route or starting with /admin */}
       {(isAdminRoute || isAdminPathname) && (
-        <div className={isToolActive ? "hidden opacity-0 pointer-events-none" : "block min-h-screen"}>
+        <div 
+          className={isToolActive ? "hidden opacity-0 pointer-events-none" : "block min-h-screen"}
+          dir="rtl"
+        >
           <Suspense fallback={<div className="min-h-screen bg-[var(--page-bg)]" />}>
             <AdminDashboard onExit={onExitAdminRoute} />
           </Suspense>
