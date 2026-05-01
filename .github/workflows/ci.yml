@@ -29,8 +29,8 @@ jobs:
         shell: bash
         run: |
           for attempt in 1 2 3; do
-            echo "npm ci attempt $attempt/3"
-            if npm ci; then
+            echo "npm ci --legacy-peer-deps attempt $attempt/3"
+            if npm ci --legacy-peer-deps; then
               exit 0
             fi
             if [ "$attempt" -lt 3 ]; then
@@ -38,7 +38,7 @@ jobs:
               sleep 10
             fi
           done
-          echo "npm ci failed after 3 attempts"
+          echo "npm ci --legacy-peer-deps failed after 3 attempts"
           exit 1
 
       - name: Typecheck
