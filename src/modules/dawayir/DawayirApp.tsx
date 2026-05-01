@@ -256,7 +256,7 @@ export default function DawayirApp() {
 
     return (
         <div
-            className="h-screen w-full text-slate-200 font-sans overflow-hidden relative"
+            className="h-[100dvh] w-full text-slate-200 font-sans overflow-hidden relative"
             style={{ background: "#020408", colorScheme: "dark" }}
             {...gestureHandlers}
         >

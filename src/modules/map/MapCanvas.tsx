@@ -1127,7 +1127,7 @@ interface MapCanvasProps {
     isListening: boolean;
     isSpeaking?: boolean;
     onToggle: () => void;
-    onNodeDrop: (nodeId: string) => void;
+    onNodeDrop?: (nodeId: string) => void;
   };
 }
 

@@ -17,7 +17,8 @@ export type NudgeType =
   | "follow_up"
   | "weekly_digest"
   | "streak_warning"
-  | "energy_alert";
+  | "energy_alert"
+  | "connection_insight";
 
 export interface Nudge {
   id: string;
@@ -63,6 +64,7 @@ const DEFAULT_PREFERENCES: NudgePreference[] = [
   { type: "weekly_digest", label: "ملخص أسبوعي", emoji: "📊", enabled: true },
   { type: "streak_warning", label: "تحذير streak", emoji: "🔥", enabled: true },
   { type: "energy_alert", label: "تنبيه طاقة", emoji: "⚡", enabled: true },
+  { type: "connection_insight", label: "بصيرة اتصال", emoji: "🔮", enabled: true },
 ];
 
 export const useSadaState = create<SadaState>()(

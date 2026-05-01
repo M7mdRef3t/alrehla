@@ -132,7 +132,7 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
         <div class="footer">
             <p>أنت بتستلم الإيميل ده لأنك قررت تدور على راحتك وتواجه المشتتات.</p>
             <p>بياناتك أمانة ومشفرة تماماً.</p>
-            <p>قتل الدجال بالعلم © 2026</p>
+            <p>مواجهة الوهم بالحقيقة © 2026</p>
         </div>
     </div>
 </body>

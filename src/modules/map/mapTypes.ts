@@ -259,4 +259,18 @@ export interface MapNode {
     reminder?: string;
     timestamp: number;
   };
+
+  /** 🔮 أحداث الاتصال غير المادي المرصودة مع هذا الشخص */
+  connectionEvents?: {
+    /** عدد الأحداث المرصودة */
+    totalEvents: number;
+    /** عدد الأحداث المؤكدة */
+    confirmedEvents: number;
+    /** آخر حدث */
+    lastEventAt?: number;
+    /** الظاهرة الغالبة */
+    dominantPhenomenon?: string;
+    /** بصيرة AI */
+    aiInsight?: string;
+  };
 }

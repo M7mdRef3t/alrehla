@@ -298,7 +298,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-      <body suppressHydrationWarning>
+      <body suppressHydrationWarning className="overscroll-none">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <ClarityInit />
           <ConsciousnessSensoryProvider>

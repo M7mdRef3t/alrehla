@@ -81,7 +81,7 @@ export const LayoutModeSwitcher: FC = () => {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="fixed top-4 left-4 z-50 p-3 rounded-full glass-card hover:bg-white/10 transition-all group"
+        className="fixed top-[calc(env(safe-area-inset-top)+5rem)] md:top-20 left-4 z-50 p-3 rounded-full glass-card hover:bg-white/10 transition-all group"
         style={{
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)"
         }}

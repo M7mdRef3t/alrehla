@@ -97,7 +97,7 @@ export function UpgradeScreen({ isOpen, onClose }: UpgradeScreenProps) {
 
                   <h2 className="text-3xl font-black text-white mb-4 leading-tight">أوقف نزيف طاقتك الآن</h2>
                   <p className="text-sm font-medium text-amber-100/70 leading-relaxed max-w-sm">
-                    الرحلة مصممة مش عشان ترفهك، مصممة عشان تديك درع صلب تقدر تتعامل بيه مع الدجالين ودوائرك المستنزِفة.
+                    الرحلة مصممة مش عشان ترفهك، مصممة عشان تديك درع صلب تقدر تتعامل بيه مع الأوهام ودوائرك المستنزِفة.
                   </p>
                 </div>
 

@@ -154,7 +154,7 @@ const LOGO_CONCEPTS: LogoConcept[] = [
     src: "/brand-concepts/logo-tree-of-mind.png",
     category: "composite",
     strengths: ["يربط العلم بالروحانية", "تصميم غني", "يشتغل كأيقونة"],
-    bestFor: "لو عايز توصّل فكرة 'قتل الدجال بالعلم' بصرياً",
+    bestFor: "لو عايز توصّل فكرة 'مواجهة الوهم بالحقيقة' بصرياً",
   },
   {
     id: "line-compass-man",

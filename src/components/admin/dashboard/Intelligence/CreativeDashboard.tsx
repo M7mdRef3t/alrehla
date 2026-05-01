@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap as Sparkles, Send, ShieldCheck, Zap, RefreshCcw, CheckCircle2, AlertCircle, BarChart3, TrendingUp, Users, Video, Link as LinkIcon, Link2, Plus, ChevronDown, Calendar, Eye, PenLine } from 'lucide-react';
+import { Zap as Sparkles, Send, ShieldCheck, Zap, RefreshCcw, CheckCircle2, AlertCircle, BarChart3, TrendingUp, Users, Video, Link as LinkIcon, Link2, Plus, ChevronDown, Calendar, Eye, PenLine, Magnet } from 'lucide-react';
 import { viralArchitect, ViralPost } from '@/ai/ViralContentManager';
 import { supabase, isSupabaseReady } from '@/services/supabaseClient';
 import { AdminTooltip } from '../Overview/components/AdminTooltip';
@@ -16,6 +16,8 @@ interface VideoAnalytics {
     platform: string;
     description?: string;
     views?: number;
+    hook?: string;
+    visualDirection?: string;
 }
 
 export const CreativeDashboard: React.FC = () => {
@@ -28,11 +30,20 @@ export const CreativeDashboard: React.FC = () => {
 
     // Analytics State
     const [videos, setVideos] = useState<VideoAnalytics[]>([]);
-    const [stats, setStats] = useState({
+    const [stats, setStats] = useState<{
+        totalVideos: number;
+        totalClicks: number;
+        activeIllusions: number;
+        conversionRate: number;
+        bestHook: { text: string; views: number } | null;
+        bestVisual: { text: string; views: number } | null;
+    }>({
         totalVideos: 0,
         totalClicks: 0,
         activeIllusions: 0,
-        conversionRate: 0
+        conversionRate: 0,
+        bestHook: null,
+        bestVisual: null
     });
     const [isFetchingAnalytics, setIsFetchingAnalytics] = useState(false);
 
@@ -46,9 +57,16 @@ export const CreativeDashboard: React.FC = () => {
     const [manualPlatform, setManualPlatform] = useState('');
     const [manualDescription, setManualDescription] = useState('');
     const [manualPublishDate, setManualPublishDate] = useState(new Date().toISOString().slice(0, 10));
+    const [manualPublishDateOverride, setManualPublishDateOverride] = useState(false);
     const [manualViews, setManualViews] = useState('');
+    const [manualViewsOverride, setManualViewsOverride] = useState(false);
+    const [manualVisualDirection, setManualVisualDirection] = useState('');
+    const [manualCaption, setManualCaption] = useState('');
+    const [manualHook, setManualHook] = useState('');
+    const [manualScript, setManualScript] = useState('');
     const [isSubmittingManual, setIsSubmittingManual] = useState(false);
     const [manualSuccess, setManualSuccess] = useState(false);
+    const [isSyncingViews, setIsSyncingViews] = useState(false);
 
     // ═══ Illusion Options (Grouped) ═══
     const ILLUSION_GROUPS = [
@@ -116,6 +134,19 @@ export const CreativeDashboard: React.FC = () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             const resolvedPlatform = manualPlatform || detectPlatformFromUrl(manualUrl);
+            
+            let initialViews = manualViews ? Number(manualViews) : 0;
+            if (!manualViews) {
+                try {
+                    const res = await fetch('/api/social/views', {
+                        method: 'POST',
+                        body: JSON.stringify({ url: manualUrl.trim(), platform: resolvedPlatform, publishedAt: manualPublishDate })
+                    });
+                    const data = await res.json();
+                    if (data.success && data.views) initialViews = data.views;
+                } catch (e) { console.error('Initial views fetch failed', e); }
+            }
+
             await supabase.from('feedback').insert({
                 content: manualUrl.trim(),
                 rating: 'up',
@@ -128,15 +159,26 @@ export const CreativeDashboard: React.FC = () => {
                     platform: resolvedPlatform,
                     description: manualDescription.trim() || undefined,
                     publishDate: manualPublishDate,
-                    views: manualViews ? Number(manualViews) : undefined,
+                    views: initialViews,
                     topic: 'تفكيك أوهام',
                     manual: true,
+                    visualDirection: manualVisualDirection.trim() || undefined,
+                    caption: manualCaption.trim() || undefined,
+                    hook: manualHook.trim() || undefined,
+                    script: manualScript.trim() || undefined,
                 },
             });
             setManualSuccess(true);
             setManualUrl('');
             setManualDescription('');
             setManualViews('');
+            setManualViewsOverride(false);
+            setManualPublishDate(new Date().toISOString().slice(0, 10));
+            setManualPublishDateOverride(false);
+            setManualVisualDirection('');
+            setManualCaption('');
+            setManualHook('');
+            setManualScript('');
             setManualPlatform('');
             setManualToneOverride(false);
             setTimeout(() => { setManualSuccess(false); setShowManualForm(false); fetchAnalytics(); }, 1500);
@@ -144,6 +186,19 @@ export const CreativeDashboard: React.FC = () => {
             console.error('Manual video submit failed:', e);
         } finally {
             setIsSubmittingManual(false);
+        }
+    };
+
+    const handleSyncViews = async () => {
+        setIsSyncingViews(true);
+        try {
+            const res = await fetch('/api/social/sync-views');
+            await res.json();
+            fetchAnalytics();
+        } catch (e) {
+            console.error('Failed to sync views:', e);
+        } finally {
+            setIsSyncingViews(false);
         }
     };
 
@@ -220,6 +275,8 @@ export const CreativeDashboard: React.FC = () => {
                         estimatedClicks: correlatedClicks,
                         description: meta.description,
                         views: meta.views,
+                        hook: meta.hook,
+                        visualDirection: meta.visualDirection,
                     };
                 });
 
@@ -228,13 +285,48 @@ export const CreativeDashboard: React.FC = () => {
                 const illusions = new Set(formattedVideos.map(v => v.illusionName)).size;
                 const totalCorrelatedClicks = formattedVideos.reduce((a, b) => a + b.estimatedClicks, 0);
                 
+                // Smart Insights Calculation
+                const hooksMap: Record<string, { totalViews: number; count: number }> = {};
+                const visualsMap: Record<string, { totalViews: number; count: number }> = {};
+
+                formattedVideos.forEach(v => {
+                    const views = v.views || 0;
+                    if (v.hook) {
+                        if (!hooksMap[v.hook]) hooksMap[v.hook] = { totalViews: 0, count: 0 };
+                        hooksMap[v.hook].totalViews += views;
+                        hooksMap[v.hook].count += 1;
+                    }
+                    if (v.visualDirection) {
+                        if (!visualsMap[v.visualDirection]) visualsMap[v.visualDirection] = { totalViews: 0, count: 0 };
+                        visualsMap[v.visualDirection].totalViews += views;
+                        visualsMap[v.visualDirection].count += 1;
+                    }
+                });
+
+                let bestHook = null;
+                let bestVisual = null;
+                let maxHookAvg = -1;
+                let maxVisualAvg = -1;
+
+                Object.entries(hooksMap).forEach(([hook, data]) => {
+                    const avg = data.totalViews / data.count;
+                    if (avg > maxHookAvg) { maxHookAvg = avg; bestHook = { text: hook, views: Math.floor(avg) }; }
+                });
+
+                Object.entries(visualsMap).forEach(([visual, data]) => {
+                    const avg = data.totalViews / data.count;
+                    if (avg > maxVisualAvg) { maxVisualAvg = avg; bestVisual = { text: visual, views: Math.floor(avg) }; }
+                });
+
                 setStats({
                     totalVideos: formattedVideos.length,
                     totalClicks: totalStudioClicks,
                     activeIllusions: illusions,
                     conversionRate: totalStudioClicks > 0 && formattedVideos.length > 0
                         ? Number(((totalStudioClicks / (formattedVideos.length * totalStudioClicks / totalCorrelatedClicks || 1)) * 100 / 100).toFixed(1))
-                        : 0
+                        : 0,
+                    bestHook,
+                    bestVisual
                 });
             }
         } catch (err) {
@@ -318,6 +410,57 @@ export const CreativeDashboard: React.FC = () => {
                                 </div>
                                 <h4 className="text-3xl font-black text-white mb-1">{stats.conversionRate}%</h4>
                                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">معدل التحويل (CR)</p>
+                            </div>
+                        </div>
+
+                        {/* Smart Insights (الرؤى الذكية) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-gradient-to-br from-indigo-500/10 to-violet-500/5 border border-indigo-500/20 p-6 rounded-[2rem] relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-all"></div>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                        <Magnet className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-black text-white">أفضل هوك (Best Hook)</h3>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">بناءً على متوسط المشاهدات</p>
+                                    </div>
+                                </div>
+                                {stats.bestHook ? (
+                                    <div>
+                                        <p className="text-lg text-white font-medium mb-3 leading-relaxed" dir="rtl">"{stats.bestHook.text}"</p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold font-mono">{stats.bestHook.views.toLocaleString()}</span>
+                                            <span className="text-[10px] text-slate-500">متوسط مشاهدة</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-slate-500 italic mt-4">جاري جمع البيانات... أضف هوك للفيديوهات القادمة</p>
+                                )}
+                            </div>
+
+                            <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 p-6 rounded-[2rem] relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all"></div>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                        <Eye className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-black text-white">أفضل توجيه بصري (Best Visuals)</h3>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">بناءً على متوسط المشاهدات</p>
+                                    </div>
+                                </div>
+                                {stats.bestVisual ? (
+                                    <div>
+                                        <p className="text-lg text-white font-medium mb-3 leading-relaxed" dir="rtl">"{stats.bestVisual.text}"</p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold font-mono">{stats.bestVisual.views.toLocaleString()}</span>
+                                            <span className="text-[10px] text-slate-500">متوسط مشاهدة</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-slate-500 italic mt-4">جاري جمع البيانات... أضف توجيه بصري للفيديوهات القادمة</p>
+                                )}
                             </div>
                         </div>
 
@@ -436,15 +579,76 @@ export const CreativeDashboard: React.FC = () => {
                                                 {/* Date + Views Row */}
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">تاريخ النشر</label>
-                                                        <input type="date" value={manualPublishDate} onChange={e => setManualPublishDate(e.target.value)}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500/50 transition-colors" />
+                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">تاريخ النشر (تلقائي)</label>
+                                                        <div className="flex items-center gap-2">
+                                                            {manualPublishDateOverride ? (
+                                                                <input type="date" value={manualPublishDate} onChange={e => setManualPublishDate(e.target.value)}
+                                                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500/50 transition-colors" autoFocus />
+                                                            ) : (
+                                                                <div className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm flex items-center justify-between">
+                                                                    <span className="text-slate-500 font-medium text-xs">تاريخ اليوم ({new Date().toISOString().slice(0, 10)})</span>
+                                                                    <span className="text-[8px] text-emerald-400 font-mono uppercase">AUTO</span>
+                                                                </div>
+                                                            )}
+                                                            <button onClick={() => {
+                                                                setManualPublishDateOverride(!manualPublishDateOverride);
+                                                                if (manualPublishDateOverride) setManualPublishDate(new Date().toISOString().slice(0, 10));
+                                                            }}
+                                                                className="px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-bold text-slate-400 hover:text-white hover:bg-white/10 transition-colors whitespace-nowrap">
+                                                                {manualPublishDateOverride ? '↺ تلقائي' : '✏️ تغيير'}
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                     <div>
-                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">المشاهدات (اختياري)</label>
-                                                        <input type="number" value={manualViews} onChange={e => setManualViews(e.target.value)}
-                                                            placeholder="مثال: 5000"
-                                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50 transition-colors" dir="ltr" />
+                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">المشاهدات (تلقائي)</label>
+                                                        <div className="flex items-center gap-2">
+                                                            {manualViewsOverride ? (
+                                                                <input type="number" value={manualViews} onChange={e => setManualViews(e.target.value)}
+                                                                    placeholder="مثال: 5000"
+                                                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50 transition-colors" dir="ltr" autoFocus />
+                                                            ) : (
+                                                                <div className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm flex items-center justify-between">
+                                                                    <span className="text-slate-500 font-medium text-xs">جلب تلقائي من الرابط</span>
+                                                                    <span className="text-[8px] text-emerald-400 font-mono uppercase">AUTO</span>
+                                                                </div>
+                                                            )}
+                                                            <button onClick={() => {
+                                                                setManualViewsOverride(!manualViewsOverride);
+                                                                if (manualViewsOverride) setManualViews('');
+                                                            }}
+                                                                className="px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-bold text-slate-400 hover:text-white hover:bg-white/10 transition-colors whitespace-nowrap">
+                                                                {manualViewsOverride ? '↺ تلقائي' : '✏️ تغيير'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {/* Optional Content Details */}
+                                                <div className="space-y-4 border-t border-white/10 pt-4 mt-2">
+                                                    <div>
+                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">الهوك - Hook (اختياري)</label>
+                                                        <input type="text" value={manualHook} onChange={e => setManualHook(e.target.value)}
+                                                            placeholder="العبارة الخاطفة في أول ثواني..."
+                                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50 transition-colors" dir="rtl" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">الاسكريبت - Script (اختياري)</label>
+                                                        <textarea value={manualScript} onChange={e => setManualScript(e.target.value)}
+                                                            placeholder="النص الكامل أو النقاط الأساسية..."
+                                                            rows={3}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50 transition-colors resize-none" dir="rtl" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">التوجيه البصري - Visuals (اختياري)</label>
+                                                        <input type="text" value={manualVisualDirection} onChange={e => setManualVisualDirection(e.target.value)}
+                                                            placeholder="مثال: زوم بطيء، إضاءة خافتة..."
+                                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50 transition-colors" dir="rtl" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">الكابشن - Caption (اختياري)</label>
+                                                        <textarea value={manualCaption} onChange={e => setManualCaption(e.target.value)}
+                                                            placeholder="النص المكتوب تحت الفيديو والهاشتاجات..."
+                                                            rows={2}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50 transition-colors resize-none" dir="rtl" />
                                                     </div>
                                                 </div>
                                                 {/* Submit */}
@@ -467,13 +671,25 @@ export const CreativeDashboard: React.FC = () => {
                                     <BarChart3 className="w-4 h-4 text-amber-400" />
                                     تأثير الفيديوهات (Video Impact Radar)
                                 </h3>
-                                <button
-                                    onClick={fetchAnalytics}
-                                    disabled={isFetchingAnalytics}
-                                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-colors"
-                                >
-                                    <RefreshCcw className={`w-4 h-4 ${isFetchingAnalytics ? 'animate-spin' : ''}`} />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handleSyncViews}
+                                        disabled={isSyncingViews}
+                                        title="مزامنة المشاهدات تلقائياً"
+                                        className="p-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-colors flex items-center gap-2"
+                                    >
+                                        <RefreshCcw className={`w-4 h-4 ${isSyncingViews ? 'animate-spin' : ''}`} />
+                                        <span className="text-xs font-bold hidden sm:inline">مزامنة المشاهدات</span>
+                                    </button>
+                                    <button
+                                        onClick={fetchAnalytics}
+                                        disabled={isFetchingAnalytics}
+                                        title="تحديث الجدول"
+                                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-colors"
+                                    >
+                                        <RefreshCcw className={`w-4 h-4 ${isFetchingAnalytics ? 'animate-spin' : ''}`} />
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="overflow-x-auto">

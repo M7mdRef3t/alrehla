@@ -23,6 +23,10 @@ import { useGamificationState } from "@/domains/gamification/store/gamification.
 import { useWirdState } from "@/modules/wird/store/wird.store";
 import { useBawsalaState } from "@/modules/bawsala/store/bawsala.store";
 import { useNadhirState } from "@/modules/nadhir/store/nadhir.store";
+import { useMapState } from "@/modules/map/dawayirIndex";
+import { CONNECTION_PHENOMENA } from "@/data/connectionPhenomena";
+import { useTruthTestState } from "@/services/truthTest.store";
+import { TYPE_LABELS } from "@/services/truthTestEngine";
 
 /* ═══════════════════════════════════════════ */
 /*               CONSTANTS                    */
@@ -53,6 +57,7 @@ function useNudgeGenerator() {
   const wirdState = useWirdState();
   const { decisions } = useBawsalaState();
   const { safeContacts } = useNadhirState();
+  const mapNodes = useMapState((s) => s.nodes);
 
   const isEnabled = useCallback((type: NudgeType) => preferences.find((p) => p.type === type)?.enabled ?? true, [preferences]);
 
@@ -232,12 +237,127 @@ function useNudgeGenerator() {
       }
     }
 
+    // ── Connection Insight (رصد تلقائي للاتصالات غير المادية) ──
+    if (isEnabled("connection_insight")) {
+      // رصد: أشخاص عندهم أحداث اتصال مرصودة على الخريطة
+      const peopleWithConnections = mapNodes.filter(
+        (n) => n.connectionEvents && n.connectionEvents.totalEvents >= 3
+      );
+
+      for (const person of peopleWithConnections.slice(0, 2)) {
+        const ce = person.connectionEvents!;
+        const alreadyNudged = nudges.some(
+          (n) => n.type === "connection_insight" && n.message.includes(person.label)
+        );
+        if (alreadyNudged) continue;
+
+        const phenomenonName = ce.dominantPhenomenon
+          ? (CONNECTION_PHENOMENA[ce.dominantPhenomenon as keyof typeof CONNECTION_PHENOMENA]?.nameAr ?? "نمط ملفت")
+          : "نمط ملفت";
+
+        const confirmRate = ce.totalEvents > 0
+          ? Math.round((ce.confirmedEvents / ce.totalEvents) * 100)
+          : 0;
+
+        let insightMessage: string;
+        if (confirmRate >= 60) {
+          insightMessage = `${ce.totalEvents} حدث اتصال مع "${person.label}" — ${ce.confirmedEvents} منهم اتأكد (${confirmRate}%). ده نمط يستاهل انتباهك.`;
+        } else {
+          insightMessage = `لاحظنا ${ce.totalEvents} حدث مرتبط بـ "${person.label}" — الظاهرة الأقرب: ${phenomenonName}. سجّل ملاحظاتك عشان نفهم أكتر.`;
+        }
+
+        newNudges.push({
+          type: "connection_insight",
+          emoji: "🔮",
+          title: `بصيرة اتصال — ${person.label}`,
+          message: insightMessage,
+          action: { label: "افتح الملف", route: "map" },
+          priority: confirmRate >= 60 ? "high" : "medium",
+        });
+      }
+
+      // رصد: لو المستخدم طاقته منخفضة باستمرار وبيتفاعل مع نفس الشخص
+      const recentLowEnergy = logs.filter(
+        (l) => Date.now() - l.timestamp < 72 * 3600000 && l.energy <= 3
+      );
+      if (recentLowEnergy.length >= 3 && mapNodes.length > 0) {
+        const alreadyHasEnergyInsight = nudges.some(
+          (n) => n.type === "connection_insight" && n.title.includes("طاقتك")
+        );
+        if (!alreadyHasEnergyInsight) {
+          newNudges.push({
+            type: "connection_insight",
+            emoji: "🌑",
+            title: "طاقتك وعلاقاتك",
+            message: `طاقتك منخفضة من ${recentLowEnergy.length} نبضات. أحياناً ده بيرتبط بأشخاص معينين — افتح خريطتك وشوف مين بيشغل بالك.`,
+            action: { label: "افتح الخريطة", route: "map" },
+            priority: "medium",
+          });
+        }
+      }
+    }
+
+    // ── Truth Test Follow-ups (متابعة اختبارات المصداقية) ──
+    if (isEnabled("connection_insight")) {
+      try {
+        const ttState = useTruthTestState.getState();
+        const expiredPending = ttState.getExpiredPending();
+
+        // تنبيه لكل اختبار منتهي ومستنى نتيجة
+        for (const test of expiredPending.slice(0, 3)) {
+          const alreadyNudged = nudges.some(
+            (n) => n.type === "connection_insight" && n.message.includes(test.id)
+          );
+          if (alreadyNudged) continue;
+
+          const testLabel = TYPE_LABELS[test.type];
+          const personPart = test.personName ? ` مع "${test.personName}"` : "";
+
+          newNudges.push({
+            type: "connection_insight",
+            emoji: "🔬",
+            title: `نتيجة اختبار — ${testLabel}`,
+            message: `الاختبار اللي سجلته${personPart} انتهى. اتأكد ولا لأ؟ [${test.id}]`,
+            action: { label: "سجّل النتيجة", route: "sila" },
+            priority: "high",
+          });
+        }
+
+        // تنبيه صباحي: "عايز تختبر إحساسك النهاردة؟"
+        if (hour >= 6 && hour <= 11) {
+          const stats = ttState.getQuickStats();
+          const hasRecentTest = ttState.tests.length > 0 &&
+            Date.now() - ttState.tests[0].predictionTimestamp < 24 * 3600000;
+
+          if (!hasRecentTest) {
+            const alreadyPrompted = nudges.some(
+              (n) => n.type === "connection_insight" && n.title.includes("اختبر")
+            );
+            if (!alreadyPrompted) {
+              const promptMsg = stats.total === 0
+                ? "حاسس بحد النهاردة؟ سجّل التوقع دلوقتي — وخلينا نشوف لو اتأكد."
+                : `عندك ${stats.total} اختبار — نسبة الإصابة ${stats.hitRate}%. عايز تختبر تاني؟`;
+
+              newNudges.push({
+                type: "connection_insight",
+                emoji: "🔮",
+                title: "اختبر إحساسك النهاردة",
+                message: promptMsg,
+                action: { label: "سجّل توقع", route: "sila" },
+                priority: "low",
+              });
+            }
+          }
+        }
+      } catch { /* truth test store not ready */ }
+    }
+
     // Dispatch all
     if (newNudges.length > 0) {
       newNudges.forEach((n) => addNudge(n));
       setLastGeneratedDate(key);
     }
-  }, [lastGeneratedDate, addNudge, isEnabled, wirdState, logs, badges, decisions, nudges, setLastGeneratedDate]);
+  }, [lastGeneratedDate, addNudge, isEnabled, wirdState, logs, badges, decisions, nudges, setLastGeneratedDate, mapNodes]);
 }
 
 /* ═══════════════════════════════════════════ */

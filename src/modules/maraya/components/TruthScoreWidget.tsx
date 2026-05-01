@@ -52,23 +52,35 @@ export const TruthScoreWidget: FC<TruthScoreWidgetProps> = ({ compact = false })
         : state.trend === "declining" ? "بيتراجع"
         : "ثابت";
 
+    // Emoji + simple description per level
+    const levelEmoji = {
+        deluded: "🌫️",
+        foggy: "🌁",
+        awakening: "🌅",
+        seeing: "👁️",
+        truthful: "✨"
+    }[state.level];
+
+    const levelDesc = {
+        deluded: "تتجنب الحقيقة حالياً",
+        foggy: "الصورة ضبابية — خد وقتك",
+        awakening: "بدأت تشوف الأمور أوضح",
+        seeing: "واضح معاك إيه اللي بيحصل",
+        truthful: "صادق مع نفسك بشكل كامل"
+    }[state.level];
+
+    const trendEmoji = state.trend === "improving" ? "📈" : state.trend === "declining" ? "📉" : "➡️";
+
     if (compact) {
         return (
             <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/[0.03] border border-white/5" dir="rtl">
-                <div className="relative w-16 h-16">
+                {/* Score ring */}
+                <div className="relative w-16 h-16 flex-shrink-0">
                     <svg className="w-16 h-16 -rotate-90" viewBox="0 0 80 80">
-                        <circle
-                            cx="40" cy="40" r={radius}
-                            fill="none"
-                            stroke="rgba(255,255,255,0.05)"
-                            strokeWidth="4"
-                        />
+                        <circle cx="40" cy="40" r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4" />
                         <motion.circle
                             cx="40" cy="40" r={radius}
-                            fill="none"
-                            stroke={color}
-                            strokeWidth="4"
-                            strokeLinecap="round"
+                            fill="none" stroke={color} strokeWidth="4" strokeLinecap="round"
                             strokeDasharray={circumference}
                             initial={{ strokeDashoffset: circumference }}
                             animate={{ strokeDashoffset }}
@@ -76,17 +88,23 @@ export const TruthScoreWidget: FC<TruthScoreWidgetProps> = ({ compact = false })
                         />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-black tabular-nums" style={{ color }}>
-                            {state.score}
-                        </span>
+                        <span className="text-base font-black tabular-nums" style={{ color }}>{state.score}</span>
                     </div>
                 </div>
-                <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">نقطة الصفر</p>
-                    <p className="text-sm font-black" style={{ color }}>{label}</p>
-                    <div className={`flex items-center gap-1 ${trendColor}`}>
-                        <TrendIcon className="w-3 h-3" />
-                        <span className="text-[10px] font-bold">{trendLabel}</span>
+
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                    {/* Title row */}
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-sm">{levelEmoji}</span>
+                        <p className="text-sm font-black truncate" style={{ color }}>{label}</p>
+                    </div>
+                    {/* Description */}
+                    <p className="text-[11px] text-zinc-400 leading-snug mb-1">{levelDesc}</p>
+                    {/* Trend badge */}
+                    <div className={`inline-flex items-center gap-1 text-[10px] font-bold ${trendColor}`}>
+                        <span>{trendEmoji}</span>
+                        <span>{trendLabel}</span>
                     </div>
                 </div>
             </div>

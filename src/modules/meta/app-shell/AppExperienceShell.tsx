@@ -324,6 +324,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       screen === "diagnosis" ||
       screen === "life-os" ||
       screen === "dawayir" ||
+      screen === "map" ||
       isAdminRoute ||
       isAnalyticsRoute;
 

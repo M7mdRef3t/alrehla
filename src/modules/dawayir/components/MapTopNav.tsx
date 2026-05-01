@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, Home, HelpCircle, Bell, User } from 'lucide-react';
+import { ChevronRight, Home } from 'lucide-react';
 
 interface MapTopNavProps {
   /** Number of completed journey milestones */
@@ -64,26 +64,6 @@ export function MapTopNav({
                         className={`h-1.5 rounded-full transition-all duration-500 ${i < currentStep ? 'w-8 bg-teal-400 shadow-[0_0_10px_rgba(45,212,191,0.5)]' : 'w-1.5 bg-white/10'}`}
                     />
                 ))}
-            </div>
-        </div>
-      </motion.div>
-
-      {/* 👤 User Actions */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="flex items-center gap-3 pointer-events-auto"
-      >
-        <button className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
-            <HelpCircle size={20} />
-        </button>
-        <button className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
-            <Bell size={20} />
-        </button>
-        <div className="w-10 h-10 rounded-2xl bg-teal-500/20 border border-teal-500/30 overflow-hidden">
-            <div className="w-full h-full flex items-center justify-center text-teal-400">
-                <User size={20} />
             </div>
         </div>
       </motion.div>

@@ -1,6 +1,7 @@
 import type { ComponentProps, FC } from "react";
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { MapCanvas } from "../map/MapCanvas";
 import { FamilyTreeView } from "./FamilyTreeView";
 import { ForestView } from "./ForestView";
@@ -10,7 +11,7 @@ import { MeNodeDetails } from "./MeNodeDetails";
 import { BreathingOverlay } from "./BreathingOverlay";
 import { MapOnboardingOverlay } from "./MapOnboardingOverlay";
 import { hasSeenOnboarding } from "@/utils/mapOnboarding";
-import { Map, TreeDeciduous, X, Mic, Zap as Sparkles } from "lucide-react";
+import { Map, TreeDeciduous, X, Mic, Zap as Sparkles, Eye, EyeOff } from "lucide-react";
 import { SafeMotionCircle } from "@/components/ui/SafeSvg";
 
 import { DailyPulseWidget } from "./DailyPulseWidget";
@@ -24,7 +25,7 @@ import { ShareDialog } from "./ShareDialog";
 import { WeeklyReportWidget } from "./WeeklyReportWidget";
 import { ConsciousnessThread } from "./ConsciousnessThread";
 import { ShadowInsightPanel } from "./ShadowInsightPanel";
-import { VoicePresence } from "./VoicePresence";
+
 import { VoicePulseModal } from "./VoicePulseModal";
 import { TabNavigation } from "./TabNavigation";
 import { LayoutModeSwitcher } from "./LayoutModeSwitcher";
@@ -69,6 +70,9 @@ import { MapSidebar } from "@/modules/dawayir/components/MapSidebar";
 import { MapMetricsBar } from "@/modules/dawayir/components/MapMetricsBar";
 import { MapControlDock } from "@/modules/dawayir/components/MapControlDock";
 import { Zap as ZapIcon } from "lucide-react";
+import { OracleAnalysisModal } from "./OracleAnalysisModal";
+import { WeeklyActionPlanModal } from "@/modules/action/WeeklyActionPlanModal";
+import { useHafizState, getVerticalResonanceState } from '@/modules/hafiz/store/hafiz.store';
 
 const DawayirCanvas = lazy(() => import("@/modules/dawayir/DawayirCanvas").then(m => ({ default: m.DawayirCanvas })));
 const FeelingCheckModal = lazy(() => import("@/modules/dawayir/FeelingCheckModal").then(m => ({ default: m.FeelingCheckModal })));
@@ -206,6 +210,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   onOpenProfile,
   hideBottomDock = false
 }) => {
+  const router = useRouter();
   useGraphSync();
   useAdaptiveLayout();
 
@@ -223,8 +228,11 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [isHandToolActive, setIsHandToolActive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showActionPlan, setShowActionPlan] = useState(false);
-  const [showMapSettings, setShowMapSettings] = useState(false);
-  const [isOracleLoading, setIsOracleLoading] = useState(false);
+  const [showOracleModal, setShowOracleModal] = useState(false);
+  const [isLayoutSwitching, setIsLayoutSwitching] = useState(false);
+
+  const hafizMemories = useHafizState(s => s.memories);
+  const resonance = useMemo(() => getVerticalResonanceState(hafizMemories), [hafizMemories]);
 
   const user = useAuthState(s => s.user);
   const role = useAuthState(s => getEffectiveRoleFromState(s));
@@ -269,13 +277,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       setIsUpgradeOpen(true);
       return;
     }
+
     const node = nodes.find(n => n.id === nodeId);
     if (!node) {
       if (runtimeEnv.isDev) console.warn("[CoreMapScreen] Node not found for drop:", nodeId);
       return;
     }
 
-    assignUrl(
+    router.push(
       getDawayirLiveLaunchHref(livePath, {
         surface: "map-drop",
         nodeId: node.id,
@@ -283,13 +292,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         goalId
       })
     );
-  }, [goalId, livePath, nodes, user]);
+  }, [goalId, livePath, nodes, user, router]);
 
   const handleMainDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
   }, []);
 
   const openLiveRoute = useCallback(() => {
+    console.log("[CoreMapScreen] openLiveRoute executing!");
     if (!user) {
       setIsCloudAuthOpen(true);
       return;
@@ -298,13 +308,13 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       setIsUpgradeOpen(true);
       return;
     }
-    assignUrl(
+    router.push(
       getDawayirLiveLaunchHref(livePath, {
         surface: "map-fab",
         goalId
       })
     );
-  }, [goalId, livePath, user]);
+  }, [goalId, livePath, user, router]);
 
   const [showMeCard, setShowMeCard] = useState(false);
   const [showFeelingCheck, setShowFeelingCheck] = useState(false);
@@ -323,6 +333,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [isSacredIsolation, setIsSacredIsolation] = useState(false);
   const [harmony, setHarmony] = useState(getGlobalHarmony());
   const [sovereignMessage, setSovereignMessage] = useState<{ message: string; id: string } | null>(null);
+  
+  const [isHudVisible, setIsHudVisible] = useState(true);
+  const [isHudPinned, setIsHudPinned] = useState(false);
   
   useEffect(() => {
     const timer = setInterval(() => setHarmony(getGlobalHarmony()), 10000);
@@ -439,6 +452,16 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const { hasAnsweredToday } = useDailyQuestion();
   const teiResult = useMemo(() => computeTEI(nodes), [nodes]);
   const tei = teiResult.score;
+
+  useEffect(() => {
+    if (isHudPinned) return;
+    setIsHudVisible(true);
+    const t = setTimeout(() => {
+      setIsHudVisible(false);
+    }, 8000);
+    return () => clearTimeout(t);
+  }, [nodes, tei, isHudPinned]);
+
   const shadowScore = useMemo(() => getShadowScore(), []);
 
   // ── Real Metrics Computation (replacing hardcoded values) ──
@@ -755,6 +778,34 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           background: `radial-gradient(circle at center, transparent 30%, ${harmony.color}26 100%)`
         }}
       />
+      <AnimatePresence>
+        {showOracleModal && (
+          <OracleAnalysisModal
+            isOpen={showOracleModal}
+            onClose={() => setShowOracleModal(false)}
+            nodes={nodes}
+            resonance={resonance}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isLayoutSwitching && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { delay: 0.2 } }}
+            className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm pointer-events-none flex items-center justify-center"
+          >
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-16 h-16 rounded-full border-4 border-amber-500/20 border-t-amber-500 animate-spin" />
+              <p className="text-amber-400 font-bold tracking-widest text-sm drop-shadow-md">
+                جاري إعادة ترتيب الأبعاد...
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Header */}
       <motion.header 
@@ -843,7 +894,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </div>
       )}
 
-      <VoicePresence trigger={voiceTrigger} />
+
 
       {/* Operational Visuals */}
       {activeTab === "operational" && (
@@ -951,19 +1002,49 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                         totalSteps={journeySteps.total} 
                     />
                     <MapSidebar 
-                        onAddPerson={() => setShowAddPerson(true)} 
                         onRearrange={() => console.log('Rearrange')} 
                         onSave={() => console.log('Save Map')}
-                        onShowOracle={() => console.log('Call Oracle')}
+                        onShowOracle={() => setShowOracleModal(true)}
                         onShowPlan={() => setShowActionPlan(true)}
                         isSaving={isSaving}
                         data={{ nodes, links: [] } as any}
+                        isHudVisible={isHudVisible}
+                        isHudPinned={isHudPinned}
+                        onToggleHud={() => {
+                          setIsHudPinned(!isHudPinned);
+                          setIsHudVisible(!isHudPinned);
+                        }}
                     />
-                    <MapMetricsBar 
-                        energy={mapMetrics.energy} 
-                        boundaries={mapMetrics.boundaries} 
-                        clarity={mapMetrics.clarity} 
-                    />
+
+                    {/* Floating HUD Toggle (Extreme Left - Premium Large) */}
+                    <div className="absolute top-[280px] left-6 pointer-events-auto z-[60]">
+                        <button 
+                            onClick={() => {
+                                setIsHudPinned(!isHudPinned);
+                                setIsHudVisible(!isHudPinned);
+                            }}
+                            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-2xl border-2 ${isHudVisible ? 'bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700' : 'bg-teal-500/20 border-teal-500/40 text-teal-400 hover:bg-teal-500/30'} backdrop-blur-xl group`}
+                            title={isHudVisible ? "إخفاء التفاصيل" : "عرض التفاصيل"}
+                        >
+                            {isHudVisible ? <EyeOff size={28} className="group-hover:scale-110 transition-transform" /> : <Eye size={28} className="group-hover:scale-110 transition-transform" />}
+                        </button>
+                    </div>
+
+                    <AnimatePresence>
+                      {isHudVisible && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 20, transition: { duration: 0.2 } }}
+                        >
+                          <MapMetricsBar 
+                              energy={mapMetrics.energy} 
+                              boundaries={mapMetrics.boundaries} 
+                              clarity={mapMetrics.clarity} 
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                     {/* Instruction Tip */}
                     <div className="absolute bottom-10 left-10 pointer-events-auto px-5 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-3 hidden md:flex">
                         <div className="w-6 h-6 rounded-lg bg-teal-500/20 flex items-center justify-center">
@@ -973,10 +1054,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     </div>
 
                     <MapControlDock 
-                        onAnalyze={() => console.log('Analyze')}
+                        onAnalyze={() => setShowOracleModal(true)}
                         onPlan={() => setShowActionPlan(true)}
-                        onSettings={() => setShowMapSettings(true)}
                         onSave={() => console.log('Save')}
+                        onLive={openLiveRoute}
                         isSaving={isSaving}
                         isHandToolActive={isHandToolActive}
                         onToggleHandTool={() => setIsHandToolActive(!isHandToolActive)}
@@ -1071,6 +1152,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           }}
           onOpenMission={onOpenMission}
           onOpenMissionFromAddPerson={onOpenMissionFromAddPerson}
+        />
+      )}
+      {showActionPlan && (
+        <WeeklyActionPlanModal
+          isOpen={showActionPlan}
+          onClose={() => setShowActionPlan(false)}
         />
       )}
       {showVoicePulse && <VoicePulseModal onClose={() => setShowVoicePulse(false)} />}

@@ -41,6 +41,7 @@ function getInitialScreen(): AppShellScreen {
   if (window.location.pathname.startsWith("/admin")) return "landing";
   
   if (window.location.pathname.startsWith("/dawayir")) return "dawayir";
+  if (window.location.pathname.startsWith("/map")) return "map";
 
   const bootAction = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
   if (!bootAction) return "landing";

@@ -16,6 +16,7 @@ export type MemorySource =
   | "watheeqa"
   | "nadhir"
   | "riwaya"
+  | "connection_event"
   | "manual";
 
 export type MemoryTag =
@@ -25,6 +26,7 @@ export type MemoryTag =
   | "pain"
   | "gratitude"
   | "turning_point"
+  | "nonmaterial_connection"
   | "custom";
 
 export interface Memory {

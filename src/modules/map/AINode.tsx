@@ -32,7 +32,10 @@ export const AINode: FC<AINodeProps> = ({
             className="absolute left-1/2 bottom-[15%] -translate-x-1/2 flex flex-col items-center gap-2 z-40"
         >
             <motion.button
-                onClick={onToggle}
+                onTap={() => {
+                    console.log("[AINode] onToggle triggered via onTap!");
+                    onToggle();
+                }}
                 className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all ${isConnected
                     ? "bg-[var(--soft-teal)]/10 border-2 border-[var(--soft-teal)]"
                     : "bg-white/5 border border-white/10 hover:border-white/20"

@@ -279,7 +279,7 @@ export function useNextStepRouting({
               else if (cogLoad <= 3) dynamicHesitation = 90;
               else dynamicHesitation = 180;
 
-              nextStepTelemetry.startSession(decision.decisionId, decision.createdAt, {
+              nextStepTelemetry.startSession(decision.decisionId, undefined, {
                 cognitiveLoadRequired: cogLoad,
                 hesitationThresholdSec: dynamicHesitation,
                 onIntervention: (snapshot) => handleActiveIntervention(snapshot, decision)

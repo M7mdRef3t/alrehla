@@ -55,7 +55,7 @@ const HERO_STYLES = `
     -moz-osx-font-smoothing: grayscale;
     backface-visibility: hidden;
     transform-style: preserve-3d;
-    min-height: 100svh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     overflow: hidden;
@@ -945,13 +945,12 @@ const HERO_STYLES = `
   @media (max-width: 1023px) {
     .hero-root {
       overflow-x: hidden;
+      overflow-y: visible !important;
       width: 100%;
-      min-height: 100svh;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+      min-height: 100dvh;
+      height: auto;
       transform-style: flat !important;
       perspective: none !important;
-      contain: layout style;
     }
 
     .hero-root *,
@@ -967,7 +966,8 @@ const HERO_STYLES = `
       gap: 1.5rem; /* Reduced from 2rem */
       padding: 6rem 1rem 4rem; /* Reduced padding */
       width: 100%;
-      min-height: 100svh;
+      min-height: 100dvh;
+      height: auto;
       max-width: 100vw;
       box-sizing: border-box;
       overflow-x: hidden;

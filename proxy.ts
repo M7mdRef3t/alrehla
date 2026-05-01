@@ -46,8 +46,22 @@ export default async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
 
+    const isLocalhost = request.nextUrl.hostname === 'localhost' || request.nextUrl.hostname === '127.0.0.1';
+    
+    let limited = false;
+    let current = 0;
+    let limit = 0;
+
     // 1. Rate Limiting Protection (Applied to all matched API routes)
-    const { limited, current, limit } = checkRateLimit(ip, pathname);
+    // We bypass rate limiting in development mode or localhost to prevent HMR and dev server crashes
+    if (!isLocalhost && process.env.NODE_ENV !== 'development') {
+        const rateLimitResult = checkRateLimit(ip, pathname);
+        limited = rateLimitResult.limited;
+        current = rateLimitResult.current;
+        limit = rateLimitResult.limit;
+    } else {
+        limit = LIMITS.DEFAULT; // Just for headers
+    }
     
     if (limited) {
         return NextResponse.json(

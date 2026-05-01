@@ -17,11 +17,14 @@
 import { useMapState } from '@/modules/map/dawayirIndex';
 import { useJourneyState } from "@/domains/journey/store/journey.store";
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
+import { useTruthTestState } from "@/services/truthTest.store";
+import { analyzeTruthTests } from "@/services/truthTestEngine";
 
 export interface MirrorInsight {
     id: string;
     type: "emotional_denial" | "reality_detachment" | "placement_anxiety"
-        | "false_support" | "love_drain" | "paper_boundaries" | "false_recovery";
+        | "false_support" | "love_drain" | "paper_boundaries" | "false_recovery"
+        | "connection_bias";
     title: string;
     message: string;
     question: string;
@@ -262,6 +265,41 @@ export function detectContradictions(): MirrorInsight | null {
             }
         }
     }
+
+    // ══════════════════════════════════════════════════════
+    // نمط ٨: "وهم الاتصال" (Connection Bias) 🔬 جديد
+    // السيناريو: بيانات مختبر المصداقية بتقول إن نسبة الإصابة أقل من الصدفة
+    // ══════════════════════════════════════════════════════
+    try {
+        const ttTests = useTruthTestState.getState().tests;
+        if (ttTests.length >= 10) {
+            const dashboard = analyzeTruthTests(ttTests, activeNodes.length);
+            const weakOrBelow = dashboard.byType.filter(
+                (t) => t.significance === "below_chance" || t.significance === "weak"
+            );
+
+            if (weakOrBelow.length >= 2) {
+                const totalDecided = ttTests.filter(
+                    (t) => t.outcome === "confirmed" || t.outcome === "denied"
+                ).length;
+                const totalConfirmed = ttTests.filter((t) => t.outcome === "confirmed").length;
+                const hitRate = totalDecided > 0 ? Math.round((totalConfirmed / totalDecided) * 100) : 0;
+
+                const id = `connection-bias-${Math.floor(now / (DAY_MS * 14))}`;
+                if (!shown.has(id)) {
+                    return {
+                        id,
+                        type: "connection_bias" as const,
+                        title: "وهم الاتصال",
+                        message: `${ttTests.length} اختبار — نسبة الإصابة ${hitRate}%. ده قريب من الصدفة أو أقل. عقلك بيتذكر المرات اللي صح وبينسى اللي غلط.`,
+                        question: "لو شلت الإحساس وبصيت للأرقام بس — هل فعلاً فيه اتصال؟",
+                        severity: "firm" as const,
+                        evidence: `${ttTests.length} اختبار | إصابة: ${hitRate}% | الحكم: ضوضاء/أقل من الصدفة`
+                    };
+                }
+            }
+        }
+    } catch { /* truth test store may not be ready */ }
 
     return null;
 }

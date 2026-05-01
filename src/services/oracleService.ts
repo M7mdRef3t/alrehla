@@ -24,6 +24,14 @@ export interface CommandInsight {
     tag?: string;
 }
 
+export interface OracleMapAnalysis {
+    summary: string;
+    vampires: Array<{ name: string; reason: string; action: string }>;
+    opportunities: Array<{ name: string; reason: string; action: string }>;
+    structuralFlaw: string;
+    cognitiveTruth: string;
+}
+
 /**
  * 🔮 THE ORACLE (OracleService)
  * Autonomous AI integration for analyzing dreams and leads.
@@ -86,6 +94,52 @@ export class OracleService {
                 knots: [],
                 metadata: { error: "Failed to connect to Oracle" } 
             };
+        }
+    }
+
+    /**
+     * 🧠 SMART ANALYSIS (Oracle Map State)
+     * Analyzes the current graph to identify vampires, structural flaws, and truths.
+     */
+    static async analyzeMapState(nodes: any[], resonance: any): Promise<OracleMapAnalysis | null> {
+        const nodesSummary = nodes
+            .map(n => `Node: ${n.label}, Ring: ${n.ring}, Energy: ${n.energy || 0}, Type: ${n.type}`)
+            .join("\n");
+
+        const prompt = `
+      أنت "الأوراكل" (The Oracle) ومحلل النظم الخبير في منصة الدواير والرحلة. 
+      مهمتك هي إجراء "تحليل ذكي" (Smart Analysis) لخريطة العلاقات الحالية للمستخدم من منظور "المبادئ الأولى" (First Principles).
+
+      الخريطة الحالية للمستخدم:
+      ${nodesSummary || 'الخريطة فارغة تماماً. لا يوجد أي أشخاص أو عقد.'}
+
+      ◈ المحور الرأسي (حالة الاتصال بالمصدر):
+      - حالة الرنين: ${resonance.label} (${Math.round(resonance.strength * 100)}%)
+
+      المطلوب:
+      بناءً على هذه الخريطة، استخرج الآتي بأسلوب "الأوراكل" الصارم والواضح، وبالعامية المصرية القوية (Skeptical, Progressive):
+      1. خلاصة التحليل (summary): فقرة تشرح حالة دوائره الاجتماعية ومصدر الخلل أو القوة الرئيسي. إذا كانت الخريطة فارغة، ركز على العزلة أو عدم الوعي بالدوائر المحيطة.
+      2. مصاصي الطاقة (vampires): أشخاص أو عقد تستنزفه. (مهم جداً: إذا كانت الخريطة فارغة، يجب أن تُرجع مصفوفة فارغة [] ولا تخترع أسماء).
+      3. الفرص (opportunities): أشخاص يمكن أن يكونوا محفزين. (مهم جداً: إذا كانت الخريطة فارغة، يجب أن تُرجع مصفوفة فارغة [] ولا تخترع أسماء).
+      4. الخلل الهيكلي (structuralFlaw): الخطأ الأكبر في ترتيب دوائره (أو خطأ العزلة إذا كانت فارغة).
+      5. الحقيقة المعرفية (cognitiveTruth): حقيقة قاطعة تفتح بصيرته.
+
+      رجع JSON فقط بهذا الهيكل:
+      {
+        "summary": "...",
+        "vampires": [{ "name": "...", "reason": "...", "action": "..." }],
+        "opportunities": [{ "name": "...", "reason": "...", "action": "..." }],
+        "structuralFlaw": "...",
+        "cognitiveTruth": "..."
+      }
+    `;
+
+        try {
+            const result = await geminiClient.generateJSON<OracleMapAnalysis>(prompt);
+            return result;
+        } catch (error) {
+            logger.error("Oracle Map Analysis Error:", error);
+            return null;
         }
     }
 

@@ -8,6 +8,7 @@ import type { CognitiveBiasAlert } from "@/services/cognitiveBiasEngine";
 import { dismissBiasAlert } from "@/services/cognitiveBiasEngine";
 import { recordTruthEvent, onTruthMilestone } from "@/services/truthScoreEngine";
 import type { TruthEventType } from "@/services/truthScoreEngine";
+import { useMapState } from "@/modules/map/dawayirIndex";
 import { getReconnectionMessage, shouldTriggerRitual } from "@/data/reconnectionMessages";
 import type { ReconnectionMessage } from "@/data/reconnectionMessages";
 
@@ -21,7 +22,7 @@ const GamificationNudgeToast = lazy(() => import('@/modules/growth/GamificationN
 
 // ⚔️ Truth Engine Components
 const BiasAlertCard = lazy(() => import('@/modules/maraya/components/BiasAlertCard').then(m => ({ default: m.BiasAlertCard })));
-const TruthScoreWidget = lazy(() => import('@/modules/maraya/components/TruthScoreWidget').then(m => ({ default: m.TruthScoreWidget })));
+
 const PredictionJournalCard = lazy(() => import('@/modules/maraya/components/PredictionJournalCard').then(m => ({ default: m.PredictionJournalCard })));
 const CollectivePulseWidget = lazy(() => import('@/modules/maraya/components/CollectivePulseWidget'));
 const ReconnectionRitual = lazy(() => import('@/modules/maraya/components/ReconnectionRitual'));
@@ -51,6 +52,9 @@ export const AmbientOverlays = memo(function AmbientOverlays({
   const setOverlay = useAppOverlayState((s) => s.setOverlay);
   const [dismissedBiasIds, setDismissedBiasIds] = useState<Set<string>>(new Set());
   const [ritualMessage, setRitualMessage] = useState<ReconnectionMessage | null>(null);
+  // Show advanced features only when user has 5+ active nodes (experienced user)
+  const activeNodesCount = useMapState((s) => s.nodes.filter(n => !n.isNodeArchived).length);
+  const isAdvancedUser = activeNodesCount >= 5;
 
   // Subscribe to truth milestones for Reconnection Ritual
   useEffect(() => {
@@ -126,36 +130,31 @@ export const AmbientOverlays = memo(function AmbientOverlays({
         />
       )}
 
-      {/* ⚔️ Truth Engine: Bias Alert Cards — floating bottom-left */}
-      {visibleBiasAlerts.length > 0 && (
-        <Suspense fallback={null}>
-          <div 
-            className="fixed bottom-4 left-4 z-50 w-[380px] max-h-[80vh] overflow-y-auto space-y-3 no-scrollbar pointer-events-auto"
-            dir="rtl"
-          >
-            {visibleBiasAlerts.slice(0, 2).map(alert => (
-              <BiasAlertCard 
-                key={alert.id}
-                alert={alert}
-                onDismiss={() => handleBiasDismiss(alert.id)}
-              />
-            ))}
-          </div>
-        </Suspense>
-      )}
+      <div className="fixed bottom-28 md:bottom-4 left-4 z-50 flex flex-col justify-end gap-3 pointer-events-none" dir="rtl">
+        {/* ⚔️ Truth Engine: Bias Alert Cards */}
+        {visibleBiasAlerts.length > 0 && (
+          <Suspense fallback={null}>
+            <div className="w-[380px] flex flex-col gap-3 max-h-[40vh] overflow-y-auto no-scrollbar pointer-events-auto">
+              {visibleBiasAlerts.slice(0, 2).map(alert => (
+                <BiasAlertCard 
+                  key={alert.id}
+                  alert={alert}
+                  onDismiss={() => handleBiasDismiss(alert.id)}
+                />
+              ))}
+            </div>
+          </Suspense>
+        )}
 
-      {/* ⚔️ Truth Engine: Truth Score + Prediction Journal — only on map screens */}
-      {(screen === "map" || screen === "dawayir") && (
-        <Suspense fallback={null}>
-          <div 
-            className="fixed bottom-4 right-4 z-40 w-[320px] space-y-3 pointer-events-auto"
-            dir="rtl"
-          >
-            <TruthScoreWidget compact />
-            <PredictionJournalCard />
-          </div>
-        </Suspense>
-      )}
+        {/* ⚔️ Prediction Journal — advanced users only (5+ nodes) */}
+        {(screen === "map" || screen === "dawayir") && isAdvancedUser && (
+          <Suspense fallback={null}>
+            <div className="w-[320px] flex flex-col gap-3 pointer-events-auto">
+              <PredictionJournalCard />
+            </div>
+          </Suspense>
+        )}
+      </div>
 
       {/* 🌍 Collective Pulse Widget — only on map screens */}
       {(screen === "map" || screen === "dawayir") && (

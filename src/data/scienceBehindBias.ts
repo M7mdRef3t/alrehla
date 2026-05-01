@@ -44,7 +44,8 @@ export type MirrorInsightType =
     | "false_support"
     | "love_drain"
     | "paper_boundaries"
-    | "false_recovery";
+    | "false_recovery"
+    | "connection_illusion";
 
 export interface MirrorScienceNote {
     type: MirrorInsightType;
@@ -256,5 +257,15 @@ export const MIRROR_SCIENCE: Record<MirrorInsightType, MirrorScienceNote> = {
         relatedAyah: "﴿فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا﴾",
         ayahReference: "الشرح: ٥-٦",
         userFriendlyInsight: "التحسن السريع بعد الألم مش دايماً تعافي — ممكن يكون هروب. التعافي الحقيقي بياخد وقته.",
+    },
+    connection_illusion: {
+        type: "connection_illusion",
+        titleAr: "وهم الاتصال",
+        researchSummary: "وهم التكرار (المعروف بظاهرة بادر-ماينهوف) بيخلي المخ يلاحظ التطابقات ويتجاهل المرات اللي ما حصلش فيها حاجة — فالإنسان بيحس بوجود 'اتصال' وهو في الحقيقة تحيز معرفي.",
+        researcher: "Arnold Zwicky (Stanford)",
+        year: 2006,
+        relatedAyah: "﴿بَلِ الْإِنسَانُ عَلَىٰ نَفْسِهِ بَصِيرَةٌ﴾",
+        ayahReference: "القيامة: ١٤",
+        userFriendlyInsight: "مش كل إحساس = اتصال حقيقي. أحياناً عقلك بيلاحظ اللي يثبت اللي هو عايز يصدقه. لكن ده مش معناه إن كل الإحساسات وهم — فيه إحساسات حقيقية. الفرق في الدليل.",
     },
 };

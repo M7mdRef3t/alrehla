@@ -9,6 +9,7 @@ class SoundManager {
     private ambientGain: GainNode | null = null;
     private enabled: boolean = true;
     private sensoryEnabled: boolean = true;
+    private userInteracted: boolean = false;
 
     constructor() {
         this.init();
@@ -19,6 +20,7 @@ class SoundManager {
         if (typeof window === "undefined") return;
         
         const resume = () => {
+            this.userInteracted = true;
             this.resumeContext();
             // Remove listeners after first interaction
             window.removeEventListener('click', resume);
@@ -73,9 +75,9 @@ class SoundManager {
     private createOscillator(type: OscillatorType, frequency: number, duration: number, startTime: number = 0) {
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
 
-        // If context is suspended, try to resume and return to avoid errors
+        // If context is suspended, try to resume only if user has interacted
         if (this.audioContext.state === 'suspended') {
-            this.resumeContext();
+            if (this.userInteracted) this.resumeContext();
             return;
         }
 
@@ -224,7 +226,7 @@ class SoundManager {
 
         // Centralized check for suspended context
         if (this.audioContext.state === 'suspended') {
-            this.resumeContext();
+            if (this.userInteracted) this.resumeContext();
             return;
         }
 
@@ -258,7 +260,7 @@ class SoundManager {
         if (!this.audioContext || !this.masterGain || !this.enabled || !this.sensoryEnabled) return;
         
         if (this.audioContext.state === 'suspended') {
-            this.resumeContext();
+            if (this.userInteracted) this.resumeContext();
             return;
         }
 

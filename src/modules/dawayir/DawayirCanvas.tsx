@@ -138,6 +138,7 @@ const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ r
         style={{
           filter: `drop-shadow(0 0 1.8px ${colors[ring]})`,
           transformOrigin: "50px 50px",
+          willChange: "transform, filter",
         }}
         animate={{ rotate: 360 }}
         transition={{ duration: ring === 'green' ? 20 : ring === 'yellow' ? 30 : 40, repeat: Infinity, ease: "linear" }}
@@ -327,10 +328,10 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       } as any}
       whileHover={{ scale: 1.15, transition: { type: "spring", stiffness: 400, damping: 10 } }}
       whileTap={{ scale: 0.95 }}
-      initial={{ scale: 0, opacity: 0, filter: "blur(10px)" }}
+      initial={{ scale: 0, opacity: 0 }}
       animate={isDragging ? 
-        { scale: 1.3, opacity: 1, filter: "drop-shadow(0 0 15px rgba(45,212,191,0.6))" } : 
-        { scale: 1, opacity: 1, filter: "blur(0px)" }
+        { scale: 1.3, opacity: 1 } : 
+        { scale: 1, opacity: 1 }
       }
       transition={{ 
         type: "spring", 
@@ -427,7 +428,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
             stroke="#f43f5e" 
             strokeOpacity={0.8}
             strokeWidth={1.2} 
-            style={{ filter: "drop-shadow(0 0 5px rgba(244,63,94,0.7))" }}
+            style={{ filter: "drop-shadow(0 0 5px rgba(244,63,94,0.7))", willChange: "filter" }}
           />
         </g>
       ) : (
@@ -437,7 +438,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
             fill={ringColors[node.ring]}
             stroke="rgba(255,255,255,0.2)" 
             strokeWidth={0.2} 
-            style={{ filter: `drop-shadow(0 0 8px ${ringGlows[node.ring]})` }}
+            style={{ filter: `drop-shadow(0 0 8px ${ringGlows[node.ring]})`, willChange: "filter" }}
           />
           {/* Glossy Overlay */}
           <circle 
@@ -821,7 +822,7 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
   return (
     <div className="w-full h-full relative overflow-hidden bg-transparent">
       {/* 🧭 Map Navigation Controls (Merged Premium Panel) */}
-      <div className="absolute top-32 left-6 z-50 flex flex-col gap-2">
+      <div className="absolute top-48 left-6 z-50 flex flex-col gap-2">
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -866,7 +867,8 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <svg 
           viewBox={`${viewBoxX} ${viewBoxY} ${100 / zoomScale} ${100 / zoomScale}`} 
-          className={`dawayir-map-svg w-full h-full ${isPanMode ? 'cursor-grab' : 'touch-none'}`}
+          className={`dawayir-map-svg w-full h-full touch-none ${isPanMode ? 'cursor-grab' : ''}`}
+          style={{ touchAction: 'none' }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

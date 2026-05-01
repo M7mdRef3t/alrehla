@@ -45,7 +45,7 @@ export function isRetryableModelError(error: unknown): boolean {
 }
 
 export function getClient() {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_PRO_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_PRO_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
   console.log("[Gemini API] API Key found (censored):", apiKey ? apiKey.slice(0, 5) + "..." : "NONE");
   if (!apiKey) return null;
   return new GoogleGenerativeAI(apiKey);
