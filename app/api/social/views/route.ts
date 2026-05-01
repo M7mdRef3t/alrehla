@@ -174,7 +174,7 @@ async function fetchInstagramViewsApi(shortcode: string): Promise<number | null>
         if (!mediaId) return null;
 
         // Step 2: Fetch views insight for this media node
-        const insightsRes = await fetch(
+        const insightsRes: Response = await fetch(
             `https://graph.instagram.com/${mediaId}/insights?metric=views&access_token=${token}`,
             { next: { revalidate: 3600 } }
         );

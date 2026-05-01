@@ -56,7 +56,6 @@ export function MapTopNav({
         className="flex items-center gap-6 pointer-events-auto"
       >
         <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black text-slate-400 tracking-wide">{computedStepsLabel}</span>
             <div className="flex gap-2">
                 {Array.from({ length: totalSteps }).map((_, i) => (
                     <div 

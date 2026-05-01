@@ -143,7 +143,7 @@ export const CreativeDashboard: React.FC = () => {
                         body: JSON.stringify({ url: manualUrl.trim(), platform: resolvedPlatform, publishedAt: manualPublishDate })
                     });
                     const data = await res.json();
-                    if (data.success && data.views) initialViews = data.views;
+                    if (data.success && data.views && !data.isSimulated) initialViews = data.views;
                 } catch (e) { console.error('Initial views fetch failed', e); }
             }
 
@@ -700,7 +700,7 @@ export const CreativeDashboard: React.FC = () => {
                                             <th className="py-3 px-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">الوهم المفكك</th>
                                             <th className="py-3 px-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">النبرة (Tone)</th>
                                             <th className="py-3 px-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">المنصة</th>
-                                            <th className="py-3 px-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">الزيارات المقدرة</th>
+                                            <th className="py-3 px-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">المشاهدات</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -733,7 +733,7 @@ export const CreativeDashboard: React.FC = () => {
                                                         </span>
                                                     </td>
                                                     <td className="py-4 px-4 text-sm font-black text-amber-400">
-                                                        +{vid.estimatedClicks}
+                                                        {(vid.views ?? 0).toLocaleString()}
                                                     </td>
                                                 </tr>
                                             ))

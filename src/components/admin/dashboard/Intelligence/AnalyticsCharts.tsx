@@ -41,7 +41,7 @@ export const ToneBreakdownChart: React.FC<{ videos: VideoItem[] }> = ({ videos }
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Bar Chart */}
         <div className="h-56">
-          <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+          <ResponsiveContainer width="100%" height={200} minWidth={0}>
             <BarChart data={data} barSize={28}>
               <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: '#475569', fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -54,7 +54,7 @@ export const ToneBreakdownChart: React.FC<{ videos: VideoItem[] }> = ({ videos }
         </div>
         {/* Pie Chart */}
         <div className="h-56 flex items-center justify-center">
-          <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+          <ResponsiveContainer width="100%" height={200} minWidth={0}>
             <PieChart>
               <Pie data={data} dataKey="videos" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} stroke="none">
                 {data.map((d, i) => <Cell key={i} fill={d.fill} fillOpacity={0.8} />)}
@@ -170,7 +170,7 @@ export const GrowthChart: React.FC = () => {
           <div className="py-8 text-center text-xs text-slate-500">لا توجد بيانات إنتاج بعد. ابدأ بتوليد السكريبتات من استوديو المحتوى.</div>
         ) : (
           <div className="h-52">
-            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+            <ResponsiveContainer width="100%" height={200} minWidth={0}>
               <AreaChart data={data}>
                 <defs>
                   <linearGradient id="gScripts" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#06b6d4" stopOpacity={0.4} /><stop offset="100%" stopColor="#06b6d4" stopOpacity={0} /></linearGradient>

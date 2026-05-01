@@ -54,7 +54,7 @@ async function fetchInstagramViewsApi(shortcode: string): Promise<number | null>
 
         if (!mediaId) return null;
 
-        const insightsRes = await fetch(
+        const insightsRes: Response = await fetch(
             `https://graph.instagram.com/${mediaId}/insights?metric=views&access_token=${token}`,
             { next: { revalidate: 3600 } }
         );
@@ -74,7 +74,7 @@ async function resolveFacebookVideoId(url: string): Promise<string | null> {
     try {
         let finalUrl = url;
         if (url.includes('fb.watch')) {
-            const res = await fetch(url, { redirect: 'follow', method: 'HEAD' });
+            const res: Response = await fetch(url, { redirect: 'follow', method: 'HEAD' });
             finalUrl = res.url;
         }
 
@@ -100,7 +100,7 @@ async function fetchFacebookViewsApi(videoId: string): Promise<number | null> {
     if (!token) return null;
 
     try {
-        const res = await fetch(
+        const res: Response = await fetch(
             `https://graph.facebook.com/v20.0/${videoId}?fields=views&access_token=${token}`,
             { next: { revalidate: 3600 } }
         );

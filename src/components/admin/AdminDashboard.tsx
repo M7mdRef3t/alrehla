@@ -115,6 +115,7 @@ const FeatureFlagsPanel = lazy(() => import("./dashboard/Features/FeatureFlagsPa
 const CommandPanel = lazy(() => import("./dashboard/Command/CommandControl").then(m => ({ default: m.CommandControl })));
 const ConsciousnessAtlasDashboard = lazy(() => import("./dashboard/Executive/ConsciousnessAtlasDashboard").then(m => ({ default: m.ConsciousnessAtlasDashboard })));
 const FeedbackPanel = lazy(() => import("./dashboard/Support/FeedbackPanel").then(m => ({ default: m.FeedbackPanel })));
+const ConceptsDebatePanel = lazy(() => import("./dashboard/Intelligence/ConceptsDebatePanel").then(m => ({ default: m.ConceptsDebatePanel })));
 
 const DataManagementModal = lazy(() => Promise.resolve({ default: DataManagement }));
 
@@ -887,6 +888,12 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "ai-studio" && (
                   <div>
                     <CommandAIHub />
+                  </div>
+                )}
+
+                {effectiveTab === "concepts-debate" && (
+                  <div>
+                    <ConceptsDebatePanel />
                   </div>
                 )}
 

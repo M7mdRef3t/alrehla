@@ -1,0 +1,1 @@
+fetch("https://www.tiktok.com/@khaby.lame/video/7161405105214049541", {headers: {"User-Agent": "Mozilla/5.0"}}).then(r=>r.text()).then(t=>{ const m=t.match(/<meta name="description" content="([^"]*)"/); console.log(m?m[1]:"No meta description")}).catch(console.error)

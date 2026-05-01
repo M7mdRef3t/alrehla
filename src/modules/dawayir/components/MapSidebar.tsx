@@ -4,7 +4,7 @@ import { UserPlus, RefreshCw, Save, LogOut, Info, Shield, AlertTriangle, Heart, 
 import { useEmergencyState } from '@/domains/admin/store/emergency.store';
 
 interface MapSidebarProps {
-  onAddPerson: () => void;
+  onAddPerson?: () => void;
   onRearrange: () => void;
   onSave: () => void;
   onShowOracle: () => void;
@@ -14,10 +14,12 @@ interface MapSidebarProps {
   isHudVisible?: boolean;
   isHudPinned?: boolean;
   onToggleHud?: () => void;
+  onEmergency?: () => void;
 }
 
-export function MapSidebar({ onAddPerson, onRearrange, onSave, onShowOracle, onShowPlan, isSaving, data, isHudVisible = true, isHudPinned = false, onToggleHud }: MapSidebarProps) {
+export function MapSidebar({ onAddPerson, onRearrange, onSave, onShowOracle, onShowPlan, isSaving, data, isHudVisible = true, isHudPinned = false, onToggleHud, onEmergency }: MapSidebarProps) {
   const openEmergency = useEmergencyState(s => s.open);
+  const handleEmergency = onEmergency ?? openEmergency;
   // Derive real insights from data
   const mostDrained = data?.nodes?.reduce((prev: any, current: any) => (prev.intensity > (current.intensity || 0)) ? prev : current, data?.nodes?.[0])?.name || '...';
   const mostSafe = data?.nodes?.find((n: any) => n.is_safe)?.name || '...';
@@ -104,19 +106,7 @@ export function MapSidebar({ onAddPerson, onRearrange, onSave, onShowOracle, onS
         )}
       </AnimatePresence>
 
-      {/* ⚡ Action Buttons */}
-      <div className="mt-auto space-y-3 pointer-events-auto">
-        <button 
-          onClick={() => openEmergency()}
-          className="w-full p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-between group hover:bg-rose-500/20 transition-all mt-4 border-dashed"
-        >
-            <div className="text-right">
-                <span className="text-xs font-black text-rose-400 block">خروج هادي</span>
-                <span className="text-[9px] text-rose-300/60">خذ نفساً، نحن هنا معك</span>
-            </div>
-            <LogOut size={20} className="text-rose-400 group-hover:-translate-x-1 transition-transform" />
-        </button>
-      </div>
+      {/* Quiet Exit button moved to CoreMapScreen as fixed absolute element */}
     </div>
   );
 }

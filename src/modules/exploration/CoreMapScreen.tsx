@@ -11,7 +11,7 @@ import { MeNodeDetails } from "./MeNodeDetails";
 import { BreathingOverlay } from "./BreathingOverlay";
 import { MapOnboardingOverlay } from "./MapOnboardingOverlay";
 import { hasSeenOnboarding } from "@/utils/mapOnboarding";
-import { Map, TreeDeciduous, X, Mic, Zap as Sparkles, Eye, EyeOff } from "lucide-react";
+import { Map, TreeDeciduous, X, Mic, Zap as Sparkles, Eye, EyeOff, LogOut } from "lucide-react";
 import { SafeMotionCircle } from "@/components/ui/SafeSvg";
 
 import { DailyPulseWidget } from "./DailyPulseWidget";
@@ -73,6 +73,7 @@ import { Zap as ZapIcon } from "lucide-react";
 import { OracleAnalysisModal } from "./OracleAnalysisModal";
 import { WeeklyActionPlanModal } from "@/modules/action/WeeklyActionPlanModal";
 import { useHafizState, getVerticalResonanceState } from '@/modules/hafiz/store/hafiz.store';
+import { useEmergencyState } from '@/domains/admin/store/emergency.store';
 
 const DawayirCanvas = lazy(() => import("@/modules/dawayir/DawayirCanvas").then(m => ({ default: m.DawayirCanvas })));
 const FeelingCheckModal = lazy(() => import("@/modules/dawayir/FeelingCheckModal").then(m => ({ default: m.FeelingCheckModal })));
@@ -218,6 +219,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const activeTab = useLayoutState((s) => s.activeTab);
   const journey = useJourneyProgress();
   const mirrorName = journey.mirrorName;
+  const openEmergencyModal = useEmergencyState((s) => s.open);
 
   const [showAddPerson, setShowAddPerson] = useState(false);
   const [segmentedView, setSegmentedView] = useState<"network" | "stability" | "metrics" | "live">("network");
@@ -1002,6 +1004,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                         totalSteps={journeySteps.total} 
                     />
                     <MapSidebar 
+                        onAddPerson={handleAddNodeClick}
                         onRearrange={() => console.log('Rearrange')} 
                         onSave={() => console.log('Save Map')}
                         onShowOracle={() => setShowOracleModal(true)}
@@ -1016,19 +1019,20 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                         }}
                     />
 
-                    {/* Floating HUD Toggle (Extreme Left - Premium Large) */}
-                    <div className="absolute top-[280px] left-6 pointer-events-auto z-[60]">
+                    {/* Floating HUD Toggle (Extreme Top-Left Corner - Minimalist) */}
+                    <div className="absolute top-[80px] left-6 pointer-events-auto z-[60]">
                         <button 
                             onClick={() => {
                                 setIsHudPinned(!isHudPinned);
                                 setIsHudVisible(!isHudPinned);
                             }}
-                            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-2xl border-2 ${isHudVisible ? 'bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700' : 'bg-teal-500/20 border-teal-500/40 text-teal-400 hover:bg-teal-500/30'} backdrop-blur-xl group`}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-xl border ${isHudVisible ? 'bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700' : 'bg-teal-500/20 border-teal-500/40 text-teal-400 hover:bg-teal-500/30'} backdrop-blur-xl group overflow-hidden`}
                             title={isHudVisible ? "إخفاء التفاصيل" : "عرض التفاصيل"}
                         >
-                            {isHudVisible ? <EyeOff size={28} className="group-hover:scale-110 transition-transform" /> : <Eye size={28} className="group-hover:scale-110 transition-transform" />}
+                            {isHudVisible ? <EyeOff size={18} className="shrink-0 group-hover:scale-110 transition-transform" /> : <Eye size={18} className="shrink-0 group-hover:scale-110 transition-transform" />}
                         </button>
                     </div>
+
 
                     <AnimatePresence>
                       {isHudVisible && (
@@ -1171,6 +1175,16 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {showBreathing && !onOpenBreathing && <BreathingOverlay onClose={() => setShowBreathing(false)} />}
       <DailyJournalArchive isOpen={showJournalArchive} onClose={() => setShowJournalArchive(false)} />
       <GoogleAuthModal isOpen={isCloudAuthOpen} onClose={() => setIsCloudAuthOpen(false)} onGuestMode={() => setIsCloudAuthOpen(false)} onNotNow={() => setIsCloudAuthOpen(false)} intent={{ kind: "ai_focus", createdAt: Date.now() }} />
+      {/* ── Quiet Exit Button — Fixed Bottom-Right (Nav Level) ── */}
+      <div className="fixed bottom-4 right-6 z-[200] pointer-events-auto">
+        <button
+          onClick={() => openEmergencyModal()}
+          className="w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 backdrop-blur-xl group overflow-hidden"
+          title="خروج هادي"
+        >
+          <LogOut size={16} className="shrink-0 group-hover:-translate-x-0.5 transition-transform" />
+        </button>
+      </div>
 
     </motion.main>
   );

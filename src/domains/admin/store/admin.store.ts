@@ -101,6 +101,26 @@ export interface JourneyPathStep {
   enabled: boolean;
 }
 
+export type ConceptStatus = "draft" | "debating" | "validated" | "rejected";
+
+export interface ConceptArgument {
+  id: string;
+  author: "owner" | "ai" | "empirical_data";
+  content: string;
+  timestamp: number;
+}
+
+export interface DebatedConcept {
+  id: string;
+  title: string;
+  hypothesis: string;
+  status: ConceptStatus;
+  arguments: ConceptArgument[];
+  empiricalDataRef?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface JourneyPath {
   id: string;
   title: string;
@@ -419,6 +439,9 @@ interface AdminState {
   aiInterventions: import("@/services/commandOrchestrator").CommandIntervention[];
   agentActivity: import("@/services/LocalCommandAgent").AgentActivityStep[];
   lastSentientPulse: number | null;
+  
+  // Concept Debate Lab
+  debatedConcepts: DebatedConcept[];
 
   setAdminAccess: (value: boolean) => void;
   toggleContentEditing: (value: boolean) => void;
@@ -453,6 +476,11 @@ interface AdminState {
   addAgentActivity: (activity: import("@/services/LocalCommandAgent").AgentActivityStep) => void;
   clearAgentActivity: () => void;
   setLastSentientPulse: (timestamp: number) => void;
+
+  addConcept: (concept: DebatedConcept) => void;
+  updateConceptStatus: (id: string, status: ConceptStatus) => void;
+  addConceptArgument: (conceptId: string, arg: ConceptArgument) => void;
+  deleteConcept: (id: string) => void;
 }
 
 const DEFAULT_PROMPT =
@@ -523,6 +551,7 @@ export const useAdminState = create<AdminState>()(
       aiInterventions: [],
       agentActivity: [],
       lastSentientPulse: null,
+      debatedConcepts: [],
 
       setAdminAccess: (value) => set({ adminAccess: value }),
       toggleContentEditing: (value) => set({ isContentEditingEnabled: value }),
@@ -579,7 +608,28 @@ export const useAdminState = create<AdminState>()(
           agentActivity: [activity, ...state.agentActivity].slice(0, 100)
         })),
       clearAgentActivity: () => set({ agentActivity: [] }),
-      setLastSentientPulse: (lastSentientPulse) => set({ lastSentientPulse })
+      setLastSentientPulse: (lastSentientPulse) => set({ lastSentientPulse }),
+
+      addConcept: (concept) =>
+        set((state) => ({
+          debatedConcepts: [concept, ...state.debatedConcepts]
+        })),
+      updateConceptStatus: (id, status) =>
+        set((state) => ({
+          debatedConcepts: state.debatedConcepts.map(c => 
+            c.id === id ? { ...c, status, updatedAt: Date.now() } : c
+          )
+        })),
+      addConceptArgument: (conceptId, arg) =>
+        set((state) => ({
+          debatedConcepts: state.debatedConcepts.map(c => 
+            c.id === conceptId ? { ...c, arguments: [...c.arguments, arg], updatedAt: Date.now() } : c
+          )
+        })),
+      deleteConcept: (id) =>
+        set((state) => ({
+          debatedConcepts: state.debatedConcepts.filter(c => c.id !== id)
+        }))
     }),
     {
       name: "dawayir-admin-state", storage: zustandIdbStorage,

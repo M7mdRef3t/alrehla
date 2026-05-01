@@ -57,7 +57,8 @@ export type AdminTab =
   | "command-funnel"
   | "people-hub"
   | "growth-hub"
-  | "markaz";
+  | "markaz"
+  | "concepts-debate";
 
 export type NavGroup = {
   title: string;
@@ -96,6 +97,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "مختبر الذكاء والجينات",
     items: [
       { id: "ai-studio", label: "عقل المنصة (AI Lab)", icon: <Brain className="h-4 w-4 text-purple-400" /> },
+      { id: "concepts-debate", label: "مختبر المفاهيم", icon: <Brain className="h-4 w-4 text-indigo-400" /> },
     ],
   },
   {
@@ -167,6 +169,7 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "growth-hub": "رادار التوسع والنمو",
   "people-hub": "مركز المسافرين والوعي",
   "markaz": "برج حورس (المركز التنفيذي)",
+  "concepts-debate": "مختبر المفاهيم",
 };
 
 export const DEVELOPER_PLUS_TABS: AdminTab[] = ["ai-studio"];
@@ -204,4 +207,5 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "growth-hub": "محرك التوسع: رادار شامل للنمو، الإيرادات، قصص النجاح، وحملات الانتشار.",
   "people-hub": "مركز المسافرين: إدارة شاملة للمسافرين، نبض الوعي، وأرشيف الإدراك الجماعي.",
   "markaz": "برج حورس: غرفة العمليات التنفيذية لنداء الحق والتدخلات المباشرة مع المسافرين.",
+  "concepts-debate": "مختبر المفاهيم: مساحة مخصصة للنقاش المعرفي والعلمي حول مفاهيم المنصة واختبارها عبر البيانات.",
 };
