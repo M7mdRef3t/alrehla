@@ -65,7 +65,7 @@ export async function POST(req: Request) {
 
 async function handleReadFile(filePath: string) {
   try {
-    const fullPath = path.resolve(ROOT, filePath);
+    const fullPath = path.resolve(/*turbopackIgnore: true*/ ROOT, filePath);
     if (!fullPath.startsWith(ROOT)) {
       throw new Error("Access denied: path outside root");
     }
@@ -78,7 +78,7 @@ async function handleReadFile(filePath: string) {
 
 async function handleListFiles(dirPath: string = ".") {
     try {
-      const fullPath = path.resolve(ROOT, dirPath);
+      const fullPath = path.resolve(/*turbopackIgnore: true*/ ROOT, dirPath);
       if (!fullPath.startsWith(ROOT)) {
         throw new Error("Access denied: path outside root");
       }
@@ -109,7 +109,7 @@ async function handleRunDiagnostic(command: string) {
 
 async function handleAuditUICognitive(filePath: string) {
   try {
-    const fullPath = path.resolve(ROOT, filePath);
+    const fullPath = path.resolve(/*turbopackIgnore: true*/ ROOT, filePath);
     if (!fullPath.startsWith(ROOT)) {
       throw new Error("Access denied: path outside root");
     }
@@ -202,7 +202,7 @@ async function handleMutateUIComponent(args: any) {
     }
 
     // 1. Create directory if not exists
-    const evolDir = path.join(ROOT, "src", "evolution", componentId);
+    const evolDir = path.join(/*turbopackIgnore: true*/ ROOT, "src", "evolution", componentId);
     await fs.mkdir(evolDir, { recursive: true });
     
     // 2. Write the component file
@@ -210,7 +210,7 @@ async function handleMutateUIComponent(args: any) {
     const filePath = path.join(evolDir, fileName);
 
     // Final check: Ensure the resolved path is still within our evolution root
-    const evolutionRoot = path.join(ROOT, "src", "evolution");
+    const evolutionRoot = path.join(/*turbopackIgnore: true*/ ROOT, "src", "evolution");
     if (!filePath.startsWith(evolutionRoot)) {
        throw new Error("Security Violation: Target path is outside the evolution boundary.");
     }
