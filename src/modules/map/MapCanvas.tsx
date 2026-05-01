@@ -1412,7 +1412,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
       }
 
       if (overId === "ai-node") {
-        aiState?.onNodeDrop(activeId);
+        aiState?.onNodeDrop?.(activeId);
         return;
       }
 
