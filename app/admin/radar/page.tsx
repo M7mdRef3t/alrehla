@@ -1808,7 +1808,7 @@ export default function AdminRadarPage() {
                   </p>
                 </div>
                 <a
-                  href="https://www.tiktok.com/v2/auth/authorize/?client_key=sbawhmjasvky36kjpx&response_type=code&scope=user.info.basic,video.list&redirect_uri=https://www.alrehla.app/api/tiktok/callback&state=demo"
+                  href="https://www.tiktok.com/v2/auth/authorize/?client_key=sbawhmjasvky36kjpx&response_type=code&scope=user.info.basic&redirect_uri=https://www.alrehla.app/api/tiktok/callback&state=demo"
                   className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-cyan-500 text-white text-sm font-bold shadow-lg shadow-pink-500/20 hover:scale-105 transition-transform text-center"
                 >
                   Connect TikTok
