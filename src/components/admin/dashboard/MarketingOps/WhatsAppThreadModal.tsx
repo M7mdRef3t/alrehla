@@ -59,6 +59,10 @@ export function WhatsAppThreadModal({
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isWindowClosed, setIsWindowClosed] = useState(false);
+  const [drafting, setDrafting] = useState(false);
+  const [aiDraftResult, setAiDraftResult] = useState<{ analysis: string; state: string } | null>(null);
+  const [isAutopilotEnabled, setIsAutopilotEnabled] = useState(false);
+  const [togglingAutopilot, setTogglingAutopilot] = useState(false);
   const showToast = useToastState((s) => s.showToast);
 
   const fetchEvents = async () => {
@@ -123,6 +127,60 @@ export function WhatsAppThreadModal({
     }
   };
 
+  const handleDraftReply = async () => {
+    if (!leadId || drafting) return;
+    setDrafting(true);
+    try {
+      const res = await fetch(`/api/admin/marketing-ops/lead/${leadId}/whatsapp`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          authorization: `Bearer ${getBearerToken()}` 
+        },
+        body: JSON.stringify({ action: "draft_reply" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.draftResult) {
+        setAiDraftResult({ analysis: data.draftResult.analysis, state: data.draftResult.state });
+        insertQuickReply(data.draftResult.draft);
+        showToast("الأوركال حلل الموقف واقترح رد 🧠", "success");
+      } else {
+        showToast(`فشل استشارة الأوركال: ${data.error || "مجهول"}`, "error");
+      }
+    } catch (err) {
+      showToast("خطأ في الاتصال بالأوركال", "error");
+    } finally {
+      setDrafting(false);
+    }
+  };
+
+  const toggleAutopilot = async () => {
+    if (!leadId || togglingAutopilot) return;
+    setTogglingAutopilot(true);
+    const newState = !isAutopilotEnabled;
+    try {
+      const res = await fetch(`/api/admin/marketing-ops/lead/${leadId}/whatsapp`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          authorization: `Bearer ${getBearerToken()}` 
+        },
+        body: JSON.stringify({ action: "toggle_autopilot", enable: newState }),
+      });
+      const data = await res.json();
+      if (res.ok && typeof data.autopilotEnabled === 'boolean') {
+        setIsAutopilotEnabled(data.autopilotEnabled);
+        showToast(data.autopilotEnabled ? "تم تفعيل الطيار الآلي بنجاح 🤖" : "تم إيقاف الطيار الآلي", "success");
+      } else {
+        showToast(`فشل تغيير حالة الطيار الآلي: ${data.error || "مجهول"}`, "error");
+      }
+    } catch (err) {
+      showToast("خطأ في الاتصال بالسيرفر", "error");
+    } finally {
+      setTogglingAutopilot(false);
+    }
+  };
+
   if (!leadId) return null;
 
   return (
@@ -165,6 +223,23 @@ export function WhatsAppThreadModal({
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Autopilot Toggle */}
+              <button 
+                onClick={toggleAutopilot}
+                disabled={togglingAutopilot}
+                title={isAutopilotEnabled ? "إيقاف الطيار الآلي" : "تفعيل الطيار الآلي للرد التلقائي عبر الأوركال"}
+                className={`px-3 py-1.5 rounded-full border text-[10px] font-black transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50 ${
+                  isAutopilotEnabled 
+                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.2)]' 
+                    : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white/70'
+                }`}
+              >
+                {togglingAutopilot ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Brain className="w-3 h-3" />}
+                {isAutopilotEnabled ? 'الطيار الآلي مُفعل 🤖' : 'الطيار الآلي معطّل'}
+              </button>
+              
+              <div className="w-px h-6 bg-white/10 mx-1 shrink-0"></div>
+
               <button 
                 onClick={fetchEvents}
                 disabled={loading}
@@ -177,6 +252,25 @@ export function WhatsAppThreadModal({
               </button>
             </div>
           </div>
+
+          {/* Psychological Snapshot */}
+          {aiDraftResult && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }} 
+              animate={{ opacity: 1, height: 'auto' }} 
+              className="bg-indigo-900/40 border-b border-indigo-500/20 px-4 py-2 flex items-center justify-between shrink-0"
+            >
+              <div className="flex items-center gap-2">
+                <Brain className="w-4 h-4 text-indigo-400" />
+                <span className="text-[11px] font-medium text-indigo-200">
+                  <span className="font-bold text-indigo-300">تحليل الموقف:</span> {aiDraftResult.analysis}
+                </span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-black tracking-wider">
+                {aiDraftResult.state}
+              </span>
+            </motion.div>
+          )}
 
           {/* Oracle Advice Overlay */}
           {oracleAdvice && (
@@ -284,7 +378,16 @@ export function WhatsAppThreadModal({
           </div>
           
           {/* Quick Replies Area */}
-          <div className="px-4 py-2 border-t border-white/5 bg-slate-900/30 overflow-x-auto whitespace-nowrap scrollbar-hide flex gap-2 shrink-0">
+          <div className="px-4 py-2 border-t border-white/5 bg-slate-900/30 overflow-x-auto whitespace-nowrap scrollbar-hide flex gap-2 shrink-0 items-center">
+             <button 
+               onClick={handleDraftReply}
+               disabled={drafting}
+               className="px-3 py-1.5 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-[10px] font-black text-indigo-300 hover:text-white hover:bg-indigo-500/40 transition-all shrink-0 flex items-center gap-1.5 shadow-[0_0_15px_rgba(99,102,241,0.15)] disabled:opacity-50"
+             >
+               {drafting ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Brain className="w-3 h-3" />}
+               استشهد بالأوركال 🧠
+             </button>
+             <div className="w-px h-4 bg-white/10 mx-1 shrink-0"></div>
              {QUICK_REPLIES.map((reply, idx) => (
                 <button 
                   key={idx}

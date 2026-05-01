@@ -139,7 +139,7 @@ class WhatsAppAutomationService {
       // 2. Sync with marketing_leads (CRM)
       const { data: leadData, error: leadSearchError } = await supabase
         .from('marketing_leads')
-        .select('id, status, intent, utm')
+        .select('id, name, status, intent, utm, campaign, metadata')
         .eq('phone_normalized', phoneNormalized)
         .maybeSingle();
 
@@ -218,30 +218,57 @@ class WhatsAppAutomationService {
         console.error('[WhatsAppAutomation] Error logging message event:', eventError);
       }
 
-      // 4. Automated Responses with Link Chaining
+      // 4. Automated Responses with Link Chaining & Auto-Pilot
       if (!activated) {
-        let repliedLocally = false;
-        const autoTriggers = ["payment_requested", "info_requested", "pricing_requested"];
-        if (autoTriggers.includes(intent)) {
-          await this.handleAutoReply(phoneNormalized, leadId, intent, payload.name, attributionData.utm?.ctwa_clid);
-          repliedLocally = true;
-        }
+        const isAutoPilot = leadData?.metadata?.ai_autopilot === true;
         
-        // 5. Forward to Botpress for AI Processing only if we didn't auto-reply
-        if (!repliedLocally) {
-          const { BotpressService } = await import("./botpressService");
-          console.log(`[WhatsAppAutomation] Forwarding message to Botpress AI for ${phoneNormalized}`);
-          await BotpressService.sendMessage({
-            userId: phoneNormalized,
-            text: payload.text || "[Media Message]",
-            metadata: { 
-              source: "whatsapp", 
-              messageId: payload.messageId, 
-              leadId: leadId,
-              intent: intent,
-              oracle_strategy: oracleStrategy
-            }
-          });
+        if (isAutoPilot && leadId) {
+           console.log(`[WhatsAppAutomation] Auto-Pilot active for ${phoneNormalized}. Consulting Oracle...`);
+           
+           // Fetch recent events for context to give Oracle
+           const { data: recentEvents } = await supabase
+             .from("whatsapp_message_events")
+             .select("*")
+             .eq("lead_id", leadId)
+             .order("created_at", { ascending: true })
+             .limit(10);
+           
+           const { OracleService } = await import("./oracleService");
+           const draftResult = await OracleService.draftWhatsAppReply(recentEvents || [], { 
+             name: leadData?.name,
+             campaign: leadData?.campaign 
+           });
+           
+           if (draftResult && draftResult.draft && !draftResult.draft.includes("مش قادر أحلل")) {
+              await WhatsAppCloudService.sendFreeText(phoneNormalized, leadId, draftResult.draft);
+              console.log(`[WhatsAppAutomation] Auto-Pilot replied to ${phoneNormalized} successfully.`);
+           } else {
+              console.warn(`[WhatsAppAutomation] Auto-Pilot failed to draft for ${phoneNormalized}. Falling back.`);
+           }
+        } else {
+          let repliedLocally = false;
+          const autoTriggers = ["payment_requested", "info_requested", "pricing_requested"];
+          if (autoTriggers.includes(intent)) {
+            await this.handleAutoReply(phoneNormalized, leadId, intent, payload.name, attributionData.utm?.ctwa_clid);
+            repliedLocally = true;
+          }
+          
+          // 5. Forward to Botpress for AI Processing only if we didn't auto-reply
+          if (!repliedLocally) {
+            const { BotpressService } = await import("./botpressService");
+            console.log(`[WhatsAppAutomation] Forwarding message to Botpress AI for ${phoneNormalized}`);
+            await BotpressService.sendMessage({
+              userId: phoneNormalized,
+              text: payload.text || "[Media Message]",
+              metadata: { 
+                source: "whatsapp", 
+                messageId: payload.messageId, 
+                leadId: leadId,
+                intent: intent,
+                oracle_strategy: oracleStrategy
+              }
+            });
+          }
         }
       }
 

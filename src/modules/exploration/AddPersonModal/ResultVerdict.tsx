@@ -85,7 +85,8 @@ export const ResultVerdict: FC<ResultVerdictProps> = ({
                 </span>
                 <span className="text-xl text-teal-400 font-bold ml-1">%</span>
               </motion.div>
-              <span className="text-[10px] font-black text-teal-500 mt-3 font-tajawal tracking-widest">السيادة الشخصية</span>
+              <span className="text-[10px] font-black text-teal-500 mt-3 font-tajawal tracking-widest">مؤشر القيادة الشخصية</span>
+              <span className="text-[9px] text-teal-400/60 mt-1 font-tajawal max-w-[150px] leading-tight text-center">مدى سيطرتك بناءً على إجاباتك</span>
            </div>
         </div>
 

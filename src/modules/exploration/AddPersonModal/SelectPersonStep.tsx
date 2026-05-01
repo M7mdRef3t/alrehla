@@ -50,6 +50,10 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
     { page: "add_person" }
   );
 
+  // Family sub-step: detect if العائلة was selected from a non-family goalId
+  const isFamilyExpansionNeeded = (goalId === "general" || goalId === "unknown") && selectedTitle === "العائلة" && !showCustomTitleInput;
+  const familySuggestions = SUGGESTIONS.family;
+
   return (
     <form onSubmit={onContinue} className="text-right flex flex-col min-h-0 h-full">
       <h2 id="add-person-title" className="text-2xl font-black text-white mb-2 shrink-0 font-alexandria leading-[1.8]">
@@ -68,43 +72,86 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
         >
           {suggestions.map((suggestion: SuggestionCard, idx: number) => {
             const Icon = suggestion.icon;
-            const isSelected = selectedTitle === suggestion.label && !showCustomTitleInput;
+            const isSelected = selectedTitle === suggestion.label && !showCustomTitleInput && !isFamilyExpansionNeeded;
+            const isFamilyParent = suggestion.label === "العائلة" && isFamilyExpansionNeeded;
             return (
-              <motion.button
-                key={suggestion.label}
-                type="button"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                onClick={() => {
-                  import("@/services/soundManager").then(m => m.soundManager.playEffect("cosmic_pulse"));
-                  onTitleSelect(suggestion.label);
-                }}
-                className={`group relative w-full flex items-center gap-3 rounded-2xl transition-all duration-300 focus-visible:outline-none p-3 overflow-hidden ${isSelected
-                    ? "bg-teal-500/10 border border-teal-400/30 shadow-[0_0_20px_rgba(45,212,191,0.08)]"
-                    : "bg-white/[0.03] border border-transparent hover:border-white/10 hover:bg-white/[0.05]"
-                  }`}
-                title={`اختيار "${suggestion.label}"`}
-                whileTap={{ scale: 0.98 }}
-              >
-                {/* Selection indicator */}
-                {isSelected && (
-                  <motion.div 
-                    layoutId="selection-glow"
-                    className="absolute inset-0 rounded-2xl bg-teal-400/5 pointer-events-none"
-                  />
-                )}
+              <div key={suggestion.label}>
+                <motion.button
+                  type="button"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  onClick={() => {
+                    import("@/services/soundManager").then(m => m.soundManager.playEffect("cosmic_pulse"));
+                    onTitleSelect(suggestion.label);
+                  }}
+                  className={`group relative w-full flex items-center gap-3 rounded-2xl transition-all duration-300 focus-visible:outline-none p-3 overflow-hidden ${isSelected || isFamilyParent
+                      ? "bg-teal-500/10 border border-teal-400/30 shadow-[0_0_20px_rgba(45,212,191,0.08)]"
+                      : "bg-white/[0.03] border border-transparent hover:border-white/10 hover:bg-white/[0.05]"
+                    }`}
+                  title={`اختيار "${suggestion.label}"`}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {/* Selection indicator */}
+                  {(isSelected || isFamilyParent) && (
+                    <motion.div 
+                      layoutId="selection-glow"
+                      className="absolute inset-0 rounded-2xl bg-teal-400/5 pointer-events-none"
+                    />
+                  )}
 
-                <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all duration-300 z-10 ${isSelected ? "bg-teal-400/15 text-teal-300" : "bg-white/5 text-zinc-500 group-hover:text-zinc-300 group-hover:bg-white/8"}`}>
-                  <Icon className="w-5 h-5" strokeWidth={1.5} />
-                </div>
-                <div className={`flex-1 text-right z-10 font-tajawal text-sm ${isSelected ? "text-teal-300 font-bold" : "text-zinc-300 group-hover:text-white"}`}>
-                  {suggestion.label}
-                </div>
-                {isSelected && (
-                  <div className="w-2 h-2 rounded-full bg-teal-400 shrink-0 shadow-[0_0_8px_#2dd4bf]" />
+                  <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all duration-300 z-10 ${isSelected || isFamilyParent ? "bg-teal-400/15 text-teal-300" : "bg-white/5 text-zinc-500 group-hover:text-zinc-300 group-hover:bg-white/8"}`}>
+                    <Icon className="w-5 h-5" strokeWidth={1.5} />
+                  </div>
+                  <div className={`flex-1 text-right z-10 font-tajawal text-sm ${isSelected || isFamilyParent ? "text-teal-300 font-bold" : "text-zinc-300 group-hover:text-white"}`}>
+                    {suggestion.label}
+                  </div>
+                  {(isSelected || isFamilyParent) && (
+                    <div className="w-2 h-2 rounded-full bg-teal-400 shrink-0 shadow-[0_0_8px_#2dd4bf]" />
+                  )}
+                </motion.button>
+
+                {/* Family Sub-Step: Show specific family members when العائلة is selected */}
+                {isFamilyParent && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mr-6 mt-1 mb-2 flex flex-col gap-1.5 border-r-2 border-teal-500/30 pr-3 overflow-hidden"
+                  >
+                    <p className="text-[10px] text-teal-400 font-bold font-tajawal mb-1">مين بالضبط؟</p>
+                    {familySuggestions.map((fam, fIdx) => {
+                      const FamIcon = fam.icon;
+                      const isFamSelected = selectedTitle === fam.label;
+                      return (
+                        <motion.button
+                          key={fam.label}
+                          type="button"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: fIdx * 0.03 }}
+                          onClick={() => {
+                            import("@/services/soundManager").then(m => m.soundManager.playEffect("cosmic_pulse"));
+                            onTitleSelect(fam.label);
+                          }}
+                          className={`group w-full flex items-center gap-2.5 rounded-xl transition-all duration-200 p-2.5 ${isFamSelected
+                              ? "bg-teal-500/15 border border-teal-400/30"
+                              : "bg-white/[0.02] border border-transparent hover:bg-white/[0.05]"
+                            }`}
+                          whileTap={{ scale: 0.97 }}
+                        >
+                          <div className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center ${isFamSelected ? "bg-teal-400/20 text-teal-300" : "bg-white/5 text-zinc-500"}`}>
+                            <FamIcon className="w-4 h-4" strokeWidth={1.5} />
+                          </div>
+                          <span className={`text-xs font-tajawal ${isFamSelected ? "text-teal-300 font-bold" : "text-zinc-400"}`}>
+                            {fam.label}
+                          </span>
+                          {isFamSelected && <div className="w-1.5 h-1.5 rounded-full bg-teal-400 mr-auto" />}
+                        </motion.button>
+                      );
+                    })}
+                  </motion.div>
                 )}
-              </motion.button>
+              </div>
             );
           })}
           

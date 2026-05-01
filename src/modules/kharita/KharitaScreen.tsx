@@ -67,10 +67,16 @@ interface KharitaScreenProps {
 /*           LIVING MAP CANVAS                */
 /* ═══════════════════════════════════════════ */
 
+import { useKharitaStore } from "./store/kharita.store";
+
 export default function KharitaScreen({ onNavigate }: KharitaScreenProps) {
-  // Simulated progress: user is at level 40 (has unlocked tools up to unlockedLevel 40)
-  const currentProgressLevel = 45; 
-  
+  const currentProgressLevel = useKharitaStore((state) => state.currentProgressLevel);
+  const syncWithVerticalAxis = useKharitaStore((state) => state.actions.syncWithVerticalAxis);
+
+  useEffect(() => {
+    syncWithVerticalAxis();
+  }, [syncWithVerticalAxis]);
+
   const handleNavigate = (screen: string, unlocked: boolean) => {
     if (!unlocked) return; // Prevent navigation to locked areas (Fog of War)
     const appScreen = KHARITA_SCREEN_ROUTES[screen] || (screen as AppScreen);

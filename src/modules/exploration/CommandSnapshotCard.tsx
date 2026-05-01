@@ -79,7 +79,10 @@ export const CommandSnapshotCard: FC<CommandSnapshotCardProps> = ({ snapshot }) 
         >
           <div className="absolute top-0 right-0 w-2 h-full opacity-60" style={{ backgroundColor: theme.primary }} />
           
-          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-8 border-b border-white/5 pb-4">إشارات البوصلة المرصودة</h4>
+          <h4 className="text-[11px] font-black text-slate-400 mb-8 border-b border-white/5 pb-4 font-tajawal flex items-center gap-2">
+            <span>🧠</span> 
+            المحكمة الداخلية: اللي بيحصل جوا دماغك (للعرض فقط)
+          </h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {snapshot.reasons.map((reason, idx) => (
@@ -88,10 +91,10 @@ export const CommandSnapshotCard: FC<CommandSnapshotCardProps> = ({ snapshot }) 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * idx }}
-                className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.01] transition-colors"
               >
-                 <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center shrink-0 border border-white/5 mt-0.5">
-                    <ShieldCheck className="w-4 h-4" style={{ color: theme.primary }} />
+                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 border border-white/10 mt-0.5" style={{ boxShadow: `0 0 10px ${theme.glow}` }}>
+                    <ShieldCheck className="w-4 h-4 text-white" />
                  </div>
                  <span className="text-base font-bold text-slate-200 leading-tight">
                     {reason}

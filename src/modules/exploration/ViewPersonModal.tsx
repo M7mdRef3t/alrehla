@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FC, type MouseEvent as ReactMouseEvent } from "react";
 import { motion } from "framer-motion";
-import { X, Share2, Target, ClipboardList } from "lucide-react";
+import { X, Share2, Target, ClipboardList, Trash2 } from "lucide-react";
 import { Z_LAYERS } from "@/config/zIndices";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { useMapState } from '@/modules/map/dawayirIndex';
@@ -28,6 +28,8 @@ import { assignUrl } from "@/services/navigation";
 import { useAuthState } from "@/domains/auth/store/auth.store";
 import { canSendAIMessage } from "@/services/subscriptionManager";
 import { Mic } from "lucide-react";
+import { RealityCheckInCard } from "./RealityCheckInCard";
+import { getPendingAfterPulse, getPendingCheckIns, getLatestFeedbackForNode } from "@/services/realityFeedbackEngine";
 
 interface ViewPersonModalProps {
   nodeId: string;
@@ -60,6 +62,16 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   const user = useAuthState(s => s.user);
   const journeyPaths = useAdminState((s) => s.journeyPaths);
   const livePath = useMemo(() => getDawayirLivePath(journeyPaths), [journeyPaths]);
+
+  // Reality Feedback: check if there's a pending check-in for this node
+  const pendingFeedback = useMemo(() => {
+    const latest = getLatestFeedbackForNode(nodeId);
+    if (!latest) return null;
+    if (latest.status === "awaiting_after" && Date.now() >= latest.pulse.evaluateAt) return latest;
+    if (latest.status === "awaiting_checkin") return latest;
+    return null;
+  }, [nodeId]);
+  const [showFeedbackCard, setShowFeedbackCard] = useState(!!pendingFeedback);
   
   const returnAlarm = useMemo(
     () => (node ? deriveRedReturnAlarm(node, node.label) : null),
@@ -139,6 +151,14 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
       desc: "قمت بتجميد علاقة مستنزفة ونقلها إلى المدار الصفري للحفاظ على سلامي الداخلي.",
       type: "boundary"
     });
+  };
+
+  const handleDeleteNode = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (window.confirm(`هل أنت متأكد من حذف "${node.label}" نهائياً من خريطتك؟`)) {
+      useMapState.getState().archiveNode(node.id);
+      onClose();
+    }
   };
 
   return (
@@ -295,6 +315,16 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
             </div>
           </button>
 
+          <button onClick={handleDeleteNode} className="w-full rounded-2xl border border-rose-500/20 bg-rose-500/5 p-5 text-rose-500 transition-all hover:bg-rose-500/10 backdrop-blur-md">
+            <div className="flex items-center justify-between">
+              <div className="text-right">
+                <span className="block text-base font-black">🗑️ حذف الشخص نهائياً</span>
+                <span className="text-xs text-rose-500/70">إزالة الشخص من الخريطة بالكامل.</span>
+              </div>
+              <div className="h-10 w-10 flex items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10"><Trash2 className="w-5 h-5 text-rose-500" /></div>
+            </div>
+          </button>
+
           {orbitReplay && <OrbitDriftReplayCard snapshot={orbitReplay} />}
 
           {(node.isEmergency || node.ring === "red" || (node.energyBalance?.netEnergy ?? 0) < 0) && (
@@ -355,6 +385,18 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                   <span className="text-[var(--consciousness-text)] text-xs block">انسحاب تكتيكي</span>
                 </div>
               </button>
+            </div>
+          )}
+
+          {/* 🔬 Reality Check-In — متابعة الأثر الحقيقي */}
+          {showFeedbackCard && pendingFeedback && (
+            <div className="mb-4">
+              <RealityCheckInCard
+                record={pendingFeedback}
+                currentRing={node.ring}
+                onComplete={() => setShowFeedbackCard(false)}
+                onDismiss={() => setShowFeedbackCard(false)}
+              />
             </div>
           )}
 

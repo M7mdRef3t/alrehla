@@ -6,9 +6,11 @@ import { GET as runMarketingCron } from "../../cron/marketing-outreach/route";
 export const dynamic = "force-dynamic";
 
 function buildClient() {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    serviceKey || anonKey, // fallback to anon in local dev when service key is missing
     { auth: { persistSession: false } }
   );
 }
@@ -31,6 +33,7 @@ async function checkAuth(req: Request): Promise<NextResponse | null> {
 
 // ─── GET — stats + quick-send leads ─────────────────────────────────────────
 export async function GET(req: Request) {
+  try {
   const authError = await checkAuth(req);
   if (authError) {
     return authError;
@@ -99,7 +102,7 @@ export async function GET(req: Request) {
         idEngagementMap[String(qs.lead_id)] = entry;
       }
       if (qs.lead_email) {
-        emailEngagementMap[qs.lead_email.toLowerCase().trim()] = entry;
+        emailEngagementMap[String(qs.lead_email).toLowerCase().trim()] = entry;
       }
     }
   }
@@ -181,7 +184,7 @@ export async function GET(req: Request) {
     }
     
     // Revenue Attributions 
-    if (["activated", "converted", "proof_received"].includes((lead.status as string)?.toLowerCase())) {
+    if (["activated", "converted", "proof_received"].includes(String(lead.status || "").toLowerCase())) {
         const metadata = (lead.metadata as any) || {};
         const amount = Number(metadata.amount) || Number(metadata.amount_egp) || 0;
         
@@ -203,11 +206,11 @@ export async function GET(req: Request) {
     console.error("[MarketingOps] gate_sessions fetch error:", gateError);
   }
 
-  const existingEmails = new Set(rawLeads.map(l => l.email?.toLowerCase().trim()));
+  const existingEmails = new Set(rawLeads.map(l => l.email ? String(l.email).toLowerCase().trim() : undefined).filter(Boolean));
   const prospectLeads: any[] = [];
 
   for (const session of (gateSessions ?? [])) {
-    const email = session.email?.toLowerCase().trim();
+    const email = session.email ? String(session.email).toLowerCase().trim() : undefined;
     if (email && !existingEmails.has(email)) {
       // Create a "pseudo-lead" from the gate session
       prospectLeads.push({
@@ -305,7 +308,7 @@ export async function GET(req: Request) {
       const lead = leadMap.get(email);
       const leadId = (lead?.id as string) ?? uniqueLeads.get(email) ?? null;
       const rawName = ((lead?.first_name ?? lead?.name ?? lead?.full_name ?? "") as string).trim();
-      const phone = (lead?.phone as string | undefined)?.trim() || null;
+      const phone = lead?.phone ? String(lead.phone).trim() : null;
       const personalLink = leadId
         ? `${appUrl}/onboarding?ref=${leadId}&utm_source=manual&utm_medium=quicksend`
         : `${appUrl}/onboarding?utm_source=manual&utm_medium=quicksend`;
@@ -442,11 +445,16 @@ export async function GET(req: Request) {
     conversionHealth,
     flowStats
   });
+  } catch (err: any) {
+    console.error("[MarketingOps GET Error]", err);
+    return NextResponse.json({ ok: false, error: err.message, stack: err.stack }, { status: 500 });
+  }
 }
 
 // Normalize Egyptian phone to international format
 function normalizeEgyptianPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
+  if (!phone) return "";
+  const digits = String(phone).replace(/\D/g, "");
   if (digits.startsWith("0") && digits.length === 11) return `+2${digits}`;
   if (digits.startsWith("2") && digits.length === 12) return `+${digits}`;
   if (digits.startsWith("+2")) return phone;

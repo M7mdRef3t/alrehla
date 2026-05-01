@@ -26,14 +26,6 @@
     {
       "path": "/api/social/sync-views",
       "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/marketing-outreach",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/cron/ab-test-monitor",
-      "schedule": "0 10 * * *"
     }
   ]
 }

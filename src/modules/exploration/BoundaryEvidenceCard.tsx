@@ -124,7 +124,7 @@ export const BoundaryEvidenceCard: FC<BoundaryEvidenceCardProps> = ({ evidence }
               <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
               <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2 text-right">
                  <FileText className="w-4 h-4" />
-                 الأدلة المرصودة
+                 الأدلة الواقعية المرصودة (للعرض فقط)
               </h4>
               
               <div className="space-y-5">
@@ -134,12 +134,12 @@ export const BoundaryEvidenceCard: FC<BoundaryEvidenceCardProps> = ({ evidence }
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 * idx }}
-                      className="flex items-start gap-4 group"
+                      className="flex items-start gap-4"
                     >
-                       <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center shrink-0 border border-white/5 mt-0.5 group-hover:bg-white/10 transition-colors">
-                          <Activity className="w-3.5 h-3.5" style={{ color: theme.primary }} />
+                       <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 border border-white/10 mt-0.5" style={{ boxShadow: `0 0 10px ${theme.glow}` }}>
+                          <Activity className="w-4 h-4 text-white" />
                        </div>
-                       <span className="text-md font-bold text-slate-300 group-hover:text-white transition-colors leading-relaxed">
+                       <span className="text-md font-bold text-slate-300 leading-relaxed">
                           {item}
                        </span>
                     </motion.div>

@@ -20,9 +20,11 @@ function parseCompactCount(raw: unknown): number | null {
   if (typeof raw === "number" && Number.isFinite(raw)) return raw;
   if (typeof raw !== "string") return null;
 
+  // Handle common numeric formats including Arabic-style if present
   const normalized = raw
     .replace(/&nbsp;/g, " ")
     .replace(/,/g, "")
+    .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString()) // Arabic digits to English
     .trim()
     .match(/(\d+(?:\.\d+)?)\s*([KMB])?/i);
 
@@ -38,7 +40,9 @@ function parseCompactCount(raw: unknown): number | null {
 
 function getStatsViews(node: any): number | null {
   const stats = node?.stats ?? node?.statsV2 ?? node?.itemInfo?.itemStruct?.stats ?? node?.itemStruct?.stats;
-  return parseCompactCount(stats?.playCount ?? stats?.play_count ?? stats?.video_view_count);
+  const count = stats?.playCount ?? stats?.play_count ?? stats?.video_view_count;
+  if (count === undefined || count === null) return null;
+  return parseCompactCount(count);
 }
 
 function findViewsInTree(node: unknown, videoId: string | null): number | null {
@@ -54,15 +58,23 @@ function findViewsInTree(node: unknown, videoId: string | null): number | null {
     const currentId = String(current.id ?? current.itemId ?? current.videoId ?? current.aweme_id ?? "");
     const directViews = getStatsViews(current);
 
-    if (directViews !== null && (!videoId || currentId === videoId || String(current?.itemStruct?.id ?? "") === videoId)) {
-      candidates.push(directViews);
+    if (directViews !== null) {
+      // If we have a videoId, we must match it. If not, we take the largest count found (riskier but better than zero)
+      if (!videoId || currentId === videoId || String(current?.itemStruct?.id ?? "") === videoId) {
+        candidates.push(directViews);
+      }
     }
 
     if (current.itemStruct) visit(current.itemStruct);
     if (current.itemInfo) visit(current.itemInfo);
 
-    for (const child of Object.values(current)) {
-      if (child && typeof child === "object") visit(child);
+    for (const key in current) {
+      try {
+        const child = current[key];
+        if (child && typeof child === "object") visit(child);
+      } catch {
+        // Skip inaccessible properties
+      }
     }
   };
 
@@ -74,7 +86,11 @@ function findViewsInTree(node: unknown, videoId: string | null): number | null {
 
 export function parseTikTokViewsFromHtml(html: string, url: string): number | null {
   const videoId = extractTikTokVideoId(url);
-  console.log(`[TikTok Scraper] Parsing URL: ${url}, Video ID: ${videoId}`);
+  console.log(`[TikTok Scraper] Parsing URL: ${url}, Extracted Video ID: ${videoId}`);
+
+  if (html.includes("verify-user") || html.includes("captcha") || html.length < 2000) {
+    console.warn(`[TikTok Scraper] Possible bot detection or empty page. HTML length: ${html.length}`);
+  }
 
   const scriptIds = ["__UNIVERSAL_DATA_FOR_REHYDRATION__", "SIGI_STATE", "__NEXT_DATA__"];
   for (const scriptId of scriptIds) {
@@ -84,7 +100,7 @@ export function parseTikTokViewsFromHtml(html: string, url: string): number | nu
       const parsed = JSON.parse(scriptMatch[1]);
       const views = findViewsInTree(parsed, videoId);
       if (views !== null && views > 0) {
-        console.log(`[TikTok Scraper] Found views in ${scriptId}: ${views}`);
+        console.log(`[TikTok Scraper] Found views in ${scriptId}: ${views} (Target ID: ${videoId})`);
         return views;
       }
     } catch {
@@ -115,11 +131,11 @@ export function parseTikTokViewsFromHtml(html: string, url: string): number | nu
     html.match(/(\d+(?:[,.]\d+)?\s*[KMB]?)\s*(?:views|Views|مشاهدة|play)/i);
   const metaViews = parseCompactCount(metaMatch?.[1]);
   if (metaViews && metaViews > 0) {
-    console.log(`[TikTok Scraper] Found views in Meta: ${metaViews}`);
+    console.log(`[TikTok Scraper] Found views in Meta/Regex: ${metaViews}`);
     return metaViews;
   }
 
-  console.error(`[TikTok Scraper] No views found for ${url}`);
+  console.error(`[TikTok Scraper] No views found for ${url}. HTML Snippet: ${html.substring(0, 500)}`);
   return null;
 }
 
@@ -130,12 +146,18 @@ export async function fetchTikTokViews(url: string): Promise<number | null> {
       redirect: "follow",
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`[TikTok Scraper] Fetch failed with status: ${res.status}`);
+      return null;
+    }
 
+    const finalUrl = res.url || url;
     const html = await res.text();
-    return parseTikTokViewsFromHtml(html, url);
+    
+    // Pass finalUrl to ensure videoId extraction works on expanded links
+    return parseTikTokViewsFromHtml(html, finalUrl);
   } catch (error) {
-    console.error("[TikTok Scraper] Error:", error);
+    console.error("[TikTok Scraper] Fatal Error:", error);
     return null;
   }
 }

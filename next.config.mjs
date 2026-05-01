@@ -60,7 +60,7 @@ const nextConfig = {
               "img-src 'self' data: blob: https: http:",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://www.google-analytics.com https://www.facebook.com https://graph.facebook.com https://*.clarity.ms https://*.vercel-insights.com https://*.vercel-analytics.com https://*.sentry.io https://*.ingest.de.sentry.io https://vercel.live wss://*.pusher.com ws://localhost:* http://localhost:* ws://127.0.0.1:*",
               "frame-src 'self' https://accounts.google.com https://vercel.live",
-              "media-src 'self' blob:",
+              "media-src 'self' blob: https://assets.mixkit.co",
               "worker-src 'self' blob:",
               "object-src 'self' data:",
             ].join("; ")

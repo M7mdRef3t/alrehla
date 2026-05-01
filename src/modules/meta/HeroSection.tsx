@@ -1546,7 +1546,12 @@ export const HeroSection: FC<HeroSectionProps> = ({
   const reduceMotion = useReducedMotion();
   const [isWarping, setIsWarping] = useState(false);
   const headlineLineRef = useRef<HTMLSpanElement | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024;
+    }
+    return false;
+  });
   const [dynamicHeadline, setDynamicHeadline] = useState<string | null>(null);
   const [dynamicSubline, setDynamicSubline] = useState<string | null>(null);
   const [dynamicCta, setDynamicCta] = useState<string | null>(null);

@@ -842,25 +842,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         <div className="relative w-full z-30">
           <div className="max-w-[34rem] mx-auto px-4 pt-2 pb-3 flex flex-col items-center">
             
-            {/* 1. HUD: OPERATIONAL */}
+            {/* 1. HUD: OPERATIONAL (Moved to Unified Bottom HUD) */}
             {activeTab === "operational" && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{
-                  opacity: isSpeaking ? 0.6 : 1,
-                  scale: isSpeaking ? 0.98 : 1,
-                  y: 0
-                }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="w-full pt-2"
-              >
-                <MapOperationalStrip
-                  activeNodesCount={activeNodes.length}
-                  greenNodesCount={greenNodes.length}
-                  archivedNodesCount={archivedNodes.length}
-                  onOpenSupport={() => setShowDashboard(true)}
-                />
-              </motion.div>
+              <div className="hidden"></div>
             )}
 
             {/* 2. HUD: ANALYTICAL */}
@@ -1051,15 +1035,36 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     </AnimatePresence>
 
 
-                    <MapControlDock 
-                        onAnalyze={() => setShowOracleModal(true)}
-                        onPlan={() => setShowActionPlan(true)}
-                        onSave={() => console.log('Save')}
-                        onLive={openLiveRoute}
-                        isSaving={isSaving}
-                        isHandToolActive={isHandToolActive}
-                        onToggleHandTool={() => setIsHandToolActive(!isHandToolActive)}
-                    />
+                    {/* Unified Bottom HUD (Guarantees no overlap) */}
+                    <div className="absolute bottom-28 md:bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 flex flex-col items-center gap-4 pointer-events-none" dir="rtl">
+                       {activeTab === "operational" && (
+                         <motion.div 
+                           initial={{ opacity: 0, y: 20 }}
+                           animate={{ opacity: 1, y: 0 }}
+                           exit={{ opacity: 0, y: 20 }}
+                           className="w-full pointer-events-auto flex justify-center"
+                         >
+                           <MapOperationalStrip
+                             activeNodesCount={activeNodes.length}
+                             greenNodesCount={greenNodes.length}
+                             archivedNodesCount={archivedNodes.length}
+                             onOpenSupport={() => setShowDashboard(true)}
+                           />
+                         </motion.div>
+                       )}
+                       
+                       <div className="w-full max-w-lg pointer-events-auto">
+                         <MapControlDock 
+                             onAnalyze={() => setShowOracleModal(true)}
+                             onPlan={() => setShowActionPlan(true)}
+                             onSave={() => console.log('Save')}
+                             onLive={openLiveRoute}
+                             isSaving={isSaving}
+                             isHandToolActive={isHandToolActive}
+                             onToggleHandTool={() => setIsHandToolActive(!isHandToolActive)}
+                         />
+                       </div>
+                    </div>
                 </div>
               </motion.div>
             ) : canUseFamilyTreeView && isFamily ? (

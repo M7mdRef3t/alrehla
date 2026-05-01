@@ -12,9 +12,13 @@ import {
   Search,
   Sparkles,
   User,
-  Bot
+  Bot,
+  FileDown
 } from "lucide-react";
 import { useAdminState, type DebatedConcept, type ConceptStatus, type ConceptArgument } from "@/domains/admin/store/admin.store";
+import { useTruthTestState } from "@/services/truthTest.store";
+import { exportToNotebookLM } from "@/services/notebookLmExport";
+import { ConnectionRadar } from "./ConnectionRadar";
 
 const STATUS_CONFIG: Record<ConceptStatus, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
   draft: { label: "مسودة", icon: <Clock className="w-4 h-4" />, color: "text-slate-400", bg: "bg-slate-400/10 border-slate-400/20" },
@@ -28,6 +32,7 @@ export const ConceptsDebatePanel: React.FC = () => {
   const addConcept = useAdminState((s) => s.addConcept);
   const updateConceptStatus = useAdminState((s) => s.updateConceptStatus);
   const addConceptArgument = useAdminState((s) => s.addConceptArgument);
+  const truthTests = useTruthTestState((s) => s.tests);
   
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -79,6 +84,15 @@ export const ConceptsDebatePanel: React.FC = () => {
     }
   };
 
+  const handleForwardToLab = (title: string, hypothesis: string) => {
+    setNewTitle(title);
+    setNewHypothesis(hypothesis);
+    setSelectedConceptId(null);
+    setIsCreating(true);
+    // Scroll to top to see the creation form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
       {/* Header */}
@@ -94,14 +108,27 @@ export const ConceptsDebatePanel: React.FC = () => {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => { setIsCreating(true); setSelectedConceptId(null); }}
-          className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-indigo-500/20"
-        >
-          <Plus className="w-5 h-5" />
-          <span>فرضية جديدة</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => exportToNotebookLM(concepts, truthTests)}
+            className="flex items-center gap-2 px-4 py-3 bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/30 rounded-xl font-bold transition-all shadow-lg shadow-teal-500/10"
+            title="تصدير السجل المعرفي بصيغة متوافقة مع NotebookLM"
+          >
+            <FileDown className="w-5 h-5" />
+            <span className="hidden sm:inline">تصدير للمختبر الخارجي</span>
+          </button>
+          <button
+            onClick={() => { setIsCreating(true); setSelectedConceptId(null); }}
+            className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-indigo-500/20"
+          >
+            <Plus className="w-5 h-5" />
+            <span>فرضية جديدة</span>
+          </button>
+        </div>
       </div>
+
+      {/* Connection Radar */}
+      <ConnectionRadar onForwardToLab={handleForwardToLab} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: List of Concepts */}

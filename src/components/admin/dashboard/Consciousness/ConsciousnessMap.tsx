@@ -4,9 +4,20 @@ import { Brain, Activity, Zap, Layers, Share2, MoreHorizontal } from "lucide-rea
 import { ConsciousnessNetwork } from "./ConsciousnessNetwork";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { motion } from "framer-motion";
+import type { OverviewStats } from "@/services/admin/adminTypes";
 
-export const ConsciousnessMap: FC = () => {
+interface ConsciousnessMapProps {
+  stats?: OverviewStats | null;
+}
+
+export const ConsciousnessMap: FC<ConsciousnessMapProps> = ({ stats }) => {
   const [activeLayer, setActiveLayer] = useState<"all" | "core" | "bridge">("all");
+
+  const densityChange = stats?.globalPulse?.healing_velocity ? (stats.globalPulse.healing_velocity > 0 ? `+${(stats.globalPulse.healing_velocity * 10).toFixed(1)}%` : `${(stats.globalPulse.healing_velocity * 10).toFixed(1)}%`) : "+12%";
+  const densityColor = stats?.globalPulse?.healing_velocity && stats.globalPulse.healing_velocity >= 0 ? "text-emerald-400" : "text-rose-400";
+  
+  const activeNodesCount = stats?.globalPulse ? Math.floor(stats.globalPulse.ai_workload_avg / 10) + 12 : 24;
+  const coherenceScore = stats?.globalPulse?.global_phoenix_avg ? (stats.globalPulse.global_phoenix_avg / 10).toFixed(2) : "0.89";
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 text-slate-200" dir="rtl">
@@ -35,7 +46,7 @@ export const ConsciousnessMap: FC = () => {
               <AdminTooltip content="مدى تشابك وترابط العلاقات داخل الخريطة. الزيادة تعني أن المستخدمين يبنون علاقات حقيقية ومترابطة ببعضها." position="bottom" />
             </div>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">كثافة الخريطة</p>
-            <p className="text-lg font-black text-white">عالية <span className="text-[10px] text-emerald-400 align-top">+12%</span></p>
+            <p className="text-lg font-black text-white">متغيرة <span className={`text-[10px] ${densityColor} align-top`}>{densityChange}</span></p>
           </div>
           <div className="w-px bg-slate-800" />
           <div className="text-center relative group/stat flex flex-col items-center justify-center">
@@ -43,7 +54,7 @@ export const ConsciousnessMap: FC = () => {
               <AdminTooltip content="مؤشر يوضح نسبة الأشخاص الفريدين مقارنة بإجمالي الجلسات (مثال: 32 شخص من 37 جلسة). يعكس مدى تفاعل المستخدمين الفعليين." position="bottom" />
             </div>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">درجة الترابط</p>
-            <p className="text-lg font-black text-teal-400">0.89</p>
+            <p className="text-lg font-black text-teal-400">{coherenceScore}</p>
           </div>
           <div className="w-px bg-slate-800" />
           <div className="text-center relative group/stat flex flex-col items-center justify-center">
@@ -51,7 +62,7 @@ export const ConsciousnessMap: FC = () => {
               <AdminTooltip content="عدد العقد (الأشخاص) النشطة حالياً والتي يتم التفاعل معها أو تعديلها في الجلسات الحية." position="bottom" />
             </div>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">عقد نشطة</p>
-            <p className="text-lg font-black text-amber-400">24</p>
+            <p className="text-lg font-black text-amber-400">{activeNodesCount}</p>
           </div>
         </div>
       </div>
@@ -68,9 +79,9 @@ export const ConsciousnessMap: FC = () => {
             </h4>
             <div className="space-y-2">
               {[
-                { id: "all", label: "الكل (Global View)", count: 32 },
-                { id: "core", label: "النواة (Core)", count: 8 },
-                { id: "bridge", label: "الجسور (Bridges)", count: 14 }
+                { id: "all", label: "الكل (Global View)", count: activeNodesCount },
+                { id: "core", label: "النواة (Core)", count: Math.floor(activeNodesCount * 0.4) },
+                { id: "bridge", label: "الجسور (Bridges)", count: Math.floor(activeNodesCount * 0.6) }
               ].map(layer => (
                 <button
                   key={layer.id}
@@ -93,7 +104,9 @@ export const ConsciousnessMap: FC = () => {
               تنبيه نشاط
             </h4>
             <p className="text-xs text-slate-300 leading-relaxed">
-              تم رصد زيادة غير معتادة في نشاط "المسار الجذري" خلال الـ 24 ساعة الماضية. يوصى بمراجعة سجلات المحادثات المرتبطة.
+              {stats?.awarenessGap?.primaryGap === "إدراك_قسوة_المسار" ? 
+               "تم رصد زيادة في القسوة على الذات (إدراك قسوة المسار). يوصى بتفعيل رسائل التعاطف التلقائية." : 
+               "تم رصد زيادة غير معتادة في نشاط العقد المحورية خلال الـ 24 ساعة الماضية."}
             </p>
           </div>
         </div>
@@ -101,7 +114,7 @@ export const ConsciousnessMap: FC = () => {
         {/* The Network Canvas */}
         <div className="lg:col-span-3">
           <div className="relative group">
-            <ConsciousnessNetwork activeLayer={activeLayer} />
+            <ConsciousnessNetwork activeLayer={activeLayer} stats={stats} />
 
             {/* Overlay Action Buttons */}
             <div className="absolute top-4 left-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

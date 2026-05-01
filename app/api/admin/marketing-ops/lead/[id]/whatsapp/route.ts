@@ -19,7 +19,7 @@ export async function GET(
     // just in case of events without lead_id.
     const { data: lead } = await supabase
       .from("marketing_leads")
-      .select("phone_normalized")
+      .select("phone_normalized, metadata")
       .eq("id", leadId)
       .single();
 
@@ -41,7 +41,11 @@ export async function GET(
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, events: events || [] });
+    return NextResponse.json({ 
+      ok: true, 
+      events: events || [],
+      autopilotEnabled: lead?.metadata?.ai_autopilot === true
+    });
   } catch (error: any) {
     console.error("[WhatsApp Chat API] Internal Error:", error);
     return NextResponse.json({ ok: false, error: error.message || "Internal server error" }, { status: 500 });
@@ -65,10 +69,10 @@ export async function POST(
       return NextResponse.json({ ok: false, error: "Missing admin client" }, { status: 500 });
     }
 
-    // 1. Get phone number
+    // 1. Get phone number and metadata
     const { data: lead } = await supabase
       .from("marketing_leads")
-      .select("phone_normalized")
+      .select("phone_normalized, name, campaign, metadata")
       .eq("id", leadId)
       .single();
 
@@ -89,6 +93,44 @@ export async function POST(
         }, { status: 400 });
       }
       return NextResponse.json({ ok: true, messageId: result.message_id });
+    }
+
+    // --- Action: Toggle Auto Pilot ---
+    if (action === "toggle_autopilot") {
+      const { enable } = body;
+      const currentMetadata = lead.metadata || {};
+      const newMetadata = { ...currentMetadata, ai_autopilot: enable === true };
+      
+      const { error: updateError } = await supabase
+        .from("marketing_leads")
+        .update({ metadata: newMetadata })
+        .eq("id", leadId);
+        
+      if (updateError) {
+        return NextResponse.json({ ok: false, error: updateError.message }, { status: 500 });
+      }
+      
+      return NextResponse.json({ ok: true, autopilotEnabled: enable === true });
+    }
+
+    // --- Action: Draft AI Reply ---
+    if (action === "draft_reply") {
+      const { OracleService } = await import("@/services/oracleService");
+      
+      // Fetch recent events for context
+      const { data: events } = await supabase
+        .from("whatsapp_message_events")
+        .select("*")
+        .eq("lead_id", leadId)
+        .order("created_at", { ascending: true })
+        .limit(20);
+        
+      const draftResult = await OracleService.draftWhatsAppReply(events || [], { 
+        name: lead.name,
+        campaign: lead.campaign 
+      });
+
+      return NextResponse.json({ ok: true, draftResult });
     }
 
     // --- Default: Send Free Text ---

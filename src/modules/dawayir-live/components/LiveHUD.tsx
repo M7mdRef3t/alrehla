@@ -1,9 +1,11 @@
 'use client';
 
 import type { FormEvent } from "react";
-import { ArrowRight, Eye, History, Link2, MessageSquareText, Mic, MicOff, Send, Zap as Sparkles, X } from "lucide-react";
+import { ArrowRight, Eye, History, Link2, MessageSquareText, Mic, MicOff, Send, Zap as Sparkles, X, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import type { CognitiveMetrics, JourneyStage, LiveLanguage, SessionStatus, TruthContract } from '../types';
+import { useMapState } from '@/modules/map/dawayirIndex';
+import { useLiveSessionStore } from '../store/liveSession.store';
 
 interface LiveHUDProps {
   language: LiveLanguage;
@@ -153,6 +155,10 @@ export default function LiveHUD({
   const canToggleMic = status === "connected" || status === "speaking";
   const pulseState = isAgentSpeaking ? "agent" : isMicActive ? "user" : "silent";
 
+  const activeNodeId = useLiveSessionStore((s) => s.activeNodeId);
+  const mapNodes = useMapState((s) => s.nodes);
+  const activeNode = activeNodeId ? mapNodes.find((n) => n.id === activeNodeId) : null;
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSendText();
@@ -178,7 +184,14 @@ export default function LiveHUD({
               </div>
             </div>
 
-            <div className="header-actions">
+            {activeNode && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/50 border border-slate-800/50 text-slate-300 text-xs font-medium ml-4">
+                <MapPin className="h-3.5 w-3.5 text-teal-400 opacity-80" />
+                <span className="truncate max-w-[120px]">{activeNode.label || activeNode.topic}</span>
+              </div>
+            )}
+
+            <div className="header-actions ml-auto">
               <button type="button" className="live-icon-btn" onClick={onOpenHistory} aria-label={language === "ar" ? "السجل" : "History"}>
                 <History className="h-4 w-4" />
               </button>

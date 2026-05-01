@@ -34,6 +34,7 @@ import { Typewriter } from "@/modules/meta/UI/Typewriter";
 import { DivineConnection } from "./DivineConnection";
 import { useHafizState, calculateVerticalResonance } from "@/modules/hafiz/store/hafiz.store";
 import { useSynthesisState } from "@/domains/consciousness/store/synthesis.store";
+import { useLiveSessionStore } from '@/modules/dawayir-live/store/liveSession.store';
 
 const MAP_HERO_STYLES = `
   .map-hero-grid-wrapper {
@@ -410,6 +411,12 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   const [isExploding, setIsExploding] = useState(false);
   const archiveNode = useMapState((s) => s.archiveNode);
 
+  const activeNodeId = useLiveSessionStore((s) => s.activeNodeId);
+  const sessionStatus = useLiveSessionStore((s) => s.status);
+  const isAgentSpeaking = useLiveSessionStore((s) => s.isAgentSpeaking);
+
+  const isLiveSessionActive = activeNodeId === node.id && (sessionStatus === 'connected' || sessionStatus === 'speaking');
+
   useEffect(() => {
     if (isHighlighted) {
       setPulseDone(false);
@@ -542,20 +549,39 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
       onMouseLeave={() => setShowDelete(false)}
     >
       {/* ── Resonance Pulse (Live Session) ── */}
-      {node.lastLiveSessionAt && (new Date().getTime() - new Date(node.lastLiveSessionAt).getTime() < 86400000) && (
+      {isLiveSessionActive && (
         <motion.div
           className="absolute -inset-8 rounded-full pointer-events-none"
           style={{
             zIndex: -2,
-            border: "2px solid rgba(168,85,247,0.4)",
-            boxShadow: "0 0 30px rgba(168,85,247,0.2)"
+            border: `2px solid ${isAgentSpeaking ? 'rgba(0,240,255,0.6)' : 'rgba(168,85,247,0.4)'}`,
+            boxShadow: `0 0 30px ${isAgentSpeaking ? 'rgba(0,240,255,0.3)' : 'rgba(168,85,247,0.2)'}`
           }}
           animate={{
-            scale: [0.8, 1.4, 1.6],
-            opacity: [0.8, 0.3, 0],
+            scale: isAgentSpeaking ? [0.8, 1.6, 1.8] : [0.8, 1.4, 1.6],
+            opacity: isAgentSpeaking ? [0.9, 0.4, 0] : [0.8, 0.3, 0],
           }}
           transition={{
-            duration: 3,
+            duration: isAgentSpeaking ? 1.5 : 3,
+            repeat: Infinity,
+            ease: "easeOut",
+          }}
+        />
+      )}
+      {!isLiveSessionActive && node.lastLiveSessionAt && (new Date().getTime() - new Date(node.lastLiveSessionAt).getTime() < 86400000) && (
+        <motion.div
+          className="absolute -inset-8 rounded-full pointer-events-none"
+          style={{
+            zIndex: -2,
+            border: "1px solid rgba(168,85,247,0.2)",
+            boxShadow: "0 0 20px rgba(168,85,247,0.1)"
+          }}
+          animate={{
+            scale: [0.9, 1.2, 1.3],
+            opacity: [0.5, 0.1, 0],
+          }}
+          transition={{
+            duration: 4,
             repeat: Infinity,
             ease: "easeOut",
           }}
@@ -1901,21 +1927,21 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     <motion.line
                       x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2}
                       stroke={glowColor}
-                      strokeWidth={1.5}
+                      strokeWidth={isGreen ? 2.5 : 1}
                       opacity={0}
                       style={{ filter: "blur(3px)" }}
-                      animate={{ opacity: [0.03, 0.12, 0.03] }}
+                      animate={{ opacity: isGreen ? [0.1, 0.3, 0.1] : [0.01, 0.05, 0.01] }}
                       transition={{ duration: 4 + (line.x1 % 3), repeat: Infinity, ease: "easeInOut" }}
                     />
-                    {/* Core laser line — thinner for precision */}
+                    {/* Core laser line — thinner for precision, fragmented for pain nodes */}
                     <motion.line
                       x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2}
                       stroke={threadColor}
-                      strokeWidth={0.5}
-                      strokeDasharray="2 4"
+                      strokeWidth={isGreen ? 0.8 : 0.3}
+                      strokeDasharray={isGreen ? "4 2" : "1 8"}
                       animate={{
-                        opacity: [0.15, 0.45, 0.15],
-                        strokeDashoffset: [0, -12],
+                        opacity: isGreen ? [0.3, 0.7, 0.3] : [0.05, 0.15, 0.05],
+                        strokeDashoffset: [0, isGreen ? -12 : -5],
                       }}
                       transition={{
                         duration: 3 + (line.y1 % 2),

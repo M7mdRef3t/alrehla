@@ -26,7 +26,7 @@ export function MapControlDock({
   onToggleHandTool
 }: MapControlDockProps) {
   return (
-    <div className="fixed bottom-28 md:bottom-8 left-1/2 -translate-x-1/2 z-40 px-4 w-full max-w-lg pointer-events-none" dir="rtl">
+    <div className="relative w-full max-w-lg pointer-events-none" dir="rtl">
       <motion.div 
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

@@ -66,12 +66,59 @@ export const CommandExpansionHub: React.FC = () => {
     init();
   }, []);
 
-  const markets = [
-    { id: "Riyadh", name: "الرياض", painScore: 88, resonance: diffusion?.regionalDiffusion["Riyadh"] ? Math.round(diffusion.regionalDiffusion["Riyadh"] * 100) : 92, potential: "High", arpu: "$45" },
-    { id: "Dubai", name: "دبي", painScore: 75, resonance: diffusion?.regionalDiffusion["Dubai"] ? Math.round(diffusion.regionalDiffusion["Dubai"] * 100) : 95, potential: "Extreme", arpu: "$60" },
-    { id: "Cairo", name: "القاهرة", painScore: 94, resonance: diffusion?.regionalDiffusion["Cairo"] ? Math.round(diffusion.regionalDiffusion["Cairo"] * 100) : 40, potential: "Medium", arpu: "$12" },
-    { id: "London", name: "لندن", painScore: 65, resonance: diffusion?.regionalDiffusion["London"] ? Math.round(diffusion.regionalDiffusion["London"] * 100) : 88, potential: "High", arpu: "$55" },
-  ];
+  const dynamicMarkets = React.useMemo(() => {
+    const defaultMarkets = [];
+    
+    // 1. Gateways (TikTok / Meta)
+    if (diffusion?.gatewayHealth) {
+      if (diffusion.gatewayHealth["tiktok"]) {
+        const gh = diffusion.gatewayHealth["tiktok"];
+        defaultMarkets.push({
+          id: "tiktok",
+          name: "إعلانات تيك توك",
+          painScore: Math.round((gh.roi || 0) > 0 ? 80 : 90),
+          resonance: Math.round(gh.resonance * 100) || 50,
+          potential: (gh.roi || 0) > 200 ? "Extreme" : "High",
+          arpu: `$${Math.round(gh.cpl || 15)} CPA`
+        });
+      }
+      if (diffusion.gatewayHealth["meta"]) {
+        const gh = diffusion.gatewayHealth["meta"];
+        defaultMarkets.push({
+          id: "meta",
+          name: "إعلانات ميتا",
+          painScore: Math.round((gh.roi || 0) > 0 ? 70 : 85),
+          resonance: Math.round(gh.resonance * 100) || 60,
+          potential: (gh.roi || 0) > 150 ? "Extreme" : "High",
+          arpu: `$${Math.round(gh.cpl || 20)} CPA`
+        });
+      }
+    }
+
+    // 2. Regions
+    const predefinedRegions = [
+      { id: "Riyadh", name: "الرياض", defaultArpu: "$45", defaultPain: 88, defaultRes: 92 },
+      { id: "Dubai", name: "دبي", defaultArpu: "$60", defaultPain: 75, defaultRes: 95 },
+      { id: "Cairo", name: "القاهرة", defaultArpu: "$12", defaultPain: 94, defaultRes: 40 },
+    ];
+
+    predefinedRegions.forEach(region => {
+      const dbResonance = diffusion?.regionalDiffusion?.[region.id] || diffusion?.regionalDiffusion?.[region.name];
+      defaultMarkets.push({
+        id: region.id,
+        name: region.name,
+        painScore: region.defaultPain,
+        resonance: dbResonance ? Math.round(dbResonance * 100) : region.defaultRes,
+        potential: dbResonance && dbResonance > 0.5 ? "Extreme" : "High",
+        arpu: region.defaultArpu
+      });
+    });
+
+    return defaultMarkets.length > 0 ? defaultMarkets : [
+      { id: "Riyadh", name: "الرياض", painScore: 88, resonance: 92, potential: "High", arpu: "$45" },
+      { id: "Dubai", name: "دبي", painScore: 75, resonance: 95, potential: "Extreme", arpu: "$60" }
+    ];
+  }, [diffusion]);
 
   const b2bPartners = b2bClients.length > 0 
     ? b2bClients.map(c => ({
@@ -156,7 +203,7 @@ export const CommandExpansionHub: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {markets.map((market) => (
+              {dynamicMarkets.map((market) => (
                 <div
                   key={market.id}
                   onClick={() => setActiveMarket(market.id)}
@@ -200,11 +247,11 @@ export const CommandExpansionHub: React.FC = () => {
                      <div className="mt-4 pt-4 border-t border-rose-500/20 text-center relative">
                         <button
                            disabled={ignitionMarketId === market.id}
-                           onClick={(e) => {
+                           onClick={async (e) => {
                                e.stopPropagation();
                                setIgnitionMarketId(market.id);
-                               CommandOrchestrator.executeIntervention(`ignite_market_${market.id}`);
-                               setTimeout(() => setIgnitionMarketId(null), 3000);
+                               await growthEngine.deployMarketIgnition(market.id);
+                               setIgnitionMarketId(null);
                            }}
                            className={`w-full py-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-transform ${ignitionMarketId === market.id ? 'opacity-50 cursor-wait' : ''}`}
                         >

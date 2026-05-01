@@ -315,4 +315,48 @@ export class OracleService {
             return [];
         }
     }
+
+    /**
+     * 🗣️ CONVERSATION DRAFTING (Context-Aware AI Reply)
+     * Generates a context-aware reply based on WhatsApp chat history.
+     */
+    static async draftWhatsAppReply(chatHistory: any[], leadContext?: any): Promise<{ draft: string; analysis: string; state: string }> {
+        const historyText = chatHistory.slice(-10).map(msg => 
+            `[${msg.direction === 'inbound' ? 'المسافر' : 'نحن'}]: ${msg.message_body}`
+        ).join('\n');
+
+        const prompt = `
+        أنت "الأوراكل" التكتيكي لمنصة الدواير.
+        مهمتك: صياغة الرد المثالي لمسافر (Lead) عبر الواتساب بناءً على سياق المحادثة الأخيرة، بلهجة مصرية ذكية وقوية.
+
+        سياق المسافر (إن وُجد):
+        ${JSON.stringify(leadContext || {})}
+
+        تاريخ المحادثة (آخر 10 رسائل):
+        ${historyText}
+
+        قواعد الصياغة (Sovereign Engine Doctrine):
+        1. الرد يجب أن يكون بالعامية المصرية الطبيعية والموزونة (بدون ابتذال).
+        2. لا تعتذر أبداً ولا تتوسل للمسافر ليشتري. نحن نقدم الحقيقة، وهو من يقرر عبور البوابة.
+        3. استخدم مبدأ "الندرة" و "الغموض المحفز" إذا كان المسافر متردداً.
+        4. إذا سأل عن تفاصيل، اعطه إجابة قاطعة وواضحة (بدون حشو).
+        5. يجب أن ينتهي الرد بـ "سؤال تكتيكي" أو "Call to Action" مباشر (مثال: مستعد؟ / تحب نبدأ؟ / إيه الخطوة الجاية بالنسبة لك؟).
+
+        المطلوب:
+        قم بإرجاع JSON فقط يحتوي على:
+        {
+          "draft": "النص المقترح للرد (جاهز للإرسال)",
+          "analysis": "تحليل سريع لسيكولوجية المسافر في هذه اللحظة (جملة واحدة بالعامية)",
+          "state": "الحالة النفسية (متردد، متحمس، غاضب، فضولي، مستعد)"
+        }
+        `;
+
+        try {
+            const result = await geminiClient.generateJSON<{ draft: string; analysis: string; state: string }>(prompt);
+            return result || { draft: "مش قادر أحلل المحادثة دلوقتي.", analysis: "خطأ في الاتصال بالأوركال", state: "مجهول" };
+        } catch (error) {
+            logger.error("Oracle WhatsApp Draft Error:", error);
+            return { draft: "فيه عطل فني في الأوركال حالياً.", analysis: "Error", state: "مجهول" };
+        }
+    }
 }

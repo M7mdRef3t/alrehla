@@ -78,7 +78,7 @@ export const ConsciousnessAtlasDashboard: FC = () => {
                <div className="w-full h-full rounded-[20px] overflow-hidden border border-white/5 relative">
                    {/* Fallback overlay incase WebGL context isn't fully transparent feeling */}
                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(45,212,191,0.02),transparent_60%)] pointer-events-none" />
-                   <ConsciousnessMap />
+                   <ConsciousnessMap stats={remoteStats} />
                </div>
             </div>
 

@@ -99,7 +99,7 @@ export const PressureSentenceCard: FC<PressureSentenceCardProps> = ({ snapshot }
             <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500/40" />
             <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-              المنطق الخاص
+              ليه الجملة دي بتشتغل؟
             </h4>
             <p className="text-base text-slate-300 leading-relaxed font-bold">
               {snapshot.reasoning}
@@ -110,10 +110,10 @@ export const PressureSentenceCard: FC<PressureSentenceCardProps> = ({ snapshot }
             <div className="absolute top-0 right-0 w-1.5 h-full bg-indigo-500/40" />
             <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
-              تكتيك الاستخدام
+              إمتى تستخدمها؟
             </h4>
             <p className="text-base text-slate-400 leading-relaxed font-medium">
-              استخدم "الدرع" ده في أي تواصل رقمي أو رد سريع على مكالمة عشان تفرض حمايتك "قبل" ما يتم استدراجك.
+              استخدم الجملة دي في أي رد أو رسالة عشان تحط حدودك بوضوح "قبل" ما تدخل في جدال استنزافي.
             </p>
           </div>
         </div>
@@ -126,7 +126,7 @@ export const PressureSentenceCard: FC<PressureSentenceCardProps> = ({ snapshot }
         {/* The Instrument: Deep Glass Card */}
         <motion.div 
           whileHover={{ scale: 1.01 }}
-          className="relative py-20 px-10 sm:px-20 rounded-[4rem] border border-white/10 overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.6)] flex items-center justify-center text-center group"
+          className="relative py-12 px-8 sm:px-14 rounded-3xl border border-white/10 overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.6)] flex items-center justify-center text-center group"
           style={{ 
             background: "rgba(15, 23, 42, 0.6)",
             backdropFilter: "blur(60px)"
@@ -135,7 +135,7 @@ export const PressureSentenceCard: FC<PressureSentenceCardProps> = ({ snapshot }
           {/* Iridescent Border Overlay */}
           <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent opacity-30 pointer-events-none" />
           
-          <p className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight sm:leading-[1.15] tracking-tight drop-shadow-2xl">
+          <p className="text-xl sm:text-2xl md:text-3xl font-black text-white leading-relaxed tracking-tight drop-shadow-2xl">
               "{snapshot.sentence}"
           </p>
         </motion.div>

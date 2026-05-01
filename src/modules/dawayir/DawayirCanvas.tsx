@@ -95,54 +95,45 @@ const CinematicBackground: FC = memo(() => (
   </g>
 ));
 
-const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ radius, label, ring }) => {
+const OrbitalRing: FC<{ radius: number; label: string; ring: Ring; hasNodes?: boolean }> = memo(({ radius, ring, hasNodes = false }) => {
   const colors = {
-    green: "#34d399", // soft emerald
-    yellow: "#fbbf24", // soft amber
-    red: "#fb7185", // soft rose
+    green: "#34d399",
+    yellow: "#fbbf24",
+    red: "#fb7185",
   };
 
   const safeRadius = Number.isFinite(radius) && radius > 0 ? radius : 1;
 
   return (
     <g className={`dawayir-orbit dawayir-orbit--${ring}`}>
-      <circle
-        cx={50} cy={50} r={Math.max(safeRadius - 0.6, 1)}
-        fill="none"
-        stroke={colors[ring]}
-        strokeOpacity="0.055"
-        strokeWidth={1.8}
-      />
-      <circle 
-        cx={50} cy={50} r={safeRadius} 
-        fill="none" 
-        stroke="rgba(255,255,255,0.08)" 
-        strokeWidth={0.35} 
-      />
+      {/* Single clean ring line */}
       <circle
         cx={50} cy={50} r={safeRadius}
         fill="none"
         stroke={colors[ring]}
-        strokeOpacity="0.34"
-        strokeWidth={0.34}
+        strokeOpacity={hasNodes ? 0.28 : 0.12}
+        strokeWidth={0.25}
       />
-      
-      {/* Animated Energy Trail */}
-      <SafeMotionCircle
-        cx={50} cy={50} r={safeRadius}
-        fill="none"
-        stroke={colors[ring]}
-        strokeWidth={0.55}
-        strokeOpacity={0.55}
-        strokeDasharray={`${safeRadius * 0.5} ${safeRadius * 1.5}`}
-        style={{
-          filter: `drop-shadow(0 0 1.8px ${colors[ring]})`,
-          transformOrigin: "50px 50px",
-          willChange: "transform, filter",
-        }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: ring === 'green' ? 20 : ring === 'yellow' ? 30 : 40, repeat: Infinity, ease: "linear" }}
-      />
+      {/* Ultra-subtle energy arc — only when ring has nodes */}
+      {hasNodes && (
+        <SafeMotionCircle
+          cx={50} cy={50} r={safeRadius}
+          fill="none"
+          stroke={colors[ring]}
+          strokeWidth={0.35}
+          strokeDasharray={`${safeRadius * 0.3} ${safeRadius * 2.5}`}
+          style={{
+            filter: `drop-shadow(0 0 1px ${colors[ring]})`,
+            transformOrigin: "50px 50px",
+            willChange: "transform",
+          }}
+          animate={{ rotate: 360, opacity: [0.15, 0.4, 0.15] }}
+          transition={{
+            rotate: { duration: ring === 'green' ? 25 : ring === 'yellow' ? 38 : 50, repeat: Infinity, ease: "linear" },
+            opacity: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+          }}
+        />
+      )}
     </g>
   );
 });
@@ -267,7 +258,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
     disabled: isHandToolActive
   });
 
-  const archiveNode = useMapState((s) => s.archiveNode);
+  const deleteNode = useMapState((s) => s.deleteNode);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const deleteClickedRef = React.useRef(false);
 
@@ -285,16 +276,21 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
 
   const handleConfirmDelete = useCallback(() => {
     setShowConfirmDelete(false);
-    archiveNode(node.id);
-  }, [archiveNode, node.id]);
+    deleteNode(node.id);
+  }, [deleteNode, node.id]);
 
   // Calculate base position if no drag is happening
   const radius = node.ring === "green" ? 20 : node.ring === "yellow" ? 35 : 50;
-  const angle = (index / Math.max(total, 1)) * 2 * Math.PI - Math.PI / 2;
+  // Start from right (0 = 3 o'clock), distribute evenly — visible in default zoom
+  const angle = (index / Math.max(total, 1)) * 2 * Math.PI;
   const rawX = 50 + radius * Math.cos(angle);
   const rawY = 50 + radius * Math.sin(angle);
   const baseX = Number.isFinite(rawX) ? rawX : 50;
   const baseY = Number.isFinite(rawY) ? rawY : 50;
+
+  // Intensity-based node size: scale between 3.5 (low) and 5.5 (high)
+  const intensity = typeof node.intensity === 'number' && Number.isFinite(node.intensity) ? node.intensity : 50;
+  const nodeRadius = 3.5 + (Math.min(Math.max(intensity, 0), 100) / 100) * 2.0;
 
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -312,7 +308,33 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
     red: "rgba(251, 113, 133, 0.4)",
   };
 
-  return (
+  const [isHovered, setIsHovered] = useState(false);
+
+  const longPressTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleLongPressStart = useCallback((e: React.PointerEvent) => {
+    if (isDragging) return;
+    // Only long-press on touch devices
+    if (e.pointerType !== "touch") return;
+    longPressTimer.current = setTimeout(() => {
+      handleDeleteClick();
+    }, 600);
+  }, [isDragging, handleDeleteClick]);
+
+  const handleLongPressEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handleRightClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleDeleteClick();
+  }, [handleDeleteClick]);
+
+   return (
     <>
     <motion.g 
       ref={setNodeRef as any} 
@@ -340,30 +362,27 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
         opacity: { duration: 0.3 },
         scale: { type: "spring", stiffness: 400, damping: 10, delay: index * 0.05 }
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); handleLongPressEnd(); }}
+      onPointerDown={handleLongPressStart}
+      onPointerUp={handleLongPressEnd}
+      onPointerLeave={handleLongPressEnd}
+      onContextMenu={handleRightClick as any}
       onTap={() => {
         if (!isDragging && !deleteClickedRef.current && !showConfirmDelete) onClick(node);
       }}
       {...attributes} 
       {...listeners}
     >
-      {/* Orbit Line from Center to Node */}
-      <line 
-        x1={50 - baseX} y1={50 - baseY} 
-        x2={0} y2={0} 
-        stroke={ringColors[node.ring as keyof typeof ringColors] || ringColors.green}
-        strokeWidth={0.1}
-        opacity={0.15}
-        className="pointer-events-none"
-      />
-      {/* "Birth" Animation - A pulsing ring that appears only once on mount */}
+      {/* "Birth" Animation - subtle outward pulse on mount */}
       <SafeMotionCircle
-        cx={baseX} cy={baseY} r={4}
+        cx={baseX} cy={baseY} r={nodeRadius}
         fill="none"
-        stroke="var(--soft-teal)"
-        strokeWidth={1}
-        initial={{ scale: 1, opacity: 0.8 }}
-        animate={{ scale: 2.5, opacity: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        stroke={ringColors[node.ring as keyof typeof ringColors] || ringColors.green}
+        strokeWidth={0.6}
+        initial={{ scale: 1, opacity: 0.5 }}
+        animate={{ scale: 2.8, opacity: 0 }}
+        transition={{ duration: 0.9, ease: "easeOut" }}
       />
       {node.isMirrorNode && (
         <SafeMotionCircle
@@ -405,46 +424,38 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
       {entropyLevel === 3 ? (
         <g>
           <SafeMotionCircle
-            cx={baseX} cy={baseY} r={5.5}
+            cx={baseX} cy={baseY} r={nodeRadius + 1.5}
             fill="none"
             stroke="url(#blackhole-grad)"
-            strokeWidth={1.5}
+            strokeWidth={1.2}
             strokeDasharray="3 5"
             animate={{ rotate: -360 }}
             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
             style={{ transformOrigin: `${baseX}px ${baseY}px` }}
           />
-          <SafeMotionCircle
-            cx={baseX} cy={baseY} r={7}
-            fill="none"
-            stroke="rgba(244,63,94,0.3)"
-            strokeWidth={0.5}
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          />
           <circle 
-            cx={baseX} cy={baseY} r={4} 
+            cx={baseX} cy={baseY} r={nodeRadius} 
             fill="#020617" 
             stroke="#f43f5e" 
-            strokeOpacity={0.8}
-            strokeWidth={1.2} 
+            strokeOpacity={0.85}
+            strokeWidth={1.0} 
             style={{ filter: "drop-shadow(0 0 5px rgba(244,63,94,0.7))", willChange: "filter" }}
           />
         </g>
       ) : (
         <g>
           <circle 
-            cx={baseX} cy={baseY} r={4.2} 
+            cx={baseX} cy={baseY} r={nodeRadius} 
             fill={ringColors[node.ring]}
             stroke="rgba(255,255,255,0.2)" 
             strokeWidth={0.2} 
-            style={{ filter: `drop-shadow(0 0 8px ${ringGlows[node.ring]})`, willChange: "filter" }}
+            style={{ filter: `drop-shadow(0 0 ${nodeRadius * 2}px ${ringGlows[node.ring]})`, willChange: "filter" }}
           />
           {/* Glossy Overlay */}
           <circle 
-            cx={baseX - 1} cy={baseY - 1} r={1.5} 
-            fill="rgba(255,255,255,0.3)" 
-            style={{ filter: "blur(1px)" }}
+            cx={baseX - nodeRadius * 0.28} cy={baseY - nodeRadius * 0.28} r={nodeRadius * 0.38} 
+            fill="rgba(255,255,255,0.28)" 
+            style={{ filter: "blur(0.8px)" }}
           />
         </g>
       )}
@@ -497,114 +508,141 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
         </g>
       )}
 
-      <motion.g
-        onTap={handleDeleteClick}
-        style={{ transformOrigin: `${baseX - 4.5}px ${baseY - 4.5}px` }}
-        initial={{ opacity: 0, scale: 0 }}
-        whileHover={{ scale: 1.2 }}
-        animate={{ opacity: 1, scale: 1 }}
-      >
-        <circle cx={baseX - 4.5} cy={baseY - 4.5} r={2.2} fill="rgba(15, 23, 42, 0.9)" stroke="rgba(244, 63, 94, 0.5)" strokeWidth={0.3} />
-        <foreignObject x={baseX - 6.5} y={baseY - 6.5} width="4" height="4">
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Scissors size={10} color="#f43f5e" />
-          </div>
-        </foreignObject>
-      </motion.g>
+      {/* Hover Delete Button — desktop discoverable, pure SVG */}
+      {isHovered && !isDragging && (
+        <motion.g
+          initial={{ opacity: 0, scale: 0.6 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.6 }}
+          transition={{ duration: 0.15 }}
+          style={{ transformOrigin: `${baseX}px ${baseY - nodeRadius - 4}px`, cursor: "pointer" }}
+          onClick={(e: any) => { e.stopPropagation(); handleDeleteClick(e); }}
+          onTap={(e: any) => { handleDeleteClick(e); }}
+        >
+          {/* Circle background */}
+          <circle
+            cx={baseX}
+            cy={baseY - nodeRadius - 4}
+            r={2.5}
+            fill="rgba(244, 63, 94, 0.92)"
+            stroke="rgba(255,255,255,0.4)"
+            strokeWidth={0.3}
+            style={{ filter: "drop-shadow(0 0 3px rgba(244,63,94,0.6))" }}
+          />
+          {/* × symbol */}
+          <line
+            x1={baseX - 1.2} y1={baseY - nodeRadius - 5.2}
+            x2={baseX + 1.2} y2={baseY - nodeRadius - 2.8}
+            stroke="white" strokeWidth={0.55} strokeLinecap="round"
+          />
+          <line
+            x1={baseX + 1.2} y1={baseY - nodeRadius - 5.2}
+            x2={baseX - 1.2} y2={baseY - nodeRadius - 2.8}
+            stroke="white" strokeWidth={0.55} strokeLinecap="round"
+          />
+          {/* Invisible larger hit area */}
+          <circle
+            cx={baseX}
+            cy={baseY - nodeRadius - 4}
+            r={4}
+            fill="transparent"
+          />
+        </motion.g>
+      )}
     </motion.g>
 
-    {/* Custom Delete Confirmation Modal — Portal to body */}
+    {/* Long-Press Bottom Sheet Delete */}
     {showConfirmDelete && createPortal(
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         style={{
           position: "fixed",
           inset: 0,
           zIndex: 9999,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "rgba(5,8,20,0.75)",
-          backdropFilter: "blur(8px)",
+          alignItems: "flex-end",
+          background: "rgba(5,8,20,0.6)",
+          backdropFilter: "blur(6px)",
         }}
         onClick={() => setShowConfirmDelete(false)}
       >
-        <div
+        <motion.div
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "100%" }}
+          transition={{ type: "spring", stiffness: 400, damping: 35 }}
           style={{
-            margin: "0 1rem",
             width: "100%",
-            maxWidth: "20rem",
-            borderRadius: "1rem",
-            padding: "1.25rem",
+            background: "linear-gradient(180deg, rgba(15,23,42,0.98) 0%, rgba(10,16,32,0.99) 100%)",
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "1.5rem 1.5rem 0 0",
+            padding: "1.25rem 1.25rem 2.5rem",
             textAlign: "right",
-            background: "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95))",
-            border: "1px solid rgba(244,63,94,0.25)",
-            boxShadow: "0 0 40px rgba(244,63,94,0.15), 0 20px 60px rgba(0,0,0,0.6)",
+            boxShadow: "0 -20px 60px rgba(0,0,0,0.5)",
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.75rem" }}>
-            <div
-              style={{
-                width: "3rem",
-                height: "3rem",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(244,63,94,0.12)",
-                border: "1.5px solid rgba(244,63,94,0.3)",
-              }}
-            >
-              <X style={{ width: "1.25rem", height: "1.25rem", color: "#f43f5e" }} />
+          {/* Handle */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+            <div style={{ width: "2.5rem", height: "0.25rem", borderRadius: "9999px", background: "rgba(255,255,255,0.15)" }} />
+          </div>
+
+          {/* Node Info */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem", padding: "0 0.25rem" }}>
+            <div style={{
+              width: "2.75rem", height: "2.75rem", borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: node.ring === "green" ? "rgba(52,211,153,0.15)" : node.ring === "yellow" ? "rgba(251,191,36,0.15)" : "rgba(251,113,133,0.15)",
+              border: `1.5px solid ${node.ring === "green" ? "rgba(52,211,153,0.4)" : node.ring === "yellow" ? "rgba(251,191,36,0.4)" : "rgba(251,113,133,0.4)"}`,
+              flexShrink: 0,
+            }}>
+              <span style={{ fontSize: "1.1rem" }}>🗑️</span>
+            </div>
+            <div>
+              <p style={{ fontSize: "0.95rem", fontWeight: 800, color: "#f1f5f9", margin: 0 }}>{node.label}</p>
+              <p style={{ fontSize: "0.72rem", color: "#64748b", margin: "0.15rem 0 0" }}>
+                {node.ring === "green" ? "دائرة الأمان" : node.ring === "yellow" ? "دائرة الحذر" : "دائرة التهديد"}
+              </p>
             </div>
           </div>
-          <p style={{ fontSize: "0.875rem", fontWeight: 700, marginBottom: "0.25rem", color: "#e2e8f0" }}>
-            اقطع الحبل الطاقي مع "{node.label}"؟
-          </p>
-          <p style={{ fontSize: "0.75rem", marginBottom: "1.25rem", color: "#94a3b8" }}>
-            هذه خطوة نحو استعادة قيادتك. سيتم حفظ العلاقة في أرشيف الحكمة للاستفادة من دروسها متى شئت.
-          </p>
-          <div style={{ display: "flex", gap: "0.5rem", flexDirection: "row-reverse" }}>
+
+          {/* Actions */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
             <button
               type="button"
               onClick={handleConfirmDelete}
               style={{
-                flex: 1,
-                padding: "0.625rem",
-                borderRadius: "0.75rem",
-                fontSize: "0.875rem",
-                fontWeight: 700,
-                background: "linear-gradient(135deg, #f43f5e, #e11d48)",
-                color: "#fff",
-                border: "none",
-                outline: "none",
-                cursor: "pointer",
-                boxShadow: "0 0 16px rgba(244,63,94,0.3)",
+                width: "100%", padding: "0.875rem 1rem",
+                borderRadius: "1rem", fontSize: "0.9rem", fontWeight: 700,
+                background: "linear-gradient(135deg, rgba(244,63,94,0.15), rgba(225,29,72,0.12))",
+                color: "#fb7185", border: "1px solid rgba(244,63,94,0.25)",
+                cursor: "pointer", textAlign: "right", display: "flex",
+                alignItems: "center", gap: "0.6rem",
               }}
             >
-              موافق
+              <span style={{ fontSize: "1.1rem" }}>🗑️</span>
+              <span>حذف هذا الشخص</span>
+              <span style={{ fontSize: "0.7rem", color: "#64748b", marginRight: "auto" }}>سيُحذف نهائياً</span>
             </button>
+
             <button
               type="button"
               onClick={() => setShowConfirmDelete(false)}
               style={{
-                flex: 1,
-                padding: "0.625rem",
-                borderRadius: "0.75rem",
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                background: "rgba(255,255,255,0.06)",
-                color: "#94a3b8",
-                border: "1px solid rgba(255,255,255,0.1)",
-                outline: "none",
+                width: "100%", padding: "0.875rem 1rem",
+                borderRadius: "1rem", fontSize: "0.9rem", fontWeight: 600,
+                background: "rgba(255,255,255,0.04)",
+                color: "#94a3b8", border: "1px solid rgba(255,255,255,0.08)",
                 cursor: "pointer",
               }}
             >
               إلغاء
             </button>
           </div>
-        </div>
-      </div>,
+        </motion.div>
+      </motion.div>,
       document.body
     )}
     </>
@@ -720,32 +758,53 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
   }, [groupedNodes]);
 
   const ghostNodePosition = useMemo(() => {
-    // Positioning at bottom-right (45 deg) to avoid overlap with "You" label
-    const angle = Math.PI / 4; 
-    
+    const GREEN_RADIUS = 20;
+    // If no nodes at all, place at bottom-center of green ring (6 o'clock)
     if (activeNodesCount === 0) {
-      const radius = 22;
-      return {
-        x: 50 + radius * Math.cos(angle),
-        y: 50 + radius * Math.sin(angle)
-      };
+      const angle = Math.PI / 2;
+      return { x: 50 + GREEN_RADIUS * Math.cos(angle), y: 50 + GREEN_RADIUS * Math.sin(angle) };
     }
 
-    // Find a radius based on rings
-    const radius = activeNodesCount < 8 ? 28 : 38;
+    // Find largest angular gap among green-ring nodes
+    const greenNodes = groupedNodes.green;
+    if (greenNodes.length === 0) {
+      // No green nodes — place at top of green ring
+      return { x: 50 + GREEN_RADIUS * Math.cos(-Math.PI / 2), y: 50 + GREEN_RADIUS * Math.sin(-Math.PI / 2) };
+    }
+
+    // Compute each node's angle on the green ring
+    const angles = greenNodes.map((_, i) =>
+      (i / Math.max(greenNodes.length, 1)) * 2 * Math.PI - Math.PI / 2
+    ).sort((a, b) => a - b);
+
+    // Find largest gap between consecutive angles (including wrap-around)
+    let maxGap = 0;
+    let bestAngle = angles[0] + Math.PI; // fallback: opposite of first node
+    for (let i = 0; i < angles.length; i++) {
+      const next = angles[(i + 1) % angles.length];
+      const gap = i === angles.length - 1
+        ? (angles[0] + 2 * Math.PI) - angles[i]
+        : next - angles[i];
+      if (gap > maxGap) {
+        maxGap = gap;
+        bestAngle = angles[i] + gap / 2;
+      }
+    }
+
+    // Place ghost node on green ring at the midpoint of the largest gap
     return {
-      x: 50 + radius * Math.cos(angle),
-      y: 50 + radius * Math.sin(angle)
+      x: 50 + GREEN_RADIUS * Math.cos(bestAngle),
+      y: 50 + GREEN_RADIUS * Math.sin(bestAngle)
     };
-  }, [activeNodesCount]);
+  }, [activeNodesCount, groupedNodes]);
 
   const { entropyMap, isLoading: aiLoading } = useMasafatyAnalysis();
   const [selectedEntropyNode, setSelectedEntropyNode] = useState<string | null>(null);
 
   // --- Zoom & Pan State ---
-  const [viewBoxX, setViewBoxX] = useState(0);
-  const [viewBoxY, setViewBoxY] = useState(0);
-  const [zoomScale, setZoomScale] = useState(1);
+  const [viewBoxX, setViewBoxX] = useState(11.5);
+  const [viewBoxY, setViewBoxY] = useState(8);
+  const [zoomScale, setZoomScale] = useState(1.3);
   const [isPanMode, setIsPanMode] = useState(isHandToolActive); // Toggle Hand tool
   const [isDraggingBg, setIsDraggingBg] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
@@ -899,9 +958,9 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
               <stop offset="100%" stopColor="#9f1239" />
             </radialGradient>
           </defs>
-          <OrbitalRing radius={50} label="Danger" ring="red" />
-          <OrbitalRing radius={35} label="Caution" ring="yellow" />
-          <OrbitalRing radius={20} label="Safe" ring="green" />
+          <OrbitalRing radius={50} ring="red" hasNodes={groupedNodes.red.length > 0} />
+          <OrbitalRing radius={35} ring="yellow" hasNodes={groupedNodes.yellow.length > 0} />
+          <OrbitalRing radius={20} ring="green" hasNodes={groupedNodes.green.length > 0} />
 
           {/* Cinematic Background Layer */}
           <CinematicBackground />

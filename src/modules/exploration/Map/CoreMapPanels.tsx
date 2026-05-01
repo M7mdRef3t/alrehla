@@ -100,7 +100,7 @@ export function MapOperationalStrip({
     <motion.div 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }} 
-      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4 pointer-events-auto"
+      className="relative w-full max-w-2xl pointer-events-auto"
     >
       <div className="relative overflow-hidden rounded-2xl glass-dark border border-white/10 backdrop-blur-3xl shadow-2xl flex items-center p-1.5 h-16 ring-1 ring-white/5">
         {/* Glow Background */}
@@ -293,7 +293,7 @@ export function MapSupportPanel({
 }: MapSupportPanelProps) {
   const compactSummary = `نشط ${activeNodesCount} | آمن ${greenNodesCount} | مؤرشف ${archivedNodesCount}`;
   const containerClass = show
-    ? "mx-auto mb-3 w-full max-w-[42rem] md:fixed md:right-8 md:bottom-24 md:mx-0 md:mb-0 md:w-[24rem] md:max-w-[24rem] md:z-[60]"
+    ? "mx-auto mb-3 w-full max-w-[42rem] md:fixed md:right-8 md:bottom-40 md:mx-0 md:mb-0 md:w-[24rem] md:max-w-[24rem] md:z-[60]"
     : "hidden";
 
   return (

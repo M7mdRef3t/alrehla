@@ -35,6 +35,8 @@ import type {
 } from '../types';
 import { AudioOutputPlayer, MicCapture, base64ToArrayBuffer, parsePcmSampleRate } from '@/modules/dawayir-live/utils/audioHelpers';
 import { createVoiceTattooFromChunks, hasVoiceTattoo, readVoiceTattoo, saveVoiceTattoo } from '@/modules/dawayir-live/utils/voiceTattoo';
+import { useLiveSessionStore } from '../store/liveSession.store';
+import { useMapState } from '@/modules/map/dawayirIndex';
 
 const DEFAULT_CIRCLES: CircleNode[] = [
   { id: 1, label: "وعي", radius: 50, color: "#FFD700", fluidity: 0.5 },
@@ -169,6 +171,33 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
   useEffect(() => {
     snapshotRef.current = snapshot;
   }, [snapshot]);
+
+  // Sync state to global store
+  useEffect(() => {
+    useLiveSessionStore.getState().setStatus(status);
+  }, [status]);
+
+  useEffect(() => {
+    useLiveSessionStore.getState().setSessionId(sessionId);
+  }, [sessionId]);
+
+  useEffect(() => {
+    useLiveSessionStore.getState().setTruthContract(latestTruthContract);
+  }, [latestTruthContract]);
+
+  useEffect(() => {
+    useLiveSessionStore.getState().setAgentSpeaking(isAgentSpeaking);
+  }, [isAgentSpeaking]);
+
+  useEffect(() => {
+    useLiveSessionStore.getState().setActiveNodeId(config.initialContext?.nodeId || null);
+  }, [config.initialContext?.nodeId]);
+
+  useEffect(() => {
+    return () => {
+      useLiveSessionStore.getState().reset();
+    };
+  }, []);
 
   useEffect(() => {
     const existing = readVoiceTattoo();
@@ -808,8 +837,17 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
     setLatestTruthContract(completed.truthContract);
     setLatestLoopRecall(completed.loopRecall);
     setStatus("completed");
+    
+    if (config.initialContext?.nodeId) {
+      useMapState.getState().registerLiveSession(config.initialContext.nodeId, {
+        summary: completed.summary?.summary,
+        score: Math.round(metrics.equilibriumScore * 100),
+        truthContract: completed.truthContract || undefined
+      });
+    }
+
     return completed.session.id;
-  }, [disconnect, latestSummary, metrics]);
+  }, [config.initialContext?.nodeId, disconnect, latestSummary, metrics]);
 
   const createShareLink = useCallback(async () => {
     const activeSessionId = sessionIdRef.current;

@@ -17,8 +17,7 @@ import type {
   ContactLevel,
 } from "@alrehla/masarat";
 import { eventBus } from "@/shared/events/bus";
-
-
+import { useMasaratStore } from "./store/masarat.store";
 // ─── Constants ─────────────────────────────────────────
 const PATH_ICONS: Record<PathId, string> = {
   path_protection:  "🛡️",
@@ -58,8 +57,8 @@ export default function MasaratScreen() {
   const [quickResult, setQuickResult] = useState<QuickPathResult | null>(null);
   const [selectedRing, setSelectedRing] = useState<Ring | null>(null);
   const [selectedContact, setSelectedContact] = useState<ContactLevel | null>(null);
-  const [resolvedPath, setResolvedPath] = useState<PathId | null>(null);
-
+  const resolvedPath = useMasaratStore(s => s.activePathId);
+  const { setActivePath, clearActivePath } = useMasaratStore(s => s.actions);
 
   // ── Quick Path handler ──
   const handleQuickPath = useCallback((situation: QuickPathSituation) => {
@@ -79,19 +78,15 @@ export default function MasaratScreen() {
       zone: ring,
       contact: contact,
     });
-    setResolvedPath(pathId);
+    setActivePath(pathId, ring, contact);
     setMode("result");
     eventBus.emit("masarat:path_resolved", { pathId });
-  }, [selectedRing, selectedContact]);
+  }, [selectedRing, selectedContact, setActivePath]);
 
   const handleSaveActivePath = useCallback(() => {
     if (!resolvedPath) return;
-    try {
-      localStorage.setItem("masarat-active-path", resolvedPath);
-    } catch { /* noop */ }
     eventBus.emit("masarat:path_activated", { pathId: resolvedPath });
   }, [resolvedPath]);
-
   // ─── Render modes ───────────────────────────────────
   return (
     <div style={S.pageWrapper}>
@@ -152,9 +147,7 @@ export default function MasaratScreen() {
 
 // ─── Home Mode ─────────────────────────────────────────
 function HomeMode({ onQuick, onFinder }: { onQuick: () => void; onFinder: () => void }) {
-  const activePath = typeof window !== "undefined"
-    ? (localStorage.getItem("masarat-active-path") as PathId | null)
-    : null;
+  const activePath = useMasaratStore(s => s.activePathId);
 
   return (
     <div style={S.content}>

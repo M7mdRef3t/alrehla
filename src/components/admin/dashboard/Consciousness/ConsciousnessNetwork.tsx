@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SafeCircle } from "@/components/ui/SafeSvg";
+import type { OverviewStats } from "@/services/admin/adminTypes";
 
 interface Node {
     id: number;
@@ -13,6 +14,7 @@ interface Node {
     type: "core" | "healing" | "friction" | "ai_session" | "pulse";
     label?: string;
     intensity: number;
+    verticalResonance: number; // 0.0 = completely disconnected (friction), 1.0 = fully connected (core/healing)
 }
 
 interface Flow {
@@ -31,49 +33,60 @@ const NODE_LABELS = [
 
 interface ConsciousnessNetworkProps {
     activeLayer?: "all" | "core" | "bridge";
+    stats?: OverviewStats | null;
 }
 
-export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetworkProps) {
+export function ConsciousnessNetwork({ activeLayer = "all", stats }: ConsciousnessNetworkProps) {
     const [nodes, setNodes] = useState<Node[]>([]);
     const [flows, setFlows] = useState<Flow[]>([]);
     const [hoveredNode, setHoveredNode] = useState<Node | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Initialize Simulation
+    // Initialize Simulation based on stats
     useEffect(() => {
-        const nodeCount = 45;
-        const initialNodes: Node[] = Array.from({ length: nodeCount }).map((_, i) => {
+        // Dynamic scaling based on real stats or fallback
+        const baseCount = stats?.globalPulse ? Math.floor(stats.globalPulse.ai_workload_avg / 10) + 12 : 30;
+        const healingVel = stats?.globalPulse?.healing_velocity ?? 0;
+        const totalNodes = Math.min(Math.max(baseCount, 15), 60);
+
+        const initialNodes: Node[] = Array.from({ length: totalNodes }).map((_, i) => {
             const rand = Math.random();
             let type: Node["type"] = "pulse";
-            if (rand > 0.9) type = "core";
-            else if (rand > 0.75) type = "healing";
-            else if (rand > 0.6) type = "friction";
-            else if (rand > 0.45) type = "ai_session";
+            let verticalResonance = 0.5;
+
+            // Type distribution based on stats
+            // If healing velocity is low, more friction. If high, more healing.
+            if (rand > 0.85) { type = "core"; verticalResonance = 0.9 + Math.random() * 0.1; }
+            else if (rand > (0.65 - (healingVel * 0.5))) { type = "healing"; verticalResonance = 0.7 + Math.random() * 0.3; }
+            else if (rand > (0.45 + (healingVel * 0.5))) { type = "friction"; verticalResonance = Math.random() * 0.3; } // Friction = low vertical resonance
+            else if (rand > 0.3) { type = "ai_session"; verticalResonance = 0.5 + Math.random() * 0.4; }
+            else { type = "pulse"; verticalResonance = 0.3 + Math.random() * 0.4; }
 
             return {
                 id: i,
                 x: 10 + Math.random() * 80, 
                 y: 10 + Math.random() * 80,
-                vx: (Math.random() - 0.5) * 0.2,
-                vy: (Math.random() - 0.5) * 0.2,
+                vx: (Math.random() - 0.5) * 0.15,
+                vy: (Math.random() - 0.5) * 0.15,
                 radius: type === "core" ? 8 : type === "friction" ? 5 : 4,
                 type,
+                verticalResonance,
                 intensity: Math.random(),
                 label: type !== "pulse" ? NODE_LABELS[Math.floor(Math.random() * NODE_LABELS.length)] : undefined
             };
         });
         setNodes(initialNodes);
 
-        // Initialize some flows
-        const initialFlows: Flow[] = Array.from({ length: 8 }).map((_, i) => ({
+        // Initialize flows
+        const initialFlows: Flow[] = Array.from({ length: Math.floor(totalNodes / 3) }).map((_, i) => ({
             id: `flow-${i}`,
-            from: Math.floor(Math.random() * nodeCount),
-            to: Math.floor(Math.random() * nodeCount),
+            from: Math.floor(Math.random() * totalNodes),
+            to: Math.floor(Math.random() * totalNodes),
             progress: Math.random(),
             speed: 0.002 + Math.random() * 0.005
         }));
         setFlows(initialFlows);
-    }, []);
+    }, [stats]);
 
     // Animation Loop
     useEffect(() => {
@@ -122,25 +135,39 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
         return () => cancelAnimationFrame(animationFrameId);
     }, [nodes.length]);
 
+    // Derived State for Filtering
+    const visibleNodes = useMemo(() => {
+        if (activeLayer === "all") return nodes;
+        if (activeLayer === "core") return nodes.filter(n => n.type === "core" || n.type === "healing");
+        if (activeLayer === "bridge") return nodes.filter(n => n.type === "ai_session" || n.type === "friction" || n.type === "healing");
+        return nodes;
+    }, [nodes, activeLayer]);
+
     // Generate Connections Efficiently
     const connections = useMemo(() => {
         const lines: React.JSX.Element[] = [];
-        nodes.forEach((node, i) => {
-            for (let j = i + 1; j < nodes.length; j++) {
-                const other = nodes[j];
+        visibleNodes.forEach((node, i) => {
+            for (let j = i + 1; j < visibleNodes.length; j++) {
+                const other = visibleNodes[j];
                 const dx = node.x - other.x;
                 const dy = node.y - other.y;
                 const distSquared = dx * dx + dy * dy;
 
-                if (distSquared < 300) {
+                let threshold = 300;
+                if (activeLayer === "bridge") threshold = 800; // Bridges connect further nodes
+
+                if (distSquared < threshold) {
                     const isFriction = node.type === "friction" || other.type === "friction";
                     const isHealing = node.type === "healing" || other.type === "healing";
                     
                     let strokeColor = "rgba(45,212,191,0.15)"; // default teal
                     if (isFriction) strokeColor = "rgba(225,29,72,0.2)"; // red
                     if (isHealing) strokeColor = "rgba(16,185,129,0.2)"; // emerald
+                    if (activeLayer === "bridge" && (node.type === "ai_session" || other.type === "ai_session")) {
+                        strokeColor = "rgba(56,189,248,0.3)"; // Highlight AI bridges
+                    }
 
-                    const opacity = Math.max(0.05, 1 - Math.sqrt(distSquared) / 17);
+                    const opacity = Math.max(0.05, 1 - Math.sqrt(distSquared) / (activeLayer === "bridge" ? 28 : 17));
                     lines.push(
                         <motion.line
                             key={`${node.id}-${other.id}`}
@@ -148,8 +175,8 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
                             x2={`${other.x}%`} y2={`${other.y}%`}
                             stroke={strokeColor}
                             strokeWidth={opacity * 1.5}
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
+                            initial={{ pathLength: 0, opacity: 0 }}
+                            animate={{ pathLength: 1, opacity: 1 }}
                             transition={{ duration: 1.5, ease: "easeInOut" }}
                         />
                     );
@@ -157,23 +184,26 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
             }
         });
         return lines;
-    }, [nodes]);
+    }, [visibleNodes, activeLayer]);
 
-    const getNodeColor = (type: Node["type"], intensity: number) => {
+    const getNodeColor = (type: Node["type"], intensity: number, verticalResonance: number) => {
+        // Visually represent vertical disconnects (frictions) by making them dimmer or starker
+        const baseAlpha = type === "friction" ? 0.8 : 0.4 + (verticalResonance * 0.4);
+        
         switch (type) {
-            case "core": return `rgba(168, 85, 247, ${0.4 + intensity * 0.6})`; // Purple
-            case "healing": return `rgba(16, 185, 129, ${0.4 + intensity * 0.6})`; // Emerald
-            case "friction": return `rgba(225, 29, 72, ${0.6 + intensity * 0.4})`; // Rose
-            case "ai_session": return `rgba(56, 189, 248, ${0.4 + intensity * 0.6})`; // Sky
+            case "core": return `rgba(168, 85, 247, ${baseAlpha + intensity * 0.2})`; // Purple
+            case "healing": return `rgba(16, 185, 129, ${baseAlpha + intensity * 0.2})`; // Emerald
+            case "friction": return `rgba(225, 29, 72, ${0.4 + intensity * 0.6})`; // Rose, throbbing intensely
+            case "ai_session": return `rgba(56, 189, 248, ${baseAlpha + intensity * 0.2})`; // Sky
             default: return `rgba(45, 212, 191, ${0.2 + intensity * 0.3})`; // Teal (Pulse)
         }
     };
     
-    const getGlowColor = (type: Node["type"]) => {
+    const getGlowColor = (type: Node["type"], verticalResonance: number) => {
+        if (type === "friction") return "rgba(225,29,72,0.4)"; // Weak glow for disconnected pain
         switch (type) {
-            case "core": return "rgba(168,85,247,0.6)";
-            case "healing": return "rgba(16,185,129,0.6)";
-            case "friction": return "rgba(225,29,72,0.8)";
+            case "core": return `rgba(168,85,247,${0.4 + verticalResonance * 0.4})`;
+            case "healing": return `rgba(16,185,129,${0.4 + verticalResonance * 0.4})`;
             case "ai_session": return "rgba(56,189,248,0.6)";
             default: return "rgba(45,212,191,0.3)";
         }
@@ -228,75 +258,86 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
 
             {/* Density Hotspots (Heat-map Layer) */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-                {nodes.filter(n => n.type === "friction" || n.type === "core").map(node => (
-                    <div 
-                        key={`hotspot-${node.id}`}
-                        className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full blur-[60px]"
-                        style={{
-                            left: `${node.x}%`,
-                            top: `${node.y}%`,
-                            width: 120,
-                            height: 120,
-                            backgroundColor: node.type === "friction" ? "rgba(225,29,72,0.1)" : "rgba(168,85,247,0.1)"
-                        }}
-                    />
-                ))}
+                <AnimatePresence>
+                    {visibleNodes.filter(n => n.type === "friction" || n.type === "core").map(node => (
+                        <motion.div 
+                            key={`hotspot-${node.id}`}
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0 }}
+                            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full blur-[60px]"
+                            style={{
+                                left: `${node.x}%`,
+                                top: `${node.y}%`,
+                                width: 120,
+                                height: 120,
+                                backgroundColor: node.type === "friction" ? "rgba(225,29,72,0.1)" : "rgba(168,85,247,0.1)"
+                            }}
+                        />
+                    ))}
+                </AnimatePresence>
             </div>
 
             {/* Live Nodes Layer */}
-            {nodes.map((node) => (
-                <div
-                    key={node.id}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 cursor-crosshair z-10"
-                    style={{ left: `${node.x}%`, top: `${node.y}%` }}
-                    onMouseEnter={() => setHoveredNode(node)}
-                    onMouseLeave={() => setHoveredNode(null)}
-                >
-                    {/* Node Visual Engine */}
-                    <div className="relative flex items-center justify-center">
-                        {/* Outer Glow / Ripple for Active states */}
-                        {(node.type !== "pulse" || hoveredNode?.id === node.id) && (
-                            <div 
-                                className="absolute rounded-full animate-pulse"
-                                style={{
-                                    width: node.radius * 6,
-                                    height: node.radius * 6,
-                                    backgroundColor: getGlowColor(node.type),
-                                    opacity: 0.15,
-                                    filter: "blur(8px)",
-                                    animationDuration: node.type === "friction" ? "1s" : "3s"
+            <AnimatePresence>
+                {visibleNodes.map((node) => (
+                    <motion.div
+                        key={node.id}
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0 }}
+                        className="absolute -translate-x-1/2 -translate-y-1/2 cursor-crosshair z-10"
+                        style={{ left: `${node.x}%`, top: `${node.y}%` }}
+                        onMouseEnter={() => setHoveredNode(node)}
+                        onMouseLeave={() => setHoveredNode(null)}
+                    >
+                        {/* Node Visual Engine */}
+                        <div className="relative flex items-center justify-center">
+                            {/* Outer Glow / Ripple for Active states */}
+                            {(node.type !== "pulse" || hoveredNode?.id === node.id) && (
+                                <div 
+                                    className="absolute rounded-full animate-pulse"
+                                    style={{
+                                        width: node.radius * 6,
+                                        height: node.radius * 6,
+                                        backgroundColor: getGlowColor(node.type, node.verticalResonance),
+                                        opacity: node.type === "friction" ? 0.1 : 0.15,
+                                        filter: "blur(8px)",
+                                        animationDuration: node.type === "friction" ? "0.5s" : "3s"
+                                    }}
+                                />
+                            )}
+                            
+                            {/* Core Dot */}
+                            <div
+                                className={`relative rounded-full transition-all duration-300 ${hoveredNode?.id === node.id ? 'scale-[2]' : 'scale-100'}`}
+                                style={{ 
+                                    width: node.radius * 2, 
+                                    height: node.radius * 2,
+                                    backgroundColor: getNodeColor(node.type, node.intensity, node.verticalResonance),
+                                    boxShadow: `0 0 15px ${getGlowColor(node.type, node.verticalResonance)}`
                                 }}
                             />
-                        )}
-                        
-                        {/* Core Dot */}
-                        <div
-                            className={`relative rounded-full transition-all duration-300 ${hoveredNode?.id === node.id ? 'scale-[2]' : 'scale-100'}`}
-                            style={{ 
-                                width: node.radius * 2, 
-                                height: node.radius * 2,
-                                backgroundColor: getNodeColor(node.type, node.intensity),
-                                boxShadow: `0 0 15px ${getGlowColor(node.type)}`
-                            }}
-                        />
-                    </div>
+                        </div>
 
-                    {/* Sovereign Label (Visible on Hover or for Core/Friction) */}
-                    {node.label && (hoveredNode?.id === node.id || node.type === "friction" || node.type === "core") && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 5, scale: 0.9 }}
-                            animate={{ opacity: 1, y: -8, scale: 1 }}
-                            className={`absolute bottom-full left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 text-[10px] text-white rounded-lg border backdrop-blur-md pointer-events-none font-bold z-20 shadow-xl ${
-                                node.type === "friction" ? "bg-rose-950/80 border-rose-500/50 text-rose-100" :
-                                node.type === "healing" ? "bg-emerald-950/80 border-emerald-500/50 text-emerald-100" :
-                                "bg-slate-900/90 border-slate-700 text-slate-100"
-                            }`}
-                        >
-                            {node.label}
-                        </motion.div>
-                    )}
-                </div>
-            ))}
+                        {/* Sovereign Label (Visible on Hover or for Core/Friction) */}
+                        {node.label && (hoveredNode?.id === node.id || node.type === "friction" || node.type === "core") && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 5, scale: 0.9 }}
+                                animate={{ opacity: 1, y: -8, scale: 1 }}
+                                className={`absolute bottom-full left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 text-[10px] text-white rounded-lg border backdrop-blur-md pointer-events-none font-bold z-20 shadow-xl ${
+                                    node.type === "friction" ? "bg-rose-950/80 border-rose-500/50 text-rose-100" :
+                                    node.type === "healing" ? "bg-emerald-950/80 border-emerald-500/50 text-emerald-100" :
+                                    "bg-slate-900/90 border-slate-700 text-slate-100"
+                                }`}
+                            >
+                                {node.label}
+                                {node.type === "friction" && <div className="text-[8px] text-rose-300/80 text-center mt-0.5">انقطاع رأسي مرصود</div>}
+                            </motion.div>
+                        )}
+                    </motion.div>
+                ))}
+            </AnimatePresence>
 
             {/* Cinematic Overlay Stats */}
             <div className="absolute bottom-6 left-6 pointer-events-none select-none z-20">
