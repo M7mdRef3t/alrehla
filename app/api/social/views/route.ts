@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { fetchTikTokViews as fetchAccurateTikTokViews } from '../tiktokViews';
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_DATA_API_KEY;
 
@@ -14,7 +15,9 @@ function extractYouTubeId(url: string): string | null {
         if (v) return v;
         const shortsMatch = u.pathname.match(/\/shorts\/([a-zA-Z0-9_-]+)/);
         if (shortsMatch) return shortsMatch[1];
-    } catch {}
+    } catch {
+        // Ignore invalid URLs and let callers fall back.
+    }
     return null;
 }
 
@@ -58,21 +61,30 @@ async function fetchTikTokViews(url: string): Promise<number | null> {
 
         const html = await res.text();
 
-        // ── Method 1: __UNIVERSAL_DATA_FOR_REHYDRATION__ (newest TikTok pages) ──
+        // ── Method 1: __UNIVERSAL_DATA_FOR_REHYDRATION__ ──
         const universalMatch = html.match(/<script\s+id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/);
         if (universalMatch) {
             try {
                 const json = JSON.parse(universalMatch[1]);
-                // Navigate the nested structure to find playCount
                 const defaultScope = json?.['__DEFAULT_SCOPE__'];
                 const videoDetail = defaultScope?.['webapp.video-detail'] || defaultScope?.['webapp.video.detail'];
                 const playCount = videoDetail?.itemInfo?.itemStruct?.stats?.playCount
-                    ?? videoDetail?.itemStruct?.stats?.playCount;
+                    ?? videoDetail?.itemStruct?.stats?.playCount
+                    ?? videoDetail?.itemInfo?.itemStruct?.stats?.play_count;
                 if (typeof playCount === 'number') return playCount;
-            } catch {}
+            } catch {
+                // Ignore malformed TikTok hydration payload.
+            }
         }
 
-        // ── Method 2: SIGI_STATE (older TikTok pages) ──
+        // ── Method 2: Raw playCount Regex (Often works even if JSON parsing fails) ──
+        const playCountMatch = html.match(/"playCount":(\d+)/) || html.match(/"play_count":(\d+)/);
+        if (playCountMatch) {
+            const num = parseInt(playCountMatch[1], 10);
+            if (!isNaN(num) && num > 0) return num;
+        }
+
+        // ── Method 3: SIGI_STATE ──
         const sigiMatch = html.match(/<script\s+id="SIGI_STATE"[^>]*>([\s\S]*?)<\/script>/);
         if (sigiMatch) {
             try {
@@ -80,13 +92,15 @@ async function fetchTikTokViews(url: string): Promise<number | null> {
                 const items = json?.ItemModule;
                 if (items) {
                     const firstKey = Object.keys(items)[0];
-                    const playCount = items[firstKey]?.stats?.playCount;
+                    const playCount = items[firstKey]?.stats?.playCount || items[firstKey]?.stats?.play_count;
                     if (typeof playCount === 'number') return playCount;
                 }
-            } catch {}
+            } catch {
+                // Ignore malformed TikTok SIGI payload.
+            }
         }
 
-        // ── Method 3: JSON-LD (interactionCount) ──
+        // ── Method 4: JSON-LD ──
         const jsonLdMatch = html.match(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/);
         if (jsonLdMatch) {
             try {
@@ -95,11 +109,14 @@ async function fetchTikTokViews(url: string): Promise<number | null> {
                     (s: any) => s?.interactionType?.['@type'] === 'WatchAction'
                 )?.userInteractionCount;
                 if (count) return parseInt(count, 10);
-            } catch {}
+            } catch {
+                // Ignore malformed JSON-LD payload.
+            }
         }
 
-        // ── Method 4: meta tag og:description often contains "X Likes, Y Comments, Z Views" ──
-        const metaMatch = html.match(/content="[^"]*?(\d[\d,.]*)\s*(?:views|Views|مشاهدة|play)/i);
+        // ── Method 5: Meta Description Fallback ──
+        const metaMatch = html.match(/content="[^"]*?(\d[\d,.]*)\s*(?:views|Views|مشاهدة|play)/i) ||
+                          html.match(/(\d[\d,.]*)\s*(?:views|Views|مشاهدة|play)/i);
         if (metaMatch) {
             const cleaned = metaMatch[1].replace(/[,.\s]/g, '');
             const num = parseInt(cleaned, 10);
@@ -124,7 +141,9 @@ function extractInstagramShortcode(url: string): string | null {
         // Match /reel/SHORTCODE/ or /p/SHORTCODE/
         const match = u.pathname.match(/\/(?:reel|p)\/([a-zA-Z0-9_-]+)/);
         if (match) return match[1];
-    } catch {}
+    } catch {
+        // Ignore invalid Instagram URLs and let callers fall back.
+    }
     return null;
 }
 
@@ -140,7 +159,7 @@ async function fetchInstagramViewsApi(shortcode: string): Promise<number | null>
 
         for (let i = 0; i < 3; i++) {
             if (!nextUrl) break;
-            const res = await fetch(nextUrl, { next: { revalidate: 3600 } });
+            const res: Response = await fetch(nextUrl, { next: { revalidate: 3600 } });
             if (!res.ok) break;
             const data = await res.json();
             
@@ -197,7 +216,9 @@ async function resolveFacebookVideoId(url: string): Promise<string | null> {
         const storyFbid = u.searchParams.get('story_fbid');
         if (storyFbid) return storyFbid;
 
-    } catch {}
+    } catch {
+        // Ignore invalid Facebook URLs and let callers fall back.
+    }
     return null;
 }
 
@@ -319,7 +340,7 @@ export async function POST(req: Request) {
 
         // ── 2. TikTok (Free Scraping) ──
         if (isTikTokUrl(url)) {
-            const realViews = await fetchTikTokViews(url);
+            const realViews = await fetchAccurateTikTokViews(url);
             if (realViews !== null) {
                 return NextResponse.json({ success: true, views: realViews, isSimulated: false, source: 'tiktok_scraper' });
             }

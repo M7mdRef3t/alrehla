@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { fetchTikTokViews } from '../tiktokViews';
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_DATA_API_KEY;
 
@@ -11,7 +12,9 @@ function extractYouTubeId(url: string): string | null {
         if (v) return v;
         const shortsMatch = u.pathname.match(/\/shorts\/([a-zA-Z0-9_-]+)/);
         if (shortsMatch) return shortsMatch[1];
-    } catch {}
+    } catch {
+        // Ignore invalid URLs and let callers fall back.
+    }
     return null;
 }
 
@@ -21,7 +24,9 @@ function extractInstagramShortcode(url: string): string | null {
         if (!u.hostname.includes('instagram.com')) return null;
         const match = u.pathname.match(/\/(?:reel|p)\/([a-zA-Z0-9_-]+)/);
         if (match) return match[1];
-    } catch {}
+    } catch {
+        // Ignore invalid Instagram URLs and let callers fall back.
+    }
     return null;
 }
 
@@ -35,7 +40,7 @@ async function fetchInstagramViewsApi(shortcode: string): Promise<number | null>
 
         for (let i = 0; i < 3; i++) {
             if (!nextUrl) break;
-            const res = await fetch(nextUrl, { next: { revalidate: 3600 } });
+            const res: Response = await fetch(nextUrl, { next: { revalidate: 3600 } });
             if (!res.ok) break;
             const data = await res.json();
             
@@ -84,7 +89,9 @@ async function resolveFacebookVideoId(url: string): Promise<string | null> {
         const storyFbid = u.searchParams.get('story_fbid');
         if (storyFbid) return storyFbid;
 
-    } catch {}
+    } catch {
+        // Ignore invalid Facebook URLs and let callers fall back.
+    }
     return null;
 }
 
@@ -145,6 +152,7 @@ export async function GET(req: Request) {
             const publishedAt = meta.publishDate || video.created_at;
 
             let newViews = meta.views || 0;
+            let shouldPersistViews = false;
 
             // ── 1. Try YouTube API ──
             const youtubeId = extractYouTubeId(url);
@@ -162,64 +170,11 @@ export async function GET(req: Request) {
             }
             // ── 2. Try TikTok Scraping (free) ──
             else if (url.includes('tiktok.com')) {
-                try {
-                    const tikRes = await fetch(url, {
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                            'Accept-Language': 'en-US,en;q=0.9',
-                            'Accept-Encoding': 'identity',
-                        },
-                        redirect: 'follow',
-                    });
-                    if (tikRes.ok) {
-                        const html = await tikRes.text();
-                        let scraped: number | null = null;
-
-                        // Method 1: __UNIVERSAL_DATA_FOR_REHYDRATION__
-                        const universalMatch = html.match(/<script\s+id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/);
-                        if (universalMatch) {
-                            try {
-                                const json = JSON.parse(universalMatch[1]);
-                                const ds = json?.['__DEFAULT_SCOPE__'];
-                                const vd = ds?.['webapp.video-detail'] || ds?.['webapp.video.detail'];
-                                scraped = vd?.itemInfo?.itemStruct?.stats?.playCount ?? vd?.itemStruct?.stats?.playCount ?? null;
-                            } catch {}
-                        }
-
-                        // Method 2: SIGI_STATE
-                        if (scraped === null) {
-                            const sigiMatch = html.match(/<script\s+id="SIGI_STATE"[^>]*>([\s\S]*?)<\/script>/);
-                            if (sigiMatch) {
-                                try {
-                                    const json = JSON.parse(sigiMatch[1]);
-                                    const items = json?.ItemModule;
-                                    if (items) {
-                                        const firstKey = Object.keys(items)[0];
-                                        scraped = items[firstKey]?.stats?.playCount ?? null;
-                                    }
-                                } catch {}
-                            }
-                        }
-
-                        // Method 3: JSON-LD
-                        if (scraped === null) {
-                            const jsonLdMatch = html.match(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/);
-                            if (jsonLdMatch) {
-                                try {
-                                    const json = JSON.parse(jsonLdMatch[1]);
-                                    const count = json?.interactionStatistic?.find?.(
-                                        (s: any) => s?.interactionType?.['@type'] === 'WatchAction'
-                                    )?.userInteractionCount;
-                                    if (count) scraped = parseInt(count, 10);
-                                } catch {}
-                            }
-                        }
-
-                        if (typeof scraped === 'number' && scraped > 0) newViews = scraped;
-                    }
-                } catch (e) {
-                    console.error(`[sync] TikTok scrape error for ${url}:`, e);
+                const accurateViews = await fetchTikTokViews(url);
+                if (typeof accurateViews === 'number' && accurateViews > 0) {
+                    newViews = accurateViews;
+                    meta.viewSource = 'tiktok_scraper';
+                    shouldPersistViews = true;
                 }
             }
             // ── 3. Try Meta (Instagram) API ──
@@ -333,8 +288,8 @@ export async function GET(req: Request) {
             }
 
 
-            // Update record if views increased
-            if (newViews > (meta.views || 0)) {
+            // Real platform reads can correct stale simulated values downward.
+            if (shouldPersistViews || newViews > (meta.views || 0)) {
                 meta.views = newViews;
                 meta.lastViewSync = new Date().toISOString();
                 
