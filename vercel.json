@@ -25,7 +25,7 @@
   "crons": [
     {
       "path": "/api/social/sync-views",
-      "schedule": "0 */4 * * *"
+      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/cron/marketing-outreach",
