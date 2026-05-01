@@ -74,6 +74,7 @@ function findViewsInTree(node: unknown, videoId: string | null): number | null {
 
 export function parseTikTokViewsFromHtml(html: string, url: string): number | null {
   const videoId = extractTikTokVideoId(url);
+  console.log(`[TikTok Scraper] Parsing URL: ${url}, Video ID: ${videoId}`);
 
   const scriptIds = ["__UNIVERSAL_DATA_FOR_REHYDRATION__", "SIGI_STATE", "__NEXT_DATA__"];
   for (const scriptId of scriptIds) {
@@ -82,9 +83,12 @@ export function parseTikTokViewsFromHtml(html: string, url: string): number | nu
     try {
       const parsed = JSON.parse(scriptMatch[1]);
       const views = findViewsInTree(parsed, videoId);
-      if (views !== null && views > 0) return views;
+      if (views !== null && views > 0) {
+        console.log(`[TikTok Scraper] Found views in ${scriptId}: ${views}`);
+        return views;
+      }
     } catch {
-      // Ignore malformed embedded TikTok JSON and try the next source.
+      console.warn(`[TikTok Scraper] Failed to parse JSON from ${scriptId}`);
     }
   }
 
@@ -97,9 +101,12 @@ export function parseTikTokViewsFromHtml(html: string, url: string): number | nu
         : [parsed?.interactionStatistic].filter(Boolean);
       const watchStat = stats.find((stat: any) => stat?.interactionType?.["@type"] === "WatchAction");
       const views = parseCompactCount(watchStat?.userInteractionCount);
-      if (views !== null && views > 0) return views;
+      if (views !== null && views > 0) {
+        console.log(`[TikTok Scraper] Found views in JSON-LD: ${views}`);
+        return views;
+      }
     } catch {
-      // Ignore malformed JSON-LD and continue to the text fallbacks.
+      console.warn(`[TikTok Scraper] Failed to parse JSON-LD`);
     }
   }
 
@@ -107,7 +114,13 @@ export function parseTikTokViewsFromHtml(html: string, url: string): number | nu
     html.match(/<meta[^>]+(?:name|property)=["'](?:description|og:description)["'][^>]+content=["'][^"']*?(\d+(?:[,.]\d+)?\s*[KMB]?)\s*(?:views|Views|مشاهدة|play)/i) ??
     html.match(/(\d+(?:[,.]\d+)?\s*[KMB]?)\s*(?:views|Views|مشاهدة|play)/i);
   const metaViews = parseCompactCount(metaMatch?.[1]);
-  return metaViews && metaViews > 0 ? metaViews : null;
+  if (metaViews && metaViews > 0) {
+    console.log(`[TikTok Scraper] Found views in Meta: ${metaViews}`);
+    return metaViews;
+  }
+
+  console.error(`[TikTok Scraper] No views found for ${url}`);
+  return null;
 }
 
 export async function fetchTikTokViews(url: string): Promise<number | null> {

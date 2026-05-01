@@ -24,7 +24,7 @@ export interface MirrorInsight {
     id: string;
     type: "emotional_denial" | "reality_detachment" | "placement_anxiety"
         | "false_support" | "love_drain" | "paper_boundaries" | "false_recovery"
-        | "connection_bias";
+        | "connection_illusion";
     title: string;
     message: string;
     question: string;
@@ -289,7 +289,7 @@ export function detectContradictions(): MirrorInsight | null {
                 if (!shown.has(id)) {
                     return {
                         id,
-                        type: "connection_bias" as const,
+                        type: "connection_illusion" as const,
                         title: "وهم الاتصال",
                         message: `${ttTests.length} اختبار — نسبة الإصابة ${hitRate}%. ده قريب من الصدفة أو أقل. عقلك بيتذكر المرات اللي صح وبينسى اللي غلط.`,
                         question: "لو شلت الإحساس وبصيت للأرقام بس — هل فعلاً فيه اتصال؟",

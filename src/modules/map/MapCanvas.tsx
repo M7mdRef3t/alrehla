@@ -2334,7 +2334,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                       type="button"
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      className="map-add-node-gate absolute z-20 w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-dashed border-teal-500/50 bg-slate-800/30 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:border-teal-400 hover:bg-slate-700/50 transition-all shadow-lg hover:shadow-[0_0_20px_rgba(45,212,191,0.3)] pointer-events-auto"
+                      className="map-add-node-gate absolute z-20 w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-dashed border-teal-500/50 bg-slate-800/30 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:border-teal-400 hover:bg-slate-700/50 transition-all shadow-lg hover:shadow-[0_0_20px_rgba(45,212,191,0.3)] pointer-events-auto"
                       style={{
                         left: `${nodePositions['ghost-add-node']?.x ?? 50}%`,
                         top: `${nodePositions['ghost-add-node']?.y ?? 90}%`,
@@ -2343,7 +2343,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                       onClick={(e) => { e.stopPropagation(); onAddNode(); }}
                       title="إضافة شخص جديد"
                     >
-                      <Plus className="w-5 h-5 text-teal-400/70" />
+                      <Plus className="w-4 h-4 text-teal-400/70" />
                     </motion.button>
                   )}
                 </AnimatePresence>

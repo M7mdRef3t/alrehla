@@ -930,20 +930,7 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
               style={{ pointerEvents: "all", cursor: "pointer", transformOrigin: `${ghostNodePosition.x}px ${ghostNodePosition.y}px` }}
             >
               {/* Pulsing Aura */}
-              <SafeMotionCircle
-                cx={ghostNodePosition.x}
-                cy={ghostNodePosition.y}
-                r={8.5}
-                fill="none"
-                stroke="var(--soft-teal)"
-                strokeWidth={0.22}
-                strokeDasharray="1.6 2.4"
-                animate={{ 
-                   rotate: 360,
-                   opacity: [0.2, 0.6, 0.2]
-                }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-              />
+
               
               {/* Interaction Area (Invisible but large enough) */}
               <circle
@@ -957,11 +944,11 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
               <circle
                 cx={ghostNodePosition.x}
                 cy={ghostNodePosition.y}
-                r={5.4}
+                r={4.0}
                 fill="rgba(45, 212, 191, 0.12)"
                 stroke="var(--soft-teal)"
                 strokeOpacity={0.72}
-                strokeWidth={0.38}
+                strokeWidth={0.28}
                 strokeDasharray="1 1.2"
                 className="animate-spin-slow"
                 style={{
@@ -969,28 +956,29 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
                   filter: "drop-shadow(0 0 3px rgba(45, 212, 191, 0.65))",
                 }}
               />
+
               <circle
                 cx={ghostNodePosition.x}
                 cy={ghostNodePosition.y}
-                r={3.1}
+                r={2.4}
                 fill="rgba(2, 12, 20, 0.88)"
                 stroke="rgba(234, 255, 251, 0.28)"
-                strokeWidth={0.16}
+                strokeWidth={0.12}
               />
               
               {/* Plus Icon inside - Premium Style */}
               <g transform={`translate(${ghostNodePosition.x}, ${ghostNodePosition.y})`}>
-                <circle r={2.2} fill="rgba(45, 212, 191, 0.16)" />
-                <line x1="-1.45" y1="0" x2="1.45" y2="0" stroke="#7ff7e8" strokeWidth="0.72" strokeLinecap="round" />
-                <line x1="0" y1="-1.45" x2="0" y2="1.45" stroke="#7ff7e8" strokeWidth="0.72" strokeLinecap="round" />
+                <circle r={1.6} fill="rgba(45, 212, 191, 0.16)" />
+                <line x1="-1.1" y1="0" x2="1.1" y2="0" stroke="#7ff7e8" strokeWidth="0.55" strokeLinecap="round" />
+                <line x1="0" y1="-1.1" x2="0" y2="1.1" stroke="#7ff7e8" strokeWidth="0.55" strokeLinecap="round" />
               </g>
 
               {/* Label */}
               <text
                 x={ghostNodePosition.x}
-                y={ghostNodePosition.y + 10.5}
+                y={ghostNodePosition.y + 8.5}
                 textAnchor="middle"
-                fontSize="2.75"
+                fontSize="2.2"
                 fill="#7ff7e8"
                 style={{ 
                   fontWeight: "900", 

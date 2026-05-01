@@ -10,7 +10,7 @@
 
 import { useState, type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff, AlertTriangle, Zap, Heart, Shield } from "lucide-react";
+import { Eye, EyeOff, AlertTriangle, Zap, Heart, Shield, Activity } from "lucide-react";
 import type { MirrorInsight } from "@/services/mirrorLogic";
 import { dismissMirrorInsight } from "@/services/mirrorLogic";
 import { ScienceInsightCard } from "./ScienceInsightCard";
@@ -29,7 +29,8 @@ const TYPE_CONFIG: Record<MirrorInsight["type"], { icon: typeof Eye; color: stri
     false_support: { icon: Zap, color: "text-emerald-400", bgGlow: "rgba(52,211,153,0.08)" },
     love_drain: { icon: Heart, color: "text-rose-400", bgGlow: "rgba(251,113,133,0.08)" },
     paper_boundaries: { icon: Shield, color: "text-purple-400", bgGlow: "rgba(192,132,252,0.08)" },
-    false_recovery: { icon: Eye, color: "text-teal-400", bgGlow: "rgba(45,212,191,0.08)" },
+    false_recovery: { icon: Activity, color: "text-teal-400", bgGlow: "rgba(45,212,191,0.08)" },
+    connection_illusion: { icon: Zap, color: "text-indigo-400", bgGlow: "rgba(99,102,241,0.08)" },
 };
 
 const SEVERITY_BORDER: Record<MirrorInsight["severity"], string> = {
