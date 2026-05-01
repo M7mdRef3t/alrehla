@@ -371,14 +371,7 @@ export default function DawayirApp() {
                             />
                         </div>
 
-                        <div className="absolute inset-0 pointer-events-none z-50">
-                            <div className="absolute bottom-10 left-10 pointer-events-auto px-5 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-3">
-                                <div className="w-6 h-6 rounded-lg bg-teal-500/20 flex items-center justify-center">
-                                    <Zap size={14} className="text-teal-400" />
-                                </div>
-                                <span className="text-[11px] font-bold text-slate-300" dir="rtl">اسحب أي شخص لتغيير موقعه في الخريطة</span>
-                            </div>
-                        </div>
+
                             {/* Phase 3: The AI Facilitator */}
                             {focusedNode && (
                                 <>

@@ -38,6 +38,7 @@ const TAG_META: Record<MemoryTag, { label: string; emoji: string; color: string 
   pain: { label: "ألم", emoji: "💔", color: "#ef4444" },
   gratitude: { label: "امتنان", emoji: "🙏", color: "#a855f7" },
   turning_point: { label: "نقطة تحوّل", emoji: "🔄", color: "#f97316" },
+  nonmaterial_connection: { label: "اتصال روحي", emoji: "✨", color: "#6366f1" },
   custom: { label: "مخصص", emoji: "🏷️", color: "#64748b" },
 };
 
@@ -48,6 +49,7 @@ const SOURCE_META: Record<MemorySource, { label: string; emoji: string }> = {
   watheeqa: { label: "وثيقة", emoji: "📝" },
   nadhir: { label: "نذير", emoji: "🛡️" },
   riwaya: { label: "رواية", emoji: "📖" },
+  connection_event: { label: "حدث اتصال", emoji: "🤝" },
   manual: { label: "يدوي", emoji: "✍️" },
 };
 
