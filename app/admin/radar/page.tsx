@@ -773,8 +773,10 @@ const SystemHealthRadar: React.FC<{
   );
 };
 
-export default function AdminRadarPage() {
+import { MarkazScreen } from "@/modules/markaz/MarkazScreen";
 
+export default function AdminRadarPage() {
+  const [activeTab, setActiveTab] = useState<"radar" | "ops" | "horus">("radar");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pulse, setPulse] = useState<RadarPulse | null>(null);
@@ -1509,22 +1511,69 @@ export default function AdminRadarPage() {
   return (
     <main className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] p-6 md:p-10">
       <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex items-center justify-between">
+        <header className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
             <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Admin</p>
             <h1 className="text-2xl md:text-3xl font-black">Architect&apos;s Radar</h1>
             <p className="text-sm text-[var(--color-text-muted)]">Aggregated awareness telemetry only. No chat/message text.</p>
           </div>
-          <button 
-            onClick={() => loadRadar()}
-            disabled={loading}
-            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-[var(--vibrant-blue)] backdrop-blur-md transition-all hover:bg-white/10 active:scale-95 disabled:opacity-40"
-          >
-            <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            {loading ? "تحديث..." : "تحديث النبض"}
-          </button>
+
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/5 bg-white/5 p-1 backdrop-blur-xl">
+            <button
+              onClick={() => setActiveTab("radar")}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                activeTab === "radar"
+                  ? "bg-[var(--vibrant-blue)] text-white shadow-lg shadow-blue-500/20"
+                  : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              الرادار
+            </button>
+            <button
+              onClick={() => setActiveTab("ops")}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                activeTab === "ops"
+                  ? "bg-[var(--soft-teal)] text-white shadow-lg shadow-teal-500/20"
+                  : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              العمليات
+            </button>
+            <button
+              onClick={() => setActiveTab("horus")}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                activeTab === "horus"
+                  ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20"
+                  : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              برج حورس
+            </button>
+            
+            <div className="mx-2 h-4 w-px bg-white/10" />
+
+            <button 
+              onClick={() => loadRadar()}
+              disabled={loading}
+              className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-xs font-black text-[var(--vibrant-blue)] transition-all hover:bg-white/10 active:scale-95 disabled:opacity-40"
+            >
+              <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {loading ? "تزامن..." : "تحديث"}
+            </button>
+          </div>
         </header>
 
         {!loading && !error && showAnomaly && (
@@ -1546,7 +1595,9 @@ export default function AdminRadarPage() {
         )}
 
         {!loading && !error && pulse && (
-          <section className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-6">
+            {activeTab === "radar" && (
+              <section className="grid gap-4 md:grid-cols-3">
             <article className="rounded-2xl border border-white/10 bg-black/20 p-5">
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Global Phoenix Index</p>
               <p className="mt-3 text-4xl font-black">{Number(pulse.global_phoenix_avg).toFixed(2)}</p>
@@ -1591,7 +1642,11 @@ export default function AdminRadarPage() {
                 Generated: {new Date(pulse.generated_at).toLocaleString()}
               </p>
             </article>
+          </section>
+        )}
 
+        {activeTab === "ops" && (
+          <section className="grid gap-4 md:grid-cols-3">
             <article className="rounded-2xl border border-[var(--vibrant-blue)]/20 bg-[var(--vibrant-blue)]/5 p-5 md:col-span-1">
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--vibrant-blue)] font-bold">System Vitals</p>
               <div className="mt-4">
@@ -1700,110 +1755,65 @@ export default function AdminRadarPage() {
               )}
             </article>
 
-            <article className="rounded-2xl border border-white/10 bg-black/20 p-5 md:col-span-3">
-              <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Operations Watch</p>
-              <div className="mt-3 grid gap-3 md:grid-cols-3">
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm">
-                  <p className="text-[11px] text-[var(--color-text-muted)]">API 5xx / 24h</p>
-                  <p className="font-black text-rose-200">{Number(opsTelemetry?.api5xx24h ?? 0)}</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm">
-                  <p className="text-[11px] text-[var(--color-text-muted)]">LLM P95 (ms)</p>
-                  <p className="font-black text-amber-200">{Number(opsTelemetry?.llmLatencyP95Ms ?? 0)}</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm">
-                  <p className="text-[11px] text-[var(--color-text-muted)]">Token Usage / 24h</p>
-                  <p className="font-black text-teal-200">{Number(opsTelemetry?.tokenUsage24h ?? 0)}</p>
-                </div>
-              </div>
-
-              {/* Sovereign AI Stability Radar */}
-              <div className="mt-4 pt-4 border-t border-white/5">
-                <AiStabilityRadar failures={opsTelemetry?.recentAiFailures ?? []} />
-              </div>
-
-              {/* Technical Friction Pulse (Professional Observability) */}
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="p-4 rounded-3xl bg-rose-500/5 border border-rose-500/10 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                      <p className="text-[10px] text-rose-300 font-bold uppercase tracking-wider">Technical Friction</p>
+                {/* Content Oracle */}
+                <article className="rounded-2xl border border-white/10 bg-black/20 p-5 md:col-span-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Content Oracle</p>
+                      <p className="text-sm text-[var(--color-text-muted)]">ح بض اع اجع إ أفار Reels فرة.</p>
                     </div>
-                    <p className="text-xs text-rose-200/60 leading-tight">نبض أخطاء الواجهة (JS/UI) خلال آخر 24 ساعة.</p>
+                    <button
+                      type="button"
+                      onClick={() => { void generateContentFromPulse(); }}
+                      disabled={contentLoading}
+                      className="px-4 py-2 rounded-xl bg-[var(--soft-teal)] text-slate-950 text-sm font-bold disabled:opacity-60"
+                    >
+                      {contentLoading ? "جارٍ اتح..." : "است حت  اع اجع"}
+                    </button>
                   </div>
-                  <div className="mt-4 flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-rose-400">{observability?.errorPulse24h ?? 0}</span>
-                    <span className="text-[10px] text-rose-300/50 uppercase">Errors Detected</span>
-                  </div>
-                </div>
 
-                <div className="p-4 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <p className="text-[10px] text-emerald-300 font-bold uppercase tracking-wider">Momentum Pulse</p>
+                  {contentInsight && (
+                    <p className="mt-4 text-sm text-amber-200">{contentInsight}</p>
+                  )}
+
+                  {contentIdeas.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {contentIdeas.map((idea, idx) => (
+                        <div key={`${idx}-${idea}`} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm">
+                          {idx + 1}. {idea}
+                        </div>
+                      ))}
                     </div>
-                    <p className="text-xs text-emerald-200/60 leading-tight">لحظات استلام القيمة (Aha! Moments) المكتشفة.</p>
-                  </div>
-                  <div className="mt-4 flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-emerald-400">{observability?.ahaMomentPulse24h ?? 0}</span>
-                    <span className="text-[10px] text-emerald-300/50 uppercase">Success Anchors</span>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 space-y-2">
-                {opsAlerts.length === 0 && (
-                  <p className="text-sm text-emerald-300">No operational alerts in the last 24h.</p>
-                )}
-                {opsAlerts.map((alert) => (
-                  <div
-                    key={`${alert.code}-${alert.level}`}
-                    className={`rounded-xl border px-3 py-2 text-sm ${alert.level === "critical" ? "border-rose-400/40 bg-rose-500/10 text-rose-100" : "border-amber-300/30 bg-amber-500/10 text-amber-100"
-                      }`}
-                  >
-                    <p className="font-semibold">{alert.message}</p>
-                    <p className="text-xs opacity-80">code: {alert.code}  value: {alert.value}  threshold: {alert.threshold}</p>
-                  </div>
-                ))}
-              </div>
-            </article>
+                  )}
 
-            <article className="rounded-2xl border border-white/10 bg-black/20 p-5 md:col-span-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+                  {contentMeta && (
+                    <p className="mt-3 text-xs text-[var(--color-text-muted)]">
+                      model: {contentMeta.model} {contentMeta.usedFallback ? "(fallback)" : ""}
+                    </p>
+                  )}
+                </article>
+              </section>
+            )}
+
+            {activeTab === "ops" && (
+              <section className="grid gap-4 md:grid-cols-3">
+
+            {/* TikTok Integration Demo Button */}
+            <article className="rounded-2xl border border-[var(--vibrant-blue)]/20 bg-[var(--vibrant-blue)]/5 p-5 md:col-span-3">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Content Oracle</p>
-                  <p className="text-sm text-[var(--color-text-muted)]">ح بض اع اجع إ أفار Reels فرة.</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--vibrant-blue)] font-bold">TikTok Analytics Integration</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+                    Connect your TikTok account to sync views and engagement data for Alrehla content directly into the Ops dashboard.
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => { void generateContentFromPulse(); }}
-                  disabled={contentLoading}
-                  className="px-4 py-2 rounded-xl bg-[var(--soft-teal)] text-slate-950 text-sm font-bold disabled:opacity-60"
+                <a
+                  href="https://www.tiktok.com/v2/auth/authorize/?client_key=aweisI8I27wg7vyj&response_type=code&scope=user.info.basic,video.list&redirect_uri=https://www.alrehla.app/api/tiktok/callback&state=demo"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-cyan-500 text-white text-sm font-bold shadow-lg shadow-pink-500/20 hover:scale-105 transition-transform text-center"
                 >
-                  {contentLoading ? "جارٍ اتح..." : "است حت  اع اجع"}
-                </button>
+                  Connect TikTok
+                </a>
               </div>
-
-              {contentInsight && (
-                <p className="mt-4 text-sm text-amber-200">{contentInsight}</p>
-              )}
-
-              {contentIdeas.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  {contentIdeas.map((idea, idx) => (
-                    <div key={`${idx}-${idea}`} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm">
-                      {idx + 1}. {idea}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {contentMeta && (
-                <p className="mt-3 text-xs text-[var(--color-text-muted)]">
-                  model: {contentMeta.model} {contentMeta.usedFallback ? "(fallback)" : ""}
-                </p>
-              )}
             </article>
 
             <article className="rounded-2xl border border-white/10 bg-black/20 p-5 md:col-span-3">
@@ -2216,7 +2226,15 @@ export default function AdminRadarPage() {
             </article>
           </section>
         )}
+
+        {activeTab === "horus" && (
+          <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <MarkazScreen />
+          </section>
+        )}
       </div>
+    )}
+    </div>
     </main>
   );
 }
