@@ -158,7 +158,7 @@ export async function GET(req: Request) {
             const youtubeId = extractYouTubeId(url);
             if (youtubeId && YOUTUBE_API_KEY) {
                 try {
-                    const res = await fetch(
+                    const res: Response = await fetch(
                         `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${youtubeId}&key=${YOUTUBE_API_KEY}`
                     );
                     const data = await res.json();
@@ -190,7 +190,7 @@ export async function GET(req: Request) {
                 // ── 3.1 Try Meta Scraping Fallback ──
                 if (newViews === (meta.views || 0)) {
                     try {
-                        const res = await fetch(url, {
+                        const res: Response = await fetch(url, {
                             headers: {
                                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
                                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -235,7 +235,7 @@ export async function GET(req: Request) {
                 // ── 4.1 Try Meta Scraping Fallback ──
                 if (newViews === (meta.views || 0)) {
                     try {
-                        const res = await fetch(url, {
+                        const res: Response = await fetch(url, {
                             headers: {
                                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
                                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',

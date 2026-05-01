@@ -24,7 +24,7 @@ function extractYouTubeId(url: string): string | null {
 async function fetchYouTubeViews(videoId: string): Promise<number | null> {
     if (!YOUTUBE_API_KEY) return null;
     try {
-        const res = await fetch(
+        const res: Response = await fetch(
             `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${YOUTUBE_API_KEY}`,
             { next: { revalidate: 3600 } }
         );
@@ -47,7 +47,7 @@ function isTikTokUrl(url: string): boolean {
 async function fetchTikTokViews(url: string): Promise<number | null> {
     try {
         // Fetch the TikTok page HTML — server-side only
-        const res = await fetch(url, {
+        const res: Response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -198,7 +198,7 @@ async function resolveFacebookVideoId(url: string): Promise<string | null> {
     try {
         let finalUrl = url;
         if (url.includes('fb.watch')) {
-            const res = await fetch(url, { redirect: 'follow', method: 'HEAD' });
+            const res: Response = await fetch(url, { redirect: 'follow', method: 'HEAD' });
             finalUrl = res.url;
         }
 
@@ -227,7 +227,7 @@ async function fetchFacebookViewsApi(videoId: string): Promise<number | null> {
     if (!token) return null;
 
     try {
-        const res = await fetch(
+        const res: Response = await fetch(
             `https://graph.facebook.com/v20.0/${videoId}?fields=views&access_token=${token}`,
             { next: { revalidate: 3600 } }
         );
@@ -254,7 +254,7 @@ function isMetaUrl(url: string): boolean {
 
 async function fetchMetaViews(url: string): Promise<number | null> {
     try {
-        const res = await fetch(url, {
+        const res: Response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
