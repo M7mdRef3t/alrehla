@@ -94,6 +94,7 @@ const CommandAIHub = lazy(() => import("./dashboard/Intelligence/CommandAIHub").
 
 const SeoGeoAuditorPanel = lazy(() => import("./dashboard/SEO/SeoGeoAuditorPanel").then(m => ({ default: m.SeoGeoAuditorPanel })));
 const CommandWarRoom = lazy(() => import("./dashboard/Executive/CommandWarRoom").then(m => ({ default: m.CommandWarRoom })));
+const MohamedRefaatPanel = lazy(() => import("./dashboard/Refaat/MohamedRefaatPanel").then(m => ({ default: m.MohamedRefaatPanel })));
 const LiveAdminPanel = lazy(() => import("@/modules/dawayir-live/pages/LiveAdminPanel").then(m => ({ default: m.default })));
 const AdAnalyticsDashboard = lazy(() => import("./dashboard/AdAnalytics/AdAnalyticsDashboard").then(m => ({ default: m.AdAnalyticsDashboard })));
 const SurveyResultsPanel = lazy(() => import("./dashboard/Data/SurveyResultsPanel").then(m => ({ default: m.SurveyResultsPanel })));
@@ -390,10 +391,18 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   useEffect(() => {
     setIsMounted(true);
     setTab(getTabFromLocation());
+    
+    // Sync tab with URL on back/forward or manual pushUrl
+    const unsub = subscribePopstate(() => {
+      setTab(getTabFromLocation());
+    });
+
     const storedSidebar = window.localStorage.getItem(ADMIN_SIDEBAR_VISIBILITY_KEY);
     setIsDesktopSidebarVisible(storedSidebar !== "hidden");
     const storedHeader = window.localStorage.getItem("admin-dashboard-header-visible");
     setIsHeaderVisible(storedHeader !== "hidden");
+
+    return () => unsub();
   }, []);
   const authUser = useAuthState((s) => s.user);
   const adminAccess = useAdminState((s) => s.adminAccess);
@@ -849,6 +858,12 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
             
             <div className="max-w-7xl mx-auto pb-20 relative z-10">
               <Suspense fallback={<div>Loading...</div>}>
+                {effectiveTab === "mohamed-refaat" && (
+                  <div className="space-y-12">
+                    <MohamedRefaatPanel />
+                  </div>
+                )}
+
                 {effectiveTab === "command" && (
                   <div className="space-y-12">
                     <CommandPanel />

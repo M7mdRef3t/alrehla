@@ -17,11 +17,9 @@ import {
   TrendingUp, Zap, Clock, Flame,
 } from "lucide-react";
 import { useSijilState, type ActivitySource } from "./store/sijil.store";
-import { usePulseState } from "@/domains/consciousness/store/pulse.store";
-import { useGamificationState } from "@/domains/gamification/store/gamification.store";
-import { useWirdState } from "@/modules/wird/store/wird.store";
-import { useBawsalaState } from "@/modules/bawsala/store/bawsala.store";
-import { useHafizState } from "@/modules/hafiz/store/hafiz.store";
+
+// Neural Mesh — replaces all cross-module stores
+import { platform } from "@/shared/platform";
 
 /* ═══════════════════════════════════════════ */
 /*               CONSTANTS                    */
@@ -52,69 +50,117 @@ const SOURCE_META: Record<string, { label: string; emoji: string; color: string 
 };
 
 /* ═══════════════════════════════════════════ */
-/*         AUTO-SYNC FROM STORES              */
+/*         AUTO-SYNC VIA EVENTBUS             */
 /* ═══════════════════════════════════════════ */
 
+/**
+ * يستمع لأحداث المنصة عبر الـ EventBus ويسجّلها في السجل تلقائياً.
+ * بدلاً من الـ seeding القديم (كان يقرأ stores مرة واحدة)،
+ * الآن كل حدث حقيقي بيتسجّل لحظياً.
+ *
+ * ملاحظة: التأثيرات الأساسية (XP, Impact) تتعامل معها eventEffects.ts.
+ * هنا بس نسجل الأحداث المرئية في الـ timeline.
+ */
 function useAutoSync() {
-  const { events, logEvent } = useSijilState();
-  const logs = usePulseState((s) => s.logs) ?? [];
-  const { badges } = useGamificationState();
-  const wirdState = useWirdState();
-  const { decisions } = useBawsalaState();
-  const { memories } = useHafizState();
+  const { logEvent } = useSijilState();
 
   useEffect(() => {
-    // Only sync if empty (first time) to avoid duplicates
-    if (events.length > 0) return;
+    const unsubs: Array<() => void> = [];
 
-    // Seed from pulse logs
-    logs.slice(0, 20).forEach((l) => {
-      logEvent({
-        source: "pulse",
-        emoji: "💓",
-        action: "سجّل نبضة",
-        detail: `طاقة ${l.energy}/10 · ${l.mood}`,
-      });
-    });
-
-    // Seed from decisions
-    decisions.slice(0, 10).forEach((d) => {
-      logEvent({
-        source: "bawsala",
-        emoji: "🧭",
-        action: d.status === "decided" ? "اتّخذ قرار" : "فتح قرار للتفكير",
-        detail: d.question,
-      });
-    });
-
-    // Seed from memories
-    memories.slice(0, 10).forEach((m) => {
-      logEvent({
-        source: "hafiz",
-        emoji: "💎",
-        action: "حفظ ذكرى",
-        detail: m.title,
-      });
-    });
-
-    // Seed from badges
-    badges.slice(0, 5).forEach((b) => {
-      logEvent({
-        source: "gamification",
-        emoji: "🏅",
-        action: "حصل على وسام",
-        detail: b.id,
-      });
-    });
-
-    // Wird streak
-    if (wirdState.streak > 0) {
-      logEvent({
-        source: "wird",
-        emoji: "🔥",
-        action: `streak: ${wirdState.streak} يوم`,
-      });
+    // ── Pulse logs ──
+    const pulseStore = (() => { try { return require("@/domains/consciousness/store/pulse.store").usePulseState; } catch { return null; } })();
+    if (pulseStore) {
+      let prevLength = (pulseStore.getState()?.logs ?? []).length;
+      unsubs.push(
+        pulseStore.subscribe(() => {
+          const logs = pulseStore.getState()?.logs ?? [];
+          if (logs.length > prevLength) {
+            const latest = logs[logs.length - 1];
+            if (latest) {
+              logEvent({
+                source: "pulse",
+                emoji: "💓",
+                action: "سجّل نبضة",
+                detail: `طاقة ${latest.energy}/10 · ${latest.mood}`,
+              });
+            }
+            prevLength = logs.length;
+          }
+        })
+      );
     }
+
+    // ── Gamification badges ──
+    const gamStore = (() => { try { return require("@/domains/gamification/store/gamification.store").useGamificationState; } catch { return null; } })();
+    if (gamStore) {
+      let prevBadges = (gamStore.getState()?.badges ?? []).length;
+      unsubs.push(
+        gamStore.subscribe(() => {
+          const badges = gamStore.getState()?.badges ?? [];
+          if (badges.length > prevBadges) {
+            const latest = badges[badges.length - 1];
+            if (latest) {
+              logEvent({
+                source: "gamification",
+                emoji: "🏅",
+                action: "حصل على وسام",
+                detail: latest.name || latest.id,
+              });
+            }
+            prevBadges = badges.length;
+          }
+        })
+      );
+    }
+
+    // ── EventBus events ──
+    const { eventBus } = require("@/shared/events");
+
+    unsubs.push(eventBus.on("wird:completed_today", (p: { streak: number }) => {
+      logEvent({ source: "wird", emoji: "🔥", action: `أكمل الورد اليومي`, detail: `سلسلة ${p.streak} يوم` });
+    }));
+
+    unsubs.push(eventBus.on("dawayir:node_added", (p: { label: string; ring: string }) => {
+      logEvent({ source: "dawayir", emoji: "🔵", action: `أضاف "${p.label}"`, detail: `في ${p.ring}` });
+    }));
+
+    unsubs.push(eventBus.on("khalwa:session_completed", (p: { duration: number }) => {
+      logEvent({ source: "khalwa", emoji: "🧘", action: "أكمل خلوة", detail: `${Math.round(p.duration / 60)} دقيقة` });
+    }));
+
+    unsubs.push(eventBus.on("masarat:journey_completed", (p: { pathId: string }) => {
+      logEvent({ source: "masarat", emoji: "🛤️", action: "أكمل مساراً", detail: p.pathId });
+    }));
+
+    unsubs.push(eventBus.on("mithaq:pledge_created", (p: { category: string }) => {
+      logEvent({ source: "mithaq", emoji: "📜", action: "ميثاق جديد", detail: p.category });
+    }));
+
+    unsubs.push(eventBus.on("nadhir:crisis_detected", (p: { severity: string }) => {
+      logEvent({ source: "nadhir", emoji: "🚨", action: "تنبيه طوارئ", detail: `مستوى: ${p.severity}` });
+    }));
+
+    unsubs.push(eventBus.on("warsha:challenge_completed", (p: { daysCompleted: number }) => {
+      logEvent({ source: "warsha", emoji: "💪", action: "أكمل تحدي", detail: `${p.daysCompleted} يوم` });
+    }));
+
+    unsubs.push(eventBus.on("tazkiya:cycle_completed", (p: { totalCycles: number }) => {
+      logEvent({ source: "tazkiya", emoji: "🧹", action: `دورة تزكية #${p.totalCycles}` });
+    }));
+
+    // ── Seed initial data if Sijil is empty (first time) ──
+    const currentEvents = useSijilState.getState().events;
+    if (currentEvents.length === 0) {
+      const p = platform.snapshot();
+      if (p.bawsala.totalDecisions > 0)
+        logEvent({ source: "bawsala", emoji: "🧭", action: `${p.bawsala.totalDecisions} قرار مسجّل في البوصلة` });
+      if (p.hafiz.totalMemories > 0)
+        logEvent({ source: "hafiz", emoji: "💎", action: `${p.hafiz.totalMemories} ذكرى محفوظة` });
+      if (p.wird.streak > 0)
+        logEvent({ source: "wird", emoji: "🔥", action: `streak: ${p.wird.streak} يوم` });
+    }
+
+    return () => { unsubs.forEach((u) => u()); };
   }, []);
 }
 

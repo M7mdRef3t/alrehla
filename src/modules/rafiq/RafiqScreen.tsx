@@ -13,17 +13,8 @@ import {
   type MoodTone,
 } from "./store/rafiq.store";
 
-// Cross-ecosystem reads
-import { useTazkiyaState } from "@/modules/tazkiya/store/tazkiya.store";
-import { useJisrState } from "@/modules/jisr/store/jisr.store";
-import { useRisalaState } from "@/modules/risala/store/risala.store";
-import { useKhalwaState } from "@/modules/khalwa/store/khalwa.store";
-import { useWarshaState } from "@/modules/warsha/store/warsha.store";
-import { useKanzState } from "@/modules/kanz/store/kanz.store";
-import { useBathraState } from "@/modules/bathra/store/bathra.store";
-import { useMithaqState } from "@/modules/mithaq/store/mithaq.store";
-import { useQalbState } from "@/modules/qalb/store/qalb.store";
-import { useAtharState } from "@/modules/athar/store/athar.store";
+// Neural Mesh — single import replaces 10 cross-module stores
+import { usePlatform } from "@/shared/platform";
 
 import {
   Compass,
@@ -38,19 +29,7 @@ import {
 /* ═══════════════════════════════════════════ */
 
 function useGenerateSuggestions(): { suggestions: Suggestion[]; tone: MoodTone } {
-  const tazkiyaCycles = useTazkiyaState((s) => s.cycles.length);
-  const tazkiyaComplete = useTazkiyaState((s) => s.cycles.filter((c) => c.isComplete).length);
-  const bridges = useJisrState((s) => s.bridges.length);
-  const bridgesOpen = useJisrState((s) => s.bridges.filter((b) => !b.isComplete).length);
-  const sentMessages = useRisalaState((s) => s.sentMessages.length);
-  const khalwaMin = useKhalwaState((s) => s.getTotalMinutes());
-  const warshaActive = useWarshaState((s) => s.activeChallenges.length);
-  const warshaComplete = useWarshaState((s) => s.completedChallenges.length);
-  const kanzGems = useKanzState((s) => s.gems.length);
-  const seedsActive = useBathraState((s) => s.getActiveSeeds().length);
-  const pledgesActive = useMithaqState((s) => s.pledges.filter((p) => p.status === "active").length);
-  const qalbScore = useQalbState((s) => s.getToday()?.score ?? 0);
-  const atharCount = useAtharState((s) => s.entries.length);
+  const p = usePlatform();
 
   return useMemo(() => {
     const suggestions: Suggestion[] = [];
@@ -70,14 +49,29 @@ function useGenerateSuggestions(): { suggestions: Suggestion[]; tone: MoodTone }
       });
     };
 
+    // Extract data from platform snapshot
+    const tazkiyaCycles = p.tazkiya.totalCycles;
+    const bridgesOpen = p.relationships.jisr
+      ? p.relationships.jisr.activeFractures
+      : 0;
+    const sentMessages = p.risala.totalMessages;
+    const khalwaAvailable = p.khalwa.available;
+    const warshaActive = p.warsha.hasActiveChallenge ? 1 : 0;
+    const warshaProgress = p.warsha.progress;
+    const kanzGems = p.kanz.totalGems;
+    const seedsActive = p.bathra.totalSeeds;
+    const pledgesActive = p.mithaq.hasPledges ? p.mithaq.pledges.length : 0;
+    const qalbScore = p.qalb.overallHealth;
+    const atharCount = 0; // athar doesn't expose count in snapshot
+
     // High priority: things that need attention NOW
     if (bridgesOpen > 0) add("jisr", `عندك ${bridgesOpen} جسر مفتوح — أكمل خطوة الإصلاح`, "high");
-    if (warshaActive > 0) add("warsha", `عندك ${warshaActive} تحدي نشط — لا تكسر السلسلة!`, "high");
+    if (warshaActive > 0) add("warsha", `عندك تحدي نشط (${warshaProgress}%) — لا تكسر السلسلة!`, "high");
     if (pledgesActive > 0) add("mithaq", `${pledgesActive} عهد نشط ينتظر الوفاء`, "high");
 
     // Medium: growth opportunities
     if (tazkiyaCycles === 0) add("tazkiya", "ابدأ أول دورة تزكية — اكتشف خفتك", "medium");
-    if (khalwaMin < 10) add("khalwa", "جرّب 10 دقائق خلوة — السكينة تبدأ من هنا", "medium");
+    if (!khalwaAvailable) add("khalwa", "جرّب 10 دقائق خلوة — السكينة تبدأ من هنا", "medium");
     if (kanzGems === 0) add("kanz", "أضف أول جوهرة لكنزك — درس أو لحظة", "medium");
     if (sentMessages === 0) add("risala", "أرسل رسالة تشجيع لمسافر — العطاء يُغني", "medium");
     if (seedsActive === 0) add("bathra", "ازرع بذرة عادة جديدة — اختر شيئاً بسيطاً", "medium");
@@ -85,7 +79,6 @@ function useGenerateSuggestions(): { suggestions: Suggestion[]; tone: MoodTone }
     // Low: exploration
     if (atharCount < 5) add("athar", "تصفّح سجل أثرك — كل فعل يُحسب", "low");
     if (qalbScore < 50) add("qalb", `صحة قلبك ${qalbScore}% — اكتشف الأبعاد الضعيفة`, "medium");
-    if (warshaComplete >= 3) add("shahada", "تحقق من شهاداتك — قد تكون فتحت بادج جديد!", "low");
 
     // Sort: high → medium → low
     const order = { high: 0, medium: 1, low: 2 };
@@ -99,7 +92,7 @@ function useGenerateSuggestions(): { suggestions: Suggestion[]; tone: MoodTone }
     else if (qalbScore > 0) tone = "comfort";
 
     return { suggestions: suggestions.slice(0, 6), tone };
-  }, [tazkiyaCycles, tazkiyaComplete, bridges, bridgesOpen, sentMessages, khalwaMin, warshaActive, warshaComplete, kanzGems, seedsActive, pledgesActive, qalbScore, atharCount]);
+  }, [p]);
 }
 
 /* ═══════════════════════════════════════════ */

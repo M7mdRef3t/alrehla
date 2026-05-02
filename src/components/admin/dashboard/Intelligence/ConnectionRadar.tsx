@@ -4,11 +4,11 @@ import { useTruthTestState } from "@/services/truthTest.store";
 import type { TruthTestType } from "@/services/truthTestEngine";
 
 export interface ConnectionRadarProps {
-  onForwardToLab: (title: string, hypothesis: string) => void;
+  onForwardToLab: (title: string, hypothesis: string, evidenceIds?: string[]) => void;
 }
 
 const TYPE_LABELS: Record<TruthTestType, string> = {
-  connection_feeling: "إحساس بالاتصال",
+  connection_prediction: "إحساس بالاتصال",
   pre_feeling: "إحساس مسبق (توقع تواصل)",
   intent_reading: "قراءة نية"
 };
@@ -18,7 +18,7 @@ export const ConnectionRadar: React.FC<ConnectionRadarProps> = ({ onForwardToLab
 
   // Filter and group anomalies
   const anomalies = useMemo(() => {
-    const failedTests = tests.filter(t => t.outcome === "denied" || t.outcome === "coincidence");
+    const failedTests = tests.filter(t => t.outcome === "denied");
     
     // Group by personId or "unknown" + type
     const groups: Record<string, {
@@ -27,6 +27,7 @@ export const ConnectionRadar: React.FC<ConnectionRadarProps> = ({ onForwardToLab
       type: TruthTestType;
       count: number;
       lastDate: number;
+      testIds: string[];
     }> = {};
 
     failedTests.forEach(t => {
@@ -39,11 +40,13 @@ export const ConnectionRadar: React.FC<ConnectionRadarProps> = ({ onForwardToLab
           personName: pName,
           type: t.type,
           count: 0,
-          lastDate: 0
+          lastDate: 0,
+          testIds: []
         };
       }
       
       groups[key].count += 1;
+      groups[key].testIds.push(t.id);
       if (t.outcomeTimestamp && t.outcomeTimestamp > groups[key].lastDate) {
         groups[key].lastDate = t.outcomeTimestamp;
       }
@@ -118,7 +121,7 @@ export const ConnectionRadar: React.FC<ConnectionRadarProps> = ({ onForwardToLab
               onClick={() => {
                 const title = `وهم ${TYPE_LABELS[anomaly.type]} مع [${anomaly.personName}]`;
                 const hypothesis = `تشير بيانات الرادار إلى ${anomaly.count} إخفاقات متتالية في "${TYPE_LABELS[anomaly.type]}"، مما يرجح أن الإحساس بالاتصال كان إسقاطاً عاطفياً وليس تواصلاً حقيقياً.`;
-                onForwardToLab(title, hypothesis);
+                onForwardToLab(title, hypothesis, anomaly.testIds);
               }}
               className="w-full py-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 text-xs font-bold transition-all flex items-center justify-center gap-2 relative z-10"
             >

@@ -78,6 +78,98 @@ export interface DomainEvents {
   "masarat:quick_path_used": { situation: string };
   "masarat:path_resolved": { pathId: string };
   "masarat:path_activated": { pathId: string };
+  "masarat:journey_started": { pathId: string; timestamp: number };
+  "masarat:step_completed": { pathId: string; stepId?: string; timestamp: number };
+  "masarat:stage_completed": { pathId: string; stageId?: string; timestamp: number };
+  "masarat:journey_completed": { pathId: string; timestamp: number };
+
+  // 📿 Wird (الورد)
+  "wird:completed_today": { streak: number };
+  "wird:streak_broken": { lastStreak: number };
+  "wird:dhikr_completed": { category: string; count: number };
+
+  // 🧘 Khalwa (الخلوة)
+  "khalwa:session_started": { intention?: string };
+  "khalwa:session_completed": { duration: number; intention?: string };
+
+  // ❤️ Qalb (القلب)
+  "qalb:zone_changed": { from: string; to: string };
+  "qalb:pulse_logged": { health: number };
+
+  // 🧹 Tazkiya (التزكية)
+  "tazkiya:cycle_started": { step: string };
+  "tazkiya:cycle_completed": { totalCycles: number };
+  "tazkiya:step_advanced": { from: string; to: string };
+
+  // 🫁 Samt (الصمت)
+  "samt:session_started": { pattern: string };
+  "samt:session_completed": { duration: number; pattern: string };
+
+  // 🎯 Niyya (النية)
+  "niyya:intention_set": { intention: string; category: string };
+  "niyya:intention_fulfilled": { intention: string };
+
+  // 📜 Mithaq (الميثاق)
+  "mithaq:pledge_created": { pledgeId: string; category: string };
+  "mithaq:pledge_completed": { pledgeId: string };
+  "mithaq:pledge_broken": { pledgeId: string };
+  "mithaq:checkin_added": { pledgeId: string };
+
+  // 🎭 Qinaa (القناع)
+  "qinaa:mask_logged": { context: string; intensity: number };
+  "qinaa:authentic_moment": { context: string };
+
+  // 🌑 Zill (الظل)
+  "zill:shadow_discovered": { type: string };
+  "zill:integration_advanced": { shadowId: string; level: number };
+
+  // 🤝 Sila (الصلة)
+  "sila:connection_added": { personId: string; type: string };
+  "sila:quality_changed": { personId: string; from: number; to: number };
+
+  // 🌉 Jisr (الجسر)
+  "jisr:fracture_identified": { fractureId: string; kind: string };
+  "jisr:fracture_repaired": { fractureId: string };
+
+  // 💪 Warsha (الورشة)
+  "warsha:challenge_started": { challengeId: string; category: string };
+  "warsha:challenge_completed": { challengeId: string; daysCompleted: number };
+  "warsha:day_completed": { challengeId: string; day: number };
+
+  // 💎 Kanz (الكنز)
+  "kanz:gem_added": { category: string; source: string };
+
+  // 🏁 Raya (الراية)
+  "raya:goal_created": { goalId: string; category: string };
+  "raya:goal_completed": { goalId: string };
+  "raya:milestone_reached": { goalId: string; milestoneId: string };
+
+  // ⭐ Qutb (القطب)
+  "qutb:north_star_set": { statement: string };
+  "qutb:alignment_changed": { score: number };
+
+  // 🧬 Basma (البصمة)
+  "basma:trait_discovered": { name: string; category: string };
+  "basma:value_identified": { label: string };
+
+  // 📋 Sijil (السجل)
+  "sijil:activity_logged": { source: string; action: string };
+
+  // 🚨 Nadhir (النذير)
+  "nadhir:crisis_detected": { severity: string };
+  "nadhir:crisis_resolved": Record<string, never>;
+
+  // 💰 Raseed (الرصيد)
+  "raseed:xp_earned": { source: string; amount: number; dimension: string };
+  "raseed:level_up": { newLevel: number };
+
+  // 📊 Athar (الأثر)
+  "athar:impact_logged": { category: string; content: string };
+
+  // 🔄 Dawra (الدورة)
+  "dawra:entry_logged": { type: string; value: number };
+  "dawra:pattern_detected": { type: string; phase: string };
+
   // Generic
   [key: `custom:${string}`]: unknown;
 }
@@ -86,6 +178,9 @@ export interface DomainEvents {
 
 class EventBus {
   private listeners = new Map<string, Set<EventCallback>>();
+  private _debug = false;
+  private _history: Array<{ event: string; payload: unknown; time: number }> = [];
+  private static readonly MAX_HISTORY = 100;
 
   /**
    * Subscribe to a domain event
@@ -109,6 +204,24 @@ class EventBus {
    * Emit a domain event
    */
   emit<K extends keyof DomainEvents>(event: K, payload: DomainEvents[K]): void {
+    // Debug logging
+    if (this._debug) {
+      const listenerCount = this.listeners.get(event as string)?.size ?? 0;
+      console.log(
+        `%c[EventBus] %c${String(event)}%c → ${listenerCount} listener(s)`,
+        "color: #6366f1; font-weight: bold",
+        "color: #34d399; font-weight: bold",
+        "color: #94a3b8",
+        payload
+      );
+    }
+
+    // Record in history (always, for diagnostics)
+    this._history.push({ event: event as string, payload, time: Date.now() });
+    if (this._history.length > EventBus.MAX_HISTORY) {
+      this._history.shift();
+    }
+
     const callbacks = this.listeners.get(event as string);
     if (!callbacks) return;
 
@@ -148,7 +261,57 @@ class EventBus {
   clear(): void {
     this.listeners.clear();
   }
+
+  // ═══════════════════════════════════════════════════════════
+  //                    DEBUG & DIAGNOSTICS
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * 🔍 تشغيل/إيقاف وضع التتبع — يسجل كل حدث في الـ console.
+   *
+   * @example
+   *   eventBus.debug(true);   // تفعيل
+   *   eventBus.debug(false);  // إيقاف
+   *
+   * Or from browser DevTools:
+   *   __eventBus.debug(true)
+   */
+  debug(enable = true): void {
+    this._debug = enable;
+    console.log(`[EventBus] Debug mode ${enable ? "ON 🟢" : "OFF 🔴"}`);
+  }
+
+  /**
+   * 📊 يرجع آخر N حدث تم بثهم (الأحدث أولاً)
+   *
+   * @example
+   *   eventBus.history()     // آخر 20
+   *   eventBus.history(50)   // آخر 50
+   */
+  history(count = 20): typeof this._history {
+    return [...this._history].reverse().slice(0, count);
+  }
+
+  /**
+   * 📡 يرجع عدد المستمعين لكل event — مفيد لكشف التسريبات
+   *
+   * @example
+   *   eventBus.stats()
+   *   // { "wird:completed_today": 2, "dawayir:node_added": 1, ... }
+   */
+  stats(): Record<string, number> {
+    const result: Record<string, number> = {};
+    this.listeners.forEach((set, key) => {
+      if (set.size > 0) result[key] = set.size;
+    });
+    return result;
+  }
 }
 
 // Singleton
 export const eventBus = new EventBus();
+
+// Expose to browser DevTools for live debugging
+if (typeof window !== "undefined") {
+  (window as any).__eventBus = eventBus;
+}

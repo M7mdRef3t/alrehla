@@ -66,10 +66,10 @@ export const FloatingWhatsApp: FC<FloatingWhatsAppProps> = ({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       whileHover={{ scale: 1.1, y: -4 }}
       whileTap={{ scale: 0.9 }}
-      className={`fixed left-6 bottom-8 w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.3)] border border-white/10 hover:bg-emerald-500 transition-colors ${className}`}
+      className={`fixed left-6 bottom-44 md:bottom-12 w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.3)] border border-white/10 hover:bg-emerald-500 transition-colors ${className}`}
       style={{ zIndex: Z_LAYERS.SYSTEM_WHISPER }}
     >
-      <MessageCircle className="w-6 h-6 shrink-0" />
+      <MessageCircle className="w-5 h-5 shrink-0" />
       <span className="absolute -top-1 -right-1 flex h-3 w-3">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
         <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>

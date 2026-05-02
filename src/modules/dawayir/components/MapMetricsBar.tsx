@@ -77,7 +77,7 @@ export function MapMetricsBar({
 
   // Dynamic color based on value
   const energyColor = energy >= 60 ? "text-teal-400" : energy >= 30 ? "text-amber-400" : "text-rose-400";
-  const boundariesColor = boundaries >= 60 ? "text-amber-400" : boundaries >= 30 ? "text-orange-400" : "text-rose-400";
+  const boundariesColor = boundaries >= 60 ? "text-emerald-400" : boundaries >= 30 ? "text-amber-400" : "text-rose-400";
   const clarityColor = clarity >= 60 ? "text-indigo-400" : clarity >= 30 ? "text-purple-400" : "text-rose-400";
 
   return (

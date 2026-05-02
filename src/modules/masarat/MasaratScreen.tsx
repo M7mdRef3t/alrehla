@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   getStaticQuickPath,
   resolvePathId,
@@ -18,6 +18,9 @@ import type {
 } from "@alrehla/masarat";
 import { eventBus } from "@/shared/events/bus";
 import { useMasaratStore } from "./store/masarat.store";
+import JourneyFlow from "./JourneyFlow";
+import { getJourneyStepsForPath } from "./journeySteps.data";
+import { getMasaratContext } from "./masaratContext";
 // ─── Constants ─────────────────────────────────────────
 const PATH_ICONS: Record<PathId, string> = {
   path_protection:  "🛡️",
@@ -48,10 +51,10 @@ const CONTACT_LABELS: Record<ContactLevel, { ar: string; icon: string }> = {
   none:   { ar: "لا احتكاك — قطعت التواصل",          icon: "🚫" },
 };
 
-type Mode = "home" | "quick" | "finder" | "result";
+type Mode = "home" | "quick" | "finder" | "result" | "journey";
 
 // ─── Component ─────────────────────────────────────────
-export default function MasaratScreen() {
+export default function MasaratScreen({ onNavigate }: { onNavigate?: (screen: string) => void }) {
   const [mode, setMode] = useState<Mode>("home");
   const [selectedSituation, setSelectedSituation] = useState<QuickPathSituation | null>(null);
   const [quickResult, setQuickResult] = useState<QuickPathResult | null>(null);
@@ -83,10 +86,19 @@ export default function MasaratScreen() {
     eventBus.emit("masarat:path_resolved", { pathId });
   }, [selectedRing, selectedContact, setActivePath]);
 
+  const { startJourney } = useMasaratStore(s => s.actions);
+
+  // ── Context: بيانات حية من Pulse + Hafiz ──
+  const context = useMemo(() => getMasaratContext(), [mode]);
+
   const handleSaveActivePath = useCallback(() => {
     if (!resolvedPath) return;
     eventBus.emit("masarat:path_activated", { pathId: resolvedPath });
-  }, [resolvedPath]);
+    // بدأ رحلة المسار الجديدة
+    const steps = getJourneyStepsForPath(resolvedPath);
+    startJourney(steps);
+    setMode("journey");
+  }, [resolvedPath, startJourney]);
   // ─── Render modes ───────────────────────────────────
   return (
     <div style={S.pageWrapper}>
@@ -98,7 +110,7 @@ export default function MasaratScreen() {
             setMode("home");
             setQuickResult(null);
             setSelectedSituation(null);
-            setResolvedPath(null);
+            clearActivePath();
           }}>
             ← رجوع
           </button>
@@ -110,7 +122,14 @@ export default function MasaratScreen() {
       </header>
 
       {/* Home */}
-      {mode === "home" && <HomeMode onQuick={() => setMode("quick")} onFinder={() => setMode("finder")} />}
+      {mode === "home" && (
+        <HomeMode
+          onQuick={() => setMode("quick")}
+          onFinder={() => setMode("finder")}
+          setMode={setMode}
+          startJourney={startJourney}
+        />
+      )}
 
       {/* Quick Path */}
       {mode === "quick" && !quickResult && (
@@ -140,13 +159,28 @@ export default function MasaratScreen() {
       {mode === "result" && resolvedPath && (
         <PathResult pathId={resolvedPath} onSave={handleSaveActivePath} />
       )}
+
+      {/* Journey Flow — الرحلة الفعلية */}
+      {mode === "journey" && resolvedPath && (
+        <JourneyFlow
+          pathName={PATH_NAMES[resolvedPath]}
+          pathColor={PATH_COLORS[resolvedPath]}
+          onNavigate={onNavigate}
+          context={context}
+        />
+      )}
       </div>
     </div>
   );
 }
 
 // ─── Home Mode ─────────────────────────────────────────
-function HomeMode({ onQuick, onFinder }: { onQuick: () => void; onFinder: () => void }) {
+function HomeMode({ onQuick, onFinder, setMode, startJourney }: {
+  onQuick: () => void;
+  onFinder: () => void;
+  setMode: React.Dispatch<React.SetStateAction<Mode>>;
+  startJourney: (steps: any[]) => void;
+}) {
   const activePath = useMasaratStore(s => s.activePathId);
 
   return (
@@ -160,7 +194,7 @@ function HomeMode({ onQuick, onFinder }: { onQuick: () => void; onFinder: () => 
         </p>
       </div>
 
-      {/* Active Path Card */}
+      {/* Active Path Card — مع زر متابعة الرحلة */}
       {activePath && (
         <div style={{
           ...S.card,
@@ -170,12 +204,32 @@ function HomeMode({ onQuick, onFinder }: { onQuick: () => void; onFinder: () => 
         }}>
           <div style={S.cardRow}>
             <span style={{ fontSize: 28 }}>{PATH_ICONS[activePath]}</span>
-            <div>
+            <div style={{ flex: 1 }}>
               <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>مسارك النشط</p>
               <p style={{ fontSize: 17, fontWeight: 700, margin: 0, color: PATH_COLORS[activePath] }}>
                 {PATH_NAMES[activePath]}
               </p>
             </div>
+            <button
+              style={{
+                padding: "8px 14px",
+                borderRadius: 10,
+                border: `1px solid ${PATH_COLORS[activePath]}40`,
+                backgroundColor: `${PATH_COLORS[activePath]}15`,
+                color: PATH_COLORS[activePath],
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+              onClick={() => {
+                const steps = getJourneyStepsForPath(activePath);
+                startJourney(steps);
+                setMode("journey");
+              }}
+            >
+              متابعة الرحلة →
+            </button>
           </div>
         </div>
       )}

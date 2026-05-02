@@ -28,7 +28,9 @@ import { useGamificationState } from "@/domains/gamification/store/gamification.
 import { useMapState } from "@/modules/map/dawayirIndex";
 import { usePredictiveState } from "@/domains/consciousness/store/predictive.store";
 import { useDailyJournalState } from "@/domains/journey/store/journal.store";
-import { useRifaqState } from "@/modules/rifaq/store/rifaq.store";
+
+// Neural Mesh — replaces rifaq store import
+import { platform } from "@/shared/platform";
 
 /* ═══════════════════════════════════════════ */
 /*                 CONSTANTS                  */
@@ -100,7 +102,6 @@ export const TaqrirScreen: FC = () => {
   const { crashProbability } = usePredictiveState();
   const rawJournalEntries = useDailyJournalState((s) => s.entries);
   const journalEntries = useMemo(() => rawJournalEntries ?? [], [rawJournalEntries]);
-  const { buddies } = useRifaqState();
 
   const cutoff = useMemo(() => {
     const days = PERIODS.find((p) => p.id === period)?.days ?? 7;
@@ -163,11 +164,11 @@ export const TaqrirScreen: FC = () => {
     return { total: written.length, recent: recentWritten.length };
   }, [journalEntries, cutoff]);
 
-  // ── Rifaq ──
+  // ── Rifaq (via Neural Mesh) ──
   const rifaqData = useMemo(() => {
-    const active = buddies.filter((b) => b.status === "active");
-    return { total: active.length };
-  }, [buddies]);
+    const data = platform.rifaq();
+    return { total: data.activeBuddies };
+  }, []);
 
   // ── Overall Score (simplified from Mizan) ──
   const overallScore = useMemo(() => {

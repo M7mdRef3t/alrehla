@@ -178,7 +178,7 @@ export const KineticVideoEngine: React.FC<KineticVideoEngineProps> = ({ script, 
             <motion.div 
               className="h-full bg-indigo-500"
               initial={{ width: "0%" }}
-              animate={{ width: \`\${(Math.max(0, activeWordIndex) / (words.length - 1)) * 100}%\` }}
+              animate={{ width: `${(Math.max(0, activeWordIndex) / (words.length - 1)) * 100}%` }}
               transition={{ duration: 0.1 }}
             />
           </div>

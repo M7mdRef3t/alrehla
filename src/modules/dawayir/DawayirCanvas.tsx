@@ -63,11 +63,11 @@ const CinematicBackground: FC = memo(() => (
   <g className="pointer-events-none">
     <defs>
       <radialGradient id="nebula-grad-1" cx="20%" cy="30%" r="70%">
-        <stop offset="0%" stopColor="var(--ring-safe)" stopOpacity="0.08" />
+        <stop offset="0%" stopColor="var(--ring-safe)" stopOpacity="0.04" />
         <stop offset="100%" stopColor="transparent" stopOpacity="0" />
       </radialGradient>
       <radialGradient id="nebula-grad-2" cx="80%" cy="70%" r="70%">
-        <stop offset="0%" stopColor="var(--ring-danger)" stopOpacity="0.05" />
+        <stop offset="0%" stopColor="var(--ring-danger)" stopOpacity="0.03" />
         <stop offset="100%" stopColor="transparent" stopOpacity="0" />
       </radialGradient>
       <filter id="starGlow">
@@ -76,11 +76,11 @@ const CinematicBackground: FC = memo(() => (
       </filter>
     </defs>
     
-    {/* Nebula Clouds */}
+    {/* Subtle Nebula Clouds */}
     <rect width="100" height="100" fill="url(#nebula-grad-1)" />
     <rect width="100" height="100" fill="url(#nebula-grad-2)" />
-    <circle cx="50" cy="50" r="34" fill="none" stroke="rgba(94, 234, 212, 0.08)" strokeWidth="0.18" />
-    <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(201, 168, 76, 0.06)" strokeWidth="0.12" />
+    
+    {/* Faint Perspective Grid */}
     {[18, 30, 42, 54, 66, 78].map((x) => (
       <line
         key={`axis-${x}`}
@@ -88,14 +88,14 @@ const CinematicBackground: FC = memo(() => (
         y1="6"
         x2={50 + (x - 50) * 0.25}
         y2="94"
-        stroke="rgba(94, 234, 212, 0.035)"
-        strokeWidth="0.12"
+        stroke="rgba(94, 234, 212, 0.012)" /* Significantly lighter */
+        strokeWidth="0.1"
       />
     ))}
   </g>
 ));
 
-const OrbitalRing: FC<{ radius: number; label: string; ring: Ring; hasNodes?: boolean }> = memo(({ radius, ring, hasNodes = false }) => {
+const OrbitalRing: FC<{ radius: number; label?: string; ring: Ring; hasNodes?: boolean }> = memo(({ radius, ring, hasNodes = false }) => {
   const colors = {
     green: "#34d399",
     yellow: "#fbbf24",
@@ -289,7 +289,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   const baseY = Number.isFinite(rawY) ? rawY : 50;
 
   // Intensity-based node size: scale between 3.5 (low) and 5.5 (high)
-  const intensity = typeof node.intensity === 'number' && Number.isFinite(node.intensity) ? node.intensity : 50;
+  const intensity = (node.analysis?.score ? node.analysis.score * 15 : 50);
   const nodeRadius = 3.5 + (Math.min(Math.max(intensity, 0), 100) / 100) * 2.0;
 
   const style = transform ? {
@@ -802,9 +802,9 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
   const [selectedEntropyNode, setSelectedEntropyNode] = useState<string | null>(null);
 
   // --- Zoom & Pan State ---
-  const [viewBoxX, setViewBoxX] = useState(11.5);
-  const [viewBoxY, setViewBoxY] = useState(8);
-  const [zoomScale, setZoomScale] = useState(1.3);
+  const [viewBoxX, setViewBoxX] = useState(14.3);
+  const [viewBoxY, setViewBoxY] = useState(14.3);
+  const [zoomScale, setZoomScale] = useState(1.4);
   const [isPanMode, setIsPanMode] = useState(isHandToolActive); // Toggle Hand tool
   const [isDraggingBg, setIsDraggingBg] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
@@ -814,8 +814,8 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
   }, [isHandToolActive]);
 
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    // Only initiate pan if we click directly on the SVG or if Pan Mode is forced
-    if (e.target === e.currentTarget || isPanMode) {
+    // Only initiate pan if Pan Mode is active AND we click directly on the SVG
+    if (isPanMode && e.target === e.currentTarget) {
       setIsDraggingBg(true);
       setLastPos({ x: e.clientX, y: e.clientY });
       (e.target as Element).setPointerCapture(e.pointerId);
@@ -873,60 +873,56 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
   const zoomIn = () => performZoom(1.3);
   const zoomOut = () => performZoom(0.7);
   const centerView = () => {
-    setZoomScale(1);
-    setViewBoxX(0);
-    setViewBoxY(0);
+    setZoomScale(1.4);
+    setViewBoxX(14.3);
+    setViewBoxY(14.3);
   };
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-transparent">
       {/* 🧭 Map Navigation Controls (Merged Premium Panel) */}
-      <div className="absolute top-48 left-6 z-50 flex flex-col gap-2">
+      <div className="absolute top-36 left-4 z-50 flex flex-col gap-2">
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex flex-col gap-1 p-2 rounded-2xl shadow-2xl pointer-events-auto"
-          style={{
-            background: "linear-gradient(145deg, rgba(15,23,42,0.85), rgba(30,41,59,0.95))",
-            backdropFilter: "blur(24px)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.05)"
-          }}
+          className="flex flex-col gap-0.5 pointer-events-auto"
         >
-          {/* Separator */}
-          <div className="h-px bg-white/10 my-1 mx-2" />
-
           {/* Zoom Actions */}
           <button
             onClick={zoomIn}
-            className="p-3 rounded-xl hover:bg-white/10 transition-all duration-200 text-slate-300 hover:text-teal-400 group"
+            className="p-1.5 rounded-xl hover:bg-white/10 transition-all duration-200 text-slate-300 hover:text-teal-400 group"
             title="تكبير (Zoom In)"
           >
-            <Plus size={20} strokeWidth={2.5} className="group-active:scale-90 transition-transform" />
+            <Plus size={14} strokeWidth={2.5} className="group-active:scale-90 transition-transform" />
           </button>
           
           <button
             onClick={zoomOut}
-            className="p-3 rounded-xl hover:bg-white/10 transition-all duration-200 text-slate-300 hover:text-teal-400 group"
+            className="p-1.5 rounded-xl hover:bg-white/10 transition-all duration-200 text-slate-300 hover:text-teal-400 group"
             title="تصغير (Zoom Out)"
           >
-            <Minus size={20} strokeWidth={2.5} className="group-active:scale-90 transition-transform" />
+            <Minus size={14} strokeWidth={2.5} className="group-active:scale-90 transition-transform" />
           </button>
 
           <button
             onClick={centerView}
-            className="p-3 rounded-xl hover:bg-white/10 transition-all duration-200 text-slate-300 hover:text-teal-400 group"
+            className="p-1.5 rounded-xl hover:bg-white/10 transition-all duration-200 text-slate-300 hover:text-teal-400 group"
             title="توسيط الخريطة (Reset View)"
           >
-            <Target size={20} strokeWidth={2.5} className="group-active:scale-90 transition-transform" />
+            <Target size={14} strokeWidth={2.5} className="group-active:scale-90 transition-transform" />
           </button>
         </motion.div>
       </div>
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        {/* Static Background SVG (Doesn't move with pan/zoom) */}
+        <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full pointer-events-none z-0" preserveAspectRatio="xMidYMid slice">
+          <CinematicBackground />
+        </svg>
+
         <svg 
           viewBox={`${viewBoxX} ${viewBoxY} ${100 / zoomScale} ${100 / zoomScale}`} 
-          className={`dawayir-map-svg w-full h-full touch-none ${isPanMode ? 'cursor-grab' : ''}`}
+          className={`dawayir-map-svg w-full h-full touch-none relative z-10 ${isPanMode ? 'cursor-grab' : ''}`}
           style={{ touchAction: 'none' }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -961,9 +957,6 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({
           <OrbitalRing radius={50} ring="red" hasNodes={groupedNodes.red.length > 0} />
           <OrbitalRing radius={35} ring="yellow" hasNodes={groupedNodes.yellow.length > 0} />
           <OrbitalRing radius={20} ring="green" hasNodes={groupedNodes.green.length > 0} />
-
-          {/* Cinematic Background Layer */}
-          <CinematicBackground />
 
           {/* Center Me */}
           <MeNodeCenter />

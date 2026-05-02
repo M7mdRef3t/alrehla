@@ -96,7 +96,7 @@ export class AIErrorAnalyzer {
     };
 
     // حفظ في الـ history
-    this.saveToHistory(error, result);
+    await this.saveToHistory(error, result);
 
     return result;
   }
@@ -302,12 +302,7 @@ ${stack ? `\n${stack}` : ""}
     return ast;
   }
 
-  /**
-   * ─────────────────────────────────────────────────────────────────
-   * حفظ في الـ History
-   * ─────────────────────────────────────────────────────────────────
-   */
-  private saveToHistory(error: Error | string, analysis: ErrorAnalysisResult): void {
+  private async saveToHistory(error: Error | string, analysis: ErrorAnalysisResult): Promise<void> {
     const errorObj = typeof error === "string" ? new Error(error) : error;
 
     this.errorHistory.push({
@@ -322,18 +317,20 @@ ${stack ? `\n${stack}` : ""}
       this.errorHistory = this.errorHistory.slice(-100);
     }
 
-    // حفظ في localStorage
+    // حفظ في Supabase
     try {
-      const summary = this.errorHistory.slice(-20).map((e) => ({
-        message: e.error.message,
-        timestamp: e.timestamp,
-        severity: e.analysis?.analysis.severity,
-        resolved: e.resolved,
-      }));
-
-      localStorage.setItem("dawayir-error-history", JSON.stringify(summary));
-    } catch {
-      // ignore
+      const { supabase } = await import("@/services/supabaseClient");
+      if (supabase) {
+        await supabase.from("system_error_logs").insert({
+          timestamp: Date.now(),
+          error: analysis.error,
+          analysis: analysis.analysis,
+          suggested_fixes: analysis.suggestedFixes,
+          similar_errors: analysis.similarErrors,
+        });
+      }
+    } catch (e) {
+      console.error("[ErrorAnalyzer] Failed to save to Supabase", e);
     }
   }
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, Home } from 'lucide-react';
+import { ChevronLeft, Home } from 'lucide-react';
 
 interface MapTopNavProps {
   /** Number of completed journey milestones */
@@ -32,7 +32,7 @@ export function MapTopNav({
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-2xl pointer-events-auto border border-white/10 shadow-xl"
+        className="hidden md:flex items-center gap-2 px-5 py-2.5 rounded-2xl pointer-events-auto border border-white/10 shadow-xl"
         style={{
           background: "rgba(15,23,42,0.8)",
           backdropFilter: "blur(20px)",
@@ -42,8 +42,8 @@ export function MapTopNav({
             <Home size={16} className="text-teal-400" />
         </div>
         <div className="flex items-center gap-1 text-xs font-bold text-slate-300">
-            <span>/map</span>
-            <ChevronRight size={14} className="text-slate-600" />
+            <span>رحلتي</span>
+            <ChevronLeft size={14} className="text-slate-600" />
             <span className="text-white">{breadcrumbLabel}</span>
         </div>
       </motion.div>

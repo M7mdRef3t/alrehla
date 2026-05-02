@@ -435,7 +435,9 @@ export type FlowStep =
   | "activation_submit_success"
   | "activation_submit_failed"
   | "paid_feature_clicked"
-  | "premium_bridge_viewed";
+  | "premium_bridge_viewed"
+  | "node_classified";
+
 
 export function recordFlowEvent(
   step: FlowStep,

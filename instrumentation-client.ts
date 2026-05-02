@@ -43,3 +43,6 @@ Sentry.init({
 });
 
 } // end else — Sentry active in production only
+
+// Navigation Instrumentation for App Router
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

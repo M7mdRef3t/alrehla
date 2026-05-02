@@ -126,7 +126,7 @@ export class AutoHealthChecker {
     };
 
     // حفظ في الـ history
-    this.saveToHistory(result);
+    await this.saveToHistory(result);
 
     // لو في مشاكل critical، نبّه
     if (status === "critical") {
@@ -511,7 +511,7 @@ export class AutoHealthChecker {
    * حفظ النتيجة في الـ History
    * ─────────────────────────────────────────────────────────────────
    */
-  private saveToHistory(result: HealthCheckResult): void {
+  private async saveToHistory(result: HealthCheckResult): Promise<void> {
     this.healthHistory.push(result);
 
     // احتفظ بآخر أسبوع فقط
@@ -519,14 +519,20 @@ export class AutoHealthChecker {
       this.healthHistory = this.healthHistory.slice(-this.HISTORY_LIMIT);
     }
 
-    // حفظ في localStorage
+    // حفظ في Supabase
     try {
-      localStorage.setItem(
-        "dawayir-health-history",
-        JSON.stringify(this.healthHistory.slice(-24)) // آخر 24 ساعة
-      );
-    } catch {
-      // ignore
+      const { supabase } = await import("@/services/supabaseClient");
+      if (supabase) {
+        await supabase.from("system_health_logs").insert({
+          timestamp: result.timestamp,
+          status: result.status,
+          score: result.score,
+          issues: result.issues,
+          auto_fixed_issues: result.autoFixedIssues,
+        });
+      }
+    } catch (e) {
+      console.error("[HealthCheck] Failed to save to Supabase", e);
     }
   }
 

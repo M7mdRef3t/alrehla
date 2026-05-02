@@ -475,9 +475,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     // 🛡️ Boundaries: ratio of safe (green) nodes to total active nodes
     const totalActive = activeNodes.length;
     const greenCount = activeNodes.filter(n => n.ring === "green" && !n.isDetached).length;
-    const redCount = activeNodes.filter(n => n.ring === "red" && !n.isDetached).length;
+    const yellowCount = activeNodes.filter(n => n.ring === "yellow" && !n.isDetached).length;
     const boundaries = totalActive > 0
-      ? Math.round(((greenCount / totalActive) * 0.7 + ((totalActive - redCount) / Math.max(totalActive, 1)) * 0.3) * 100)
+      ? Math.round(((greenCount * 1 + yellowCount * 0.5) / totalActive) * 100)
       : 50; // default if no nodes
 
     // 👁️ Clarity: inverted TEI score (TEI = chaos, clarity = peace)
@@ -511,21 +511,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   // ─── Data-Driven Cinematic Engine (Parallax & Depth) ───
   const dataWeight = useMemo(() => Math.max(1, nodes.length * 0.12), [nodes.length]);
-  
-  const globalMouseX = useMotionValue(0);
-  const globalMouseY = useMotionValue(0);
-
-  const handleGlobalMouseMove = useCallback((e: React.MouseEvent) => {
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    globalMouseX.set((e.clientX - cx) / (20 * dataWeight));
-    globalMouseY.set((e.clientY - cy) / (20 * dataWeight));
-  }, [globalMouseX, globalMouseY, dataWeight]);
-
-  const gridX = useSpring(useTransform(globalMouseX, x => -x * 1.5), { stiffness: 45, damping: 20 });
-  const gridY = useSpring(useTransform(globalMouseY, y => -y * 1.5), { stiffness: 45, damping: 20 });
-  const nebulaX = useSpring(useTransform(globalMouseX, x => -x * 0.3), { stiffness: 10, damping: 40 });
-  const nebulaY = useSpring(useTransform(globalMouseY, y => -y * 0.3), { stiffness: 10, damping: 40 });
 
   const gridRotateX = useMemo(() => {
     const angle = 45 + Math.min((tei / 100) * 35, 35);
@@ -711,7 +696,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       className="flex-1 w-full h-full relative flex flex-col pb-0 atmospheric-void overflow-hidden"
       aria-label="Relationship Radar Map"
       onDrop={handleMainDrop}
-      onMouseMove={handleGlobalMouseMove}
       initial="hidden"
       animate="visible"
     >
@@ -719,8 +703,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       <div aria-hidden className="fixed inset-0 pointer-events-none bg-[#030712] overflow-hidden" style={{ zIndex: -1 }}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-900/15 via-[#030712] to-[#030712]" />
         
-        {/* Dynamic Nebula Layer */}
-        <motion.div style={{ x: nebulaX, y: nebulaY, width: "100%", height: "100%", position: "absolute" }}>
+        {/* Static Nebula Layer */}
+        <div className="absolute inset-0 w-full h-full">
           <div 
             className="map-nebula" 
             style={{ 
@@ -729,14 +713,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               "--nebula-color-3": nebulaPalette.c3,
             } as React.CSSProperties} 
           />
-        </motion.div>
+        </div>
 
-        {/* Dynamic 3D Grid Layer */}
-        <motion.div style={{ x: gridX, y: gridY, width: "100%", height: "100%", position: "absolute" }}>
+        {/* Static 3D Grid Layer */}
+        <div className="absolute inset-0 w-full h-full">
           <div className="map-grid-wrapper">
             <div className="map-grid" style={{ transform: `rotateX(${gridRotateX}) scale(1.5)` }} />
           </div>
-        </motion.div>
+        </div>
 
         {/* Ambient Orbs — soft and cheerful */}
         <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] rounded-full pointer-events-none"
@@ -812,7 +796,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* Header */}
       <motion.header 
         variants={staggerContainer}
-        className="relative z-20 text-center px-4 sm:px-6 pt-[110px] md:pt-[130px] pb-1 flex flex-col items-center gap-2 pointer-events-none"
+        className="relative z-20 text-center px-4 sm:px-6 pt-[80px] md:pt-[100px] pb-1 flex flex-col items-center gap-2 pointer-events-none"
       >
         {!isSacredIsolation && (
           <motion.div
@@ -842,9 +826,25 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         <div className="relative w-full z-30">
           <div className="max-w-[34rem] mx-auto px-4 pt-2 pb-3 flex flex-col items-center">
             
-            {/* 1. HUD: OPERATIONAL (Moved to Unified Bottom HUD) */}
+            {/* 1. HUD: OPERATIONAL */}
             {activeTab === "operational" && (
-              <div className="hidden"></div>
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{
+                  opacity: isSpeaking ? 0.6 : 1,
+                  scale: isSpeaking ? 0.98 : 1,
+                  y: 0
+                }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="w-full pt-2"
+              >
+                <MapOperationalStrip
+                  activeNodesCount={activeNodes.length}
+                  greenNodesCount={greenNodes.length}
+                  archivedNodesCount={archivedNodes.length}
+                  onOpenSupport={() => setShowDashboard(true)}
+                />
+              </motion.div>
             )}
 
             {/* 2. HUD: ANALYTICAL */}
@@ -1019,7 +1019,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
 
                     <AnimatePresence>
-                      {isHudVisible && (
+                      {isHudVisible && activeNodes.length > 0 && (
                         <motion.div
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -1036,24 +1036,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
 
                     {/* Unified Bottom HUD (Guarantees no overlap) */}
-                    <div className="absolute bottom-28 md:bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 flex flex-col items-center gap-4 pointer-events-none" dir="rtl">
-                       {activeTab === "operational" && (
-                         <motion.div 
-                           initial={{ opacity: 0, y: 20 }}
-                           animate={{ opacity: 1, y: 0 }}
-                           exit={{ opacity: 0, y: 20 }}
-                           className="w-full pointer-events-auto flex justify-center"
-                         >
-                           <MapOperationalStrip
-                             activeNodesCount={activeNodes.length}
-                             greenNodesCount={greenNodes.length}
-                             archivedNodesCount={archivedNodes.length}
-                             onOpenSupport={() => setShowDashboard(true)}
-                           />
-                         </motion.div>
-                       )}
-                       
-                       <div className="w-full max-w-lg pointer-events-auto">
+                    <div className="fixed bottom-0 md:bottom-8 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 flex flex-col items-center pointer-events-none z-50" dir="rtl">
+                       <div className="w-full pointer-events-auto">
                          <MapControlDock 
                              onAnalyze={() => setShowOracleModal(true)}
                              onPlan={() => setShowActionPlan(true)}
@@ -1175,7 +1159,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       <DailyJournalArchive isOpen={showJournalArchive} onClose={() => setShowJournalArchive(false)} />
       <GoogleAuthModal isOpen={isCloudAuthOpen} onClose={() => setIsCloudAuthOpen(false)} onGuestMode={() => setIsCloudAuthOpen(false)} onNotNow={() => setIsCloudAuthOpen(false)} intent={{ kind: "ai_focus", createdAt: Date.now() }} />
       {/* ── Quiet Exit Button — Fixed Bottom-Right (Nav Level) ── */}
-      <div className="fixed bottom-4 right-6 z-[200] pointer-events-auto">
+      <div className="fixed bottom-44 md:bottom-12 right-6 z-[200] pointer-events-auto">
         <button
           onClick={() => openEmergencyModal()}
           className="w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 backdrop-blur-xl group overflow-hidden"

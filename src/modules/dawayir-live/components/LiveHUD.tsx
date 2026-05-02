@@ -187,7 +187,7 @@ export default function LiveHUD({
             {activeNode && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/50 border border-slate-800/50 text-slate-300 text-xs font-medium ml-4">
                 <MapPin className="h-3.5 w-3.5 text-teal-400 opacity-80" />
-                <span className="truncate max-w-[120px]">{activeNode.label || activeNode.topic}</span>
+                <span className="truncate max-w-[120px]">{activeNode.label}</span>
               </div>
             )}
 

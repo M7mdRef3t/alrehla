@@ -1,11 +1,16 @@
 import type { DebatedConcept } from "@/domains/admin/store/admin.store";
 import type { TruthTest } from "@/services/truthTestEngine";
+import type { VisitorSessionSummary } from "@/services/admin/adminTypes";
 
 /**
  * NotebookLM Export Utility
- * يقوم بتجميع البيانات المعرفية وتحويلها إلى تقرير Markdown متوافق مع NotebookLM
+ * يقوم بتجميع البيانات المعرفية والتحليل السلوكي وتحويلها إلى تقرير Markdown متوافق مع NotebookLM
  */
-export const exportToNotebookLM = (concepts: DebatedConcept[], tests: TruthTest[]) => {
+export const exportToNotebookLM = (
+  concepts: DebatedConcept[], 
+  tests: TruthTest[],
+  sessions: VisitorSessionSummary[] = []
+) => {
   const dateStr = new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
   
   // 1. Core Doctrine
@@ -36,7 +41,9 @@ export const exportToNotebookLM = (concepts: DebatedConcept[], tests: TruthTest[
         concept.status === "debating" ? "💬 قيد النقاش" : "⏳ مسودة";
 
       markdown += `### ${concept.title} [${statusAr}]\n`;
-      markdown += `**الفرضية:** ${concept.hypothesis}\n\n`;
+      markdown += `**الفرضية:** ${concept.hypothesis}\n`;
+      if (concept.truthScore) markdown += `**مقياس اليقين:** ${concept.truthScore}%\n`;
+      markdown += `\n`;
       
       if (concept.arguments.length > 0) {
         markdown += `**سجل النقاش والأدلة:**\n`;
@@ -53,7 +60,7 @@ export const exportToNotebookLM = (concepts: DebatedConcept[], tests: TruthTest[
   markdown += `تحليل لمدى دقة "الإحساس الداخلي" للمستخدمين مقارنة بـ "الواقع الفعلي" لكشف أوهام الاتصال.\n\n`;
 
   const completedTests = tests.filter(t => t.outcome !== "pending");
-  const failedTests = completedTests.filter(t => t.outcome === "denied" || t.outcome === "coincidence");
+  const failedTests = completedTests.filter(t => t.outcome === "denied" || t.outcome === "uncertain");
   const hitTests = completedTests.filter(t => t.outcome === "confirmed");
 
   markdown += `- إجمالي الاختبارات المحسومة: ${completedTests.length}\n`;
@@ -65,9 +72,30 @@ export const exportToNotebookLM = (concepts: DebatedConcept[], tests: TruthTest[
     failedTests.forEach(t => {
       markdown += `- **نوع الاختبار:** ${t.type}\n`;
       markdown += `  - **الهدف:** ${t.personName || "غير محدد"}\n`;
-      markdown += `  - **النتيجة الفعلية:** ${t.outcome === "denied" ? "نفي قاطع (لم يحدث)" : "مجرد صدفة (لا يوجد رابط سببي)"}\n`;
+      markdown += `  - **النتيجة الفعلية:** ${t.outcome === "denied" ? "نفي قاطع (لم يحدث)" : "غير حاسم (صدفة محتملة)"}\n`;
       if (t.outcomeNote) markdown += `  - **ملاحظة:** ${t.outcomeNote}\n`;
     });
+    markdown += `\n`;
+  }
+
+  // --- New Telemetry Section ---
+  markdown += `---\n\n## 🧭 سجل الرحلات والتحليل السلوكي (Journey Telemetry)\n`;
+  markdown += `تحليل أنماط الحركة، الرنين، والمخاطر للمسافرين النشطين.\n\n`;
+
+  if (sessions.length === 0) {
+    markdown += "> لا توجد بيانات تيليمتري متاحة حالياً.\n\n";
+  } else {
+    markdown += `| المسافر (ID) | الحالة | الرنين | الإنجاز | الأحداث |\n`;
+    markdown += `| :--- | :--- | :--- | :--- | :--- |\n`;
+    
+    sessions.slice(0, 50).forEach(s => {
+      const riskAr = s.riskLevel === 'high' ? "⚠️ خطر" : "✅ آمن";
+      const resonanceAr = s.aiState === 'connected' ? "متصل" : s.aiState === 'disturbed' ? "مشوش" : "مستقر";
+      const progress = `${Math.min(100, ((s.taskCompletions || 0) / 7) * 100).toFixed(0)}%`;
+      
+      markdown += `| ${s.linkedEmail || s.sessionId.slice(0, 8)} | ${riskAr} | ${resonanceAr} | ${progress} | ${s.eventsCount} |\n`;
+    });
+    markdown += `\n`;
   }
 
   // Generate File and Trigger Download

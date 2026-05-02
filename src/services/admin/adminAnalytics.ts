@@ -79,6 +79,7 @@ function normalizeOverviewApiData(raw: Record<string, unknown>): OverviewStats {
     moodWeekly: (raw.moodWeekly ?? { points: [], unstableToCompletedPct: null }) as OverviewStats["moodWeekly"],
     pulseCopyVariants: (raw.pulseCopyVariants ?? { assigned: { energy: { a: 0, b: 0 }, mood: { a: 0, b: 0 }, focus: { a: 0, b: 0 } }, completed: { energy: { a: 0, b: 0 }, mood: { a: 0, b: 0 }, focus: { a: 0, b: 0 } } }) as OverviewStats["pulseCopyVariants"],
     pulseCopyVariantTrend: (raw.pulseCopyVariantTrend ?? { energy: [], mood: [], focus: [] }) as OverviewStats["pulseCopyVariantTrend"],
+    globalPulse: (raw.globalPulse ?? null) as OverviewStats["globalPulse"],
   };
 }
 
@@ -112,7 +113,9 @@ export async function fetchOverviewStats(options?: RequestInit): Promise<Overvie
     { data: installedSessionsRows },
     { count: marketingLeadsTotalCount },
     { count: marketingLeadsLast24hCount },
-    { data: marketingLeadsRows }
+    { data: marketingLeadsRows },
+    { data: recentJourneyMapsRows },
+    { data: nodeClassifiedRows }
   ] =
     await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -141,7 +144,20 @@ export async function fetchOverviewStats(options?: RequestInit): Promise<Overvie
         .select("source,source_type,status,utm,created_at")
         .gte("created_at", fourteenDaysAgo)
         .order("created_at", { ascending: true })
-        .limit(10000)
+        .limit(10000),
+      supabase
+        .from("journey_maps")
+        .select("nodes,updated_at")
+        .order("updated_at", { ascending: false })
+        .limit(200),
+      // ليف أحداث التصنيف الفعلية من routing_events
+      supabase
+        .from("routing_events")
+        .select("payload,occurred_at")
+        .eq("event_type", "flow_event")
+        .gte("occurred_at", fourteenDaysAgo)
+        .order("occurred_at", { ascending: false })
+        .limit(5000)
     ]);
   const installedUsers = new Set(
     ((installedSessionsRows ?? []) as Array<{ session_id?: unknown }>)
@@ -185,6 +201,7 @@ export async function fetchOverviewStats(options?: RequestInit): Promise<Overvie
       aiTokensUsed: aiLogsCount ?? null,
       growthData: [],
       zones: [],
+      topScenarios: [],
       phaseOneGoal: {
         registeredTravelers: usersCount ?? 0,
         installedTravelers: installedUsers,
@@ -310,11 +327,11 @@ export async function fetchOverviewStats(options?: RequestInit): Promise<Overvie
   const sessionActiveDays = new Map<string, Set<string>>();
 
   for (const row of events as Array<Record<string, unknown>>) {
-    const createdAt = String(row.created_at ?? "");
+    const createdAt = String(row.occurred_at ?? row.created_at ?? "");
     const date = createdAt ? createdAt.slice(5, 10) : "--";
     if (!growthMap.has(date)) growthMap.set(date, { paths: 0, nodes: 0 });
     const bucket = growthMap.get(date)!;
-    const type = String(row.type ?? "");
+    const type = String(row.event_type ?? row.type ?? "");
     const payload = row.payload as Record<string, unknown> | null;
     if (type === "path_started") bucket.paths += 1;
     if (type === "node_added") bucket.nodes += 1;
@@ -398,9 +415,9 @@ export async function fetchOverviewStats(options?: RequestInit): Promise<Overvie
   for (const date of last7Dates) pulseEnergyWeeklyMap.set(date, { changed: 0, unstable: 0, completed: 0, recommended: 0, undo: 0 });
 
   for (const row of events as Array<Record<string, unknown>>) {
-    const createdAt = String(row.created_at ?? "");
+    const createdAt = String(row.occurred_at ?? row.created_at ?? "");
     const day = createdAt.slice(0, 10);
-    if (!pulseEnergyWeeklyMap.has(day) || String(row.type ?? "") !== "flow_event") continue;
+    if (!pulseEnergyWeeklyMap.has(day) || String(row.event_type ?? row.type ?? "") !== "flow_event") continue;
     const payload = row.payload as Record<string, unknown> | null;
     const step = String(payload?.step ?? "");
     const point = pulseEnergyWeeklyMap.get(day)!;
@@ -420,9 +437,9 @@ export async function fetchOverviewStats(options?: RequestInit): Promise<Overvie
   for (const date of last7Dates) moodWeeklyMap.set(date, { changed: 0, unstable: 0, completed: 0 });
 
   for (const row of events as Array<Record<string, unknown>>) {
-    const createdAt = String(row.created_at ?? "");
+    const createdAt = String(row.occurred_at ?? row.created_at ?? "");
     const day = createdAt.slice(0, 10);
-    if (!moodWeeklyMap.has(day) || String(row.type ?? "") !== "flow_event") continue;
+    if (!moodWeeklyMap.has(day) || String(row.event_type ?? row.type ?? "") !== "flow_event") continue;
     const payload = row.payload as Record<string, unknown> | null;
     const step = String(payload?.step ?? "");
     const point = moodWeeklyMap.get(day)!;
@@ -438,10 +455,107 @@ export async function fetchOverviewStats(options?: RequestInit): Promise<Overvie
 
   const zones = Array.from(zoneMap.entries()).map(([label, count]) => ({ label, count }));
 
+  // --- Start Top Scenarios extraction ---
+  // SOURCE 1: journey_maps snapshot (baseline — always present)
+  // SOURCE 2: routing_events node_classified (live — more accurate for trends)
+  const scenarioCounts = new Map<string, number>();
+  const scenarioFirstSeen = new Map<string, number>();
+  const scenarioLastSeen = new Map<string, number>();
+  const sevenDaysAgoMs = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+  const scenarioRecentCount = new Map<string, number>(); // last 7 days
+  const scenarioOlderCount = new Map<string, number>();  // 7-14 days ago
+  let totalNodesForScenarios = 0;
+
+  // Helper: ingest one scenario observation
+  const ingestScenario = (label: string, ts: number | null) => {
+    scenarioCounts.set(label, (scenarioCounts.get(label) ?? 0) + 1);
+    totalNodesForScenarios += 1;
+    if (ts != null) {
+      const prev1st = scenarioFirstSeen.get(label);
+      if (prev1st == null || ts < prev1st) scenarioFirstSeen.set(label, ts);
+      const prevLast = scenarioLastSeen.get(label);
+      if (prevLast == null || ts > prevLast) scenarioLastSeen.set(label, ts);
+      if (ts >= sevenDaysAgoMs) {
+        scenarioRecentCount.set(label, (scenarioRecentCount.get(label) ?? 0) + 1);
+      } else {
+        scenarioOlderCount.set(label, (scenarioOlderCount.get(label) ?? 0) + 1);
+      }
+    }
+  };
+
+  // SOURCE 1: journey_maps — structural snapshot
+  if (recentJourneyMapsRows) {
+    for (const row of recentJourneyMapsRows as Array<Record<string, unknown>>) {
+      const nodes = row.nodes as Array<any> | null;
+      const rowTs = row.updated_at ? new Date(String(row.updated_at)).getTime() : null;
+      if (!nodes || !Array.isArray(nodes)) continue;
+      for (const node of nodes) {
+        if (!node) continue;
+        const zone = node.ring;
+        const isEmotionalCaptivity = zone === "red" && !!node.detachmentMode;
+        let scenarioLabel = "";
+        if (isEmotionalCaptivity) scenarioLabel = "سجين ذهني";
+        else if (node.analysis?.insights?.stateLabel) scenarioLabel = String(node.analysis.insights.stateLabel);
+        else if (zone === "red") scenarioLabel = "طوارئ";
+        else if (zone === "yellow") scenarioLabel = "استنزاف نشط";
+        if (scenarioLabel) ingestScenario(scenarioLabel, rowTs);
+      }
+    }
+  }
+
+  // SOURCE 2: routing_events node_classified — live events (higher fidelity)
+  // These override the snapshot for trend accuracy. We weight live events 2x
+  // since they reflect actual user sessions, not stored state snapshots.
+  const liveClassificationWeight = 2;
+  if (nodeClassifiedRows) {
+    for (const row of nodeClassifiedRows as Array<Record<string, unknown>>) {
+      const payload = row.payload as Record<string, unknown> | null;
+      if (!payload) continue;
+      const step = String(payload?.step ?? "");
+      if (step !== "node_classified") continue;
+      const meta = payload?.meta as Record<string, unknown> | undefined;
+      const label = String(meta?.scenarioLabel ?? "").trim();
+      if (!label) continue;
+      const occurredAt = row.occurred_at ? new Date(String(row.occurred_at)).getTime() : null;
+      // Ingest with weight — adds multiple observations to increase signal
+      for (let w = 0; w < liveClassificationWeight; w++) {
+        ingestScenario(label, occurredAt);
+      }
+    }
+  }
+
+  const topScenarios = Array.from(scenarioCounts.entries())
+    .map(([label, count]) => {
+      const recent = scenarioRecentCount.get(label) ?? 0;
+      const older = scenarioOlderCount.get(label) ?? 0;
+      let trend: "rising" | "declining" | "stable" = "stable";
+      let trendDeltaPct: number | null = null;
+      if (older > 0) {
+        const delta = ((recent - older) / older) * 100;
+        trendDeltaPct = Math.round(delta);
+        if (delta >= 15) trend = "rising";
+        else if (delta <= -15) trend = "declining";
+      } else if (recent > 0) {
+        trend = "rising"; // pattern emerging — no historical baseline
+        trendDeltaPct = null;
+      }
+      return {
+        label,
+        count,
+        percent: totalNodesForScenarios > 0 ? Math.round((count / totalNodesForScenarios) * 100) : 0,
+        firstSeen: scenarioFirstSeen.get(label) ?? null,
+        lastSeen: scenarioLastSeen.get(label) ?? null,
+        trend,
+        trendDeltaPct
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+  // --- End Top Scenarios extraction ---
+
   const sessionsByType = { node_added: new Set<string>(), path_started: new Set<string>(), task_completed: new Set<string>() };
   for (const row of events as Array<Record<string, unknown>>) {
     const sid = String(row.session_id ?? "anonymous");
-    const type = String(row.type ?? "");
+    const type = String(row.event_type ?? row.type ?? "");
     if (type === "node_added") sessionsByType.node_added.add(sid);
     if (type === "path_started") sessionsByType.path_started.add(sid);
     if (type === "task_completed") sessionsByType.task_completed.add(sid);
@@ -472,6 +586,7 @@ export async function fetchOverviewStats(options?: RequestInit): Promise<Overvie
     aiTokensUsed: aiLogsCount ?? null,
     growthData,
     zones,
+    topScenarios,
     phaseOneGoal: { registeredTravelers: usersCount ?? 0, installedTravelers: installedUsers, addedPeers: addedPeopleCount ?? 0 },
     pulseEnergyWeekly: { points: pulseEnergyWeeklyPoints, unstableToCompletedPct },
     moodWeekly: { points: moodWeeklyPoints, unstableToCompletedPct: moodUnstableToCompletedPct },

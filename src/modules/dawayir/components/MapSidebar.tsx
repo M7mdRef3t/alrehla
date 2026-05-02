@@ -21,8 +21,11 @@ export function MapSidebar({ onAddPerson, onRearrange, onSave, onShowOracle, onS
   const openEmergency = useEmergencyState(s => s.open);
   const handleEmergency = onEmergency ?? openEmergency;
   // Derive real insights from data
-  const mostDrained = data?.nodes?.reduce((prev: any, current: any) => (prev.intensity > (current.intensity || 0)) ? prev : current, data?.nodes?.[0])?.name || '...';
-  const mostSafe = data?.nodes?.find((n: any) => n.is_safe)?.name || '...';
+  const redNodes = data?.nodes?.filter((n: any) => n.ring === 'red' && !n.isNodeArchived && !n.isDetached) || [];
+  const mostDrained = redNodes.length > 0 ? redNodes[0].label : 'لا يوجد استنزاف';
+  
+  const greenNodes = data?.nodes?.filter((n: any) => n.ring === 'green' && !n.isNodeArchived && !n.isDetached) || [];
+  const mostSafe = greenNodes.length > 0 ? greenNodes[0].label : 'لا مساحة أمان حالياً';
   return (
     <div className="absolute top-[110px] right-6 bottom-6 w-80 z-40 flex flex-col gap-4 pointer-events-none" dir="rtl">
       <AnimatePresence>

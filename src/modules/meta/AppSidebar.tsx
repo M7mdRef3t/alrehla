@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   ClipboardList,
   PanelRightOpen,
+  Menu,
   X,
   Bell,
   Share2,
@@ -964,15 +965,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* ───── FLOATING WHATSAPP MOVED TO GLOBAL SURFACE ───── */}
 
-      {/* ───── MOBILE MENU TRIGGER (DRAG HANDLE) ───── */}
+      {/* ───── MOBILE MENU TRIGGER (FLOATING BUTTON) ───── */}
       <button
         type="button"
         title="افتح القائمة"
         onClick={handleOpen}
-        className="fixed right-0 bottom-[calc(var(--bottom-nav-height,5rem)+10.5rem+env(safe-area-inset-bottom))] md:hidden w-6 h-16 flex items-center justify-center bg-[#0B0F19]/90 backdrop-blur-md border border-r-0 border-slate-700 rounded-l-xl shadow-lg transition-transform hover:-translate-x-1"
-        style={{ zIndex: Z_LAYERS.NAVIGATION_BARS + 1 }}
+        className="fixed right-6 top-[80px] md:hidden w-10 h-10 flex items-center justify-center bg-slate-900/60 backdrop-blur-md border border-slate-700 rounded-xl shadow-xl transition-all hover:bg-slate-800 z-[60]"
       >
-        <div className="w-1 h-6 rounded-full bg-slate-400/50" />
+        <Menu size={20} className="text-slate-200 shrink-0 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
       </button>
 
       {/* ───── MOBILE SIDEBAR ───── */}

@@ -24,19 +24,75 @@ export async function handleBroadcasts(req: AdminRequest, res: AdminResponse) {
 
   if (req.method === "POST") {
     const body = await parseJsonBody(req);
-    const bodyRecord = body as Record<string, unknown>;
-    const broadcast = ((bodyRecord?.broadcast as Record<string, unknown> | undefined) ?? bodyRecord) as Record<string, unknown>;
-    const { error } = await client.from("admin_broadcasts").insert({
-      id: broadcast["id"],
-      title: broadcast["title"],
-      body: broadcast["body"],
-      created_at: broadcast["created_at"] || broadcast["createdAt"] || new Date().toISOString()
-    });
-    if (error) {
-      res.status(500).json({ error: "Failed to save broadcast" });
+    const { action, id, ...rest } = body as Record<string, any>;
+
+    // Action: SEND
+    if (action === "send") {
+      if (!id) {
+        res.status(400).json({ error: "Missing broadcast id for sending" });
+        return;
+      }
+
+      const { data: broadcast, error: fetchErr } = await client
+        .from("admin_broadcasts")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (fetchErr || !broadcast) {
+        console.error(`[Broadcasts] Fetch for send failed for ID ${id}:`, fetchErr);
+        res.status(404).json({ error: "Broadcast not found" });
+        return;
+      }
+
+      // Execute broadcast by updating system_settings (watched by CoreMapScreen)
+      const { error: sendErr } = await client.from("system_settings").upsert({
+        key: "sovereign_broadcast",
+        value: {
+          message: broadcast.body,
+          title: broadcast.title,
+          id: broadcast.id,
+          audience: broadcast.audience || { type: "all" },
+          timestamp: Date.now()
+        }
+      });
+
+      if (sendErr) {
+        console.error(`[Broadcasts] Upsert to system_settings failed:`, sendErr);
+        res.status(500).json({ error: "Failed to dispatch broadcast to system_settings" });
+        return;
+      }
+
+      // Mark as sent
+      await client.from("admin_broadcasts").update({ sent_at: new Date().toISOString() }).eq("id", id);
+
+      res.status(200).json({ ok: true });
       return;
     }
-    res.status(200).json({ ok: true });
+
+    // Default: CREATE/INSERT
+    const broadcastPayload = {
+      title: rest.title,
+      body: rest.body,
+      audience: rest.audience || { type: "all" },
+      created_at: rest.created_at || rest.createdAt || new Date().toISOString()
+    };
+
+    if (id) (broadcastPayload as any).id = id;
+
+    const { data, error } = await client
+      .from("admin_broadcasts")
+      .insert(broadcastPayload)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("[Broadcasts] Insert failed:", error);
+      res.status(500).json({ error: "Failed to save broadcast", details: error.message });
+      return;
+    }
+
+    res.status(200).json({ broadcast: data });
     return;
   }
 

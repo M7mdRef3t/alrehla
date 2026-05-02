@@ -169,7 +169,22 @@ export type TopScenario = {
   share?: number | null;
   percentage?: number | null;
   percent?: number | null;
+  /** أقدم وقت ظهور لهذا السيناريو في البيانات الحالية */
+  firstSeen?: number | null;
+  /** أحدث وقت ظهور لهذا السيناريو */
+  lastSeen?: number | null;
+  /** rising | declining | stable — للرادار */
+  trend?: "rising" | "declining" | "stable" | null;
+  /** نسبة التغيير مقارنة بالأسبوع السابق (موجبة = ارتفاع) */
+  trendDeltaPct?: number | null;
 };
+
+
+export interface GlobalPulseStats {
+  healing_velocity: number;
+  ai_workload_avg: number;
+  global_phoenix_avg: number;
+}
 
 export type PhaseOneGoalProgress = OverviewStats["phaseOneGoal"];
 
@@ -225,6 +240,7 @@ export interface OverviewStats {
     resolved?: number | null;
     unresolved?: number | null;
     gapPercent?: number | null;
+    primaryGap?: string | null;
     byCategory?: Array<{ label: string; count: number }>;
   } | null;
   routingV2?: any;
@@ -232,6 +248,7 @@ export interface OverviewStats {
   taskFriction?: any[] | null;
   weeklyRhythm?: any;
   emergencyLogs?: any[] | null;
+  globalPulse?: GlobalPulseStats | null;
 }
 
 // ─── Funnel & Behavioral ────────────────────────────────────────────
@@ -412,6 +429,7 @@ export interface VisitorSessionSummary {
   protocolKey?: string | null;
   rootTension?: string | null;
   commitmentPledge?: string | null;
+  recentIssues?: string[];
 }
 
 // ─── User State ─────────────────────────────────────────────────────

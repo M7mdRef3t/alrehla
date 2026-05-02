@@ -136,16 +136,21 @@ export class CommandOrchestrator {
 الاحتكاك الأخير المرصود: ${friction || "لا يوجد احتكاك محدد"}
 
 قم بإنشاء 2-3 تدخلات استباقية (Command Interventions).
-الإجابة يجب أن تكون بصيغة JSON array فقط، حيث كل كائن يحتوي على:
-{
-  "id": "معرف_فريد_بحروف_انجليزية",
-  "type": "action",
-  "label": "عنوان التدخل بالعربية (مثل: إطلاق رسالة سكينة)",
-  "subtitle": "شرح قصير للتدخل",
-  "iconType": "shield" أو "zap" أو "activity" أو "flame" أو "lock" أو "unlock",
-  "actionId": "emergency_pulse" أو "deploy_nudge" أو "harvest_insights" أو "audit_flow",
-  "urgency": "high" أو "medium" أو "low"
-}
+الإجابة يجب أن تكون بصيغة RAW JSON array فقط، بدون أي مقدمات أو علامات markdown (لا تستخدم \`\`\`json).
+تنبيه هام جداً: ممنوع تماماً استخدام علامات التنصيص المزدوجة " داخل النصوص (مثل الـ label والـ subtitle) إلا إذا تم هروبها (escape) بـ \\ (مثل \\"نص\\"). يفضل عدم استخدامها أصلاً.
+
+الهيكل المطلوب:
+[
+  {
+    "id": "معرف_فريد_انجليزي",
+    "type": "action",
+    "label": "عنوان التدخل",
+    "subtitle": "شرح التدخل",
+    "iconType": "shield" | "zap" | "activity" | "flame" | "lock" | "unlock",
+    "actionId": "emergency_pulse" | "deploy_nudge" | "harvest_insights" | "audit_flow",
+    "urgency": "high" | "medium" | "low"
+  }
+]
         `;
 
         try {

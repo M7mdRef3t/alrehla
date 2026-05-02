@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { getVerticalResonanceState } from "../../hafiz/store/hafiz.store";
+import { getVerticalResonanceState, useHafizState } from "../../hafiz/store/hafiz.store";
 
 export interface KharitaState {
   currentProgressLevel: number;
@@ -32,7 +32,8 @@ export const useKharitaStore = create<KharitaState>()(
         syncWithVerticalAxis: () => {
           // Implementing the Vertical Axis Doctrine
           try {
-            const resonance = getVerticalResonanceState();
+            const memories = useHafizState.getState().memories;
+            const resonance = getVerticalResonanceState(memories);
             // Optional: boost progress or adapt map visuals based on resonance
             if (resonance.strength > 0.8 && get().currentProgressLevel < 100) {
               // Minimal alignment boost

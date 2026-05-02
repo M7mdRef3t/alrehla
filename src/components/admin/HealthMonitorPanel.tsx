@@ -11,45 +11,100 @@ export const HealthMonitorPanel: FC = () => {
   const [filter, setFilter] = useState<"all" | "critical" | "warning" | "healthy">("all");
 
   useEffect(() => {
-    const loadData = (): void => {
+    let healthSub: any;
+    let errorSub: any;
+
+    const loadData = async (): Promise<void> => {
       try {
-        const health = JSON.parse(localStorage.getItem("dawayir-health-history") || "[]") as HealthCheckResult[];
-        setHealthHistory(health.slice(-50));
+        const { supabase } = await import("@/services/supabaseClient");
+        if (!supabase) return;
 
-        const rawErrors = JSON.parse(localStorage.getItem("dawayir-error-history") || "[]") as Array<{
-          message?: string;
-          timestamp?: number;
-          severity?: "low" | "medium" | "high" | "critical";
-          resolved?: boolean;
-        }>;
+        // Fetch health history
+        const { data: healthData, error: healthError } = await supabase
+          .from("system_health_logs")
+          .select("*")
+          .order("timestamp", { ascending: false })
+          .limit(50);
+          
+        if (healthError) throw healthError;
+        
+        if (healthData) {
+          const formattedHealth = healthData.reverse().map(row => ({
+            timestamp: row.timestamp,
+            status: row.status,
+            score: row.score,
+            issues: row.issues,
+            autoFixedIssues: row.auto_fixed_issues
+          }));
+          setHealthHistory(formattedHealth);
+        }
 
-        const normalizedErrors: ErrorAnalysisResult[] = rawErrors.map((item) => ({
-          error: { message: item.message || "Unknown error" },
-          analysis: {
-            rootCause: item.message || "Unknown root cause",
-            severity: item.severity || "low",
-            category: "runtime",
-            affectedFeatures: [],
-          },
-          suggestedFixes: [],
-          similarErrors: [
-            {
-              message: item.message || "Unknown error",
-              timestamp: item.timestamp || Date.now(),
-              resolved: Boolean(item.resolved),
-            },
-          ],
-        }));
+        // Fetch error history
+        const { data: errorData, error: errorError } = await supabase
+          .from("system_error_logs")
+          .select("*")
+          .order("timestamp", { ascending: false })
+          .limit(20);
 
-        setErrorHistory(normalizedErrors.slice(-20));
+        if (errorError) throw errorError;
+
+        if (errorData) {
+          const formattedErrors = errorData.reverse().map(row => ({
+            error: row.error,
+            analysis: row.analysis,
+            suggestedFixes: row.suggested_fixes,
+            similarErrors: row.similar_errors
+          }));
+          setErrorHistory(formattedErrors);
+        }
+
+        // Real-time subscriptions
+        healthSub = supabase
+          .channel('public:system_health_logs')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'system_health_logs' }, payload => {
+            setHealthHistory(prev => {
+              const newRecord = {
+                timestamp: payload.new.timestamp,
+                status: payload.new.status,
+                score: payload.new.score,
+                issues: payload.new.issues,
+                autoFixedIssues: payload.new.auto_fixed_issues
+              } as HealthCheckResult;
+              return [...prev, newRecord].slice(-50);
+            });
+          })
+          .subscribe();
+
+        errorSub = supabase
+          .channel('public:system_error_logs')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'system_error_logs' }, payload => {
+            setErrorHistory(prev => {
+              const newError = {
+                error: payload.new.error,
+                analysis: payload.new.analysis,
+                suggestedFixes: payload.new.suggested_fixes,
+                similarErrors: payload.new.similar_errors
+              } as ErrorAnalysisResult;
+              return [...prev, newError].slice(-20);
+            });
+          })
+          .subscribe();
+
       } catch (error) {
-        logger.error("Failed to load health data:", error);
+        logger.error("Failed to load health data from Supabase:", error);
       }
     };
 
     loadData();
-    const interval = setInterval(loadData, 60_000);
-    return () => clearInterval(interval);
+
+    return () => {
+      import("@/services/supabaseClient").then(({ supabase }) => {
+        if (supabase) {
+          if (healthSub) supabase.removeChannel(healthSub);
+          if (errorSub) supabase.removeChannel(errorSub);
+        }
+      });
+    };
   }, []);
 
   const filteredHistory = healthHistory.filter((check) => {

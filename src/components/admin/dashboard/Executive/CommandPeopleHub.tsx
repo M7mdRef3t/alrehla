@@ -1,25 +1,22 @@
+import { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
 import type { FC, ReactNode } from "react";
-import { useState, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Users,
-  Activity,
-  Archive,
-  ClipboardList,
-  Heart,
-  ChevronRight,
-  Sparkles
-} from "lucide-react";
+import { Users, Activity, Archive, ClipboardList, Heart, ChevronRight, Sparkles, Link as LinkIcon } from "lucide-react";
 import { AwarenessSkeleton } from "@/modules/meta/AwarenessSkeleton";
+import { fetchOverviewStats } from "@/services/admin/adminAnalytics";
+import { useHafizState, getVerticalResonanceState } from "@/modules/hafiz/store/hafiz.store";
+import type { OverviewStats } from "@/services/admin/adminTypes";
 
 // ─── Lazy-loaded modules ─────────────────────────────────────────────────────
 const UsersPanel                = lazy(() => import("../Users/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const UserStatePanel            = lazy(() => import("../Data/UserStatePanel").then(m => ({ default: m.UserStatePanel })));
 const ConsciousnessArchivePanel = lazy(() => import("../Consciousness/ConsciousnessArchivePanel").then(m => ({ default: m.ConsciousnessArchivePanel })));
 const TruthCallerPanel          = lazy(() => import("../Users/TruthCallerPanel").then(m => ({ default: m.TruthCallerPanel })));
+const SurveyResultsPanel        = lazy(() => import("../Data/SurveyResultsPanel").then(m => ({ default: m.SurveyResultsPanel })));
+const JourneyLogPanel           = lazy(() => import("./components/JourneyLogPanel").then(m => ({ default: m.JourneyLogPanel })));
 
 // ─── Tab definition ───────────────────────────────────────────────────────────
-type PeopleTab = "travelers" | "pulse" | "archive" | "surveys" | "call-of-truth";
+type PeopleTab = "travelers" | "pulse" | "archive" | "surveys" | "call-of-truth" | "journey-log";
 
 interface TabConfig {
   id: PeopleTab;
@@ -77,6 +74,15 @@ const TABS: TabConfig[] = [
     glow: "rgba(99,102,241,0.15)",
     description: "محرك التدخل الروحي والتحليل الاستباقي للرنين الرقمي",
   },
+  {
+    id: "journey-log",
+    label: "Journey Log",
+    arabicLabel: "سجل الرحلة",
+    icon: <ClipboardList className="w-4 h-4" />,
+    accent: "emerald",
+    glow: "rgba(16,185,129,0.15)",
+    description: "تتبع تفصيلي لكل خطوة في رحلة المسافرين",
+  },
 ];
 
 const ACCENT_CLASSES: Record<string, { border: string; text: string; bg: string; ring: string }> = {
@@ -85,12 +91,26 @@ const ACCENT_CLASSES: Record<string, { border: string; text: string; bg: string;
   amber:   { border: "border-amber-500/30", text: "text-amber-400", bg: "bg-amber-500/10", ring: "ring-amber-500/40" },
   sky:     { border: "border-sky-500/30",   text: "text-sky-400",   bg: "bg-sky-500/10",   ring: "ring-sky-500/40" },
   indigo:  { border: "border-indigo-500/30", text: "text-indigo-400", bg: "bg-indigo-500/10", ring: "ring-indigo-500/40" },
+  emerald: { border: "border-emerald-500/30", text: "text-emerald-400", bg: "bg-emerald-500/10", ring: "ring-emerald-500/40" },
 };
 
 export const CommandPeopleHub: FC = () => {
   const [activeTab, setActiveTab] = useState<PeopleTab>("travelers");
+  const [stats, setStats] = useState<OverviewStats | null>(null);
+  const memories = useHafizState(s => s.memories);
+  
+  const resonance = useMemo(() => getVerticalResonanceState(memories), [memories]);
   const currentTab = TABS.find(t => t.id === activeTab)!;
   const accent = ACCENT_CLASSES[currentTab.accent];
+
+  const loadStats = useCallback(async () => {
+    const data = await fetchOverviewStats();
+    if (data) setStats(data);
+  }, []);
+
+  useEffect(() => {
+    void loadStats();
+  }, [loadStats]);
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -114,14 +134,30 @@ export const CommandPeopleHub: FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500/10 border border-teal-500/20">
+          <div className="flex flex-wrap items-center gap-3">
+             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500/10 border border-teal-500/20 backdrop-blur-md">
                <Users className="w-3.5 h-3.5 text-teal-400" />
-               <span className="text-[10px] font-black text-teal-400 uppercase tracking-widest">Active Souls: High</span>
+               <span className="text-[10px] font-black text-teal-400 uppercase tracking-widest">
+                 {typeof stats?.activeConsciousnessNow === 'number' 
+                   ? `Souls Active: ${stats.activeConsciousnessNow}` 
+                   : "Active Souls: Low"}
+               </span>
              </div>
-             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
+             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 backdrop-blur-md">
                <Activity className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-               <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Collective Resonance: 84%</span>
+               <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest">
+                 {typeof stats?.avgMood === 'number' 
+                   ? `Collective Pulse: ${Math.round(stats.avgMood * 10)}%` 
+                   : "Resonance: 40%"}
+               </span>
+             </div>
+             <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border backdrop-blur-md transition-all duration-500 ${
+               resonance.strength > 0.6 ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" : "bg-slate-500/10 border-slate-500/20 text-slate-400"
+             }`}>
+               <LinkIcon className={`w-3.5 h-3.5 ${resonance.strength > 0.6 ? "animate-bounce" : ""}`} />
+               <span className="text-[10px] font-black uppercase tracking-widest">
+                 Source Alignment: {resonance.label}
+               </span>
              </div>
           </div>
         </div>
@@ -188,7 +224,9 @@ export const CommandPeopleHub: FC = () => {
             {activeTab === "travelers" && <UsersPanel />}
             {activeTab === "pulse"     && <UserStatePanel />}
             {activeTab === "archive"   && <ConsciousnessArchivePanel />}
+            {activeTab === "surveys"   && <SurveyResultsPanel />}
             {activeTab === "call-of-truth" && <TruthCallerPanel />}
+            {activeTab === "journey-log" && <JourneyLogPanel />}
           </Suspense>
         </motion.div>
       </AnimatePresence>

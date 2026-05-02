@@ -495,8 +495,8 @@ export function generateQuickActions(
   }
 
   // Energy-based logic
-  if (plan?.morningEnergy !== null) {
-    if (plan!.morningEnergy! >= 8) {
+  if (plan && plan.morningEnergy != null) {
+    if (plan.morningEnergy >= 8) {
       actions.push({
         id: "focus",
         label: "أصعب مهمة",
@@ -505,7 +505,7 @@ export function generateQuickActions(
         action: "focus",
         priority: 88,
       });
-    } else if (plan!.morningEnergy! <= 4) {
+    } else if (plan.morningEnergy <= 4) {
       actions.push({
         id: "rest",
         label: "راحة استراتيجية",

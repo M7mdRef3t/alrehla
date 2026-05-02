@@ -24,7 +24,7 @@ import { usePulseState, type PulseMood } from "@/domains/consciousness/store/pul
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
 import { useMapState } from "@/modules/map/dawayirIndex";
 import { useDailyJournalState } from "@/domains/journey/store/journal.store";
-import { useBawsalaState } from "@/modules/bawsala/store/bawsala.store";
+import { platform } from "@/shared/platform";
 
 /* ═══════════════════════════════════════════ */
 /*               CONSTANTS                    */
@@ -106,7 +106,8 @@ export const RiwayaScreen: FC = () => {
   const nodes = useMemo(() => rawNodes ?? [], [rawNodes]);
   const rawJournalEntries = useDailyJournalState((s) => s.entries);
   const journalEntries = useMemo(() => rawJournalEntries ?? [], [rawJournalEntries]);
-  const { decisions } = useBawsalaState();
+  const bawsalaData = useMemo(() => platform.bawsala(), []);
+  const decisions = bawsalaData.rawDecisions;
 
   // ── Build Timeline Events ──
   const events = useMemo<TimelineEvent[]>(() => {

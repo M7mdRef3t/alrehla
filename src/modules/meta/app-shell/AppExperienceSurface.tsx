@@ -188,11 +188,6 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         onLogin={handleHeaderLogin}
         onLogout={handleLogout}
       />
-      <PlatformTabBar
-        activeScreen={screen}
-        onNavigate={handleHeaderNavigate}
-        onLogin={handleHeaderLogin}
-      />
       <Suspense fallback={null}>
         <NotificationEnableButton />
       </Suspense>

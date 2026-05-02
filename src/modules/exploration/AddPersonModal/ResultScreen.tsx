@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldAlert } from "lucide-react";
 import type { FeelingAnswers } from "../FeelingCheck";
@@ -89,7 +89,35 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     () => (realityAnswers ? realityScoreToRing(realityAnswers) : "green"),
     [realityAnswers]
   );
-  
+
+  // ═══ Fire node_classified event — feeds IllusionRadar ═══
+  useEffect(() => {
+    if (!result?.scenarioKey) return;
+    const ring = realityAnswers ? realityScoreToRing(realityAnswers) : "green";
+    const isEmotionalCaptivity = result.scenarioKey === "emotional_prisoner";
+    const scenarioLabel = isEmotionalCaptivity
+      ? "سجين ذهني"
+      : ring === "red" && result.scenarioKey === "emergency"
+      ? "طوارئ"
+      : ring === "red"
+      ? "طوارئ"
+      : ring === "yellow"
+      ? "استنزاف نشط"
+      : "ميناء آمن";
+    recordFlowEvent("node_classified", {
+      meta: {
+        scenarioLabel,
+        scenarioKey: result.scenarioKey,
+        ring,
+        isEmotionalCaptivity,
+        nodeId: addedNodeId,
+        category,
+        classifiedAt: Date.now()
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result.scenarioKey]); // fire once per unique result
+
   const nodes = useMapState((s) => s.nodes);
   const updateNodeSymptoms = useMapState((s) => s.updateNodeSymptoms);
   const setRecoveryPlanOpenWith = useMapState((s) => s.setRecoveryPlanOpenWith);

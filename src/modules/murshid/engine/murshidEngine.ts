@@ -13,7 +13,9 @@ import { useConsciousnessHistory } from "@/domains/consciousness/store/history.s
 import { usePredictiveState } from "@/domains/consciousness/store/predictive.store";
 import { useMapState } from "@/modules/map/dawayirIndex";
 import { useDailyJournalState } from "@/domains/journey/store/journal.store";
-import { useRifaqState } from "@/modules/rifaq/store/rifaq.store";
+
+// Neural Mesh — replaces rifaq store import
+import { platform } from "@/shared/platform";
 
 /* ═══════════════════════════════════════════ */
 /*                  TYPES                     */
@@ -296,10 +298,10 @@ function generateJournalInsights(): MurshidInsight[] {
 
 function generateSocialInsights(): MurshidInsight[] {
   const insights: MurshidInsight[] = [];
-  const { buddies } = useRifaqState.getState();
-  const active = buddies.filter((b) => b.status === "active");
+  const rifaqData = platform.rifaq();
+  const activeBuddies = rifaqData.activeBuddies;
 
-  if (active.length === 0 && useGamificationState.getState().level >= 3) {
+  if (activeBuddies === 0 && useGamificationState.getState().level >= 3) {
     insights.push({
       id: "social-no-rifaq", type: "nudge", priority: 4,
       title: "لسه ما أضفتش رفيق",
@@ -310,11 +312,11 @@ function generateSocialInsights(): MurshidInsight[] {
     });
   }
 
-  if (active.length >= 3) {
+  if (activeBuddies >= 3) {
     insights.push({
       id: "social-good-network", type: "celebration", priority: 5,
       title: "شبكة دعم قوية! 👥",
-      message: `عندك ${active.length} رفاق نشطين — ده بيأثر إيجابياً على استمراريتك في الرحلة.`,
+      message: `عندك ${activeBuddies} رفاق نشطين — ده بيأثر إيجابياً على استمراريتك في الرحلة.`,
       emoji: "👥", color: "#ec4899", source: "Rifaq",
       timestamp: Date.now(),
     });

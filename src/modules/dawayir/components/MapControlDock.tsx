@@ -30,7 +30,7 @@ export function MapControlDock({
       <motion.div 
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-3xl p-2 flex items-center justify-between gap-1 shadow-2xl pointer-events-auto"
+        className="bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-3xl p-2 flex items-center justify-between gap-1 pointer-events-auto"
       >
         {/* Analysis Button */}
         <button

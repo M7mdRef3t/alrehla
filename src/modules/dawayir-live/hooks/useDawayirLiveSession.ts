@@ -840,9 +840,14 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
     
     if (config.initialContext?.nodeId) {
       useMapState.getState().registerLiveSession(config.initialContext.nodeId, {
-        summary: completed.summary?.summary,
+        summary: completed.summary?.headline,
         score: Math.round(metrics.equilibriumScore * 100),
-        truthContract: completed.truthContract || undefined
+        truthContract: completed.truthContract 
+          ? { 
+              actionPoints: completed.truthContract.promises, 
+              reminder: completed.truthContract.reminder 
+            } 
+          : undefined
       });
     }
 

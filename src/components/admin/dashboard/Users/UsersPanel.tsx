@@ -6,6 +6,7 @@ import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { isSupabaseReady } from "@/services/supabaseClient";
 import { fetchVisitorSessions, fetchJourneyMap, fetchSessionEvents } from "@/services/admin/adminUsers";
 import { type SessionEventRow, type VisitorSessionSummary, type JourneyMapSnapshot } from "@/services/admin/adminTypes";
+import { getSearch, subscribePopstate, pushUrl, createCurrentUrl } from "@/services/navigation";
 
 export const UsersPanel: FC = () => {
   const [query, setQuery] = useState("");
@@ -27,6 +28,19 @@ export const UsersPanel: FC = () => {
     refresh();
     const timer = setInterval(refresh, 30000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const applyFilterFromUrl = () => {
+      const params = new URLSearchParams(getSearch());
+      const filter = params.get("filter");
+      if (filter) {
+        setQuery(filter);
+      }
+    };
+    applyFilterFromUrl();
+    const unsub = subscribePopstate(applyFilterFromUrl);
+    return () => unsub();
   }, []);
 
   const openGodView = async (sessionId: string) => {
@@ -61,9 +75,17 @@ export const UsersPanel: FC = () => {
     }
   };
 
-  const filteredSessions = (visitorSessions ?? []).filter((s) =>
-    query.trim().length === 0 ? true : s.sessionId.toLowerCase().includes(query.trim().toLowerCase())
-  );
+  const filteredSessions = (visitorSessions ?? []).filter((s) => {
+    if (query.trim().length === 0) return true;
+    const q = query.trim().toLowerCase();
+    
+    // Check if query matches Session ID, Email, or recent issues (illusions)
+    const matchesId = s.sessionId.toLowerCase().includes(q);
+    const matchesEmail = s.linkedEmail?.toLowerCase().includes(q);
+    const matchesIssues = s.recentIssues?.some(issue => issue.toLowerCase().includes(q));
+    
+    return matchesId || matchesEmail || matchesIssues;
+  });
 
   return (
     <div className="space-y-6 text-slate-200" dir="rtl">
@@ -86,8 +108,19 @@ export const UsersPanel: FC = () => {
           <div className="relative z-10 w-full md:w-1/3">
              <input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="تتبع أثر روح معينة (Session ID)..."
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  const url = createCurrentUrl();
+                  if (url) {
+                    if (e.target.value) {
+                      url.searchParams.set("filter", e.target.value);
+                    } else {
+                      url.searchParams.delete("filter");
+                    }
+                    pushUrl(url);
+                  }
+                }}
+                placeholder="تتبع أثر روح معينة (Session ID أو وهم)..."
                 className="w-full rounded-xl border border-slate-700/50 bg-slate-950/60 px-4 py-2.5 text-xs text-amber-100 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all font-mono shadow-inner"
                 dir="ltr"
              />
@@ -291,27 +324,70 @@ const GodViewModal: FC<GodViewModalProps> = ({ isOpen, onClose, loading, error, 
               </div>
             ) : snapshot?.nodes?.length ? (
               <div className="flex flex-col lg:flex-row items-center justify-center min-h-full gap-12">
-                 {/* Fake Network Graph View */}
-                 <div className="relative flex flex-col items-center gap-8 py-12 flex-1">
-                    {snapshot.nodes.map((node, i) => (
-                       <motion.div 
-                         initial={{ opacity: 0, y: 20 }}
-                         animate={{ opacity: 1, y: 0 }}
-                         transition={{ delay: i * 0.1 }}
-                         key={i}
-                         className="relative flex items-center justify-center"
-                       >
-                          {/* Connection line to next node */}
-                          {i !== snapshot.nodes!.length - 1 && (
-                             <div className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-12 bg-gradient-to-b from-amber-500/50 to-indigo-500/10" />
-                          )}
-                          <div className="flex items-center gap-4 bg-slate-900 border border-amber-500/30 rounded-full py-2 px-6 shadow-[0_0_20px_rgba(245,158,11,0.1)] z-10 hover:scale-105 hover:border-amber-400 transition-transform cursor-crosshair">
-                             <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
-                             <span className="text-xs font-bold text-amber-100 uppercase tracking-widest">{node.label}</span>
-                             <span className="text-[10px] text-amber-500/50 font-mono bg-black/40 px-2 py-0.5 rounded-md uppercase" dir="ltr">{node.ring}</span>
-                          </div>
-                       </motion.div>
-                    ))}
+                 {/* Cinematic Neural Nexus View */}
+                 <div className="relative flex flex-col items-center gap-12 py-16 flex-1">
+                    <div className="absolute inset-y-0 w-px bg-gradient-to-b from-transparent via-amber-500/20 to-transparent" />
+                    
+                    {snapshot.nodes.map((node, i) => {
+                       const isEven = i % 2 === 0;
+                       const xOffset = isEven ? "md:translate-x-12" : "md:-translate-x-12";
+                       
+                       return (
+                        <motion.div 
+                          initial={{ opacity: 0, x: isEven ? 40 : -40 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ 
+                            delay: i * 0.15,
+                            type: "spring",
+                            stiffness: 100,
+                            damping: 20
+                          }}
+                          key={i}
+                          className={`relative flex items-center justify-center ${xOffset}`}
+                        >
+                           {/* Dynamic connection lines */}
+                           {i !== snapshot.nodes!.length - 1 && (
+                              <svg className="absolute top-full left-1/2 -translate-x-1/2 w-48 h-12 pointer-events-none overflow-visible z-0">
+                                <motion.path
+                                  d={`M ${isEven ? -48 : 48} 0 C ${isEven ? -48 : 48} 24, ${!isEven ? -48 : 48} 24, ${!isEven ? -48 : 48} 48`}
+                                  fill="none"
+                                  stroke="url(#line-gradient)"
+                                  strokeWidth="1.5"
+                                  strokeDasharray="4 4"
+                                  initial={{ pathLength: 0, opacity: 0 }}
+                                  animate={{ pathLength: 1, opacity: 0.4 }}
+                                  transition={{ delay: i * 0.15 + 0.3, duration: 1 }}
+                                />
+                                <defs>
+                                  <linearGradient id="line-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" />
+                                    <stop offset="100%" stopColor="#6366f1" stopOpacity="0.2" />
+                                  </linearGradient>
+                                </defs>
+                              </svg>
+                           )}
+                           
+                           <div className="relative group/node">
+                             {/* Node Pulse Aura */}
+                             <div className="absolute -inset-4 bg-amber-500/10 rounded-full blur-xl opacity-0 group-hover/node:opacity-100 transition-opacity duration-500" />
+                             
+                             <div className="flex items-center gap-4 bg-slate-900/90 border border-amber-500/30 rounded-2xl py-3 px-6 shadow-[0_0_20px_rgba(245,158,11,0.1)] z-10 hover:scale-110 hover:border-amber-400 transition-all duration-500 cursor-crosshair backdrop-blur-md">
+                               <div className="relative">
+                                 <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,1)]" />
+                                 <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping opacity-40" />
+                               </div>
+                               <div className="flex flex-col">
+                                 <span className="text-xs font-black text-amber-100 uppercase tracking-widest">{node.label}</span>
+                                 <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-[8px] text-amber-500/60 font-black uppercase tracking-widest bg-black/40 px-1.5 py-0.5 rounded leading-none" dir="ltr">{node.ring}</span>
+                                    <span className="text-[8px] text-slate-500 font-mono">0x{i.toString(16).toUpperCase()}</span>
+                                 </div>
+                               </div>
+                             </div>
+                           </div>
+                        </motion.div>
+                       );
+                    })}
                  </div>
                  
                  {/* AI Interpretation Panel */}

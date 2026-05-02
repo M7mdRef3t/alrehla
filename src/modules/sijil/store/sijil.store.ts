@@ -15,6 +15,7 @@ export type ActivitySource =
   | "hafiz" | "mirah" | "markaz" | "sada" | "riwaya"
   | "rifaq" | "baseera" | "atmosfera" | "masarat"
   | "dawayir" | "murshid" | "taqrir" | "gamification"
+  | "khalwa" | "mithaq" | "warsha" | "tazkiya"
   | "system";
 
 export interface ActivityEvent {

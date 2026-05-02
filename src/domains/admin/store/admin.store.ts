@@ -12,6 +12,7 @@ import { getEffectiveFeatureAccess } from "@/utils/featureFlags";
 import { isUserMode } from "@/config/appEnv";
 import { runtimeEnv } from "@/config/runtimeEnv";
 import { zustandIdbStorage } from '@/utils/idbStorage';
+import type { VisitorSessionSummary } from "@/services/admin/adminTypes";
 
 
 export interface ScoringWeights {
@@ -116,6 +117,8 @@ export interface DebatedConcept {
   hypothesis: string;
   status: ConceptStatus;
   arguments: ConceptArgument[];
+  empiricalEvidence?: string[]; // IDs of TruthTests
+  truthScore?: number; // 0-100
   empiricalDataRef?: string;
   createdAt: number;
   updatedAt: number;
@@ -408,6 +411,7 @@ const DEFAULT_JOURNEY_PATHS: JourneyPath[] = [
   }
 ];
 
+
 interface AdminState {
   adminAccess: boolean;
   isContentEditingEnabled: boolean;
@@ -442,6 +446,9 @@ interface AdminState {
   
   // Concept Debate Lab
   debatedConcepts: DebatedConcept[];
+
+  // Live Telemetry
+  visitorSessions: VisitorSessionSummary[];
 
   setAdminAccess: (value: boolean) => void;
   toggleContentEditing: (value: boolean) => void;
@@ -480,7 +487,10 @@ interface AdminState {
   addConcept: (concept: DebatedConcept) => void;
   updateConceptStatus: (id: string, status: ConceptStatus) => void;
   addConceptArgument: (conceptId: string, arg: ConceptArgument) => void;
+  updateConceptTruthScore: (id: string, score: number) => void;
   deleteConcept: (id: string) => void;
+
+  setVisitorSessions: (sessions: VisitorSessionSummary[]) => void;
 }
 
 const DEFAULT_PROMPT =
@@ -552,6 +562,7 @@ export const useAdminState = create<AdminState>()(
       agentActivity: [],
       lastSentientPulse: null,
       debatedConcepts: [],
+      visitorSessions: [],
 
       setAdminAccess: (value) => set({ adminAccess: value }),
       toggleContentEditing: (value) => set({ isContentEditingEnabled: value }),
@@ -626,10 +637,18 @@ export const useAdminState = create<AdminState>()(
             c.id === conceptId ? { ...c, arguments: [...c.arguments, arg], updatedAt: Date.now() } : c
           )
         })),
+      updateConceptTruthScore: (id, score) =>
+        set((state) => ({
+          debatedConcepts: state.debatedConcepts.map(c =>
+            c.id === id ? { ...c, truthScore: score, updatedAt: Date.now() } : c
+          )
+        })),
       deleteConcept: (id) =>
         set((state) => ({
           debatedConcepts: state.debatedConcepts.filter(c => c.id !== id)
-        }))
+        })),
+
+      setVisitorSessions: (sessions) => set({ visitorSessions: sessions })
     }),
     {
       name: "dawayir-admin-state", storage: zustandIdbStorage,

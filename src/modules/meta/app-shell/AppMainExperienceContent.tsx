@@ -441,7 +441,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
     return (
       <PageShell headerMode="none" tabBarVisible={true} fullWidth={true}>
         <Suspense fallback={<StandardLoadingFallback color="teal" />}>
-          <MasaratScreen />
+          <MasaratScreen onNavigate={(s) => onNavigate?.(s as Parameters<typeof onNavigate>[0])} />
         </Suspense>
       </PageShell>
     );

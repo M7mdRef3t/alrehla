@@ -20,9 +20,9 @@ import {
 import { useMirahState, type InsightCategory } from "./store/mirah.store";
 import { usePulseState } from "@/domains/consciousness/store/pulse.store";
 import { useGamificationState } from "@/domains/gamification/store/gamification.store";
-import { useWirdState } from "@/modules/wird/store/wird.store";
-import { useBawsalaState } from "@/modules/bawsala/store/bawsala.store";
-import { useHafizState } from "@/modules/hafiz/store/hafiz.store";
+
+// Neural Mesh — replaces 3 cross-module stores (wird, bawsala, hafiz)
+import { platform } from "@/shared/platform";
 
 /* ═══════════════════════════════════════════ */
 /*               CONSTANTS                    */
@@ -63,9 +63,9 @@ function useInsightGenerator() {
   const { addInsight, lastAnalysisDate, setLastAnalysisDate, addMilestone, setReflections, reflections } = useMirahState();
   const logs = usePulseState((s) => s.logs) ?? [];
   const { badges, level, streak: gameStreak } = useGamificationState();
-  const wirdState = useWirdState();
-  const { decisions } = useBawsalaState();
-  const { memories } = useHafizState();
+  const wirdData = platform.wird();
+  const bawsalaData = platform.bawsala();
+  const hafizData = platform.hafiz();
 
   useEffect(() => {
     const key = todayKey();
@@ -123,14 +123,14 @@ function useInsightGenerator() {
     }
 
     // ── Behavior (Consistency) ──
-    if (wirdState.streak >= 7) {
+    if (wirdData.streak >= 7) {
       insights.push({
         category: "behavior", emoji: "🔥",
         title: "ثباتك مذهل",
-        description: `${wirdState.streak} يوم streak — أنت من النوع اللي لما يبدأ — يكمل.`,
+        description: `${wirdData.streak} يوم streak — أنت من النوع اللي لما يبدأ — يكمل.`,
         confidence: 95,
       });
-    } else if (wirdState.streak === 0 && wirdState.rituals.filter((r) => r.enabled).length > 0) {
+    } else if (wirdData.streak === 0 && wirdData.totalRituals > 0) {
       insights.push({
         category: "behavior", emoji: "🔄",
         title: "الثبات يحتاج عمل",
@@ -149,26 +149,23 @@ function useInsightGenerator() {
       });
     }
 
-    if (decisions.length >= 3) {
+    if (bawsalaData.totalDecisions >= 3) {
       insights.push({
         category: "growth", emoji: "🧭",
         title: "متّخذ قرارات بوعي",
-        description: `${decisions.length} قرار مدروس في البوصلة — أنت تاخذ حياتك بجدية.`,
+        description: `${bawsalaData.totalDecisions} قرار مدروس في البوصلة — أنت تاخذ حياتك بجدية.`,
         confidence: 85,
       });
     }
 
     // ── Social ──
-    if (memories.length >= 5) {
-      const gratMemories = memories.filter((m) => m.tags.includes("gratitude"));
-      if (gratMemories.length >= 2) {
-        insights.push({
-          category: "social", emoji: "🙏",
-          title: "شخص ممتن",
-          description: `${gratMemories.length} ذكريات امتنان في حافظ — الامتنان سمة أصيلة فيك.`,
-          confidence: 80,
-        });
-      }
+    if (hafizData.totalMemories >= 5) {
+      insights.push({
+        category: "social", emoji: "🙏",
+        title: "لديك ذاكرة غنية",
+        description: `${hafizData.totalMemories} ذكريات محفوظة في حافظ — أنت تحفظ اللحظات المهمة.`,
+        confidence: 80,
+      });
     }
 
     // ── Values ──
@@ -272,7 +269,7 @@ export const MirahScreen: FC = () => {
   useInsightGenerator();
 
   const logs = usePulseState((s) => s.logs) ?? [];
-  const wirdState = useWirdState();
+  const wirdData = platform.wird();
   const { level } = useGamificationState();
 
   // ── Radar Scores ──
@@ -288,12 +285,12 @@ export const MirahScreen: FC = () => {
     return {
       energy: Math.min(avgEnergy, 100),
       emotion: Math.min(positiveRatio, 100),
-      behavior: Math.min(wirdState.streak * 5, 100),
+      behavior: Math.min(wirdData.streak * 5, 100),
       growth: Math.min(logs.length * 2, 100),
       social: Math.min(level * 15, 100),
       values: Math.min((insights.filter((i) => i.acknowledged).length) * 20, 100),
     } as Record<InsightCategory, number>;
-  }, [logs, wirdState.streak, level, insights]);
+  }, [logs, wirdData.streak, level, insights]);
 
   const overallScore = useMemo(() => {
     const vals = Object.values(radarScores);
@@ -457,7 +454,7 @@ export const MirahScreen: FC = () => {
               {[
                 { label: "نبضة", value: logs.length, emoji: "💓" },
                 { label: "مستوى", value: level, emoji: "⭐" },
-                { label: "streak", value: wirdState.streak, emoji: "🔥" },
+                { label: "streak", value: wirdData.streak, emoji: "🔥" },
               ].map((s) => (
                 <div key={s.label}>
                   <span className="text-sm">{s.emoji}</span>

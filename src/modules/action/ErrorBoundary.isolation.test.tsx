@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 function JourneyCrash(): React.JSX.Element {
@@ -12,7 +12,7 @@ function DawayirSafePane() {
 
 describe("Error boundary isolation", () => {
   it("keeps Dawayir boundary alive when Journey subtree crashes", () => {
-    render(
+    const { container } = render(
       <div>
         <ErrorBoundary fallback={<div data-testid="journey-fallback">Journey fallback</div>}>
           <JourneyCrash />
@@ -24,7 +24,7 @@ describe("Error boundary isolation", () => {
       </div>
     );
 
-    expect(screen.getByTestId("journey-fallback")).toBeInTheDocument();
-    expect(screen.getByTestId("dawayir-safe-pane")).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="journey-fallback"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="dawayir-safe-pane"]')).toBeTruthy();
   });
 });

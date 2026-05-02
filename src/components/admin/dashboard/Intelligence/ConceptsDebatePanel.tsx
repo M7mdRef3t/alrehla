@@ -19,6 +19,8 @@ import { useAdminState, type DebatedConcept, type ConceptStatus, type ConceptArg
 import { useTruthTestState } from "@/services/truthTest.store";
 import { exportToNotebookLM } from "@/services/notebookLmExport";
 import { ConnectionRadar } from "./ConnectionRadar";
+import { TruthMeter } from "./TruthMeter";
+import { geminiClient } from "@/services/geminiClient";
 
 const STATUS_CONFIG: Record<ConceptStatus, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
   draft: { label: "مسودة", icon: <Clock className="w-4 h-4" />, color: "text-slate-400", bg: "bg-slate-400/10 border-slate-400/20" },
@@ -38,7 +40,10 @@ export const ConceptsDebatePanel: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newHypothesis, setNewHypothesis] = useState("");
+  const [newEvidence, setNewEvidence] = useState<string[]>([]);
   const [argumentText, setArgumentText] = useState("");
+  const [isConsultingAI, setIsConsultingAI] = useState(false);
+  const updateTruthScore = useAdminState((s) => s.updateConceptTruthScore);
   
   const selectedConcept = concepts.find(c => c.id === selectedConceptId);
 
@@ -50,6 +55,7 @@ export const ConceptsDebatePanel: React.FC = () => {
       hypothesis: newHypothesis.trim(),
       status: "draft",
       arguments: [],
+      empiricalEvidence: newEvidence,
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
@@ -57,6 +63,7 @@ export const ConceptsDebatePanel: React.FC = () => {
     setIsCreating(false);
     setNewTitle("");
     setNewHypothesis("");
+    setNewEvidence([]);
     setSelectedConceptId(newConcept.id);
   };
 
@@ -70,23 +77,63 @@ export const ConceptsDebatePanel: React.FC = () => {
     };
     addConceptArgument(selectedConceptId, arg);
     setArgumentText("");
+  };
+
+  const handleConsultAI = async () => {
+    if (!selectedConcept || isConsultingAI) return;
     
-    // Auto-reply simulation for AI if owner posts
-    if (author === "owner") {
-      setTimeout(() => {
-        addConceptArgument(selectedConceptId, {
-          id: `arg_ai_${Date.now()}`,
-          author: "ai",
-          content: "بناءً على بروتوكول اختبار الحقيقة، هذا الادعاء يحتاج إلى جمع 5 عينات اختبار أعمى لتحديد ما إذا كان 'وهماً' أم ظاهرة قابلة للقياس.",
-          timestamp: Date.now()
-        });
-      }, 1000);
+    setIsConsultingAI(true);
+    
+    try {
+      const prompt = `
+        أنت "الذكاء السيادي" لمنصة الرحلة. مهمتك هي تحليل الفرضية التالية في "مختبر المفاهيم".
+        يجب أن تتبع "عقيدة الرحلة": القرآن كدليل حقيقة، صفر تراث، العلم يقتل الوهم.
+        
+        الفرضية: ${selectedConcept.title} - ${selectedConcept.hypothesis}
+        
+        سجل النقاش الحالي:
+        ${selectedConcept.arguments.map(a => `${a.author === 'owner' ? 'الباحث' : 'الذكاء'}: ${a.content}`).join('\n')}
+        
+        المطلوب:
+        1. تقديم تحليل نقدي للفرضية (هل هي وهم أم إدراك؟).
+        2. تقديم استدلال علمي أو نصي (من القرآن مباشرة بدون تفسيرات).
+        3. اقتراح "نسبة يقين" (Truth Score) من 0 لـ 100.
+        
+        رد دائماً بالعامية المصرية بأسلوب ذكي ومباشر.
+        تنسيق الرد يجب أن يكون JSON كالتالي:
+        {
+          "analysis": "نص الرد هنا",
+          "score": 85
+        }
+      `;
+
+      const data = await geminiClient.generateJSON<{ analysis: string; score: number }>(prompt, "concept_debate");
+      
+      const finalAnalysis = data?.analysis || "عذراً، واجهت مشكلة في التحليل.";
+      const finalScore = data?.score || selectedConcept.truthScore || 50;
+
+      addConceptArgument(selectedConcept.id, {
+        id: `arg_ai_${Date.now()}`,
+        author: "ai",
+        content: finalAnalysis,
+        timestamp: Date.now()
+      });
+
+      if (finalScore) {
+        updateTruthScore(selectedConcept.id, finalScore);
+      }
+
+    } catch (error) {
+      console.error("AI Consultation error:", error);
+    } finally {
+      setIsConsultingAI(false);
     }
   };
 
-  const handleForwardToLab = (title: string, hypothesis: string) => {
+  const handleForwardToLab = (title: string, hypothesis: string, evidenceIds?: string[]) => {
     setNewTitle(title);
     setNewHypothesis(hypothesis);
+    setNewEvidence(evidenceIds || []);
     setSelectedConceptId(null);
     setIsCreating(true);
     // Scroll to top to see the creation form
@@ -110,12 +157,12 @@ export const ConceptsDebatePanel: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => exportToNotebookLM(concepts, truthTests)}
-            className="flex items-center gap-2 px-4 py-3 bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/30 rounded-xl font-bold transition-all shadow-lg shadow-teal-500/10"
-            title="تصدير السجل المعرفي بصيغة متوافقة مع NotebookLM"
+            onClick={() => exportToNotebookLM(concepts, truthTests, useAdminState.getState().visitorSessions)}
+            className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors border border-white/5 flex items-center gap-2 font-bold"
+            title="تصدير لـ NotebookLM"
           >
             <FileDown className="w-5 h-5" />
-            <span className="hidden sm:inline">تصدير للمختبر الخارجي</span>
+            <span className="text-sm hidden sm:inline">تصدير الذكاء</span>
           </button>
           <button
             onClick={() => { setIsCreating(true); setSelectedConceptId(null); }}
@@ -241,9 +288,13 @@ export const ConceptsDebatePanel: React.FC = () => {
                 </div>
                 <div className="p-4 bg-indigo-900/10 border border-indigo-500/20 rounded-xl">
                   <p className="text-sm text-indigo-100 leading-relaxed font-medium">
-                    <span className="text-indigo-400 font-bold ml-2">الفرضية:</span>
                     {selectedConcept.hypothesis}
                   </p>
+                </div>
+
+                {/* Truth Meter Integration */}
+                <div className="mt-4">
+                  <TruthMeter score={selectedConcept.truthScore || 50} />
                 </div>
               </div>
 
@@ -293,6 +344,19 @@ export const ConceptsDebatePanel: React.FC = () => {
                     placeholder="اكتب ردك أو دليلك هنا..."
                     className="flex-1 bg-black/40 border border-slate-700 rounded-xl px-4 text-sm text-white focus:border-indigo-500 outline-none"
                   />
+                  <button
+                    onClick={handleConsultAI}
+                    disabled={isConsultingAI}
+                    className={`p-3 rounded-xl transition-all flex items-center gap-2 font-bold ${
+                      isConsultingAI 
+                        ? "bg-slate-800 text-slate-500" 
+                        : "bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/30"
+                    }`}
+                    title="استشارة الذكاء السيادي"
+                  >
+                    <Bot className={`w-5 h-5 ${isConsultingAI ? "animate-pulse" : ""}`} />
+                    <span className="text-xs hidden sm:inline">استشارة الذكاء</span>
+                  </button>
                   <button
                     onClick={() => handleAddArgument("owner")}
                     disabled={!argumentText.trim()}

@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { ClipboardList, TrendingUp, Users, AlertTriangle, CheckCircle2, BarChart3 } from "lucide-react";
 import { supabase, isSupabaseReady } from "@/services/supabaseClient";
 import { surveyCopy } from "@/copy/survey";
@@ -78,11 +79,31 @@ const HypothesisCard: FC<{
   metric: string;
   level: "high" | "medium" | "low";
 }> = ({ title, hypothesis, status, metric, level }) => {
-  const statusColor = status === "validated"
-    ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-    : status === "invalidated"
-    ? "text-rose-400 bg-rose-500/10 border-rose-500/20"
-    : "text-amber-400 bg-amber-500/10 border-amber-500/20";
+  const statusConfig = {
+    validated: {
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/5",
+      border: "border-emerald-500/20",
+      glow: "shadow-[0_0_20px_rgba(16,185,129,0.1)]",
+      icon: CheckCircle2
+    },
+    invalidated: {
+      color: "text-rose-400",
+      bg: "bg-rose-500/5",
+      border: "border-rose-500/20",
+      glow: "shadow-[0_0_20px_rgba(244,63,94,0.1)]",
+      icon: AlertTriangle
+    },
+    insufficient: {
+      color: "text-amber-400",
+      bg: "bg-amber-500/5",
+      border: "border-amber-500/20",
+      glow: "shadow-[0_0_20px_rgba(245,158,11,0.1)]",
+      icon: BarChart3
+    }
+  };
+
+  const cfg = statusConfig[status];
 
   const levelBadge = level === "high"
     ? "bg-rose-500/20 text-rose-300"
@@ -90,21 +111,25 @@ const HypothesisCard: FC<{
     ? "bg-amber-500/20 text-amber-300"
     : "bg-emerald-500/20 text-emerald-300";
 
-  const StatusIcon = status === "validated" ? CheckCircle2 : status === "invalidated" ? AlertTriangle : BarChart3;
+  const StatusIcon = cfg.icon;
 
   return (
-    <div className={`rounded-2xl border p-5 ${statusColor}`}>
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2">
-          <StatusIcon className="w-4 h-4" />
-          <h4 className="text-sm font-bold">{title}</h4>
+    <div className={`rounded-3xl border p-6 transition-all duration-500 hover:scale-[1.02] ${cfg.bg} ${cfg.border} ${cfg.glow}`}>
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-xl bg-slate-900 border ${cfg.border}`}>
+            <StatusIcon className={`w-4 h-4 ${cfg.color}`} />
+          </div>
+          <h4 className="text-sm font-black text-white tracking-tight uppercase">{title}</h4>
         </div>
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${levelBadge}`}>
+        <span className={`text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest ${levelBadge}`}>
           {level === "high" ? "خطورة عالية" : level === "medium" ? "متوسطة" : "منخفضة"}
         </span>
       </div>
-      <p className="text-xs text-white/70 mb-2 leading-relaxed">{hypothesis}</p>
-      <p className="text-xs font-medium">{metric}</p>
+      <p className="text-xs text-slate-400 mb-4 leading-relaxed font-medium">{hypothesis}</p>
+      <div className={`text-[10px] font-black uppercase tracking-widest p-2 rounded-lg bg-black/20 border border-white/5 ${cfg.color}`}>
+        {metric}
+      </div>
     </div>
   );
 };
@@ -117,38 +142,49 @@ const QuestionSummary: FC<{
   const responseCount = stat.responses.length;
 
   return (
-    <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
-      <p className="text-sm font-medium text-white mb-3 text-right leading-relaxed">{questionText}</p>
-      <p className="text-[10px] text-white/40 mb-2">{responseCount} إجابة</p>
+    <div className="rounded-[2rem] border border-white/5 bg-slate-900/40 p-6 backdrop-blur-xl transition-all hover:bg-slate-900/60 group">
+      <p className="text-sm font-black text-white mb-4 text-right leading-relaxed group-hover:text-sky-400 transition-colors">{questionText}</p>
+      <div className="flex items-center gap-2 mb-4">
+        <div className="h-1 flex-1 bg-white/5 rounded-full" />
+        <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">{responseCount} RESPONSES</p>
+      </div>
 
       {stat.type === "scale" && stat.average !== undefined && (
-        <div className="flex items-center gap-3">
-          <div className="text-2xl font-black text-teal-400">{stat.average.toFixed(1)}</div>
-          <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-teal-500 to-teal-300"
-              style={{ width: `${(stat.average / 10) * 100}%` }}
+        <div className="space-y-3">
+          <div className="flex items-end justify-between">
+            <div className="text-4xl font-black text-sky-400 tracking-tighter">{stat.average.toFixed(1)}</div>
+            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest pb-1">Score Index</div>
+          </div>
+          <div className="h-2 bg-slate-950 rounded-full overflow-hidden border border-white/5 p-0.5">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${(stat.average / 10) * 100}%` }}
+              className="h-full rounded-full bg-gradient-to-r from-sky-600 via-sky-400 to-sky-300 shadow-[0_0_15px_rgba(14,165,233,0.5)]"
             />
           </div>
         </div>
       )}
 
       {stat.type === "mc" && stat.distribution && (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {Object.entries(stat.distribution)
             .sort(([, a], [, b]) => b - a)
-            .map(([value, count]) => {
+            .map(([value, count], i) => {
               const pct = responseCount > 0 ? Math.round((count / responseCount) * 100) : 0;
               return (
-                <div key={value} className="flex items-center gap-2">
-                  <div className="flex-1 h-6 bg-white/5 rounded-lg overflow-hidden relative">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-lg bg-teal-500/20"
-                      style={{ width: `${pct}%` }}
-                    />
-                    <span className="relative px-2 text-[11px] text-white/80 leading-6">{value}</span>
+                <div key={value} className="space-y-1">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[11px] font-bold text-slate-300">{value}</span>
+                    <span className="text-[10px] font-mono text-sky-500/80">{pct}%</span>
                   </div>
-                  <span className="text-[11px] text-white/50 w-10 text-right font-mono">{pct}%</span>
+                  <div className="h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ delay: i * 0.1 }}
+                      className="h-full rounded-full bg-sky-500/40"
+                    />
+                  </div>
                 </div>
               );
             })}
@@ -156,14 +192,14 @@ const QuestionSummary: FC<{
       )}
 
       {stat.type === "open" && (
-        <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
-          {stat.responses.slice(0, 5).map((r, i) => (
-            <p key={i} className="text-xs text-white/60 bg-white/5 rounded-lg px-3 py-2 text-right">
-              {String(r)}
+        <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
+          {stat.responses.slice(0, 8).map((r, i) => (
+            <p key={i} className="text-[11px] text-slate-400 bg-white/[0.02] border border-white/5 rounded-xl px-4 py-3 text-right leading-relaxed hover:bg-white/5 transition-colors italic">
+              " {String(r)} "
             </p>
           ))}
-          {stat.responses.length > 5 && (
-            <p className="text-[10px] text-white/30 text-center">+{stat.responses.length - 5} إجابة أخرى</p>
+          {stat.responses.length > 8 && (
+            <p className="text-[9px] font-black text-slate-600 text-center uppercase tracking-widest pt-2">+{stat.responses.length - 8} additional voices</p>
           )}
         </div>
       )}
@@ -231,27 +267,33 @@ export const SurveyResultsPanel: FC = () => {
   return (
     <div className="space-y-8">
       {/* Overview KPIs */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 text-center">
-          <ClipboardList className="w-6 h-6 text-teal-400 mx-auto mb-2" />
-          <p className="text-3xl font-black text-white">{agg.total}</p>
-          <p className="text-[11px] text-white/50 mt-1">إجمالي الردود</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-slate-900/40 p-8 text-center backdrop-blur-xl group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 blur-[40px] pointer-events-none rounded-full group-hover:bg-sky-500/20 transition-all duration-700" />
+          <ClipboardList className="w-8 h-8 text-sky-400 mx-auto mb-4" />
+          <p className="text-5xl font-black text-white tracking-tighter">{agg.total}</p>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mt-2">إجمالي الردود</p>
         </div>
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 text-center">
-          <Users className="w-6 h-6 text-indigo-400 mx-auto mb-2" />
-          <p className="text-3xl font-black text-white">{agg.deviceBreakdown["mobile"] || 0}</p>
-          <p className="text-[11px] text-white/50 mt-1">موبايل</p>
+        <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-slate-900/40 p-8 text-center backdrop-blur-xl group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[40px] pointer-events-none rounded-full group-hover:bg-indigo-500/20 transition-all duration-700" />
+          <Users className="w-8 h-8 text-indigo-400 mx-auto mb-4" />
+          <p className="text-5xl font-black text-white tracking-tighter">{agg.deviceBreakdown["mobile"] || 0}</p>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mt-2">موبايل</p>
         </div>
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 text-center">
-          <TrendingUp className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
-          <p className="text-3xl font-black text-white">{agg.deviceBreakdown["desktop"] || 0}</p>
-          <p className="text-[11px] text-white/50 mt-1">ديسكتوب</p>
+        <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-slate-900/40 p-8 text-center backdrop-blur-xl group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[40px] pointer-events-none rounded-full group-hover:bg-emerald-500/20 transition-all duration-700" />
+          <TrendingUp className="w-8 h-8 text-emerald-400 mx-auto mb-4" />
+          <p className="text-5xl font-black text-white tracking-tighter">{agg.deviceBreakdown["desktop"] || 0}</p>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mt-2">ديسكتوب</p>
         </div>
       </div>
 
       {/* Hypothesis Cards */}
-      <div>
-        <h3 className="text-lg font-black text-white mb-4 uppercase tracking-wider">Hypothesis Validation</h3>
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <h3 className="text-xl font-black text-white uppercase tracking-[0.3em]">Hypothesis Validation</h3>
+          <div className="h-px flex-1 bg-white/5" />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <HypothesisCard
             title="H1: الخريطة البصرية أقوى من النص"
@@ -285,8 +327,11 @@ export const SurveyResultsPanel: FC = () => {
       </div>
 
       {/* Question-by-Question Breakdown */}
-      <div>
-        <h3 className="text-lg font-black text-white mb-4 uppercase tracking-wider">Question Breakdown</h3>
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <h3 className="text-xl font-black text-white uppercase tracking-[0.3em]">Deep Signal Analysis</h3>
+          <div className="h-px flex-1 bg-white/5" />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {surveyCopy.questions.map((q) => {
             const stat = agg.questionStats[q.id];

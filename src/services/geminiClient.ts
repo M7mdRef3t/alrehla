@@ -250,10 +250,29 @@ class GeminiClient {
 
     try {
       // Extract JSON from various delimiters: [BEGIN JSON], markdown code blocks, or raw text
-      const customMatch = result.match(/\[BEGIN JSON\]\n?([\s\S]*?)\n?\[END JSON\]/i);
-      const markdownMatch = result.match(/```json\n([\s\S]*?)\n```/i) || result.match(/```\n([\s\S]*?)\n```/i);
+      const customMatch = result.match(/\[BEGIN JSON\]\s*([\s\S]*?)\s*\[END JSON\]/i);
+      const markdownMatch = result.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
       
-      const rawJson = customMatch ? customMatch[1] : (markdownMatch ? markdownMatch[1] : result);
+      let rawJson = customMatch ? customMatch[1] : (markdownMatch ? markdownMatch[1] : result);
+
+      // If still not valid-looking (doesn't start with [ or {), try to find the first and last brackets
+      if (rawJson && !rawJson.trim().startsWith('[') && !rawJson.trim().startsWith('{')) {
+        const firstBracket = result.indexOf('[');
+        const firstBrace = result.indexOf('{');
+        let startIdx = -1;
+        if (firstBracket !== -1 && firstBrace !== -1) startIdx = Math.min(firstBracket, firstBrace);
+        else if (firstBracket !== -1) startIdx = firstBracket;
+        else if (firstBrace !== -1) startIdx = firstBrace;
+
+        if (startIdx !== -1) {
+          const lastBracket = result.lastIndexOf(']');
+          const lastBrace = result.lastIndexOf('}');
+          const endIdx = Math.max(lastBracket, lastBrace);
+          if (endIdx > startIdx) {
+            rawJson = result.substring(startIdx, endIdx + 1);
+          }
+        }
+      }
 
       // Sanitize Unicode smart/curly quotes that models sometimes place INSIDE JSON strings.
       // These look like " " (U+201C / U+201D) and break JSON.parse when inside a quoted value.

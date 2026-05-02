@@ -12,25 +12,29 @@ class SoundManager {
     private userInteracted: boolean = false;
 
     constructor() {
-        this.init();
         this.setupResumeListeners();
     }
 
     private setupResumeListeners() {
         if (typeof window === "undefined") return;
         
-        const resume = () => {
+        const resume = (e: Event) => {
+            // Only respond to actual user interactions, not programmatic ones
+            if (e && !e.isTrusted) return;
+            
             this.userInteracted = true;
+            if (!this.audioContext) {
+                this.init();
+            }
             this.resumeContext();
-            // Remove listeners after first interaction
-            window.removeEventListener('click', resume);
-            window.removeEventListener('keydown', resume);
-            window.removeEventListener('touchstart', resume);
+            
+            // Remove listeners after first successful interaction
+            const events = ['click', 'keydown', 'touchend', 'pointerup'];
+            events.forEach(eventType => window.removeEventListener(eventType, resume));
         };
 
-        window.addEventListener('click', resume);
-        window.addEventListener('keydown', resume);
-        window.addEventListener('touchstart', resume);
+        const events = ['click', 'keydown', 'touchend', 'pointerup'];
+        events.forEach(eventType => window.addEventListener(eventType, resume, { once: true }));
     }
 
     public async resumeContext() {
@@ -73,11 +77,13 @@ class SoundManager {
     }
 
     private createOscillator(type: OscillatorType, frequency: number, duration: number, startTime: number = 0) {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
 
         // If context is suspended, try to resume only if user has interacted
         if (this.audioContext.state === 'suspended') {
-            if (this.userInteracted) this.resumeContext();
+            this.resumeContext();
             return;
         }
 
@@ -120,6 +126,8 @@ class SoundManager {
     }
 
     private playGavel(now: number) {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
         const osc = this.audioContext.createOscillator();
         const gain = this.audioContext.createGain();
@@ -136,6 +144,8 @@ class SoundManager {
     }
 
     private playCelebration(now: number) {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
         [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
             this.createOscillator('square', freq, 1.5, now + i * 0.1);
@@ -143,6 +153,8 @@ class SoundManager {
     }
 
     private playWarp(now: number) {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
         const osc = this.audioContext.createOscillator();
         const g = this.audioContext.createGain();
@@ -169,6 +181,8 @@ class SoundManager {
     }
 
     private playHeartbeat(now: number) {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
         const playThump = (time: number) => {
             const osc = this.audioContext!.createOscillator();
@@ -188,6 +202,8 @@ class SoundManager {
     }
 
     private playTension(now: number) {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled || !this.sensoryEnabled) return;
         [80, 85].forEach(freq => {
             const osc = this.audioContext!.createOscillator();
@@ -204,6 +220,8 @@ class SoundManager {
     }
 
     private playHarmony(now: number) {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled || !this.sensoryEnabled) return;
         [440, 554.37].forEach(freq => {
             const osc = this.audioContext!.createOscillator();
@@ -221,12 +239,13 @@ class SoundManager {
     }
 
     public playEffect(type: 'gavel' | 'heartbeat' | 'cosmic_pulse' | 'tension' | 'harmony' | 'celebration' | 'warp' | 'radar_ping' | 'scanning') {
+        if (!this.userInteracted) return;
         if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
 
         // Centralized check for suspended context
         if (this.audioContext.state === 'suspended') {
-            if (this.userInteracted) this.resumeContext();
+            this.resumeContext();
             return;
         }
 
@@ -256,11 +275,12 @@ class SoundManager {
     }
 
     public startAmbientCommunity() {
+        if (!this.userInteracted) return;
         if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled || !this.sensoryEnabled) return;
         
         if (this.audioContext.state === 'suspended') {
-            if (this.userInteracted) this.resumeContext();
+            this.resumeContext();
             return;
         }
 
@@ -309,6 +329,8 @@ class SoundManager {
 
     // New Tactical Methods
     public playSniperShot() {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
         const now = this.audioContext.currentTime;
         const osc = this.audioContext.createOscillator();
@@ -325,6 +347,8 @@ class SoundManager {
     }
 
     public playRadarPing() {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
         const now = this.audioContext.currentTime;
         const osc = this.audioContext.createOscillator();
@@ -341,6 +365,8 @@ class SoundManager {
     }
 
     public playShieldActivate() {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
         const now = this.audioContext.currentTime;
         const osc = this.audioContext.createOscillator();
@@ -357,6 +383,8 @@ class SoundManager {
     }
 
     public playScanning() {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
         const now = this.audioContext.currentTime;
         const duration = 1.8;
@@ -387,6 +415,8 @@ class SoundManager {
     }
 
     public playDrone() {
+        if (!this.userInteracted) return;
+        if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
         const now = this.audioContext.currentTime;
         const duration = 2.0;

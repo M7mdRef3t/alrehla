@@ -1627,12 +1627,12 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   }, [nodes, nodePositions, shouldSkipInterferenceScan]);
 
   const { viewBox } = useMemo(() => {
-    if (!highlightNodeId) return { viewBox: "0 0 100 100" };
+    if (!highlightNodeId) return { viewBox: "15 15 70 70" };
     const node = nodes.find((n) => n.id === highlightNodeId);
-    if (!node) return { viewBox: "0 0 100 100" };
+    if (!node) return { viewBox: "15 15 70 70" };
 
     const pos = nodePositions[node.id];
-    if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return { viewBox: "0 0 100 100" };
+    if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return { viewBox: "15 15 70 70" };
 
     const zoomSize = 42;
     const vx = Math.max(0, Math.min(100 - zoomSize, pos.x - zoomSize / 2));
@@ -1643,8 +1643,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   return (
     <div className="absolute inset-0 z-0 pointer-events-none flex flex-col items-center justify-center overflow-hidden">
       <div
-        className={`pointer-events-auto relative aspect-square w-[110vmin] h-[110vmin] md:w-[95vmin] md:h-[95vmin] max-w-full max-h-full transition-all duration-1000 ease-out opacity-90 mix-blend-lighten ${isSimulation ? "scale-[0.85] saturate-[0.8] brightness-125" : ""}`}
-        style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+        className={`pointer-events-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square w-[240vmin] h-[240vmin] md:w-[150vmin] md:h-[150vmin] max-w-none max-h-none transition-all duration-1000 ease-out opacity-90 mix-blend-lighten scale-[1.7] md:scale-100 ${isSimulation ? "saturate-[0.8] brightness-125 !scale-[1.2]" : ""}`}
         id="map-canvas"
       >
         <style dangerouslySetInnerHTML={{ __html: MAP_HERO_STYLES }} />

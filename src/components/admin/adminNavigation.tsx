@@ -58,7 +58,8 @@ export type AdminTab =
   | "people-hub"
   | "growth-hub"
   | "markaz"
-  | "concepts-debate";
+  | "concepts-debate"
+  | "mohamed-refaat";
 
 export type NavGroup = {
   title: string;
@@ -73,6 +74,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "مركز القيادة (Alpha)",
     items: [
+      { id: "mohamed-refaat", label: "مساحة محمد رفعت", icon: <ShieldCheck className="h-4 w-4 text-teal-400" /> },
       { id: "command", label: "غرفة القيادة", icon: <ShieldCheck className="h-4 w-4 text-amber-500" /> },
       { id: "exec-overview", label: "نبض الإبداع والمنظومة", icon: <Sparkles className="h-4 w-4 text-rose-400" /> },
       { id: "markaz", label: "برج حورس (نداء الحق)", icon: <Target className="h-4 w-4 text-emerald-400" /> },
@@ -170,6 +172,7 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "people-hub": "مركز المسافرين والوعي",
   "markaz": "برج حورس (المركز التنفيذي)",
   "concepts-debate": "مختبر المفاهيم",
+  "mohamed-refaat": "مساحة محمد رفعت",
 };
 
 export const DEVELOPER_PLUS_TABS: AdminTab[] = ["ai-studio"];
@@ -208,4 +211,5 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "people-hub": "مركز المسافرين: إدارة شاملة للمسافرين، نبض الوعي، وأرشيف الإدراك الجماعي.",
   "markaz": "برج حورس: غرفة العمليات التنفيذية لنداء الحق والتدخلات المباشرة مع المسافرين.",
   "concepts-debate": "مختبر المفاهيم: مساحة مخصصة للنقاش المعرفي والعلمي حول مفاهيم المنصة واختبارها عبر البيانات.",
+  "mohamed-refaat": "مساحة محمد رفعت: مساحة التفكير، الأهداف، والإدارة الشاملة بناءً على المبادئ الأولى.",
 };
